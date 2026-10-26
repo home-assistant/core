@@ -9,6 +9,7 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PollControlService,
     PowerSwitchConfigurationService,
     SmartSensitivityControlService,
     SmokeSensitivityService,
@@ -852,6 +853,7 @@ async def test_relay_output_mode_unsupported(
 
 SECURITY_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_alarm_system"
 COMFORT_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_other_cases"
+ORIENTATION_LIGHT_ENTITY_ID = "select.motion_detector_orientation_light_response_time"
 
 
 @pytest.mark.parametrize(
@@ -979,3 +981,79 @@ async def test_dimmer_phase_control_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(PHASE_CONTROL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("long_poll_interval", "expected"),
+    [
+        (PollControlService.PollControlState.SHORT, "short"),
+        (PollControlService.PollControlState.UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.parametrize("device_buckets", [{"motion_detectors2": []}], indirect=True)
+async def test_orientation_light_current_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    long_poll_interval: PollControlService.PollControlState,
+    expected: str,
+) -> None:
+    """The orientation-light response time is reported, unknown stays unknown."""
+    mock_session.device_helper.motion_detectors2 = [
+        motion_detector2_device(long_poll_interval=long_poll_interval)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ORIENTATION_LIGHT_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No smart sensitivity selects are created without support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID) is None
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_smart_sensitivity=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The levels stay unknown while the controller reports none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+async def test_orientation_light_select_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting a response time writes it to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ORIENTATION_LIGHT_ENTITY_ID, "option": "short"},
+        blocking=True,
+    )
+    assert device.long_poll_interval == PollControlService.PollControlState.SHORT
