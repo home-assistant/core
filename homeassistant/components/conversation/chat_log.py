@@ -477,7 +477,11 @@ class ChatLog:
                 continue
             if isinstance(content, AssistantContent) and content.tool_calls:
                 for tool_call in content.tool_calls:
-                    if tool_call.external or tool_call.id in answered:
+                    if tool_call.id in answered or (
+                        # The provider handles its own tools, but sentence
+                        # triggers are sent to it as a regular tool call.
+                        tool_call.external and tool_call.tool_name != "trigger_sentence"
+                    ):
                         continue
                     self.async_add_assistant_content_without_tools(
                         ToolResultContent(

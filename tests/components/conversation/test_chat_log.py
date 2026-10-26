@@ -381,6 +381,47 @@ async def test_failed_turn_tool_call_result(
     assert content[-1].content == "Error: Tool is broken"
 
 
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_turn_trigger_sentence_result(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a failed turn gets an error result for an open sentence trigger."""
+    trigger_call = llm.ToolInput(
+        tool_name="trigger_sentence", tool_args={}, external=True
+    )
+    provider_call = llm.ToolInput(tool_name="web_search", tool_args={}, external=True)
+
+    def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id="mock-agent-id",
+                    content=None,
+                    tool_calls=[trigger_call, provider_call],
+                )
+            )
+            raise HomeAssistantError("Automation failed")
+
+    with pytest.raises(HomeAssistantError):
+        run_turn()
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    # The provider tool is left to the provider.
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id=trigger_call.id,
+        tool_name="trigger_sentence",
+        result=llm.ToolResult(
+            data={"error": "HomeAssistantError", "error_text": "Automation failed"},
+            error=True,
+        ),
+    )
+    assert content[-1].content == "Error: Automation failed"
+
+
 async def test_failed_nested_turn_stored(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
