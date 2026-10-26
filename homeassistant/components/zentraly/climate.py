@@ -67,15 +67,15 @@ class ZentralyClimate(ClimateEntity):
         self._attr_unique_id = device.device_id
         self._attr_name = None
 
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_target_temperature_step = self._configuration.temperature_step
         self._attr_min_temp = self._configuration.minimum_temperature
         self._attr_max_temp = self._configuration.maximum_temperature
 
-        self._attr_current_temperature = None
+        self._attr_native_current_temperature = None
         self._attr_current_humidity = None
-        self._attr_target_temperature = None
+        self._attr_native_target_temperature = None
 
         self._attr_hvac_mode = None
         self._attr_hvac_action = None
@@ -148,7 +148,7 @@ class ZentralyClimate(ClimateEntity):
             value = updates[ClimateCapability.LOCAL_TEMPERATURE]
 
             if isinstance(value, int | float):
-                self._attr_current_temperature = float(value)
+                self._attr_native_current_temperature = float(value)
                 self._report_versions[ClimateCapability.LOCAL_TEMPERATURE] = (
                     self._report_versions.get(ClimateCapability.LOCAL_TEMPERATURE, 0)
                     + 1
@@ -158,7 +158,7 @@ class ZentralyClimate(ClimateEntity):
             value = updates[ClimateCapability.TARGET_TEMPERATURE]
 
             if isinstance(value, int | float):
-                self._attr_target_temperature = float(value)
+                self._attr_native_target_temperature = float(value)
                 self._report_versions[ClimateCapability.TARGET_TEMPERATURE] = (
                     self._report_versions.get(ClimateCapability.TARGET_TEMPERATURE, 0)
                     + 1
@@ -297,14 +297,14 @@ class ZentralyClimate(ClimateEntity):
         ) == report_versions.get(ClimateCapability.LOCAL_TEMPERATURE, 0):
             current_temperature = current_temperature_task.result()
 
-            self._attr_current_temperature = current_temperature
+            self._attr_native_current_temperature = current_temperature
 
         if target_temperature_task is not None and self._report_versions.get(
             ClimateCapability.TARGET_TEMPERATURE, 0
         ) == report_versions.get(ClimateCapability.TARGET_TEMPERATURE, 0):
             target_temperature = target_temperature_task.result()
 
-            self._attr_target_temperature = target_temperature
+            self._attr_native_target_temperature = target_temperature
 
         if operation_mode_task is not None and self._report_versions.get(
             ClimateCapability.OPERATION_MODE, 0
@@ -401,7 +401,7 @@ class ZentralyClimate(ClimateEntity):
                 translation_domain=DOMAIN, translation_key="action_failed"
             )
 
-        self._attr_target_temperature = float(temperature)
+        self._attr_native_target_temperature = float(temperature)
 
         if (
             self._climate_api.supports(ClimateCapability.OPERATION_MODE)

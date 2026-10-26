@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -19,8 +20,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .common import DEVICE_ID, CreateDevice, PlatformSetup, create_nest_event
-
-from tests.common import async_get_device_automations
 
 DEVICE_NAME = "My Camera"
 DATA_MESSAGE = {"message": "service-called"}

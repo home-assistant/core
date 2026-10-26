@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.zentraly.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import HOST, PORT
 from .test_config_flow import NEW_HOST, NEW_PORT, _zeroconf_info
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("setup_integration")

@@ -4,6 +4,7 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zentraly import (
     ClimateOperationMode,
     DeviceModel,
@@ -20,8 +21,6 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEVICE_ID = "ZTTIN0100000631"
 MAC = "dcda0c58c8d8"

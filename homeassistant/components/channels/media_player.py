@@ -12,13 +12,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_SECONDS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
@@ -28,7 +26,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -42,24 +40,6 @@ async def async_setup_platform(
     """Set up the Channels platform."""
     device = ChannelsPlayer(config[CONF_NAME], config[CONF_HOST], config[CONF_PORT])
     async_add_entities([device], True)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SEEK_FORWARD,
-        None,
-        "seek_forward",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SEEK_BACKWARD,
-        None,
-        "seek_backward",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SEEK_BY,
-        {probatio.Required(ATTR_SECONDS): probatio.Coerce(int)},
-        "seek_by",
-    )
 
 
 class ChannelsPlayer(MediaPlayerEntity):

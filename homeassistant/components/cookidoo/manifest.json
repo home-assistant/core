@@ -1,6 +1,10 @@
 {
   "domain": "cookidoo",
   "name": "Cookidoo",
+  "categories": [
+    "productivity_information.shopping_groceries",
+    "appliances_cleaning.cooking"
+  ],
   "codeowners": ["@miaucl"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cookidoo",

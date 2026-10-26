@@ -2,12 +2,11 @@
 
 from bring_api import BringItemsResponse, BringListResponse, BringUserSettingsResponse
 import pytest
+from pytest_homeassistant.common import load_fixture
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.coordinator import BringData
 from homeassistant.components.bring.util import list_language, sum_attributes
-
-from tests.common import load_fixture
 
 
 @pytest.mark.parametrize(

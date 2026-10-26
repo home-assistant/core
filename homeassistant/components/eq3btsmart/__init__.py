@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 type Eq3ConfigEntry = ConfigEntry[Eq3ConfigEntryData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry setup."""
 
     mac_address: str | None = entry.unique_id
@@ -73,16 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
         hass, _async_run_thermostat(hass, entry), entry.entry_id
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry unload."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.thermostat.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.thermostat.async_disconnect()
 
 
 async def update_listener(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:

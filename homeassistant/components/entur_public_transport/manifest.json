@@ -1,6 +1,7 @@
 {
   "domain": "entur_public_transport",
   "name": "Entur",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@hfurubotten", "@SanderBlom"],
   "documentation": "https://www.home-assistant.io/integrations/entur_public_transport",
   "integration_type": "service",

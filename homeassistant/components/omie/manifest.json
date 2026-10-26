@@ -1,6 +1,7 @@
 {
   "domain": "omie",
   "name": "OMIE - Spain and Portugal electricity prices",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@luuuis"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/omie",

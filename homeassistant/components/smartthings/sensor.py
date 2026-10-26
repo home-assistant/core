@@ -1204,6 +1204,20 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="washer_progress",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_progress",
+                },
+            )
+        ],
+    },
     Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
         Attribute.WATER_CONSUMPTION: [
             SmartThingsSensorEntityDescription(
@@ -1215,6 +1229,16 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: value["cumulativeAmount"] / 1000,
             )
         ]
+    },
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="dryer_progress",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            )
+        ],
     },
     Capability.SAMSUNG_CE_HOOD_FILTER: {
         Attribute.HOOD_FILTER_USAGE: [

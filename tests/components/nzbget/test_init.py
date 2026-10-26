@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, _patch_version, init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("nzbget_api")

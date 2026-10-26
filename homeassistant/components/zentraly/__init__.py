@@ -163,7 +163,7 @@ def _register_device_info_polling(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ZentralyConfigEntry,
-) -> bool:
+) -> None:
     """Set up Zentraly from a config entry."""
 
     device_id = entry.data[CONF_DEVICE_ID]
@@ -243,18 +243,16 @@ async def async_setup_entry(
         api.host,
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant,
     entry: ZentralyConfigEntry,
-) -> bool:
+) -> None:
     """Unload a Zentraly config entry."""
 
     platforms = [Platform.CLIMATE]
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         platforms,
     )

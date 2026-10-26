@@ -7,6 +7,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zentraly import ClimateCapability, ClimateOperationMode, ZentralyConnectionError
 
 from homeassistant.components.climate import (
@@ -31,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import ENTITY_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("setup_integration")
 

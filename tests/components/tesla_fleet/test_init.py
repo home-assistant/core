@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -50,8 +51,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_platform
 from .conftest import create_config_entry
 from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -942,6 +941,41 @@ async def test_energy_history_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_energy_history.call_count == 2
+
+
+async def test_energy_history_refresh_ratelimited_not_sticky(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a 429 backoff only delays the next energy history refresh."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    after = ENERGY_HISTORY_INTERVAL + timedelta(seconds=10)
+    # The library passes the raw Retry-After header through as a string
+    mock_energy_history.side_effect = RateLimited(
+        {"after": str(int(after.total_seconds()))}
+    )
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 1
+
+    mock_energy_history.side_effect = None
+    freezer.tick(after)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 3
 
 
 async def test_init_region_issue(

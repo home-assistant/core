@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zentraly import ZentralyAuthenticationError, ZentralyConnectionError
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import DEVICE_ID, HOST, PASSWORD, PORT
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_api")
 NEW_HOST = "192.168.1.43"

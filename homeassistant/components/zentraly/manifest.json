@@ -1,6 +1,7 @@
 {
   "domain": "zentraly",
   "name": "Zentraly",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@zentralySAU"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zentraly",

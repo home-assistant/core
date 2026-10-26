@@ -3,11 +3,14 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from demetriek import LaMetricConnectionError, LaMetricError
+from demetriek import Device, LaMetricConnectionError, LaMetricError
+import probatio
 
+from homeassistant.components import media_source
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import service
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
@@ -55,3 +58,48 @@ def async_get_coordinator_by_device_id(
     config_entry: LaMetricConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return config_entry.runtime_data
+
+
+def has_audio(device: Device) -> bool:
+    """Return whether the device can play sounds.
+
+    A device without audio, like a SKY, refuses a notification with a sound.
+    """
+    return bool(device.audio and device.audio.available)
+
+
+async def async_resolve_sound_url(hass: HomeAssistant, sound: str) -> str:
+    """Turn picked media or a URL into a URL the device can fetch the sound from.
+
+    The device fetches the sound itself, so media from Home Assistant becomes
+    a full URL to Home Assistant, which the device reaches on the network.
+    """
+    invalid = ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_sound_url",
+        translation_placeholders={"url": sound},
+    )
+
+    # An empty value, or picked media without an ID, is no sound at all.
+    if not sound:
+        raise invalid
+
+    if media_source.is_media_source_id(sound):
+        media = await media_source.async_resolve_media(hass, sound, None)
+        sound = media.url
+
+    try:
+        return cv.url(async_process_play_media_url(hass, sound))
+    except (probatio.Invalid, ValueError) as err:
+        raise invalid from err
+
+
+def media_content_id(value: Any) -> str:
+    """Return the media content ID of picked media, or the value as it is.
+
+    The media selector hands over a dictionary, while a URL in an automation
+    is plain text.
+    """
+    if isinstance(value, dict):
+        return str(value.get("media_content_id", ""))
+    return str(value)

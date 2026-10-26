@@ -17,9 +17,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
