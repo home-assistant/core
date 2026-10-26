@@ -623,6 +623,7 @@ homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
 homeassistant.components.teleinfo.*
 homeassistant.components.teltonika.*
+homeassistant.components.tesla_fleet.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
