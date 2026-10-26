@@ -311,7 +311,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_supports_options_flow(cls, config_entry: ComelitConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return bool(config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE)
+        entry_type: str = config_entry.data.get(CONF_TYPE, BRIDGE)
+        return entry_type == BRIDGE
 
 
 class ComelitOptionsFlowHandler(OptionsFlow):
@@ -340,6 +341,8 @@ class ComelitOptionsFlowHandler(OptionsFlow):
             )
             if entry.domain == Platform.COVER
         ]
+        if not covers:
+            return self.async_abort(reason="no_covers")
 
         return self.async_show_form(
             step_id="init",

@@ -128,6 +128,12 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         self._position = self._attr_current_cover_position
         self._movement_start = None
 
+    def _is_moving_away_from_target(self) -> bool:
+        """Return if the cover moves opposite to the tracked movement."""
+        if self.is_opening:
+            return self._movement_target_position < self._movement_start_position
+        return self._movement_target_position > self._movement_start_position
+
     def _cancel_position_timer(self) -> None:
         """Cancel a pending scheduled stop, if any."""
         if self._position_timer is not None:
@@ -164,20 +170,30 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         is_moving = self.is_opening or self.is_closing
-        if is_moving and self._movement_start is None:
-            # Movement started outside HA (wall switch, Comelit app)
+        if is_moving and (
+            self._movement_start is None or self._is_moving_away_from_target()
+        ):
+            # Movement started or reversed outside HA (wall switch, Comelit app)
             self._start_movement(100 if self.is_opening else 0)
         elif not is_moving and self._movement_start is not None:
             self._end_movement()
+            if self._movement_target_position in (0, 100):
+                # Stopped on its own during full travel: end stop reached
+                self._position = self._movement_target_position
         self._update_cover_position()
         super()._handle_coordinator_update()
 
     async def _async_reach_target_position(self, _now: datetime) -> None:
         """Stop the cover once it reaches the requested position."""
         self._position_timer = None
+        movement_start = self._movement_start
         # Status may be stale: stopping an idle cover would start it moving
         await self.coordinator.async_refresh()
-        if not self.is_closing and not self.is_opening:
+        if (
+            not self.coordinator.last_update_success
+            # Superseded by a stop, a reversal or a newer command
+            or self._movement_start is not movement_start
+        ):
             return
 
         action = STATE_ON if self.is_closing else STATE_OFF
@@ -234,6 +250,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         if current is None:
             current = 0
         if target == current:
+            await self.async_stop_cover()
             return
 
         if target > current:

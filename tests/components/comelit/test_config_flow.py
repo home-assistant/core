@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiocomelit import CannotAuthenticate, CannotConnect
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import BRIDGE, COVER, VEDO
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -587,3 +587,19 @@ async def test_options_flow_support(
     await setup_integration(hass, config_entry)
 
     assert config_entry.supports_options is supports_options
+
+
+async def test_options_flow_no_covers(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow aborts when the bridge has no covers."""
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {}
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_covers"

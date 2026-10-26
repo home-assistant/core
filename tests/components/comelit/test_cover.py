@@ -109,7 +109,7 @@ async def test_cover_open(
         0: _cover_device(0, "Cover0"),
     }
 
-    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -289,7 +289,7 @@ async def test_cover_position_estimation(
         0: _cover_device(0, "Cover0"),
     }
 
-    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME / 2))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -476,6 +476,114 @@ async def test_cover_set_position_already_stopped(
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
 
 
+async def test_cover_set_position_current_while_moving(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test requesting the current position of a moving cover stops it."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME * 0.4))
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 40},
+        blocking=True,
+    )
+
+    assert mock_serial_bridge.set_device_status.call_count == 2
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 40
+
+
+async def test_cover_set_position_refresh_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test no stop command is sent when the status cannot be refreshed."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        blocking=True,
+    )
+
+    mock_serial_bridge.get_all_devices.side_effect = CannotConnect
+
+    # Shorter than the poll interval, so only the scheduled stop refreshes
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME / 10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_serial_bridge.set_device_status.call_count == 1
+
+
+async def test_cover_set_position_superseded_during_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test a command accepted during the scheduled stop refresh is not stopped."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        blocking=True,
+    )
+
+    devices = mock_serial_bridge.get_all_devices.return_value
+
+    async def _open_during_refresh() -> dict:
+        mock_serial_bridge.get_all_devices.side_effect = None
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+        return devices
+
+    mock_serial_bridge.get_all_devices.side_effect = _open_during_refresh
+
+    # Shorter than the poll interval, so only the scheduled stop refreshes
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME / 10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_serial_bridge.set_device_status.call_count == 2
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.OPENING
+
+
 async def test_cover_set_position_cancels_previous_timer(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -539,20 +647,40 @@ async def test_cover_external_movement(
     assert state.state == CoverState.CLOSING
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    # Stopped from the wall switch partway through
+    # Reaches its end stop sooner than the default travel time estimates
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
         0: _cover_device(0, "Cover0"),
     }
 
-    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME * 0.4))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == CoverState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 60
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    # Closed fully from the wall switch
+
+async def test_cover_external_reversal(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reversal outside Home Assistant replaces the requested movement."""
+
+    mock_restore_cache(hass, [State(ENTITY_ID, CoverState.CLOSED)])
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 60},
+        blocking=True,
+    )
+
+    # Reversed from the wall switch
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
         0: _cover_device(0, "Cover0", STATE_COVER.index("closing")),
     }
@@ -561,17 +689,23 @@ async def test_cover_external_movement(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_serial_bridge.get_all_devices.return_value[COVER] = {
-        0: _cover_device(0, "Cover0"),
-    }
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == CoverState.CLOSING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 20
 
-    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    # The scheduled stop for the 60% target was cancelled
+    freezer.tick(timedelta(seconds=DEFAULT_COVER_TRAVEL_TIME))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_serial_bridge.set_device_status.call_count == 1
 
 
 async def test_cover_command_failure(
