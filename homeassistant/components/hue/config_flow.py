@@ -32,7 +32,6 @@ from .const import (
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
 )
-from .errors import CannotConnect
 
 LOGGER = logging.getLogger(__name__)
 
@@ -238,7 +237,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         except TimeoutError:
             self.link_error = "register_failed"
             return self.async_show_progress_done(next_step_id="link")
-        except CannotConnect:
+        except aiohttp.ClientError:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
             return self.async_show_progress_done(next_step_id="cannot_connect")
         except Exception:
