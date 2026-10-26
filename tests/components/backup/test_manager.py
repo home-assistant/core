@@ -4415,7 +4415,7 @@ def _rename_agent_storage(
     (
         "stored_agents",
         "stored_agent_ids",
-        "replace_existing",
+        "overwrite_orphaned_settings",
         "expected_agents",
         "expected_agent_ids",
     ),
@@ -4471,7 +4471,7 @@ def _rename_agent_storage(
                 }
             },
             ["test.new"],
-            id="replace_existing",
+            id="overwrite_orphaned_settings",
         ),
         pytest.param(
             {"test.new": {"protected": True, "retention": None}},
@@ -4479,7 +4479,7 @@ def _rename_agent_storage(
             True,
             {},
             ["test.new"],
-            id="replace_existing_old_agent_has_no_settings",
+            id="overwrite_orphaned_settings_old_agent_has_no_settings",
         ),
         pytest.param(
             {
@@ -4490,7 +4490,7 @@ def _rename_agent_storage(
             True,
             {"test.new": {"protected": False, "retention": None}},
             ["backup.local"],
-            id="replace_existing_old_agent_not_selected",
+            id="overwrite_orphaned_settings_old_agent_not_selected",
         ),
         pytest.param(
             {"test.new": {"protected": True, "retention": None}},
@@ -4498,7 +4498,7 @@ def _rename_agent_storage(
             True,
             {},
             [],
-            id="replace_existing_old_agent_not_configured",
+            id="overwrite_orphaned_settings_old_agent_not_configured",
         ),
     ],
 )
@@ -4508,7 +4508,7 @@ async def test_rename_agent(
     freezer: FrozenDateTimeFactory,
     stored_agents: dict[str, Any],
     stored_agent_ids: list[str],
-    replace_existing: bool,
+    overwrite_orphaned_settings: bool,
     expected_agents: dict[str, Any],
     expected_agent_ids: list[str],
 ) -> None:
@@ -4517,7 +4517,7 @@ async def test_rename_agent(
     await setup_backup_integration(hass)
 
     async_get_manager(hass).async_rename_agent(
-        "test.old", "test.new", replace_existing=replace_existing
+        "test.old", "test.new", overwrite_orphaned_settings=overwrite_orphaned_settings
     )
     freezer.tick()
     async_fire_time_changed(hass)
@@ -4530,16 +4530,16 @@ async def test_rename_agent(
 
 
 @pytest.mark.parametrize(
-    ("replace_existing", "expected_failed_agent_ids"),
+    ("overwrite_orphaned_settings", "expected_failed_agent_ids"),
     [
         pytest.param(False, ["test.new", "test.other"], id="keep"),
-        pytest.param(True, ["test.other"], id="replace_existing"),
+        pytest.param(True, ["test.other"], id="overwrite_orphaned_settings"),
     ],
 )
 async def test_rename_agent_failed_uploads_of_new_agent(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    replace_existing: bool,
+    overwrite_orphaned_settings: bool,
     expected_failed_agent_ids: list[str],
 ) -> None:
     """Test failed uploads of the new agent ID are removed when replacing it."""
@@ -4550,7 +4550,7 @@ async def test_rename_agent_failed_uploads_of_new_agent(
     manager = async_get_manager(hass)
 
     manager.async_rename_agent(
-        "test.old", "test.new", replace_existing=replace_existing
+        "test.old", "test.new", overwrite_orphaned_settings=overwrite_orphaned_settings
     )
 
     assert (
@@ -4580,7 +4580,12 @@ async def test_rename_agent_same_id(
 
 
 @pytest.mark.parametrize(
-    ("stored_agents", "stored_agent_ids", "remote_agents", "replace_existing"),
+    (
+        "stored_agents",
+        "stored_agent_ids",
+        "remote_agents",
+        "overwrite_orphaned_settings",
+    ),
     [
         pytest.param(
             {"test.new": {"protected": True, "retention": None}},
@@ -4602,7 +4607,7 @@ async def test_rename_agent_same_id(
             ["test.old"],
             ["test.new"],
             True,
-            id="new_agent_loaded_replace_existing",
+            id="new_agent_loaded_overwrite_orphaned_settings",
         ),
         pytest.param(
             {"test.new": {"protected": True, "retention": None}},
@@ -4616,7 +4621,7 @@ async def test_rename_agent_same_id(
             ["test.new"],
             ["test.new"],
             True,
-            id="old_agent_not_configured_new_agent_loaded_replace_existing",
+            id="old_agent_not_configured_new_agent_loaded_overwrite_orphaned_settings",
         ),
     ],
 )
@@ -4626,7 +4631,7 @@ async def test_rename_agent_already_exists(
     stored_agents: dict[str, Any],
     stored_agent_ids: list[str],
     remote_agents: list[str],
-    replace_existing: bool,
+    overwrite_orphaned_settings: bool,
 ) -> None:
     """Test renaming an agent to an agent ID that already exists fails."""
     hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
@@ -4635,7 +4640,9 @@ async def test_rename_agent_already_exists(
 
     with pytest.raises(ValueError, match="Backup agent test.new already exists"):
         manager.async_rename_agent(
-            "test.old", "test.new", replace_existing=replace_existing
+            "test.old",
+            "test.new",
+            overwrite_orphaned_settings=overwrite_orphaned_settings,
         )
 
     assert manager.config.data.agents.keys() == stored_agents.keys()

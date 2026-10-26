@@ -413,19 +413,20 @@ class BackupManager:
         old_agent_id: str,
         new_agent_id: str,
         *,
-        replace_existing: bool = False,
+        overwrite_orphaned_settings: bool = False,
     ) -> None:
         """Rename a backup agent in the backup config and known backups.
 
         Integrations call this when the ID of one of their backup agents changes,
-        for example when migrating the unique ID of a config entry. Integrations
-        which know that none of their config entries provide the new agent ID pass
-        replace_existing to replace settings left behind for it, for example by a
-        removed config entry.
+        for example when migrating the unique ID of a config entry. Settings of the
+        new agent ID are orphaned if none of the integration's config entries,
+        including disabled ones, provide it, for example when they were left
+        behind by a removed config entry. Integrations which know this pass
+        overwrite_orphaned_settings to replace them with those of the old agent ID.
 
         Raises ValueError if the agent IDs belong to different integrations, if
         the new agent ID is loaded, or if both agent IDs are configured and
-        replace_existing is not set.
+        overwrite_orphaned_settings is not set.
         """
         if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
             raise ValueError(
@@ -436,7 +437,7 @@ class BackupManager:
             return
         config = self.config.data
         if new_agent_id in self.backup_agents or (
-            not replace_existing
+            not overwrite_orphaned_settings
             and (
                 old_agent_id in config.agents
                 or old_agent_id in config.create_backup.agent_ids
@@ -447,7 +448,7 @@ class BackupManager:
             )
         ):
             raise ValueError(f"Backup agent {new_agent_id} already exists")
-        if replace_existing:
+        if overwrite_orphaned_settings:
             self.config.remove_agent(new_agent_id)
             self.known_backups.remove_failed_agent(new_agent_id)
         self.config.rename_agent(old_agent_id, new_agent_id)
