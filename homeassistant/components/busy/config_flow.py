@@ -7,7 +7,7 @@ from busylib.exceptions import BusyBarAPIError, BusyBarError
 from busylib.transports import AiohttpTransport
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -95,9 +95,11 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="http_api_disabled")
                 if mode == "key" and api_key is None:
                     return await self.async_step_key()
-                device = await client.status_device()
-                device_id = (device.usb_mac or "").replace(":", "").lower()
-                await self.async_set_unique_id(device_id)
+                if self.source == SOURCE_USER:
+                    device = await client.status_device()
+                    await self.async_set_unique_id(
+                        (device.usb_mac or "").replace(":", "").lower()
+                    )
                 self._abort_if_unique_id_configured()
                 issued = await client.access_token_mint(
                     f"Home Assistant {self.hass.config.location_name}"
