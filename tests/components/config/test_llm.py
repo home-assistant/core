@@ -639,45 +639,19 @@ async def test_reload_config_entry_invalid_args(
     [
         pytest.param(
             {"query": "random", "type": "helper"},
-            [{"domain": "random", "name": "Random", "config_flow": True}],
+            [{"domain": "random", "name": "Random"}],
             {"random"},
             id="helper_exact",
         ),
         pytest.param(
-            {"query": "3 Day Blinds", "type": "integration"},
-            [
-                {
-                    "domain": "3_day_blinds",
-                    "name": "3 Day Blinds",
-                    "config_flow": False,
-                    "supported_by": "motion_blinds",
-                }
-            ],
-            {"3_day_blinds"},
-            id="virtual_supported_by",
-        ),
-        pytest.param(
             {"query": "sun", "type": "integration"},
-            [
-                {
-                    "domain": "sun",
-                    "name": "Sun",
-                    "config_flow": True,
-                    "single_config_entry": True,
-                }
-            ],
+            [{"domain": "sun", "name": "Sun"}],
             {"sun"},
-            id="single_config_entry",
+            id="integration_exact",
         ),
         pytest.param(
             {"query": "Times of the Day"},
-            [
-                {
-                    "domain": "tod",
-                    "name": "Times of the Day Sensor",
-                    "config_flow": True,
-                }
-            ],
+            [{"domain": "tod", "name": "Times of the Day Sensor"}],
             {"tod"},
             id="translated_title_match",
         ),
@@ -685,38 +659,25 @@ async def test_reload_config_entry_invalid_args(
             {"query": "yale"},
             [],
             {"august", "yalexs_ble"},
-            id="brand_sub_integrations",
+            id="brand_exact_match",
         ),
         pytest.param(
-            {"query": "motion_blinds"},
-            [
-                {
-                    "domain": "motion_blinds",
-                    "name": "Motionblinds",
-                    "config_flow": True,
-                }
-            ],
-            {"motion_blinds", "3_day_blinds"},
-            id="supported_by_match",
-        ),
-        pytest.param(
-            {"query": "aqara"},
-            [
-                {
-                    "domain": "aqara",
-                    "name": "Aqara",
-                    "config_flow": False,
-                    "iot_standards": ["matter", "zigbee"],
-                }
-            ],
-            {"aqara"},
-            id="iot_standards_brand",
+            {"query": "yal"},
+            [],
+            {"august", "yalexs_ble"},
+            id="brand_substring_match",
         ),
         pytest.param(
             {"query": "actiontec"},
             [],
             set(),
             id="yaml_only_excluded",
+        ),
+        pytest.param(
+            {"query": "bega"},
+            [],
+            set(),
+            id="iot_standard_only_excluded",
         ),
         pytest.param(
             {"query": "homeassistant_yellow"},
@@ -733,7 +694,7 @@ async def test_search_integrations(
     expected_prefix: list[dict[str, Any]],
     expected_domains: set[str],
 ) -> None:
-    """Test searching available integrations, helpers, and virtual integrations."""
+    """Test searching available config-flow integrations and helpers."""
     tool = SearchIntegrationsTool()
     res = await tool.async_call(
         hass,

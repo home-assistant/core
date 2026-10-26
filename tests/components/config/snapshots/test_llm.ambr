@@ -52,7 +52,7 @@
       'additionalProperties': False,
       'properties': dict({
         'query': dict({
-          'description': 'Search text to match against integration name, domain, brand, or IoT standard (case-insensitive).',
+          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
           'format': 'strip',
           'type': 'string',
         }),

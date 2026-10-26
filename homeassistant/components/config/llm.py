@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
 import heapq
 from typing import Any, override
 
@@ -129,112 +128,57 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
     return result
 
 
-def _rank_integration(
-    query: str,
-    domain: str,
-    name: str,
-    brand_name: str | None,
-    other: Iterable[str],
-) -> int | None:
-    """Return the match rank for a case-folded query, or None if it does not match.
-
-    Lower numbers rank higher when sorting with heapq.nsmallest:
-    - 0: exact match on name or domain
-    - 1: exact match on brand name
-    - 2: substring match on name or domain
-    - 3: substring match on brand name, supported_by, or iot_standards
-    """
-    domain_folded = domain.casefold()
-    name_folded = name.casefold()
-    if query in (name_folded, domain_folded):
-        return 0
-    brand_folded = brand_name.casefold() if brand_name else ""
-    if brand_folded == query:
-        return 1
-    if query in name_folded or query in domain_folded:
-        return 2
-    if (brand_folded and query in brand_folded) or any(
-        query in item.casefold() for item in other
-    ):
-        return 3
-    return None
-
-
-@dataclass(order=True, slots=True, frozen=True)
-class _SearchMatch:
-    """Ranked integration search match ordered by rank, name, and domain."""
-
-    rank: int
-    sort_name: str
-    domain: str
-    entry_info: JsonObjectType = field(compare=False)
-
-
-def _match_searchable_entry(
-    query: str,
-    domain: str,
-    meta: dict[str, Any],
-    title_trans: dict[str, str],
-    brand_name: str | None = None,
-) -> _SearchMatch | None:
-    """Rank an integration description and build its result dict if matched."""
-    if meta.get("integration_type") == "hardware":
-        return None
-    supported_by: str | None = meta.get("supported_by")
-    iot_standards: list[str] | None = meta.get("iot_standards")
-    has_config_flow = bool(meta.get("config_flow", False))
-    if not (has_config_flow or supported_by or iot_standards):
-        return None
-
-    name: str = (
-        meta.get("name") or title_trans.get(f"component.{domain}.title") or domain
-    )
-    other = (*((supported_by,) if supported_by else ()), *(iot_standards or ()))
-    if (rank := _rank_integration(query, domain, name, brand_name, other)) is None:
-        return None
-
-    entry_info: JsonObjectType = {
-        "domain": domain,
-        "name": name,
-        "config_flow": has_config_flow,
-    }
-    if supported_by:
-        entry_info["supported_by"] = supported_by
-    if iot_standards:
-        entry_info["iot_standards"] = list[JsonValueType](iot_standards)
-    if meta.get("single_config_entry"):
-        entry_info["single_config_entry"] = True
-    return _SearchMatch(rank, name.casefold(), domain, entry_info)
-
-
 def _iter_searchable_matches(
     query: str,
     descriptions: dict[str, Any],
     title_trans: dict[str, str],
     filter_type: str | None,
-) -> Iterator[_SearchMatch]:
-    """Yield ranked integration matches for query."""
-    if filter_type in (None, "integration"):
-        integrations = (
-            descriptions["core"]["integration"] | descriptions["custom"]["integration"]
-        )
-        for key, info in integrations.items():
-            if "integration_type" in info or not info.get("integrations"):
-                if match := _match_searchable_entry(query, key, info, title_trans):
-                    yield match
-                continue
-            brand_name = info.get("name", key)
-            for sub_domain, sub_info in info["integrations"].items():
-                if match := _match_searchable_entry(
-                    query, sub_domain, sub_info, title_trans, brand_name=brand_name
-                ):
-                    yield match
+) -> Iterator[tuple[int, str, str, str]]:
+    """Yield (rank, sort_name, domain, name) for config-flow integrations matching query.
 
+    Lower rank numbers sort first with heapq.nsmallest:
+    - 0: exact match on domain or name
+    - 1: exact match on brand name
+    - 2: substring match on domain or name
+    - 3: substring match on brand name
+    """
+    sources: list[tuple[str, dict[str, Any], str]] = []
+    if filter_type in (None, "integration"):
+        for key, info in (
+            descriptions["core"]["integration"] | descriptions["custom"]["integration"]
+        ).items():
+            if "integration_type" in info:
+                sources.append((key, info, ""))
+            elif sub := info.get("integrations"):
+                brand = info.get("name", key).casefold()
+                sources.extend((dom, meta, brand) for dom, meta in sub.items())
     if filter_type in (None, "helper"):
-        helpers = descriptions["core"]["helper"] | descriptions["custom"]["helper"]
-        for domain, info in helpers.items():
-            if match := _match_searchable_entry(query, domain, info, title_trans):
-                yield match
+        sources.extend(
+            (dom, meta, "")
+            for dom, meta in (
+                descriptions["core"]["helper"] | descriptions["custom"]["helper"]
+            ).items()
+        )
+
+    for domain, meta, brand in sources:
+        # Exclude YAML-only, hardware, virtual, and IoT-standard-only entries for now.
+        if not meta.get("config_flow"):
+            continue
+        name = (
+            meta.get("name") or title_trans.get(f"component.{domain}.title") or domain
+        )
+        dom_f, name_f = domain.casefold(), name.casefold()
+        if query in (dom_f, name_f):
+            rank = 0
+        elif query == brand:
+            rank = 1
+        elif query in dom_f or query in name_f:
+            rank = 2
+        elif brand and query in brand:
+            rank = 3
+        else:
+            continue
+        yield (rank, name_f, domain, name)
 
 
 class GetConfigEntriesTool(Tool):
@@ -385,12 +329,10 @@ class SearchIntegrationsTool(Tool):
     name = "config__search_integrations"
     title = "Search available integrations"
     description = (
-        "Search the catalog of all available Home Assistant integrations and helpers "
-        "(including uninstalled ones) by name, domain, brand, or IoT standard "
-        "(use config__get_config_entries instead to list integrations that are already "
-        "installed). Returns whether the integration supports a UI config_flow, or if "
-        "it is a virtual integration supported_by another integration domain or IoT "
-        "standard (zigbee, zwave, matter, homekit)."
+        "Search the catalog of available Home Assistant integrations and helpers "
+        "that can be set up via a config flow (including uninstalled ones) by name, "
+        "domain, or brand. Use config__get_config_entries instead to list "
+        "integrations that are already installed."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -401,8 +343,8 @@ class SearchIntegrationsTool(Tool):
             probatio.Required(
                 "query",
                 description=(
-                    "Search text to match against integration name, domain, brand, "
-                    "or IoT standard (case-insensitive)."
+                    "Search text to match against integration name, domain, or "
+                    "brand (case-insensitive)."
                 ),
             ): _NON_EMPTY_STRING,
             probatio.Optional(
@@ -437,7 +379,11 @@ class SearchIntegrationsTool(Tool):
             _iter_searchable_matches(query, descriptions, title_trans, filter_type),
         )
         return ToolResult(
-            data={"result": list[JsonValueType](match.entry_info for match in best)}
+            data={
+                "result": list[JsonValueType](
+                    {"domain": domain, "name": name} for _, _, domain, name in best
+                )
+            }
         )
 
 
