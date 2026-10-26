@@ -21,13 +21,15 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION
 from .coordinator import (
+    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBeEpexData,
     EngieBePricesCoordinator,
     EngieBePricesData,
-    epex_extreme_price_today,
     epex_next_price,
     epex_price_at,
+    epex_slots_cover_day,
+    epex_slots_for_day,
     normalize_slot_code,
 )
 
@@ -219,18 +221,32 @@ class EngieBeEpexSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[EngieBeEpexData, EpexGranularity, datetime], float | None]
 
 
+def _epex_extreme_today(
+    data: EngieBeEpexData,
+    granularity: EpexGranularity,
+    now: datetime,
+    choose: Callable[[Iterable[float]], float],
+) -> float | None:
+    """Return the lowest or highest EPEX price of today in Brussels."""
+    today = now.astimezone(BRUSSELS_TIME_ZONE).date()
+    slots = data.slots(granularity)
+    if not epex_slots_cover_day(slots, today, granularity):
+        return None
+    return choose(slot.value_eur_per_kwh for slot in epex_slots_for_day(slots, today))
+
+
 def _epex_lowest_today(
     data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
 ) -> float | None:
     """Return the lowest EPEX price of today."""
-    return epex_extreme_price_today(data, granularity, now, min)
+    return _epex_extreme_today(data, granularity, now, min)
 
 
 def _epex_highest_today(
     data: EngieBeEpexData, granularity: EpexGranularity, now: datetime
 ) -> float | None:
     """Return the highest EPEX price of today."""
-    return epex_extreme_price_today(data, granularity, now, max)
+    return _epex_extreme_today(data, granularity, now, max)
 
 
 _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (

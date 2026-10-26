@@ -46,7 +46,7 @@ class _EpexTrigger(Trigger):
     """Base for triggers that watch the EPEX prices of ENGIE Belgium devices.
 
     Each update of the EPEX coordinator, including the quarter-hour tick,
-    computes a value per device and compares it against the previous one.
+    computes a check per device and fires when it goes from false to true.
     """
 
     _options_schema: probatio.Schema = probatio.Schema(DEVICE_IDS_SCHEMA)
@@ -68,12 +68,8 @@ class _EpexTrigger(Trigger):
         self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
 
     @abstractmethod
-    def _value(self, data: EngieBeEpexData, now: datetime) -> Any:
-        """Return the value to compare between two updates."""
-
-    @abstractmethod
-    def _fires(self, previous: Any, current: Any) -> bool:
-        """Return True when the change from previous to current fires."""
+    def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
+        """Return the check to compare between two updates."""
 
     def _device_value(self, device_id: str) -> Any:
         """Return the value for one device, or UNDEFINED when it is not known."""
@@ -133,7 +129,8 @@ class _EpexTrigger(Trigger):
             if (
                 previous is not UNDEFINED
                 and current is not UNDEFINED
-                and self._fires(previous, current)
+                and previous is False
+                and current is True
             ):
                 run_action({ATTR_DEVICE_ID: device_id}, description)
             previous = current
@@ -163,16 +160,7 @@ class _EpexTrigger(Trigger):
         return async_remove
 
 
-class _EpexBecameTrueTrigger(_EpexTrigger):
-    """Base for triggers that fire when a check goes from false to true."""
-
-    @override
-    def _fires(self, previous: bool | None, current: bool | None) -> bool:
-        """Return True on the change from false to true."""
-        return previous is False and current is True
-
-
-class _EpexNegativeTrigger(_EpexBecameTrueTrigger):
+class _EpexNegativeTrigger(_EpexTrigger):
     """Base for triggers on the sign of the current EPEX price."""
 
     _granularity: EpexGranularity
@@ -213,7 +201,7 @@ class EpexQuarterHourNoLongerNegativeTrigger(_EpexNegativeTrigger):
     _negative = False
 
 
-class EpexTomorrowPricesPublishedTrigger(_EpexBecameTrueTrigger):
+class EpexTomorrowPricesPublishedTrigger(_EpexTrigger):
     """Trigger that fires when the EPEX prices of tomorrow become available."""
 
     @override
@@ -222,7 +210,7 @@ class EpexTomorrowPricesPublishedTrigger(_EpexBecameTrueTrigger):
         return epex_day_available(data, epex_tomorrow(now))
 
 
-class _EpexCrossedThresholdTrigger(_EpexBecameTrueTrigger):
+class _EpexCrossedThresholdTrigger(_EpexTrigger):
     """Base for triggers that fire when an EPEX price enters a range."""
 
     _options_schema = probatio.Schema(

@@ -307,20 +307,6 @@ def epex_is_negative(
     return None if price is None else price < 0
 
 
-def epex_extreme_price_today(
-    data: EngieBeEpexData,
-    granularity: EpexGranularity,
-    now: datetime,
-    choose: Callable[[Iterable[float]], float],
-) -> float | None:
-    """Return the lowest or highest EPEX price of today in Brussels."""
-    today = now.astimezone(BRUSSELS_TIME_ZONE).date()
-    slots = data.slots(granularity)
-    if not epex_slots_cover_day(slots, today, granularity):
-        return None
-    return choose(slot.value_eur_per_kwh for slot in epex_slots_for_day(slots, today))
-
-
 class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     """Coordinator that fetches Belgian EPEX day-ahead prices for both granularities."""
 

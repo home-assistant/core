@@ -198,6 +198,7 @@ async def test_crossed_threshold_trigger(
     )
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
 async def test_tomorrow_prices_published_trigger(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
