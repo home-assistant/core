@@ -325,7 +325,9 @@ async def test_options_flow(
                 ),
             ],
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],

@@ -394,7 +394,9 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
                 ),
             ],
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],

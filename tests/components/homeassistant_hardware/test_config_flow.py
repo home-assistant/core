@@ -340,7 +340,9 @@ def mock_firmware_info(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient",
             return_value=mock_update_client,
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware",
             side_effect=mock_flash_firmware,
