@@ -1,10 +1,12 @@
 """Support for Sofar event entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import takewhile
 from typing import override
 
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.faults import FAULTS, FaultLogEntry
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
@@ -28,8 +30,10 @@ type EntryKey = tuple[int, datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
-class SofarEventEntityDescription(SofarEntityDescription, EventEntityDescription):
+class SofarEventEntityDescription(EventEntityDescription, SofarEntityDescription):
     """Describe a Sofar event entity."""
+
+    entries_fn: Callable[[SofarInverter], tuple[FaultLogEntry, ...]]
 
 
 EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
@@ -39,6 +43,7 @@ EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
         translation_key="fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[fault.key for fault in FAULTS],
+        entries_fn=lambda device: device.fault_log.entries,
     ),
 )
 
@@ -98,7 +103,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
             list(
                 takewhile(
                     lambda logged: _key(logged) not in known,
-                    self.coordinator.device.fault_log.entries,
+                    self._entries(),
                 )
             )
         ):
@@ -117,9 +122,13 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         if (logged := self._logged()) != known:
             self._remember(logged)
 
+    def _entries(self) -> tuple[FaultLogEntry, ...]:
+        """Return the log entries, newest first."""
+        return self.entity_description.entries_fn(self.coordinator.device)
+
     def _logged(self) -> set[EntryKey]:
         """Return every entry the log holds now."""
-        return {_key(entry) for entry in self.coordinator.device.fault_log.entries}
+        return {_key(entry) for entry in self._entries()}
 
     def _remember(self, known: set[EntryKey]) -> None:
         """Take entries as handled, and keep them across restarts."""
