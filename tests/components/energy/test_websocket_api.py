@@ -1380,3 +1380,47 @@ async def test_fossil_energy_consumption_missing_sum(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
+
+
+async def test_save_prefs_device_color(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a device color is stored and returned."""
+    assert await async_setup_component(hass, "energy", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "energy/save_prefs",
+            "device_consumption": [
+                {"stat_consumption": "sensor.a", "color": [255, 0, 128]},
+                {"stat_consumption": "sensor.b"},
+            ],
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json_auto_id({"type": "energy/get_prefs"})
+    msg = await client.receive_json()
+    devices = msg["result"]["device_consumption"]
+    assert devices[0]["color"] == [255, 0, 128]
+    assert "color" not in devices[1]
+
+
+@pytest.mark.parametrize(
+    "color", [[256, 0, 0], [-1, 0, 0], [1, 2], [1, 2, 3, 4], "red", None]
+)
+async def test_save_prefs_invalid_device_color(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, color
+) -> None:
+    """Test invalid colors are rejected."""
+    assert await async_setup_component(hass, "energy", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "energy/save_prefs",
+            "device_consumption": [{"stat_consumption": "sensor.a", "color": color}],
+        }
+    )
+    assert not (await client.receive_json())["success"]
