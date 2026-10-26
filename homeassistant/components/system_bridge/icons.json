@@ -86,6 +86,24 @@
       "memory_used_percentage": {
         "default": "mdi:memory"
       },
+      "network_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_link_rate": {
+        "default": "mdi:speedometer"
+      },
+      "network_interface_ssid": {
+        "default": "mdi:wifi"
+      },
+      "network_interface_upload_rate": {
+        "default": "mdi:upload-network"
+      },
+      "network_upload_rate": {
+        "default": "mdi:upload-network"
+      },
       "os": {
         "default": "mdi:devices"
       },
