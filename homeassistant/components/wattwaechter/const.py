@@ -27,5 +27,6 @@ LEGACY_MODEL_IDS: dict[str, str] = {
 }
 
 # Gas power in kW, derived by the device from the flow rate and the energy
-# factor (calorific value times z-number). Reported for gas only.
+# factor (calorific value times the gas correction factor). Reported for
+# gas only.
 OBIS_GAS_POWER = "7-0:16.7.0"
