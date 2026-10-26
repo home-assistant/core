@@ -1336,6 +1336,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/nintendo_parental_controls/ @pantherale0
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/noaa_tides/ @jdelaney72
+/tests/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/nordpool/ @gjohansson-ST
