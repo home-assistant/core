@@ -22,7 +22,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.anthropic.config_flow import (
     DEFAULT_AI_TASK_OPTIONS,
     DEFAULT_CONVERSATION_OPTIONS,
@@ -915,7 +915,6 @@ async def test_subentry_web_search_user_location(
         "tool_search": False,
         "user_location": True,
         "web_fetch": False,
-        "web_fetch_max_uses": 5,
         "web_search": True,
         "web_search_max_uses": 5,
         "code_execution": False,
@@ -1392,10 +1391,10 @@ async def test_invalid_model(
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_THINKING_TYPE: "enabled",
                 CONF_WEB_FETCH: False,
-                CONF_WEB_FETCH_MAX_USES: 7,
+                CONF_WEB_FETCH_MAX_USES: 6,
                 CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 10,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_MAX_USES: 4,
+                CONF_WEB_SEARCH_USER_LOCATION: True,
                 CONF_CODE_EXECUTION: False,
             },
             id="disable_web_tools",
@@ -1448,9 +1447,9 @@ async def test_invalid_model(
                 CONF_THINKING_TYPE: "enabled",
                 CONF_TOOL_SEARCH: True,
                 CONF_WEB_FETCH: False,
-                CONF_WEB_FETCH_MAX_USES: 8,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_CODE_EXECUTION: False,
             },
@@ -1503,9 +1502,9 @@ async def test_invalid_model(
                 CONF_THINKING_TYPE: "adaptive",
                 CONF_TOOL_SEARCH: False,
                 CONF_WEB_FETCH: False,
-                CONF_WEB_FETCH_MAX_USES: 9,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_CODE_EXECUTION: True,
             },
@@ -1538,10 +1537,7 @@ async def test_invalid_model(
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_THINKING_TYPE: "enabled",
                 CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_MAX_USES: 5,
-                CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_FETCH: False,
-                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_CODE_EXECUTION: False,
             },
             id="recommended_to_custom",
@@ -1739,10 +1735,7 @@ async def test_creating_ai_task_subentry_additional(
         CONF_MAX_TOKENS: 1200,
         CONF_TOOL_SEARCH: False,
         CONF_WEB_FETCH: False,
-        CONF_WEB_FETCH_MAX_USES: 5,
         CONF_WEB_SEARCH: False,
-        CONF_WEB_SEARCH_MAX_USES: 5,
-        CONF_WEB_SEARCH_USER_LOCATION: False,
         CONF_THINKING_BUDGET: 1024,
         CONF_THINKING_TYPE: "enabled",
         CONF_CODE_EXECUTION: False,
@@ -2213,15 +2206,31 @@ async def test_reconfigure_legacy_thinking_budget(
         pytest.param("adaptive", id="adaptive"),
     ],
 )
+@pytest.mark.parametrize(
+    "thinking_budget",
+    [
+        pytest.param(-1, id="negative_budget"),
+        pytest.param("invalid", id="invalid_budget"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
-async def test_unused_thinking_budget(
+async def test_hidden_model_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     thinking_type: str,
+    thinking_budget: int | str,
+    subentry_type: str,
 ) -> None:
-    """An unused manual budget does not constrain disabled or adaptive thinking."""
+    """Hide dependent settings and ignore stale invalid values before validation."""
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -2230,23 +2239,178 @@ async def test_unused_thinking_budget(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_CHAT_MODEL: "claude-sonnet-4-6"}
     )
+    assert {
+        key.schema: key.visible
+        for key in result["data_schema"].schema
+        if isinstance(key, data_entry_flow.Optional)
+    } == {
+        CONF_THINKING_BUDGET: {"field": CONF_THINKING_TYPE, "value": "enabled"},
+        CONF_WEB_SEARCH_MAX_USES: {"field": CONF_WEB_SEARCH, "value": True},
+        CONF_WEB_SEARCH_USER_LOCATION: {"field": CONF_WEB_SEARCH, "value": True},
+        CONF_WEB_FETCH_MAX_USES: {"field": CONF_WEB_FETCH, "value": True},
+    }
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_THINKING_TYPE: thinking_type,
             CONF_MAX_TOKENS: 1024,
-            CONF_THINKING_BUDGET: 2048,
+            CONF_THINKING_BUDGET: thinking_budget,
+            CONF_EFFORT: "high",
+            CONF_WEB_SEARCH: False,
+            CONF_WEB_SEARCH_MAX_USES: -1,
+            CONF_WEB_SEARCH_USER_LOCATION: "invalid",
+            CONF_WEB_FETCH: False,
+            CONF_WEB_FETCH_MAX_USES: -1,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_THINKING_TYPE] == thinking_type
+    assert result["data"][CONF_THINKING_BUDGET] == DEFAULT[CONF_THINKING_BUDGET]
+    assert result["data"][CONF_EFFORT] == "high"
+    assert {
+        CONF_WEB_SEARCH_MAX_USES,
+        CONF_WEB_SEARCH_USER_LOCATION,
+        CONF_WEB_FETCH_MAX_USES,
+    }.isdisjoint(result["data"])
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {CONF_THINKING_TYPE: "enabled", CONF_THINKING_BUDGET: -1},
+            id="thinking_budget",
+        ),
+        pytest.param(
+            {CONF_WEB_SEARCH: True, CONF_WEB_SEARCH_MAX_USES: -1},
+            id="web_search_limit",
+        ),
+        pytest.param(
+            {CONF_WEB_SEARCH: True, CONF_WEB_SEARCH_USER_LOCATION: "invalid"},
+            id="web_search_location",
+        ),
+        pytest.param(
+            {CONF_WEB_FETCH: True, CONF_WEB_FETCH_MAX_USES: -1},
+            id="web_fetch_limit",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_visible_model_options_validation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, str | bool | int],
+    subentry_type: str,
+) -> None:
+    """Validate dependent fields when their controlling option enables them."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_NAME: "Claude", CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "claude-sonnet-4-6"}
+    )
+    with pytest.raises(InvalidData):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input
+        )
+
+
+@pytest.mark.parametrize(
+    "thinking_type",
+    [
+        pytest.param("disabled", id="disabled"),
+        pytest.param("adaptive", id="adaptive"),
+    ],
+)
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_reconfigure_preserves_hidden_model_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    thinking_type: str,
+    subentry_type: str,
+) -> None:
+    """Retain saved preferences while their dependent controls are hidden."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    dormant_options = {
+        CONF_THINKING_BUDGET: 2048,
+        CONF_WEB_SEARCH_MAX_USES: 7,
+        CONF_WEB_SEARCH_USER_LOCATION: True,
+        CONF_WEB_FETCH_MAX_USES: 9,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-sonnet-4-6",
+            CONF_THINKING_TYPE: "enabled",
+            **dormant_options,
+        },
+    )
+    await hass.async_block_till_done()
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "claude-sonnet-4-6"}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_THINKING_TYPE: thinking_type,
+            CONF_THINKING_BUDGET: -1,
+            CONF_WEB_SEARCH: False,
+            CONF_WEB_SEARCH_MAX_USES: -1,
+            CONF_WEB_SEARCH_USER_LOCATION: "invalid",
+            CONF_WEB_FETCH: False,
+            CONF_WEB_FETCH_MAX_USES: -1,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert {key: subentry.data[key] for key in dormant_options} == dormant_options
+    assert subentry.data[CONF_THINKING_TYPE] == thinking_type
+    assert subentry.data[CONF_WEB_SEARCH] is False
+    assert subentry.data[CONF_WEB_FETCH] is False
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_required_enabled_thinking_budget(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_model_catalogue: list[ModelInfo],
+    subentry_type: str,
 ) -> None:
     """Validate the budget when the only supported thinking type is hidden."""
     model = model_list[0].model_copy(deep=True, update={"id": "custom-model"})
@@ -2257,7 +2421,7 @@ async def test_required_enabled_thinking_budget(
     mock_model_catalogue[:] = [model]
 
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, "conversation"),
+        (mock_config_entry.entry_id, subentry_type),
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
@@ -2267,6 +2431,14 @@ async def test_required_enabled_thinking_budget(
         result["flow_id"], {CONF_CHAT_MODEL: model.id}
     )
     assert CONF_THINKING_TYPE not in result["data_schema"].schema
+    budget_field = next(
+        key for key in result["data_schema"].schema if key == CONF_THINKING_BUDGET
+    )
+    assert budget_field.visible is True
+    with pytest.raises(InvalidData):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_THINKING_BUDGET: -1}
+        )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {CONF_MAX_TOKENS: 1024, CONF_THINKING_BUDGET: 1024},
