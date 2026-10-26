@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.met_eireann.const import DOMAIN, HOME_LOCATION_NAME
+from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -48,7 +48,7 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     assert result["step_id"] == config_entries.SOURCE_USER
 
     default_data = result["data_schema"]({})
-    assert default_data["name"] == HOME_LOCATION_NAME
+
     assert default_data["latitude"] == 1
     assert default_data["longitude"] == 2
     assert default_data["elevation"] == 3
@@ -57,7 +57,6 @@ async def test_flow_with_home_location(hass: HomeAssistant) -> None:
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     test_data = {
-        "name": "test",
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
         CONF_ELEVATION: 0,
@@ -76,7 +75,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == test_data.get("name")
+    assert result["title"] == "Met Éireann"
     assert result["data"] == test_data
     assert result["result"].unique_id == "0.0,0.0"
 
@@ -87,7 +86,6 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     Test to ensure the config form does not allow duplicate entries.
     """
     test_data = {
-        "name": "test",
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
         CONF_ELEVATION: 0,

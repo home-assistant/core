@@ -5,10 +5,10 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME
+from .const import DOMAIN
 
 
 class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -32,9 +32,6 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=probatio.Schema(
                     {
-                        # Name field is no longer allowed in config flow schemas
-                        # pylint: disable-next=home-assistant-config-flow-name-field
-                        probatio.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
                         probatio.Required(
                             CONF_LATITUDE, default=self.hass.config.latitude
                         ): cv.latitude,
@@ -47,4 +44,5 @@ class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
                     }
                 ),
             )
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+
+        return self.async_create_entry(title="Met Éireann", data=user_input)
