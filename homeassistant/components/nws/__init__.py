@@ -306,8 +306,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> Non
 
     if entry.version < 2:
         data = dict(entry.data)
-        long = data.pop(CONF_LONGITUDE)
-        lat = data.pop(CONF_LATITUDE)
+        long = data.pop(CONF_LONGITUDE, None)
+        lat = data.pop(CONF_LATITUDE, None)
         if lat is not None and long is not None:
             data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
         hass.config_entries.async_update_entry(entry, data=data, version=2)
