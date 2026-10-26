@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
+import re
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
 
@@ -39,13 +40,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DEFAULT_MAX_BIND_VARS,
-    DOMAIN,
-    SQLITE_FILE_URL_PREFIX,
-    SQLITE_URL_PREFIX,
-    SupportedDialect,
-)
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -66,6 +61,17 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
+
+# Splits a URL up to its database part the same way as SQLAlchemy
+_URL_DATABASE_RE = re.compile(
+    r"""
+    [\w+]+://
+    (?:[^:/]*(?::[^@]*)?@)?
+    (?:(?:\[[^/?]+\]|[^/:?]+)?(?::[^/?]*)?)?
+    (?:/(?P<database>[^?]*))?
+    """,
+    re.VERBOSE,
+)
 
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
@@ -254,15 +260,14 @@ def get_engine_db_url(db_url: str) -> URL:
 
     PostgreSQL URLs without a driver are pinned to psycopg2, the driver
     installations ship, so they don't depend on the SQLAlchemy default driver.
-    SQLite file paths are used as written, without URL-decoding, so the engine
-    opens the same file that the recorder checks and moves away.
+    The database part is used as written, without URL-decoding, so the engine
+    connects to the database or file that the recorder checks and moves away.
     """
     url = make_url(db_url)
     if url.drivername == "postgresql":
         url = url.set(drivername="postgresql+psycopg2")
-    if db_url.startswith(SQLITE_FILE_URL_PREFIX):
-        path = db_url.removeprefix(SQLITE_FILE_URL_PREFIX).partition("?")[0]
-        url = url.set(database=path)
+    if (match := _URL_DATABASE_RE.match(db_url)) and match["database"] is not None:
+        url = url.set(database=match["database"])
     return url
 
 

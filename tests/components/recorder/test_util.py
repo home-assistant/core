@@ -166,6 +166,27 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
             {"timeout": "0.1"},
             id="sqlite_percent",
         ),
+        pytest.param(
+            "sqlite+pysqlite:////config/ha%20copy/home-assistant_v2.db",
+            "sqlite+pysqlite",
+            "/config/ha%20copy/home-assistant_v2.db",
+            {},
+            id="sqlite_pysqlite_percent",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/home%20assistant?charset=utf8mb4",
+            "mysql",
+            "home%20assistant",
+            {"charset": "utf8mb4"},
+            id="mysql_percent",
+        ),
+        pytest.param(
+            "postgresql://user:pa?ss@host/home%20assistant",
+            "postgresql+psycopg2",
+            "home%20assistant",
+            {},
+            id="postgresql_percent",
+        ),
         pytest.param("sqlite://", "sqlite", None, {}, id="sqlite_memory"),
     ],
 )
@@ -178,6 +199,14 @@ def test_get_engine_db_url(
     assert url.drivername == drivername
     assert url.database == database
     assert url.query == query
+
+
+def test_get_engine_db_url_decodes_password() -> None:
+    """Test the engine URL still URL-decodes the username and password."""
+    url = get_engine_db_url("postgresql://us%40er:pa%40ss@host/db")
+
+    assert url.username == "us@er"
+    assert url.password == "pa@ss"
 
 
 def test_validate_or_move_away_sqlite_database(
