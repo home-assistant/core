@@ -249,6 +249,10 @@ async def test_call_action_template(hass: HomeAssistant) -> None:
             {"action": "test.action", "target": {"invalid": "value"}},
             id="invalid_target",
         ),
+        pytest.param(
+            {"action": "test.action", "data": {"{{ ['a'] }}": "b"}},
+            id="unhashable_key",
+        ),
     ],
 )
 async def test_call_action_invalid(
@@ -670,6 +674,21 @@ async def test_get_live_context_schema(
     """Test that homeassistant__GetLiveContext tool parameters convert to a sane OpenAPI schema."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     tool = next(t for t in result.tools if t.name == "homeassistant__GetLiveContext")
+
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
+
+    assert schema == snapshot
+
+
+async def test_call_action_schema(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test that homeassistant__call_action parameters convert to an OpenAPI schema."""
+    result = await llm_component.async_get_tools(
+        hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(t for t in result.tools if t.name == CALL_ACTION_TOOL)
 
     api = await llm.async_get_api(hass, "assist", _llm_context())
     schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)

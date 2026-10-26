@@ -481,8 +481,13 @@ class CallActionTool(Tool):
             hass.services.supports_response(domain, action) is not SupportsResponse.NONE
         )
         try:
+            params = async_prepare_call_from_config(hass, config)
+        # A template that renders to a list or dict cannot be a key in the data
+        except (HomeAssistantError, TypeError) as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        try:
             response = await hass.services.async_call(
-                **async_prepare_call_from_config(hass, config),
+                **params,
                 blocking=True,
                 context=llm_context.context,
                 return_response=return_response,
