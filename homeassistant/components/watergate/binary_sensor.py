@@ -92,3 +92,12 @@ class SonicBinarySensor(WatergateEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return True if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.value_fn(self.coordinator.data) is not None
+        )
