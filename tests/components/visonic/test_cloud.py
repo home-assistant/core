@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import replace
 from datetime import timedelta
+from functools import partial
 import logging
 from types import SimpleNamespace
 from typing import Any, cast
@@ -55,7 +56,6 @@ from homeassistant.components.visonic.visonic_types import (
     AlarmPanelStatus,
     CommandResult,
     DeviceType,
-    TriggerAlarmType,
 )
 from homeassistant.const import (
     CONF_EMAIL,
@@ -128,8 +128,7 @@ async def cloud(hass: HomeAssistant) -> AsyncGenerator[VisonicCloudConnection]:
         callbacks,
         async_get_clientsession(hass),
     )
-    connection.cloud_alarm = MagicMock(spec=AlarmSystem)
-    connection.cloud_alarm.get_user_code.return_value = "1234"
+    connection.cloud_alarm = connected_cloud_alarm()
     connection.login_success = True
     yield connection
     await connection.async_panel_stop()
@@ -138,6 +137,8 @@ async def cloud(hass: HomeAssistant) -> AsyncGenerator[VisonicCloudConnection]:
 def connected_cloud_alarm() -> MagicMock:
     """Create a cloud session with coherent connected status responses."""
     alarm = MagicMock(spec=AlarmSystem)
+    alarm.get_panel_state.side_effect = partial(AlarmSystem.get_panel_state, alarm)
+    alarm._summarize_alarms.side_effect = AlarmSystem._summarize_alarms
     alarm.get_user_code.return_value = "1234"
     alarm.get_status.return_value = Status(STATUS_DATA)
     alarm.get_panel_info.return_value = None
@@ -1385,70 +1386,6 @@ async def test_determine_armcode(
 
     partition = Partition({"status": status, "state": state})
     assert coordinator._determine_armcode(partition) is expected
-
-
-@pytest.mark.parametrize(
-    ("alarm_status", "alarm_type", "zone", "expected"),
-    [
-        (
-            AlarmPanelStatus.ARMED_AWAY,
-            TriggerAlarmType.INTRUDER,
-            4,
-            (True, 4, TriggerAlarmType.INTRUDER),
-        ),
-        (
-            AlarmPanelStatus.ARMED_HOME,
-            TriggerAlarmType.INTRUDER,
-            7,
-            (True, 7, TriggerAlarmType.INTRUDER),
-        ),
-        (
-            AlarmPanelStatus.DISARMED,
-            TriggerAlarmType.INTRUDER,
-            4,
-            (False, -1, TriggerAlarmType.NONE),
-        ),
-        (
-            AlarmPanelStatus.DISARMED,
-            TriggerAlarmType.FIRE,
-            4,
-            (True, 4, TriggerAlarmType.FIRE),
-        ),
-        (
-            AlarmPanelStatus.DISARMED,
-            TriggerAlarmType.PANIC,
-            4,
-            (True, 4, TriggerAlarmType.PANIC),
-        ),
-        (
-            AlarmPanelStatus.DISARMED,
-            TriggerAlarmType.NONE,
-            4,
-            (False, 4, TriggerAlarmType.NONE),
-        ),
-    ],
-)
-@pytest.mark.asyncio
-async def test_determine_siren_state(
-    setup_cloud_integration: SetupIntegration,
-    alarm_status: AlarmPanelStatus,
-    alarm_type: TriggerAlarmType,
-    zone: int,
-    expected: tuple[bool, int, TriggerAlarmType],
-) -> None:
-    """Test siren state determination."""
-    ok, entry = await setup_cloud_integration()
-    assert ok
-    coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
-
-    assert (
-        coordinator._determine_siren_state(
-            alarm_status,
-            alarm_type,
-            zone,
-        )
-        == expected
-    )
 
 
 @pytest.mark.asyncio

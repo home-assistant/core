@@ -11,7 +11,7 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
-from pyvisonicalarm.alarm import AlarmSystem
+from pyvisonicalarm.alarm import AlarmSystem, PanelState as CloudPanelState
 from pyvisonicalarm.classes import Status
 from pyvisonicalarm.exceptions import ConnectionTimeoutError, UnauthorizedError
 
@@ -445,7 +445,7 @@ async def test_stop_prevents_reauthentication_from_pending_request(
         await response.wait()
         raise UnauthorizedError
 
-    alarm.get_status = AsyncMock(side_effect=unauthorized)
+    alarm.get_panel_state = AsyncMock(side_effect=unauthorized)
     with patch.object(cloud, "_async_panel_reconnect") as reconnect:
         refresh(coordinator, hass, freezer)
         await started.wait()
@@ -481,14 +481,14 @@ async def test_stop_cancels_cloud_refresh_waiting_for_session(
         await response.wait()
         raise UnauthorizedError
 
-    alarm.get_status = AsyncMock(side_effect=status)
+    alarm.get_panel_state = AsyncMock(side_effect=status)
     with patch.object(cloud, "_async_panel_reconnect") as reconnect:
         coordinator.state_changed_callback(0)
         await started.wait()
         coordinator.state_changed_callback(0)
         tasks = tuple(coordinator._refresh_tasks)
         assert len(tasks) == 2
-        alarm.get_status.assert_awaited_once_with()
+        alarm.get_panel_state.assert_awaited_once_with()
         await coordinator.async_panel_stop()
         response.set()
         await hass.async_block_till_done()
@@ -792,7 +792,7 @@ async def test_pushed_session_renewal_failure_and_recovery(
     coordinator = command_coordinator
     cloud = cast(VisonicCloudConnection, coordinator.connection)
     alarm = MagicMock(spec=AlarmSystem)
-    alarm.get_status.side_effect = UnauthorizedError()
+    alarm.get_panel_state.side_effect = UnauthorizedError()
     cloud.cloud_alarm = alarm
     cloud.login_success = True
     snapshot = VisonicCoordinatorData(connected=True, mode="cloud")
@@ -802,7 +802,9 @@ async def test_pushed_session_renewal_failure_and_recovery(
     assert coordinator.config_entry is not None
 
     recovered_alarm = MagicMock(spec=AlarmSystem)
-    recovered_alarm.get_status.return_value = Status({"connected": True})
+    recovered_alarm.get_panel_state.return_value = CloudPanelState(
+        status=Status({"connected": True}), connected=True
+    )
     recovered_alarm.get_panel_info.return_value = None
     recovered_alarm.get_devices.return_value = []
     recovered_alarm.get_alarms.return_value = []

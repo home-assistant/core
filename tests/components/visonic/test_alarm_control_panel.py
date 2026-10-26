@@ -503,8 +503,7 @@ async def test_update_local_handles_unavailable(
     alarm.update_local(entry)
 
     assert alarm._attr_supported_features == 0
-    # _attr_code_format may still be NUMBER if default logic sets it
-    assert alarm._attr_code_format in (None, alarm._attr_code_format)
+    assert alarm.code_format == CodeFormat.NUMBER
     await wait_for_coordinator_timer()
 
 

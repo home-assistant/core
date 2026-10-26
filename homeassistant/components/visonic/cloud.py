@@ -1,6 +1,7 @@
 """Cloud connection helper for the Visonic coordinator."""
 
 import asyncio
+from collections.abc import Sequence
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -10,7 +11,7 @@ import uuid
 
 import aiohttp
 from pyvisonicalarm.alarm import AlarmSystem
-from pyvisonicalarm.classes import Alarm, PanelInfo, Partition, Status
+from pyvisonicalarm.classes import Partition
 from pyvisonicalarm.core import API
 from pyvisonicalarm.devices import Device, PanelDevice
 from pyvisonicalarm.exceptions import Error, SessionTokenError, UnauthorizedError
@@ -35,7 +36,6 @@ from .visonic_types import (
     AlarmPanelCommand,
     AlarmPanelStatus,
     CommandResult,
-    TriggerAlarmType,
 )
 
 MAP_ALARM_STATUS = {
@@ -49,22 +49,6 @@ MAP_ALARM_STATUS = {
     "PROGRAMMING": AlarmPanelStatus.INSTALLER,
     "ALARM": AlarmPanelStatus.TRIGGERED,
 }
-
-MAP_ALARM_TYPE = {
-    "EMERGENCY": TriggerAlarmType.EMERGENCY,
-    "FIRE": TriggerAlarmType.FIRE,
-    "PANIC": TriggerAlarmType.PANIC,
-    "ALARM_IN_MEMORY": TriggerAlarmType.INTRUDER,
-}
-
-PANEL_ARMED_LIST = [
-    AlarmPanelStatus.ARMED_AWAY,
-    AlarmPanelStatus.ARMED_AWAY_BYPASS,
-    AlarmPanelStatus.ARMED_AWAY_INSTANT,
-    AlarmPanelStatus.ARMED_HOME,
-    AlarmPanelStatus.ARMED_HOME_BYPASS,
-    AlarmPanelStatus.ARMED_HOME_INSTANT,
-]
 
 
 @dataclass(slots=True)
@@ -375,15 +359,6 @@ class VisonicCloudConnection(VisonicConnection):
         key = p.status + "_" + p.state if p.status else p.state
         return MAP_ALARM_STATUS.get(key, AlarmPanelStatus.UNKNOWN)
 
-    def _determine_siren_state(
-        self, ac: AlarmPanelStatus, al: TriggerAlarmType, zone: int
-    ) -> tuple[bool, int, TriggerAlarmType]:
-        if ac in PANEL_ARMED_LIST and al == TriggerAlarmType.INTRUDER:
-            return (True, zone, TriggerAlarmType.INTRUDER)
-        if al != TriggerAlarmType.INTRUDER:
-            return (al != TriggerAlarmType.NONE, zone, al)
-        return (False, -1, TriggerAlarmType.NONE)
-
     @override
     async def create_state_snapshot(self) -> VisonicCoordinatorData:
         """Fetch data from Visonic API with auto-reauth."""
@@ -429,13 +404,9 @@ class VisonicCloudConnection(VisonicConnection):
         # We're connected to the visonic cloud server and we are logged in
 
         timenow: datetime = get_utc_time()
-        # Attempt to get status using current session (is the panel responsive)
-        status: Status | None = await self.cloud_alarm.get_status()
+        panel_data = await self.cloud_alarm.get_panel_state()
 
-        if status is None:
-            status = Status({"connected": False})
-
-        if not status.connected:
+        if not panel_data.connected:
             # The panel is not responsive so try to reconnect
             #  This may be a temporary thing though so have timeouts
             timeout: float = min(60, 2.5 * self.settings.update_interval)
@@ -471,44 +442,13 @@ class VisonicCloudConnection(VisonicConnection):
         # The visonic cloud server is currently connected to the panel and the panel is responding
         self.last_connected_timestamp = timenow
         self.never_connected = False
-        panel_info: PanelInfo | None = await self.cloud_alarm.get_panel_info()
-        partitions = status.partitions
-        if panel_info is not None:
-            if panel_info.multi_partitions:
-                active_ids = {part.id for part in panel_info.partitions if part.active}
-                partitions = [part for part in partitions if part.id in active_ids]
-            else:
-                partitions = partitions[:1]
+        panelstate = self.process_devices(panel_data.devices)
         armcode = combine_partition_statuses(
-            self._determine_armcode(part) for part in partitions
+            self._determine_armcode(part) for part in panel_data.partitions
         )
-        devices: list[Device] = await self.cloud_alarm.get_devices()
-        # Process the panel device
-        panelstate = self.process_devices(devices)
-        panelstate.attributes["ready"] = bool(partitions) and all(
-            part.ready for part in partitions
+        panelstate.attributes["ready"] = bool(panel_data.partitions) and all(
+            part.ready for part in panel_data.partitions
         )
-        alarms: list[Alarm] = await self.cloud_alarm.get_alarms()
-        siren_active = False
-        for part in partitions:
-            for alarm in alarms:
-                if (
-                    panel_info is not None
-                    and panel_info.multi_partitions
-                    and part.id not in (alarm.partitions or [])
-                ):
-                    continue
-                if alarm.alarm_type is None:
-                    continue
-                alarm_type = MAP_ALARM_TYPE.get(alarm.alarm_type, TriggerAlarmType.NONE)
-                zone = alarm.zone if alarm.zone is not None else -1
-                if self._determine_siren_state(
-                    self._determine_armcode(part), alarm_type, zone
-                )[0]:
-                    siren_active = True
-                    break
-            if siren_active:
-                break
 
         new_data = VisonicCoordinatorData(
             connected=True,
@@ -519,12 +459,12 @@ class VisonicCloudConnection(VisonicConnection):
             disconnection_count=self.disconnection_counter,
             panelstate=panelstate,
             armcode=armcode,
-            siren_active=siren_active,
+            siren_active=panel_data.alarm_active,
         )
         self._last_snapshot = new_data
         return new_data
 
-    def process_devices(self, devices: list[Device]) -> PanelState:
+    def process_devices(self, devices: Sequence[Device]) -> PanelState:
         """Process the devices from the panel."""
         try:
             # Set default values, att
