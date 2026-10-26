@@ -15,7 +15,12 @@ from zentraly import (
 
 from homeassistant.components.zentraly.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICE_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_DEVICE_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
@@ -297,3 +302,25 @@ async def test_setup_and_reconnect_without_versions(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID).state == "heat"
     assert mock_device_info.await_count == 2
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_shutdown_disconnects(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Home Assistant shutdown awaits the library connection cleanup."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_api.async_disconnect.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_unload_removes_shutdown_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+) -> None:
+    """An unloaded entry does not disconnect again when Home Assistant stops."""
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_api.async_disconnect.assert_awaited_once_with()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_api.async_disconnect.assert_awaited_once_with()

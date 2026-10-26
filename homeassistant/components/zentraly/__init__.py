@@ -19,9 +19,10 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -74,7 +75,9 @@ async def _async_refresh_device_info(
     """Refresh firmware and hardware information for a Zentraly device."""
 
     if not device.connected:
-        return
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        )
 
     info = await device.async_get_device_info()
     firmware_version = info.firmware_version
@@ -132,8 +135,12 @@ def _register_device_info_refresh(
     async def async_refresh() -> None:
         """Refresh metadata, sharing a read already in progress."""
         nonlocal refresh_task
-        if not device.connected or not device.supports_device_info:
+        if not device.supports_device_info:
             return
+        if not device.connected:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            )
         if refresh_task is None or refresh_task.done():
             refresh_task = entry.async_create_background_task(
                 hass,
@@ -228,6 +235,14 @@ async def async_setup_entry(
     # Connection failures are retried inside the library's background task.
     await api.async_connect()
     entry.async_on_unload(api.async_disconnect)
+
+    async def async_shutdown(event: Event) -> None:
+        """Close library connection tasks before Home Assistant stops."""
+        await api.async_disconnect()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+    )
 
     refresh_device_info = _register_device_info_refresh(
         hass,

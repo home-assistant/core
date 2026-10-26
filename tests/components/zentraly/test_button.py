@@ -1,5 +1,7 @@
 """Tests for Zentraly device information refresh actions."""
 
+import asyncio
+from collections.abc import Callable
 from unittest.mock import AsyncMock
 
 import pytest
@@ -118,3 +120,49 @@ async def test_incomplete_refresh(
     )
     assert device.sw_version == firmware
     assert device.hw_version == hardware
+
+
+async def test_disconnect_while_press_waits(
+    hass: HomeAssistant,
+    mock_device_info: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """A press accepted before disconnection fails when its queued read starts."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read() -> ZentralyDeviceInfo:
+        started.set()
+        await release.wait()
+        return ZentralyDeviceInfo("1.1", "2.1")
+
+    mock_device_info.reset_mock()
+    mock_device_info.side_effect = read
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BUTTON, DOMAIN, f"{DEVICE_ID}_refresh_device_info"
+    )
+    first = hass.async_create_task(
+        hass.services.async_call(
+            BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    )
+    await started.wait()
+    second = hass.async_create_task(
+        hass.services.async_call(
+            BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    )
+    try:
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert not second.done()
+        connection_state(False)
+    finally:
+        release.set()
+        await first
+    with pytest.raises(HomeAssistantError) as error:
+        await second
+    assert error.value.translation_domain == DOMAIN
+    assert error.value.translation_key == "cannot_connect"
+    mock_device_info.assert_awaited_once_with()
