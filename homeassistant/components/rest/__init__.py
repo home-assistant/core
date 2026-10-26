@@ -105,7 +105,7 @@ async def _async_entry_updated(
 
 async def async_unload_entry(hass: HomeAssistant, entry: RestConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, ENTRY_PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, ENTRY_PLATFORMS)
 
 
 def convert_config_to_legacy_format(

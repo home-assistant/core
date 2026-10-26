@@ -86,7 +86,9 @@ async def async_setup_entry(
         if subentry.subentry_type != Platform.SENSOR:
             continue
 
-        config: ConfigType = {**subentry.data}
+        config: ConfigType = {
+            key: value for key, value in subentry.data.items() if value is not None
+        }
         if CONF_JSON_ATTRS in config:
             config[CONF_JSON_ATTRS] = [item["item"] for item in config[CONF_JSON_ATTRS]]
         config = probatio.Schema(SENSOR_SCHEMA, extra=probatio.REMOVE_EXTRA)(

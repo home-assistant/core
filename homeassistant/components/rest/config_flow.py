@@ -58,7 +58,6 @@ from .const import (
     DOCS_URL_TEMPLATE_DATA_PROCESSING,
     DOCS_URL_XML_CONVERT_SPEC,
     DOMAIN,
-    PLATFORMS,
 )
 from .coordinator import RestConfigEntry
 from .schema import (
@@ -158,7 +157,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         ) -> ConfigFlowResult:
             return await self.async_step_create_entry({CONF_PLATFORM: platform})
 
-        menu_options = [*PLATFORMS, NO_PLATFORM]
+        menu_options = [*SUBENTRY_CONFIG.keys(), NO_PLATFORM]
         for platform in menu_options:
             setattr(
                 self,
@@ -189,7 +188,7 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return dict.fromkeys(PLATFORMS, RestSubentryFlow)
+        return dict.fromkeys(SUBENTRY_CONFIG.keys(), RestSubentryFlow)
 
     @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
@@ -382,7 +381,11 @@ class RestSubentryFlow(ConfigSubentryFlow):
                 )
                 return self.async_create_entry(
                     title=title,
-                    data=user_input,
+                    data={
+                        key: value
+                        for key, value in user_input.items()
+                        if key != CONF_UNIT_OF_MEASUREMENT or value is not None
+                    },
                     unique_id=f"{self._subentry_type}_{self.flow_id}",
                 )
         return self.async_show_form(
