@@ -11,8 +11,8 @@ from fronius_modbus import (
     SunSpecError,
     datamanager_unit_id,
 )
+from fronius_solarapi import FroniusError, FroniusSolarApi
 from modbus_connection import ModbusError, ModbusTcpParams
-from pyfronius import Fronius, FroniusError
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> N
     """Set up fronius from a config entry."""
     _async_fix_modbus_sensor_unique_ids(hass, entry)
     host = entry.data[CONF_HOST]
-    fronius = Fronius(
+    fronius = FroniusSolarApi(
         async_get_clientsession(
             hass,
             # Fronius Gen24 firmware 1.35.4-1 redirects to HTTPS with self-signed
@@ -140,7 +140,7 @@ class FroniusSolarNet:
     """The FroniusSolarNet class routes received values to sensor entities."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fronius: Fronius
+        self, hass: HomeAssistant, entry: ConfigEntry, fronius: FroniusSolarApi
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
@@ -246,11 +246,9 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            # API v0 doesn't provide product_type
-            solar_net_device.model = _logger_info.get("product_type", {}).get(
-                "value", "Datalogger Web"
-            )
-            solar_net_device.sw_version = _logger_info["software_version"]["value"]
+            # API v0 doesn't provide a product id
+            solar_net_device.model = _logger_info.product_id or "Datalogger Web"
+            solar_net_device.sw_version = _logger_info.software_version
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create_from_info(
@@ -313,7 +311,7 @@ class FroniusSolarNet:
         inverter_infos: list[FroniusDeviceInfo] = []
 
         try:
-            _inverter_info = await self.fronius.inverter_info()
+            response = await self.fronius.inverter_info()
         except FroniusError as err:
             if self.config_entry.state is ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
@@ -329,16 +327,14 @@ class FroniusSolarNet:
                 },
             ) from err
 
-        for inverter in _inverter_info["inverters"]:
-            solar_net_id = inverter["device_id"]["value"]
-            unique_id = inverter["unique_id"]["value"]
+        for solar_net_id, inverter in response.data.items():
+            unique_id = inverter.unique_id
+            model = inverter.model
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
-                manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
-                model=inverter["device_type"].get(
-                    "model", inverter["device_type"]["value"]
-                ),
-                name=inverter.get("custom_name", {}).get("value"),
+                manufacturer=model.manufacturer if model else "Fronius",
+                model=model.model if model else str(inverter.device_type),
+                name=inverter.custom_name,
                 via_device_id=dr.async_get_device_id_by_identifier(
                     self.hass,
                     (DOMAIN, self.solar_net_device_id),

@@ -131,6 +131,27 @@
       "memory_used_percentage": {
         "name": "Memory used %"
       },
+      "network_download_rate": {
+        "name": "Network download rate"
+      },
+      "network_interface_download_rate": {
+        "name": "{interface} download rate"
+      },
+      "network_interface_link_rate": {
+        "name": "{interface} link rate"
+      },
+      "network_interface_signal_strength": {
+        "name": "{interface} signal strength"
+      },
+      "network_interface_ssid": {
+        "name": "{interface} SSID"
+      },
+      "network_interface_upload_rate": {
+        "name": "{interface} upload rate"
+      },
+      "network_upload_rate": {
+        "name": "Network upload rate"
+      },
       "os": {
         "name": "Operating system"
       },

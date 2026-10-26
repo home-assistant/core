@@ -8,6 +8,7 @@ from typing import Final, cast, override
 from systembridgeconnector.models.modules.cpu import PerCPU
 from systembridgeconnector.models.modules.displays import Display
 from systembridgeconnector.models.modules.gpus import GPU
+from systembridgeconnector.models.modules.networks import Network, NetworkIO
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +19,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_PORT,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfInformation,
@@ -26,7 +29,7 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -239,6 +242,165 @@ def partition_usage(
     return None
 
 
+def network_io(data: SystemBridgeData) -> NetworkIO | None:
+    """Return the I/O for all network interfaces combined."""
+    if data.networks is not None:
+        return data.networks.io
+    return None
+
+
+def network_download_rate(data: SystemBridgeData) -> float | None:
+    """Return the download rate for all network interfaces combined."""
+    if (io := network_io(data)) is not None:
+        return io.bytes_recv_rate
+    return None
+
+
+def network_upload_rate(data: SystemBridgeData) -> float | None:
+    """Return the upload rate for all network interfaces combined."""
+    if (io := network_io(data)) is not None:
+        return io.bytes_sent_rate
+    return None
+
+
+def network_interfaces(data: SystemBridgeData) -> list[Network]:
+    """Return the network interfaces, leaving out loopback interfaces."""
+    if data.networks is None or data.networks.networks is None:
+        return []
+    return [
+        interface
+        for interface in data.networks.networks
+        if interface.name is not None
+        and not (
+            interface.stats is not None
+            and interface.stats.flags is not None
+            and "loopback" in interface.stats.flags
+        )
+    ]
+
+
+def with_network_interface(func) -> Callable:
+    """Wrap a function to ensure a network interface is available."""
+
+    def wrapper(data: SystemBridgeData, name: str) -> StateType:
+        """Wrap a function to ensure a network interface is available."""
+        for interface in network_interfaces(data):
+            if interface.name == name:
+                return func(interface)
+        return None
+
+    return wrapper
+
+
+@with_network_interface
+def network_interface_download_rate(interface: Network) -> float | None:
+    """Return the network interface download rate."""
+    if interface.io is not None:
+        return interface.io.bytes_recv_rate
+    return None
+
+
+@with_network_interface
+def network_interface_upload_rate(interface: Network) -> float | None:
+    """Return the network interface upload rate."""
+    if interface.io is not None:
+        return interface.io.bytes_sent_rate
+    return None
+
+
+@with_network_interface
+def network_interface_ssid(interface: Network) -> str | None:
+    """Return the SSID the network interface is connected to."""
+    if interface.wifi is not None:
+        return interface.wifi.ssid
+    return None
+
+
+@with_network_interface
+def network_interface_signal_strength(interface: Network) -> int | None:
+    """Return the network interface Wi-Fi signal strength."""
+    if interface.wifi is not None:
+        return interface.wifi.signal
+    return None
+
+
+@with_network_interface
+def network_interface_link_rate(interface: Network) -> float | None:
+    """Return the network interface Wi-Fi link rate."""
+    if interface.wifi is not None:
+        return interface.wifi.link_rate
+    return None
+
+
+def network_interface_sensor_types(
+    interface: Network,
+) -> list[SystemBridgeSensorEntityDescription]:
+    """Return the sensor descriptions for a network interface."""
+    name = cast(str, interface.name)
+    descriptions = [
+        SystemBridgeSensorEntityDescription(
+            key=f"network_{name}_download_rate",
+            translation_key="network_interface_download_rate",
+            translation_placeholders={"interface": name},
+            entity_registry_enabled_default=False,
+            device_class=SensorDeviceClass.DATA_RATE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+            suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+            suggested_display_precision=2,
+            value=lambda data, k=name: network_interface_download_rate(data, k),
+        ),
+        SystemBridgeSensorEntityDescription(
+            key=f"network_{name}_upload_rate",
+            translation_key="network_interface_upload_rate",
+            translation_placeholders={"interface": name},
+            entity_registry_enabled_default=False,
+            device_class=SensorDeviceClass.DATA_RATE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+            suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+            suggested_display_precision=2,
+            value=lambda data, k=name: network_interface_upload_rate(data, k),
+        ),
+    ]
+    if interface.wifi is not None:
+        descriptions.extend(
+            [
+                SystemBridgeSensorEntityDescription(
+                    key=f"network_{name}_ssid",
+                    translation_key="network_interface_ssid",
+                    translation_placeholders={"interface": name},
+                    value=lambda data, k=name: network_interface_ssid(data, k),
+                ),
+                SystemBridgeSensorEntityDescription(
+                    key=f"network_{name}_signal_strength",
+                    translation_key="network_interface_signal_strength",
+                    translation_placeholders={"interface": name},
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+                    value=lambda data, k=name: network_interface_signal_strength(
+                        data, k
+                    ),
+                ),
+                SystemBridgeSensorEntityDescription(
+                    key=f"network_{name}_link_rate",
+                    translation_key="network_interface_link_rate",
+                    translation_placeholders={"interface": name},
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
+                    device_class=SensorDeviceClass.DATA_RATE,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+                    suggested_display_precision=0,
+                    value=lambda data, k=name: network_interface_link_rate(data, k),
+                ),
+            ]
+        )
+    return descriptions
+
+
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="boot_time",
@@ -316,6 +478,26 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         value=memory_used,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="network_download_rate",
+        translation_key="network_download_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=2,
+        value=network_download_rate,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="network_upload_rate",
+        translation_key="network_upload_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=2,
+        value=network_upload_rate,
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
@@ -690,6 +872,32 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
+
+    known_network_sensors: set[str] = set()
+
+    @callback
+    def _async_add_network_interface_sensors() -> None:
+        """Add network interface sensors not seen before."""
+        new_descriptions = [
+            description
+            for interface in network_interfaces(coordinator.data)
+            for description in network_interface_sensor_types(interface)
+            if description.key not in known_network_sensors
+        ]
+        if not new_descriptions:
+            return
+        known_network_sensors.update(
+            description.key for description in new_descriptions
+        )
+        async_add_entities(
+            SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
+            for description in new_descriptions
+        )
+
+    _async_add_network_interface_sensors()
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_network_interface_sensors)
+    )
 
 
 class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
