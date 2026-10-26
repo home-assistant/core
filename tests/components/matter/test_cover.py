@@ -305,8 +305,18 @@ async def test_cover_wago_blind_type(
     )
     assert "current_tilt_position" not in state.attributes
 
-    set_node_attribute(matter_node, 1, 258, 355729413, 1)
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=clusters.WindowCovering.Attributes.WagoBlindType.attribute_id,
+        value=1,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["device_class"] == "blind"
@@ -316,11 +326,25 @@ async def test_cover_wago_blind_type(
     )
     assert state.attributes["current_tilt_position"] == 100
 
-    set_node_attribute(matter_node, 1, 258, 355729413, 0)
-    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=clusters.WindowCovering.Attributes.WagoBlindType.attribute_id,
+        value=0,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["device_class"] == "shutter"
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        == 0
+    )
     assert "current_tilt_position" not in state.attributes
 
 
