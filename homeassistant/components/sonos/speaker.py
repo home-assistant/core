@@ -551,9 +551,9 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
-        av_transport_uri = event.variables.get("av_transport_uri", "")
+        av_transport_uri = event.variables.get("av_transport_uri")
         # Only included when it changes, which can be in an event skipped below
-        if "av_transport_uri" in event.variables:
+        if av_transport_uri is not None:
             self._av_transport_uri = av_transport_uri
             self._av_transport_uri_set = True
 
@@ -563,8 +563,10 @@ class SonosSpeaker:
         # new coordinator will use its media. The regrouping process will
         # be completed during the next ZoneGroupState update.
         current_track_uri = event.variables.get("current_track_uri", "")
-        if av_transport_uri == current_track_uri and av_transport_uri.startswith(
-            "x-rincon:"
+        if (
+            av_transport_uri is not None
+            and av_transport_uri == current_track_uri
+            and av_transport_uri.startswith("x-rincon:")
         ):
             new_coordinator_uid = av_transport_uri.split(":")[-1]
             if new_coordinator_speaker := self.data.discovered.get(new_coordinator_uid):
