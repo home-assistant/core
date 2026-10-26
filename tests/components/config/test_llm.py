@@ -23,6 +23,7 @@ from homeassistant.components.config.llm import (
     ConfigureFlowTool,
     GetConfigEntriesTool,
     ReloadConfigEntryTool,
+    SearchIntegrationsTool,
     StartFlowTool,
     async_get_tools,
 )
@@ -63,6 +64,7 @@ async def test_async_get_tools(
     assert [tool.name for tool in ha_tools.tools] == [
         "config__get_config_entries",
         "config__reload_config_entry",
+        "config__search_integrations",
         "config__start_flow",
         "config__configure_flow",
     ]
@@ -74,6 +76,7 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
     tools = [
         GetConfigEntriesTool(),
         ReloadConfigEntryTool(),
+        SearchIntegrationsTool(),
         StartFlowTool(),
         ConfigureFlowTool(),
     ]
@@ -112,6 +115,14 @@ async def test_call_through_api(
     assert reload_tool.integration == config_component.DOMAIN
     assert reload_tool.annotations == llm.ToolAnnotations(
         read_only=False, destructive=False, idempotent=True, open_world=False
+    )
+
+    search_tool = next(
+        tool for tool in api.tools if tool.name == "config__search_integrations"
+    )
+    assert search_tool.integration == config_component.DOMAIN
+    assert search_tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
     )
 
     start_tool = next(tool for tool in api.tools if tool.name == "config__start_flow")
@@ -646,6 +657,101 @@ async def test_reload_config_entry_invalid_args(
 ) -> None:
     """Test that invalid entry_id arguments raise probatio.Invalid."""
     tool = ReloadConfigEntryTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected_prefix", "expected_domains"),
+    [
+        pytest.param(
+            {"query": "random", "type": "helper"},
+            [{"domain": "random", "name": "Random"}],
+            {"random"},
+            id="helper_exact",
+        ),
+        pytest.param(
+            {"query": "sun", "type": "integration"},
+            [{"domain": "sun", "name": "Sun"}],
+            {"sun"},
+            id="integration_exact",
+        ),
+        pytest.param(
+            {"query": "Times of the Day"},
+            [{"domain": "tod", "name": "Times of the Day Sensor"}],
+            {"tod"},
+            id="translated_title_match",
+        ),
+        pytest.param(
+            {"query": "yale"},
+            [],
+            {"august", "yalexs_ble"},
+            id="brand_exact_match",
+        ),
+        pytest.param(
+            {"query": "yal"},
+            [],
+            {"august", "yalexs_ble"},
+            id="brand_substring_match",
+        ),
+        pytest.param(
+            {"query": "actiontec"},
+            [],
+            set(),
+            id="yaml_only_excluded",
+        ),
+        pytest.param(
+            {"query": "bega"},
+            [],
+            set(),
+            id="iot_standard_only_excluded",
+        ),
+        pytest.param(
+            {"query": "homeassistant_yellow"},
+            [],
+            set(),
+            id="hardware_excluded",
+        ),
+    ],
+)
+async def test_search_integrations(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    tool_args: dict[str, Any],
+    expected_prefix: list[dict[str, Any]],
+    expected_domains: set[str],
+) -> None:
+    """Test searching available config-flow integrations and helpers."""
+    tool = SearchIntegrationsTool()
+    res = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, tool_args),
+        llm_context,
+    )
+    assert res.error is False
+    assert isinstance(items := res.data["result"], list)
+    assert items[: len(expected_prefix)] == expected_prefix
+    domains = {item["domain"] for item in items if isinstance(item, dict)}
+    assert expected_domains <= domains
+    assert bool(domains) is bool(expected_domains)
+
+
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({}, id="missing_query"),
+        pytest.param({"query": ""}, id="empty_query"),
+        pytest.param({"query": "   "}, id="whitespace_query"),
+        pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
+    ],
+)
+async def test_search_integrations_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test invalid arguments are rejected by SearchIntegrationsTool."""
+    tool = SearchIntegrationsTool()
     with pytest.raises(probatio.Invalid):
         await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
 

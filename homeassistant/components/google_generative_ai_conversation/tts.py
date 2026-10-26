@@ -29,10 +29,14 @@ from .entity import (
     GoogleGenerativeAILLMBaseEntity,
     supports_custom_sampling,
     supports_speech_metadata,
+    supports_voice_library,
 )
 from .helpers import convert_to_wav
 
 ATTR_STYLE = "style"
+
+VOICES_PAGE_SIZE = 1000
+VOICES_MAX_PAGES = 10
 
 
 async def async_setup_entry(
@@ -249,6 +253,59 @@ class GoogleGenerativeAITextToSpeechEntity(
     def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
+        self._library_voices: dict[str, list[Voice]] = {}
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Load the voice library in the background."""
+        await super().async_added_to_hass()
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
+        if supports_voice_library(model):
+            self.entry.async_create_background_task(
+                self.hass, self._async_load_voice_library(), "google_ai_tts_voices"
+            )
+
+    async def _async_load_voice_library(self) -> None:
+        """Load the voices that are not part of the default prebuilt voices."""
+        try:
+            # The sync client blocks and lazily imports SDK modules, so keep it off the loop.
+            library_voices = await self.hass.async_add_executor_job(
+                self._fetch_voice_library
+            )
+        except Exception as err:  # noqa: BLE001
+            # The voices API raises SDK-internal errors with no public base class.
+            LOGGER.warning("Could not load the Google AI voice library: %s", err)
+            return
+        self._library_voices = library_voices
+
+    def _fetch_voice_library(self) -> dict[str, list[Voice]]:
+        """Fetch the voice library grouped by language."""
+        known_voice_ids = {voice.voice_id for voice in self._supported_voices}
+        library_voices: dict[str, list[Voice]] = {}
+        page_token = None
+        for _ in range(VOICES_MAX_PAGES):
+            response = self._genai_client.voices.list(
+                page_size=VOICES_PAGE_SIZE, page_token=page_token, type_=["prebuilt"]
+            )
+            for voice in response.voices or []:
+                if not voice.id or not voice.language_code:
+                    continue
+                if voice.id in known_voice_ids:
+                    continue
+                name = voice.display_name or voice.id
+                if voice.gender:
+                    name = f"{name} ({voice.gender})"
+                library_voices.setdefault(voice.language_code, []).append(
+                    Voice(voice.id, name)
+                )
+            if not (page_token := response.next_page_token):
+                break
+        else:
+            LOGGER.warning(
+                "Stopped loading the Google AI voice library after %s pages",
+                VOICES_MAX_PAGES,
+            )
+        return library_voices
 
     @cached_property
     @override
@@ -263,7 +320,7 @@ class GoogleGenerativeAITextToSpeechEntity(
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
-        return self._supported_voices
+        return [*self._supported_voices, *self._library_voices.get(language, [])]
 
     @cached_property
     @override

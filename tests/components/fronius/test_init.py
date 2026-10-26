@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyfronius import FroniusError
+from fronius_solarapi import FroniusError
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -67,7 +67,7 @@ async def test_inverter_error(
     """Test setup when inverter_info reports an error."""
     mock_responses(aioclient_mock)
     with patch(
-        "pyfronius.Fronius.inverter_info",
+        "fronius_solarapi.FroniusSolarApi.inverter_info",
         side_effect=FroniusError,
     ):
         config_entry = await setup_fronius_integration(hass)
@@ -128,7 +128,7 @@ async def test_inverter_rescan_interruption(
     )
 
     with patch(
-        "pyfronius.Fronius.inverter_info",
+        "fronius_solarapi.FroniusSolarApi.inverter_info",
         side_effect=FroniusError,
     ):
         freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))

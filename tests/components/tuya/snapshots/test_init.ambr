@@ -136,7 +136,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '18yvbamhgkjc')]>,
   })
 # ---
 # name: test_device_registry[18yvbamhgkjc_channel_2]
@@ -156,7 +156,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '18yvbamhgkjc')]>,
   })
 # ---
 # name: test_device_registry[18yvbamhgkjc_channel_3]
@@ -176,7 +176,7 @@
     }),
     'name': 'Channel 3',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '18yvbamhgkjc')]>,
   })
 # ---
 # name: test_device_registry[18yvbamhgkjc_channel_4]
@@ -196,7 +196,7 @@
     }),
     'name': 'Channel 4',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '18yvbamhgkjc')]>,
   })
 # ---
 # name: test_device_registry[1nw1rysgyj8th1l5qbnxw]
@@ -546,7 +546,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '49m7h9lh3t8pq6ftzc')]>,
   })
 # ---
 # name: test_device_registry[49m7h9lh3t8pq6ftzc_channel_2]
@@ -566,7 +566,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '49m7h9lh3t8pq6ftzc')]>,
   })
 # ---
 # name: test_device_registry[4alb3gcicwdxrs3zgj]
@@ -796,7 +796,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp')]>,
   })
 # ---
 # name: test_device_registry[51tdkcsamisw9ukycp_channel_2]
@@ -816,7 +816,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', '51tdkcsamisw9ukycp')]>,
   })
 # ---
 # name: test_device_registry[53apxfah2qoxb1cgkw]
@@ -3026,7 +3026,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_2]
@@ -3046,7 +3046,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_3]
@@ -3066,7 +3066,7 @@
     }),
     'name': 'Channel 3',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_4]
@@ -3086,7 +3086,7 @@
     }),
     'name': 'Channel 4',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_5]
@@ -3106,7 +3106,7 @@
     }),
     'name': 'Channel 5',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_6]
@@ -3126,7 +3126,7 @@
     }),
     'name': 'Channel 6',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_7]
@@ -3146,7 +3146,7 @@
     }),
     'name': 'Channel 7',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cijerqyssiwrf7deqzkfs_channel_8]
@@ -3166,7 +3166,7 @@
     }),
     'name': 'Channel 8',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'cijerqyssiwrf7deqzkfs')]>,
   })
 # ---
 # name: test_device_registry[cju47ovcbeuapei2zc]
@@ -3486,7 +3486,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'dj8foneugkjc')]>,
   })
 # ---
 # name: test_device_registry[dj8foneugkjc_channel_2]
@@ -3506,7 +3506,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'dj8foneugkjc')]>,
   })
 # ---
 # name: test_device_registry[dke76hazlc]
@@ -4276,7 +4276,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
   })
 # ---
 # name: test_device_registry[g7af6lrt4miugbstcp_channel_2]
@@ -4296,7 +4296,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
   })
 # ---
 # name: test_device_registry[g7af6lrt4miugbstcp_channel_3]
@@ -4316,7 +4316,7 @@
     }),
     'name': 'Channel 3',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'g7af6lrt4miugbstcp')]>,
   })
 # ---
 # name: test_device_registry[g9h9sblxpb5wdwzkqkynw]
@@ -4726,7 +4726,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp')]>,
   })
 # ---
 # name: test_device_registry[gt1q9tldv1opojrtcp_channel_2]
@@ -4746,7 +4746,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'gt1q9tldv1opojrtcp')]>,
   })
 # ---
 # name: test_device_registry[gtcinipmdp5rgx3nlc]
@@ -7256,7 +7256,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp')]>,
   })
 # ---
 # name: test_device_registry[pfhwb1v3i7cifa2tcp_channel_2]
@@ -7276,7 +7276,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'pfhwb1v3i7cifa2tcp')]>,
   })
 # ---
 # name: test_device_registry[ppgdpsq1xaxlyzryjk]
@@ -7476,7 +7476,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'q62sg0p3s52thp6zzc')]>,
   })
 # ---
 # name: test_device_registry[q62sg0p3s52thp6zzc_channel_2]
@@ -7496,7 +7496,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'q62sg0p3s52thp6zzc')]>,
   })
 # ---
 # name: test_device_registry[q8dncqpgin4yympisc]
@@ -7696,7 +7696,7 @@
     }),
     'name': 'Channel 10',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_11]
@@ -7716,7 +7716,7 @@
     }),
     'name': 'Channel 11',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_12]
@@ -7736,7 +7736,7 @@
     }),
     'name': 'Channel 12',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_13]
@@ -7756,7 +7756,7 @@
     }),
     'name': 'Channel 13',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_14]
@@ -7776,7 +7776,7 @@
     }),
     'name': 'Channel 14',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_15]
@@ -7796,7 +7796,7 @@
     }),
     'name': 'Channel 15',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_16]
@@ -7816,7 +7816,7 @@
     }),
     'name': 'Channel 16',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_17]
@@ -7836,7 +7836,7 @@
     }),
     'name': 'Channel 17',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_18]
@@ -7856,7 +7856,7 @@
     }),
     'name': 'Channel 18',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_19]
@@ -7876,7 +7876,7 @@
     }),
     'name': 'Channel 19',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_1]
@@ -7896,7 +7896,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_20]
@@ -7916,7 +7916,7 @@
     }),
     'name': 'Channel 20',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_21]
@@ -7936,7 +7936,7 @@
     }),
     'name': 'Channel 21',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_22]
@@ -7956,7 +7956,7 @@
     }),
     'name': 'Channel 22',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_7]
@@ -7976,7 +7976,7 @@
     }),
     'name': 'Channel 7',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_8]
@@ -7996,7 +7996,7 @@
     }),
     'name': 'Channel 8',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qpic3qqzgk_channel_9]
@@ -8016,7 +8016,7 @@
     }),
     'name': 'Channel 9',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'qpic3qqzgk')]>,
   })
 # ---
 # name: test_device_registry[qt0o5jlatiqf2rscps]
@@ -9086,7 +9086,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'tcdk0skzcpisexj2zc')]>,
   })
 # ---
 # name: test_device_registry[tcdk0skzcpisexj2zc_channel_2]
@@ -9106,7 +9106,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'tcdk0skzcpisexj2zc')]>,
   })
 # ---
 # name: test_device_registry[thdfxdqqlc]
@@ -9876,7 +9876,7 @@
     }),
     'name': 'Channel 10',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_11]
@@ -9896,7 +9896,7 @@
     }),
     'name': 'Channel 11',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_12]
@@ -9916,7 +9916,7 @@
     }),
     'name': 'Channel 12',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_13]
@@ -9936,7 +9936,7 @@
     }),
     'name': 'Channel 13',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_14]
@@ -9956,7 +9956,7 @@
     }),
     'name': 'Channel 14',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_15]
@@ -9976,7 +9976,7 @@
     }),
     'name': 'Channel 15',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_16]
@@ -9996,7 +9996,7 @@
     }),
     'name': 'Channel 16',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_17]
@@ -10016,7 +10016,7 @@
     }),
     'name': 'Channel 17',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_18]
@@ -10036,7 +10036,7 @@
     }),
     'name': 'Channel 18',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_19]
@@ -10056,7 +10056,7 @@
     }),
     'name': 'Channel 19',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_1]
@@ -10076,7 +10076,7 @@
     }),
     'name': 'Channel 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_20]
@@ -10096,7 +10096,7 @@
     }),
     'name': 'Channel 20',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_2]
@@ -10116,7 +10116,7 @@
     }),
     'name': 'Channel 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_3]
@@ -10136,7 +10136,7 @@
     }),
     'name': 'Channel 3',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_4]
@@ -10156,7 +10156,7 @@
     }),
     'name': 'Channel 4',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_5]
@@ -10176,7 +10176,7 @@
     }),
     'name': 'Channel 5',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_6]
@@ -10196,7 +10196,7 @@
     }),
     'name': 'Channel 6',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_7]
@@ -10216,7 +10216,7 @@
     }),
     'name': 'Channel 7',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_8]
@@ -10236,7 +10236,7 @@
     }),
     'name': 'Channel 8',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[wrr5fva8vgffwlxqbdnz_channel_9]
@@ -10256,7 +10256,7 @@
     }),
     'name': 'Channel 9',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'wrr5fva8vgffwlxqbdnz')]>,
   })
 # ---
 # name: test_device_registry[x4nogasbi8ggpb3lcd]
