@@ -611,25 +611,53 @@ async def test_room_thermostat2_display_numbers_set_value(
 
 
 @pytest.mark.parametrize(
-    "device_buckets",
+    ("device_buckets", "brightness_present", "on_time_present"),
     [
-        {"thermostats": [thermostat_gen2_device(supports_display_configuration=False)]},
-        {
-            "thermostats": [
-                thermostat_gen2_device(
-                    supports_display_configuration=True, display_brightness=40
-                )
-            ]
-        },
+        (
+            {
+                "thermostats": [
+                    thermostat_gen2_device(supports_display_configuration=False)
+                ]
+            },
+            False,
+            False,
+        ),
+        (
+            {
+                "thermostats": [
+                    thermostat_gen2_device(
+                        supports_display_configuration=True, display_brightness=40
+                    )
+                ]
+            },
+            True,
+            False,
+        ),
+        (
+            {
+                "thermostats": [
+                    thermostat_gen2_device(
+                        supports_display_configuration=True, display_on_time=20
+                    )
+                ]
+            },
+            False,
+            True,
+        ),
     ],
-    indirect=True,
+    indirect=["device_buckets"],
 )
 @pytest.mark.usefixtures("mock_session")
-async def test_thermostat_gen2_display_numbers_unsupported(
+async def test_thermostat_gen2_display_numbers_partial_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    brightness_present: bool,
+    on_time_present: bool,
 ) -> None:
-    """No on-time entity without a value, and none at all without support."""
+    """Each display number exists only when its own value is available."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(DISPLAY_ON_TIME_ENTITY_ID) is None
+    assert (hass.states.get(DISPLAY_BRIGHTNESS_ENTITY_ID) is not None) is (
+        brightness_present
+    )
+    assert (hass.states.get(DISPLAY_ON_TIME_ENTITY_ID) is not None) is on_time_present
