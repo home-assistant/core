@@ -9,7 +9,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -18,6 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _DEPRECATED_ATTR_MULTI_PRESS_COUNT as _DEPRECATED_ATTR_MULTI_PRESS_COUNT,
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
     ATTR_PRESS_COUNT,
@@ -36,10 +36,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
-
-_DEPRECATED_ATTR_MULTI_PRESS_COUNT = DeprecatedConstant(
-    "multi_press_count", "ATTR_PRESS_COUNT", "2027.5.0"
-)
 
 
 __all__ = [

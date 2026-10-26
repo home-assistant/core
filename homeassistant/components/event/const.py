@@ -50,8 +50,10 @@ class ButtonEventType(
 ):
     """Standard event types for button device class.
 
-    None of these are mandatory: integrations map only the
-    interactions their hardware can actually produce.
+    PRESS_START and PRESS_END are physical: the edges of the button. The other
+    types are gestures: what the device concluded. Declare a type in
+    event_types only if its meaning holds for every event sent under that
+    name; none of the types are mandatory.
     """
 
     PRESS_START = "press_start"
