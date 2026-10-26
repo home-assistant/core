@@ -118,7 +118,7 @@ async def test_turning_a_limit_on_asserts_its_setpoint(
     impose one of its own. Holding it at 100% is how that gets overridden.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     assert controls.power_limit == 100.0
