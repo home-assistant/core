@@ -33,11 +33,9 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
-    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    label_registry as lr,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -619,51 +617,6 @@ async def test_zha_group_device_kept_when_group_shrinks(
     assert group_proxy.group.group_entities
     assert group_proxy.device_id == device_id
     assert er.async_entries_for_device(entity_registry, device_id)
-
-
-async def test_zha_group_device_id_reuse_starts_clean(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[Any, Any, None]],
-    zigpy_app_controller_with_group: ControllerApplication,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test a new group reusing a removed group's id starts with a clean device."""
-    await setup_zha()
-
-    app_controller = zigpy_app_controller_with_group
-    gateway = get_zha_gateway(hass)
-    gateway_proxy = get_zha_gateway_proxy(hass)
-    device_id = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID].device_id
-    assert device_id is not None
-    device_registry.async_update_device(
-        device_id,
-        area_id=area_registry.async_create("Kitchen").id,
-        disabled_by=dr.DeviceEntryDisabler.USER,
-        labels={label_registry.async_create("Lights").label_id},
-        name_by_user="Old group",
-    )
-    members = list(app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID].values())
-
-    await gateway.async_remove_zigpy_group(FIXTURE_GRP_WITH_ENTITIES_ID)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # ZHA hands out the freed group id to the next new group
-    group = app_controller.groups.add_group(FIXTURE_GRP_WITH_ENTITIES_ID, "New group")
-    for member in members:
-        group.add_member(member)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    new_device_id = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID].device_id
-    assert new_device_id is not None
-    device = device_registry.async_get(new_device_id)
-    assert device is not None
-    assert device.name == "New group"
-    assert device.name_by_user is None
-    assert device.area_id is None
-    assert device.labels == set()
-    assert device.disabled_by is None
 
 
 def _remove_group_while_stopped(app_controller: ControllerApplication) -> None:

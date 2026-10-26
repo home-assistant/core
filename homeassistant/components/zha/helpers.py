@@ -319,27 +319,6 @@ def _group_entity_entries(
     ]
 
 
-def _remove_deleted_group_device(
-    device_registry: dr.DeviceRegistry, device_id: str
-) -> None:
-    """Remove the device of a group that no longer exists.
-
-    ZHA reuses freed group ids and the device registry restores a removed
-    device's user customizations when its identifiers come back, so they are
-    reset first to keep an unrelated new group from inheriting them. The
-    group's own entities must be removed before: re-enabling them would make
-    Home Assistant reload the ZHA config entry.
-    """
-    device_registry.async_update_device(
-        device_id,
-        area_id=None,
-        disabled_by=None,
-        labels=set(),
-        name_by_user=None,
-    )
-    device_registry.async_remove_device(device_id)
-
-
 class GroupEntityReference(NamedTuple):
     """Reference to a group entity."""
 
@@ -1220,8 +1199,10 @@ class ZHAGatewayProxy(EventBase):
             )
             entity_registry.async_remove(entry.entity_id)
 
+        # A new group that gets this group id again also gets the device and its
+        # entities back, with their customizations, from the deleted entries
         if device_id is not None and device_registry.async_get(device_id) is not None:
-            _remove_deleted_group_device(device_registry, device_id)
+            device_registry.async_remove_device(device_id)
         zha_group_proxy.device_id = None
 
     def _cleanup_orphaned_group_devices(self) -> None:
@@ -1239,7 +1220,7 @@ class ZHAGatewayProxy(EventBase):
                 entity_registry, device.id, config_entry_id, group_id
             ):
                 entity_registry.async_remove(entry.entity_id)
-            _remove_deleted_group_device(device_registry, device.id)
+            device_registry.async_remove_device(device.id)
 
     def _cleanup_stale_legacy_group_entities(self) -> None:
         """Remove legacy coordinator-bound group entities that no longer exist.
