@@ -186,7 +186,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, self._expire_after, self._value_is_expired
             )
 
-        payload = self._value_template(msg.payload)
+        payload = self._value_template(msg)
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 (

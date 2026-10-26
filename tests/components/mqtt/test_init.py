@@ -34,7 +34,7 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant import core as ha
-from homeassistant.components import mqtt
+from homeassistant.components import binary_sensor, mqtt, sensor
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import (
     ATTR_EVALUATE_PAYLOAD,
@@ -79,6 +79,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
+from homeassistant.util.json import json_loads
 
 from tests.components.sensor.common import MockSensor
 
@@ -200,6 +201,118 @@ async def test_command_template_fails(hass: HomeAssistant) -> None:
     assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
 
 
+def _receive_message(payload: str) -> ReceiveMessage:
+    """Return a received message with the payload."""
+    return ReceiveMessage("test-topic", payload, 0, False, "test-topic", 0.0)
+
+
+SHARED_TOPIC = "test-topic/json"
+
+
+def _shared_topic_sensor(index: int) -> dict[str, Any]:
+    """Return a sensor with value and availability template on SHARED_TOPIC."""
+    return {
+        "name": f"sensor{index}",
+        "state_topic": SHARED_TOPIC,
+        "value_template": f"{{{{ value_json.v{index} }}}}",
+        "availability_topic": SHARED_TOPIC,
+        "availability_template": "{{ 'online' if value_json is defined else 'offline' }}",
+    }
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: [_shared_topic_sensor(index) for index in range(5)],
+                binary_sensor.DOMAIN: [
+                    {
+                        "name": "flag",
+                        "state_topic": SHARED_TOPIC,
+                        "value_template": "{{ 'ON' if value_json.v0 else 'OFF' }}",
+                    }
+                ],
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("payload", "sensor_states", "flag_state"),
+    [
+        pytest.param(
+            '{"v0": 1, "v1": 2, "v2": 3, "v3": 4, "v4": 5}',
+            ["1", "2", "3", "4", "5"],
+            "on",
+            id="json",
+        ),
+        pytest.param("null", [""] * 5, "off", id="null"),
+        pytest.param("not json", ["unavailable"] * 5, "unknown", id="not_json"),
+    ],
+)
+async def test_subscribers_share_one_payload_parse(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload: str,
+    sensor_states: list[str],
+    flag_state: str,
+) -> None:
+    """One message to six entities with eleven templates is parsed once."""
+    await mqtt_mock_entry()
+    with (
+        patch(
+            "homeassistant.components.mqtt.models.json_loads", wraps=json_loads
+        ) as models_json_loads,
+        patch(
+            "homeassistant.helpers.template.json_loads", wraps=json_loads
+        ) as template_json_loads,
+    ):
+        async_fire_mqtt_message(hass, SHARED_TOPIC, payload)
+        await hass.async_block_till_done()
+        assert models_json_loads.call_count == 1
+        template_json_loads.assert_not_called()
+
+        # Debug info keeps the message, but not its parsed payload
+        stored = hass.data[mqtt.DATA_MQTT].debug_info_entities["sensor.sensor0"][
+            "subscriptions"
+        ][SHARED_TOPIC]["messages"][-1]
+        stored.payload_json  # noqa: B018
+        assert models_json_loads.call_count == 2
+
+    assert [
+        hass.states.get(f"sensor.sensor{index}").state for index in range(5)
+    ] == sensor_states
+    assert hass.states.get("binary_sensor.flag").state == flag_state
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "static",
+                    "state_topic": SHARED_TOPIC,
+                    "value_template": "fixed",
+                }
+            }
+        }
+    ],
+)
+async def test_static_value_template_does_not_parse(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """A value template without template code does not parse the payload."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.models.json_loads", wraps=json_loads
+    ) as models_json_loads:
+        async_fire_mqtt_message(hass, SHARED_TOPIC, '{"v": 1}')
+        await hass.async_block_till_done()
+    models_json_loads.assert_not_called()
+    assert hass.states.get("sensor.static").state == "fixed"
+
+
 async def test_value_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template."""
 
@@ -208,14 +321,17 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     # test rendering value
     tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl)
-    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+    assert (
+        val_tpl.async_render_with_possible_json_value(_receive_message('{"id": 4321}'))
+        == "4321"
+    )
 
     # test variables at rendering
     tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, config_attributes={"code": 1234})
     assert (
         val_tpl.async_render_with_possible_json_value(
-            '{"id": 4321}', variables=variables
+            _receive_message('{"id": 4321}'), variables=variables
         )
         == "4321 beer 1234"
     )
@@ -224,7 +340,9 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     tpl = template.Template("{{ value_json.id | as_datetime }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl)
     assert (
-        val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
+        val_tpl.async_render_with_possible_json_value(
+            _receive_message('{"otherid": 4321}'), "my default"
+        )
         == "my default"
     )
 
@@ -235,12 +353,18 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     entity.entity_id = "select.test"
     tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
-    assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+    assert (
+        val_tpl.async_render_with_possible_json_value(_receive_message('{"id": 4321}'))
+        == "4321"
+    )
 
     # test this object in a template
     tpl2 = template.Template("{{ this.entity_id }}", hass=hass)
     val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
-    assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
+    assert (
+        val_tpl2.async_render_with_possible_json_value(_receive_message("bla"))
+        == "select.test"
+    )
 
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
@@ -248,13 +372,13 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
         template_state_calls.return_value.entity_id = "select.test"
         tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
-        val_tpl3.async_render_with_possible_json_value("call1")
-        val_tpl3.async_render_with_possible_json_value("call2")
+        val_tpl3.async_render_with_possible_json_value(_receive_message("call1"))
+        val_tpl3.async_render_with_possible_json_value(_receive_message("call2"))
         assert template_state_calls.call_count == 1
 
         # The cached this follows an entity_id change
         entity.entity_id = "select.renamed"
-        val_tpl3.async_render_with_possible_json_value("call3")
+        val_tpl3.async_render_with_possible_json_value(_receive_message("call3"))
         assert template_state_calls.call_count == 2
         template_state_calls.assert_called_with(hass, "select.renamed")
 
@@ -267,7 +391,9 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
-        val_tpl.async_render_with_possible_json_value('{"some_var": null }')
+        val_tpl.async_render_with_possible_json_value(
+            _receive_message('{"some_var": null }')
+        )
     assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
@@ -276,7 +402,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     )
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value(
-            '{"some_var": null }', default="100"
+            _receive_message('{"some_var": null }'), default="100"
         )
     assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "

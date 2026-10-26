@@ -129,7 +129,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
     ]
     _value_templates: dict[
-        str, Callable[[ReceivePayloadType, ReceivePayloadType], ReceivePayloadType]
+        str, Callable[[ReceiveMessage, ReceivePayloadType], ReceivePayloadType]
     ]
     _fixed_color_mode: ColorMode | str | None
     _topics: dict[str, str | None]
@@ -211,7 +211,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         state_value = self._value_templates[CONF_STATE_TEMPLATE](
-            msg.payload,
+            msg,
             PayloadSentinel.NONE,
         )
         if not state_value:
@@ -233,7 +233,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         if CONF_BRIGHTNESS_TEMPLATE in self._config:
             brightness_value = self._value_templates[CONF_BRIGHTNESS_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             if not brightness_value:
@@ -259,7 +259,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         if CONF_COLOR_TEMP_TEMPLATE in self._config:
             color_temp_value = self._value_templates[CONF_COLOR_TEMP_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             if not color_temp_value:
@@ -292,15 +292,15 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             and CONF_BLUE_TEMPLATE in self._config
         ):
             red_value = self._value_templates[CONF_RED_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             green_value = self._value_templates[CONF_GREEN_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             blue_value = self._value_templates[CONF_BLUE_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             if not red_value or not green_value or not blue_value:
@@ -321,7 +321,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         if CONF_EFFECT_TEMPLATE in self._config:
             effect_value = self._value_templates[CONF_EFFECT_TEMPLATE](
-                msg.payload,
+                msg,
                 PayloadSentinel.NONE,
             )
             if not effect_value:

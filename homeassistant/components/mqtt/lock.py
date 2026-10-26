@@ -146,7 +146,7 @@ class MqttLock(MqttEntity, LockEntity):
     _command_template: Callable[
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
     ]
-    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -188,7 +188,7 @@ class MqttLock(MqttEntity, LockEntity):
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle new lock state messages."""
-        payload = self._value_template(msg.payload)
+        payload = self._value_template(msg)
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",

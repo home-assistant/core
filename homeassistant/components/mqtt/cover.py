@@ -364,7 +364,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @callback
     def _tilt_message_received(self, msg: ReceiveMessage) -> None:
         """Handle tilt updates."""
-        payload = self._tilt_status_template(msg.payload)
+        payload = self._tilt_status_template(msg)
 
         if not payload:
             _LOGGER.debug("Ignoring empty tilt message from '%s'", msg.topic)
@@ -375,7 +375,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        payload = self._value_template(msg.payload)
+        payload = self._value_template(msg)
 
         if not payload:
             _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
@@ -419,7 +419,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @callback
     def _position_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT position messages."""
-        payload: ReceivePayloadType = self._get_position_template(msg.payload)
+        payload: ReceivePayloadType = self._get_position_template(msg)
         payload_dict: Any = None
 
         if not payload:

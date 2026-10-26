@@ -106,7 +106,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _location_name: str | None = None
-    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -125,7 +125,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        payload = self._value_template(msg.payload)
+        payload = self._value_template(msg)
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",

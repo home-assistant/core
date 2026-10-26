@@ -144,9 +144,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving state message via MQTT."""
-        payload = self._templates[CONF_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
-        )
+        payload = self._templates[CONF_VALUE_TEMPLATE](msg, PayloadSentinel.DEFAULT)
 
         if payload is PayloadSentinel.DEFAULT:
             _LOGGER.warning(
@@ -237,7 +235,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     @callback
     def _handle_latest_version_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving latest version via MQTT."""
-        latest_version = self._templates[CONF_LATEST_VERSION_TEMPLATE](msg.payload)
+        latest_version = self._templates[CONF_LATEST_VERSION_TEMPLATE](msg)
 
         if isinstance(latest_version, str) and latest_version != "":
             self._attr_latest_version = latest_version

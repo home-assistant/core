@@ -299,7 +299,7 @@ class MqttValve(MqttEntity, ValveEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        payload = self._value_template(msg.payload)
+        payload = self._value_template(msg)
         payload_dict: Any = None
         position_payload: Any = payload
         state_payload: Any = payload

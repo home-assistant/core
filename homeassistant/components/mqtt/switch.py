@@ -91,7 +91,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _optimistic: bool
     _is_on_map: dict[str | bytes | bytearray, bool | None]
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
-    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -124,7 +124,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        if (payload := self._value_template(msg.payload)) in self._is_on_map:
+        if (payload := self._value_template(msg)) in self._is_on_map:
             self._attr_is_on = self._is_on_map[payload]
 
     @callback

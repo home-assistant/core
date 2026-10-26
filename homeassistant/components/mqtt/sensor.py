@@ -199,11 +199,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _expire_after: int | None
     _expired: bool | None
     _template: (
-        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+        Callable[[ReceiveMessage, PayloadSentinel], ReceivePayloadType] | None
     ) = None
-    _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType] | None = (
-        None
-    )
+    _last_reset_template: Callable[[ReceiveMessage], ReceivePayloadType] | None = None
 
     @override
     async def mqtt_async_added_to_hass(self) -> None:
@@ -304,7 +302,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             )
 
         if template := self._template:
-            payload = template(msg.payload, PayloadSentinel.DEFAULT)
+            payload = template(msg, PayloadSentinel.DEFAULT)
         else:
             payload = msg.payload
         if payload is PayloadSentinel.DEFAULT:
@@ -358,7 +356,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     @callback
     def _update_last_reset(self, msg: ReceiveMessage) -> None:
         template = self._last_reset_template
-        payload = msg.payload if template is None else template(msg.payload)
+        payload = msg.payload if template is None else template(msg)
         if not payload:
             _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
             return

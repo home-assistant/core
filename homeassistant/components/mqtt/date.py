@@ -85,7 +85,7 @@ class MqttDateEntity(MqttEntity, DateEntity):
     _command_template: Callable[
         [PublishPayloadType, dict[str, Any]], PublishPayloadType
     ]
-    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -111,7 +111,7 @@ class MqttDateEntity(MqttEntity, DateEntity):
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving state message via MQTT."""
-        payload = str(self._value_template(msg.payload))
+        payload = str(self._value_template(msg))
         if payload == PAYLOAD_NONE:
             self._attr_native_value = None
             return

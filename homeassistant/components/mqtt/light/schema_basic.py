@@ -239,7 +239,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
     ]
     _value_templates: dict[
-        str, Callable[[ReceivePayloadType, ReceivePayloadType], ReceivePayloadType]
+        str, Callable[[ReceiveMessage, ReceivePayloadType], ReceivePayloadType]
     ]
     _optimistic: bool
     _optimistic_brightness: bool
@@ -393,7 +393,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.NONE
+            msg, PayloadSentinel.NONE
         )
         if not payload:
             _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
@@ -410,7 +410,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _brightness_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for the brightness."""
         payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty brightness message from '%s'", msg.topic)
@@ -433,7 +433,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         convert_color: Callable[..., tuple[int, ...]],
     ) -> tuple[int, ...] | None:
         """Process MQTT messages for RGBW and RGBWW."""
-        payload = self._value_templates[template](msg.payload, PayloadSentinel.DEFAULT)
+        payload = self._value_templates[template](msg, PayloadSentinel.DEFAULT)
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty %s message from '%s'", color_mode, msg.topic)
             return None
@@ -506,7 +506,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _color_mode_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for color mode."""
         payload = self._value_templates[CONF_COLOR_MODE_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty color mode message from '%s'", msg.topic)
@@ -518,7 +518,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _color_temp_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for color temperature."""
         payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty color temp message from '%s'", msg.topic)
@@ -537,7 +537,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _effect_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for effect."""
         payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty effect message from '%s'", msg.topic)
@@ -549,7 +549,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _hs_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for hs color."""
         payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
@@ -566,7 +566,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     def _xy_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages for xy color."""
         payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](
-            msg.payload, PayloadSentinel.DEFAULT
+            msg, PayloadSentinel.DEFAULT
         )
         if payload is PayloadSentinel.DEFAULT or not payload:
             _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)

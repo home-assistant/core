@@ -5,7 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import Enum, StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
@@ -22,12 +22,15 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
+    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
     TemplateVarsType,
+    UndefinedType,
     VolSchemaType,
 )
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
@@ -142,6 +145,15 @@ class PublishMessage:
     retain: bool
 
 
+class _Unparsed(Enum):
+    """Marker for a payload that has not been parsed yet."""
+
+    UNPARSED = 0
+
+
+_UNPARSED = _Unparsed.UNPARSED
+
+
 # eq=False so we use the id() of the object for comparison
 # since client will only generate one instance of this object
 # per messages/subscribed_topic.
@@ -155,6 +167,23 @@ class ReceiveMessage:
     retain: bool
     subscribed_topic: str
     timestamp: float
+    _payload_json: Any = field(default=_UNPARSED, init=False, repr=False)
+
+    @property
+    def payload_json(self) -> Any | UndefinedType:
+        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
+        if (value := self._payload_json) is _UNPARSED:
+            try:
+                value = json_loads(self.payload)
+            except JSON_DECODE_EXCEPTIONS:
+                value = UNDEFINED
+            # The dataclass is frozen, this only caches
+            object.__setattr__(self, "_payload_json", value)
+        return value
+
+    def clear_payload_json(self) -> None:
+        """Drop the parsed payload, debug info keeps messages around."""
+        object.__setattr__(self, "_payload_json", _UNPARSED)
 
 
 type MessageCallbackType = Callable[[ReceiveMessage], None]
@@ -373,15 +402,19 @@ class MqttValueTemplate:
     @callback
     def async_render_with_possible_json_value(
         self,
-        payload: ReceivePayloadType,
+        msg: ReceiveMessage,
         default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
         rendered_payload: ReceivePayloadType
+        payload = msg.payload
 
         if self._value_template is None:
             return payload
+
+        if self._value_template.is_static:
+            return self._value_template.template
 
         values: dict[str, Any] = {}
 
@@ -414,7 +447,7 @@ class MqttValueTemplate:
             try:
                 rendered_payload = (
                     self._value_template.async_render_with_possible_json_value(
-                        payload, variables=values
+                        payload, variables=values, value_json=msg.payload_json
                     )
                 )
             except TEMPLATE_ERRORS as exc:
@@ -440,7 +473,7 @@ class MqttValueTemplate:
         try:
             rendered_payload = (
                 self._value_template.async_render_with_possible_json_value(
-                    payload, default, variables=values
+                    payload, default, variables=values, value_json=msg.payload_json
                 )
             )
         except TEMPLATE_ERRORS as exc:

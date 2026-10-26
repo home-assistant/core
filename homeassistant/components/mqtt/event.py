@@ -95,7 +95,7 @@ class MqttEvent(MqttEntity, EventEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_EVENT_ATTRIBUTES_BLOCKED
-    _template: Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType]
+    _template: Callable[[ReceiveMessage, PayloadSentinel], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -126,7 +126,7 @@ class MqttEvent(MqttEntity, EventEntity):
         event_attributes: dict[str, Any] = {}
         event_type: str
         try:
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            payload = self._template(msg, PayloadSentinel.DEFAULT)
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
             return
