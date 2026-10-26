@@ -1791,12 +1791,24 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     [
         pytest.param("loaded_device", MagicMock(), False, id="loaded_device"),
         pytest.param("loaded_entity", MagicMock(), False, id="loaded_entity"),
+        pytest.param(
+            "loaded_child_device", MagicMock(), False, id="loaded_child_device"
+        ),
         pytest.param("unloaded_device", MagicMock(), True, id="unloaded_device"),
+        pytest.param(
+            "unloaded_child_device", MagicMock(), True, id="unloaded_child_device"
+        ),
         pytest.param(
             "unloaded_entry", MagicMock(), True, id="unloaded_config_entry_id"
         ),
         pytest.param("nothing", MagicMock(), False, id="nothing_referenced"),
         pytest.param("loaded_device", None, True, id="loaded_device_driver_not_ready"),
+        pytest.param(
+            "loaded_child_device",
+            None,
+            True,
+            id="loaded_child_device_driver_not_ready",
+        ),
         pytest.param("nothing", None, False, id="nothing_referenced_driver_not_ready"),
     ],
 )
@@ -1805,6 +1817,7 @@ async def test_bypass_dynamic_config_validation_scoped(
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     lock_schlage_be469: Node,
+    climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
     config_key: str,
     driver: MagicMock | None,
@@ -1815,6 +1828,14 @@ async def test_bypass_dynamic_config_validation_scoped(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert lock_device
+    # An endpoint child device of a loaded entry (its node splits into child devices).
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
+    )
+    assert child_device
 
     other_entry = MockConfigEntry(
         domain=DOMAIN, data={"url": "ws://test2.org"}, unique_id="other"
@@ -1823,12 +1844,20 @@ async def test_bypass_dynamic_config_validation_scoped(
     other_device = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id, identifiers={(DOMAIN, "other-node")}
     )
+    # A child device of the unloaded entry, to prove child entries are also considered.
+    other_child_device = device_registry.async_get_or_create_child(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "other-child-node")},
+        parent_device_id=other_device.id,
+    )
     assert other_entry.state is not ConfigEntryState.LOADED
 
     configs = {
         "loaded_device": {"device_id": [lock_device.id]},
         "loaded_entity": {"entity_id": [SCHLAGE_BE469_LOCK_ENTITY]},
+        "loaded_child_device": {"device_id": [child_device.id]},
         "unloaded_device": {"device_id": [other_device.id]},
+        "unloaded_child_device": {"device_id": [other_child_device.id]},
         "unloaded_entry": {"config_entry_id": other_entry.entry_id},
         "nothing": {},
     }

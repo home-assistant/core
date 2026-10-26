@@ -890,6 +890,12 @@ def async_bypass_dynamic_config_validation(
                 for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
             )
             or any(
+                device.id in devices
+                for device in dr.async_child_entries_for_config_entry(
+                    dev_reg, entry.entry_id
+                )
+            )
+            or any(
                 entity.entity_id in entities
                 for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
             )

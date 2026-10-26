@@ -1438,12 +1438,11 @@ async def test_if_notification_notification_fires_endpoint_child_device(
     integration: MockConfigEntry,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test an event-based device trigger stays backwards compatible with child devices.
+    """Test a notification trigger keeps reporting the node device id.
 
-    This node has colliding endpoint values that are split into endpoint child devices.
     Notification events are always dispatched with the node device_id (not a child
-    device id), so a notification trigger stored with the node device_id before the
-    child device change still fires.
+    device id), even when a value lives on a non-root endpoint, so a notification
+    trigger stored with the node device_id before the child device change still fires.
     """
     node = shelly_qnsh_001P10_shutter
     device = device_registry.async_get_device_by_identifier(
@@ -1645,7 +1644,7 @@ async def test_if_event_device_trigger_fires_endpoint_child_device(
     event_type: str,
     event_data: dict[str, object],
 ) -> None:
-    """Test event-based device triggers stay backwards compatible with child devices.
+    """Test event-based device triggers keep reporting the node device id.
 
     Notification and value notification events are always dispatched with the node
     device_id (not a child device id), even when they originate from a value on a
