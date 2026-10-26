@@ -14,7 +14,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
-from .coordinator import DobissConfigEntry, DobissCoordinator
+from .coordinator import DobissConfigEntry, DobissCoordinator, DobissLightData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -30,12 +32,12 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
     """A light output with immediate feedback after accepted commands."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, entry: DobissConfigEntry, light: Light) -> None:
         """Initialize a named light with a stable config-entry scoped identifier."""
         super().__init__(entry.runtime_data)
-        self._light = light
-        self._attr_name = None
+        self._key = light.key
         self._attr_unique_id = f"{entry.entry_id}_{light.key}"
         controller = dr.async_get(self.coordinator.hass).async_get_device_by_identifier(
             (DOMAIN, entry.entry_id), entry.entry_id
@@ -56,22 +58,25 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
     @override
     def available(self) -> bool:
         """Missing output state must not be represented as off."""
-        return (
-            super().available and self.coordinator.data.get(self._light.key) is not None
-        )
+        return super().available and self._key in self.coordinator.data
+
+    @property
+    def _light(self) -> DobissLightData:
+        """Return the current output data."""
+        return self.coordinator.data[self._key]
 
     @property
     @override
     def is_on(self) -> bool:
         """Return whether the output is enabled."""
-        return bool(self.coordinator.data.get(self._light.key))
+        return bool(self._light.value)
 
     @property
     @override
     def brightness(self) -> int | None:
         """Convert the percentage to Home Assistant brightness."""
-        value = self.coordinator.data.get(self._light.key)
-        if not self._light.dimmable or value is None:
+        value = self._light.value
+        if not self._light.light.dimmable:
             return None
         if value == 0:
             return 0
@@ -80,7 +85,7 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
     async def _async_set_light(self, on: bool, brightness: int | None = None) -> None:
         try:
             await self.coordinator.async_set_light(
-                self._light, on=on, brightness=brightness
+                self._light.light, on=on, brightness=brightness
             )
         except DobissError as err:
             raise HomeAssistantError(
@@ -92,7 +97,7 @@ class DobissLight(CoordinatorEntity[DobissCoordinator], LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on, optionally setting a dimmer percentage."""
         brightness = None
-        if ATTR_BRIGHTNESS in kwargs and self._light.dimmable:
+        if ATTR_BRIGHTNESS in kwargs and self._light.light.dimmable:
             brightness = max(
                 1, round(brightness_to_value((1, 100), kwargs[ATTR_BRIGHTNESS]))
             )

@@ -78,7 +78,7 @@ async def test_duplicate(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    mock_client.discover_lights.assert_not_called()
+    mock_client.discover_lights.assert_awaited_once()
 
 
 async def test_invalid_host(hass: HomeAssistant, mock_client: AsyncMock) -> None:

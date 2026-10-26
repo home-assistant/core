@@ -4,14 +4,13 @@ from dobiss_nxt import DobissClient
 
 from homeassistant.const import CONF_HOST, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_API_SECRET, DOMAIN
 from .coordinator import DobissConfigEntry, DobissCoordinator
 
 PLATFORMS = [Platform.LIGHT]
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DobissConfigEntry) -> None:

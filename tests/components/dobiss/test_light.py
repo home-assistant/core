@@ -113,11 +113,15 @@ async def test_poll_confirms_command(
     assert hass.states.get("light.hall").state == "off"
 
 
+@pytest.mark.parametrize("states", [{"4_0": None, "2_0": 0}, {"2_0": 0}])
 async def test_missing_and_recovery(
-    hass: HomeAssistant, mock_client: AsyncMock, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    states: dict[str, int | None],
 ) -> None:
     """Missing outputs become unavailable and recover when status returns."""
-    mock_client.light_states.return_value = {"4_0": None, "2_0": 0}
+    mock_client.light_states.return_value = states
     freezer.tick(timedelta(seconds=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

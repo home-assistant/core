@@ -1,6 +1,7 @@
 """Coordinate REST updates for Dobiss NXT."""
 
 from asyncio import Lock
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -12,12 +13,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type DobissConfigEntry = ConfigEntry[DobissCoordinator]
 
 
-class DobissCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
+@dataclass(frozen=True)
+class DobissLightData:
+    """A discovered light and its available controller state."""
+
+    light: Light
+    value: int
+
+
+class DobissCoordinator(DataUpdateCoordinator[dict[str, DobissLightData]]):
     """Fetch the installation status once for all lights."""
 
     def __init__(
@@ -47,10 +58,11 @@ class DobissCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
             elif brightness is not None:
                 value = brightness
             elif light.dimmable:
-                value = self.data.get(light.key) or 100
+                previous = self.data.get(light.key)
+                value = previous.value if previous and previous.value else 100
             else:
                 value = 1
-            self.data = {**self.data, light.key: value}
+            self.data = {**self.data, light.key: DobissLightData(light, value)}
             self.async_update_listeners()
 
     @override
@@ -59,17 +71,30 @@ class DobissCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
         try:
             self.lights = await self.client.discover_lights()
         except DobissAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Dobiss rejected the API secret") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except DobissError as err:
-            raise UpdateFailed("Unable to discover Dobiss outputs") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="discovery_failed"
+            ) from err
 
     @override
-    async def _async_update_data(self) -> dict[str, int | None]:
+    async def _async_update_data(self) -> dict[str, DobissLightData]:
         """Refresh output status."""
         try:
             async with self._request_lock:
-                return await self.client.light_states(self.lights)
+                states = await self.client.light_states(self.lights)
         except DobissAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Dobiss rejected the API secret") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except DobissError as err:
-            raise UpdateFailed("Unable to fetch Dobiss status") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="status_failed"
+            ) from err
+        return {
+            light.key: DobissLightData(light, value)
+            for light in self.lights
+            if (value := states.get(light.key)) is not None
+        }

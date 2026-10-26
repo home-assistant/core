@@ -42,31 +42,28 @@ class DobissConfigFlow(ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors[CONF_HOST] = "invalid_host"
             else:
-                self._async_abort_entries_match({CONF_HOST: host})
                 if not user_input[CONF_API_SECRET]:
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=STEP_USER_DATA_SCHEMA,
-                        errors={"base": "invalid_auth"},
-                    )
-                client = DobissClient(
-                    async_get_clientsession(self.hass),
-                    host,
-                    user_input[CONF_API_SECRET],
-                    secure=user_input[CONF_SSL],
-                )
-                try:
-                    lights = await client.discover_lights()
-                    await client.light_states(lights)
-                except DobissAuthenticationError:
                     errors["base"] = "invalid_auth"
-                except DobissError:
-                    errors["base"] = "cannot_connect"
                 else:
-                    self._async_abort_entries_match({CONF_HOST: host})
-                    return self.async_create_entry(
-                        title=f"Dobiss ({host})", data=user_input | {CONF_HOST: host}
+                    client = DobissClient(
+                        async_get_clientsession(self.hass),
+                        host,
+                        user_input[CONF_API_SECRET],
+                        secure=user_input[CONF_SSL],
                     )
+                    try:
+                        lights = await client.discover_lights()
+                        await client.light_states(lights)
+                    except DobissAuthenticationError:
+                        errors["base"] = "invalid_auth"
+                    except DobissError:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        self._async_abort_entries_match({CONF_HOST: host})
+                        return self.async_create_entry(
+                            title=f"Dobiss ({host})",
+                            data=user_input | {CONF_HOST: host},
+                        )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
