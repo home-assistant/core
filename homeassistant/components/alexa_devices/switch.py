@@ -116,7 +116,7 @@ COMMUNICATION_SWITCHES: Final = (
 )
 FEATURE_SWITCHES: Final = (
     AmazonSwitchEntityDescription(
-        key="AQM-LED",
+        key="aqm_led",
         translation_key="aqm_led",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda coordinator, serial_num, key: (
