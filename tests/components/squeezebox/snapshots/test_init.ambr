@@ -30,7 +30,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('squeezebox', '12345678-1234-1234-1234-123456789012')]>,
   })
 # ---
 # name: test_device_registry_server_merged
