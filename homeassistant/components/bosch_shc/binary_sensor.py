@@ -50,7 +50,7 @@ CLIMATE_CONTROL_DESCRIPTIONS: tuple[
         key="call_for_heat",
         translation_key="call_for_heat",
         device_class=BinarySensorDeviceClass.RUNNING,
-        is_on_fn=lambda device: device.has_demand,
+        is_on_fn=lambda device: device.has_demand and not device.cooling_mode,
     ),
     SHCBinarySensorEntityDescription(
         key="schedule_override_active",
