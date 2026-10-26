@@ -1119,4 +1119,10 @@ async def test_form_user_missing_name_falls_back_to_default_name(
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "Roomba"
+    assert result4["result"].unique_id == "BLID"
+    assert result4["data"] == {
+        CONF_BLID: "BLID",
+        CONF_HOST: MOCK_IP,
+        CONF_PASSWORD: "password",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
