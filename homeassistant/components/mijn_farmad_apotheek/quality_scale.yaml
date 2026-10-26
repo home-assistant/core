@@ -62,9 +62,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: The service cannot be discovered.
-  docs-data-update:
-    status: exempt
-    comment: The integration fetches nothing on a schedule.
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
