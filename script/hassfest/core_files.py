@@ -13,9 +13,7 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 
 # Core integrations that do not define __all__ yet.
 # These need to be fixed; do not add new entries to this list.
-MISSING_ALL = {
-    "configurator",  # Deprecated, to be removed in 2027.10
-}
+MISSING_ALL: set[str] = set()
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
 
