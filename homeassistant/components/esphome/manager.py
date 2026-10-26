@@ -75,6 +75,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -771,6 +772,8 @@ class ESPHomeManager:
         )
         device_wizard = None
         if entry_data.device_capabilities.wizard.configured:
+            # aioesphomeapi imports the decompressor lazily when decoding the wizard.
+            await async_import_module(hass, "compression.zstd")
             try:
                 device_wizard = await cli.device_wizard()
             except InvalidWizardError as err:

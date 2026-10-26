@@ -44,7 +44,10 @@ async def test_setup_and_unload(
     )
     mock_connection.async_connect.assert_awaited_once_with()
     mock_registration.assert_awaited_once_with(
-        hass, connection_entry, connection=mock_connection
+        hass,
+        connection_entry,
+        connection=mock_connection,
+        configuration_url=None,
     )
     assert connection_entry.runtime_data.connection is mock_connection
     assert await hass.config_entries.async_unload(connection_entry.entry_id)
@@ -57,6 +60,32 @@ async def test_setup_and_unload(
     mock_connection.close.assert_awaited_once_with()
     mock_connection.on_disconnect.return_value.assert_called_once_with()
     mock_registration.return_value.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "configuration_url"),
+    [
+        pytest.param(
+            "https://eu1.cloud.thethings.network:8884",
+            "https://eu1.cloud.thethings.network/console/",
+            id="hosted",
+        ),
+        pytest.param("http://[::1]:1884", None, id="self_hosted"),
+    ],
+)
+async def test_configuration_url(
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    mock_registration: AsyncMock,
+    endpoint: str,
+    configuration_url: str | None,
+) -> None:
+    """Link the console only where its address is known."""
+    hass.config_entries.async_update_entry(
+        connection_entry, data={**connection_entry.data, "endpoint": endpoint}
+    )
+    assert await hass.config_entries.async_setup(connection_entry.entry_id)
+    assert mock_registration.call_args.kwargs["configuration_url"] == configuration_url
 
 
 @pytest.mark.parametrize(

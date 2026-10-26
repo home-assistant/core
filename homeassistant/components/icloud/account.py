@@ -1,7 +1,7 @@
 """iCloud account."""
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 import operator
 from typing import TYPE_CHECKING, Any
@@ -31,7 +31,7 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import as_utc, parse_datetime, utcnow
 from homeassistant.util.location import distance
 
 from .const import (
@@ -42,23 +42,42 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
+    DEVICE_ACTION_STATUS_CODE,
+    DEVICE_ACTION_STATUS_PENDING,
+    DEVICE_ACTIVATION_LOCKED,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
     DEVICE_DISPLAY_NAME,
+    DEVICE_FEATURE_LOCK,
+    DEVICE_FEATURES,
     DEVICE_ID,
+    DEVICE_IS_LOCATING,
     DEVICE_LOCATION,
+    DEVICE_LOCATION_ALTITUDE,
+    DEVICE_LOCATION_ENABLED,
+    DEVICE_LOCATION_FLOOR_LEVEL,
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_IS_INACCURATE,
+    DEVICE_LOCATION_IS_OLD,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOCATION_POSITION_TYPE,
+    DEVICE_LOCATION_TIMESTAMP,
+    DEVICE_LOCKED_TIMESTAMP,
     DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOST_MODE_ENABLED,
+    DEVICE_LOST_TIMESTAMP,
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
     DEVICE_RAW_DEVICE_MODEL,
+    DEVICE_REMOTE_LOCK,
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
+    DEVICE_WIPE_IN_PROGRESS,
+    DEVICE_WIPED_TIMESTAMP,
     DOMAIN,
 )
 
@@ -138,6 +157,31 @@ def code_can_be_delivered(api: PyiCloudService | None) -> bool:
 
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    """Parse an iCloud timestamp.
+
+    iCloud reports timestamps either as epoch milliseconds or as a string,
+    and uses ``None`` or an empty string when the event never happened.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        if value <= 0:
+            return None
+        try:
+            return datetime.fromtimestamp(value / 1000, tz=UTC)
+        except OSError, OverflowError, ValueError:
+            return None
+
+    if isinstance(value, str):
+        if (parsed := parse_datetime(value)) is None:
+            return None
+        return as_utc(parsed)
+
+    return None
 
 
 def _cannot_connect(err: PyiCloudConnectionException) -> ConfigEntryNotReady:
@@ -794,7 +838,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> dict[str, Any]:
+    def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
 
@@ -954,6 +998,166 @@ class IcloudDevice:
     def location(self) -> dict[str, Any] | None:
         """Return the Apple device location."""
         return self._location
+
+    @property
+    def location_timestamp(self) -> datetime | None:
+        """Return when the last location fix was recorded."""
+        if self._location is None:
+            return None
+        return _parse_timestamp(self._location.get(DEVICE_LOCATION_TIMESTAMP))
+
+    @property
+    def location_type(self) -> str | None:
+        """Return the type of the last location fix, for example GPS or Wifi."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_POSITION_TYPE)
+
+    @property
+    def location_accuracy(self) -> float | None:
+        """Return the horizontal accuracy of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_HORIZONTAL_ACCURACY)
+
+    @property
+    def location_altitude(self) -> float | None:
+        """Return the altitude of the last location fix in meters."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_ALTITUDE)
+
+    @property
+    def location_floor_level(self) -> int | None:
+        """Return the floor level of the last location fix."""
+        if self._location is None:
+            return None
+        return self._location.get(DEVICE_LOCATION_FLOOR_LEVEL)
+
+    @property
+    def device_status(self) -> str:
+        """Return the device online status."""
+        return DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
+
+    @property
+    def last_locked(self) -> datetime | None:
+        """Return when the device was last locked."""
+        return _parse_timestamp(self._status.get(DEVICE_LOCKED_TIMESTAMP))
+
+    @property
+    def last_lost(self) -> datetime | None:
+        """Return when the device was last put in lost mode."""
+        return _parse_timestamp(self._status.get(DEVICE_LOST_TIMESTAMP))
+
+    @property
+    def last_wiped(self) -> datetime | None:
+        """Return when the device was last wiped."""
+        return _parse_timestamp(self._status.get(DEVICE_WIPED_TIMESTAMP))
+
+    @property
+    def owner_name(self) -> str | None:
+        """Return the full name of the device owner."""
+        return self._attrs.get(ATTR_OWNER_NAME)
+
+    @property
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._device.erase_available
+
+    @property
+    def lock_available(self) -> bool:
+        """Return whether the device can be remotely locked."""
+        features = self._status.get(DEVICE_FEATURES) or {}
+        return bool(features.get(DEVICE_FEATURE_LOCK, False))
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._device.location_available
+
+    @property
+    def lost_mode_available(self) -> bool:
+        """Return whether the device supports lost mode."""
+        return self._device.lost_mode_available
+
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._device.sound_available
+
+    @property
+    def location_is_old(self) -> bool:
+        """Return whether Apple flagged the reported location fix as old."""
+        # The flag describes the payload Apple just sent, which can differ from
+        # the fix this integration stores.
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_OLD, False))
+
+    @property
+    def location_is_inaccurate(self) -> bool:
+        """Return whether Apple flagged the reported location fix as inaccurate."""
+        location = self._status[DEVICE_LOCATION]
+        if location is None:
+            return False
+        return bool(location.get(DEVICE_LOCATION_IS_INACCURATE, False))
+
+    @property
+    def is_online(self) -> bool:
+        """Return whether the device is online."""
+        return self.device_status == "online"
+
+    @property
+    def low_power_mode(self) -> bool:
+        """Return whether low power mode is enabled on the device."""
+        return bool(self._status.get(DEVICE_LOW_POWER_MODE, False))
+
+    @property
+    def activation_locked(self) -> bool:
+        """Return whether activation lock is enabled on the device."""
+        return bool(self._status.get(DEVICE_ACTIVATION_LOCKED, False))
+
+    @property
+    def is_locating(self) -> bool:
+        """Return whether the device is being located right now."""
+        return bool(self._status.get(DEVICE_IS_LOCATING, False))
+
+    @property
+    def location_services_enabled(self) -> bool:
+        """Return whether location services are enabled on the device."""
+        return bool(self._status.get(DEVICE_LOCATION_ENABLED, False))
+
+    @property
+    def wipe_in_progress(self) -> bool:
+        """Return whether a wipe is in progress on the device."""
+        return bool(self._status.get(DEVICE_WIPE_IN_PROGRESS, False))
+
+    @property
+    def remote_lock_pending(self) -> bool:
+        """Return whether a remote lock is pending on the device."""
+        remote_lock = self._status.get(DEVICE_REMOTE_LOCK)
+        if not isinstance(remote_lock, dict):
+            return False
+        return (
+            remote_lock.get(DEVICE_ACTION_STATUS_CODE) == DEVICE_ACTION_STATUS_PENDING
+        )
+
+    @property
+    def lost_mode_enabled(self) -> bool:
+        """Return whether lost mode is currently enabled on the device."""
+        return bool(self._status.get(DEVICE_LOST_MODE_ENABLED, False))
+
+    @property
+    def raw_status(self) -> dict[str, Any]:
+        """Return the raw device data reported by Apple."""
+        # update() stores the fetch interval in the status dict, which is
+        # account state rather than device data.
+        return {
+            key: value
+            for key, value in self._status.items()
+            if key != ATTR_ACCOUNT_FETCH_INTERVAL
+        }
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

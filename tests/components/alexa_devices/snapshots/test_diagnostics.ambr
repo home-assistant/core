@@ -36,6 +36,7 @@
       }),
     }),
     'online': True,
+    'primary display category': 'ALEXA_VOICE_ENABLED',
     'sensors': dict({
       'dnd': dict({
         'error': False,
@@ -136,6 +137,7 @@
             }),
           }),
           'online': True,
+          'primary display category': 'ALEXA_VOICE_ENABLED',
           'sensors': dict({
             'dnd': dict({
               'error': False,

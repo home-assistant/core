@@ -290,6 +290,7 @@ def _generate_device_config(
 def _parse_device_payload(
     hass: HomeAssistant,
     payload: ReceivePayloadType,
+    topic: str,
     object_id: str,
     node_id: str | None,
 ) -> MQTTDiscoveryPayload:
@@ -312,7 +313,11 @@ def _parse_device_payload(
     try:
         device_payload = MQTTDiscoveryPayload(json_loads_object(payload))
     except ValueError:
-        _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
+        _LOGGER.warning(
+            "Unable to parse JSON discovery payload on topic '%s': '%s'",
+            topic,
+            payload,
+        )
         return device_payload
     if _async_process_discovery_migration(device_payload):
         return _generate_device_config(hass, object_id, node_id, migrate_discovery=True)
@@ -580,7 +585,7 @@ async def async_start(  # noqa: C901
             # In that case this will regenerate a cleanup message for all every already
             # discovered components that were linked to the initial device discovery.
             device_discovery_payload = _parse_device_payload(
-                hass, payload, object_id, node_id
+                hass, payload, topic, object_id, node_id
             )
             if not device_discovery_payload:
                 return
@@ -641,7 +646,11 @@ async def async_start(  # noqa: C901
                     json_loads_object(payload) if payload else {}
                 )
             except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
+                _LOGGER.warning(
+                    "Unable to parse JSON discovery payload on topic '%s': '%s'",
+                    topic,
+                    payload,
+                )
                 return
             if not _async_process_discovery_migration(discovery_payload):
                 _replace_all_abbreviations(discovery_payload)
