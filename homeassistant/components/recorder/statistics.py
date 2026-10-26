@@ -24,6 +24,7 @@ from sqlalchemy import (
     lambda_stmt,
     select,
     text,
+    update,
 )
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
@@ -3098,20 +3099,23 @@ def _change_statistics_unit_for_table(
     metadata_id: int,
     convert: Callable[[float | None], float | None],
 ) -> None:
-    """Insert statistics in the database."""
+    """Convert the statistics of a statistic to a new unit."""
     columns = (table.id, table.mean, table.min, table.max, table.state, table.sum)
     query = session.query(*columns).filter_by(metadata_id=bindparam("metadata_id"))
-    rows = execute(query.params(metadata_id=metadata_id))
-    for row in rows:
-        session.query(table).filter(table.id == row.id).update(
-            {
-                table.mean: convert(row.mean),
-                table.min: convert(row.min),
-                table.max: convert(row.max),
-                table.state: convert(row.state),
-                table.sum: convert(row.sum),
-            },
-            synchronize_session=False,
+    if rows := execute(query.params(metadata_id=metadata_id)):
+        session.execute(
+            update(table),
+            [
+                {
+                    "id": row.id,
+                    "mean": convert(row.mean),
+                    "min": convert(row.min),
+                    "max": convert(row.max),
+                    "state": convert(row.state),
+                    "sum": convert(row.sum),
+                }
+                for row in rows
+            ],
         )
 
 
