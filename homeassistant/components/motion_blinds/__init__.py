@@ -9,6 +9,7 @@ from motionblinds import AsyncMotionMulticast
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
     CONF_BLIND_TYPE_LIST,
@@ -127,3 +128,17 @@ async def async_unload_entry(
         multicast.Stop_listen()
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MotionBlindsConfigEntry,
+    device_entry: DeviceEntry,
+) -> bool:
+    """Allow removing devices that are no longer connected to the gateway."""
+    gateway = config_entry.runtime_data.gateway
+    return not any(
+        identifier[0] == DOMAIN
+        and (identifier[1] == gateway.mac or identifier[1] in gateway.device_list)
+        for identifier in device_entry.identifiers
+    )
