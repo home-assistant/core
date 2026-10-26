@@ -193,8 +193,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             )
             | {"id": ANY}
         )
-        if serialized["via_device_id"] is not None:
-            serialized["via_device_id"] = ANY
+        serialized["via_device_id"] = cls._serializable_device_id(data.via_device_id)
 
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
@@ -216,7 +215,9 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         serialized["config_entry_id"] = ANY
         serialized["config_subentry_id"] = ANY
-        serialized["parent_device_id"] = ANY
+        serialized["parent_device_id"] = cls._serializable_device_id(
+            data.parent_device_id
+        )
 
         return cls._remove_created_and_modified_at(serialized)
 
@@ -237,7 +238,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized = EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
-                "config_entry_id": ANY,
+                "config_entry_id": None if data.config_entry_id is None else ANY,
                 "config_subentry_id": ANY,
                 "device_id": cls._serializable_device_id(data.device_id),
                 "id": ANY,

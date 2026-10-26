@@ -73,6 +73,7 @@ def build_device_data(
         "capabilities": device.capabilities,
         "device family": device.device_family,
         "device type": device.device_type,
+        "primary display category": device.primary_display_category,
         "device cluster members": device.device_cluster_members,
         "online": device.online,
         "serial number": device.serial_number,

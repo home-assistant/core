@@ -753,7 +753,7 @@
         'name_by_user': None,
         'serial_number': 'A0000A000000000D',
         'sw_version': '1.6.7',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -1014,7 +1014,7 @@
         'name_by_user': None,
         'serial_number': 'A0000A000000000B',
         'sw_version': '1.6.7',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -1275,7 +1275,7 @@
         'name_by_user': None,
         'serial_number': 'A0000A000000000C',
         'sw_version': '1.6.7',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -1762,7 +1762,7 @@
         'name_by_user': None,
         'serial_number': '158d0007c59c6a',
         'sw_version': '0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -3364,7 +3364,7 @@
         'name_by_user': None,
         'serial_number': 'AB3C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -4077,7 +4077,7 @@
         'name_by_user': None,
         'serial_number': 'AB1C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -4296,7 +4296,7 @@
         'name_by_user': None,
         'serial_number': 'AB2C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -4519,7 +4519,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -4788,7 +4788,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -5050,7 +5050,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -5312,7 +5312,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -5574,7 +5574,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -5836,7 +5836,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -6105,7 +6105,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -6367,7 +6367,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -6629,7 +6629,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -6898,7 +6898,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -7568,7 +7568,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -7837,7 +7837,7 @@
         'name_by_user': None,
         'serial_number': '**REDACTED**',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -8601,7 +8601,7 @@
         'name_by_user': None,
         'serial_number': 'AB3C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -9073,7 +9073,7 @@
         'name_by_user': None,
         'serial_number': 'AB1C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -9292,7 +9292,7 @@
         'name_by_user': None,
         'serial_number': 'AB2C',
         'sw_version': '1.0.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -11454,7 +11454,7 @@
         'name_by_user': None,
         'serial_number': 'cover.family_door_north',
         'sw_version': '3.6.2',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -11705,7 +11705,7 @@
         'name_by_user': None,
         'serial_number': 'cover.kitchen_window',
         'sw_version': '3.6.2',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -11883,7 +11883,7 @@
         'name_by_user': None,
         'serial_number': 'fan.ceiling_fan',
         'sw_version': '0.104.0.dev0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -12090,7 +12090,7 @@
         'name_by_user': None,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -12225,7 +12225,7 @@
         'name_by_user': None,
         'serial_number': 'climate.89_living_room',
         'sw_version': '2024.2.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -12737,7 +12737,7 @@
         'name_by_user': None,
         'serial_number': 'light.laundry_smoke_ed78',
         'sw_version': '1.4.84',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -12922,7 +12922,7 @@
         'name_by_user': None,
         'serial_number': 'cover.family_door_north',
         'sw_version': '3.6.2',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -13173,7 +13173,7 @@
         'name_by_user': None,
         'serial_number': 'cover.kitchen_window',
         'sw_version': '3.6.2',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -13351,7 +13351,7 @@
         'name_by_user': None,
         'serial_number': 'fan.ceiling_fan',
         'sw_version': '0.104.0.dev0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -13558,7 +13558,7 @@
         'name_by_user': None,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -13771,7 +13771,7 @@
         'name_by_user': None,
         'serial_number': 'fan.living_room_fan',
         'sw_version': '0.104.0.dev0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -13907,7 +13907,7 @@
         'name_by_user': None,
         'serial_number': 'climate.89_living_room',
         'sw_version': '2024.2.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -14428,7 +14428,7 @@
         'name_by_user': None,
         'serial_number': 'humidifier.humidifier_182a',
         'sw_version': '2024.2.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -14697,7 +14697,7 @@
         'name_by_user': None,
         'serial_number': 'humidifier.humidifier_182a',
         'sw_version': '2024.2.0',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -14966,7 +14966,7 @@
         'name_by_user': None,
         'serial_number': 'light.laundry_smoke_ed78',
         'sw_version': '1.4.84',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -15375,7 +15375,7 @@
         'name_by_user': None,
         'serial_number': '6623462395276914',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -15514,7 +15514,7 @@
         'name_by_user': None,
         'serial_number': '6623462395276939',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -15653,7 +15653,7 @@
         'name_by_user': None,
         'serial_number': '6623462403113447',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -15792,7 +15792,7 @@
         'name_by_user': None,
         'serial_number': '6623462403233419',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -15931,7 +15931,7 @@
         'name_by_user': None,
         'serial_number': '6623462412411853',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16080,7 +16080,7 @@
         'name_by_user': None,
         'serial_number': '6623462412413293',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16229,7 +16229,7 @@
         'name_by_user': None,
         'serial_number': '6623462389072572',
         'sw_version': '45.1.17846',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16568,7 +16568,7 @@
         'name_by_user': None,
         'serial_number': '6623462378982941',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16699,7 +16699,7 @@
         'name_by_user': None,
         'serial_number': '6623462378983942',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16830,7 +16830,7 @@
         'name_by_user': None,
         'serial_number': '6623462379122122',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -16961,7 +16961,7 @@
         'name_by_user': None,
         'serial_number': '6623462379123707',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -17092,7 +17092,7 @@
         'name_by_user': None,
         'serial_number': '6623462383114163',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -17223,7 +17223,7 @@
         'name_by_user': None,
         'serial_number': '6623462383114193',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -17354,7 +17354,7 @@
         'name_by_user': None,
         'serial_number': '6623462385996792',
         'sw_version': '1.46.13',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -18605,7 +18605,7 @@
         'name_by_user': None,
         'serial_number': '39024290',
         'sw_version': '001.005',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -22213,7 +22213,7 @@
         'name_by_user': None,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -22464,7 +22464,7 @@
         'name_by_user': None,
         'serial_number': '',
         'sw_version': '',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -22642,7 +22642,7 @@
         'name_by_user': None,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -22816,7 +22816,7 @@
         'name_by_user': None,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -22990,7 +22990,7 @@
         'name_by_user': None,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -23241,7 +23241,7 @@
         'name_by_user': None,
         'serial_number': '1.0.0',
         'sw_version': '3.0.8',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -24596,7 +24596,7 @@
         'name_by_user': None,
         'serial_number': 'a11b111',
         'sw_version': '16',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({
@@ -24823,7 +24823,7 @@
         'name_by_user': None,
         'serial_number': '1111111a114a111a',
         'sw_version': '48',
-        'via_device_id': <ANY>,
+        'via_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
       }),
       'entities': list([
         dict({

@@ -77,7 +77,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---
 # name: test_number_entities[binary_sensor.door_2_operational_problem]
@@ -158,6 +158,6 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---
