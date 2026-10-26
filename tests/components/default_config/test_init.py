@@ -26,7 +26,9 @@ def mock_ssdp():
 @pytest.fixture(autouse=True)
 def recorder_url_mock():
     """Mock recorder url."""
-    with patch("homeassistant.components.recorder.DEFAULT_URL", "sqlite://"):
+    with patch(
+        "homeassistant.components.recorder.get_default_url", return_value="sqlite://"
+    ):
         yield
 
 

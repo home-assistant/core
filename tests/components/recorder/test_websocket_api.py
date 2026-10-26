@@ -3580,7 +3580,10 @@ async def test_recorder_info_bad_recorder_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting recorder status when recorder is not started."""
-    config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:////no_dir/no_file.db",
+        recorder.CONF_DB_RETRY_WAIT: 0,
+    }
 
     client = await hass_ws_client()
 

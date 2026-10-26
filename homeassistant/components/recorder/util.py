@@ -7,7 +7,6 @@ from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
-import re
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
 
@@ -40,7 +39,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -61,17 +60,6 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
-
-# Splits a URL up to its database part the same way as SQLAlchemy
-_URL_DATABASE_RE = re.compile(
-    r"""
-    [\w+]+://
-    (?:[^:/]*(?::[^@]*)?@)?
-    (?:(?:\[[^/?]+\]|[^/:?]+)?(?::[^/?]*)?)?
-    (?:/(?P<database>[^?]*))?
-    """,
-    re.VERBOSE,
-)
 
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
@@ -258,20 +246,21 @@ def execute_stmt_lambda_element(
 def get_engine_db_url(db_url: str) -> URL:
     """Return the SQLAlchemy URL to create a database engine for db_url.
 
-    The URL is parsed like SQLAlchemy does, except that:
-    - A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
-      installations ship, instead of SQLAlchemy's default driver, which is
-      psycopg 3 from SQLAlchemy 2.1.
-    - The database name or SQLite file path is kept as written instead of
-      being URL-decoded, so a literal % in it can't make the engine use a
-      different database than the one the recorder works with.
+    A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
+    installations ship, instead of SQLAlchemy's default driver, which is
+    psycopg 3 from SQLAlchemy 2.1.
     """
     url = make_url(db_url)
     if url.drivername == "postgresql":
         url = url.set(drivername="postgresql+psycopg2")
-    if (match := _URL_DATABASE_RE.match(db_url)) and match["database"] is not None:
-        url = url.set(database=match["database"])
     return url
+
+
+def is_file_sqlite_url(url: URL) -> bool:
+    """Return if the URL is for a SQLite database stored in a file."""
+    if url.get_backend_name() != "sqlite" or not url.database:
+        return False
+    return ":memory:" not in url.database
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -291,7 +280,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl.removeprefix(SQLITE_URL_PREFIX)
+    return make_url(dburl).database or ""
 
 
 def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:

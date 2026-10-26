@@ -55,13 +55,8 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    MARIADB_PYMYSQL_URL_PREFIX,
-    MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
-    MYSQLDB_PYMYSQL_URL_PREFIX,
-    MYSQLDB_URL_PREFIX,
-    SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .db_schema import (
@@ -112,6 +107,7 @@ from .util import (
     dburl_to_path,
     end_incomplete_runs,
     get_engine_db_url,
+    is_file_sqlite_url,
     is_second_sunday,
     move_away_broken_database,
     setup_connection_for_dialect,
@@ -245,13 +241,6 @@ class Recorder(threading.Thread):
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
         return self._dialect_name
-
-    @property
-    def _using_file_sqlite(self) -> bool:
-        """Short version to check if we are using sqlite3 as a file."""
-        return self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
-            SQLITE_URL_PREFIX
-        )
 
     @property
     def recording(self) -> bool:
@@ -1476,26 +1465,27 @@ class Recorder(threading.Thread):
         kwargs: dict[str, Any] = {}
         self._completed_first_database_setup = False
 
-        if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
+        engine_url = get_engine_db_url(self.db_url)
+        backend_name = engine_url.get_backend_name()
+        driver_name = engine_url.get_driver_name()
+        using_file_sqlite = is_file_sqlite_url(engine_url)
+
+        if backend_name == "sqlite" and not using_file_sqlite:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = MutexPool
             MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
-        elif self.db_url.startswith(SQLITE_URL_PREFIX):
+        elif backend_name == "sqlite":
             kwargs["poolclass"] = RecorderPool
             kwargs["recorder_and_worker_thread_ids"] = (
                 self.recorder_and_worker_thread_ids
             )
-        elif self.db_url.startswith(
-            (
-                MARIADB_URL_PREFIX,
-                MARIADB_PYMYSQL_URL_PREFIX,
-                MYSQLDB_URL_PREFIX,
-                MYSQLDB_PYMYSQL_URL_PREFIX,
-            )
+        elif backend_name in ("mariadb", "mysql") and driver_name in (
+            "mysqldb",
+            "pymysql",
         ):
             kwargs["connect_args"] = {"charset": "utf8mb4"}
-            if self.db_url.startswith((MARIADB_URL_PREFIX, MYSQLDB_URL_PREFIX)):
+            if driver_name == "mysqldb":
                 # If they have configured MySQLDB but don't have
                 # the MySQLDB module installed this will throw
                 # an ImportError which we suppress here since
@@ -1505,16 +1495,14 @@ class Recorder(threading.Thread):
                     kwargs["connect_args"]["conv"] = build_mysqldb_conv()
 
         # Disable extended logging for non SQLite databases
-        if not self.db_url.startswith(SQLITE_URL_PREFIX):
+        if backend_name != "sqlite":
             kwargs["echo"] = False
 
-        if self._using_file_sqlite:
+        if using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
         assert not self.engine
-        self.engine = create_engine(
-            get_engine_db_url(self.db_url), **kwargs, future=True
-        )
+        self.engine = create_engine(engine_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)

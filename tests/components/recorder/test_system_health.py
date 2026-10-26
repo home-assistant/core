@@ -130,48 +130,26 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
 
 @pytest.mark.parametrize("db_engine", [SupportedDialect.POSTGRESQL])
 @pytest.mark.parametrize(
-    ("db_url", "database_name"),
+    "db_url",
     [
-        pytest.param(
-            "postgresql://homeassistant:secret@192.168.0.2:5432/home_assistant",
-            "home_assistant",
-            id="plain",
-        ),
-        pytest.param(
-            "postgresql://homeassistant:pa#ss@192.168.0.2:5432/home_assistant",
-            "home_assistant",
-            id="hash",
-        ),
-        pytest.param(
-            "postgresql://homeassistant:pa?ss@192.168.0.2:5432/home_assistant",
-            "home_assistant",
-            id="question_mark",
-        ),
-        pytest.param(
-            "postgresql://homeassistant:pa/ss@192.168.0.2:5432/home_assistant",
-            "home_assistant",
-            id="slash",
-        ),
-        pytest.param(
-            "postgresql://homeassistant:secret@192.168.0.2:5432/home%20assistant",
-            "home%20assistant",
-            id="percent",
-        ),
+        "postgresql://homeassistant:secret@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa#ss@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa?ss@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa/ss@192.168.0.2:5432/home_assistant",
     ],
+    ids=["plain", "hash", "question_mark", "slash"],
 )
 @pytest.mark.usefixtures("recorder_mock")
 async def test_recorder_system_health_db_name_with_special_characters(
     hass: HomeAssistant,
     db_engine: SupportedDialect,
     db_url: str,
-    database_name: str,
     recorder_dialect_name: None,
 ) -> None:
-    """Test the database name is read correctly when the URL needs escaping.
+    """Test the database name is read correctly when the password needs escaping.
 
     Characters that are structural in a generic URL, such as ``#`` and ``?``,
-    must not be allowed to swallow the database name that follows them, and
-    the database name is used as written, like the engine does.
+    must not be allowed to swallow the database name that follows them.
     """
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
@@ -186,4 +164,4 @@ async def test_recorder_system_health_db_name_with_special_characters(
     ):
         await get_system_health_info(hass, "recorder")
 
-    assert execute_mock.call_args.args[1] == {"database_name": database_name}
+    assert execute_mock.call_args.args[1] == {"database_name": "home_assistant"}
