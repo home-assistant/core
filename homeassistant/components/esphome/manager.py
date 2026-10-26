@@ -114,6 +114,7 @@ from .entry_data import (
 )
 from .enum_mapper import EsphomeEnumMapper
 from .outgoing_connection import async_register_outgoing_target
+from .sendspin import async_sendspin_on_connect
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
@@ -779,6 +780,7 @@ class ESPHomeManager:
             except InvalidWizardError as err:
                 _LOGGER.warning("%s: Ignoring the device wizard: %s", self.host, err)
         entry_data.async_on_connect(hass, device_info, api_version)
+        async_sendspin_on_connect(hass, entry_data)
 
         await self._handle_dynamic_encryption_key(device_info)
 

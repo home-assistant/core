@@ -339,3 +339,28 @@ async def test_manual_trigger_sensor_entity_with_date(
     )
     assert entity.state == "2025-01-01T00:00:00+00:00"
     assert entity.device_class == device_class
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    [None, SensorDeviceClass.TEMPERATURE, SensorDeviceClass.TIMESTAMP],
+)
+async def test_manual_trigger_sensor_entity_with_none(
+    hass: HomeAssistant,
+    device_class: SensorDeviceClass | None,
+) -> None:
+    """Test manual trigger sensor entity sets native value to None for "None"."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_DEVICE_CLASS: device_class,
+    }
+    entity = ManualTriggerSensorEntity(hass, config)
+    entity.entity_id = "test.entity"
+    entity._attr_native_value = "previous"
+
+    value = ValueTemplate("{{ none }}", hass).async_render_as_value_template(
+        entity.entity_id, {"value": "abc"}, None
+    )
+    entity._set_native_value_with_possible_timestamp(value)
+
+    assert entity.native_value is None

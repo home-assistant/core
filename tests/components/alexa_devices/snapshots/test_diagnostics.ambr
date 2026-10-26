@@ -57,6 +57,7 @@
       }),
     }),
     'online': True,
+    'primary display category': 'ALEXA_VOICE_ENABLED',
     'sensors': dict({
       'detectionState': dict({
         'error': False,
@@ -190,6 +191,7 @@
             }),
           }),
           'online': True,
+          'primary display category': 'ALEXA_VOICE_ENABLED',
           'sensors': dict({
             'detectionState': dict({
               'error': False,
