@@ -46,6 +46,7 @@ from .const import (
     CONF_JEELINK_LED,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
+    CONF_YAML_IMPORTED,
     DEFAULT_BAUD,
     DOMAIN,
     TYPES,
@@ -86,7 +87,8 @@ async def async_setup_entry(
     for subentry in entry.subentries.values():
         sensors = {
             sensor_entity_key(subentry.subentry_id, sensor[CONF_TYPE])
-            if entry.source != SOURCE_IMPORT and key == sensor[CONF_TYPE]
+            if not subentry.data.get(CONF_YAML_IMPORTED, False)
+            and key == sensor[CONF_TYPE]
             else key: sensor
             for key, sensor in subentry.data[CONF_SENSORS].items()
         }
