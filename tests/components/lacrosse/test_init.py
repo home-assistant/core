@@ -8,7 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
 from homeassistant.components.lacrosse import async_remove_config_entry_device
-from homeassistant.components.lacrosse.const import DOMAIN, sensor_entity_key
+from homeassistant.components.lacrosse.const import (
+    CONF_YAML_IMPORTED,
+    DOMAIN,
+    sensor_entity_key,
+)
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
@@ -229,6 +233,57 @@ async def test_yaml_import_keeps_legacy_entity_id(
         await hass.async_block_till_done()
 
     assert entity_registry.async_get(f"sensor.{sensor_type}") is not None
+
+
+async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test UI-added sensors are namespaced even on a YAML-imported entry."""
+    with (
+        patch(
+            "homeassistant.components.lacrosse.config_flow.usb.get_serial_by_id",
+            return_value="/dev/ttyUSB0",
+        ),
+        patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                **ENTRY_DATA,
+                "sensors": {"battery": {"id": 1, "type": "battery"}},
+            },
+        )
+        entry = result["result"]
+        for sensor_id in (2, 3):
+            result = await hass.config_entries.subentries.async_init(
+                (entry.entry_id, "sensor"), context={"source": SOURCE_USER}
+            )
+            result = await hass.config_entries.subentries.async_configure(
+                result["flow_id"],
+                {
+                    "id": sensor_id,
+                    "type": "temperature_humidity_battery",
+                    "friendly_name": "Outdoor",
+                },
+            )
+            assert result["type"] == "create_entry"
+            await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    expected_unique_ids = {f"{entry.entry_id}_battery"}
+    for subentry in entry.subentries.values():
+        if subentry.data.get(CONF_YAML_IMPORTED):
+            continue
+        expected_unique_ids.update(
+            f"{entry.entry_id}_{sensor_entity_key(subentry.subentry_id, sensor_type)}"
+            for sensor_type in ("temperature", "humidity", "battery")
+        )
+
+    assert {entity.unique_id for entity in entities} == expected_unique_ids
+    assert len(entities) == 7
+    assert entity_registry.async_get("sensor.battery") is not None
 
 
 async def test_remove_sensor_device(
