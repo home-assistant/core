@@ -351,6 +351,9 @@
       "advanced_mode": {
         "name": "Advanced mode"
       },
+      "auto_empty": {
+        "name": "Auto-empty"
+      },
       "border_spin": {
         "name": "Border spin"
       },
