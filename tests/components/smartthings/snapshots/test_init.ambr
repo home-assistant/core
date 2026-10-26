@@ -2169,7 +2169,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.11',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
 # name: test_devices[ikea_motion_illuminance_battery]
@@ -2199,7 +2199,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.7',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
 # name: test_devices[ikea_plug_powermeter]
@@ -2233,7 +2233,7 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
 # name: test_devices[im_smarttag2_ble_uwb]
@@ -2387,7 +2387,7 @@
     'name_by_user': None,
     'serial_number': '510802250905784',
     'sw_version': '9.3.26',
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
 # name: test_devices[multipurpose_sensor]
