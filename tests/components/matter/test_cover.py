@@ -785,6 +785,8 @@ async def test_cover_tilt_only(
 
     state = hass.states.get(entity_id)
     assert state
+    # without any position attribute, the resting state is unknown
+    assert state.state == "unknown"
     assert (
         state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
         == 0

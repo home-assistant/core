@@ -87,23 +87,16 @@ class MatterCover(MatterEntity, CoverEntity):
         if self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
-            return (
-                self.current_cover_position == 0
-                if self.current_cover_position is not None
-                else None
-            )
-
-        # Tilt-only covers: derive the closed state from the tilt position
-        if self._entity_info.endpoint.has_attribute(
+            position = self.current_cover_position
+        elif self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
         ):
-            return (
-                self.current_cover_tilt_position == 0
-                if self.current_cover_tilt_position is not None
-                else None
-            )
+            # tilt-only covers have no lift axis, so tilt is the only closure indicator
+            position = self.current_cover_tilt_position
+        else:
+            return None
 
-        return None
+        return position == 0 if position is not None else None
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
