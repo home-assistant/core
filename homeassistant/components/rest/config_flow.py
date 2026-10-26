@@ -121,6 +121,8 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             except UnicodeDecodeError as exc:
                 errors[CONF_ENCODING] = "decoding_error"
                 placeholders["decoding_error_message"] = str(exc)
+            except LookupError:
+                errors[CONF_ENCODING] = "codec_not_found"
             if not errors:
                 resource = urlsplit(
                     Template(user_input[CONF_RESOURCE], self.hass).async_render()

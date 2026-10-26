@@ -25,7 +25,7 @@
       "already_configured": "This resource is already configured."
     },
     "error": {
-      "codec not found": "Encoding not supported",
+      "codec_not_found": "Encoding not supported",
       "credentials_missing": "Username and password are both required",
       "decoding_error": "Error decoding response: {decoding_error_message}",
       "endpoint_error": "[%key:component::rest::common::endpoint_error%]",

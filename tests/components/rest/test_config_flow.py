@@ -538,3 +538,37 @@ async def test_config_flow_decode_error(
         user_input={"next_step_id": Platform.BINARY_SENSOR},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_config_flow_codec_not_found(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test that config_flow handles codec not found error."""
+    aioclient_mock.get(
+        "http://localhost", status=HTTPStatus.OK, json={"items": [{"key": "on"}]}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data | {CONF_ENCODING: "utf-88"}
+    )
+
+    assert (
+        result["errors"]
+        and CONF_ENCODING in result["errors"]
+        and result["errors"][CONF_ENCODING] == "codec_not_found"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": Platform.BINARY_SENSOR},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
