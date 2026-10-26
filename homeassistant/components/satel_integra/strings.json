@@ -208,7 +208,7 @@
   "options": {
     "error": {
       "invalid_code_format": "User code must contain numbers only.",
-      "invalid_code_length": "User code must be between 4 and 16 characters long."
+      "invalid_code_length": "User code must be between 4 and 16 digits long."
     },
     "step": {
       "init": {
