@@ -12,14 +12,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
-from homeassistant.components.engie_be.condition import (
-    EpexHourPriceIsNegativeCondition,
-    EpexHourPriceMeetsThresholdCondition,
-)
 from homeassistant.components.engie_be.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -270,22 +267,26 @@ async def test_condition_invalid_device(
     device_id = device_id_of(other_device)
 
     with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
-        await EpexHourPriceIsNegativeCondition.async_validate_complete_config(
+        await async_validate_conditions_config(
             hass,
-            {
-                "condition": f"{DOMAIN}.epex_hour_price_is_negative",
-                "options": {"device_id": device_id},
-            },
+            [
+                {
+                    "condition": f"{DOMAIN}.epex_hour_price_is_negative",
+                    "options": {"device_id": device_id},
+                }
+            ],
         )
 
 
 async def test_condition_invalid_threshold(hass: HomeAssistant) -> None:
     """Test the threshold conditions require at least one bound."""
     with pytest.raises(probatio.Invalid, match="Set above, below or both"):
-        await EpexHourPriceMeetsThresholdCondition.async_validate_complete_config(
+        await async_validate_conditions_config(
             hass,
-            {
-                "condition": f"{DOMAIN}.epex_hour_price_meets_threshold",
-                "options": {"device_id": "device"},
-            },
+            [
+                {
+                    "condition": f"{DOMAIN}.epex_hour_price_meets_threshold",
+                    "options": {"device_id": "device"},
+                }
+            ],
         )

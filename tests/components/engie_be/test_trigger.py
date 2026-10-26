@@ -12,12 +12,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
-from homeassistant.components.engie_be.trigger import (
-    EpexCurrentHourCrossedThresholdTrigger,
-    EpexHourBecameNegativeTrigger,
-)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -506,12 +503,14 @@ async def test_trigger_invalid_device(
     device_id = device_id_of(other_device)
 
     with pytest.raises(probatio.Invalid, match="is not an ENGIE Belgium device"):
-        await EpexHourBecameNegativeTrigger.async_validate_complete_config(
+        await async_validate_trigger_config(
             hass,
-            {
-                "platform": f"{DOMAIN}.epex_hour_became_negative",
-                "options": {"device_id": device_id},
-            },
+            [
+                {
+                    "platform": f"{DOMAIN}.epex_hour_became_negative",
+                    "options": {"device_id": device_id},
+                }
+            ],
         )
 
 
@@ -529,10 +528,12 @@ async def test_trigger_invalid_threshold(
 ) -> None:
     """Test the threshold triggers reject a range that can never match."""
     with pytest.raises(probatio.Invalid, match=message):
-        await EpexCurrentHourCrossedThresholdTrigger.async_validate_complete_config(
+        await async_validate_trigger_config(
             hass,
-            {
-                "platform": f"{DOMAIN}.epex_current_hour_crossed_threshold",
-                "options": {"device_id": "device", **options},
-            },
+            [
+                {
+                    "platform": f"{DOMAIN}.epex_current_hour_crossed_threshold",
+                    "options": {"device_id": "device", **options},
+                }
+            ],
         )
