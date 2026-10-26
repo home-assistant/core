@@ -32,7 +32,7 @@ type BMxConfigEntry = ConfigEntry[BMxBluetoothCoordinator]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMxConfigEntry,
-) -> bool:
+) -> None:
     """Set up BMx BLE device from a config entry."""
     address = config_entry.unique_id
     assert address is not None
@@ -114,12 +114,10 @@ async def async_setup_entry(
     # Only start after all platforms have had a chance to subscribe.
     config_entry.async_on_unload(coordinator.async_start())
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant,
     config_entry: BMxConfigEntry,
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
