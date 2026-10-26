@@ -179,10 +179,39 @@ async def test_user_flow_direct(
     mock_setup_entry.assert_awaited_once_with(hass, entry)
 
 
+@pytest.mark.parametrize(
+    ("server", "normalized_server"),
+    [
+        pytest.param("cloud.example.com", "cloud.example.com", id="hostname"),
+        pytest.param("https://cloud.example.com", "cloud.example.com", id="https-url"),
+        pytest.param("https://cloud.example.com/", "cloud.example.com", id="root-path"),
+        pytest.param("cloud.example.com/", "cloud.example.com", id="hostname-slash"),
+        pytest.param(
+            "  HTTPS://Cloud.Example.COM/  ",
+            "cloud.example.com",
+            id="case-and-whitespace",
+        ),
+        pytest.param(
+            "cloud.example.com:8443", "cloud.example.com:8443", id="hostname-port"
+        ),
+        pytest.param(
+            "https://cloud.example.com:8443/", "cloud.example.com:8443", id="https-port"
+        ),
+        pytest.param(
+            "https://cloud.example.com:443/",
+            "cloud.example.com:443",
+            id="explicit-default-port",
+        ),
+    ],
+)
 async def test_user_flow_cloud(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    server: str,
+    normalized_server: str,
 ) -> None:
-    """Authenticate the account, then collect panel credentials and polling settings."""
+    """Normalize cloud addresses before authentication and saving panel settings."""
+    cloud_input = CLOUD_INPUT | {CONF_EXTERNAL_URL: server}
     with (
         patch(
             "homeassistant.components.visonic.connection_test.API", autospec=True
@@ -204,16 +233,16 @@ async def test_user_flow_cloud(
             {CONF_TYPE: DeviceType.CLOUD.title(), CONF_PANEL_NUMBER: 2},
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT | {CONF_EMAIL: "invalid"}
+            result["flow_id"], cloud_input | {CONF_EMAIL: "invalid"}
         )
         assert result["errors"] == {"base": CONFIG_EMAIL_INVALID}
         api.authenticate_user.assert_not_awaited()
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
+            result["flow_id"], cloud_input
         )
         assert result["errors"] == {"base": "invalid_auth"}
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CLOUD_INPUT
+            result["flow_id"], cloud_input
         )
         assert result["step_id"] == FORM_SELECT_PANEL
         assert CONF_CODE not in CLOUD_INPUT
@@ -229,6 +258,7 @@ async def test_user_flow_cloud(
                 CLOUD_INPUT
                 | PANEL_INPUT
                 | {
+                    CONF_EXTERNAL_URL: normalized_server,
                     CONF_PANEL_NUMBER: 2,
                     CONF_CLOUD_APP_ID: "test-app-id",
                 }
@@ -246,8 +276,71 @@ async def test_user_flow_cloud(
         api.panel_login.assert_awaited_once_with("ABCDEF", "1234")
         api.panel_logout.assert_awaited_once_with()
         assert api.authenticate_user.await_count == 2
+        assert [item.args[1] for item in factory.call_args_list] == [
+            normalized_server
+        ] * 2
     await hass.async_block_till_done()
     mock_setup_entry.assert_awaited_once_with(hass, entry)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "server",
+    [
+        pytest.param("http://cloud.example.com", id="http"),
+        pytest.param("ftp://cloud.example.com", id="ftp"),
+        pytest.param("//cloud.example.com", id="scheme-relative"),
+        pytest.param("https://cloud.example.com/rest_api", id="path"),
+        pytest.param("https://cloud.example.com//", id="double-slash-path"),
+        pytest.param("https://cloud.example.com/%2F", id="encoded-path"),
+        pytest.param("https://user:password@cloud.example.com", id="credentials"),
+        pytest.param("https://user@cloud.example.com", id="username"),
+        pytest.param("https://@cloud.example.com", id="empty-username"),
+        pytest.param("https://cloud.example.com?key=value", id="query"),
+        pytest.param("https://cloud.example.com?", id="empty-query"),
+        pytest.param("https://cloud.example.com#fragment", id="fragment"),
+        pytest.param("https://cloud.example.com#", id="empty-fragment"),
+        pytest.param("cloud.example.com:invalid", id="invalid-port"),
+        pytest.param("cloud.example.com:65536", id="out-of-range-port"),
+        pytest.param("bad host.example.com", id="hostname-space"),
+        pytest.param("cloud.exa\nmple.com", id="embedded-newline"),
+        pytest.param("cloud.exa\tmple.com", id="embedded-tab"),
+        pytest.param("cloud..example.com", id="empty-hostname-label"),
+        pytest.param(".", id="dot-only"),
+        pytest.param("https://", id="missing-hostname"),
+        pytest.param("   ", id="whitespace-only"),
+    ],
+)
+async def test_cloud_rejects_invalid_server(
+    hass: HomeAssistant, mock_connection_test: AsyncMock, server: str
+) -> None:
+    """Reject invalid cloud addresses before making any connection attempt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: DeviceType.CLOUD.title()}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CLOUD_INPUT | {CONF_EXTERNAL_URL: server}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == FORM_CLOUD
+    assert result["errors"] == {"base": CONFIG_SETTINGS_INVALID}
+    mock_connection_test.assert_not_awaited()
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CLOUD_INPUT
+    )
+    assert result["step_id"] == FORM_SELECT_PANEL
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], PANEL_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data[CONF_EXTERNAL_URL] == CLOUD_INPUT[CONF_EXTERNAL_URL]
 
 
 @pytest.mark.usefixtures("mock_connection_test")
@@ -345,12 +438,21 @@ async def test_loaded_cloud_reauth_with_unchanged_credentials(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "server",
+    [
+        pytest.param("cloud.example.com", id="hostname"),
+        pytest.param("https://cloud.example.com/", id="https-url"),
+        pytest.param(" HTTPS://Cloud.Example.COM/ ", id="case-and-whitespace"),
+    ],
+)
 async def test_loaded_cloud_entry_updates(
     hass: HomeAssistant,
     setup_integration: SetupIntegration,
     source: str,
     initial_steps: list[tuple[str, dict[str, str]]],
     reason: str,
+    server: str,
 ) -> None:
     """Use the loaded entry listener to reload changed cloud credentials once."""
     _, entry = await setup_integration(
@@ -362,7 +464,11 @@ async def test_loaded_cloud_entry_updates(
     with patch.object(hass.config_entries, "async_reload", return_value=True) as reload:
         for step, data in (
             *initial_steps,
-            (FORM_CLOUD, CLOUD_INPUT | {CONF_PASSWORD: "new-password"}),
+            (
+                FORM_CLOUD,
+                CLOUD_INPUT
+                | {CONF_PASSWORD: "new-password", CONF_EXTERNAL_URL: server},
+            ),
             (FORM_SELECT_PANEL, PANEL_INPUT),
         ):
             assert result["step_id"] == step
@@ -372,6 +478,7 @@ async def test_loaded_cloud_entry_updates(
         await hass.async_block_till_done()
     assert result["reason"] == reason
     assert entry.data[CONF_PASSWORD] == "new-password"
+    assert entry.data[CONF_EXTERNAL_URL] == CLOUD_INPUT[CONF_EXTERNAL_URL]
     reload.assert_awaited_once_with(entry.entry_id)
 
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Final, cast, override
 import uuid
 
 import probatio
+from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -25,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -35,6 +36,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.util.network import is_host_valid
 
 from .connection_test import ConnectionTest
 from .const import (
@@ -98,6 +100,26 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 ENTRY_ID: Final = "entry_id"
 
 
+def _normalize_cloud_server(value: str) -> str:
+    """Accept a hostname or root HTTPS URL and retain any explicit port."""
+    server = value.strip()
+    try:
+        url = URL(cv.url_no_path(server if "://" in server else f"https://{server}"))
+    except (probatio.Invalid, ValueError) as err:
+        raise SchemaFlowError(CONFIG_SETTINGS_INVALID) from err
+    if (
+        url.scheme != "https"
+        or url.raw_host is None
+        or "." not in url.raw_host
+        or not is_host_valid(url.raw_host)
+        or "@" in server
+        or "?" in server
+        or "#" in server
+    ):
+        raise SchemaFlowError(CONFIG_SETTINGS_INVALID)
+    return url.raw_authority
+
+
 async def _device_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
     """Display the stored connection type using the selector's labels."""
     values = dict(handler.options)
@@ -154,8 +176,9 @@ async def _validate_connection(
                 raise SchemaFlowError(CONFIG_SETTINGS_MISSING)
             if not _EMAIL_RE.fullmatch(user_input[CONF_EMAIL].strip()):
                 raise SchemaFlowError(CONFIG_EMAIL_INVALID)
-            if "." not in user_input[CONF_EXTERNAL_URL]:
-                raise SchemaFlowError(CONFIG_SETTINGS_INVALID)
+            user_input[CONF_EXTERNAL_URL] = _normalize_cloud_server(
+                user_input[CONF_EXTERNAL_URL]
+            )
             user_input[CONF_EMAIL] = user_input[CONF_EMAIL].strip()
             user_input[CONF_CLOUD_APP_ID] = handler.options.get(
                 CONF_CLOUD_APP_ID

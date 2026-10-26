@@ -53,7 +53,7 @@
         },
         "data_description": {
           "email": "Login Email Address to the cloud server",
-          "external_url": "External cloud server URL (e.g. visonic.tycomonitor.com)",
+          "external_url": "Cloud server hostname, such as visonic.tycomonitor.com. HTTPS URLs are also accepted.",
           "password": "Login Password to the cloud server"
         },
         "description": "Enter Visonic Cloud Server Settings"
