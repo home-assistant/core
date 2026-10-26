@@ -72,6 +72,8 @@ safe-outputs:
     hide-older-comments: true
   needs:
     - prepare
+  # The conclusion job comments on the pull request when the credit budget skips a run.
+  report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
     # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
