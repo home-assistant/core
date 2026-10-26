@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -25,8 +26,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-
-from tests.common import MockConfigEntry
 
 RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
 TEMPERATURE_SENSOR = {
