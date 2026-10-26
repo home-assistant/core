@@ -889,10 +889,35 @@ async def test_cover_position_aware_tilt(
     assert state.state == "unknown"
 
 
+LIFT_BUTTONS = (
+    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+)
+TILT_BUTTONS = (
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+)
+
+
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
         ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("feature_map", "expected_features", "unexpected_features", "expected_state"),
+    [
+        pytest.param(
+            0b10010, TILT_BUTTONS, LIFT_BUTTONS, CoverState.CLOSED, id="tilt-only"
+        ),
+        # lift without PositionAwareLift has no lift position, so the
+        # closed state must not be derived from the tilt position
+        pytest.param(
+            0b10011, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="lift-and-pa-tilt"
+        ),
+        # non-conformant feature map falls back to the mandatory lift commands
+        pytest.param(0, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="empty"),
     ],
 )
 async def test_cover_feature_map(
@@ -901,32 +926,24 @@ async def test_cover_feature_map(
     matter_node: MatterNode,
     entity_id: str,
     freezer: FrozenDateTimeFactory,
+    feature_map: int,
+    expected_features: CoverEntityFeature,
+    unexpected_features: CoverEntityFeature,
+    expected_state: str,
 ) -> None:
-    """Test the button features following WindowCovering FeatureMap updates."""
-    lift_buttons = (
-        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-    )
-    tilt_buttons = (
-        CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-    )
+    """Test tilt-only handling is selected from the WindowCovering FeatureMap."""
+    set_node_attribute(matter_node, 1, 258, 65532, feature_map)
+    # fully closed tilt
+    set_node_attribute(matter_node, 1, 258, 15, 10000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
-    for feature_map, expected, unexpected in (
-        # tilt without lift exposes the tilt buttons
-        (0b10010, tilt_buttons, lift_buttons),
-        # lift and tilt expose the lift buttons
-        (0b10011, lift_buttons, tilt_buttons),
-        # non-conformant feature map falls back to the mandatory lift commands
-        (0, lift_buttons, tilt_buttons),
-    ):
-        set_node_attribute(matter_node, 1, 258, 65532, feature_map)
-        await trigger_subscription_callback_debounced(hass, freezer, matter_client)
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes["supported_features"] & expected == expected
-        assert not state.attributes["supported_features"] & unexpected
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] & expected_features == (
+        expected_features
+    )
+    assert not state.attributes["supported_features"] & unexpected_features
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
