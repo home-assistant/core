@@ -312,6 +312,11 @@
         "name": "Vibration detection"
       }
     },
+    "update": {
+      "controller_update": {
+        "name": "Software update"
+      }
+    },
     "valve": {
       "valve": {
         "name": "Valve"
@@ -321,6 +326,12 @@
   "exceptions": {
     "unsupported_hvac_mode": {
       "message": "This entity does not support the HVAC mode {hvac_mode}."
+    },
+    "update_install_failed": {
+      "message": "Failed to start the firmware update on {name}: {error}"
+    },
+    "update_not_ready": {
+      "message": "Firmware update for {name} cannot be activated right now (current state: {state})."
     }
   }
 }

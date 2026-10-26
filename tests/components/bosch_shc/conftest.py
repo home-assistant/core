@@ -24,6 +24,7 @@ from boschshcpy import (
     SHCCameraOutdoorGen2,
     SHCClimateControl,
     SHCHeatingCircuit,
+    SHCInformation,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -150,7 +151,8 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
-    session.information.updateState.name = "UP_TO_DATE"
+    session.information.updateState = SHCInformation.UpdateState.NO_UPDATE_AVAILABLE
+    session.information.available_version = None
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
     session.intrusion_system = intrusion_system_device()
