@@ -197,8 +197,18 @@ async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
     assert entity_registry.async_get(entity_id).unique_id == unique_id
 
 
+@pytest.mark.parametrize(
+    "sensor_type",
+    [
+        pytest.param("temperature", id="temperature"),
+        pytest.param("humidity", id="humidity"),
+        pytest.param("battery", id="battery"),
+    ],
+)
 async def test_yaml_import_keeps_legacy_entity_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_type: str,
 ) -> None:
     """Test YAML import keeps the legacy entity ID based on its sensor key."""
     with (
@@ -213,12 +223,12 @@ async def test_yaml_import_keeps_legacy_entity_id(
             context={"source": SOURCE_IMPORT},
             data={
                 **ENTRY_DATA,
-                "sensors": {"livingroom": {"id": 1, "type": "temperature"}},
+                "sensors": {sensor_type: {"id": 1, "type": sensor_type}},
             },
         )
         await hass.async_block_till_done()
 
-    assert entity_registry.async_get("sensor.livingroom") is not None
+    assert entity_registry.async_get(f"sensor.{sensor_type}") is not None
 
 
 async def test_remove_sensor_device(
