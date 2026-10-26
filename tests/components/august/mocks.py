@@ -42,6 +42,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
@@ -179,6 +180,11 @@ async def _create_august_api_with_devices(
         api_call_side_effects = {}
     if devices is None:
         devices = ()
+
+    area_registry = ar.async_get(hass)
+    # Matches the base device names from _mock_august_lock and _mock_august_doorbell
+    for device in devices:
+        area_registry.async_get_or_create(f"{device.device_id} Name")
 
     update_api_call_side_effects(api_call_side_effects, devices, activities)
 

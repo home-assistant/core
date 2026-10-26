@@ -953,6 +953,9 @@ async def test_group_features(
         "4": light_4,
     }
 
+    area_registry.async_create("Living Room")
+    area_registry.async_create("Dining Room")
+
     mock_bridge_v1.mock_light_responses.append(light_response)
     mock_bridge_v1.mock_group_responses.append(group_response)
     await setup_bridge(hass, mock_bridge_v1)

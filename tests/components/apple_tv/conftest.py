@@ -20,6 +20,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
 
@@ -283,12 +284,14 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_async_zeroconf: MagicMock,
     mock_atv: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up Apple TV integration with mocked pyatv."""
     mock_config_entry.add_to_hass(hass)
+    area_registry.async_create("Living Room")
 
     scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
 

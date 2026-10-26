@@ -18,6 +18,7 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -485,6 +486,17 @@ async def async_setup_integration(
         config_entry_id = mock_entry.entry_id
     else:
         mock_entry = hass.config_entries.async_get_entry(config_entry_id)
+
+    area_registry = ar.async_get(hass)
+    for area in (
+        "Basement Bathroom",
+        "Basement Bedroom",
+        "Dining Room",
+        "Hallway",
+        "Kitchen",
+        "Master Bedroom",
+    ):
+        area_registry.async_get_or_create(area)
 
     def create_tls_factory(
         *args: Any, on_connect_callback: Callable[[], None], **kwargs: Any

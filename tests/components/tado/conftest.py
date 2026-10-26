@@ -10,12 +10,14 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
+    async_load_json_array_fixture,
     load_json_object_fixture,
 )
 import requests_mock
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 @pytest.fixture
@@ -261,6 +263,9 @@ async def init_integration(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
             options={"fallback": "NEXT_TIME_BLOCK"},
         )
         entry.add_to_hass(hass)
+        area_registry = ar.async_get(hass)
+        for zone in await async_load_json_array_fixture(hass, zones_fixture, DOMAIN):
+            area_registry.async_create(zone["name"])
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

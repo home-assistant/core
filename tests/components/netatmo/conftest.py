@@ -16,6 +16,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.netatmo.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from .common import fake_get_image, fake_post_request
@@ -84,6 +85,18 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
         },
     )
     mock_entry.add_to_hass(hass)
+    area_registry = ar.async_get(hass)
+    for area in (
+        "Bureau",
+        "Cabinet",
+        "Cocina",
+        "Corridor",
+        "Entrada",
+        "Hall",
+        "Livingroom",
+        "Toilettes",
+    ):
+        area_registry.async_create(area)
 
     return mock_entry
 

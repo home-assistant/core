@@ -32,7 +32,7 @@ from homeassistant.components.watts.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 
 from . import setup_integration
 
@@ -197,9 +197,11 @@ async def test_dynamic_device_creation(
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are created dynamically."""
+    area_registry.async_create("Kitchen")
     await setup_integration(hass, mock_config_entry)
 
     assert device_registry.async_get_device_by_identifier(

@@ -8,6 +8,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 @pytest.fixture
@@ -20,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lutron() -> Generator[MagicMock]:
+def mock_lutron(hass: HomeAssistant) -> Generator[MagicMock]:
     """Mock Lutron client."""
     with (
         patch("homeassistant.components.lutron.Lutron", autospec=True) as mock_lutron,
@@ -120,6 +122,8 @@ def mock_lutron() -> Generator[MagicMock]:
         occ_group.legacy_uuid = "occ_legacy_uuid"
         occ_group.state = OccupancyGroup.State.VACANT
         area.occupancy_group = occ_group
+
+        ar.async_get(hass).async_create(area.name)
 
         yield client
 

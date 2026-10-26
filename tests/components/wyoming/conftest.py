@@ -12,6 +12,7 @@ from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -235,6 +236,7 @@ def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
 @pytest.fixture
 async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntry):
     """Initialize Wyoming satellite."""
+    ar.async_get(hass).async_create("Office")
     with (
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",

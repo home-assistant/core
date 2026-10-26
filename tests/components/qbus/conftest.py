@@ -16,6 +16,7 @@ from homeassistant.components.qbus.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.qbus.entity import QbusEntity
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.util.json import JsonObjectType
 
 from .const import FIXTURE_PAYLOAD_CONFIG, TOPIC_CONFIG
@@ -42,6 +43,15 @@ def payload_config() -> JsonObjectType:
     return load_json_object_fixture(FIXTURE_PAYLOAD_CONFIG, DOMAIN)
 
 
+def _create_areas(hass: HomeAssistant, payload_config: JsonObjectType) -> None:
+    """Create the areas suggested by the outputs in the config payload."""
+    area_registry = ar.async_get(hass)
+    for device in payload_config["devices"]:
+        for output in device["functionBlocks"]:
+            if location := output["location"]:
+                area_registry.async_get_or_create(location.title())
+
+
 @pytest.fixture
 def mock_publish_state() -> Generator[AsyncMock]:
     """Return a mocked publish state call."""
@@ -57,6 +67,7 @@ async def setup_integration(
     payload_config: JsonObjectType,
 ) -> None:
     """Set up the integration."""
+    _create_areas(hass, payload_config)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -75,6 +86,7 @@ async def setup_integration_deferred(
     """Set up the integration."""
 
     async def run() -> None:
+        _create_areas(hass, payload_config)
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

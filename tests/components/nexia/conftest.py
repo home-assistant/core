@@ -15,6 +15,7 @@ from homeassistant.components.nexia.config_flow import NexiaConfigFlow
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 def create_mock_sensor(
@@ -403,6 +404,19 @@ def patch_nexia_home(
         yield mock_nexia_home
 
 
+def create_suggested_areas(hass: HomeAssistant, nexia_home: NexiaHome) -> None:
+    """Create the areas suggested by the zone and RoomIQ sensor devices."""
+    area_registry = ar.async_get(hass)
+    for tid in nexia_home.get_thermostat_ids():
+        thermostat = nexia_home.get_thermostat_by_id(tid)
+        for zid in thermostat.get_zone_ids():
+            zone = thermostat.get_zone_by_id(zid)
+            area_registry.async_get_or_create(zone.get_name())
+            for sensor in zone.get_sensors():
+                if sensor.has_online:
+                    area_registry.async_get_or_create(sensor.name)
+
+
 async def setup_integration(
     hass: HomeAssistant, patch_nexia_home: NexiaHome, unique_id: str = "123456"
 ) -> MockConfigEntry:
@@ -415,6 +429,8 @@ async def setup_integration(
         unique_id=unique_id,
     )
     entry.add_to_hass(hass)
+
+    create_suggested_areas(hass, patch_nexia_home)
 
     # validate setup
     for tid in patch_nexia_home.get_thermostat_ids():

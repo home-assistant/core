@@ -42,7 +42,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -1293,6 +1297,7 @@ async def test_xmod_model_lookup(
 async def test_sub_device_area_from_main_device(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
+    area_registry: ar.AreaRegistry,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
@@ -1308,6 +1313,7 @@ async def test_sub_device_area_from_main_device(
     )
 
     # create main device and set area
+    area_registry.async_create("living_room")
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         name="Test name",

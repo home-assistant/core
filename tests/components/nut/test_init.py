@@ -246,6 +246,7 @@ async def test_device_location(
     """Test for suggested location on device."""
     mock_serial_number = "A00000000000"
     mock_device_location = "XYZ Location"
+    area = area_registry.async_create(mock_device_location)
     config_entry = await async_init_integration(
         hass,
         username="someuser",
@@ -263,10 +264,7 @@ async def test_device_location(
     )
 
     assert device_entry is not None
-    assert (
-        device_entry.area_id
-        == area_registry.async_get_area_by_name(mock_device_location).id
-    )
+    assert device_entry.area_id == area.id
 
 
 async def test_device_info_strips_whitespace(
@@ -275,6 +273,7 @@ async def test_device_info_strips_whitespace(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that leading and trailing whitespace is stripped from device info fields."""
+    area = area_registry.async_create("Server Room")
     config_entry = await async_init_integration(
         hass,
         username="someuser",
@@ -307,9 +306,7 @@ async def test_device_info_strips_whitespace(
     assert device_entry.connections == {
         (dr.CONNECTION_NETWORK_MAC, "00:00:00:ff:ff:ff")
     }
-    assert (
-        device_entry.area_id == area_registry.async_get_area_by_name("Server Room").id
-    )
+    assert device_entry.area_id == area.id
 
 
 async def test_device_info_whitespace_only_values(

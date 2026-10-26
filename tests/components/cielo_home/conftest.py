@@ -9,6 +9,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 @pytest.fixture
@@ -21,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_cielo_client() -> Generator[MagicMock]:
+def mock_cielo_client(hass: HomeAssistant) -> Generator[MagicMock]:
     """Mock the CieloClient to prevent actual API calls during init."""
     with (
         patch(
@@ -48,6 +50,8 @@ def mock_cielo_client() -> Generator[MagicMock]:
         mock_data.parsed = {"device_1": dev}
 
         client.get_devices_data = AsyncMock(return_value=mock_data)
+
+        ar.async_get(hass).async_create(dev.name)
 
         yield client
 

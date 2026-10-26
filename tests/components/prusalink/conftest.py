@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.prusalink import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 @pytest.fixture
@@ -21,6 +22,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         minor_version=2,
     )
     entry.add_to_hass(hass)
+    ar.async_get(hass).async_create("Workshop")
     return entry
 
 

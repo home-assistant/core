@@ -4,6 +4,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -16,5 +17,6 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"
     )
     entry.add_to_hass(hass)
+    ar.async_get(hass).async_create("Test")
 
     return entry

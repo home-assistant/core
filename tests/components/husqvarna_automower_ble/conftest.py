@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.loader import async_get_bluetooth
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
@@ -35,6 +36,12 @@ def only_discover_this_domain() -> Generator[None]:
         "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_garden_area(area_registry: ar.AreaRegistry) -> None:
+    """Create the area suggested for the mower."""
+    area_registry.async_create("Garden")
 
 
 @pytest.fixture

@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from . import MOCK_HOST, MOCK_SERIAL
 
@@ -63,11 +64,13 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(name="mock_integration")
 async def fixture_mock_integration(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Return a mock ConfigEntry setup for Kaleidescape integration."""
     mock_config_entry.add_to_hass(hass)
+    area_registry.async_create("Theater")
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry

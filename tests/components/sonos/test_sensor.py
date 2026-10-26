@@ -27,16 +27,25 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, translation
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    translation,
+)
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent
 
 
 async def test_entity_registry_unsupported(
-    hass: HomeAssistant, async_setup_sonos, soco, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sonos device without battery registered in the device registry."""
+    area_registry.async_create("Zone A")
     soco.get_battery_info.side_effect = NotSupportedException
 
     await async_setup_sonos()
@@ -147,9 +156,11 @@ async def test_battery_on_s1(
     async_setup_sonos,
     soco,
     device_properties_event,
+    area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test battery state updates on a Sonos S1 device."""
+    area_registry.async_create("Zone A")
     soco.get_battery_info.return_value = {}
 
     await async_setup_sonos()

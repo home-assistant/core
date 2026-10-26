@@ -10,6 +10,7 @@ from rokuecp import Device as RokuDevice
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 def app_icon_url(*args, **kwargs):
@@ -84,6 +85,8 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Roku integration for testing."""
     mock_config_entry.add_to_hass(hass)
+    if mock_device.info.device_location:
+        ar.async_get(hass).async_create(mock_device.info.device_location)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=mock_device.info.serial_number
     )

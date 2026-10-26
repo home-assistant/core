@@ -24,7 +24,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .common import DEVICE_ID, CreateDevice, PlatformSetup, create_nest_event
 
@@ -175,9 +179,13 @@ async def test_device_no_sensor_traits(
 
 @pytest.mark.parametrize("device_traits", [{}])  # Disable default name
 async def test_device_name_from_structure(
-    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
 ) -> None:
     """Test a device without a custom name, inferring name from structure."""
+    area_registry.async_create("Some Room")
     create_device.create(
         raw_traits={
             "sdm.devices.traits.Temperature": {
