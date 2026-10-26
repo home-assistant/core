@@ -5,7 +5,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
@@ -59,6 +59,30 @@ CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_EDITABLE",
+    "ATTR_NEXT_EVENT",
+    "BASE_SCHEMA",
+    "CONF_ALL_DAYS",
+    "CONF_DATA",
+    "CONF_FROM",
+    "CONF_ICON",
+    "CONF_ID",
+    "CONF_NAME",
+    "CONF_TO",
+    "DATA_SCHEDULE",
+    "DOMAIN",
+    "LOGGER",
+    "SERVICE_RELOAD",
+    "STATE_OFF",
+    "STATE_ON",
+    "STORAGE_SCHEDULE_SCHEMA",
+    "WEEKDAY_TO_CONF",
+    "Schedule",
+    "ScheduleEntityCapabilityAttribute",
+    "ScheduleEntityStateAttribute",
+]
 
 
 @dataclass(slots=True)
