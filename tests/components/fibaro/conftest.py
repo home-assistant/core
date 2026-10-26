@@ -74,6 +74,7 @@ def mock_power_sensor() -> Mock:
         "name": "Test sensor",
         "properties": {"power": 6.6, "password": "mysecret"},
     }
+    sensor.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = False
     value_mock.is_bool_value = False
@@ -97,6 +98,7 @@ def mock_positionable_cover() -> Mock:
     cover.properties = {"manufacturer": ""}
     cover.actions = {"open": 0, "close": 0}
     cover.supported_features = {}
+    cover.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -134,6 +136,7 @@ def mock_cover() -> Mock:
         "stopSlats": 0,
     }
     cover.supported_features = {}
+    cover.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = False
     cover.value = value_mock
@@ -164,6 +167,7 @@ def mock_light() -> Mock:
     light.actions = {"setValue": 1, "on": 0, "off": 0}
     light.supported_features = {}
     light.raw_data = {"fibaro_id": 3, "name": "Test light", "properties": {"value": 20}}
+    light.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -198,6 +202,7 @@ def mock_fgd212_light() -> Mock:
         "interfaces": ["levelChange", "light"],
         "properties": {"value": 50},
     }
+    light.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 50
@@ -227,6 +232,7 @@ def mock_multilevel_base_type_light() -> Mock:
         "name": "Base type dimmer",
         "properties": {"value": 20},
     }
+    light.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -260,6 +266,7 @@ def mock_zigbee_light() -> Mock:
         "name": "Test light",
         "properties": {"value": 20},
     }
+    light.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -288,6 +295,7 @@ def mock_thermostat() -> Mock:
     climate.has_operating_mode = False
     climate.has_thermostat_mode = True
     climate.thermostat_mode = "CustomerSpecific"
+    climate.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -377,6 +385,7 @@ def mock_thermostat_quickapp_1() -> Mock:
     climate.has_unit = False
     climate.has_heating_thermostat_setpoint = False
     climate.has_heating_thermostat_setpoint_future = False
+    climate.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = False
     climate.value = value_mock
@@ -408,6 +417,7 @@ def mock_thermostat_quickapp_2() -> Mock:
     climate.has_unit = False
     climate.has_heating_thermostat_setpoint = False
     climate.has_heating_thermostat_setpoint_future = False
+    climate.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = False
     climate.value = value_mock
@@ -432,6 +442,7 @@ def mock_fan_device() -> Mock:
     climate.actions = {"setFanMode": 1}
     climate.supported_modes = [0, 1, 2]
     climate.mode = 1
+    climate.has_battery_level = False
     return climate
 
 
@@ -479,6 +490,7 @@ def mock_switch() -> Mock:
         "name": "Test button",
         "properties": {"value": True},
     }
+    switch.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = True
@@ -507,6 +519,7 @@ def mock_binary_sensor() -> Mock:
         "name": "Test motion sensor",
         "properties": {"value": True},
     }
+    sensor.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = True
@@ -535,6 +548,7 @@ def mock_lock() -> Mock:
         "name": "Test lock",
         "properties": {"value": False},
     }
+    lock.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = False
@@ -563,6 +577,7 @@ def mock_multilevel_sensor() -> Mock:
         "name": "Test multilevel sensor",
         "properties": {"unit": "V", "value": "230.1"},
     }
+    sensor.has_battery_level = False
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.float_value.return_value = 230.1

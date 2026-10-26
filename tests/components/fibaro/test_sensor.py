@@ -108,7 +108,7 @@ async def test_battery_sensor_value_updates(
     mock_thermostat_parent: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test that the battery sensor value updates."""
+    """Test that the battery sensor value initial value is set and it updates."""
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_devices.return_value = [mock_thermostat_parent]
 
