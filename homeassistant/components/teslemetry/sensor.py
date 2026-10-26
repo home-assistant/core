@@ -1803,11 +1803,11 @@ async def async_setup_entry(
     entities.extend(
         TeslemetryEnergyLocalStatusSensorEntity(energysite, description)
         for energysite in entry.runtime_data.energysites
-        if (coordinator := energysite.local_status_coordinator)
+        if (status_coordinator := energysite.local_status_coordinator)
         for description in ENERGY_LOCAL_STATUS_DESCRIPTIONS
         # Without a first status, add every sensor so they recover with the gateway.
-        if coordinator.data is None
-        or description.value_fn(coordinator.data) is not None
+        if status_coordinator.data is None
+        or description.value_fn(status_coordinator.data) is not None
     )
 
     entities.extend(
