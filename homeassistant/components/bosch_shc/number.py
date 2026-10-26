@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCHeatingCircuit,
     SHCMicromoduleRelay,
     SHCRoomThermostat2,
     SHCShutterContact2,
@@ -85,6 +86,19 @@ def _offset_set_value_fn(device: _TemperatureOffsetDevice, value: float) -> None
 
 IMPULSE_LENGTH = "impulse_length"
 
+
+def _setpoint_range_fn(
+    range_attr: str, index: int, default: float
+) -> Callable[[SHCHeatingCircuit], float]:
+    """Return a min/max function for a heating circuit setpoint range."""
+
+    def _range_fn(device: SHCHeatingCircuit) -> float:
+        temperature_range = getattr(device, range_attr)
+        return temperature_range[index] if temperature_range is not None else default
+
+    return _range_fn
+
+
 NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
     IMPULSE_LENGTH: SHCNumberEntityDescription[SHCMicromoduleRelay](
         key=IMPULSE_LENGTH,
@@ -113,6 +127,34 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         set_value_fn=lambda device, value: device.set_bypass_configuration(
             timeout=round(value)
         ),
+    ),
+    "eco_temperature": SHCNumberEntityDescription[SHCHeatingCircuit](
+        key="eco_temperature",
+        translation_key="eco_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=0.5,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.setpoint_temperature_eco,
+        set_value_fn=lambda device, value: device.set_setpoint_temperature_eco(value),
+        min_value_fn=_setpoint_range_fn("eco_temperature_range", 0, 5.0),
+        max_value_fn=_setpoint_range_fn("eco_temperature_range", 1, 30.0),
+    ),
+    "comfort_temperature": SHCNumberEntityDescription[SHCHeatingCircuit](
+        key="comfort_temperature",
+        translation_key="comfort_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_step=0.5,
+        mode=NumberMode.BOX,
+        value_fn=lambda device: device.setpoint_temperature_comfort,
+        set_value_fn=lambda device, value: device.set_setpoint_temperature_comfort(
+            value
+        ),
+        min_value_fn=_setpoint_range_fn("comfort_temperature_range", 0, 5.0),
+        max_value_fn=_setpoint_range_fn("comfort_temperature_range", 1, 30.0),
     ),
     "power_threshold": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
         key="power_threshold",
@@ -262,6 +304,18 @@ async def async_setup_entry(
         if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
         and device.supports_temperature_offset
     )
+
+    for key in ("eco_temperature", "comfort_temperature"):
+        entities.extend(
+            SHCNumber(
+                hass=hass,
+                device=device,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                description=NUMBER_TYPES[key],
+            )
+            for device in session.device_helper.heating_circuits
+        )
 
     async_add_entities(entities)
 

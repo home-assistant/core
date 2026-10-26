@@ -435,6 +435,10 @@ def heating_circuit_device(
     operation_mode: HeatingCircuitService.OperationMode = HeatingCircuitService.OperationMode.AUTOMATIC,
     on: bool = False,
     setpoint_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+    eco_temperature: float | None = 18.0,
+    comfort_temperature: float | None = 21.0,
+    eco_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+    comfort_temperature_range: tuple[float, float] | None = (5.0, 30.0),
 ) -> SHCHeatingCircuit:
     """Build a minimal device double for the heating_circuits bucket."""
     device = create_autospec(SHCHeatingCircuit, instance=True, spec_set=True)
@@ -451,6 +455,10 @@ def heating_circuit_device(
     device.operation_mode = operation_mode
     device.on = on
     device.setpoint_temperature_range = setpoint_temperature_range
+    device.setpoint_temperature_eco = eco_temperature
+    device.setpoint_temperature_comfort = comfort_temperature
+    device.eco_temperature_range = eco_temperature_range
+    device.comfort_temperature_range = comfort_temperature_range
     return device
 
 
