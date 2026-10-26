@@ -3260,6 +3260,176 @@ async def test_entity_own_area_without_own_name_issue(
     assert issue_registry.async_get_issue("homeassistant", issue_id) is None
 
 
+@pytest.mark.parametrize(
+    (
+        "child_area_id",
+        "expected_entity_area_id",
+        "expected_child_area_id",
+        "expected_area_changes",
+    ),
+    [
+        pytest.param(None, None, "kitchen", {"area_id": "kitchen"}, id="no_area"),
+        pytest.param("kitchen", None, "kitchen", {"area_id": "kitchen"}, id="same"),
+        pytest.param("bedroom", "kitchen", "bedroom", {}, id="other_area"),
+    ],
+)
+async def test_move_to_child_device_takes_over_own_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    child_area_id: str | None,
+    expected_entity_area_id: str | None,
+    expected_child_area_id: str,
+    expected_area_changes: dict[str, str],
+) -> None:
+    """Test a child device takes over the area of an entity becoming its main entity."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "child")},
+        parent_device_id=device_entry.id,
+    )
+    child_device = device_registry.async_update_child_device(
+        child_device.id, area_id=child_area_id
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+    child_area_ids_at_event: list[str | None] = []
+
+    @callback
+    def _record_child_area(event: Event) -> None:
+        child_area_ids_at_event.append(
+            device_registry.async_get(child_device.id).area_id
+        )
+
+    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _record_child_area)
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=child_device.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    await hass.async_block_till_done()
+
+    assert entry.device_id == child_device.id
+    assert entry.area_id == expected_entity_area_id
+    assert device_registry.async_get(child_device.id).area_id == expected_child_area_id
+    # The child device already has the area when the entity event is dispatched
+    assert child_area_ids_at_event == [expected_child_area_id]
+    assert len(events) == 1
+    assert events[0].data["changes"] == {
+        "device_id": device_entry.id,
+        "original_name": "Light",
+        **expected_area_changes,
+    }
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert (issue is not None) is (expected_entity_area_id is not None)
+
+
+async def test_move_to_child_device_with_area_in_same_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an area set together with a move to a child device goes to the device."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "child")},
+        parent_device_id=device_entry.id,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id="kitchen", device_id=child_device.id
+    )
+    await hass.async_block_till_done()
+
+    assert entry.area_id is None
+    assert device_registry.async_get(child_device.id).area_id == "kitchen"
+    assert len(events) == 1
+    assert events[0].data["changes"] == {"device_id": device_entry.id}
+
+
+async def test_move_to_main_device_keeps_own_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a main device does not take over the area of an entity moved to it."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EE")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=other_device.id,
+        has_entity_name=True,
+        original_name=None,
+    )
+    await hass.async_block_till_done()
+
+    assert entry.device_id == other_device.id
+    assert entry.area_id == "kitchen"
+    assert device_registry.async_get(other_device.id).area_id is None
+    issue_id = f"entity_own_area_without_own_name_{entry.id}"
+    assert issue_registry.async_get_issue("homeassistant", issue_id) is not None
+
+
 async def test_entity_own_area_without_own_name_issue_on_start(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
