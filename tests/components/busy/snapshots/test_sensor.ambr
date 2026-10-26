@@ -1,161 +1,17 @@
 # serializer version: 1
-# name: test_sensors[sensor.busy_bar_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
+# name: test_sensors
+  dict({
+    'sensor.busy_bar_battery': tuple(
+      '82',
+      '%',
+    ),
+    'sensor.busy_bar_wi_fi_network': tuple(
+      'Home',
       None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('busy', '0cfa22201131')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.busy_bar_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'busy',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '0cfa22201131_battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.busy_bar_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BUSY Bar Battery',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.busy_bar_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '82',
-  })
-# ---
-# name: test_sensors[sensor.busy_bar_wi_fi_network-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('busy', '0cfa22201131')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.busy_bar_wi_fi_network',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Wi-Fi network',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wi-Fi network',
-    'platform': 'busy',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_ssid',
-    'unique_id': '0cfa22201131_wifi_ssid',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.busy_bar_wi_fi_network-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BUSY Bar Wi-Fi network',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.busy_bar_wi_fi_network',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Home',
-  })
-# ---
-# name: test_sensors[sensor.busy_bar_wi_fi_signal-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('busy', '0cfa22201131')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.busy_bar_wi_fi_signal',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Wi-Fi signal',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-    'original_icon': None,
-    'original_name': 'Wi-Fi signal',
-    'platform': 'busy',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wifi_signal',
-    'unique_id': '0cfa22201131_wifi_signal',
-    'unit_of_measurement': 'dBm',
-  })
-# ---
-# name: test_sensors[sensor.busy_bar_wi_fi_signal-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BUSY Bar Wi-Fi signal',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.busy_bar_wi_fi_signal',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-48',
+    ),
+    'sensor.busy_bar_wi_fi_signal': tuple(
+      '-48',
+      'dBm',
+    ),
   })
 # ---

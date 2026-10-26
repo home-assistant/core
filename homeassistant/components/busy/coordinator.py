@@ -1,43 +1,43 @@
 """Polling state for BUSY Bar."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
 from busylib import AsyncBusyBar
-from busylib.exceptions import BusyBarError
-from busylib.types import WifiState
-from pydantic import BaseModel
+from busylib.exceptions import BusyBarAPIError, BusyBarError
+from busylib.transports import AiohttpTransport
+from busylib.types import Status, StatusResponse
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 type BusyConfigEntry = ConfigEntry[BusyCoordinator]
 
 
-class BusyData(BaseModel):
-    """Readings and device metadata from one poll."""
+@dataclass
+class BusyData:
+    """Status and Wi-Fi responses from one poll."""
 
-    battery: int | None
-    wifi_signal: int | None
-    wifi_ssid: str | None
-    serial: str | None
-    hardware: str | None
-    firmware: str | None
+    status: Status
+    wifi: StatusResponse
 
 
 class BusyCoordinator(DataUpdateCoordinator[BusyData]):
-    """Read two endpoints every thirty seconds."""
+    """Poll BUSY Bar status."""
 
-    def __init__(
-        self, hass: HomeAssistant, entry: BusyConfigEntry, client: AsyncBusyBar
-    ) -> None:
-        """Initialize the shared polling client.
+    config_entry: BusyConfigEntry
 
-        Bind the shared coordinator and the state required by this instance.
-        """
+    def __init__(self, hass: HomeAssistant, entry: BusyConfigEntry) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -46,30 +46,21 @@ class BusyCoordinator(DataUpdateCoordinator[BusyData]):
             update_interval=timedelta(seconds=30),
             always_update=False,
         )
-        self.client = client
+        self.client = AsyncBusyBar(
+            entry.data[CONF_HOST],
+            token=entry.data[CONF_TOKEN],
+            transport=AiohttpTransport(async_get_clientsession(hass)),
+            timeout=10,
+        )
 
     @override
     async def _async_update_data(self) -> BusyData:
-        """Map device responses into the integration's polling state.
-
-        Translate the status and Wi-Fi responses without collecting a full snapshot.
-        """
+        """Read status and Wi-Fi information."""
         try:
-            status = await self.client.status()
-            wifi = await self.client.wifi_status()
+            return BusyData(await self.client.status(), await self.client.wifi_status())
         except BusyBarError as err:
+            if isinstance(err, BusyBarAPIError) and err.status_code in (401, 403):
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from err
             raise UpdateFailed("Cannot read BUSY Bar") from err
-        firmware = status.firmware
-        return BusyData(
-            battery=status.power.battery_charge if status.power else None,
-            wifi_signal=wifi.rssi if wifi.state == WifiState.CONNECTED else None,
-            wifi_ssid=wifi.ssid if wifi.state == WifiState.CONNECTED else None,
-            serial=status.device.serial_number if status.device else None,
-            hardware=status.device.otp_model if status.device else None,
-            firmware=(
-                f"{firmware.version}"
-                + (f" ({firmware.branch})" if firmware.branch else "")
-                if firmware and firmware.version
-                else None
-            ),
-        )

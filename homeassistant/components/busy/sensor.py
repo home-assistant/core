@@ -1,6 +1,10 @@
 """Battery and Wi-Fi sensors for BUSY Bar."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import override
+
+from busylib.types import WifiState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,25 +16,46 @@ from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import BusyConfigEntry, BusyCoordinator
+from .coordinator import BusyConfigEntry, BusyData
 from .entity import BusyEntity
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class BusySensorEntityDescription(SensorEntityDescription):
+    """Describe a BUSY Bar sensor."""
+
+    value_fn: Callable[[BusyData], int | str | None]
+
+
 SENSORS = (
-    SensorEntityDescription(
+    BusySensorEntityDescription(
         key="battery",
+        value_fn=lambda data: (
+            data.status.power.battery_charge if data.status.power else None
+        ),
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    BusySensorEntityDescription(
         key="wifi_signal",
+        value_fn=lambda data: (
+            data.wifi.rssi if data.wifi.state == WifiState.CONNECTED else None
+        ),
         translation_key="wifi_signal",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(key="wifi_ssid", translation_key="wifi_ssid"),
+    BusySensorEntityDescription(
+        key="wifi_ssid",
+        translation_key="wifi_ssid",
+        value_fn=lambda data: (
+            data.wifi.ssid if data.wifi.state == WifiState.CONNECTED else None
+        ),
+    ),
 )
 
 
@@ -39,10 +64,7 @@ async def async_setup_entry(
     entry: BusyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the three readings from the shared coordinator.
-
-    Create one entity for each sensor description using the shared state.
-    """
+    """Set up BUSY Bar sensors."""
     async_add_entities(
         BusySensor(entry.runtime_data, description) for description in SENSORS
     )
@@ -51,26 +73,10 @@ async def async_setup_entry(
 class BusySensor(BusyEntity, SensorEntity):
     """One value from the bar's last successful poll."""
 
-    def __init__(
-        self, coordinator: BusyCoordinator, description: SensorEntityDescription
-    ) -> None:
-        """Apply the reading's description to its stable identity.
-
-        Bind the shared coordinator and the state required by this instance.
-        """
-        super().__init__(coordinator, description.key)
-        self.entity_description = description
+    entity_description: BusySensorEntityDescription
 
     @property
     @override
     def native_value(self) -> int | str | None:
-        """Return the selected reading, preserving missing values.
-
-        Select one domain value by the entity description key.
-        """
-        data = self.coordinator.data
-        return {
-            "battery": data.battery,
-            "wifi_signal": data.wifi_signal,
-            "wifi_ssid": data.wifi_ssid,
-        }[self.entity_description.key]
+        """Return the reading from the last poll."""
+        return self.entity_description.value_fn(self.coordinator.data)

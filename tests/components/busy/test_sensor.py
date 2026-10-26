@@ -6,11 +6,7 @@ from busylib import types
 from busylib.exceptions import BusyBarRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -25,7 +21,14 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot the three readings and their shared device metadata."""
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+    assert snapshot == {
+        state.entity_id: (state.state, state.attributes.get("unit_of_measurement"))
+        for state in hass.states.async_all("sensor")
+    }
+    entries = er.async_entries_for_config_entry(
+        entity_registry, init_integration.entry_id
+    )
+    assert len(entries) == 3
     device = device_registry.async_get_device_by_identifier(
         ("busy", init_integration.unique_id), init_integration.entry_id
     )
@@ -35,7 +38,9 @@ async def test_sensors(
         "BUSY Bar",
         "BUSY123",
     )
-    assert device.sw_version == "1.0 (release)"
+    assert device.sw_version == "1.0"
+    assert device.hw_version == "BB.1"
+    assert device.configuration_url == "http://192.168.50.20"
 
 
 async def test_poll_failure_and_recovery(
@@ -43,6 +48,7 @@ async def test_poll_failure_and_recovery(
     mock_client: AsyncMock,
     init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Share two requests per poll and recover without reloading."""
     mock_client.wifi_status.side_effect = BusyBarRequestError("offline")
@@ -50,6 +56,7 @@ async def test_poll_failure_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.busy_bar_battery").state == "unavailable"
+    assert "Error fetching BUSY Bar data" in caplog.text
     mock_client.wifi_status.side_effect = None
     freezer.tick(30)
     async_fire_time_changed(hass)
