@@ -11,13 +11,10 @@ from renson_endura_delta.field_enum import (
     DataType,
 )
 from renson_endura_delta.renson import Level, RensonVentilation
-import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -47,33 +44,6 @@ SPEED_MAPPING = {
     Level.LEVEL4.value: 4,
 }
 
-SET_TIMER_LEVEL_SCHEMA: VolDictType = {
-    vol.Required("timer_level"): vol.In(
-        ["level1", "level2", "level3", "level4", "holiday", "breeze"]
-    ),
-    vol.Required("minutes"): cv.positive_int,
-}
-
-SET_BREEZE_SCHEMA: VolDictType = {
-    vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
-    vol.Required("temperature"): cv.positive_int,
-    vol.Required("activate"): bool,
-}
-
-SET_POLLUTION_SETTINGS_SCHEMA: VolDictType = {
-    vol.Required("day_pollution_level"): vol.In(
-        ["level1", "level2", "level3", "level4"]
-    ),
-    vol.Required("night_pollution_level"): vol.In(
-        ["level1", "level2", "level3", "level4"]
-    ),
-    vol.Optional("humidity_control", default=True): bool,
-    vol.Optional("airquality_control", default=True): bool,
-    vol.Optional("co2_control", default=True): bool,
-    vol.Optional("co2_threshold", default=600): cv.positive_int,
-    vol.Optional("co2_hysteresis", default=100): cv.positive_int,
-}
-
 
 SPEED_RANGE: tuple[float, float] = (1, 4)
 
@@ -89,24 +59,6 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities([RensonFan(api, coordinator)])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "set_timer_level",
-        SET_TIMER_LEVEL_SCHEMA,
-        "set_timer_level",
-    )
-
-    platform.async_register_entity_service(
-        "set_breeze", SET_BREEZE_SCHEMA, "set_breeze"
-    )
-
-    platform.async_register_entity_service(
-        "set_pollution_settings",
-        SET_POLLUTION_SETTINGS_SCHEMA,
-        "set_pollution_settings",
-    )
 
 
 class RensonFan(RensonEntity, FanEntity):

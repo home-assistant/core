@@ -1,6 +1,7 @@
 {
   "domain": "nice_go",
   "name": "Nice G.O.",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nice_go",

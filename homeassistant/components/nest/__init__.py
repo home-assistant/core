@@ -21,12 +21,11 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 from google_nest_sdm.traits import TraitType
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http import KEY_HASS_USER
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -40,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
     Unauthorized,
@@ -48,6 +48,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
@@ -59,8 +60,12 @@ from .const import (
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
     CONF_SUBSCRIPTION_NAME,
+    CONF_TOPIC_NAME,
     DATA_SDM,
     DOMAIN,
+    LEGACY_TOPIC_ISSUE_ID,
+    PUBSUB_LEARN_MORE_URL,
+    SUBSCRIPTION_NOT_FOUND_ISSUE_ID,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .media_source import (
@@ -76,27 +81,29 @@ from .types import DevicesAddedListener, NestConfigEntry, NestData
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
+SENSOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(probatio.EnsureList())}
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(CONF_CLIENT_ID): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                 # Required to use the new API (optional for compatibility)
-                vol.Optional(CONF_PROJECT_ID): cv.string,
-                vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
+                probatio.Optional(CONF_PROJECT_ID): cv.string,
+                probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
                 # Config that only currently works on the old API
-                vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_STRUCTURE): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
+                probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                probatio.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # Platforms for SDM API
@@ -237,23 +244,31 @@ class SignalUpdateCallback:
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="legacy_entry",
+        )
 
     if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_PROJECT_ID]
         )
 
+    _async_check_pubsub_topic(hass, entry)
+
     auth = await api.new_auth(hass, entry)
     await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_create_failed",
+        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
@@ -269,6 +284,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     # changes.
     update_callback = SignalUpdateCallback(hass, entry)
     subscriber.set_update_callback(update_callback.async_handle_event)
+    subscription_issue_id = SUBSCRIPTION_NOT_FOUND_ISSUE_ID.format(
+        entry_id=entry.entry_id
+    )
     try:
         unsub = await subscriber.start_async()
     except AuthException as err:
@@ -277,19 +295,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
-        _LOGGER.error("Configuration error: %s", err)
-        return False
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            subscription_issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url=PUBSUB_LEARN_MORE_URL,
+            translation_key="pubsub_subscription_not_found",
+            translation_placeholders={"entry_title": entry.title},
+        )
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_configuration_error",
+        ) from err
     except SubscriberTimeoutException as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="subscriber_timeout",
         ) from err
     except SubscriberException as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Subscriber error: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="subscriber_error",
         ) from err
+    ir.async_delete_issue(hass, DOMAIN, subscription_issue_id)
 
     try:
         device_manager = await subscriber.async_get_device_manager()
@@ -320,16 +352,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
+    ir.async_delete_issue(
+        hass, DOMAIN, LEGACY_TOPIC_ISSUE_ID.format(entry_id=entry.entry_id)
+    )
+    ir.async_delete_issue(
+        hass, DOMAIN, SUBSCRIPTION_NOT_FOUND_ISSUE_ID.format(entry_id=entry.entry_id)
+    )
     if (
         DATA_SDM not in entry.data
         or not (
@@ -345,18 +381,29 @@ async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> Non
         access_token=entry.data["token"]["access_token"],
         cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
     )
-    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
-    try:
-        await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
-        _LOGGER.warning(
-            (
-                "Unable to delete subscription '%s'; Will be automatically cleaned up"
-                " by cloud console: %s"
-            ),
-            subscription_name,
-            err,
-        )
+    await api.async_delete_subscription(admin_client, subscription_name)
+
+
+@callback
+def _async_check_pubsub_topic(hass: HomeAssistant, entry: NestConfigEntry) -> None:
+    """Create a repair issue if the entry uses a Google-hosted Pub/Sub topic."""
+    issue_id = LEGACY_TOPIC_ISSUE_ID.format(entry_id=entry.entry_id)
+    # Entries without a topic were created before self-hosted topics were supported
+    if (topic_name := entry.data.get(CONF_TOPIC_NAME)) is not None and (
+        not api.is_legacy_topic(topic_name)
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        learn_more_url=PUBSUB_LEARN_MORE_URL,
+        translation_key="legacy_pubsub_topic",
+        translation_placeholders={"entry_title": entry.title},
+    )
 
 
 class NestEventViewBase(HomeAssistantView, ABC):

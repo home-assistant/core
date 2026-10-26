@@ -7,7 +7,7 @@ import functools
 from itertools import chain
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import recorder, websocket_api
 from homeassistant.components.recorder.statistics import StatisticsRow
@@ -100,7 +100,7 @@ def _ws_with_manager(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/get_prefs",
+        probatio.Required("type"): "energy/get_prefs",
     }
 )
 @websocket_api.async_response
@@ -123,10 +123,10 @@ def ws_get_prefs(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/save_prefs",
-        vol.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
-        vol.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
-        vol.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Required("type"): "energy/save_prefs",
+        probatio.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
+        probatio.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 @websocket_api.async_response
@@ -146,7 +146,7 @@ async def ws_save_prefs(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/info",
+        probatio.Required("type"): "energy/info",
     }
 )
 @websocket_api.async_response
@@ -168,7 +168,7 @@ async def ws_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/validate",
+        probatio.Required("type"): "energy/validate",
     }
 )
 @websocket_api.async_response
@@ -183,7 +183,7 @@ async def ws_validate(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/solar_forecast",
+        probatio.Required("type"): "energy/solar_forecast",
     }
 )
 @websocket_api.async_response
@@ -236,12 +236,12 @@ async def ws_solar_forecast(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/fossil_energy_consumption",
-        vol.Required("start_time"): str,
-        vol.Required("end_time"): str,
-        vol.Required("energy_statistic_ids"): [str],
-        vol.Required("co2_statistic_id"): str,
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
+        probatio.Required("type"): "energy/fossil_energy_consumption",
+        probatio.Required("start_time"): str,
+        probatio.Required("end_time"): str,
+        probatio.Required("energy_statistic_ids"): [str],
+        probatio.Required("co2_statistic_id"): str,
+        probatio.Required("period"): probatio.Any("5minute", "hour", "day", "month"),
     }
 )
 @websocket_api.async_response

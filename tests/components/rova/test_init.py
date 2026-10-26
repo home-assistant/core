@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import ConnectTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 async def test_reload(

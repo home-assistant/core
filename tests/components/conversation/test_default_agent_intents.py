@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import (
     climate,
@@ -15,6 +16,7 @@ from homeassistant.components import (
     vacuum,
     valve,
 )
+from homeassistant.components.climate import intent as climate_intent
 from homeassistant.components.conversation import DOMAIN
 from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -40,8 +42,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
 
 
 class MockTodoListEntity(todo.TodoListEntity):
@@ -448,6 +448,8 @@ async def test_todo_add_item_fr(
 ) -> None:
     """Test that wildcard matches prioritize results with more literal text matched."""
     assert await async_setup_component(hass, todo.DOMAIN, {})
+    # The todo intent handlers are registered by a background task
+    await hass.async_block_till_done()
     hass.states.async_set("todo.liste_des_courses", 0, {})
 
     with (
@@ -507,6 +509,36 @@ async def test_climate_turn_on_off(
     assert len(off_calls) == 1
     call = off_calls[0]
     assert call.data == {"entity_id": [entity_id]}
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_climate_set_fan_mode(hass: HomeAssistant) -> None:
+    """Test setting the fan mode of a climate device by name."""
+    await climate_intent.async_setup_intents(hass)
+
+    entity_id = f"{climate.DOMAIN}.thermostat"
+    hass.states.async_set(
+        entity_id,
+        climate.HVACMode.COOL,
+        attributes={
+            ATTR_SUPPORTED_FEATURES: climate.ClimateEntityFeature.FAN_MODE,
+            climate.ATTR_FAN_MODE: "low",
+            climate.ATTR_FAN_MODES: ["auto", "low", "high"],
+        },
+    )
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+
+    calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
+    result = await conversation.async_converse(
+        hass, "set thermostat fan to high", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.data == {"entity_id": entity_id, "fan_mode": "high"}
 
 
 @pytest.mark.freeze_time(

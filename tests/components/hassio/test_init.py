@@ -29,10 +29,13 @@ from aiohasupervisor.models import (
     SupervisorOptions,
 )
 from freezegun.api import FrozenDateTimeFactory
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import User
 from homeassistant.components import frontend, hassio
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
@@ -53,7 +56,6 @@ from homeassistant.components.hassio import (
     hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.const import (
-    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DEFAULT_UPDATE_OPTIONS,
     ENTRY_DATA_USER,
@@ -67,8 +69,10 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -76,8 +80,6 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -366,7 +368,7 @@ async def test_setup_api_push_api_data_default(
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=80, refresh_token=None)
     )
-    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    hassio_user = hass.data[DATA_SUPERVISOR_USER]
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN
@@ -442,6 +444,60 @@ async def test_setup_api_existing_hassio_user(
     )
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+async def _async_assert_supervisor_user_adopted(
+    hass: HomeAssistant, user: User, human: User
+) -> None:
+    """Assert setup adopted the existing Supervisor system user."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data[ENTRY_DATA_USER] == user.id
+    assert entry.data[ENTRY_DATA_USER] != human.id
+    assert [
+        existing
+        for existing in await hass.auth.async_get_users()
+        if existing.system_generated and existing.name == HASSIO_USER_NAME
+    ] == [user]
+
+
+async def test_setup_adopts_existing_supervisor_user(hass: HomeAssistant) -> None:
+    """Test setup reuses an existing Supervisor system user.
+
+    When the config entry data (and legacy store) naming the Supervisor user
+    is lost, an existing Supervisor system user must be adopted instead of
+    creating a duplicate. A regular user named alike must not be picked up.
+    """
+    human = await hass.auth.async_create_user(HASSIO_USER_NAME)
+    user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN).add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    await _async_assert_supervisor_user_adopted(hass, user, human)
+
+
+async def test_setup_adopts_existing_supervisor_user_without_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup reuses an existing Supervisor system user without config entry.
+
+    Same as above, but with the config entry itself gone: the entry created by
+    the system flow must name the adopted user.
+    """
+    human = await hass.auth.async_create_user(HASSIO_USER_NAME)
+    user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+        await hass.async_block_till_done()
+
+    await _async_assert_supervisor_user_adopted(hass, user, human)
 
 
 async def test_setup_migrates_legacy_hassio_store_to_config_entry(
@@ -1312,7 +1368,7 @@ async def test_setup_hardware_integration(
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
             f"homeassistant.components.{integration}.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",
@@ -2062,3 +2118,58 @@ async def test_supervisor_issues_not_set_on_coordinator_failure(
     assert DATA_KEY_SUPERVISOR_ISSUES not in hass.data
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+@pytest.mark.parametrize(
+    ("event_data", "expected_reload_count"),
+    [
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "network",
+                "data": {"host_internet": True},
+            },
+            1,
+            id="network-update",
+        ),
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+            0,
+            id="other-update-key",
+        ),
+        pytest.param(
+            {"event": "health_changed", "data": {"healthy": True}},
+            0,
+            id="other-event-type",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_supervisor_network_update_event(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    event_data: dict[str, Any],
+    expected_reload_count: int,
+) -> None:
+    """Test supervisor network update events reload adapters."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.network.async_reload_adapters"
+        ) as mock_reload_adapters,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert mock_reload_adapters.call_count == expected_reload_count

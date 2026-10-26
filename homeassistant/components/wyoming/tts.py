@@ -71,6 +71,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._rebuild_voices(self._tts_service)
 
         self._attr_name = self._tts_service.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

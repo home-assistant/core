@@ -6,19 +6,18 @@ from unittest.mock import AsyncMock, patch
 from aiolibrenms.devices import LibrenmsDevices
 from aiolibrenms.system import LibrenmsSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.librenms.const import DOMAIN
 
 from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_DEVICES_DATA, MOCK_SYSTEM_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.librenms.async_setup_entry", return_value=True
+        "homeassistant.components.librenms.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -58,7 +57,7 @@ async def mock_librenms(
     """Mock the LibreNMS API."""
     with (
         patch(
-            "homeassistant.components.librenms.coordinator.Librenms", autospec=True
+            "homeassistant.components.librenms.Librenms", autospec=True
         ) as mock_librenms,
         patch(
             "homeassistant.components.librenms.config_flow.Librenms", new=mock_librenms

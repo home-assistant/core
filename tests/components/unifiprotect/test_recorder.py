@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import Camera, EventType, SmartDetectObjectType
 
@@ -22,8 +23,6 @@ from .utils import (
     init_entry,
     setup_public_camera,
 )
-
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(

@@ -1,6 +1,7 @@
 {
   "domain": "fivem",
   "name": "FiveM",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@Sander0542"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fivem",

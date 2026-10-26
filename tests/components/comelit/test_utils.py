@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
 from aiocomelit.exceptions import (
     CannotAuthenticate,
@@ -11,6 +11,7 @@ from aiocomelit.exceptions import (
     DeviceStorageFailureError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.comelit.const import DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID_0 = "switch.switch0"
 ENTITY_ID_1 = "climate.climate0"
@@ -53,7 +52,7 @@ async def test_device_remove_stale(
     assert state.attributes[ATTR_HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,

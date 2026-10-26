@@ -1,7 +1,11 @@
 """Tests for the homeassistant LLM tools platform."""
 
+from typing import Any
+from unittest.mock import patch
+
 from probatio import to_openapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import llm as llm_component
@@ -15,11 +19,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     llm,
 )
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = "light.kitchen"
+RENDER_TEMPLATE_TOOL = "homeassistant__render_template"
+SEARCH_ACTIONS_TOOL = "homeassistant__search_actions"
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +60,245 @@ async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     assert ha_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
+async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
+    """Test the platform offers its tools to the Home Assistant API."""
+    result = ha_llm.async_get_tools(hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT)
+    assert [tool.name for tool in result.tools] == [
+        RENDER_TEMPLATE_TOOL,
+        SEARCH_ACTIONS_TOOL,
+    ]
+    assert result.prompt is None
+
+
+async def _async_render_template(
+    hass: HomeAssistant, tool_args: dict[str, Any]
+) -> llm.ToolResult:
+    """Render a template with the render template tool."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(
+        hass, llm_context, llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(tool for tool in result.tools if tool.name == RENDER_TEMPLATE_TOOL)
+    return await tool.async_call(
+        hass,
+        llm.ToolInput(RENDER_TEMPLATE_TOOL, tool_args),
+        llm_context,
+    )
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected"),
+    [
+        pytest.param(
+            {"template": "{{ states('light.kitchen') }}"},
+            {"result": "on"},
+            id="state",
+        ),
+        pytest.param(
+            {"template": "{{ [1, 2] }}"}, {"result": "[1, 2]"}, id="not_parsed"
+        ),
+        pytest.param(
+            {"template": "static text"}, {"result": "static text"}, id="static"
+        ),
+        pytest.param(
+            {
+                "template": "{{ trigger.to_state.state }}",
+                "variables": {"trigger": {"to_state": {"state": "on"}}},
+            },
+            {"result": "on"},
+            id="variables",
+        ),
+    ],
+)
+async def test_render_template(
+    hass: HomeAssistant, tool_args: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test the render template tool returns the rendered template as a string."""
+    response = await _async_render_template(hass, tool_args)
+    assert response == llm.ToolResult(data=expected)
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("{{ states('light.kitchen') ", id="syntax_error"),
+        pytest.param("{{ undefined_variable }}", id="undefined_variable"),
+        pytest.param("{{ 1 / 0 }}", id="render_error"),
+    ],
+)
+async def test_render_template_error(hass: HomeAssistant, template: str) -> None:
+    """Test the render template tool reports template errors."""
+    response = await _async_render_template(hass, {"template": template})
+    assert response.error is True
+    assert response.data["error"]
+
+
+async def test_render_template_timeout(hass: HomeAssistant) -> None:
+    """Test the render template tool reports a template that renders too slowly."""
+    with patch(
+        "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
+        return_value=True,
+    ):
+        response = await _async_render_template(hass, {"template": "{{ 1 }}"})
+    assert response == llm.ToolResult(
+        data={"error": "Template rendering exceeded the maximum time of 3 seconds"},
+        error=True,
+    )
+
+
+async def test_render_template_output_too_large(hass: HomeAssistant) -> None:
+    """Test the render template tool reports output that exceeds the maximum size."""
+    response = await _async_render_template(hass, {"template": "{{ 'a' * 16385 }}"})
+    assert response == llm.ToolResult(
+        data={
+            "error": "Template output of 16385 characters exceeded "
+            "the maximum of 16384 characters"
+        },
+        error=True,
+    )
+
+
+async def _async_call_tool(
+    hass: HomeAssistant, tool_name: str, tool_args: dict[str, Any]
+) -> llm.ToolResult:
+    """Call a tool of the Home Assistant API."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(
+        hass, llm_context, llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(tool for tool in result.tools if tool.name == tool_name)
+    return await tool.async_call(hass, llm.ToolInput(tool_name, tool_args), llm_context)
+
+
+@pytest.fixture
+def mock_actions(hass: HomeAssistant) -> None:
+    """Register test actions with descriptions."""
+    actions = {
+        "turn_on": {
+            "name": "Turn on",
+            "description": "Turns on the device.",
+            "target": {"entity": [{"domain": ["test"]}]},
+            "fields": {
+                "transition": {"selector": {"number": {"min": 0, "max": 300}}},
+                "advanced_fields": {
+                    "collapsed": True,
+                    "fields": {
+                        "brightness": {
+                            "description": "Brightness of the device.",
+                            "required": True,
+                            "selector": {"number": {"min": 0, "max": 255}},
+                        },
+                    },
+                },
+            },
+        },
+        "turn_off": {"name": "Turn off", "description": "Turns off the device."},
+        "toggle": {
+            "name": "Toggle",
+            "description": "Turns the device on when it is off.",
+        },
+        "restart": {"name": "Restart", "description": "Restarts the device."},
+        "large": {
+            "name": "Large",
+            "description": "Has many options.",
+            "fields": {
+                "option": {
+                    "description": "The option to pick.",
+                    "selector": {
+                        "select": {"options": [f"option_{i}" for i in range(2000)]}
+                    },
+                },
+            },
+        },
+        "translated": {},
+    }
+    for action, schema in actions.items():
+        hass.services.async_register("test", action, lambda call: None)
+        async_set_service_schema(hass, "test", action, schema)
+
+
+@pytest.mark.usefixtures("mock_actions")
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("TEST turn on", id="name_before_description"),
+        pytest.param("test turn_off", id="underscore"),
+        pytest.param("test device", id="more"),
+        pytest.param("test translated", id="translated"),
+        pytest.param("test large", id="too_large"),
+        pytest.param("restart", id="exact_name_first"),
+        pytest.param("test missing", id="no_match"),
+    ],
+)
+async def test_search_actions(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, query: str
+) -> None:
+    """Test the search actions tool returns the best matching actions."""
+    translations = {
+        "component.test.services.translated.name": "Translated",
+        "component.test.services.translated.description": "Translated action.",
+        "component.test.services.turn_on.fields.transition.description": (
+            "Duration of the transition."
+        ),
+    }
+    with patch(
+        "homeassistant.components.homeassistant.llm.translation.async_get_translations",
+        return_value=translations,
+    ):
+        response = await _async_call_tool(hass, SEARCH_ACTIONS_TOOL, {"query": query})
+    assert response == snapshot
+
+
+async def test_search_actions_placeholders_and_empty_target(
+    hass: HomeAssistant,
+) -> None:
+    """Test the search actions tool fills in placeholders and keeps an empty target."""
+    descriptions = {
+        "test": {
+            "open": {
+                # services.yaml gives None for a target without restrictions
+                "target": None,
+                "fields": {"url": {"selector": {"text": {}}}},
+                "description_placeholders": {"docs_url": "https://example.com"},
+            }
+        }
+    }
+    translations = {
+        "component.test.services.open.name": "Open",
+        "component.test.services.open.description": "Opens it, see {docs_url}.",
+        "component.test.services.open.fields.url.description": "See {docs_url}.",
+    }
+    with (
+        patch(
+            "homeassistant.components.homeassistant.llm.async_get_all_descriptions",
+            return_value=descriptions,
+        ),
+        patch(
+            "homeassistant.components.homeassistant.llm.translation.async_get_translations",
+            return_value=translations,
+        ),
+    ):
+        response = await _async_call_tool(hass, SEARCH_ACTIONS_TOOL, {"query": "open"})
+    assert response == llm.ToolResult(
+        data={
+            "actions": [
+                {
+                    "action": "test.open",
+                    "name": "Open",
+                    "description": "Opens it, see https://example.com.",
+                    "target": {},
+                    "fields": {
+                        "url": {
+                            "description": "See https://example.com.",
+                            "selector": {"text": {}},
+                        }
+                    },
+                }
+            ]
+        }
+    )
+
+
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:
     """Test the platform contributes the live-context and static-overview prompt."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
@@ -83,7 +327,9 @@ async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None
     response = await tool.async_call(
         hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
+    assert response == llm.ToolResult(
+        data={"error": ha_llm.NO_ENTITIES_PROMPT}, error=True
+    )
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
@@ -99,8 +345,8 @@ async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     response = await tool.async_call(
         hass, llm.ToolInput("homeassistant__GetLiveContext", {}), llm_context
     )
-    assert response["success"] is True
-    assert "Kitchen Light" in response["result"]
+    assert response.error is False
+    assert "Kitchen Light" in response.data["result"]
 
 
 async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
@@ -261,145 +507,142 @@ async def test_get_live_context_tool_filter(
     tools = await llm_component.async_get_tools(hass, llm_context, "assist")
     tool = next(t for t in tools.tools if t.name == "homeassistant__GetLiveContext")
 
-    async def _get_live_context(tool_args: dict) -> dict:
+    async def _get_live_context(tool_args: dict) -> llm.ToolResult:
         return await tool.async_call(
             hass, llm.ToolInput("homeassistant__GetLiveContext", tool_args), llm_context
         )
 
     # Filter by area and domain (example 1)
     result = await _get_live_context({"area": "Office", "domain": "light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Filter by name (example 2)
     result = await _get_live_context({"name": "Front Door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Name filter is case insensitive
     result = await _get_live_context({"name": "front door"})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter matches area aliases
     result = await _get_live_context({"area": "workspace"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Domain filter accepts a list
     result = await _get_live_context({"domain": ["switch", "lock"]})
-    assert result["success"] is True
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
-    assert "Office Light" not in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Domain filter is case insensitive
     result = await _get_live_context({"domain": "Light"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # No filters returns all exposed entities
     result = await _get_live_context({})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Front Door" in result.data["result"]
 
     # Filter that matches nothing returns a descriptive error
     result = await _get_live_context({"name": "Does Not Exist"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities matched name 'Does Not Exist'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities matched name 'Does Not Exist'"},
+        error=True,
+    )
 
     # Name filter strips surrounding whitespace
     result = await _get_live_context({"name": "  Front Door  "})
-    assert result["success"] is True
-    assert "Front Door" in result["result"]
+    assert result.error is False
+    assert "Front Door" in result.data["result"]
 
     # Area filter strips surrounding whitespace
     result = await _get_live_context({"area": "  Office  "})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
 
     # Name filter accepts entity_id
     result = await _get_live_context({"name": office_light.entity_id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Area filter accepts area_id
     result = await _get_live_context({"area": office.id})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" in result["result"]
-    assert "Kitchen Light" not in result["result"]
-    assert "Front Door" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" in result.data["result"]
+    assert "Kitchen Light" not in result.data["result"]
+    assert "Front Door" not in result.data["result"]
 
     # Name filter matches entity aliases
     result = await _get_live_context({"name": "cooking lamp"})
-    assert result["success"] is True
-    assert "Kitchen Light" in result["result"]
-    assert "Office Light" not in result["result"]
+    assert result.error is False
+    assert "Kitchen Light" in result.data["result"]
+    assert "Office Light" not in result.data["result"]
 
     # Combining name + area narrows the result
     result = await _get_live_context({"name": "Office Light", "area": "Office"})
-    assert result["success"] is True
-    assert "Office Light" in result["result"]
-    assert "Office Switch" not in result["result"]
+    assert result.error is False
+    assert "Office Light" in result.data["result"]
+    assert "Office Switch" not in result.data["result"]
 
     # Combining name + area returns the failing constraint in the error
     result = await _get_live_context({"name": "Office Light", "area": "Kitchen"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in area 'Kitchen'",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in area 'Kitchen'"}, error=True
+    )
 
     # Unknown area distinguishes "invalid area" from "no entities in area"
     result = await _get_live_context({"area": "Garage"})
-    assert result == {
-        "success": False,
-        "error": "Area 'Garage' does not exist",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "Area 'Garage' does not exist"}, error=True
+    )
 
     # Unknown domain reports which domain(s) failed
     result = await _get_live_context({"domain": "fan"})
-    assert result == {
-        "success": False,
-        "error": "No exposed entities found in domain(s): fan",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "No exposed entities found in domain(s): fan"}, error=True
+    )
 
     # Entities sharing a name are all returned rather than failing as an
     # ambiguous match, since this tool only returns context.
     result = await _get_live_context({"name": "AC"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 2
-    assert "Office" in result["result"]
-    assert "Kitchen" in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 2
+    assert "Office" in result.data["result"]
+    assert "Kitchen" in result.data["result"]
 
     # Combining a shared name with an area narrows to the single match
     result = await _get_live_context({"name": "AC", "area": "Kitchen"})
-    assert result["success"] is True
-    assert result["result"].count("domain: climate") == 1
-    assert "Kitchen" in result["result"]
-    assert "Office" not in result["result"]
+    assert result.error is False
+    assert result.data["result"].count("domain: climate") == 1
+    assert "Kitchen" in result.data["result"]
+    assert "Office" not in result.data["result"]
 
 
 async def test_get_live_context_schema(
@@ -413,3 +656,45 @@ async def test_get_live_context_schema(
     schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
 
     assert schema == snapshot
+
+
+async def test_get_exposed_entities_brightness_percentage(hass: HomeAssistant) -> None:
+    """Test that a light's brightness is also rendered as a percentage."""
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", ENTITY_ID, True)
+
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    attributes = exposed[ENTITY_ID]["attributes"]
+
+    # The raw attribute is unchanged, so anything reading it keeps working.
+    assert attributes["brightness"] == "128"
+    # The percentage is the inverse of the percentage-to-brightness conversion.
+    assert attributes["brightness_pct"] == "50"
+
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 255}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "100"
+
+    # A lit light never rounds down to nothing.
+    hass.states.async_set(
+        ENTITY_ID, "on", {"friendly_name": "Kitchen Light", "brightness": 1}
+    )
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed[ENTITY_ID]["attributes"]["brightness_pct"] == "1"
+
+    hass.states.async_set(ENTITY_ID, "off", {"friendly_name": "Kitchen Light"})
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert "brightness_pct" not in exposed[ENTITY_ID].get("attributes", {})
+
+    # Only lights get the percentage, whatever attribute another domain carries.
+    hass.states.async_set(
+        "fan.kitchen", "on", {"friendly_name": "Kitchen Fan", "brightness": 128}
+    )
+    async_expose_entity(hass, "conversation", "fan.kitchen", True)
+    exposed = async_get_exposed_entities(hass, "conversation", include_state=True)
+    assert exposed["fan.kitchen"]["attributes"]["brightness"] == "128"
+    assert "brightness_pct" not in exposed["fan.kitchen"]["attributes"]

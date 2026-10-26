@@ -23,7 +23,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.helpers.recorder import get_instance
+from homeassistant.helpers.recorder import get_instance, session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 
@@ -41,7 +41,7 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import execute_stmt_lambda_element, session_scope
+from ..util import execute_stmt_lambda_element
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
@@ -123,7 +123,7 @@ def _stmt_and_join_attributes_for_start_state(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect,
+    subquery: Subquery,
     no_attributes: bool,
     include_last_changed: bool,
     include_last_reported: bool,

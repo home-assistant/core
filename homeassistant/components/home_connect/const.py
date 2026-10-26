@@ -42,10 +42,19 @@ BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confi
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 
+BSH_OPERATION_STATE_INACTIVE = "BSH.Common.EnumType.OperationState.Inactive"
+BSH_OPERATION_STATE_READY = "BSH.Common.EnumType.OperationState.Ready"
 BSH_OPERATION_STATE_DELAYED_START = "BSH.Common.EnumType.OperationState.DelayedStart"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
 BSH_OPERATION_STATE_PAUSE = "BSH.Common.EnumType.OperationState.Pause"
 BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
+
+# Option events that only describe the current run of the active program
+PROGRAM_PROGRESS_EVENT_KEYS = (
+    EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME,
+    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
+    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
+)
 
 
 REFRIGERATION_STATUS_DOOR_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
@@ -180,6 +189,7 @@ COFFEE_TEMPERATURE_OPTIONS = {
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.94C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.95C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.96C",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.98C",
     )
 }
 

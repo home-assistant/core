@@ -1,6 +1,7 @@
 {
   "domain": "schluter",
   "name": "Schluter",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@prairieapps"],
   "documentation": "https://www.home-assistant.io/integrations/schluter",
   "iot_class": "cloud_polling",

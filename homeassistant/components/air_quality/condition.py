@@ -5,7 +5,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON, UnitOfDensity, UnitOfRatio
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    UnitOfDensity,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
@@ -20,6 +26,7 @@ from homeassistant.util.unit_conversion import (
     NitrogenDioxideConcentrationConverter,
     NitrogenMonoxideConcentrationConverter,
     OzoneConcentrationConverter,
+    RadiationConcentrationConverter,
     SulphurDioxideConcentrationConverter,
     UnitlessRatioConverter,
 )
@@ -94,6 +101,11 @@ CONDITIONS: dict[str, type[Condition]] = {
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
         UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         SulphurDioxideConcentrationConverter,
+    ),
+    "is_radon_value": make_entity_numerical_condition_with_unit(
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.RADON)},
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        RadiationConcentrationConverter,
     ),
     # Numerical sensor conditions without unit conversion (single-unit device classes)
     "is_co2_value": make_entity_numerical_condition(

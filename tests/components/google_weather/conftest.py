@@ -9,20 +9,19 @@ from google_weather_api import (
     HourlyForecastResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.google_weather.async_setup_entry", return_value=True
+        "homeassistant.components.google_weather.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

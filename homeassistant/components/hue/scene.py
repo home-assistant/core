@@ -6,27 +6,20 @@ from typing import Any, override
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
+from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
-import voluptuous as vol
+from aiohue.v2.models.zone import Zone
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import HueBridge, HueConfigEntry
-from .const import DOMAIN
+from .const import ATTR_BRIGHTNESS, ATTR_DYNAMIC, ATTR_SPEED, DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
-
-SERVICE_ACTIVATE_SCENE = "activate_scene"
-ATTR_DYNAMIC = "dynamic"
-ATTR_SPEED = "speed"
-ATTR_BRIGHTNESS = "brightness"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,13 +43,21 @@ async def async_setup_entry(
         event_type: EventType, resource: HueScene | HueSmartScene
     ) -> None:
         """Add entity from Hue resource."""
+        if (group := api.scenes.get_group(resource.id)) is None:
+            LOGGER.warning(
+                "Skipping Hue scene %s: group %s could not be resolved",
+                resource.id,
+                resource.group.rid,
+            )
+            return
+
         # Catch creation errors to continue adding other scenes even if one fails
         try:
             entity: HueSceneEntityBase
             if isinstance(resource, HueSmartScene):
-                entity = HueSmartSceneEntity(bridge, api.scenes, resource)
+                entity = HueSmartSceneEntity(bridge, api.scenes, resource, group)
             else:
-                entity = HueSceneEntity(bridge, api.scenes, resource)
+                entity = HueSceneEntity(bridge, api.scenes, resource, group)
         except KeyError, StopIteration:
             LOGGER.exception("Unable to create Hue scene entity for %s", resource.id)
             return
@@ -72,25 +73,6 @@ async def async_setup_entry(
         api.scenes.subscribe(async_add_entity, event_filter=EventType.RESOURCE_ADDED)
     )
 
-    # add platform service to turn_on/activate scene with advanced options
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ACTIVATE_SCENE,
-        {
-            vol.Optional(ATTR_DYNAMIC): vol.Coerce(bool),
-            vol.Optional(ATTR_SPEED): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            ),
-            vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=3600)
-            ),
-            vol.Optional(ATTR_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
-            ),
-        },
-        "_async_activate",
-    )
-
 
 class HueSceneEntityBase(HueBaseEntity, SceneEntity):
     """Base Representation of a Scene entity from Hue Scenes."""
@@ -102,14 +84,13 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         bridge: HueBridge,
         controller: ScenesController,
         resource: HueScene | HueSmartScene,
+        group: Room | Zone,
     ) -> None:
         """Initialize the entity."""
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        if (hue_group := self.controller.get_group(self.resource.id)) is None:
-            raise KeyError(self.resource.group.rid)
-        self.hue_group = hue_group
+        self.hue_group = group
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(

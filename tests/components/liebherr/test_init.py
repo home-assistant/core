@@ -27,6 +27,7 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -36,8 +37,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 # Test errors during initial get_devices() call in async_setup_entry
 @pytest.mark.parametrize(
@@ -45,8 +44,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
     [
         (LiebherrAuthenticationError("Invalid API key"), ConfigEntryState.SETUP_ERROR),
         (LiebherrConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+        (LiebherrTimeoutError("Request timed out"), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["auth_failed", "connection_error"],
+    ids=["auth_failed", "connection_error", "timeout"],
 )
 async def test_setup_entry_errors(
     hass: HomeAssistant,
@@ -72,8 +72,9 @@ async def test_setup_entry_errors(
     [
         (LiebherrAuthenticationError("Invalid API key"), ConfigEntryState.SETUP_ERROR),
         (LiebherrConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+        (LiebherrTimeoutError("Request timed out"), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["auth_failed", "connection_error"],
+    ids=["auth_failed", "connection_error", "timeout"],
 )
 async def test_coordinator_setup_errors(
     hass: HomeAssistant,
@@ -305,11 +306,13 @@ async def test_dynamic_device_discovery_no_new_devices(
     [
         LiebherrConnectionError("Connection failed"),
         LiebherrAuthenticationError("Auth failed"),
+        LiebherrTimeoutError("Request timed out"),
     ],
-    ids=["connection_error", "auth_error"],
+    ids=["connection_error", "auth_error", "timeout"],
 )
 async def test_dynamic_device_discovery_api_error(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -327,6 +330,7 @@ async def test_dynamic_device_discovery_api_error(
     # No crash, no new entities
     assert len(hass.states.async_all()) == initial_states
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "Unexpected error scanning for new devices" not in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")

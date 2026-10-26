@@ -1,6 +1,7 @@
 {
   "domain": "netdata",
   "name": "Netdata",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/netdata",
   "iot_class": "local_polling",

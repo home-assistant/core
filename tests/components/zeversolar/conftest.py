@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zeversolar import StatusEnum, ZeverSolarData
 
 from homeassistant.components.zeversolar.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_HOST_ZEVERSOLAR, MOCK_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -6,7 +6,9 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from asyncssh.sftp import SFTPError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.sftp_storage.backup import (
     async_register_backup_agents_listener,
@@ -15,7 +17,6 @@ from homeassistant.components.sftp_storage.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .asyncssh_mock import SSHClientConnectionMock
@@ -27,7 +28,11 @@ from .conftest import (
     ComponentSetup,
 )
 
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -63,32 +68,32 @@ async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    sftp_agent = {"agent_id": f"{DOMAIN}.{TEST_AGENT_ID}", "name": CONFIG_ENTRY_TITLE}
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert response["result"] == {
-        "agents": [
-            {"agent_id": "backup.local", "name": "local"},
-            {"agent_id": f"{DOMAIN}.{TEST_AGENT_ID}", "name": CONFIG_ENTRY_TITLE},
-        ],
-    }
+    assert response["result"] == {"agents": [local_agent, sftp_agent]}
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert (
-        response["result"]
-        == {"agents": [{"agent_id": "backup.local", "name": "local"}]}
-        or config_entry.state is ConfigEntryState.NOT_LOADED
-    )
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, sftp_agent]}
 
 
 async def test_agents_list_backups(
@@ -291,6 +296,29 @@ async def test_agents_upload(
     assert uploaded_metadata == BACKUP_METADATA["metadata"]
 
 
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_ssh_connection: SSHClientConnectionMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that upload progress is reported after each written chunk."""
+    agent_id = f"{DOMAIN}.{TEST_AGENT_ID}"
+    mock_write = mock_ssh_connection._sftp._mock_open._mock_write
+    # Report each chunk's progress in its own event
+    mock_write.side_effect = lambda *args: flush_upload_progress(hass, freezer)
+
+    with collect_upload_events(hass, agent_id) as events:
+        resp = await upload_backup_via_http(
+            await hass_client(), agent_id, TEST_AGENT_BACKUP, [b"abc", b"defgh"]
+        )
+
+    assert resp.status == 201
+    assert [c.args[0] for c in mock_write.call_args_list[:2]] == [b"abc", b"defgh"]
+    # The manager emits the first (0) and last (backup size) events
+    assert [e.uploaded_bytes for e in events] == [0, 3, 8, TEST_AGENT_BACKUP.size]
+
+
 async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -339,7 +367,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     # Called 2 times, to remove metadata and backup file.
     assert mock_ssh_connection._sftp._mock_unlink.call_count == 2
@@ -350,17 +378,18 @@ async def test_agents_delete(
     [
         (
             [True, False],
-            {"agent_errors": {}},
+            {"agent_error_translations": {}, "agent_errors": {}},
         ),  # First `True` is to confirm the metadata file exists
         (
             SFTPError(0, "manual"),
             {
+                "agent_error_translations": {},
                 "agent_errors": {
                     f"{DOMAIN}.{TEST_AGENT_ID}": (
                         f"Failed to delete backup id:"
                         f" {TEST_AGENT_BACKUP.backup_id}: manual"
                     )
-                }
+                },
             },
         ),
     ],
@@ -410,7 +439,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:

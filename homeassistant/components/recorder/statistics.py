@@ -13,6 +13,7 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
+import probatio
 from sqlalchemy import (
     Label,
     Select,
@@ -28,13 +29,16 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
 
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import (
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, get_instance, session_scope
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -78,8 +82,6 @@ from homeassistant.util.unit_conversion import (
 
 from .const import (
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
@@ -109,9 +111,7 @@ from .util import (
     execute,
     execute_stmt_lambda_element,
     filter_unique_constraint_integrity_error,
-    get_instance,
     retryable_database_job,
-    session_scope,
 )
 
 if TYPE_CHECKING:
@@ -317,6 +317,11 @@ class ShortTermStatisticsRunCache:
         """Cache the latest id for the each metadata_id."""
         self._latest_id_by_metadata_id.update(metadata_id_to_id)
 
+    def remove_metadata_ids(self, metadata_ids: Iterable[int]) -> None:
+        """Remove the cached latest ids for the metadata_ids."""
+        for metadata_id in metadata_ids:
+            self._latest_id_by_metadata_id.pop(metadata_id, None)
+
 
 class BaseStatisticsRow(TypedDict, total=False):
     """A processed row of statistic data."""
@@ -473,7 +478,7 @@ def validate_statistic_id(value: str) -> str:
     if valid_statistic_id(value):
         return value
 
-    raise vol.Invalid(f"Statistics ID {value} is an invalid statistic ID")
+    raise probatio.Invalid(f"Statistics ID {value} is an invalid statistic ID")
 
 
 @dataclasses.dataclass
@@ -685,7 +690,7 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
-CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = probatio.Schema({str: {probatio.Any(str, None): str}})
 # Keep track of domains for which a warning about failure
 # to collect custom units has been logged
 _warn_custom_units_error: set[str] = set()
@@ -727,7 +732,7 @@ def _get_custom_equivalent_units(
                 platform_custom_equivalent_units
             )
             custom_equivalent_units_per_entity |= validated_data
-        except vol.Invalid as inv:
+        except probatio.Invalid as inv:
             if domain not in _warn_custom_units_error:
                 _warn_custom_units_error.add(domain)
                 _LOGGER.warning(
@@ -970,6 +975,32 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
         instance.statistics_meta_manager.delete(session, statistic_ids)
 
 
+def clear_statistics_range(
+    instance: Recorder,
+    statistic_ids: list[str],
+    start_time: datetime,
+    end_time: datetime,
+) -> None:
+    """Clear statistics rows which overlap a time range."""
+    with session_scope(session=instance.get_session()) as session:
+        metadata = instance.statistics_meta_manager.get_many(
+            session, statistic_ids=set(statistic_ids)
+        )
+        if not metadata:
+            return
+        metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
+        for table in (StatisticsShortTerm, Statistics):
+            # Delete each row whose period overlaps the range. A row which
+            # only partly overlaps also includes the bad values.
+            session.query(table).filter(
+                table.metadata_id.in_(metadata_ids),
+                table.start_ts > (start_time - table.duration).timestamp(),
+                table.start_ts < end_time.timestamp(),
+            ).delete(synchronize_session=False)
+    # The cached latest short term statistics can be among the deleted rows.
+    get_short_term_statistics_run_cache(instance.hass).remove_metadata_ids(metadata_ids)
+
+
 @callback
 def async_update_statistics_metadata(
     hass: HomeAssistant,
@@ -1199,9 +1230,6 @@ def _reduce_statistics(
         mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
-        # Use the real local period end, not last_start + fixed duration: on a
-        # 25-hour fall-back day, +24h stays in the same local day and a lone
-        # partial-hour row would never flush.
         fake_entry: StatisticsRow = {
             "start": period_start_end(stat_list[-1]["start"])[1]
         }
@@ -2776,6 +2804,9 @@ def _build_stats(
     ]
 
 
+_NOT_CONVERTED_COLUMNS = {"last_reset", "mean_weight"}
+
+
 def _build_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
@@ -2784,13 +2815,21 @@ def _build_converted_stats(
     convert: Callable[[float | None], float | None],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
+    # last_reset is a timestamp and mean_weight a weight, they have no unit
+    convert_mapping = tuple(
+        item for item in row_mapping if item[0] not in _NOT_CONVERTED_COLUMNS
+    )
+    keep_mapping = tuple(
+        item for item in row_mapping if item[0] in _NOT_CONVERTED_COLUMNS
+    )
     return [
         {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{key: db_row[idx] for key, idx in keep_mapping},  # type: ignore[typeddict-item]
             **{
-                key: None if (v := db_row[idx]) is None else convert(v)  # type: ignore[typeddict-item]
-                for key, idx in row_mapping
+                key: None if (v := db_row[idx]) is None else convert(v)
+                for key, idx in convert_mapping
             },
         }
         for db_row in db_rows
@@ -3049,7 +3088,7 @@ def async_add_external_statistics(
 
     if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
         report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
+            "doesn't specify mean_type when calling async_add_external_statistics",
             breaks_in_ha_version="2026.11",
             exclude_integrations={DOMAIN},
         )

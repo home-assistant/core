@@ -14,7 +14,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> None:
     """Set up Flexit Nordic (BACnet) from a config entry."""
 
     coordinator = FlexitCoordinator(hass, entry)
@@ -23,9 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> None:
     """Unload the Flexit Nordic (BACnet) config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

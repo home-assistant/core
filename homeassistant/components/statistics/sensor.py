@@ -4,13 +4,14 @@ from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
+from itertools import pairwise
 import logging
 import math
 import statistics
 import time
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
@@ -62,6 +63,10 @@ from homeassistant.util.enum import try_parse_enum
 from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+# Samples expiring within this window are purged together in one update,
+# so bursts of samples do not each cause a separate state write.
+PURGE_COALESCE_WINDOW_SECONDS = 1.0
 
 # Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
@@ -120,9 +125,14 @@ def _stat_average_linear(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += 0.5 * (states[i] + states[i - 1]) * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (state, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += 0.5 * (state + previous_state) * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -134,9 +144,14 @@ def _stat_average_step(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += states[i - 1] * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += previous_state * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -373,10 +388,15 @@ def _stat_binary_average_step(
         return 100.0 * int(states[0] is True)
     if len(states) >= 2:
         on_seconds: float = 0
-        for i in range(1, len(states)):
-            if states[i - 1] is True:
-                on_seconds += ages[i] - ages[i - 1]
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            if previous_state is True:
+                on_seconds += age - previous_age
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_binary_mean(states, ages, percentile)
         return 100 / age_range_seconds * on_seconds
     return None
 
@@ -531,7 +551,7 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
     ):
-        raise vol.ValueInvalid(
+        raise probatio.ValueInvalid(
             f"The configured characteristic '{characteristic}' is not supported "
             "for the configured source sensor"
         )
@@ -545,7 +565,7 @@ def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
         config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None
         and config.get(CONF_MAX_AGE) is None
     ):
-        raise vol.RequiredFieldInvalid(
+        raise probatio.RequiredFieldInvalid(
             "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
         )
     return config
@@ -555,7 +575,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that if keep_last_sample is set, max_age must also be set."""
 
     if config.get(CONF_KEEP_LAST_SAMPLE) is True and config.get(CONF_MAX_AGE) is None:
-        raise vol.RequiredFieldInvalid(
+        raise probatio.RequiredFieldInvalid(
             "The sensor configuration must provide 'max_age'"
             " if 'keep_last_sample' is True"
         )
@@ -564,22 +584,24 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
 
 _PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Required(CONF_STATE_CHARACTERISTIC): cv.string,
-        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_STATE_CHARACTERISTIC): cv.string,
+        probatio.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
         ),
-        vol.Optional(CONF_MAX_AGE): cv.time_period,
-        vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=99)
+        probatio.Optional(CONF_MAX_AGE): cv.time_period,
+        probatio.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
+        probatio.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): probatio.Coerce(
+            int
+        ),
+        probatio.Optional(CONF_PERCENTILE, default=50): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=99)
         ),
     }
 )
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     _PLATFORM_SCHEMA_BASE,
     valid_state_characteristic_configuration,
     valid_boundary_configuration,
@@ -763,6 +785,7 @@ class StatisticsSensor(SensorEntity):
         _LOGGER.debug("Startup for %s", self.entity_id)
         if "recorder" in self.hass.config.components:
             await self._initialize_from_database()
+        self.async_on_remove(self._async_cancel_update_listener)
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -973,8 +996,16 @@ class StatisticsSensor(SensorEntity):
                 return None
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
-            # in the future when the oldest state will expire.
-            return self.ages[0] + self._samples_max_age
+            # in the future when the oldest state will expire. Samples expiring
+            # shortly after it are included, so they are purged in one update.
+            # The purge is only ever delayed, never done early.
+            window_end = self.ages[0] + PURGE_COALESCE_WINDOW_SECONDS
+            last_age = self.ages[0]
+            for age in self.ages:
+                if age > window_end:
+                    break
+                last_age = max(last_age, age)
+            return last_age + self._samples_max_age
         return None
 
     async def async_update(self) -> None:
