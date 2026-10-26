@@ -10,6 +10,7 @@ from serial import SerialException
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
+    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -380,6 +381,22 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     for key, configured in sensors.items()
                     if LaCrosseSensorType[configured[CONF_TYPE].upper()] in selected
                 }
+                used_keys = {
+                    sensor_entity_key(other.subentry_id, configured[CONF_TYPE])
+                    if entry.source != SOURCE_IMPORT and key == configured[CONF_TYPE]
+                    else key
+                    for other in entry.subentries.values()
+                    if other.subentry_id != reconfigure_subentry.subentry_id
+                    for key, configured in other.data[CONF_SENSORS].items()
+                }
+                used_keys.update(
+                    sensor_entity_key(
+                        reconfigure_subentry.subentry_id, configured[CONF_TYPE]
+                    )
+                    if entry.source != SOURCE_IMPORT and key == configured[CONF_TYPE]
+                    else key
+                    for key, configured in updated.items()
+                )
                 entity_registry = er.async_get(self.hass)
                 removed_ids = {
                     f"{entry.entry_id}_{sensor_entity_key(reconfigure_subentry.subentry_id, configured[CONF_TYPE]) if key == configured[CONF_TYPE] else key}"
@@ -397,10 +414,22 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                         for configured in updated.values()
                     ):
                         continue
-                    updated[sensor_type.key] = {
+                    key = sensor_type.key
+                    suffix = 2
+                    entity_key = (
+                        sensor_entity_key(reconfigure_subentry.subentry_id, key)
+                        if entry.source != SOURCE_IMPORT
+                        else key
+                    )
+                    while entity_key in used_keys:
+                        key = f"{sensor_type.key}_{suffix}"
+                        entity_key = key
+                        suffix += 1
+                    updated[key] = {
                         **details,
                         CONF_TYPE: sensor_type.key,
                     }
+                    used_keys.add(entity_key)
                 receiver = entry.data[CONF_DEVICE]
                 device_registry = dr.async_get(self.hass)
                 name = user_input.get(CONF_FRIENDLY_NAME)

@@ -565,6 +565,52 @@ async def test_update_sensor_preserves_entity_keys(
     assert entity_registry.async_get(entity.entity_id) == entity
 
 
+async def test_update_imported_sensor_uses_unused_entity_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test adding a type to an imported sensor preserves its retained keys."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=RECEIVER_DATA,
+        source=config_entries.SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    imported_sensors = {
+        "temperature": {"id": 1, "type": "temperature"},
+        "humidity": {"id": 1, "type": "battery"},
+        "humidity_2": {"id": 2, "type": "temperature"},
+    }
+    for subentry_data in sensor_subentries(imported_sensors):
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(subentry_data["data"]),
+                subentry_type="sensor",
+                title=subentry_data["title"],
+                unique_id=subentry_data["unique_id"],
+                subentry_id=f"sensor_{subentry_data['unique_id']}",
+            ),
+        )
+
+    subentry = entry.subentries["sensor_1"]
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {**TEMPERATURE_SENSOR, "type": "temperature_humidity_battery"},
+    )
+
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.data["sensors"] == {
+        "temperature": {
+            "id": 1,
+            "type": "temperature",
+            "friendly_name": "Outdoor",
+        },
+        "humidity": {"id": 1, "type": "battery", "friendly_name": "Outdoor"},
+        "humidity_3": {"id": 1, "type": "humidity", "friendly_name": "Outdoor"},
+    }
+
+
 async def test_update_sensor_new_type_unique_key(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
