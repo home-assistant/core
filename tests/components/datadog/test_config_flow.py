@@ -134,6 +134,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     new_options = {
         "prefix": "updated",
         "rate": 5,
+        "resend_unchanged": True,
     }
 
     # OSError Case

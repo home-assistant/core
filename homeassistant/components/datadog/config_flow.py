@@ -10,16 +10,19 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_RATE,
+    CONF_RESEND_UNCHANGED,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_RATE,
+    DEFAULT_RESEND_UNCHANGED,
     DOMAIN,
 )
 
@@ -56,6 +59,7 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_PREFIX: user_input[CONF_PREFIX],
                         CONF_RATE: user_input[CONF_RATE],
+                        CONF_RESEND_UNCHANGED: user_input[CONF_RESEND_UNCHANGED],
                     },
                 )
         return self.async_show_form(
@@ -66,6 +70,9 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     probatio.Required(CONF_PREFIX, default=DEFAULT_PREFIX): str,
                     probatio.Required(CONF_RATE, default=DEFAULT_RATE): int,
+                    probatio.Required(
+                        CONF_RESEND_UNCHANGED, default=DEFAULT_RESEND_UNCHANGED
+                    ): bool,
                 }
             ),
             errors=errors,
@@ -79,7 +86,7 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
         return DatadogOptionsFlowHandler()
 
 
-class DatadogOptionsFlowHandler(OptionsFlow):
+class DatadogOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Datadog options."""
 
     async def async_step_init(
@@ -107,6 +114,12 @@ class DatadogOptionsFlowHandler(OptionsFlow):
                                 CONF_RATE, data.get(CONF_RATE, DEFAULT_RATE)
                             ),
                         ): int,
+                        probatio.Required(
+                            CONF_RESEND_UNCHANGED,
+                            default=options.get(
+                                CONF_RESEND_UNCHANGED, DEFAULT_RESEND_UNCHANGED
+                            ),
+                        ): bool,
                     }
                 ),
                 errors={},
@@ -121,6 +134,7 @@ class DatadogOptionsFlowHandler(OptionsFlow):
                 data={
                     CONF_PREFIX: user_input[CONF_PREFIX],
                     CONF_RATE: user_input[CONF_RATE],
+                    CONF_RESEND_UNCHANGED: user_input[CONF_RESEND_UNCHANGED],
                 }
             )
 
@@ -131,6 +145,12 @@ class DatadogOptionsFlowHandler(OptionsFlow):
                 {
                     probatio.Required(CONF_PREFIX, default=options[CONF_PREFIX]): str,
                     probatio.Required(CONF_RATE, default=options[CONF_RATE]): int,
+                    probatio.Required(
+                        CONF_RESEND_UNCHANGED,
+                        default=options.get(
+                            CONF_RESEND_UNCHANGED, DEFAULT_RESEND_UNCHANGED
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,

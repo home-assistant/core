@@ -15,9 +15,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import config_flow as config_flow
-from .const import CONF_RATE, DOMAIN
+from .const import (
+    CONF_RATE,
+    CONF_RESEND_UNCHANGED,
+    DEFAULT_RESEND_UNCHANGED,
+    DOMAIN,
+    SEND_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
             ],
         )
 
-    def state_changed_listener(event):
-        state = event.data.get("new_state")
+    def send_state(state):
         if state is None or state.state == STATE_UNKNOWN:
             return
 
@@ -78,12 +84,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
         except ValueError:
             pass
 
+    def state_changed_listener(event):
+        send_state(event.data.get("new_state"))
+
+    # Resend unchanged states so Datadog does not show gaps for stable values.
+    def send_all_states(now):
+        for state in hass.states.all():
+            send_state(state)
+
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
     )
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
     )
+    if options.get(CONF_RESEND_UNCHANGED, DEFAULT_RESEND_UNCHANGED):
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, send_all_states, SEND_INTERVAL, cancel_on_shutdown=True
+            )
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> None:

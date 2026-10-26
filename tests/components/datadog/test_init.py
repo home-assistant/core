@@ -3,7 +3,13 @@
 from unittest import mock
 from unittest.mock import patch
 
-from pytest_homeassistant.common import EVENT_STATE_CHANGED, MockConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import (
+    EVENT_STATE_CHANGED,
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.datadog.const import (
     DEFAULT_HOST,
@@ -11,6 +17,7 @@ from homeassistant.components.datadog.const import (
     DEFAULT_PREFIX,
     DEFAULT_RATE,
     DOMAIN,
+    SEND_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -227,3 +234,42 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": unknown_state})
         await hass.async_block_till_done()
         assert not mock_dogstatsd.gauge.called
+
+
+@pytest.mark.parametrize(
+    ("resend_unchanged", "expected_calls"),
+    [
+        pytest.param(
+            True,
+            [mock.call("hass.sensor", 1.5, sample_rate=1, tags=["entity:sensor.foo"])],
+            id="enabled",
+        ),
+        pytest.param(False, [], id="disabled"),
+    ],
+)
+async def test_unchanged_states_resent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    resend_unchanged: bool,
+    expected_calls: list[mock._Call],
+) -> None:
+    """Test unchanged states are resent on the send interval only when enabled."""
+    with patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class:
+        mock_statsd = mock_statsd_class.return_value
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=MOCK_DATA,
+            options={**MOCK_OPTIONS, "resend_unchanged": resend_unchanged},
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        hass.states.async_set("sensor.foo", "1.5")
+        await hass.async_block_till_done()
+        mock_statsd.gauge.reset_mock()
+
+        freezer.tick(SEND_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_statsd.gauge.call_args_list == expected_calls
