@@ -3539,7 +3539,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         patch("homeassistant.components.shelly.async_setup", return_value=True),
         patch(
             "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

@@ -2785,7 +2785,7 @@ async def test_mqtt_discovery_flow_starts_once(
     and after an entry was removed, to trigger re-discovery.
     """
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -2923,7 +2923,7 @@ async def test_mqtt_discovery_flow_subscribes_atr_configured_qos(
 ) -> None:
     """Check MQTT integration discovery subscribes at the configured QoS."""
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 

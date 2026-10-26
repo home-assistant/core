@@ -64,6 +64,8 @@ from .utils import (
     time_changed,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 
 def get_sensor_by_key(sensors: tuple, key: str) -> ProtectSensorEntityDescription:
     """Get sensor description by key."""

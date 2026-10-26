@@ -33,7 +33,7 @@ from .const import (
 def mock_setup_entry():
     """Mock Teslemetry async_setup_entry method."""
     with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=None
     ) as mock_async_setup_entry:
         yield mock_async_setup_entry
 
