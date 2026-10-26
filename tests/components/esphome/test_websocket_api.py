@@ -1,8 +1,12 @@
 """Tests for ESPHome websocket API."""
 
 import asyncio
+import importlib
+import sys
+import threading
+from types import ModuleType
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -612,6 +616,47 @@ async def test_get_device_wizard(
     await hass.async_block_till_done()
     data = hass_storage[f"{DOMAIN}.{device.entry.entry_id}"]["data"]
     assert ("device_wizard" in data) is stored
+
+
+async def test_device_wizard_imports_off_event_loop(
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the first wizard can decode without importing zstd on the event loop."""
+    original_import_module = importlib.import_module
+    loop_thread_id = threading.get_ident()
+    monkeypatch.delitem(sys.modules, "compression.zstd", raising=False)
+
+    def checked_import_module(name: str, package: str | None = None) -> ModuleType:
+        assert (
+            name != "compression.zstd"
+            or name in sys.modules
+            or threading.get_ident() != loop_thread_id
+        )
+        return original_import_module(name, package)
+
+    wizard_import_module = Mock(wraps=checked_import_module)
+
+    async def device_wizard() -> DeviceWizard:
+        with patch.object(importlib, "import_module", wizard_import_module):
+            # Zstandard-compressed {"version": 1, "pages": []}.
+            return DeviceWizard.from_compressed_json(
+                bytes.fromhex(
+                    "28b52ffd2018c100007b2276657273696f6e223a312c227061676573223a5b5d7d"
+                )
+            )
+
+    monkeypatch.setattr(importlib, "import_module", checked_import_module)
+    mock_client.device_wizard = AsyncMock(side_effect=device_wizard)
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_capabilities={"wizard": {"configured": True}},
+    )
+
+    # Remove the preload if aioesphomeapi stops importing this during decoding.
+    wizard_import_module.assert_any_call("compression.zstd")
+    assert device.entry.runtime_data.device_wizard == DeviceWizard(pages=[])
 
 
 async def test_get_device_wizard_not_configured(

@@ -1,7 +1,7 @@
 """Bitcoin information service that uses blockchain.com."""
 
-from datetime import timedelta
 import logging
+from typing import override
 
 import probatio
 
@@ -20,16 +20,17 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import BitcoinConfigEntry, BitcoinData
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
+from .coordinator import BitcoinConfigEntry, BitcoinDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 BREAKS_IN_HA_VERSION = "2027.4.0"
 
-SCAN_INTERVAL = timedelta(minutes=5)
+PARALLEL_UPDATES = 0
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -216,29 +217,25 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bitcoin sensors from a config entry."""
-    data = entry.runtime_data
+    coordinator = entry.runtime_data
 
     currency = entry.data[CONF_CURRENCY]
-    if currency not in data.ticker:
+    if currency not in coordinator.data.ticker:
         _LOGGER.warning("Currency %s is not available. Using USD", currency)
-        currency = DEFAULT_CURRENCY
 
     # Two sensors share each of the names Trade volume and Miners revenue, and
     # only the first one created gets the plain entity ID. Creating the sensors
     # an imported YAML setup already had first keeps their entity IDs.
     previous = entry.data.get(CONF_DISPLAY_OPTIONS, [])
     async_add_entities(
-        (
-            BitcoinSensor(data, entry.entry_id, currency, description)
-            for description in sorted(
-                SENSOR_TYPES, key=lambda description: description.key not in previous
-            )
-        ),
-        True,
+        BitcoinSensor(coordinator, currency, description)
+        for description in sorted(
+            SENSOR_TYPES, key=lambda description: description.key not in previous
+        )
     )
 
 
-class BitcoinSensor(SensorEntity):
+class BitcoinSensor(CoordinatorEntity[BitcoinDataUpdateCoordinator], SensorEntity):
     """Representation of a Bitcoin sensor."""
 
     _attr_attribution = "Data provided by blockchain.com"
@@ -246,27 +243,35 @@ class BitcoinSensor(SensorEntity):
 
     def __init__(
         self,
-        data: BitcoinData,
-        entry_id: str,
+        coordinator: BitcoinDataUpdateCoordinator,
         currency: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self.data = data
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._currency = currency
+        self._update_from_data()
 
-    def update(self) -> None:
-        """Get the latest data and updates the states."""
-        self.data.update()
-        stats = self.data.stats
-        ticker = self.data.ticker
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_data()
+        super()._handle_coordinator_update()
+
+    def _update_from_data(self) -> None:
+        """Set the state from the latest coordinator data."""
+        stats = self.coordinator.data.stats
+        ticker = self.coordinator.data.ticker
 
         sensor_type = self.entity_description.key
         if sensor_type == "exchangerate":
-            self._attr_native_value = ticker[self._currency].p15min
-            self._attr_native_unit_of_measurement = self._currency
+            # The coordinator makes sure USD is quoted whenever this is not.
+            currency = self._currency if self._currency in ticker else DEFAULT_CURRENCY
+            self._attr_native_value = ticker[currency].p15min
+            self._attr_native_unit_of_measurement = currency
         elif sensor_type == "trade_volume_btc":
             self._attr_native_value = f"{stats.trade_volume_btc:.1f}"
         elif sensor_type == "miners_revenue_usd":
