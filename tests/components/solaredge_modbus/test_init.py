@@ -956,6 +956,33 @@ async def test_sleep_is_only_taken_from_a_fresh_read(
     assert _errors_from(caplog, READINGS_ERROR) == 1
 
 
+async def test_awake_read_before_the_link_died_is_an_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A poll that read the inverter awake and then lost the link is no reset.
+
+    The inverter is read before the meters, so the poll fails with its fresh
+    status already taken, but without having recorded it.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.PRODUCING
+    mock_modbus_unit.fail_read(
+        METER_MODEL_REGISTER, ModbusConnectionError("connection lost")
+    )
+    await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _errors_from(caplog, READINGS_ERROR) == 1
+
+
 async def test_no_reset_after_another_inverter_answered(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

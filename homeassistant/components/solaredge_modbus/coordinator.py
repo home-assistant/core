@@ -181,9 +181,11 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         have not gone on for longer than a reset takes, that is all it takes:
         the entities go unavailable without an error. A sleeping read after
         they began proves the link worked meanwhile, so it excuses nothing.
-        Anything else is an error as before, and once it is, so is every
-        failure until a poll succeeds. The first refresh has nothing to mark
-        failed, and setup must see it.
+        Nor is a poll that read the inverter awake before the link died: it
+        never got to record that, but the status it read is there. Anything
+        else is an error as before, and once it is, so is every failure until
+        a poll succeeds. The first refresh has nothing to mark failed, and
+        setup must see it.
         """
         if self._outage_since is None:
             self._outage_since = started
@@ -193,6 +195,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             self.data is not None
             and self.last_update_success
             and asleep_at is not None
+            and self.solaredge.inverter.status is InverterStatus.SLEEPING
             and 0 <= self._outage_since - asleep_at < grace
             and started - self._outage_since < grace
         ):
