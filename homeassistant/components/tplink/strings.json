@@ -151,12 +151,6 @@
       "side_brush_reset": {
         "name": "Reset side brush consumable"
       },
-      "stop_alarm": {
-        "name": "Stop alarm"
-      },
-      "test_alarm": {
-        "name": "Test alarm"
-      },
       "tilt_down": {
         "name": "Tilt down"
       },

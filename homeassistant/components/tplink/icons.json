@@ -34,12 +34,6 @@
       "side_brush_reset": {
         "default": "mdi:brush"
       },
-      "stop_alarm": {
-        "default": "mdi:bell-cancel"
-      },
-      "test_alarm": {
-        "default": "mdi:bell-alert"
-      },
       "tilt_down": {
         "default": "mdi:chevron-down"
       },

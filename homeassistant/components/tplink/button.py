@@ -11,12 +11,10 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TPLinkConfigEntry
-from .deprecate import DeprecatedInfo
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -32,22 +30,6 @@ class TPLinkButtonEntityDescription(
 PARALLEL_UPDATES = 0
 
 BUTTON_DESCRIPTIONS: Final = [
-    TPLinkButtonEntityDescription(
-        key="test_alarm",
-        deprecated_info=DeprecatedInfo(
-            platform=BUTTON_DOMAIN,
-            new_platform=SIREN_DOMAIN,
-            breaks_in_ha_version="2025.4.0",
-        ),
-    ),
-    TPLinkButtonEntityDescription(
-        key="stop_alarm",
-        deprecated_info=DeprecatedInfo(
-            platform=BUTTON_DOMAIN,
-            new_platform=SIREN_DOMAIN,
-            breaks_in_ha_version="2025.4.0",
-        ),
-    ),
     TPLinkButtonEntityDescription(
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
