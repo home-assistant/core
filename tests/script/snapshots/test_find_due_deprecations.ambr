@@ -52,12 +52,12 @@
         'version': '2026.11',
       }),
       dict({
-        'branch': 'deprecation-cleanup/beta-2025.6',
-        'issue_id': None,
+        'branch': 'deprecation-cleanup/beta-2025.6-keyword',
+        'issue_id': 'keyword',
         'items': list([
           dict({
             'file': 'homeassistant/components/beta/sensor.py',
-            'issue_id': None,
+            'issue_id': 'keyword',
             'line': 6,
             'source': 'OLD',
             'version': '2025.6.0',
@@ -68,12 +68,12 @@
         'version': '2025.6',
       }),
       dict({
-        'branch': 'deprecation-cleanup/beta-2026.9',
-        'issue_id': None,
+        'branch': 'deprecation-cleanup/beta-2026.9-default',
+        'issue_id': 'default',
         'items': list([
           dict({
             'file': 'homeassistant/components/beta/sensor.py',
-            'issue_id': None,
+            'issue_id': 'default',
             'line': 4,
             'source': "deprecate_entity() default version='2026.9.0'",
             'version': '2026.9.0',

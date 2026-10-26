@@ -18,6 +18,8 @@ POSITIONAL = {
     "DeprecatedConstantEnum": 1,
     "DeprecatedAlias": 2,
     "DeferredDeprecatedAlias": 2,
+    "DeprecatedEntityAttr": 1,
+    "DeprecatedEntityProperty": 1,
 }
 # Repair issue registry calls and the positional index of their issue_id.
 ISSUE_CALLS = {"async_create_issue": 2, "create_issue": 2, "async_get_or_create": 1}
@@ -127,9 +129,13 @@ def find_values(tree: ast.Module) -> list[tuple[ast.expr, ast.Call | None]]:
             values.extend(
                 (keyword.value, node) for keyword in node.keywords if keyword.arg == KEY
             )
+            # Generic classes are called as DeprecatedEntityProperty[str](...).
+            func = (
+                node.func.value if isinstance(node.func, ast.Subscript) else node.func
+            )
             if (
-                isinstance(node.func, ast.Name)
-                and (index := POSITIONAL.get(node.func.id)) is not None
+                isinstance(func, ast.Name)
+                and (index := POSITIONAL.get(func.id)) is not None
                 and len(node.args) > index
             ):
                 values.append((node.args[index], node))
@@ -159,12 +165,17 @@ def static_text(node: ast.expr, constants: Constants, file: str) -> str:
     return ""
 
 
-def issue_id(call: ast.Call | None, constants: Constants, file: str) -> str | None:
-    """Return the repair issue id a call creates, without its varying parts."""
+def issue_argument(call: ast.Call | None) -> ast.expr | None:
+    """Return the issue_id argument of a repair issue registry call."""
     if call is None or (index := ISSUE_CALLS.get(call_name(call) or "")) is None:
         return None
     argument = passed_argument(call, "issue_id", index)
-    if not isinstance(argument, ast.expr):
+    return argument if isinstance(argument, ast.expr) else None
+
+
+def issue_id(argument: ast.expr | None, constants: Constants, file: str) -> str | None:
+    """Return a repair issue id without its varying parts."""
+    if argument is None:
         return None
     return static_text(argument, constants, file).strip("_-/. ") or None
 
@@ -235,7 +246,7 @@ def caller_items(
     func: ast.FunctionDef | ast.AsyncFunctionDef,
     func_file: str,
     parameter: str,
-    issue: str | None,
+    issue_arg: ast.expr | None,
     files: list[tuple[str, str, ast.Module]],
     constants: Constants,
 ) -> list[Item] | None:
@@ -258,17 +269,23 @@ def caller_items(
         return None
     index, default = found
     is_method = bool(func.args.args) and func.args.args[0].arg in ("self", "cls")
+    # The issue id can be forwarded from the callers too.
+    issue_parameter = (
+        find_parameter(func, issue_arg.id) if isinstance(issue_arg, ast.Name) else None
+    )
+    issue = None if issue_parameter else issue_id(issue_arg, constants, func_file)
     items = []
     for rel, text, tree in files:
         for call in ast.walk(tree):
             if not isinstance(call, ast.Call):
                 continue
             if isinstance(call.func, ast.Name) and call.func.id == func.name:
-                call_index = index
+                shift = 0
             elif isinstance(call.func, ast.Attribute) and call.func.attr == func.name:
-                call_index = index - 1 if index is not None and is_method else index
+                shift = 1 if is_method else 0
             else:
                 continue
+            call_index = None if index is None else index - shift
             argument = passed_argument(call, parameter, call_index)
             if argument is None:
                 return None
@@ -282,8 +299,35 @@ def caller_items(
                 source = ast.get_source_segment(text, argument) or ""
             if version is None:
                 return None
+            if issue_parameter and isinstance(issue_arg, ast.Name):
+                issue = forwarded_issue_id(
+                    call,
+                    issue_arg.id,
+                    issue_parameter,
+                    shift,
+                    rel,
+                    func_file,
+                    constants,
+                )
             items.append(Item(rel, call.lineno, version, source, issue))
     return items or None
+
+
+def forwarded_issue_id(
+    call: ast.Call,
+    name: str,
+    parameter: tuple[int | None, ast.expr | None],
+    shift: int,
+    file: str,
+    func_file: str,
+    constants: Constants,
+) -> str | None:
+    """Return the repair issue id a caller passes to a helper."""
+    index, default = parameter
+    argument = passed_argument(call, name, None if index is None else index - shift)
+    if argument is False:
+        return issue_id(default, constants, func_file)
+    return issue_id(argument, constants, file)
 
 
 def area_of(file: str) -> tuple[str, str]:
@@ -337,7 +381,8 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
         for value, call in find_values(tree):
             if isinstance(value, ast.Constant) and value.value is None:
                 continue
-            issue = issue_id(call, constants, rel)
+            issue_arg = issue_argument(call)
+            issue = issue_id(issue_arg, constants, rel)
             item = Item(
                 rel,
                 value.lineno,
@@ -355,7 +400,7 @@ def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
                 and (func := owners.get(value)) is not None
                 and (
                     callers := caller_items(
-                        func, rel, value.id, issue, area_files[name], constants
+                        func, rel, value.id, issue_arg, area_files[name], constants
                     )
                 )
                 is not None

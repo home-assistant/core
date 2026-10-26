@@ -192,9 +192,9 @@ def test_scan(repo: Path, snapshot: SnapshotAssertion) -> None:
                 "deprecation-cleanup/alpha-2026.9-yaml",
                 "deprecation-cleanup/alpha-2026.11-const",
                 "deprecation-cleanup/alpha-2026.12-later",
-                "deprecation-cleanup/beta-2025.6",
-                "deprecation-cleanup/beta-2026.9",
-                "deprecation-cleanup/beta-2026.12",
+                "deprecation-cleanup/beta-2025.6-keyword",
+                "deprecation-cleanup/beta-2026.9-default",
+                "deprecation-cleanup/beta-2026.12-positional",
                 "deprecation-cleanup/const-2025.6",
                 "deprecation-cleanup/const-2026.10",
                 "deprecation-cleanup/const-2027.1",
@@ -252,6 +252,52 @@ def test_scan_branch_name_after_sibling_removed(tmp_path: Path) -> None:
     assert [deprecation["branch"] for deprecation in result["deprecations"]] == [
         "deprecation-cleanup/eta-2026.1-deprecated_option"
     ]
+
+
+def test_scan_forwarded_issue_id(tmp_path: Path) -> None:
+    """Test issue ids passed through a helper split the deprecations."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/theta/util.py": """
+                def deprecate(hass, issue_id, version="2026.1.0"):
+                    async_create_issue(
+                        hass, "theta", issue_id, breaks_in_ha_version=version
+                    )
+            """,
+            "homeassistant/components/theta/sensor.py": """
+                def setup(hass, entry):
+                    deprecate(hass, "deprecated_yaml")
+                    deprecate(hass, f"deprecated_sensor_{entry.entry_id}")
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert [deprecation["branch"] for deprecation in result["deprecations"]] == [
+        "deprecation-cleanup/theta-2026.1-deprecated_sensor",
+        "deprecation-cleanup/theta-2026.1-deprecated_yaml",
+    ]
+
+
+def test_scan_generic_entity_descriptor(tmp_path: Path) -> None:
+    """Test the version passed to a subscripted deprecation class is found."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/iota/entity.py": """
+                class IotaEntity:
+                    unit: Final = DeprecatedEntityProperty[str]("native_unit", "2026.1")
+                    _attr_unit: Final = DeprecatedEntityAttr[str](
+                        "_attr_native_unit", "2026.1"
+                    )
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert [
+        (deprecation["branch"], [item["line"] for item in deprecation["items"]])
+        for deprecation in result["deprecations"]
+    ] == [("deprecation-cleanup/iota-2026.1", [2, 4])]
 
 
 def test_scan_same_constant_name(tmp_path: Path) -> None:

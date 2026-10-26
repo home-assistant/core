@@ -20,7 +20,9 @@ deprecation that qualifies.
 
 ## 1. Scan
 
-Start from an up-to-date `dev`, then run from the repository root:
+Fetch the latest `dev` of `home-assistant/core` (for example `upstream/dev` when `origin`
+is your fork) and check it out. Use that same ref, `<dev>` below, for every branch. Then
+run from the repository root:
 
 ```bash
 uv run --no-sync python3 ./.claude/skills/ha-deprecation-cleanup/scripts/find_due_deprecations.py [--version X.Y]
@@ -54,9 +56,12 @@ passes none. Those items point at the call site. It prints JSON with:
   `_DEPRECATED_DEVICE_INFO_PARAMETERS` in `helpers/device_registry.py`. Add those that are
   due.
 
-Branch names are `deprecation-cleanup/<name>-<X.Y>-<issue_id>`, or
-`deprecation-cleanup/<name>-<X.Y>` when there is no repair issue. The script derives them
-from the deprecation alone, so the same deprecation gets the same name on every run.
+Branch names are `deprecation-cleanup/<slug>-<X.Y>-<issue_id>`, or
+`deprecation-cleanup/<slug>-<X.Y>` when there is no repair issue. The slug is the name in
+lowercase with `.py` dropped and other characters than letters, digits and `_` replaced by
+`-`, so `helpers/device_registry.py` becomes `helpers-device_registry`. The script derives
+the names from the deprecation alone, so the same deprecation gets the same name on every
+run.
 
 ## 2. Check each deprecation
 
@@ -81,8 +86,8 @@ Then pick one outcome per deprecation:
   measure that). Don't create a branch.
 - **Branch exists**: if a branch for this deprecation already exists on the push remote
   or locally, don't touch it. Look for every branch of the integration and version
-  (`git ls-remote --heads <remote> 'deprecation-cleanup/<name>-<X.Y>*'` and
-  `git branch --list 'deprecation-cleanup/<name>-<X.Y>*'`), since a branch made for the
+  (`git ls-remote --heads <remote> 'deprecation-cleanup/<slug>-<X.Y>*'` and
+  `git branch --list 'deprecation-cleanup/<slug>-<X.Y>*'`), since a branch made for the
   same deprecation can have another suffix, and check its diff to see what it removes.
   Report whether a PR is open from it, whether it is only local and not pushed, and when
   its base is more than one release behind `dev`, say it needs a merge of `dev` or a fresh
@@ -102,8 +107,9 @@ retry once.
 Prepare each branch in its own worktree, so one deprecation's changes never end up on
 another's branch. For each deprecation:
 
-1. `git worktree add -b <branch> ../<branch> origin/dev`. This refuses to touch a branch
-   that already exists. Work inside that directory and run `script/setup` there.
+1. `git worktree add -b <branch> ../<branch> <dev>`, with the `dev` ref you scanned. This
+   refuses to touch a branch that already exists. Work inside that directory and run
+   `script/setup` there.
 2. Remove the deprecated code path completely: the repair issue or warning,
    compatibility shims, old schema keys, constants, now-unused strings in `strings.json`
    (then run `python3 -m script.translations develop --integration <domain>`), and the
