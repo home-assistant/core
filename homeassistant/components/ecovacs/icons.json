@@ -103,6 +103,9 @@
       "cut_direction": {
         "default": "mdi:angle-acute"
       },
+      "mop_wash_interval": {
+        "default": "mdi:timer-refresh-outline"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
