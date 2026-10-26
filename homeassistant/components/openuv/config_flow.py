@@ -39,7 +39,7 @@ STEP_USER_SCHEMA = probatio.Schema(
         probatio.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False)
         ),
-        probatio.Optional(CONF_ELEVATION): probatio.Coerce(float),
+        probatio.Required(CONF_ELEVATION): probatio.Coerce(float),
     }
 )
 STEP_REAUTH_SCHEMA = probatio.Schema(
