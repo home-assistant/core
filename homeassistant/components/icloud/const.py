@@ -22,6 +22,7 @@ STORAGE_VERSION = 2
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,

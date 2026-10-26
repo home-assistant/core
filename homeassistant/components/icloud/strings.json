@@ -89,6 +89,11 @@
         "name": "Wipe in progress"
       }
     },
+    "button": {
+      "play_sound": {
+        "name": "Play sound"
+      }
+    },
     "sensor": {
       "altitude": {
         "name": "Altitude"

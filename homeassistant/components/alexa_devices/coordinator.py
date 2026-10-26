@@ -16,6 +16,7 @@ from aioamazondevices.exceptions import (
 )
 from aioamazondevices.structures import (
     AmazonDevice,
+    AmazonDeviceSensor,
     AmazonListEvent,
     AmazonListEventType,
     AmazonListItem,
@@ -187,6 +188,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self._dnd_states: dict[str, bool] = {}
         self.api.on_dnd_event.append(self.dnd_event_handler)
         self.api.on_dnd_event.freeze()
+
+        self.api.on_sensor_event.append(self.sensor_event_handler)
+        self.api.on_sensor_event.freeze()
 
     @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
@@ -443,3 +447,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def dnd_states(self) -> Mapping[str, bool]:
         """DND states of devices."""
         return self._dnd_states
+
+    async def sensor_event_handler(self) -> None:
+        """Handle pushed sensor events."""
+        self.async_update_listeners()
+
+    @property
+    def sensors(self) -> Mapping[str, Mapping[str, AmazonDeviceSensor]]:
+        """Sensors of devices, keyed by serial number then sensor key."""
+        return self.api.sensors
+
+    def device_sensor(self, serial_num: str, key: str) -> AmazonDeviceSensor | None:
+        """Return a sensor of a device, if present."""
+        return self.sensors.get(serial_num, {}).get(key)
