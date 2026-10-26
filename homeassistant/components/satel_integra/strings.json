@@ -185,6 +185,76 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "dt1_trouble": {
+        "name": "DT1 trouble"
+      },
+      "dt2_trouble": {
+        "name": "DT2 trouble"
+      },
+      "dtm_trouble": {
+        "name": "DTM trouble"
+      },
+      "eeprom_or_rtc_access_trouble": {
+        "name": "EEPROM or RTC access trouble"
+      },
+      "expander_power_supply_trouble": {
+        "name": "Expander power supply trouble"
+      },
+      "external_device_dtr_trouble": {
+        "name": "External device DTR trouble"
+      },
+      "external_modem_command_trouble": {
+        "name": "External modem command trouble"
+      },
+      "external_modem_initialization_trouble": {
+        "name": "External modem initialization trouble"
+      },
+      "keypad_power_supply_trouble": {
+        "name": "Keypad power supply trouble"
+      },
+      "monitoring_station_trouble": {
+        "name": "Monitoring station {number} trouble"
+      },
+      "output_trouble": {
+        "name": "Output {number} trouble"
+      },
+      "panel_ac_trouble": {
+        "name": "Panel AC trouble"
+      },
+      "panel_battery_missing_trouble": {
+        "name": "Panel battery missing"
+      },
+      "panel_battery_trouble": {
+        "name": "Panel battery trouble"
+      },
+      "panel_restart_memory_trouble": {
+        "name": "Panel restart memory trouble"
+      },
+      "ram_trouble": {
+        "name": "RAM trouble"
+      },
+      "rtc_trouble": {
+        "name": "RTC trouble"
+      },
+      "service_mode": {
+        "name": "Service mode"
+      },
+      "system_trouble": {
+        "name": "System trouble"
+      },
+      "telephone_line_bad_signal_trouble": {
+        "name": "Telephone line bad signal trouble"
+      },
+      "telephone_line_no_signal_trouble": {
+        "name": "Telephone line no signal trouble"
+      },
+      "telephone_line_voltage_or_auxiliary_processor_trouble": {
+        "name": "Telephone line voltage or auxiliary processor trouble"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
@@ -208,7 +278,7 @@
   "options": {
     "error": {
       "invalid_code_format": "User code must contain numbers only.",
-      "invalid_code_length": "User code must be between 4 and 16 characters long."
+      "invalid_code_length": "User code must be between 4 and 16 digits long."
     },
     "step": {
       "init": {

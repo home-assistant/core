@@ -178,9 +178,9 @@ async def test_reload_unsubscribes_platform_listeners(
     old_account = config_entry.runtime_data
     signal = old_account.signal_device_new
     dispatchers = hass.data[DATA_DISPATCHER]
-    # device_tracker and sensor each connect one new-device listener.
-    assert len(dispatchers[signal]) == 2
-    assert len(old_account.listeners) == 2
+    # button, device_tracker and sensor each connect one new-device listener.
+    assert len(dispatchers[signal]) == 3
+    assert len(old_account.listeners) == 3
 
     assert await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -189,8 +189,8 @@ async def test_reload_unsubscribes_platform_listeners(
     new_account = config_entry.runtime_data
     assert new_account is not old_account
     assert old_account.listeners == []
-    # Only the new account's two listeners remain on the shared signal.
-    assert len(dispatchers[signal]) == 2
+    # Only the new account's three listeners remain on the shared signal.
+    assert len(dispatchers[signal]) == 3
 
 
 @pytest.mark.usefixtures("service_auth_required")

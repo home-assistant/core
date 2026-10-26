@@ -695,7 +695,7 @@ beautifulsoup4==4.15.0
 besen==0.6.1
 
 # homeassistant.components.bitvis
-bitvis-protobuf==2.0.4
+bitvis-protobuf==2.0.5
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1168,7 +1168,7 @@ georss-qld-bushfire-alert-client==0.8
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.9.5
+getmac==0.9.6
 
 # homeassistant.components.gios
 gios==7.1.1
@@ -1227,7 +1227,7 @@ gotailwind==0.4.0
 govee-ble==1.4.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==3.1.0
+govee-local-api==3.2.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -3267,7 +3267,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.16.0
+systembridgeconnector==5.18.0
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
