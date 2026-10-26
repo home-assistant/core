@@ -388,7 +388,7 @@ async def test_switch_led_unavailable_on_sensor_error(
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
     }
-    mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["AQM-LED"].error = True
+    mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["aqm_led"].error = True
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(LED_ENTITY_ID))
@@ -404,7 +404,7 @@ async def test_switch_led_created_without_sensor_value(
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
     }
-    del mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["AQM-LED"]
+    del mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["aqm_led"]
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(LED_ENTITY_ID))

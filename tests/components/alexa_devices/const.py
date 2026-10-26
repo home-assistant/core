@@ -175,7 +175,7 @@ TEST_DEVICE_AQM = AmazonDevice(
                     "__typename": "ToggleConfiguration",
                     "friendlyName": {"value": {"text": "Enable LED Indicator"}},
                 },
-                sensor_keys={"toggleState": "AQM-LED"},
+                sensor_keys={"toggleState": "aqm_led"},
             )
         }
     },
@@ -288,8 +288,8 @@ TEST_DEVICE_AQM_SENSORS: dict[str, AmazonDeviceSensor] = {
         property_name="rangeValue",
         instance="9",
     ),
-    "AQM-LED": AmazonDeviceSensor(
-        name="AQM-LED",
+    "aqm_led": AmazonDeviceSensor(
+        name="aqm_led",
         value="ON",
         error=False,
         error_msg=None,
