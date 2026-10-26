@@ -123,8 +123,9 @@ class SHCMotionDetectorLight(SHCEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, optionally setting the brightness."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            self._device.multi_level_switch = round(
-                brightness_to_value(BRIGHTNESS_SCALE, brightness)
+            self._device.multi_level_switch = max(
+                round(brightness_to_value(BRIGHTNESS_SCALE, brightness)),
+                BRIGHTNESS_SCALE[0],
             )
         if not self.is_on:
             self._device.binaryswitch = True
