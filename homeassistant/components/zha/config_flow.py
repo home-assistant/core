@@ -51,7 +51,11 @@ from .const import (
     DOMAIN,
     LEGACY_ZEROCONF_PORT,
 )
-from .helpers import get_config_entry_unique_id, get_zha_gateway
+from .helpers import (
+    async_update_device_path,
+    get_config_entry_unique_id,
+    get_zha_gateway,
+)
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -829,9 +833,32 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             for entry in zha_config_entries:
                 path = entry.data.get(CONF_DEVICE, {}).get(CONF_DEVICE_PATH)
+                if path is None:
+                    continue
 
                 # Abort discovery if the device path is already configured
-                if path is not None and path in current_device_paths:
+                if path in current_device_paths:
+                    return self.async_abort(
+                        reason="single_instance_allowed",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
+
+                # A configured radio turning up at another path has moved, between the
+                # host and a serial proxy or between proxies. Its entry follows it.
+                if (
+                    usb.async_find_moved_serial_port(self.hass, path)
+                    == self._radio_mgr.device_path
+                ):
+                    async_update_device_path(
+                        self.hass, entry, self._radio_mgr.device_path
+                    )
+                    if entry.state in (
+                        ConfigEntryState.LOADED,
+                        ConfigEntryState.SETUP_RETRY,
+                        ConfigEntryState.SETUP_ERROR,
+                    ):
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
                     return self.async_abort(
                         reason="single_instance_allowed",
                         translation_domain=HOMEASSISTANT_DOMAIN,
