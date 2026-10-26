@@ -56,8 +56,7 @@
     "sensor": {
       "entry_type": "Sensor",
       "error": {
-        "sensor_already_configured": "This sensor is already configured.",
-        "value_type_required": "Select at least temperature or humidity."
+        "sensor_already_configured": "This sensor is already configured."
       },
       "initiate_flow": {
         "user": "Add sensor"
@@ -65,12 +64,10 @@
       "step": {
         "reconfigure": {
           "data": {
-            "battery": "Reports battery state",
             "expire_after": "Mark unavailable after (seconds)",
             "friendly_name": "Name",
-            "humidity": "Reports humidity",
             "id": "Sensor ID",
-            "temperature": "Reports temperature"
+            "type": "Measurements"
           },
           "data_description": {
             "id": "The ID the sensor reports now, for example after a battery replacement."
@@ -79,12 +76,10 @@
         },
         "user": {
           "data": {
-            "battery": "Reports battery state",
             "expire_after": "Mark unavailable after (seconds)",
             "friendly_name": "Name",
-            "humidity": "Reports humidity",
             "id": "Sensor ID",
-            "temperature": "Reports temperature"
+            "type": "Measurements"
           },
           "title": "Add sensor"
         }
@@ -106,6 +101,18 @@
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Your {integration_title} YAML configuration could not be imported because the receiver at {device} could not be opened. YAML configuration is deprecated and will be removed in Home Assistant 2027.4.0. Check that the receiver is connected, the serial device path and baud rate in your YAML configuration are correct, and no other application is using the port. Then restart Home Assistant to retry the import. Alternatively, remove the LaCrosse sensor platform configuration from YAML and set up the integration in Settings > Devices & services.",
       "title": "Unable to import {integration_title} YAML configuration"
+    }
+  },
+  "selector": {
+    "sensor_type": {
+      "options": {
+        "humidity": "Humidity",
+        "humidity_battery": "Humidity and battery",
+        "temperature": "Temperature",
+        "temperature_battery": "Temperature and battery",
+        "temperature_humidity": "Temperature and humidity",
+        "temperature_humidity_battery": "Temperature, humidity and battery"
+      }
     }
   }
 }

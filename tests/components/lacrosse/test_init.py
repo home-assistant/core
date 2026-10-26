@@ -186,7 +186,7 @@ async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
         result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"id": 7, "temperature": True, "humidity": False, "battery": False},
+            {"id": 7, "type": "temperature"},
         )
         assert result["reason"] == "reconfigure_successful"
         assert subentry.unique_id == "7"
@@ -278,7 +278,7 @@ async def test_add_sensor_to_running_hub(
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"id": 2, "temperature": True, "humidity": True, "battery": True},
+            {"id": 2, "type": "temperature_humidity_battery"},
         )
         await hass.async_block_till_done()
         subentry = next(
