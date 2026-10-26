@@ -193,18 +193,16 @@ async def test_designer_fault_keeps_served_objects(
 
 
 @pytest.mark.usefixtures("mock_client")
-async def test_setup_fails_on_server_identity_mismatch(hass: HomeAssistant) -> None:
-    """A host now answering as a different M-SERV lands the entry in SETUP_ERROR.
-
-    Object ids are unique per server, so another server's objects would bind
-    to this entry's entities.
-    """
+async def test_setup_accepts_replaced_server(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """An entry loads its entities when the M-SERV reports a different key."""
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="99999")
 
     await setup_integration(hass, entry)
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert entry.error_reason_translation_key == "unexpected_device"
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
 
 
 @pytest.mark.usefixtures("mock_client")

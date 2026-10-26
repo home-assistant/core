@@ -23,11 +23,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import ADMIN_USERNAME, DOMAIN, HUB_IDENTIFIER, PLATFORMS
@@ -105,12 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
     if not discovered or (info := client.server_info) is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="discovery_timeout"
-        )
-    # Object ids are unique per server, so another server's objects would
-    # bind to this entry's entities.
-    if info.server_key != entry.unique_id:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN, translation_key="unexpected_device"
         )
 
     mserv = admin.mserv if admin else None
