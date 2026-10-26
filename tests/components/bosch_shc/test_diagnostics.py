@@ -9,7 +9,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
-from .conftest import setup_integration, smart_plug_device
+from .conftest import smart_plug_device
 
 
 async def test_diagnostics(
@@ -24,7 +24,13 @@ async def test_diagnostics(
     plug = smart_plug_device()
     plug.room_id = "room-1"
     mock_session.devices = [plug]
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, "token": "secret", "hostname": "shc-host"},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
@@ -33,6 +39,8 @@ async def test_diagnostics(
     assert diagnostics["entry"]["host"] == REDACTED
     assert diagnostics["entry"]["ssl_certificate"] == REDACTED
     assert diagnostics["entry"]["ssl_key"] == REDACTED
+    assert diagnostics["entry"]["token"] == REDACTED
+    assert diagnostics["entry"]["hostname"] == REDACTED
     assert diagnostics["entry"]["token"] == REDACTED
     assert diagnostics["entry"]["hostname"] == REDACTED
     assert diagnostics["shc"] == {
