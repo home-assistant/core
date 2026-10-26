@@ -53,14 +53,44 @@ async def test_covers(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "entity_id"),
+    ("node_fixture", "entity_id", "service_suffix"),
     [
-        ("mock_window_covering_lift", "cover.mock_lift_window_covering"),
-        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
-        ("mock_window_covering_pa_lift_null_tilt", "cover.shelly_2pm_gen4"),
-        ("mock_window_covering_tilt", "cover.mock_tilt_window_covering"),
-        ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
-        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+        pytest.param(
+            "mock_window_covering_lift",
+            "cover.mock_lift_window_covering",
+            "",
+            id="lift",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            "",
+            id="pa-lift",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_lift_null_tilt",
+            "cover.shelly_2pm_gen4",
+            "",
+            id="pa-lift-null-tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_tilt",
+            "cover.mock_tilt_window_covering",
+            "_tilt",
+            id="tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_tilt",
+            "cover.mock_pa_tilt_window_covering",
+            "_tilt",
+            id="pa-tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_full",
+            "cover.mock_full_window_covering",
+            "",
+            id="full",
+        ),
     ],
 )
 async def test_cover(
@@ -68,12 +98,13 @@ async def test_cover(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    service_suffix: str,
 ) -> None:
     """Test window covering commands that always are implemented."""
 
     await hass.services.async_call(
         "cover",
-        "close_cover",
+        f"close_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -90,7 +121,7 @@ async def test_cover(
 
     await hass.services.async_call(
         "cover",
-        "stop_cover",
+        f"stop_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -107,7 +138,7 @@ async def test_cover(
 
     await hass.services.async_call(
         "cover",
-        "open_cover",
+        f"open_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -821,9 +852,9 @@ async def test_cover_position_aware_tilt(
     state = hass.states.get(entity_id)
     assert state
     mask = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
     assert state.attributes["supported_features"] & mask == mask
