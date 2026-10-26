@@ -78,6 +78,11 @@ class DateTimeExtension(BaseTemplateExtension):
                     self.is_datetime,
                     as_test=True,
                 ),
+                TemplateFunction(
+                    "timedelta",
+                    self.is_timedelta,
+                    as_test=True,
+                ),
                 # Functions that require hass
                 TemplateFunction(
                     "now",
@@ -231,6 +236,10 @@ class DateTimeExtension(BaseTemplateExtension):
     def is_datetime(self, value: Any) -> bool:
         """Return whether a value is a datetime."""
         return isinstance(value, datetime)
+
+    def is_timedelta(self, value: Any) -> bool:
+        """Return whether a value is a timedelta."""
+        return isinstance(value, timedelta)
 
     def now(self) -> datetime:
         """Record fetching now."""
