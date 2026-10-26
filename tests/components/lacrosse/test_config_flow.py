@@ -27,14 +27,12 @@ RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
 TEMPERATURE_SENSOR = {
     "id": 1,
     "type": "temperature",
-    "expire_after": 300,
     "friendly_name": "Outdoor",
 }
 SENSORS = {
     "1_temperature": {
         "id": 1,
         "type": "temperature",
-        "expire_after": 300,
         "friendly_name": "Outdoor",
     },
     "1_humidity": {
@@ -557,13 +555,11 @@ async def test_update_sensor_preserves_entity_keys(
             "id": new_id,
             "type": "temperature",
             "friendly_name": friendly_name,
-            "expire_after": 300,
         },
         "battery": {
             "id": new_id,
             "type": "battery",
             "friendly_name": friendly_name,
-            "expire_after": 300,
         },
     }
     assert entity_registry.async_get(entity.entity_id) == entity

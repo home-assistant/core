@@ -47,7 +47,6 @@ from .const import (
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
     DEFAULT_BAUD,
-    DEFAULT_EXPIRE_AFTER,
     DOMAIN,
     TYPES,
     sensor_entity_key,
@@ -131,9 +130,7 @@ def _add_sensors(
         typ: str = device_config[CONF_TYPE]
         sensor_class = TYPE_CLASSES[typ]
         name = typ.capitalize()
-        expire_after: int | None = device_config.get(
-            CONF_EXPIRE_AFTER, DEFAULT_EXPIRE_AFTER
-        )
+        expire_after: int | None = device_config.get(CONF_EXPIRE_AFTER)
         sensors.append(
             sensor_class(
                 hass,
