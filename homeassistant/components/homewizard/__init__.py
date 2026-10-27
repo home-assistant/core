@@ -64,9 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
     # Register the main device up front so external sub-device sensors can
     # resolve it as their via_device parent regardless of entity add order.
     if coordinator.data.device.serial is not None:
-        dr.async_get(hass).async_get_or_create(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **create_main_device_info(coordinator),
+            device_info=create_main_device_info(coordinator),
         )
 
     # Finalize
@@ -124,6 +124,7 @@ async def async_check_v2_support_and_create_issue(
         hass,
         DOMAIN,
         f"migrate_to_v2_api_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serialx import SerialException
 
 from homeassistant.components.denon_rs232.config_flow import CONF_MODEL_NAME
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from . import MOCK_MODEL
 from .conftest import MockReceiver
-
-from tests.common import MockConfigEntry
 
 
 async def test_remove_entry_while_loaded(

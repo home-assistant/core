@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
@@ -22,15 +23,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

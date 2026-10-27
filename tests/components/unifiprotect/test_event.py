@@ -9,6 +9,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
     Camera,
@@ -51,8 +52,6 @@ from .utils import (
     remove_entities,
     setup_public_camera,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_camera_remove(

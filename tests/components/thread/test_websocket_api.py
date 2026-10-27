@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, AsyncMock, MagicMock
 
+from pytest_homeassistant.typing import WebSocketGenerator
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components.thread import dataset_store, discovery
@@ -17,8 +18,6 @@ from . import (
     ROUTER_DISCOVERY_GOOGLE_1,
     ROUTER_DISCOVERY_HASS,
 )
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_add_dataset(

@@ -9,6 +9,7 @@ from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterComm
 from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
 
+from homeassistant.components.light import DEFAULT_MAX_KELVIN
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
@@ -25,7 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
+from .const import MATTER_MAX_MIREDS
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -45,6 +48,29 @@ async def async_setup_entry(
     """Set up Matter Number Input from Config Entry."""
     matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
+
+
+def _startup_mireds_to_kelvin(value: int | None) -> int:
+    """Convert StartUpColorTemperatureMireds to Kelvin, 0 meaning previous."""
+    # Treat values outside the spec range (such as 0 or 0xFFFF) as null
+    if value is None or not 0 < value <= MATTER_MAX_MIREDS:
+        return 0
+    return color_util.color_temperature_mired_to_kelvin(value)
+
+
+def _kelvin_to_startup_mireds(value: float) -> int | None:
+    """Convert Kelvin to StartUpColorTemperatureMireds, 0 meaning previous."""
+    if value == 0:
+        return None
+    return min(color_util.color_temperature_kelvin_to_mired(value), MATTER_MAX_MIREDS)
+
+
+def _physical_min_mireds_to_max_kelvin(value: float) -> float:
+    """Convert ColorTempPhysicalMinMireds to the maximum Kelvin value."""
+    # Avoid dividing by zero when the device reports 0
+    if not value:
+        return DEFAULT_MAX_KELVIN
+    return color_util.color_temperature_mired_to_kelvin(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -125,7 +151,9 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         # get the value from the primary attribute and convert
         # it to the HA value if needed
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.device_to_ha:
+        if value is not None and (
+            value_convert := self.entity_description.device_to_ha
+        ):
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -134,8 +162,9 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             min_value = self.get_matter_attribute_value(
                 self.entity_description.min_attribute
             )
-            min_convert = self.entity_description.format_min_value
-            self._attr_native_min_value = min_convert(min_value)
+            if min_value is not None:
+                min_convert = self.entity_description.format_min_value
+                self._attr_native_min_value = min_convert(min_value)
         # min case 2: get the min from entity_description
         elif self.entity_description.native_min_value is not None:
             self._attr_native_min_value = self.entity_description.native_min_value
@@ -144,8 +173,34 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         max_value = self.get_matter_attribute_value(
             self.entity_description.max_attribute
         )
-        max_convert = self.entity_description.format_max_value
-        self._attr_native_max_value = max_convert(max_value)
+        if max_value is not None:
+            max_convert = self.entity_description.format_max_value
+            self._attr_native_max_value = max_convert(max_value)
+
+
+class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
+    """Matter StartUpColorTemperatureMireds as a Number entity in Kelvin."""
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        send_value = self.entity_description.ha_to_device(value)
+        if send_value is not None:
+            # Devices ignore a start-up value outside their physical range
+            physical_max = self.get_matter_attribute_value(
+                clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+            )
+            send_value = min(send_value, physical_max or MATTER_MAX_MIREDS)
+        await self.write_attribute(value=send_value)
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        super()._update_from_device()
+        # A null start-up value means the previous color temperature is kept
+        if self._attr_native_value is None:
+            self._attr_native_value = 0
 
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
@@ -215,6 +270,31 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
         not_device_type=(device_types.Speaker,),
         # allow None value to account for 'default' value
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="power_on_color_temperature",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_color_temperature",
+            native_unit_of_measurement=UnitOfTemperature.KELVIN,
+            # use 0 to indicate that the previous color temperature is kept
+            native_min_value=0,
+            device_to_ha=_startup_mireds_to_kelvin,
+            ha_to_device=_kelvin_to_startup_mireds,
+            format_max_value=_physical_min_mireds_to_max_kelvin,
+            max_attribute=clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterStartUpColorTemperatureNumber,
+        required_attributes=(
+            clusters.ColorControl.Attributes.StartUpColorTemperatureMireds,
+            clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds,
+        ),
+        featuremap_contains=clusters.ColorControl.Bitmaps.Feature.kColorTemperature,
+        # allow None value to account for 'previous' value
         allow_none_value=True,
     ),
     MatterDiscoverySchema(
@@ -763,5 +843,23 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(clusters.WindowCovering.Attributes.WagoSlatRotationTime,),
         vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="AqaraLedStripMusicSyncSensitivity",
+            translation_key="music_sync_sensitivity",
+            native_min_value=1,
+            native_max_value=100,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            native_step=1,
+            mode=NumberMode.SLIDER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncSensitivity,
+        ),
+        vendor_id=(4447,),
     ),
 ]

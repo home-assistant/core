@@ -8,5 +8,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pytrafikverket"],
+  "quality_scale": "bronze",
   "requirements": ["pytrafikverket==2.0.0"]
 }

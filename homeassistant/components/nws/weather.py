@@ -24,8 +24,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -94,7 +93,7 @@ async def async_setup_entry(
         entity_id := entity_registry.async_get_entity_id(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])}_{HOURLY}",
+            f"{base_unique_id(**entry.data[CONF_LOCATION])}_{HOURLY}",
         )
     ):
         entity_registry.async_remove(entity_id)

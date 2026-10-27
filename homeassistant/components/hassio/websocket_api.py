@@ -5,6 +5,8 @@ from numbers import Number
 import re
 from typing import Any
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import CreateSessionOptions
 import probatio
 
 from homeassistant.components import websocket_api
@@ -24,6 +26,7 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_METHOD,
     ATTR_PARAMS,
+    ATTR_SESSION,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_SLUG,
     ATTR_TIMEOUT,
@@ -35,11 +38,14 @@ from .const import (
     WS_TYPE,
     WS_TYPE_API,
     WS_TYPE_EVENT,
+    WS_TYPE_INGRESS_INFO,
+    WS_TYPE_INGRESS_SESSION,
+    WS_TYPE_INGRESS_VALIDATE_SESSION,
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_addons_list
 from .exceptions import HassioNotReadyError
-from .handler import HassioAPIError
+from .handler import HassioAPIError, get_supervisor_client
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
@@ -66,6 +72,9 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_supervisor_event)
     websocket_api.async_register_command(hass, websocket_supervisor_api)
+    websocket_api.async_register_command(hass, websocket_ingress_info)
+    websocket_api.async_register_command(hass, websocket_ingress_session)
+    websocket_api.async_register_command(hass, websocket_ingress_validate_session)
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_update_addon)
     websocket_api.async_register_command(hass, websocket_update_core)
@@ -148,7 +157,9 @@ async def websocket_supervisor_api(
             params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
-        _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
+        # The frontend renews the ingress session when validation fails
+        log = _LOGGER.debug if command == "/ingress/validate_session" else _LOGGER.error
+        log("Failed to call %s - %s", command, err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
@@ -159,6 +170,97 @@ async def websocket_supervisor_api(
         if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
             data.pop("options", None)
         connection.send_result(msg[WS_ID], data)
+
+
+async def _async_check_ingress_access(
+    hass: HomeAssistant, connection: ActiveConnection, slug: str
+) -> None:
+    """Raise Unauthorized if the user may not open the add-on's ingress panel."""
+    if connection.user.is_admin:
+        return
+    panels = await get_supervisor_client(hass).ingress.panels()
+    if (panel := panels.get(slug)) is None or panel.admin:
+        raise Unauthorized
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_INFO,
+        probatio.Required(ATTR_SLUG): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return the add-on details the ingress panel needs."""
+    slug = msg[ATTR_SLUG]
+    try:
+        await _async_check_ingress_access(hass, connection, slug)
+        addon = await get_supervisor_client(hass).addons.addon_info(slug)
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(
+        msg[WS_ID],
+        {
+            ATTR_NAME: addon.name,
+            ATTR_SLUG: addon.slug,
+            ATTR_VERSION: addon.version,
+            "state": addon.state,
+            "ingress_url": addon.ingress_url,
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_SESSION,
+        probatio.Required(ATTR_SLUG): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_session(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create an ingress session for the add-on."""
+    client = get_supervisor_client(hass)
+    try:
+        await _async_check_ingress_access(hass, connection, msg[ATTR_SLUG])
+        # Supervisor resolves the user's role from the ID and forwards the
+        # identity to the add-on
+        session = await client.ingress.create_session(
+            CreateSessionOptions(user_id=connection.user.id)
+        )
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(msg[WS_ID], {ATTR_SESSION: session})
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required(WS_TYPE): WS_TYPE_INGRESS_VALIDATE_SESSION,
+        probatio.Required(ATTR_SESSION): cv.string,
+    }
+)
+@websocket_api.async_response
+async def websocket_ingress_validate_session(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Validate and extend an ingress session."""
+    try:
+        await get_supervisor_client(hass).ingress.validate_session(msg[ATTR_SESSION])
+    except SupervisorError as err:
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
+        return
+    connection.send_result(msg[WS_ID])
 
 
 @websocket_api.require_admin

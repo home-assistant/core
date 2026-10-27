@@ -2,6 +2,11 @@
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -10,10 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 BUTTON_ENTITY_ID_SPEAKER_AB = "button.marantz_pm6006_integrated_amplifier_speaker_a_b"
 BUTTON_ENTITY_ID_SOURCE_DIRECT = (

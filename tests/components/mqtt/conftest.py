@@ -8,6 +8,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockPahoClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN
@@ -15,9 +17,6 @@ from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMes
 from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockPahoClient
 
 ENTRY_DEFAULT_BIRTH_MESSAGE = {
     mqtt.CONF_BIRTH_MESSAGE: {

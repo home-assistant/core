@@ -10,6 +10,12 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -32,13 +38,6 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
-
-from tests.common import (
-    async_fire_time_changed,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_SOFTWARE_VERSION = MatterSoftwareVersion(
     vid=65521,

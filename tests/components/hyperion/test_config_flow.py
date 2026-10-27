@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
@@ -43,8 +44,6 @@ from . import (
     add_test_config_entry,
     create_mock_client,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: dict[str, Any] = {
@@ -149,7 +148,7 @@ async def _configure_flow(
 
     with patch(
         "homeassistant.components.hyperion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
@@ -875,7 +874,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
             "homeassistant.components.hyperion.client.HyperionClient",
             return_value=client,
         ),
-        patch("homeassistant.components.hyperion.async_setup_entry", return_value=True),
+        patch("homeassistant.components.hyperion.async_setup_entry", return_value=None),
     ):
         result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
