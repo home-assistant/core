@@ -18,6 +18,7 @@ from pytest_homeassistant.common import (
     mock_platform,
     mock_restore_cache_with_extra_data,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
@@ -61,7 +62,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
-from tests.typing import WebSocketGenerator
 
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
 TEST_UPDATE_ENTITY_ID = "update.mock_name_firmware"
