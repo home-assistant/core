@@ -2,7 +2,11 @@
 
 from datetime import UTC, datetime
 
-from aioamazondevices.const.devices import DEVICE_TYPE_AQM, DEVICE_TYPE_GLOW
+from aioamazondevices.const.devices import (
+    DEVICE_TYPE_AQM,
+    DEVICE_TYPE_GLOW,
+    DEVICE_TYPE_THERMOSTAT,
+)
 from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
     NOTIFICATION_REMINDER,
@@ -388,6 +392,90 @@ TEST_DEVICE_GLOW = AmazonDevice(
     unsupported_features={},
 )
 
+TEST_DEVICE_THERMOSTAT_SN = "thermostat_test_serial_number"
+TEST_DEVICE_THERMOSTAT = AmazonDevice(
+    account_name="Thermostat Test",
+    capabilities=[],
+    device_family="THERMOSTAT",
+    device_type=DEVICE_TYPE_THERMOSTAT,
+    primary_display_category="THERMOSTAT",
+    household_device=False,
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members={TEST_DEVICE_THERMOSTAT_SN: DEVICE_TYPE_THERMOSTAT},
+    parent_clusters=[],
+    online=True,
+    serial_number=TEST_DEVICE_THERMOSTAT_SN,
+    manufacturer="Amazon",
+    model="Smart Thermostat",
+    hardware_version=None,
+    software_version="thermostat_test_software_version",
+    entity_id="13131313-2424-3535-4646-575757575757",
+    endpoint_id="G1234567890123456789012345678E",
+    notifications_supported=False,
+    notifications={},
+    media_player_supported=False,
+    communication_settings={},
+    voice_control_supported=False,
+    features={
+        "temperatureSensor": {
+            "": AmazonDeviceFeature(
+                properties=["temperature"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"temperature": "temperature"},
+            )
+        },
+        "thermostat": {
+            "": AmazonDeviceFeature(
+                properties=[
+                    "upperSetpoint",
+                    "targetSetpoint",
+                    "lowerSetpoint",
+                    "thermostatMode",
+                ],
+                supported_operations=["setThermostatMode", "setTargetSetpoint"],
+                supported_modes=["HEAT", "COOL", "AUTO", "OFF"],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ThermostatConfiguration",
+                    "supportedModes": ["HEAT", "COOL", "AUTO", "OFF"],
+                },
+                sensor_keys={
+                    "upperSetpoint": "upperSetpoint",
+                    "targetSetpoint": "targetSetpoint",
+                    "lowerSetpoint": "lowerSetpoint",
+                    "thermostatMode": "thermostatMode",
+                },
+            )
+        },
+        "thermostatConfiguration": {
+            "": AmazonDeviceFeature(
+                properties=["allowedTemperatureRange"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"allowedTemperatureRange": "allowedTemperatureRange"},
+            )
+        },
+    },
+    unsupported_features={},
+)
+
 TEST_DEVICE_1_SENSORS: dict[str, AmazonDeviceSensor] = {
     "dnd": AmazonDeviceSensor(
         name="dnd",
@@ -562,6 +650,84 @@ TEST_DEVICE_GLOW_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="mode",
         property_name="mode",
         instance="1",
+    ),
+}
+
+TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
+    "temperature": AmazonDeviceSensor(
+        name="temperature",
+        value=72.0,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale="FAHRENHEIT",
+        feature_name="temperatureSensor",
+        property_name="temperature",
+        instance="",
+    ),
+    "upperSetpoint": AmazonDeviceSensor(
+        name="upperSetpoint",
+        value=72.0,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale="FAHRENHEIT",
+        feature_name="thermostat",
+        property_name="upperSetpoint",
+        instance="",
+    ),
+    "targetSetpoint": AmazonDeviceSensor(
+        name="targetSetpoint",
+        value=62.0,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale="FAHRENHEIT",
+        feature_name="thermostat",
+        property_name="targetSetpoint",
+        instance="",
+    ),
+    "lowerSetpoint": AmazonDeviceSensor(
+        name="lowerSetpoint",
+        value=65.0,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale="FAHRENHEIT",
+        feature_name="thermostat",
+        property_name="lowerSetpoint",
+        instance="",
+    ),
+    "thermostatMode": AmazonDeviceSensor(
+        name="thermostatMode",
+        value="AUTO",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="thermostat",
+        property_name="thermostatMode",
+        instance="",
+    ),
+    "allowedTemperatureRange": AmazonDeviceSensor(
+        name="allowedTemperatureRange",
+        value={
+            "heating": {
+                "minimum": {"value": 40.0, "scale": "FAHRENHEIT"},
+                "maximum": {"value": 87.0, "scale": "FAHRENHEIT"},
+            },
+            "cooling": {
+                "minimum": {"value": 43.0, "scale": "FAHRENHEIT"},
+                "maximum": {"value": 90.0, "scale": "FAHRENHEIT"},
+            },
+        },
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="thermostatConfiguration",
+        property_name="allowedTemperatureRange",
+        instance="",
     ),
 }
 

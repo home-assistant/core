@@ -142,6 +142,9 @@
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"
     },
+    "hvac_mode_with_temperature": {
+      "message": "Set the HVAC mode and the target temperature in separate actions"
+    },
     "invalid_auth": {
       "message": "Invalid authentication credentials: {error}"
     },
