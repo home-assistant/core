@@ -34,6 +34,7 @@ def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
     """Test is datetime."""
     assert render(hass, "{{ value is datetime }}", {"value": value}) == expected
 
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -55,6 +56,7 @@ def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
 def test_is_timedelta(hass: HomeAssistant, value, expected) -> None:
     """Test is timedelta."""
     assert render(hass, "{{ value is timedelta }}", {"value": value}) == expected
+
 
 def test_strptime(hass: HomeAssistant) -> None:
     """Test the parse timestamp method."""
