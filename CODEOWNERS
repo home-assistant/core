@@ -2077,8 +2077,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/uptimerobot/ @ludeeus @chemelli74
 /homeassistant/components/usage_prediction/ @home-assistant/core
 /tests/components/usage_prediction/ @home-assistant/core
-/homeassistant/components/usb/ @bdraco
-/tests/components/usb/ @bdraco
+/homeassistant/components/usb/ @bdraco @puddly
+/tests/components/usb/ @bdraco @puddly
 /homeassistant/components/usgs_earthquakes_feed/ @exxamalte
 /tests/components/usgs_earthquakes_feed/ @exxamalte
 /homeassistant/components/utility_meter/ @dgomes
