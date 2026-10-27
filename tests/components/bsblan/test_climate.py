@@ -792,13 +792,22 @@ async def test_restore_scene_in_auto(
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
+@pytest.mark.parametrize(
+    "current_setpoint",
+    [
+        pytest.param("8.0", id="protection_in_effect"),
+        # Read before the controller applies the protection setpoint
+        pytest.param("20.0", id="previous_setpoint"),
+    ],
+)
 async def test_restore_scene_in_off(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    current_setpoint: str,
 ) -> None:
     """Test restoring a scene in off keeps the comfort setpoint."""
-    mock_bsblan.state.return_value = _circuit_state(0, "8.0")
+    mock_bsblan.state.return_value = _circuit_state(0, current_setpoint)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await async_reproduce_state(
