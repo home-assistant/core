@@ -92,7 +92,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> No
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: OmadaConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: OmadaConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a device from the registry and drop its cached state."""
     mac = next(

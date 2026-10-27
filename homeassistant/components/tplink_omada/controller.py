@@ -101,8 +101,7 @@ class OmadaSiteController:
             devices_to_process = [
                 device
                 for device in self._devices_coordinator.data.values()
-                if device_filter(device)
-                and device.mac not in processed_devices
+                if device_filter(device) and device.mac not in processed_devices
             ]
 
             if not devices_to_process:
