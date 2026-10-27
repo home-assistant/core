@@ -153,6 +153,7 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
+        self._last_update_dispatch_generation = 0
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -419,6 +420,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
         entity_id = event and event.data["entity_id"]
 
+        if (
+            gen := self.hass.bus.current_dispatch_generation()
+        ) and self._last_update_dispatch_generation != gen:
+            _LOGGER.debug(
+                "new dispatch generation %d, resetting self-ref count",
+                gen,
+            )
+            self._last_update_dispatch_generation = gen
+            self._self_ref_update_count = 0
+
         if entity_id and entity_id == self.entity_id:
             self._self_ref_update_count += 1
             _LOGGER.debug(
@@ -426,8 +437,6 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._self_ref_update_count,
                 len(self._template_attrs),
             )
-        else:
-            self._self_ref_update_count = 0
 
         if self._self_ref_update_count > len(self._template_attrs):
             for update in updates:

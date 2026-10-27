@@ -1508,6 +1508,7 @@ class EventBus:
 
     __slots__ = (
         "_debug",
+        "_dispatch_generation",
         "_dispatching",
         "_event_queue",
         "_hass",
@@ -1528,6 +1529,7 @@ class EventBus:
             tuple[EventType[Any] | str, Any, EventOrigin, Context | None, float]
         ] = deque()
         self._dispatching = False
+        self._dispatch_generation = 0
         self._queued_event_count = 0
         self._async_logging_changed()
         self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
@@ -1630,6 +1632,7 @@ class EventBus:
             return
 
         self._dispatching = True
+        self._dispatch_generation += 1
         self._queued_event_count = 0
         try:
             self._async_dispatch(event_type, event_data, origin, context, time_fired)
@@ -1843,6 +1846,15 @@ class EventBus:
             _LOGGER.exception(
                 "Unable to remove unknown job listener %s", filterable_job
             )
+
+    def current_dispatch_generation(self) -> int | None:
+        """Returns the generation number of the currently active event dispatch.
+
+        Events that are triggered during the handling of another event will be
+        run within the same dispatch generation. Thus, the generation number
+        can be used to detect event loops.
+        """
+        return self._dispatch_generation if self._dispatching else None
 
 
 class CompressedState(TypedDict):
