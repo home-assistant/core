@@ -528,6 +528,16 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         return self.data
 
+    @override
+    async def _async_refresh_finished(self) -> None:
+        """Called when a refresh is finished.
+
+        If the last update was successful but the appliance was disconnected
+        the data wasn't actually refreshed, so we mark the last update as failed.
+        """
+        if self.last_update_success and not self.data.info.connected:
+            self.last_update_success = False
+
     async def get_appliance_data(self) -> None:
         """Get appliance data."""
         appliance = self.data.info
@@ -545,7 +555,6 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 appliance.name,
                 appliance.ha_id,
             )
-            self.last_update_success = False
             return
         try:
             settings = {
