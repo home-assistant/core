@@ -1491,6 +1491,18 @@ def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in obj.items() if v is not None}
 
 
+@callback
+def async_update_device_path(
+    hass: HomeAssistant, config_entry: ConfigEntry, new_path: str
+) -> None:
+    """Point a config entry at the new path of its radio."""
+    device = config_entry.data[CONF_DEVICE]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, CONF_DEVICE: {**device, CONF_DEVICE_PATH: new_path}},
+    )
+
+
 def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
     """Generate a unique id for a config entry based on the network info."""
     return f"epid={network_info.extended_pan_id}".lower()

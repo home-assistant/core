@@ -1157,6 +1157,28 @@ async def test_get_icons_for_integration_categories(
     }
 
 
+async def test_get_icons_for_integration_connectivity(
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_icons gives the icons of the connectivity values."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "frontend/get_icons",
+            "integration": "homeassistant",
+            "category": "integration_connectivity",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    connectivity = msg["result"]["resources"]["homeassistant"]
+    assert connectivity["zigbee"] == {"default": "mdi:zigbee"}
+    assert connectivity["matter"] == {"default": "mdi:matter"}
+
+
 async def test_get_icons_for_single_integration(
     ws_client: MockHAClientWebSocket,
 ) -> None:

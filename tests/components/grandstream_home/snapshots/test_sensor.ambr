@@ -16,7 +16,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('grandstream_home', 'ec:74:d7:97:53:c5')]>,
     'disabled_by': None,

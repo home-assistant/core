@@ -629,6 +629,7 @@ FLOWS = {
         "pegel_online",
         "persang_infrared",
         "pglab",
+        "philips_infrared",
         "philips_js",
         "pi_hole",
         "picnic",
