@@ -60,9 +60,7 @@ rules:
     comment: Devices don't provide variable number of entities.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: There are no such entities.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
