@@ -178,14 +178,6 @@ def async_get_chat_log(
             session.async_on_cleanup(do_cleanup)
 
 
-def _tool_error_result(error: BaseException) -> llm.ToolResult:
-    """Return the result of a tool call that failed."""
-    error_data: JsonObjectType = {"error": type(error).__name__}
-    if str(error):
-        error_data["error_text"] = str(error)
-    return llm.ToolResult(data=error_data, error=True)
-
-
 class ConverseError(HomeAssistantError):
     """Error during initialization of conversation.
 
@@ -438,6 +430,7 @@ class ChatLog:
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
+        error_text = str(error) or type(error).__name__
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         index = len(self.content) - 1
@@ -457,15 +450,18 @@ class ChatLog:
                         agent_id=content.agent_id,
                         tool_call_id=tool_call.id,
                         tool_name=tool_call.tool_name,
-                        result=_tool_error_result(error),
+                        result=llm.ToolResult(
+                            data={
+                                "error": type(error).__name__,
+                                "error_text": error_text,
+                            },
+                            error=True,
+                        ),
                     )
                 )
 
         self.async_add_assistant_content_without_tools(
-            AssistantContent(
-                agent_id=agent_id,
-                content=f"Error: {str(error) or type(error).__name__}",
-            )
+            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
         )
 
     @callback
@@ -539,7 +535,10 @@ class ChatLog:
             try:
                 tool_result = await tool_call_tasks[tool_input.id]
             except (HomeAssistantError, probatio.Invalid) as e:
-                tool_result = _tool_error_result(e)
+                error_data: JsonObjectType = {"error": type(e).__name__}
+                if str(e):
+                    error_data["error_text"] = str(e)
+                tool_result = llm.ToolResult(data=error_data, error=True)
             LOGGER.debug("Tool response: %s", tool_result)
 
             response_content = ToolResultContent(
