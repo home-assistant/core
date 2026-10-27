@@ -324,7 +324,7 @@ async def _start_reconfigure(
         pytest.param(
             {
                 HAS_FAULT_LOG: True,
-                LAST_HANDLED_FAULT: [[3, "2026-10-09T18:30:05"]],
+                LAST_HANDLED_FAULT: [3, "2026-10-09T18:30:05"],
             },
             id="handled_fault_stored",
         ),
@@ -360,7 +360,7 @@ async def test_reconfigure_keeps_a_fault_handled_while_probing(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data={**MOCK_ENTRY_DATA, LAST_HANDLED_FAULT: [[3, "2026-10-09T18:30:05"]]},
+        data={**MOCK_ENTRY_DATA, LAST_HANDLED_FAULT: [3, "2026-10-09T18:30:05"]},
     )
     entry.add_to_hass(hass)
     result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
@@ -377,7 +377,7 @@ async def test_reconfigure_keeps_a_fault_handled_while_probing(
         # The loaded entry keeps polling while the new link is probed.
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, LAST_HANDLED_FAULT: [[1, "2026-10-10T07:45:00"]]},
+            data={**entry.data, LAST_HANDLED_FAULT: [1, "2026-10-10T07:45:00"]},
         )
         yield mock_conn.for_unit(unit_id)
 
@@ -390,7 +390,7 @@ async def test_reconfigure_keeps_a_fault_handled_while_probing(
         )
 
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[LAST_HANDLED_FAULT] == [[1, "2026-10-10T07:45:00"]]
+    assert entry.data[LAST_HANDLED_FAULT] == [1, "2026-10-10T07:45:00"]
 
 
 async def test_reconfigure_offers_the_current_settings(
@@ -613,7 +613,7 @@ async def test_reconfigure_new_line_settings_silent_inverter(
     assert entry.data == {
         **MOCK_SERIAL_ENTRY_DATA,
         HAS_FAULT_LOG: True,
-        LAST_HANDLED_FAULT: [],
+        LAST_HANDLED_FAULT: None,
     }
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
@@ -653,7 +653,7 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
     assert entry.data == {
         **MOCK_SERIAL_ENTRY_DATA,
         HAS_FAULT_LOG: True,
-        LAST_HANDLED_FAULT: [],
+        LAST_HANDLED_FAULT: None,
     }
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED

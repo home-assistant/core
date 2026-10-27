@@ -1079,12 +1079,12 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     [
         pytest.param(
             MOCK_TCP_INPUT,
-            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: []},
+            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
             id="legacy_tcp",
         ),
         pytest.param(
             MOCK_SERIAL_ENTRY_DATA,
-            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: []},
+            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
             id="reconfigured_while_disabled",
         ),
     ],

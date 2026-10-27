@@ -14,6 +14,7 @@ from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import LAST_HANDLED_FAULT
@@ -71,18 +72,18 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     """Fires an event for each fault the inverter logs."""
 
     entity_description: SofarEventEntityDescription
-    _known: set[EntryKey] | None = None
+    # The newest entry handled; None while the log is empty.
+    _handled: EntryKey | UndefinedType | None = UNDEFINED
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Resume from the entries handled before, or take all as known."""
-        if (
-            handled := self.coordinator.config_entry.data.get(LAST_HANDLED_FAULT)
-        ) is not None:
-            self._known = {
-                (fault_id, datetime.fromisoformat(occurred_at))
-                for fault_id, occurred_at in handled
-            }
+        """Resume after the entry handled before, or from the log as is."""
+        if LAST_HANDLED_FAULT in (data := self.coordinator.config_entry.data):
+            self._handled = (
+                None
+                if (stored := data[LAST_HANDLED_FAULT]) is None
+                else (stored[0], datetime.fromisoformat(stored[1]))
+            )
         elif self.available:
             self._remember(self._newest())
         await super().async_added_to_hass()
@@ -99,13 +100,13 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         # Automations arm their triggers only once Home Assistant runs.
         if self.hass.state is not CoreState.running:
             return
-        if (known := self._known) is None:
+        if (handled := self._handled) is UNDEFINED:
             self._remember(self._newest())
             return
         for entry in reversed(
             list(
                 takewhile(
-                    lambda logged: _key(logged) not in known,
+                    lambda logged: _key(logged) != handled,
                     self._entries(),
                 )
             )
@@ -122,27 +123,27 @@ class SofarFaultEvent(SofarEntity, EventEntity):
             )
             # One write per event, so each reaches state triggers.
             self.async_write_ha_state()
-        if (newest := self._newest()) != known:
+        if (newest := self._newest()) != handled:
             self._remember(newest)
 
     def _entries(self) -> tuple[FaultLogEntry, ...]:
         """Return the log entries, newest first."""
         return self.entity_description.fault_log_fn(self.coordinator.device).entries
 
-    def _newest(self) -> set[EntryKey]:
+    def _newest(self) -> EntryKey | None:
         """Return the newest entry the log holds now, if any."""
-        return {_key(entry) for entry in self._entries()[:1]}
+        return next((_key(entry) for entry in self._entries()), None)
 
-    def _remember(self, known: set[EntryKey]) -> None:
-        """Take entries as handled, and keep them across restarts."""
-        self._known = known
+    def _remember(self, handled: EntryKey | None) -> None:
+        """Take the log as handled up to an entry, across restarts too."""
+        self._handled = handled
         entry = self.coordinator.config_entry
         self.hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                LAST_HANDLED_FAULT: [
-                    [fault_id, at.isoformat()] for fault_id, at in known
-                ],
+                LAST_HANDLED_FAULT: None
+                if handled is None
+                else [handled[0], handled[1].isoformat()],
             },
         )

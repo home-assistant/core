@@ -57,17 +57,12 @@ def platforms() -> Generator[None]:
         yield
 
 
-def _handled_entry(*entries: tuple[int, datetime]) -> MockConfigEntry:
-    """Mock a Sofar config entry from a run that handled ``entries``."""
+def _handled_entry(handled: list[int | str] | None) -> MockConfigEntry:
+    """Mock a Sofar config entry from a run that handled up to ``handled``."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data={
-            **MOCK_ENTRY_DATA,
-            LAST_HANDLED_FAULT: [
-                [fault_id, when.isoformat()] for fault_id, when in entries
-            ],
-        },
+        data={**MOCK_ENTRY_DATA, LAST_HANDLED_FAULT: handled},
         title=MOCK_MODEL,
     )
 
@@ -151,6 +146,9 @@ async def test_entry_fires_once(
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert _fired(events) == [
         ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
@@ -167,7 +165,7 @@ async def test_entry_fires_once(
             id="first_run",
         ),
         pytest.param(
-            _handled_entry(GRID_OVER_VOLTAGE),
+            _handled_entry([1, "2026-10-09T17:01:23"]),
             [
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
                 ("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00"),
@@ -175,7 +173,7 @@ async def test_entry_fires_once(
             id="stored_entry_in_log",
         ),
         pytest.param(
-            _handled_entry((169, datetime(2026, 10, 1, 9, 0, 0))),
+            _handled_entry([169, "2026-10-01T09:00:00"]),
             [
                 ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
@@ -184,7 +182,7 @@ async def test_entry_fires_once(
             id="stored_entry_rotated_out",
         ),
         pytest.param(
-            _handled_entry(),
+            _handled_entry(None),
             [
                 ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
@@ -224,7 +222,7 @@ async def test_entries_wait_until_home_assistant_runs(
     mock_connection: MockModbusConnection,
 ) -> None:
     """Test entries logged while down fire once triggers can see them."""
-    entry = _handled_entry(GRID_OVER_VOLTAGE)
+    entry = _handled_entry([1, "2026-10-09T17:01:23"])
     seed_fault_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
     hass.set_state(CoreState.starting)
     entry.add_to_hass(hass)
