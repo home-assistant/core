@@ -181,7 +181,7 @@ def async_get_chat_log(
 class ConverseError(HomeAssistantError):
     """Error during initialization of conversation.
 
-    Will not be stored in the history.
+    The chat log stores the underlying error.
     """
 
     def __init__(
@@ -430,6 +430,9 @@ class ChatLog:
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
+        # The chat log adds the cause before it raises ConverseError.
+        if isinstance(error, ConverseError):
+            return
         error_text = str(error) or type(error).__name__
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
@@ -734,6 +737,7 @@ class ChatLog:
                 intent.IntentResponseErrorCode.UNKNOWN,
                 "Sorry, I had a problem with my template",
             )
+            self.async_add_error(llm_context.agent_id or DOMAIN, err)
             raise ConverseError(
                 "Error rendering prompt",
                 conversation_id=self.conversation_id,
@@ -824,6 +828,7 @@ class ChatLog:
                     intent.IntentResponseErrorCode.UNKNOWN,
                     "Error preparing LLM API",
                 )
+                self.async_add_error(llm_context.agent_id or DOMAIN, err)
                 raise ConverseError(
                     f"Error getting LLM API {user_llm_hass_api}",
                     conversation_id=self.conversation_id,
