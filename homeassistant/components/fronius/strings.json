@@ -449,6 +449,9 @@
     }
   },
   "exceptions": {
+    "battery_limits_conflict": {
+      "message": "The inverter refuses a charge limit of {charge_limit}% together with a discharge limit of {discharge_limit}% while both limits are enabled. A negative limit forces the opposite direction and must not exceed the other limit, so the two have to add up to at least 0%. Change one of them or turn its limiting off first."
+    },
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
     },

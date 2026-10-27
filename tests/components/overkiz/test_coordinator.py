@@ -157,6 +157,37 @@ async def test_rate_limit_delays_next_refresh(
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
 
 
+async def test_rate_limit_never_polls_faster_than_configured(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Backing off must not speed a hub up."""
+    await setup_overkiz_integration(fixture=RTS_SHUTTER.fixture)
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    mock_client.fetch_events.reset_mock()
+
+    freezer.tick(RATE_LIMIT_RETRY_AFTER)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 0
+
+    freezer.tick(UPDATE_INTERVAL_ALL_ASSUMED_STATE - RATE_LIMIT_RETRY_AFTER)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
+
+
 async def test_commands_share_the_execution_poll(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,

@@ -594,7 +594,7 @@ class _DefaultPipelineProcessor:
             await conversation.async_prepare_intents(self.host.hass, language)
         await conversation.async_prepare_agent(self.host.hass, agent_id, language)
 
-    async def recognize_intent(
+    async def recognize_intent(  # noqa: C901
         self,
         intent_input: str,
         conversation_id: str,
@@ -847,6 +847,11 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except conversation.ConversationBusyError as src_error:
+            raise IntentRecognitionError(
+                code="intent-busy",
+                message=str(src_error),
+            ) from src_error
         except Unauthorized as src_error:
             raise IntentRecognitionError(
                 code="intent-unauthorized",

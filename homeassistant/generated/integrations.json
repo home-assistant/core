@@ -6144,6 +6144,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "libresync": {
+      "name": "LibreSync",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.speakers_audio"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "lichess": {
       "name": "Lichess",
       "integration_type": "service",
@@ -8616,6 +8625,15 @@
             "lighting.bulbs_lamps"
           ],
           "name": "Philips Hue BLE"
+        },
+        "philips_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "name": "Philips Infrared"
         },
         "philips_js": {
           "integration_type": "device",
