@@ -35,6 +35,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -566,6 +567,44 @@ class TestOnectaDataUpdateCoordinator:
 
         command.assert_awaited_once()
         assert coordinator._polling_backoff_until is None
+
+    async def test_successful_write_reschedules_poll_after_cooldown(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+    ) -> None:
+        """Poll after the write cooldown instead of the previous backoff deadline."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        coordinator._polling_backoff_until = dt_util.utcnow() + timedelta(minutes=6)
+
+        # A scheduled poll observes the backoff and sets its next timer to the
+        # remaining time.
+        coordinator.update_interval = timedelta(minutes=5)
+        coordinator._schedule_refresh()
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert coordinator.update_interval == timedelta(minutes=1)
+
+        command = AsyncMock()
+        assert await coordinator.async_execute_command(lambda _client: command())
+        assert coordinator.update_interval == timedelta(seconds=30)
+
+        coordinator.client.get_gateway_devices.reset_mock()
+        freezer.tick(timedelta(seconds=29))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        coordinator.client.get_gateway_devices.assert_not_awaited()
+
+        # Coordinator timers are intentionally staggered by a fraction of a
+        # second, so advance just past the cooldown boundary.
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        coordinator.client.get_gateway_devices.assert_awaited_once()
 
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""

@@ -156,8 +156,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except TimeoutError:
                 _LOGGER.debug("Daikin request timed out")
                 return False
+            had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None
             self._last_patch_call = dt_util.utcnow()
+            if had_polling_backoff:
+                self.update_interval = _POST_WRITE_COOLDOWN
+                if self._listeners:
+                    self._schedule_refresh()
             return True
 
     def async_register_devices(self) -> None:
