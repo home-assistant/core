@@ -158,5 +158,17 @@
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
       "title": "[%key:component::v2c::issues::deprecated_sensor::title%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "pv_available": "Photovoltaic installation"
+        },
+        "data_description": {
+          "pv_available": "The V2C Trydan EVSE photovoltaic installation option is enabled."
+        }
+      }
+    }
   }
 }

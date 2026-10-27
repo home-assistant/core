@@ -33,6 +33,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> None:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+
+async def update_listener(hass: HomeAssistant, entry: V2CConfigEntry) -> None:
+    """Reload the integration when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: V2CConfigEntry) -> None:
     """Unload a config entry."""

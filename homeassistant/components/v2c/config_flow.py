@@ -7,11 +7,14 @@ import probatio
 from pytrydan import Trydan
 from pytrydan.exceptions import TrydanError
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import CONF_PV_AVAILABLE, DOMAIN
+from .coordinator import V2CConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +29,13 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for V2C."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: V2CConfigEntry) -> V2COptionsFlow:
+        """Create the options flow."""
+        return V2COptionsFlow()
 
     @override
     async def async_step_user(
@@ -58,4 +68,27 @@ class V2CConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+
+class V2COptionsFlow(OptionsFlow):
+    """Handle the V2C options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure photovoltaic availability."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_PV_AVAILABLE,
+                        default=self.config_entry.options.get(CONF_PV_AVAILABLE, False),
+                    ): selector.BooleanSelector()
+                }
+            ),
         )
