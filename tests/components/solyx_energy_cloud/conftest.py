@@ -1,12 +1,11 @@
 """Fixtures and helpers for the Solyx Energy tests."""
 
 from collections.abc import Generator
-from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 from solyx_energy_api.client import SolyxEnergyApiClient
 
 from homeassistant.components.solyx_energy_cloud.const import (
@@ -14,14 +13,11 @@ from homeassistant.components.solyx_energy_cloud.const import (
     CONF_NYMO_CLIENT_SECRET,
     DOMAIN,
 )
-from homeassistant.util.json import json_loads
 
 from .const import NYMO_CLIENT_ID, NYMO_CLIENT_SECRET
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-
-FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture
@@ -41,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_solyx_api_client() -> AsyncMock:
     """Return a mocked SolyxEnergyApiClient instance."""
-    data = json_loads((FIXTURES_DIR / "assets_data.json").read_text(encoding="utf-8"))
+    data = load_json_array_fixture("assets_data.json", DOMAIN)
     client = AsyncMock(spec=SolyxEnergyApiClient)
     client.async_get_assets.return_value = data
     client.async_test_connection.return_value = None
