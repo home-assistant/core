@@ -10,3 +10,13 @@ def mock_heartbeat():
     """Mock broadlink heartbeat."""
     with patch("homeassistant.components.broadlink.heartbeat.blk.ping"):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_rediscovery():
+    """Mock broadlink rediscovery."""
+    with patch(
+        "homeassistant.components.broadlink.helpers.async_find_device_by_mac",
+        return_value=None,
+    ):
+        yield

@@ -1,7 +1,5 @@
 """Helper functions for the Broadlink integration."""
 
-from __future__ import annotations
-
 import asyncio
 from base64 import b64decode
 import ipaddress
@@ -9,6 +7,7 @@ import logging
 import time
 
 import broadlink_async as blk
+from broadlink_async.exceptions import BroadlinkException
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
@@ -38,7 +37,7 @@ def _get_subnet_network(fallback_ip: str | None) -> ipaddress.IPv4Network | None
             if isinstance(ip_obj, ipaddress.IPv4Address) and any(
                 ip_obj in net for net in RFC1918_NETWORKS
             ):
-                return ipaddress.ip_network(f"{fallback_ip}/24", strict=False)
+                return ipaddress.IPv4Network(f"{fallback_ip}/24", strict=False)
         except ValueError:
             pass
     return None
@@ -104,7 +103,7 @@ async def async_find_device_by_mac(
                     dev = await asyncio.wait_for(blk.hello(ip), timeout=timeout_per_probe)
                     dev_mac = dev.mac.hex().lower()
                     _DISCOVERED_CACHE[dev_mac] = (ip, dev)
-                except Exception:
+                except (BroadlinkException, OSError, TimeoutError):
                     pass
 
         # Probe hosts

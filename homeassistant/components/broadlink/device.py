@@ -27,6 +27,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .helpers import async_find_device_by_mac
 from .updater import BroadlinkUpdateManager, get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         except (NetworkTimeoutError, OSError) as err:
             _LOGGER.warning(
-                "Failed to connect to %s at %s (%s). Attempting MAC rediscovery...",
+                "Failed to connect to %s at %s (%s); attempting MAC rediscovery",
                 config.title,
                 config.data[CONF_HOST],
                 err,
@@ -244,8 +245,6 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
     async def _async_rediscover_by_mac(self) -> bool:
         """Attempt to locate device by MAC address and update host."""
-        from .helpers import async_find_device_by_mac
-
         target_mac = self.mac_address
         current_ip = self.config.data.get(CONF_HOST)
         result = await async_find_device_by_mac(target_mac, fallback_ip=current_ip)
