@@ -32,6 +32,7 @@ from telegram.error import (
     TelegramError,
     TimedOut,
 )
+from telegram.request import BaseRequest
 
 from homeassistant.components.telegram_bot.bot import (
     ALLOWED_UPDATES,
@@ -371,7 +372,7 @@ async def test_send_message_with_inline_keyboard(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=expected,
-            read_timeout=None,
+            read_timeout=BaseRequest.DEFAULT_NONE,
             message_thread_id=None,
         )
 
@@ -1447,7 +1448,7 @@ async def test_edit_message(
         parse_mode=None,
         disable_web_page_preview=None,
         reply_markup=None,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
     with patch(
@@ -1473,7 +1474,7 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
         parse_mode=PARSER_MD2,
     )
 
@@ -1540,7 +1541,7 @@ async def test_answer_callback_query(
         123456,
         text="mock message",
         show_alert=True,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -1851,7 +1852,7 @@ async def test_set_message_reaction(
         54321,
         reaction="👍",
         is_big=True,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -1889,7 +1890,7 @@ async def test_send_message_draft(
         text="_Thinking..._",
         message_thread_id=123,
         parse_mode=PARSER_MD2,
-        read_timeout=None,
+        read_timeout=BaseRequest.DEFAULT_NONE,
     )
 
 
@@ -2255,13 +2256,25 @@ async def test_deprecated_timeout_parameter(
     # trigger service call
     context = Context()
     context.origin_event = event
-    await hass.services.async_call(
-        DOMAIN,
-        "send_message",
-        {"message": "test message", "timeout": 5},
-        blocking=True,
-        context=context,
-    )
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=123456, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {"message": "test message", "timeout": 5},
+            blocking=True,
+            context=context,
+        )
+
+    assert mock_send_message.call_args.kwargs["read_timeout"] == 5
 
     # check issue is created correctly
     issue = issue_registry.async_get_issue(

@@ -1,6 +1,7 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
@@ -15,6 +16,14 @@ from aiohomeconnect.model import (
     StatusKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
+from aiohomeconnect.model.program import (
+    ArrayOfPrograms,
+    EnumerateProgram,
+    Option,
+    OptionKey,
+    Program,
+    ProgramKey,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -31,13 +40,24 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
+    BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_READY,
+    BSH_OPERATION_STATE_RUN,
     DOMAIN,
 )
 from homeassistant.components.home_connect.coordinator import HomeConnectError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    Event as HassEvent,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
+
+from . import create_event_message, create_operation_state_status
 
 TEST_HC_APP = "Dishwasher"
 
@@ -921,3 +941,501 @@ async def test_all_entities(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+OVEN_FINISH_TIME_ENTITY_ID = "sensor.oven_program_finish_time"
+OVEN_PROGRESS_ENTITY_ID = "sensor.oven_program_progress"
+PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize(
+    "end_events",
+    [
+        pytest.param(
+            [
+                (EventType.NOTIFY, {EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
+                (
+                    EventType.STATUS,
+                    {
+                        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                            BSH_OPERATION_STATE_READY
+                        )
+                    },
+                ),
+            ],
+            id="active_program_cleared_then_ready",
+        ),
+        pytest.param(
+            [
+                (
+                    EventType.STATUS,
+                    {
+                        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                            BSH_OPERATION_STATE_READY
+                        )
+                    },
+                ),
+                (EventType.NOTIFY, {EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
+            ],
+            id="ready_then_active_program_cleared",
+        ),
+        pytest.param(
+            [
+                (
+                    EventType.STATUS,
+                    {
+                        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                            BSH_OPERATION_STATE_READY
+                        )
+                    },
+                ),
+            ],
+            id="ready_only",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "next_program",
+    [
+        ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR,
+        ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING,
+    ],
+)
+async def test_program_finish_time_not_carried_over_to_next_program(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    end_events: list[tuple[EventType, dict[EventKey, Any]]],
+    next_program: ProgramKey,
+) -> None:
+    """Test a program without a timer doesn't show the previous remaining time."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 10,
+                },
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "10")
+
+    await client.add_events(
+        [
+            *(
+                create_event_message(appliance.ha_id, event_type, items)
+                for event_type, items in end_events
+            ),
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: next_program.value},
+            ),
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+            ),
+            # The first event after a disconnection updates all the entities.
+            EventMessage(appliance.ha_id, EventType.DISCONNECTED, ArrayOfEvents([])),
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, STATE_UNKNOWN)
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize(
+    ("program_change_items", "expected_finish_time", "expected_progress"),
+    [
+        pytest.param(
+            {
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                )
+            },
+            STATE_UNKNOWN,
+            STATE_UNKNOWN,
+            id="new_program_without_timer",
+        ),
+        pytest.param(
+            {
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                ),
+                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 600,
+                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+            },
+            "2021-01-09T12:10:00+00:00",
+            "0",
+            id="new_program_with_timer",
+        ),
+        pytest.param(
+            {
+                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 600,
+                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                ),
+            },
+            "2021-01-09T12:10:00+00:00",
+            "0",
+            id="new_program_with_timer_reported_before_program",
+        ),
+        pytest.param(
+            {
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
+                )
+            },
+            "2021-01-09T12:30:00+00:00",
+            "10",
+            id="same_program",
+        ),
+    ],
+)
+async def test_program_finish_time_on_program_change_while_running(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    program_change_items: dict[EventKey, Any],
+    expected_finish_time: str,
+    expected_progress: str,
+) -> None:
+    """Test the progress of the previous program is dropped on a program change."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 10,
+                },
+            ),
+            create_event_message(
+                appliance.ha_id, EventType.NOTIFY, program_change_items
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, expected_finish_time)
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, expected_progress)
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize(
+    ("active_program_options", "expected_finish_time", "expected_progress"),
+    [
+        pytest.param([], STATE_UNKNOWN, STATE_UNKNOWN, id="without_timer"),
+        pytest.param(
+            [
+                Option(OptionKey.BSH_COMMON_REMAINING_PROGRAM_TIME, 600),
+                Option(OptionKey.BSH_COMMON_PROGRAM_PROGRESS, 50),
+            ],
+            "2021-01-09T12:10:00+00:00",
+            "50",
+            id="with_timer",
+        ),
+    ],
+)
+async def test_program_finish_time_after_reconnection(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    active_program_options: list[Option],
+    expected_finish_time: str,
+    expected_progress: str,
+) -> None:
+    """Test the refresh on reconnection replaces the stored program progress."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 10,
+                },
+            ),
+            EventMessage(appliance.ha_id, EventType.DISCONNECTED, ArrayOfEvents([])),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, STATE_UNAVAILABLE)
+
+    # While disconnected, the program was replaced by another one.
+    program_key = ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [EnumerateProgram(program_key, program_key.value)],
+            active=Program(program_key, options=active_program_options),
+        )
+    )
+    await client.add_events(
+        [EventMessage(appliance.ha_id, EventType.CONNECTED, ArrayOfEvents([]))]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, expected_finish_time)
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, expected_progress)
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize(
+    "end_events",
+    [
+        pytest.param(
+            [(EventType.NOTIFY, {EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None})],
+            id="active_program_cleared",
+        ),
+        pytest.param(
+            [
+                (
+                    EventType.STATUS,
+                    {
+                        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                            BSH_OPERATION_STATE_READY
+                        )
+                    },
+                )
+            ],
+            id="ready",
+        ),
+        pytest.param(
+            [(EventType.DISCONNECTED, {}), (EventType.CONNECTED, {})],
+            id="reconnected_while_ready",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_event_order",
+    [
+        pytest.param((0, 1, 2), id="progress_program_operation_state"),
+        pytest.param((0, 2, 1), id="progress_operation_state_program"),
+        pytest.param((1, 0, 2), id="program_progress_operation_state"),
+        pytest.param((1, 2, 0), id="program_operation_state_progress"),
+        pytest.param((2, 0, 1), id="operation_state_progress_program"),
+        pytest.param((2, 1, 0), id="operation_state_program_progress"),
+    ],
+)
+async def test_program_finish_time_on_program_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    end_events: list[tuple[EventType, dict[EventKey, Any]]],
+    start_event_order: tuple[int, int, int],
+) -> None:
+    """Test the progress of a new program is kept regardless of the event order."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Used by the refresh after the reconnection
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_READY)
+    )
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800},
+            ),
+            *(
+                create_event_message(appliance.ha_id, event_type, items)
+                for event_type, items in end_events
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    start_events = (
+        create_event_message(
+            appliance.ha_id,
+            EventType.NOTIFY,
+            {
+                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1200,
+                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+            },
+        ),
+        create_event_message(
+            appliance.ha_id,
+            EventType.NOTIFY,
+            {
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                )
+            },
+        ),
+        create_event_message(
+            appliance.ha_id,
+            EventType.STATUS,
+            {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+        ),
+    )
+    await client.add_events([start_events[index] for index in start_event_order])
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:20:00+00:00")
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "0")
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_program_change_does_not_write_intermediate_states(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test a program change with new progress only writes the new states."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 10,
+                },
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    written_states: list[tuple[str, str]] = []
+
+    @callback
+    def _record_state(event: HassEvent[EventStateChangedData]) -> None:
+        if new_state := event.data["new_state"]:
+            written_states.append((event.data["entity_id"], new_state.state))
+
+    async_track_state_change_event(
+        hass, [OVEN_FINISH_TIME_ENTITY_ID, OVEN_PROGRESS_ENTITY_ID], _record_state
+    )
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                        ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                    ),
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 600,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+                },
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert written_states == [
+        (OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:10:00+00:00"),
+        (OVEN_PROGRESS_ENTITY_ID, "0"),
+    ]
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_program_finish_time_kept_on_pause(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test pausing and resuming a program keeps its progress."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800,
+                    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 10,
+                },
+            ),
+            *(
+                create_event_message(
+                    appliance.ha_id,
+                    EventType.STATUS,
+                    {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: operation_state},
+                )
+                for operation_state in (
+                    BSH_OPERATION_STATE_PAUSE,
+                    BSH_OPERATION_STATE_RUN,
+                )
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+    assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "10")

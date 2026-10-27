@@ -225,7 +225,7 @@
         "step": {
           "system_execute_reboot": {
             "description": "Settings were changed which require a system reboot to take effect.\n\nSelect **Reboot** to reboot the system now. Home Assistant and all apps will be inaccessible for a brief period.",
-            "submit": "Reboot"
+            "submit": "[%key:common::action::reboot%]"
           }
         }
       },

@@ -1,55 +1,4 @@
 # serializer version: 1
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.somfy_tahoma_switch_hot_water_tank-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.somfy_tahoma_switch_hot_water_tank',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Hot Water Tank',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
-    'original_name': 'Hot Water Tank',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1202/6019143#7-DomesticHotWaterTank',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.somfy_tahoma_switch_hot_water_tank-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Somfy TaHoma Switch Hot Water Tank',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-boiler',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.somfy_tahoma_switch_hot_water_tank',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.indoor_camera_camera_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -58,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'myfox://SOMFY_PROTECT-1234567890ABCDEF/NmZSuim2Wwcttk9NB56B1kdql30fDmDY')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -109,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'myfox://SOMFY_PROTECT-1234567890ABCDEF/jQ5ul40RVLnipT6JB8b3JK96tUsf14mR')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -152,6 +101,57 @@
     'state': 'off',
   })
 # ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.somfy_tahoma_switch_hot_water_tank-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-5678-1202/6019143')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.somfy_tahoma_switch_hot_water_tank',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot Water Tank',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:water-boiler',
+    'original_name': 'Hot Water Tank',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1202/6019143#7-DomesticHotWaterTank',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.somfy_tahoma_switch_hot_water_tank-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Somfy TaHoma Switch Hot Water Tank',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.somfy_tahoma_switch_hot_water_tank',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.home_library_garden_light_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-1234-6233/6852535')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -211,9 +211,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-1234-6233/9474368')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -262,9 +262,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-1234-6233/16168460')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -313,9 +313,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-1234-6233/16580352')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -364,9 +364,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'rtds://1234-1234-6233/4065441')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,

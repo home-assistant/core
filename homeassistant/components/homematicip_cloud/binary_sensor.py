@@ -21,6 +21,7 @@ from homematicip.device import (
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
+    MotionDetectorSwitchOutdoor,
     PluggableMainsFailureSurveillance,
     PresenceDetectorIndoor,
     RainSensor,
@@ -31,6 +32,7 @@ from homematicip.device import (
     TiltVibrationSensor,
     WallMountedThermostatPro,
     WaterSensor,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -118,6 +120,19 @@ MOTION_SENSOR_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=lambda device: device.motionDetected,
         channel=1,
+    ),
+)
+
+MOTION_SWITCH_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[MotionDetectorSwitchOutdoor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        channel_value_fn=lambda channel: channel.motionDetected,
+        channel=1,
+        channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
     ),
 )
 
@@ -216,6 +231,20 @@ WALL_THERMOSTAT_DESCRIPTIONS: tuple[
     ),
 )
 
+WATER_SUPPLY_STOP_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WaterSupplyStop],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="water_alarm",
+        translation_key="water_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        channel_value_fn=lambda channel: channel.waterAlarmActive,
+        channel=1,
+        channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
+    ),
+)
+
 BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
@@ -231,12 +260,14 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
         MotionDetectorOutdoor,
         MotionDetectorPushButton,
     ): MOTION_SENSOR_DESCRIPTIONS,
+    (MotionDetectorSwitchOutdoor,): MOTION_SWITCH_SENSOR_DESCRIPTIONS,
     (PresenceDetectorIndoor,): PRESENCE_SENSOR_DESCRIPTIONS,
     (SmokeDetector,): SMOKE_SENSOR_DESCRIPTIONS,
     (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,
     (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
     (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
     (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
+    (WaterSupplyStop,): WATER_SUPPLY_STOP_DESCRIPTIONS,
 }
 
 

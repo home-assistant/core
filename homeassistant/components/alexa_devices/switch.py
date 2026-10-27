@@ -1,10 +1,11 @@
 """Support for switches."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import Any, Final, override
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -46,13 +47,24 @@ def _update_communication_state(
     )
 
 
+def _has_feature_sensor(device: AmazonDevice, sensor_key: str) -> bool:
+    """Return if a supported feature of the device provides the sensor."""
+    return any(
+        sensor_key in feature.sensor_keys.values()
+        for instances in device.features.values()
+        for feature in instances.values()
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
     is_on_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
     is_available_fn: Callable[[AmazonDevicesCoordinator, str, str], bool]
-    method: str
+    method: Callable[
+        [AmazonDevicesCoordinator, AmazonDevice, str, bool], Awaitable[None]
+    ]
     update_state_fn: Callable[[AmazonDevicesCoordinator, str, str, bool], None]
 
 
@@ -65,7 +77,9 @@ DND_SWITCH: Final = AmazonSwitchEntityDescription(
     is_available_fn=lambda coordinator, serial_num, _: (
         serial_num in coordinator.dnd_states
     ),
-    method="set_do_not_disturb",
+    method=lambda coordinator, device, _, state: coordinator.api.set_do_not_disturb(
+        device, state
+    ),
     update_state_fn=lambda coordinator, serial_num, _, state: coordinator.set_dnd_state(
         serial_num, state
     ),
@@ -81,7 +95,9 @@ COMMUNICATION_SWITCHES: Final = (
             is not None
             and settings.get("communications") != "OFF"
         ),
-        method="set_announcement_status",
+        method=lambda coordinator, device, _, state: (
+            coordinator.api.set_announcement_status(device, state)
+        ),
         update_state_fn=_update_communication_state,
     ),
     AmazonSwitchEntityDescription(
@@ -92,8 +108,37 @@ COMMUNICATION_SWITCHES: Final = (
         is_available_fn=lambda coordinator, serial_num, key: (
             coordinator.data[serial_num].communication_settings.get(key) is not None
         ),
-        method="set_communication_status",
+        method=lambda coordinator, device, _, state: (
+            coordinator.api.set_communication_status(device, state)
+        ),
         update_state_fn=_update_communication_state,
+    ),
+)
+FEATURE_SWITCHES: Final = (
+    AmazonSwitchEntityDescription(
+        key="aqm_led",
+        translation_key="aqm_led",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda coordinator, serial_num, key: (
+            coordinator.sensors[serial_num][key].value == "ON"
+        ),
+        is_available_fn=lambda coordinator, serial_num, key: (
+            (sensor := coordinator.device_sensor(serial_num, key)) is not None
+            and sensor.error is False
+        ),
+        method=lambda coordinator, device, key, state: (
+            coordinator.api.call_feature_operation(
+                device,
+                (sensor := coordinator.sensors[device.serial_number][key]).feature_name,
+                "turnOn" if state else "turnOff",
+                command_payload=None,
+                instance=sensor.instance or None,
+            )
+        ),
+        # Optimistic until Amazon pushes the new state
+        update_state_fn=lambda coordinator, serial_num, key, state: setattr(
+            coordinator.sensors[serial_num][key], "value", "ON" if state else "OFF"
+        ),
     ),
 )
 
@@ -150,6 +195,12 @@ async def async_setup_entry(
                 if switch_desc.key
                 in coordinator.data[serial_num].communication_settings
             ]
+            + [
+                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
+                for switch_desc in FEATURE_SWITCHES
+                for serial_num in new_devices
+                if _has_feature_sensor(coordinator.data[serial_num], switch_desc.key)
+            ]
         )
         known_dnd_devices.update(new_dnd_devices)
         known_devices.update(new_devices)
@@ -165,13 +216,10 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
-        method = getattr(self.coordinator.api, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
         async with alexa_api_call(self.coordinator):
-            await method(self.device, state)
+            await self.entity_description.method(
+                self.coordinator, self.device, self.entity_description.key, state
+            )
         self.entity_description.update_state_fn(
             self.coordinator,
             self.device.serial_number,

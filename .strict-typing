@@ -127,6 +127,7 @@ homeassistant.components.blueprint.*
 homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
+homeassistant.components.bluetti_modbus.*
 homeassistant.components.bond.*
 homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
@@ -230,6 +231,7 @@ homeassistant.components.flexit_bacnet.*
 homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
+homeassistant.components.foreca.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.freshr.*
 homeassistant.components.fritz.*
@@ -425,6 +427,7 @@ homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.music_assistant.*
 homeassistant.components.my.*
+homeassistant.components.my_pv.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
@@ -483,6 +486,7 @@ homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
+homeassistant.components.philips_infrared.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
@@ -545,6 +549,7 @@ homeassistant.components.saunum.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*
+homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
@@ -578,6 +583,7 @@ homeassistant.components.snooz.*
 homeassistant.components.sofar.*
 homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
+homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
@@ -590,6 +596,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
+homeassistant.components.steamvr_base_station.*
 homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
@@ -620,6 +627,7 @@ homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
 homeassistant.components.teleinfo.*
 homeassistant.components.teltonika.*
+homeassistant.components.tesla_fleet.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*

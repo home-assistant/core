@@ -9,6 +9,7 @@ from pyoverkiz.action_queue import ActionQueueSettings
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
+    SomfyTokenCredentials,
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import OverkizClient, OverkizClientSettings
@@ -20,6 +21,7 @@ from pyoverkiz.exceptions import (
     NoSuchTokenError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -33,6 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -58,6 +61,8 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_REFRESH_TOKEN,
+    CONF_SITE_OID,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -115,6 +120,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     elif entry.data.get(CONF_HUB) == Server.REXEL:
         client = await create_rexel_client(hass, entry)
 
+    # Somfy multi-account Cloud API (resumable token)
+    elif entry.data.get(CONF_HUB) == Server.SOMFY:
+        client = await create_somfy_client(hass, entry)
+
     # Overkiz Cloud API
     else:
         client = create_cloud_client(
@@ -151,6 +160,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
+    except SomfyServiceError as exception:
+        raise ConfigEntryNotReady("Somfy service error") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -196,20 +207,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     registered_gateway_ids = {gateway.id for gateway in setup.gateways}
 
     for gateway in setup.gateways:
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, gateway.id)},
-                model=gateway.type.beautify_name if gateway.type else None,
-                model_id=str(gateway.type),
-                manufacturer=client.server_config.manufacturer,
-                name=gateway.type.beautify_name if gateway.type else gateway.id,
-                sw_version=gateway.connectivity.protocol_version,
-                hw_version=f"{gateway.type}:{gateway.sub_type}"
-                if gateway.type and gateway.sub_type
-                else None,
-                configuration_url=client.server_config.configuration_url,
-            ),
+            identifiers={(DOMAIN, gateway.id)},
+            model=gateway.type.beautify_name if gateway.type else None,
+            model_id=str(gateway.type),
+            manufacturer=client.server_config.manufacturer,
+            name=gateway.type.beautify_name if gateway.type else gateway.id,
+            sw_version=gateway.connectivity.protocol_version,
+            hw_version=f"{gateway.type}:{gateway.sub_type}"
+            if gateway.type and gateway.sub_type
+            else None,
+            configuration_url=client.server_config.configuration_url,
         )
 
     # Some devices reference a gateway that is not part of setup.gateways
@@ -218,14 +227,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     for gateway_id in {
         device.identifier.gateway_id for device in coordinator.data.values()
     } - registered_gateway_ids:
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, gateway_id)},
-                manufacturer=client.server_config.manufacturer,
-                name=gateway_id,
-                configuration_url=client.server_config.configuration_url,
-            ),
+            identifiers={(DOMAIN, gateway_id)},
+            manufacturer=client.server_config.manufacturer,
+            name=gateway_id,
+            configuration_url=client.server_config.configuration_url,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -369,6 +376,34 @@ async def create_rexel_client(
         credentials=RexelTokenCredentials(
             access_token_callback=async_get_token,
             gateway_id=entry.data[CONF_GATEWAY_ID],
+        ),
+        session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
+    )
+
+
+async def create_somfy_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create an Overkiz client for a Somfy multi-account, resumed from a token."""
+
+    async def on_token_refresh(refresh_token: str) -> None:
+        """Persist the rotated Somfy refresh token back to the config entry."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_REFRESH_TOKEN: refresh_token},
+        )
+
+    return OverkizClient(
+        server=Server.SOMFY,
+        credentials=SomfyTokenCredentials(
+            refresh_token=entry.data[CONF_REFRESH_TOKEN],
+            site_oid=entry.data[CONF_SITE_OID],
+            region=entry.data[CONF_REGION],
+            gateway_id=entry.data[CONF_GATEWAY_ID],
+            on_token_refresh=on_token_refresh,
         ),
         session=async_create_clientsession(hass),
         settings=OverkizClientSettings(
