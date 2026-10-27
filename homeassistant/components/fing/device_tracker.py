@@ -22,6 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator = config_entry.runtime_data
+    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     tracked_devices: set[str] = set()
 
@@ -39,12 +40,18 @@ async def async_setup_entry(
             try:
                 _, mac = entity_entry.unique_id.rsplit("-", 1)
                 if mac in devices_to_remove:
-                    entities_to_remove.append(entity_entry.entity_id)
+                    entities_to_remove.append(entity_entry)
             except ValueError:
                 continue
 
-        for entity_id in entities_to_remove:
-            entity_registry.async_remove(entity_id)
+        for entity_entry in entities_to_remove:
+            entity_registry.async_remove(entity_entry.entity_id)
+            if (
+                device_id := entity_entry.device_id
+            ) is not None and not er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ):
+                device_registry.async_remove_device(device_id)
 
         entities_to_add = []
         for mac_addr in devices_to_add:

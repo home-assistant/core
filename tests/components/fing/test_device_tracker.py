@@ -36,6 +36,7 @@ async def test_new_device_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mocked_fing_agent: AsyncMock,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -49,6 +50,7 @@ async def test_new_device_found(
 
     # First check -> there are 3 devices in total
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 3
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 3
 
     mocked_fing_agent.get_devices.return_value = DeviceResponse(
         await async_load_json_object_fixture(
@@ -62,6 +64,7 @@ async def test_new_device_found(
 
     # Second check -> added one device
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 4
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 4
 
     mocked_fing_agent.get_devices.return_value = DeviceResponse(
         await async_load_json_object_fixture(
@@ -75,6 +78,7 @@ async def test_new_device_found(
 
     # Third check -> removed two devices (old devices)
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 2
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
 
 
 async def test_device_modified(
