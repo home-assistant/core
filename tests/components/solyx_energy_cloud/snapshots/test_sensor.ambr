@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_current',
-    'unique_id': 'nymo-67890-boiler_current',
+    'unique_id': 'nymo-12345-boiler_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5.2',
   })
 # ---
 # name: test_all_entities[sensor.nymo_boiler_current_2-entry]
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_current',
-    'unique_id': 'nymo-12345-boiler_current',
+    'unique_id': 'nymo-67890-boiler_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.2',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_boiler_power-entry]
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_power',
-    'unique_id': 'nymo-67890-boiler_power',
+    'unique_id': 'nymo-12345-boiler_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -170,7 +170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '567.0',
+    'state': '1234.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_boiler_power_2-entry]
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_power',
-    'unique_id': 'nymo-12345-boiler_power',
+    'unique_id': 'nymo-67890-boiler_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -228,7 +228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1234.0',
+    'state': '567.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_boiler_voltage-entry]
@@ -269,7 +269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_voltage',
-    'unique_id': 'nymo-67890-boiler_voltage',
+    'unique_id': 'nymo-12345-boiler_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -286,7 +286,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_boiler_voltage_2-entry]
@@ -327,7 +327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_voltage',
-    'unique_id': 'nymo-12345-boiler_voltage',
+    'unique_id': 'nymo-67890-boiler_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -344,7 +344,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '230.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention-entry]
@@ -385,7 +385,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'legionella_days',
-    'unique_id': 'nymo-67890-legionella_days',
+    'unique_id': 'nymo-12345-legionella_days',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -402,7 +402,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '7.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_days_since_last_legionella_prevention_2-entry]
@@ -443,7 +443,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'legionella_days',
-    'unique_id': 'nymo-12345-legionella_days',
+    'unique_id': 'nymo-67890-legionella_days',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -460,7 +460,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_days_since_maximum_temperature-entry]
@@ -501,7 +501,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'days_since_maximum_temperature',
-    'unique_id': 'nymo-67890-days_since_maximum_temperature',
+    'unique_id': 'nymo-12345-days_since_maximum_temperature',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -518,7 +518,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_days_since_maximum_temperature_2-entry]
@@ -559,7 +559,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'days_since_maximum_temperature',
-    'unique_id': 'nymo-12345-days_since_maximum_temperature',
+    'unique_id': 'nymo-67890-days_since_maximum_temperature',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -576,7 +576,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_grid_power-entry]
@@ -617,7 +617,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
-    'unique_id': 'nymo-67890-grid_power',
+    'unique_id': 'nymo-12345-grid_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -634,7 +634,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '42.0',
+    'state': '-100.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_grid_power_2-entry]
@@ -675,7 +675,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
-    'unique_id': 'nymo-12345-grid_power',
+    'unique_id': 'nymo-67890-grid_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -692,7 +692,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-100.0',
+    'state': '42.0',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_this_month-entry]
@@ -733,7 +733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_this_month',
-    'unique_id': 'nymo-67890-saved_this_month',
+    'unique_id': 'nymo-12345-saved_this_month',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -750,7 +750,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12.5',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_this_month_2-entry]
@@ -791,7 +791,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_this_month',
-    'unique_id': 'nymo-12345-saved_this_month',
+    'unique_id': 'nymo-67890-saved_this_month',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -808,7 +808,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.5',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_this_week-entry]
@@ -849,7 +849,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_this_week',
-    'unique_id': 'nymo-67890-saved_this_week',
+    'unique_id': 'nymo-12345-saved_this_week',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -866,7 +866,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3.2',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_this_week_2-entry]
@@ -907,7 +907,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_this_week',
-    'unique_id': 'nymo-12345-saved_this_week',
+    'unique_id': 'nymo-67890-saved_this_week',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -924,7 +924,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.2',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_today-entry]
@@ -965,7 +965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_today',
-    'unique_id': 'nymo-67890-saved_today',
+    'unique_id': 'nymo-12345-saved_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -982,7 +982,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.4',
   })
 # ---
 # name: test_all_entities[sensor.nymo_saved_today_2-entry]
@@ -1023,7 +1023,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'saved_today',
-    'unique_id': 'nymo-12345-saved_today',
+    'unique_id': 'nymo-67890-saved_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1040,6 +1040,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.4',
+    'state': 'unknown',
   })
 # ---

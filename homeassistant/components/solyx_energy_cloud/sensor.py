@@ -137,7 +137,7 @@ async def async_setup_entry(
         known_devices.update(new_devices)
         async_add_entities(
             SolyxSensorEntity(coordinator, description, device_id)
-            for device_id in new_devices
+            for device_id in sorted(new_devices)
             for description in SENSOR_DESCRIPTIONS
         )
 
