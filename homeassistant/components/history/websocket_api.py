@@ -228,37 +228,39 @@ def _generate_historical_response(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    entity_ids: list[str] | None,
+    entity_ids: list[str],
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
     send_empty: bool,
 ) -> tuple[float, dt | None, bytes | None]:
-    """Generate a historical response."""
-    states = cast(
-        dict[str, list[dict[str, Any]]],
-        history.get_significant_states(
-            hass,
-            start_time,
-            end_time,
-            entity_ids,
-            None,
-            include_start_time_state,
-            significant_changes_only,
-            minimal_response,
-            no_attributes,
-            True,
-        ),
-    )
+    """Generate a historical response.
+
+    Each entity's states are serialized as soon as they are complete, so the
+    states of all entities are never kept as Python objects at the same time.
+    """
     last_time_ts = 0.0
-    for state_list in states.values():
+
+    def _serialize(entity_id: str, state_list: list[dict[str, Any]]) -> bytes:
+        nonlocal last_time_ts
         if (
-            state_list
-            and (state_last_time := state_list[-1][COMPRESSED_STATE_LAST_UPDATED])
-            > last_time_ts
-        ):
+            state_last_time := state_list[-1][COMPRESSED_STATE_LAST_UPDATED]
+        ) > last_time_ts:
             last_time_ts = cast(float, state_last_time)
+        return b"%b:%b" % (json_bytes(entity_id), json_bytes(state_list))
+
+    serialized_states = history.get_significant_states_serialized(
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+        _serialize,
+    )
 
     if last_time_ts == 0:
         # If we did not send any states ever, we need to send an empty response
@@ -273,7 +275,15 @@ def _generate_historical_response(
     return (
         last_time_ts,
         last_time_dt,
-        _generate_websocket_response(msg_id, start_time, last_time_dt, states),
+        messages.construct_event_message(
+            msg_id,
+            b'{"states":{%b},"start_time":%b,"end_time":%b}'
+            % (
+                b",".join(serialized_states),
+                json_bytes(start_time.timestamp()),
+                json_bytes(last_time_dt.timestamp()),
+            ),
+        ),
     )
 
 
@@ -283,7 +293,7 @@ async def _async_send_historical_states(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    entity_ids: list[str] | None,
+    entity_ids: list[str],
     include_start_time_state: bool,
     significant_changes_only: bool,
     minimal_response: bool,
