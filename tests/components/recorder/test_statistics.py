@@ -1,7 +1,7 @@
 """The tests for sensor recorder platform."""
 
 from collections.abc import Generator
-from datetime import timedelta
+from datetime import datetime, timedelta
 import re
 from typing import Any, Literal
 from unittest.mock import ANY, Mock, patch
@@ -28,7 +28,11 @@ from sqlalchemy.exc import OperationalError
 from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
-from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
+from homeassistant.components.recorder.db_schema import (
+    Statistics,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
     datetime_to_timestamp_or_none,
@@ -47,6 +51,7 @@ from homeassistant.components.recorder.statistics import (
     async_import_statistics,
     async_list_statistic_ids,
     async_update_statistics_metadata,
+    get_first_uncompiled_hour,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
@@ -5023,6 +5028,36 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
         process_timestamp(hour_12).timestamp(),
         process_timestamp(hour_13).timestamp(),
     ]
+
+
+@pytest.mark.parametrize(
+    ("runs", "expected"),
+    [
+        pytest.param((), None, id="no_runs"),
+        pytest.param(
+            ("2024-03-15 14:45:00+00:00", "2024-03-15 14:50:00+00:00"),
+            datetime(2024, 3, 15, 14, tzinfo=dt_util.UTC),
+            id="hour_in_progress",
+        ),
+        pytest.param(
+            ("2024-03-15 14:50:00+00:00", "2024-03-15 14:55:00+00:00"),
+            datetime(2024, 3, 15, 15, tzinfo=dt_util.UTC),
+            id="hour_compiled",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_first_uncompiled_hour(
+    hass: HomeAssistant, runs: tuple[str, ...], expected: datetime | None
+) -> None:
+    """Test the first hour not yet compiled follows the last statistics run."""
+    with session_scope(hass=hass) as session:
+        session.query(StatisticsRuns).delete()
+        session.add_all(
+            StatisticsRuns(start=dt_util.parse_datetime(run)) for run in runs
+        )
+
+    assert get_first_uncompiled_hour(hass) == expected
 
 
 @pytest.mark.freeze_time("2024-03-15 15:00:05+00:00")

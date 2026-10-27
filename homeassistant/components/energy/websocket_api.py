@@ -3,9 +3,10 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
+from datetime import datetime
 import functools
 from itertools import chain
+import math
 from typing import Any, cast
 
 import probatio
@@ -270,19 +271,15 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids = set(msg["energy_statistic_ids"])
     statistic_ids.add(msg["co2_statistic_id"])
 
-    # One clock snapshot for both synthesis and the open-hour CO₂ skip so an
-    # hour rollover during the executor job cannot desync them.
+    # One clock snapshot for both synthesis and the CO₂ skip so an hour rollover
+    # during the executor job cannot desync them.
     now = dt_util.utcnow()
-    current_hour_start = now.replace(minute=0, second=0, microsecond=0)
-    open_hour_starts = {
-        current_hour_start.timestamp(),
-        (current_hour_start - timedelta(hours=1)).timestamp(),
-    }
 
-    # Fetch energy + CO2 statistics
-    statistics = await recorder.get_instance(hass).async_add_executor_job(
-        functools.partial(
-            recorder.statistics.statistics_during_period,
+    def _get_statistics() -> tuple[datetime | None, dict[str, list[StatisticsRow]]]:
+        # Read the compile progress first, so an hour compiled in between is
+        # never mistaken for a synthesized one
+        first_uncompiled_hour = recorder.statistics.get_first_uncompiled_hour(hass)
+        return first_uncompiled_hour, recorder.statistics.statistics_during_period(
             hass,
             start_time,
             end_time,
@@ -292,7 +289,11 @@ async def ws_get_fossil_energy_consumption(
             {"mean", "change"},
             now=now,
         )
-    )
+
+    # Fetch energy + CO2 statistics
+    first_uncompiled_hour, statistics = await recorder.get_instance(
+        hass
+    ).async_add_executor_job(_get_statistics)
 
     def _combine_change_statistics(
         stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
@@ -359,11 +360,15 @@ async def ws_get_fossil_energy_consumption(
     # Calculate amount of fossil based energy. Compiled hours missing CO₂ assume
     # 100% fossil, but hours synthesized from short-term statistics have no CO₂
     # mean yet, so skip them.
+    synthesized_hours_start = (
+        first_uncompiled_hour.timestamp() if first_uncompiled_hour else math.inf
+    )
+    synthesized_hours_end = now.replace(minute=0, second=0, microsecond=0).timestamp()
     fossil_energy: list[dict[str, Any]] = []
     for start, delta in merged_energy_statistics.items():
         co2_percentage = indexed_co2_statistics.get(start)
         if co2_percentage is None:
-            if start in open_hour_starts:
+            if synthesized_hours_start <= start <= synthesized_hours_end:
                 continue
             co2_percentage = 100
         fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})

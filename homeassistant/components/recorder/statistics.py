@@ -504,6 +504,20 @@ def get_start_time() -> datetime:
     return current_period - timedelta(minutes=5)
 
 
+def get_first_uncompiled_hour(hass: HomeAssistant) -> datetime | None:
+    """Return the start of the first hour not yet compiled to long-term statistics."""
+    with session_scope(hass=hass, read_only=True) as session:
+        last_run: datetime | None = session.query(
+            func.max(StatisticsRuns.start)
+        ).scalar()
+    if last_run is None:
+        return None
+    # The hourly statistics are compiled with the last 5-minute period of the hour
+    return (process_timestamp(last_run) + StatisticsShortTerm.duration).replace(
+        minute=0, second=0, microsecond=0
+    )
+
+
 def _compile_hourly_statistics_summary_mean_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:

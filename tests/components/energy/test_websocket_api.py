@@ -14,7 +14,10 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.energy import DOMAIN, data, is_configured
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.db_schema import StatisticsShortTerm
+from homeassistant.components.recorder.db_schema import (
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
@@ -1333,24 +1336,39 @@ async def test_fossil_energy_consumption_check_missing_hour(
 
 
 @pytest.mark.parametrize(
-    "now",
+    ("last_run", "compiled_energy", "expected_hour_14"),
     [
         pytest.param(
-            "2024-03-15 14:17:00+00:00",
+            "2024-03-15 14:10:00+00:00",
+            (),
+            {},
             id="current_hour",
             marks=pytest.mark.freeze_time("2024-03-15 14:17:00+00:00"),
         ),
         pytest.param(
-            "2024-03-15 15:00:05+00:00",
+            "2024-03-15 14:50:00+00:00",
+            (),
+            {},
             id="previous_hour_not_compiled",
             marks=pytest.mark.freeze_time("2024-03-15 15:00:05+00:00"),
+        ),
+        pytest.param(
+            "2024-03-15 15:10:00+00:00",
+            ({"start": "2024-03-15 14:00:00+00:00", "state": 35.0, "sum": 35.0},),
+            {"2024-03-15T14:00:00+00:00": pytest.approx(15.0)},
+            id="previous_hour_compiled",
+            marks=pytest.mark.freeze_time("2024-03-15 15:17:00+00:00"),
         ),
     ],
 )
 async def test_fossil_energy_consumption_skips_open_hour_without_co2(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, now: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    last_run: str,
+    compiled_energy: tuple[dict[str, Any], ...],
+    expected_hour_14: dict[str, float],
 ) -> None:
-    """Open-hour energy without a CO₂ mean must not default to 100% fossil."""
+    """Energy synthesized for uncompiled hours must not default to 100% fossil."""
     await hass.config.async_set_time_zone("UTC")
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
@@ -1389,6 +1407,14 @@ async def test_fossil_energy_consumption_skips_open_hour_without_co2(
                 "state": 20.0,
                 "sum": 20.0,
             },
+            *(
+                {
+                    **row,
+                    "start": dt_util.parse_datetime(row["start"]),
+                    "last_reset": None,
+                }
+                for row in compiled_energy
+            ),
         ),
     )
     async_import_statistics(
@@ -1411,6 +1437,8 @@ async def test_fossil_energy_consumption_skips_open_hour_without_co2(
 
     metadata_id = get_metadata(hass, statistic_ids={energy_id})[energy_id][0]
     with session_scope(hass=hass) as session:
+        session.query(StatisticsRuns).delete()
+        session.add(StatisticsRuns(start=dt_util.parse_datetime(last_run)))
         for minutes, state, sum_ in (
             (0, 25.0, 25.0),
             (5, 30.0, 30.0),
@@ -1443,13 +1471,13 @@ async def test_fossil_energy_consumption_skips_open_hour_without_co2(
     )
     response = await client.receive_json()
     assert response["success"]
-    # hour_12 change 10 * 50% = 5; hour_13 change 10 * 20% = 2.
-    # Open hour_14 has energy change but no CO₂ mean — omit, do not use 100%.
+    # hour_12 change 10 * 50% = 5; hour_13 change 10 * 20% = 2. hour_14 has no
+    # CO₂ mean: skipped while synthesized, 100% fossil once compiled.
     assert response["result"] == {
         hour_12.isoformat(): pytest.approx(5.0),
         hour_13.isoformat(): pytest.approx(2.0),
+        **expected_hour_14,
     }
-    assert hour_14.isoformat() not in response["result"]
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
