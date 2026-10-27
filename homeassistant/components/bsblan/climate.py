@@ -15,12 +15,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import DOMAIN, Setpoint
+from .const import Setpoint
 from .entity import BSBLanCircuitEntity
 from .helpers import circuit_temperature_bounds, first_temperature
 
@@ -194,7 +193,15 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if hvac_mode == self.hvac_mode:
+        # Heat covers permanent comfort and reduced, rewriting it would drop eco
+        if hvac_mode == self.hvac_mode == HVACMode.HEAT:
+            return
+        if (
+            hvac_mode == self.hvac_mode == HVACMode.AUTO
+            and self.supported_features & ClimateEntityFeature.PRESET_MODE
+        ):
+            # Ends the temporary override a preset starts in auto
+            await self._async_thermostat(temporary_mode=0)
             return
         await self._async_thermostat(hvac_mode=HA_TO_BSBLAN_HVAC_MODE[hvac_mode])
 
@@ -216,25 +223,8 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) == self.hvac_mode:
             hvac_mode = None
-        if (mode := hvac_mode or self.hvac_mode) in (HVACMode.AUTO, HVACMode.OFF):
-            # Scenes replay the saved target, rounded to the display unit
-            if not any(
-                setpoint is not None and abs(temperature - setpoint) < 0.3
-                for setpoint in (
-                    self.native_target_temperature,
-                    self._comfort_setpoint,
-                    self._reduced_setpoint,
-                    self._protection_setpoint,
-                )
-            ):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key=(
-                        "set_temperature_in_auto_mode"
-                        if mode == HVACMode.AUTO
-                        else "set_temperature_when_off"
-                    ),
-                )
+        if (hvac_mode or self.hvac_mode) in (HVACMode.AUTO, HVACMode.OFF):
+            # BSB-LAN can't override the setpoint the controller applies in these modes
             if hvac_mode is not None:
                 await self.async_set_hvac_mode(hvac_mode)
             return
