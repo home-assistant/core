@@ -12,6 +12,13 @@ from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsE
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+)
 from yalexs_ble import (
     KEYPAD_MASTER_CODE_SLOT,
     DoorActivity,
@@ -58,13 +65,6 @@ from homeassistant.util import dt as dt_util
 
 from . import YALE_ACCESS_LOCK_DISCOVERY_INFO
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    async_fire_time_changed_exact,
-)
 from tests.components.logbook.common import MockRow, mock_humanify
 
 ENTITY_ID = "lock.front_door"
@@ -1213,16 +1213,19 @@ async def test_changed_by_cleared_on_transitional_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test transitional and fault states drop the previous attribution."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
     mock_lock.push(LockStatus.UNLOCKED)
     mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
     await _settle(hass, freezer)
     assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Keypad slot 3"
+    assert hass.states.get(ENTITY_ID).context.id == activity_events[0].context.id
 
     mock_lock.push(status)
     await hass.async_block_till_done()
     result = hass.states.get(ENTITY_ID)
     assert result.state == state
     assert "changed_by" not in result.attributes
+    assert result.context.id != activity_events[0].context.id
 
 
 @pytest.mark.usefixtures("entry")
@@ -2088,3 +2091,112 @@ async def test_unavailable_cancels_settle(
     await _settle(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == "unavailable"
     assert not activity_events
+
+
+@pytest.mark.usefixtures("entry")
+async def test_transitional_state_keeps_newer_service_context(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_lock: MockLock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a Home Assistant lock action's context survives an earlier activity."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await _settle(hass, freezer)
+
+    mock_lock.push_lock.lock.side_effect = lambda: mock_lock.push(LockStatus.LOCKING)
+    context = Context(user_id=hass_admin_user.id)
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True, context=context
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "locking"
+    assert state.context.id == context.id
+    assert state.context.user_id == hass_admin_user.id
+
+
+@pytest.mark.usefixtures("entry")
+async def test_overlapping_lock_action_keeps_its_context(
+    hass: HomeAssistant, hass_admin_user: MockUser, mock_lock: MockLock
+) -> None:
+    """Test a lock action during a credential action keeps its initiating user."""
+    release = asyncio.Event()
+    started = asyncio.Event()
+
+    async def slow_clear(slot: int) -> None:
+        started.set()
+        await release.wait()
+
+    mock_lock.push_lock.clear_keycode.side_effect = slow_clear
+    credential_task = hass.async_create_task(
+        _call(hass, "clear_lock_credential", {"credential_index": 3})
+    )
+    await started.wait()
+
+    lock_context = Context(user_id=hass_admin_user.id)
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True, context=lock_context
+    )
+    release.set()
+    await credential_task
+
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.context.id == lock_context.id
+    assert state.context.user_id == hass_admin_user.id
+
+
+@pytest.mark.usefixtures("entry")
+async def test_cancelled_set_credential_removes_name(
+    hass: HomeAssistant, mock_lock: MockLock, entry: MockConfigEntry
+) -> None:
+    """Test cancelling a set after programming started drops the old name."""
+    entry.runtime_data.credential_names._names["3"] = "Guest"
+    started = asyncio.Event()
+
+    async def hang(slot: int, pin: str) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    mock_lock.push_lock.set_keycode.side_effect = hang
+    task = hass.async_create_task(
+        _call(
+            hass,
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 3, "name": "New"},
+        )
+    )
+    await started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert entry.runtime_data.credential_names.get(3) is None
+    assert not entry.runtime_data.credential_operations
+
+
+@pytest.mark.usefixtures("entry")
+async def test_renamed_main_lock_owns_activity_events(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test activity events follow the main lock after an entity_id change."""
+    new_entity_id = "lock.back_door"
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.MANUAL))
+    await _settle(hass, freezer)
+
+    assert len(activity_events) == 1
+    assert activity_events[0].data["entity_id"] == new_entity_id

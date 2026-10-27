@@ -1,5 +1,7 @@
 """Constants for the Yale Access Bluetooth integration."""
 
+from enum import StrEnum
+
 from yalexs_ble import KEYPAD_MASTER_CODE_SLOT
 
 DOMAIN = "yalexs_ble"
@@ -12,9 +14,23 @@ CONF_MASTER_CODE_NAME = "master_code_name"
 
 DEVICE_TIMEOUT = 55
 
-ATTR_CREDENTIAL_DATA = "credential_data"
-ATTR_CREDENTIAL_INDEX = "credential_index"
-ATTR_CREDENTIAL_TYPE = "credential_type"
+
+class YaleXSBLEService(StrEnum):
+    """Store keys for Yale Access Bluetooth services."""
+
+    CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
+    GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
+    SET_LOCK_CREDENTIAL = "set_lock_credential"
+
+
+class YaleXSBLEServiceArgument(StrEnum):
+    """Store keys for Yale Access Bluetooth service arguments."""
+
+    CREDENTIAL_DATA = "credential_data"
+    CREDENTIAL_INDEX = "credential_index"
+    CREDENTIAL_TYPE = "credential_type"
+    NAME = "name"
+
 
 CREDENTIAL_TYPE_PIN = "pin"
 

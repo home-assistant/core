@@ -1,5 +1,6 @@
 """Support for Yale Access Bluetooth locks."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
@@ -34,14 +35,13 @@ from . import YALEXSBLEConfigEntry
 from .const import (
     ACTIVITY_HOLD_SECONDS,
     ACTIVITY_SETTLE_SECONDS,
-    ATTR_CREDENTIAL_DATA,
-    ATTR_CREDENTIAL_INDEX,
     ATTR_MASTER_CODE,
     ATTR_SLOT,
     ATTR_SOURCE,
     DOMAIN,
     EVENT_LOCK_ACTIVITY,
     HA_OPERATION_TIMEOUT_SECONDS,
+    YaleXSBLEServiceArgument,
     changed_by_for_source,
 )
 from .entity import YALEXSBLEEntity
@@ -184,6 +184,10 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         self._async_cancel_hold()
         if new_state.lock is not self._lock_status:
             self._attr_changed_by = None
+            if self._context is self._data.last_activity_context:
+                # Keep a newer Home Assistant context but not a stale activity one.
+                self._context = None
+                self._context_set = None
         super()._async_state_changed(new_state, lock_info, connection_info)
 
     def _should_hold(self, new_state: LockState) -> bool:
@@ -398,17 +402,16 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         assert self._context is not None
         # A context spans a script run, so parallel calls need the data to tell apart.
         key = (name, self._context.id, tuple(sorted(data.items())))
+        # The action never changes state, so keep its context off later writes,
+        # including those from lock actions that run while it is in progress.
+        self._context = None
+        self._context_set = None
         operations = self._data.credential_operations
         if (task := operations.get(key)) is None:
             task = self.hass.async_create_task(operation())
             operations[key] = task
             task.add_done_callback(lambda _: operations.pop(key, None))
-        try:
-            result: T = await task
-        finally:
-            # The action never changes state, so keep its context off later writes.
-            self._context = None
-            self._context_set = None
+        result: T = await task
         return result
 
     async def async_set_lock_credential(self, **kwargs: Any) -> None:
@@ -419,12 +422,12 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def _set_credential(self, **kwargs: Any) -> None:
         """Set a keypad PIN on the lock."""
-        pin: str = kwargs[ATTR_CREDENTIAL_DATA]
+        pin: str = kwargs[YaleXSBLEServiceArgument.CREDENTIAL_DATA]
         if not PIN_PATTERN.fullmatch(pin):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="invalid_pin"
             )
-        slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
+        slot: int = kwargs[YaleXSBLEServiceArgument.CREDENTIAL_INDEX]
         try:
             with _translate_keycode_errors():
                 await self._device.set_keycode(slot, pin)
@@ -432,7 +435,11 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             if not _keycode_slot_unchanged(err.__cause__):
                 await self._data.credential_names.async_remove(slot)
             raise
-        if name := kwargs.get(ATTR_NAME):
+        except asyncio.CancelledError:
+            # Programming may have started, so the old label might be wrong.
+            await self._data.credential_names.async_remove(slot)
+            raise
+        if name := kwargs.get(YaleXSBLEServiceArgument.NAME):
             await self._data.credential_names.async_set(slot, name)
 
     async def async_clear_lock_credential(self, **kwargs: Any) -> None:
@@ -443,7 +450,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def _clear_credential(self, **kwargs: Any) -> None:
         """Clear a keypad PIN on the lock."""
-        slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
+        slot: int = kwargs[YaleXSBLEServiceArgument.CREDENTIAL_INDEX]
         with _translate_keycode_errors():
             await self._device.clear_keycode(slot)
         await self._data.credential_names.async_remove(slot)
@@ -458,7 +465,7 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
 
     async def _credential_status(self, **kwargs: Any) -> dict[str, bool | str | None]:
         """Read a keypad PIN slot from the lock."""
-        slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
+        slot: int = kwargs[YaleXSBLEServiceArgument.CREDENTIAL_INDEX]
         with _translate_keycode_errors():
             exists = await self._device.get_keycode(slot) is not None
         return {
@@ -477,6 +484,13 @@ class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
         """Publish this entity as the owner of activity events."""
         self._data.main_lock_entity_id = self.entity_id
         await super().async_added_to_hass()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Follow the entity_id in activity events."""
+        super().async_entity_id_changed(old_entity_id)
+        self._data.main_lock_entity_id = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:
