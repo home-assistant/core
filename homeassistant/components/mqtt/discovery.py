@@ -258,7 +258,9 @@ def _replace_component_abbreviations(payload: dict[str, Any]) -> None:
     if not isinstance(components := payload.get(CONF_COMPONENTS), dict):
         return
     for comp_conf in components.values():
-        _replace_all_abbreviations(comp_conf, component_only=True)
+        # The schema rejects a component that is not a mapping
+        if isinstance(comp_conf, dict):
+            _replace_all_abbreviations(comp_conf, component_only=True)
 
 
 @callback

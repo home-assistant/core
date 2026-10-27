@@ -15,6 +15,7 @@ from aioesphomeapi import (
     BinarySensorInfo,
     DeviceCapabilities,
     DeviceInfo,
+    DeviceRelation,
     DeviceWizard,
     EntityInfo,
     SendspinFeature,
@@ -46,7 +47,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import MockESPHomeDeviceType
+from .conftest import SUB_DEVICE_RELATIONS, MockESPHomeDeviceType, SubDeviceLookup
 
 
 def _device_id_for_mac(
@@ -259,25 +260,35 @@ async def test_get_device_capabilities_wrong_domain(
     assert response["error"]["message"] == "Device is not an ESPHome device"
 
 
+@pytest.mark.parametrize(("relation", "lookup"), SUB_DEVICE_RELATIONS)
 async def test_get_device_capabilities_sub_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_ws_client: WebSocketGenerator,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
 ) -> None:
     """Test capabilities are not exposed on ESPHome sub-devices."""
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
             "devices": [
-                SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=0),
+                SubDeviceInfo(
+                    device_id=11111111,
+                    name="Motion Sensor",
+                    area_id=0,
+                    relation=relation,
+                ),
             ],
         },
     )
 
-    sub_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    sub_device = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+        device.entry.entry_id,
     )
     assert sub_device is not None
 
