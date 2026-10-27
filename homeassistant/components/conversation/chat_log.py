@@ -111,13 +111,11 @@ def async_get_chat_log(
         if chat_log.turn_active:
             raise ConversationBusyError(session.conversation_id)
         is_new_log = False
-        turn_start = len(chat_log.content)
         if user_input is not None:
             chat_log.async_add_user_content(UserContent(content=user_input.text))
     else:
         chat_log = ChatLog(hass, session.conversation_id)
         is_new_log = True
-        turn_start = len(chat_log.content)
         if user_input is not None:
             chat_log.content.append(UserContent(content=user_input.text))
         all_chat_logs[session.conversation_id] = chat_log
@@ -148,11 +146,13 @@ def async_get_chat_log(
         chat_log.delta_listener = None
 
         no_reply = chat_log.content[-1] is last_message
-        if no_reply:
-            LOGGER.debug(
-                "Chat Log opened but no assistant message was added, removing the turn"
+        if no_reply and user_input is not None:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id=user_input.agent_id or DOMAIN, content="(no response)"
+                )
             )
-            del chat_log.content[turn_start:]
+            no_reply = False
 
         if not is_new_log:
             _async_notify_subscribers(
