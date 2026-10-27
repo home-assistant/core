@@ -10,9 +10,10 @@ import time
 from typing import Any, Final, final, override
 
 from aiohttp import web
-from propcache.api import cached_property, under_cached_property
+from propcache.api import cached_property
 from webrtc_models import RTCIceCandidateInit
 
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EntityStateAttribute
@@ -23,8 +24,10 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import (
     CAMERA_STREAM_SOURCE_TIMEOUT,
     DEFAULT_CONTENT_TYPE,
+    DOMAIN,
     ENTITY_IMAGE_URL,
     MIN_STREAM_INTERVAL,
+    PREVIEW_FEATURE_TWO_WAY_AUDIO,
     CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
@@ -46,11 +49,19 @@ class CameraEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes camera entities."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class CameraEntityCapabilities:
+    """Capabilities declared by a camera entity."""
+
+    two_way_audio: bool = False
+
+
 @dataclass(frozen=True)
 class CameraCapabilities:
-    """Camera capabilities."""
+    """Camera capabilities resolved for the frontend."""
 
     frontend_stream_types: set[StreamType]
+    two_way_audio: bool = False
 
 
 async def async_get_still_stream(
@@ -112,6 +123,7 @@ async def async_get_still_stream(
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "brand",
+    "camera_entity_capabilities",
     "frame_interval",
     "is_on",
     "is_recording",
@@ -132,6 +144,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Entity Properties
     entity_description: CameraEntityDescription
     _attr_brand: str | None = None
+    _attr_camera_entity_capabilities = CameraEntityCapabilities()
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
@@ -146,7 +159,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __init__(self) -> None:
         """Initialize a camera."""
-        self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -208,6 +220,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def frame_interval(self) -> float:
         """Return the interval between frames of the mjpeg stream."""
         return self._attr_frame_interval
+
+    @cached_property
+    def camera_entity_capabilities(self) -> CameraEntityCapabilities:
+        """Return the capabilities declared by the camera entity."""
+        return self._attr_camera_entity_capabilities
 
     @property
     @override
@@ -445,7 +462,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         self._webrtc_provider = new_provider
-        self._invalidate_camera_capabilities_cache()
         if write_state:
             self.async_write_ha_state()
 
@@ -492,13 +508,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._webrtc_provider:
             self._webrtc_provider.async_close_session(session_id)
 
-    @callback
-    def _invalidate_camera_capabilities_cache(self) -> None:
-        """Invalidate the camera capabilities cache."""
-        self._cache.pop("camera_capabilities", None)
-
     @final
-    @under_cached_property
+    @property
     def camera_capabilities(self) -> CameraCapabilities:
         """Return the camera capabilities."""
         frontend_stream_types = set()
@@ -512,7 +523,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if self._webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
-        return CameraCapabilities(frontend_stream_types)
+        return CameraCapabilities(
+            frontend_stream_types,
+            # Two way audio is only available over WebRTC
+            two_way_audio=(
+                self.camera_entity_capabilities.two_way_audio
+                and StreamType.WEB_RTC in frontend_stream_types
+                and async_is_preview_feature_enabled(
+                    self.hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO
+                )
+            ),
+        )
 
     @callback
     @override
@@ -526,5 +547,4 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             supports_stream := self.supported_features & CameraEntityFeature.STREAM
         ):
             self.__supports_stream = supports_stream
-            self._invalidate_camera_capabilities_cache()
             self.hass.async_create_task(self.async_refresh_providers())

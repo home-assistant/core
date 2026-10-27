@@ -1,7 +1,6 @@
 """Switch for Midea."""
 
 from dataclasses import asdict, dataclass
-from functools import partial
 from typing import Any, override
 
 from midealocal.const import DeviceType
@@ -149,7 +148,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="power",
         translation_key="power",
-        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC, DeviceType.FC],
         device_class=SwitchDeviceClass.SWITCH,
     ),
     MideaSwitchEntityDescription(
@@ -247,13 +246,13 @@ class MideaSwitch(MideaEntity, SwitchEntity):
         return value
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=False)
@@ -276,10 +275,4 @@ class MideaRestoreSwitch(MideaSwitch, RestoreEntity):
             not isinstance(is_on := last_extra_data.as_dict().get("is_on"), bool)
         ):
             return
-        await self.hass.async_add_executor_job(
-            partial(
-                self._device.set_attribute,
-                attr=self.entity_description.key,
-                value=is_on,
-            )
-        )
+        self._device.set_attribute(attr=self.entity_description.key, value=is_on)

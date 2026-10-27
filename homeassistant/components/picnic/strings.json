@@ -95,6 +95,14 @@
       }
     }
   },
+  "exceptions": {
+    "gtin_lookup_failed": {
+      "message": "Unable to look up the product by GTIN. Try again later."
+    },
+    "gtin_not_found": {
+      "message": "No Picnic product found for GTIN {gtin}."
+    }
+  },
   "selector": {
     "two_fa_channel": {
       "options": {
@@ -105,7 +113,7 @@
   },
   "services": {
     "add_product": {
-      "description": "Adds a product to the cart based on a search string or product ID. The search string and product ID are exclusive.",
+      "description": "Adds a product to the cart using a product ID, product name, or GTIN. Provide only one of these identifiers.",
       "fields": {
         "amount": {
           "description": "Amount to add of the selected product.",
@@ -114,6 +122,10 @@
         "config_entry_id": {
           "description": "The product will be added to the selected service.",
           "name": "Picnic service"
+        },
+        "gtin": {
+          "description": "The product's GTIN (EAN) barcode. Picnic must recognize the code.",
+          "name": "GTIN (EAN)"
         },
         "product_id": {
           "description": "The product ID of a Picnic product.",
