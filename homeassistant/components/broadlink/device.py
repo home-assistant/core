@@ -224,7 +224,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return await function(*args, **kwargs)
         except EndpointClosedError:
             raise
-        except (AuthorizationError, ConnectionClosedError):
+        except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
             return await function(*args, **kwargs)

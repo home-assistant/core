@@ -105,7 +105,7 @@ async def async_find_device_by_mac(
                     )
                     dev_mac = dev.mac.hex().lower()
                     _DISCOVERED_CACHE[dev_mac] = (ip, dev)
-                except (BroadlinkException, OSError, TimeoutError):
+                except BroadlinkException, OSError, TimeoutError:
                     pass
 
         # Probe hosts
