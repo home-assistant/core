@@ -37,7 +37,12 @@ def _validate_threshold(options: dict[str, Any]) -> dict[str, Any]:
 
 DEVICE_IDS_OPTIONS_SCHEMA = probatio.Schema(DEVICE_IDS_SCHEMA)
 
-PRICE_SCHEMA = probatio.All(probatio.Coerce(float), probatio.Range(min=-1, max=5))
+MIN_PRICE = -1.0
+MAX_PRICE = 5.0
+
+PRICE_SCHEMA = probatio.All(
+    probatio.Coerce(float), probatio.Range(min=MIN_PRICE, max=MAX_PRICE)
+)
 
 THRESHOLD_OPTIONS_SCHEMA = probatio.Schema(
     probatio.All(

@@ -243,15 +243,19 @@ class _EpexCrossedThresholdTrigger(_EpexTrigger):
     _granularity: EpexGranularity
     _price_fn: Callable[[EngieBeEpexData, EpexGranularity, datetime], float | None]
 
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the trigger."""
+        super().__init__(hass, config)
+        self._above: float | None = self._options.get(CONF_ABOVE)
+        self._below: float | None = self._options.get(CONF_BELOW)
+
     @override
     def _value(self, data: EngieBeEpexData, now: datetime) -> bool | None:
         """Return whether the watched price is inside the range."""
         price = self._price_fn(data, self._granularity, now)
         if price is None:
             return None
-        return price_in_range(
-            price, self._options.get(CONF_ABOVE), self._options.get(CONF_BELOW)
-        )
+        return price_in_range(price, self._above, self._below)
 
     @override
     def _price(self, data: EngieBeEpexData, now: datetime) -> float | None:

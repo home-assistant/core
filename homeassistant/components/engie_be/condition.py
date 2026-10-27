@@ -17,7 +17,7 @@ from homeassistant.helpers.condition import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import epex_price_at
+from .coordinator import EngieBeEpexData, epex_is_negative, epex_price_at
 from .helpers import (
     DEVICE_IDS_OPTIONS_SCHEMA,
     THRESHOLD_OPTIONS_SCHEMA,
@@ -54,16 +54,13 @@ class _EpexCondition(Condition):
         self._device_ids: list[str] = config.options[ATTR_DEVICE_ID]
 
     @abstractmethod
-    def _check_price(self, price: float) -> bool:
+    def _check_data(self, data: EngieBeEpexData, now: datetime) -> bool:
         """Return True when the current price passes the check."""
 
     def _check_device(self, device_id: str, now: datetime) -> bool:
         """Return True when the current price of one device passes the check."""
         data = async_get_device_epex_data(self._hass, device_id)
-        if data is None:
-            return False
-        price = epex_price_at(data, self._granularity, now)
-        return price is not None and self._check_price(price)
+        return data is not None and self._check_data(data, now)
 
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
@@ -76,9 +73,9 @@ class _EpexNegativeCondition(_EpexCondition):
     """Base for conditions that pass while the current EPEX price is negative."""
 
     @override
-    def _check_price(self, price: float) -> bool:
-        """Return True when the price is negative."""
-        return price < 0
+    def _check_data(self, data: EngieBeEpexData, now: datetime) -> bool:
+        """Return True when the current price is negative."""
+        return epex_is_negative(data, self._granularity, now) is True
 
 
 class _EpexThresholdCondition(_EpexCondition):
@@ -86,12 +83,17 @@ class _EpexThresholdCondition(_EpexCondition):
 
     _options_schema = THRESHOLD_OPTIONS_SCHEMA
 
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the condition."""
+        super().__init__(hass, config)
+        self._above: float | None = self._options.get(CONF_ABOVE)
+        self._below: float | None = self._options.get(CONF_BELOW)
+
     @override
-    def _check_price(self, price: float) -> bool:
-        """Return True when the price is inside the range."""
-        return price_in_range(
-            price, self._options.get(CONF_ABOVE), self._options.get(CONF_BELOW)
-        )
+    def _check_data(self, data: EngieBeEpexData, now: datetime) -> bool:
+        """Return True when the current price is inside the range."""
+        price = epex_price_at(data, self._granularity, now)
+        return price is not None and price_in_range(price, self._above, self._below)
 
 
 class EpexHourPriceIsNegativeCondition(_EpexNegativeCondition):
