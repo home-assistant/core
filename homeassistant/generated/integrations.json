@@ -135,6 +135,16 @@
       ],
       "supported_by": "opower"
     },
+    "aerosmart": {
+      "name": "aerosmart",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation",
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "aftership": {
       "name": "AfterShip",
       "integration_type": "service",
