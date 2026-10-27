@@ -14,10 +14,9 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up NAD Infrared from a config entry."""
-    if (
-        er.async_get(hass).async_get(entry.data[CONF_INFRARED_ENTITY_ID]) is None
-        and entry.data[CONF_INFRARED_ENTITY_ID] not in async_get_emitters(hass)
-    ):
+    if er.async_get(hass).async_get(
+        entry.data[CONF_INFRARED_ENTITY_ID]
+    ) is None and entry.data[CONF_INFRARED_ENTITY_ID] not in async_get_emitters(hass):
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="emitter_not_found"
         )
