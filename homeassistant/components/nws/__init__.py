@@ -8,7 +8,13 @@ import logging
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    Platform,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -59,7 +65,7 @@ def get_base_unique_id(entry: ConfigEntry) -> str:
     """Return base unique id from config entry."""
     if entry.data.get(CONF_LOCATION_ENTITY):
         return entry.entry_id
-    return base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
+    return base_unique_id(**entry.data[CONF_LOCATION])
 
 
 @dataclass
@@ -114,8 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
         longitude = coordinates.longitude
         station = None
     else:
-        latitude = entry.data[CONF_LATITUDE]
-        longitude = entry.data[CONF_LONGITUDE]
+        latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
+        longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
         station = entry.data[CONF_STATION]
 
     client_session = async_get_clientsession(hass)
@@ -285,10 +291,23 @@ def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
     if nws_data.location_entity_id:
         name = f"NWS: {nws_data.location_entity_id}"
     else:
-        name = f"NWS: {entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
+        location = entry.data[CONF_LOCATION]
+        name = f"NWS: {location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, uid)},
         manufacturer="National Weather Service",
         name=name,
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
+    """Migrate config entry."""
+
+    if entry.version < 2:
+        data = dict(entry.data)
+        long = data.pop(CONF_LONGITUDE, None)
+        lat = data.pop(CONF_LATITUDE, None)
+        if lat is not None and long is not None:
+            data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(entry, data=data, version=2)

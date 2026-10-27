@@ -20,6 +20,6 @@
   "documentation": "https://www.home-assistant.io/integrations/imou",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "gold",
   "requirements": ["pyimouapi==1.4.0"]
 }
