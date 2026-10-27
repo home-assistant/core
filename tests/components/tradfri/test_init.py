@@ -3,12 +3,14 @@
 import json
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
-from pytradfri.const import ATTR_GATEWAY_ID
+from pytradfri.const import ATTR_GATEWAY_ID, ATTR_ID
 from pytradfri.gateway import Gateway
 
 from homeassistant.components import tradfri
 from homeassistant.components.tradfri.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -98,6 +100,50 @@ async def test_remove_stale_devices(
     assert device_entry.manufacturer == "IKEA of Sweden"
     assert device_entry.name == "Gateway"
     assert device_entry.model == "E1526"
+
+
+async def test_remove_stale_devices_keeps_skipped_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    command_store: CommandStore,
+    mock_gateway: Gateway,
+) -> None:
+    """Test a skipped device is not removed as stale, while stale devices are."""
+    invalid_device = await async_load_json_object_fixture(
+        hass, "light_missing_state.json", DOMAIN
+    )
+    command_store.register_device(mock_gateway, invalid_device)
+
+    # Version 2 keeps the identifiers below from being migrated.
+    config_entry = MockConfigEntry(
+        domain=tradfri.DOMAIN,
+        data={
+            tradfri.CONF_HOST: "mock-host",
+            tradfri.CONF_IDENTITY: "mock-identity",
+            tradfri.CONF_KEY: "mock-key",
+            tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
+        },
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+    skipped_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID}-{invalid_device[ATTR_ID]}")},
+        name="skipped-device",
+    )
+    stale_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID}-65599")},
+        name="stale-device",
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    # The skipped device is still reported by the gateway, so it is not stale.
+    assert device_registry.async_get(skipped_device_entry.id)
+    assert device_registry.async_get(stale_device_entry.id) is None
 
 
 async def test_migrate_config_entry_and_identifiers(
@@ -225,6 +271,67 @@ async def test_migrate_config_entry_and_identifiers(
     assert config_entry1.version == 2
     assert config_entry2.version == 2
     assert config_entry3.version == 1
+
+
+@pytest.mark.parametrize(
+    "invalid_fixtures",
+    [
+        pytest.param(["light_missing_state.json"], id="remote_reported_as_light"),
+        pytest.param(["outlet_missing_state.json"], id="unfinished_outlet_pairing"),
+        pytest.param(["air_purifier_missing_data.json"], id="air_purifier"),
+        pytest.param(["blind_missing_position.json"], id="blind"),
+        pytest.param(
+            [
+                "light_missing_state.json",
+                "outlet_missing_state.json",
+                "air_purifier_missing_data.json",
+                "blind_missing_position.json",
+            ],
+            id="multiple_invalid_devices",
+        ),
+    ],
+)
+async def test_skip_device_with_invalid_response(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    mock_gateway: Gateway,
+    caplog: pytest.LogCaptureFixture,
+    invalid_fixtures: list[str],
+) -> None:
+    """Test devices with an invalid gateway response do not stop the setup."""
+    valid_device = await async_load_json_object_fixture(hass, "bulb_w.json", DOMAIN)
+    invalid_devices = [
+        await async_load_json_object_fixture(hass, fixture, DOMAIN)
+        for fixture in invalid_fixtures
+    ]
+    all_devices = [valid_device, *invalid_devices]
+    command_store.register_response(
+        mock_gateway.get_devices(), [device[ATTR_ID] for device in all_devices]
+    )
+    for device_response in all_devices:
+        command_store.register_response(
+            mock_gateway.get_device(device_response[ATTR_ID]), device_response
+        )
+
+    config_entry = MockConfigEntry(
+        domain=tradfri.DOMAIN,
+        data={
+            tradfri.CONF_HOST: "mock-host",
+            tradfri.CONF_IDENTITY: "mock-identity",
+            tradfri.CONF_KEY: "mock-key",
+            tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("light.test_w")
+    assert len(hass.states.async_all()) == 1
+    for device in invalid_devices:
+        assert f"Skipping device {device[ATTR_ID]} with invalid data" in caplog.text
 
 
 def mock_gateway_fixture(

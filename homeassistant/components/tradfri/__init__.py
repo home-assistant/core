@@ -1,5 +1,6 @@
 """Support for IKEA Tradfri."""
 
+import asyncio
 from datetime import datetime, timedelta
 
 from pytradfri import Gateway, RequestError
@@ -64,7 +65,13 @@ async def async_setup_entry(
         devices_commands: list[Command[Device]] = await api(
             gateway.get_devices(), timeout=TIMEOUT_API
         )
-        devices: list[Device] = await api(devices_commands, timeout=TIMEOUT_API)
+        devices = [
+            device
+            for device in await asyncio.gather(
+                *(_async_get_device(api, command) for command in devices_commands)
+            )
+            if device is not None
+        ]
 
     except RequestError as exc:
         await factory.shutdown()
@@ -82,7 +89,10 @@ async def async_setup_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    remove_stale_devices(hass, entry, devices)
+    # Skipped devices are still on the gateway, so keep their registry entries.
+    remove_stale_devices(
+        hass, entry, {str(command.path[-1]) for command in devices_commands}
+    )
 
     # Setup the device coordinators
     tradfri_data = TradfriData(factory=factory, gateway=gateway, api=api)
@@ -126,16 +136,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: TradfriConfigEntry) -> 
     await entry.runtime_data.factory.shutdown()
 
 
+async def _async_get_device(
+    api: APIRequestProtocol, command: Command[Device]
+) -> Device | None:
+    """Fetch a device, or return None if the gateway returns invalid data."""
+    try:
+        return await api(command, timeout=TIMEOUT_API)
+    except ValueError as err:
+        # pytradfri raises a pydantic ValidationError, which is a ValueError.
+        LOGGER.warning(
+            "Skipping device %s with invalid data, remove or re-pair it on the"
+            " gateway: %s",
+            command.path[-1],
+            err,
+        )
+        return None
+
+
 @callback
 def remove_stale_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, devices: list[Device]
+    hass: HomeAssistant, config_entry: ConfigEntry, all_device_ids: set[str]
 ) -> None:
     """Remove stale devices from device registry."""
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids = {str(device.id) for device in devices}
 
     for device_entry in device_entries:
         device_id: str | None = None
