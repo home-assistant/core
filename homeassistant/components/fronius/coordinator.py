@@ -3,12 +3,13 @@
 from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from fronius_modbus import (
     Controls,
     FroniusModbusInverter,
     Mppt,
+    Storage,
     SunSpecError,
     SunSpecMapShiftError,
 )
@@ -25,7 +26,7 @@ from fronius_solarapi import (
 from modbus_connection import ModbusError
 
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -380,6 +381,17 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                     and component.revert_seconds != self._revert_seconds
                 ):
                     await component.write("revert_seconds", self._revert_seconds)
+                if isinstance(component, Storage) and (
+                    refused := _refused_battery_limits(component, field, value)
+                ):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="battery_limits_conflict",
+                        translation_placeholders={
+                            "charge_limit": f"{refused[0]:g}",
+                            "discharge_limit": f"{refused[1]:g}",
+                        },
+                    )
                 await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
@@ -416,6 +428,48 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             values["battery_grid_charging"] = storage.grid_charging
 
         return self._as_device_data(values)
+
+
+BATTERY_LIMIT_FIELDS: Final = frozenset(
+    {
+        "charge_limit",
+        "discharge_limit",
+        "charge_limit_enabled",
+        "discharge_limit_enabled",
+    }
+)
+
+
+def _refused_battery_limits(
+    storage: Storage, field: str, value: float | bool
+) -> tuple[float, float] | None:
+    """Return the charge and discharge limit a write would leave refused.
+
+    With both limits enabled, battery power has to fit between the negated
+    discharge rate and the charge rate. A Gen24 refuses an empty window -
+    both rates negative, or a charge limit below a forced charging rate -
+    when the second limit is enabled, and answers with a bare Modbus error.
+    Other settings of the model stay writable whatever the limits are.
+    """
+    if field not in BATTERY_LIMIT_FIELDS:
+        return None
+    limits = {
+        "charge_limit": storage.charge_limit,
+        "discharge_limit": storage.discharge_limit,
+        "charge_limit_enabled": storage.charge_limit_enabled,
+        "discharge_limit_enabled": storage.discharge_limit_enabled,
+        field: value,
+    }
+    charge, discharge = limits["charge_limit"], limits["discharge_limit"]
+    if (
+        limits["charge_limit_enabled"] is True
+        and limits["discharge_limit_enabled"] is True
+        and charge is not None
+        and discharge is not None
+        and charge + discharge < 0
+    ):
+        return charge, discharge
+    return None
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase[LoggerInfo]):
