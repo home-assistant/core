@@ -552,6 +552,35 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    "template_str",
+    [
+        "{{ dict.clear(states.sensor.test.attributes) }}",
+        "{{ dict.pop(states.sensor.test.attributes, 'a') }}",
+        "{{ dict.setdefault(states.sensor.test.attributes, 'b', 2) }}",
+        "{{ dict.update(states.sensor.test.attributes, {'b': 2}) }}",
+    ],
+)
+def test_dict_methods_not_available(hass: HomeAssistant, template_str: str) -> None:
+    """Test the methods of the dict type are not available to templates."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    with pytest.raises(TemplateError):
+        template.Template(template_str, hass).async_render()
+
+    assert hass.states.get("sensor.test").attributes == {"a": 1}
+
+
+def test_dict_function(hass: HomeAssistant) -> None:
+    """Test dict builds a new dict."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    assert template.Template(
+        "{{ dict(states.sensor.test.attributes, b=2) }}", hass
+    ).async_render() == {"a": 1, "b": 2}
+    assert hass.states.get("sensor.test").attributes == {"a": 1}
+
+
+@pytest.mark.parametrize(
     ("rounded", "with_unit", "output1_1", "output1_2", "output2_1", "output2_2"),
     [
         (False, False, 23, 23.015, 23, 23.015),

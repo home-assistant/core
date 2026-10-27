@@ -838,6 +838,11 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
+def _dict(*args: Any, **kwargs: Any) -> dict[Any, Any]:
+    """Build a dict without giving templates the dict type."""
+    return dict(*args, **kwargs)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -861,6 +866,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.compiled_code_pin: LRU[str | jinja2.nodes.Template, CodeType] = LRU(
             COMPILED_CODE_PIN_SIZE
         )
+        # The dict type would also give templates its unbound methods, such as
+        # dict.update, which change the dict passed to them.
+        self.globals["dict"] = _dict
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension(AreaExtension)
