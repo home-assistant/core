@@ -51,7 +51,7 @@ async def async_setup_entry(
             and isinstance(device, Camera)
             and (device.has_speaker or device.has_removable_speaker)
         ):
-            async_add_entities([ProtectMediaPlayer(data, device)])
+            async_add_entities([ProtectMediaPlayer(data, device, _SPEAKER_DESCRIPTION)])
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(

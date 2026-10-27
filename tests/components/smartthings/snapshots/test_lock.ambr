@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('smartthings', 'a9f587c5-5d8b-4273-8907-e7f609af5158')]>,
     'disabled_by': None,

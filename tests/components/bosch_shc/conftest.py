@@ -340,6 +340,7 @@ def smart_plug_device(
     enter_duration_seconds: int | None = None,
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -358,6 +359,11 @@ def smart_plug_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
     device.state_after_power_outage = state_after_power_outage
     return device
 
@@ -371,6 +377,7 @@ def smart_plug_compact_device(
     enter_duration_seconds: int | None = None,
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -388,6 +395,11 @@ def smart_plug_compact_device(
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
     device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
     device.state_after_power_outage = state_after_power_outage
     return device
 
@@ -598,6 +610,7 @@ def micromodule_relay_device(
     impulse_length_raises_key_error: bool = False,
     switch_type: SwitchConfiguration.SwitchType | None = None,
     actuator_type: SwitchConfiguration.ActuatorType | None = None,
+    output_mode: SwitchConfiguration.OutputMode | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -617,6 +630,7 @@ def micromodule_relay_device(
     device.swap_outputs = swap_outputs
     device.switch_type = switch_type
     device.actuator_type = actuator_type
+    device.output_mode = output_mode
     if impulse_length_raises_key_error:
         type(device).impulse_length = PropertyMock(
             side_effect=KeyError("impulseLength")
@@ -822,6 +836,7 @@ def motion_detector2_device(
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
+    smart_sensitivity: dict[str, str] | None = None,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -840,6 +855,11 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.get_smart_sensitivity.side_effect = lambda context: (
+        {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
+        if smart_sensitivity
+        else None
+    )
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:

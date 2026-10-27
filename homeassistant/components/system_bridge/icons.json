@@ -26,6 +26,18 @@
       "cpu_speed": {
         "default": "mdi:speedometer"
       },
+      "disk_device_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_device_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "disk_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
       "display_refresh_rate": {
         "default": "mdi:monitor"
       },
