@@ -290,6 +290,51 @@ async def test_a_superseded_maintenance_pass_leaves_the_replacement_alone(
     assert mock_config_entry.runtime_data.last_update_success
 
 
+@pytest.mark.parametrize(
+    "error",
+    [CoolbotError("dropped"), CoolbotAuthError("rejected")],
+    ids=["connection_error", "auth_error"],
+)
+async def test_a_reconnect_during_a_failed_pass_close_stays_healthy(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """A refresh that reconnects while a failed pass closes its socket wins.
+
+    The pass's error has to be published before that close is awaited, or it
+    lands after the refresh and marks the healthy replacement unavailable.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    closing = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_close() -> None:
+        closing.set()
+        await release.wait()
+
+    mock_client.async_ping.side_effect = error
+    mock_client.async_close.side_effect = slow_close
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+    )
+    await closing.wait()
+
+    replacement = make_client()
+    with patch(
+        "homeassistant.components.coolbot.coordinator.CoolbotClient",
+        return_value=replacement,
+    ):
+        await _request_update(hass)
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.last_update_success
+    assert hass.states.get(ROOM_TEMPERATURE).state != "unavailable"
+
+
 async def test_a_refresh_that_cannot_reconnect_fails(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:

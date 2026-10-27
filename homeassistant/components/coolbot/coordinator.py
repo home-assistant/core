@@ -189,16 +189,19 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         except CoolbotAuthError as err:
             if self._superseded(client):
                 return
+            # Published before the close is awaited, in both handlers: a
+            # refresh can reconnect while the old socket closes, and its
+            # healthy data must land after this error, not be overwritten by it.
+            self.async_set_update_error(self._auth_error(err))
             # The socket must not be left open while the credentials are wrong.
             await self._async_shutdown_client()
-            self.async_set_update_error(self._auth_error(err))
             return
         except CoolbotError as err:
             if self._superseded(client):
                 return
+            self.async_set_update_error(self._connection_error(err))
             # Dropped so the next pass reconnects from scratch.
             await self._async_shutdown_client()
-            self.async_set_update_error(self._connection_error(err))
             return
 
         if self._superseded(client):
