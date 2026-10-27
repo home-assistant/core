@@ -368,18 +368,23 @@ class _LastPayloadJson:
     __slots__ = ("parsed", "payload")
 
     def __init__(self) -> None:
-        self.payload: object = None
+        self.payload: ReceivePayloadType | None = None
         self.parsed: Any = UNDEFINED
 
     def loads(self, payload: ReceivePayloadType) -> Any | UndefinedType:
         """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
-        if payload is not self.payload:
-            try:
-                self.parsed = json_loads(payload)
-            except JSON_DECODE_EXCEPTIONS:
-                self.parsed = UNDEFINED
+        if payload is self.payload:
+            return self.parsed
+        parsed: Any
+        try:
+            parsed = json_loads(payload)
+        except JSON_DECODE_EXCEPTIONS:
+            parsed = UNDEFINED
+        # A bytearray can change in place, so it is never kept.
+        if not isinstance(payload, bytearray):
             self.payload = payload
-        return self.parsed
+            self.parsed = parsed
+        return parsed
 
     def clear(self) -> None:
         """Drop the payload and its parse."""

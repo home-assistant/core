@@ -310,6 +310,15 @@ async def test_static_value_template_does_not_parse(
     assert hass.states.get("sensor.static").state == "fixed"
 
 
+async def test_value_template_bytearray_changed_in_place(hass: HomeAssistant) -> None:
+    """A bytearray payload changed in place is parsed again."""
+    val_tpl = mqtt.MqttValueTemplate(template.Template("{{ value_json.v }}", hass=hass))
+    payload = bytearray(b'{"v": 1}')
+    assert val_tpl.async_render_with_possible_json_value(payload) == "1"
+    payload[6:7] = b"2"
+    assert val_tpl.async_render_with_possible_json_value(payload) == "2"
+
+
 async def test_value_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template."""
 
