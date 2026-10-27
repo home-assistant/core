@@ -1,6 +1,6 @@
 """SQLAlchemy util functions."""
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -233,6 +233,33 @@ def execute_stmt_lambda_element(
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
+
+
+def execute_stmt_lambda_element_streamed[_T](
+    session: Session,
+    stmt: StatementLambdaElement,
+    convert: Callable[[Iterable[Row], Iterable[str]], _T],
+) -> _T:
+    """Execute a StatementLambdaElement and convert the rows while they are read.
+
+    The rows and their field names are passed to convert. Rows are not kept in a
+    list, so they are freed as soon as they are converted. Errors raised while
+    reading the rows are not retried by execute_stmt_lambda_element, so all rows
+    are read again at once when reading them fails.
+    """
+    result = cast(
+        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    )
+    fields = result.keys()
+    try:
+        return convert(result, fields)
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error reading rows, retrying: %s", err)
+        _rollback_read_only_session(session)
+        rows = cast(
+            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+        )
+        return convert(rows, fields)
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:

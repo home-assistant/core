@@ -1,10 +1,9 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from functools import partial
 from itertools import groupby
-import logging
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, cast
 
@@ -20,9 +19,7 @@ from sqlalchemy import (
     select,
     union_all,
 )
-from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
@@ -45,15 +42,13 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import _rollback_read_only_session, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element, execute_stmt_lambda_element_streamed
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
     SIGNIFICANT_DOMAINS,
     STATE_KEY,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 # These are the APIs of this package
 __all__ = [
@@ -329,7 +324,9 @@ def get_significant_states_with_session(
         )
 
     if not (include_start_time_state and slow_dependent_subquery):
-        return _streamed_states_to_dict(session, _stmt(metadata_ids), to_dict)
+        return execute_stmt_lambda_element_streamed(
+            session, _stmt(metadata_ids), lambda rows, _: to_dict(rows)
+        )
     # https://github.com/home-assistant/core/issues/137178
     # If we include the start time state we need to limit the
     # number of metadata_ids we query for at a time to avoid
@@ -347,33 +344,6 @@ def get_significant_states_with_session(
             ),
         )
     return to_dict(rows)
-
-
-def _streamed_states_to_dict[_T](
-    session: Session,
-    stmt: StatementLambdaElement,
-    to_dict: Callable[[Iterable[Row]], _T],
-) -> _T:
-    """Convert the rows of a statement while they are read from the database.
-
-    Rows are not kept in a list, so they are freed as soon as they are converted.
-    """
-    rows = cast(
-        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
-    )
-    try:
-        return to_dict(rows)
-    except SQLAlchemyError as err:
-        # Streamed rows are read outside the retry loop of
-        # execute_stmt_lambda_element, fall back to reading all rows at once
-        _LOGGER.error("Error reading states, retrying: %s", err)
-        _rollback_read_only_session(session)
-        return to_dict(
-            cast(
-                Sequence[Row],
-                execute_stmt_lambda_element(session, stmt, orm_rows=False),
-            )
-        )
 
 
 def _generate_significant_states_with_session_stmt(
@@ -565,11 +535,11 @@ def state_changes_during_period(
         )
         return cast(
             dict[str, list[State]],
-            _streamed_states_to_dict(
+            execute_stmt_lambda_element_streamed(
                 session,
                 stmt,
-                partial(
-                    _sorted_states_to_dict,
+                lambda rows, _: _sorted_states_to_dict(
+                    rows,
                     start_time_ts=start_time_ts if include_start_time_state else None,
                     entity_ids=entity_ids,
                     entity_id_to_metadata_id=entity_id_to_metadata_id,

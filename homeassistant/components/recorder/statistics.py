@@ -26,7 +26,6 @@ from sqlalchemy import (
     text,
     update,
 )
-from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -110,9 +109,9 @@ from .models import (
     process_timestamp,
 )
 from .util import (
-    _rollback_read_only_session,
     execute,
     execute_stmt_lambda_element,
+    execute_stmt_lambda_element_streamed,
     filter_unique_constraint_integrity_error,
     retryable_database_job,
 )
@@ -2207,20 +2206,9 @@ def _statistics_during_period_with_session(
         types=types,
         reducer=reducer,
     )
-    stats = cast(
-        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    result = execute_stmt_lambda_element_streamed(
+        session, stmt, lambda rows, fields: to_dict(rows, fields=fields)
     )
-    try:
-        result = to_dict(stats, fields=stats.keys())
-    except SQLAlchemyError as err:
-        # Streamed rows are read outside the retry loop of
-        # execute_stmt_lambda_element, fall back to reading all rows at once
-        _LOGGER.error("Error reading statistics, retrying: %s", err)
-        _rollback_read_only_session(session)
-        rows = cast(
-            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
-        )
-        result = to_dict(rows, fields=stats.keys())
     if not result:
         return {}
 
