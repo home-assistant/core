@@ -2,7 +2,11 @@
 
 from typing import Any, override
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,6 +45,7 @@ class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEn
     """Implementation of a Nightscout sensor."""
 
     _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
     )

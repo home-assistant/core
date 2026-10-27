@@ -39,6 +39,8 @@ def make_state(
         fan_supply=17,
         fan_exhaust=15,
         alarms=alarms,
+        filter_partial_m3=61920,
+        filter_total_m3=234830,
         timestamp=int(dt_util.utcnow().timestamp() * 1000),
     )
 

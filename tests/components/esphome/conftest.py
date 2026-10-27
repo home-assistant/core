@@ -14,6 +14,7 @@ from aioesphomeapi import (
     BluetoothProxyFeature,
     DeviceCapabilities,
     DeviceInfo,
+    DeviceRelation,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -40,12 +41,29 @@ from homeassistant.components.esphome.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
+
+
+type SubDeviceLookup = Callable[
+    [dr.DeviceRegistry, tuple[str, str], str], dr.AnyDeviceEntry | None
+]
+# The relation of a sub device, with the registry lookup for the resulting device
+SUB_DEVICE_RELATIONS = [
+    pytest.param(
+        DeviceRelation.VIA, dr.DeviceRegistry.async_get_device_by_identifier, id="via"
+    ),
+    pytest.param(
+        DeviceRelation.CHILD,
+        dr.DeviceRegistry.async_get_child_device_by_identifier,
+        id="child",
+    ),
+]
 
 
 class MockGenericDeviceEntryType(Protocol):
