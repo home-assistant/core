@@ -13,7 +13,7 @@ from aiohttp.web_urldispatcher import (
 )
 import aiohttp_cors
 
-from homeassistant.const import HTTP_HEADER_X_REQUESTED_WITH
+from homeassistant.const import HTTP_HEADER_HA_DEVICE_ID, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.core import callback
 from homeassistant.helpers.http import (
     KEY_ALLOW_ALL_CORS,
@@ -24,6 +24,7 @@ from homeassistant.helpers.http import (
 ALLOWED_CORS_HEADERS: Final[list[str]] = [
     ORIGIN,
     ACCEPT,
+    HTTP_HEADER_HA_DEVICE_ID,
     HTTP_HEADER_X_REQUESTED_WITH,
     CONTENT_TYPE,
     AUTHORIZATION,
