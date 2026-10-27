@@ -10,7 +10,7 @@ from pycoolbot import CoolbotAuthError, CoolbotClient, CoolbotDevice, CoolbotErr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -187,6 +187,12 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
     def _schedule_maintenance(self, _now: datetime) -> None:
         """Start a maintenance pass, unless the last one is still running."""
         if self._maintenance_task is not None and not self._maintenance_task.done():
+            # Staleness is a function of time, not of the network: a pass held
+            # up by a reconnect or a ping must not keep a cooler that stopped
+            # reporting showing its last reading for as long as it takes.
+            if self.data:
+                self._log_staleness_transitions(self.data)
+                self.async_update_listeners()
             return
         self._maintenance_task = self.config_entry.async_create_task(
             self.hass, self._async_maintain(), "coolbot maintenance"
@@ -237,14 +243,13 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         """
         return client is not None and client is not self._client
 
-    def _auth_error(self, err: CoolbotError) -> ConfigEntryError:
+    def _auth_error(self, err: CoolbotError) -> ConfigEntryAuthFailed:
         """Wrap a rejected login.
 
-        Not ConfigEntryAuthFailed: that asks Home Assistant to start a reauth
-        flow, and this integration has none yet. Raising it would offer the user
-        a repair that cannot open. Swap it back when reauth lands.
+        Home Assistant only starts a reauth flow when the integration has one,
+        so until reauth lands this fails setup without offering a repair.
         """
-        return ConfigEntryError(
+        return ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_failed",
             translation_placeholders={"error": str(err)},

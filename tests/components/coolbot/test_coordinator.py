@@ -17,6 +17,7 @@ from homeassistant.components.coolbot.const import (
     DOMAIN,
     MAINTENANCE_INTERVAL,
     PROFILE_REFRESH_INTERVAL,
+    STALE_AFTER_SECONDS,
 )
 from homeassistant.components.coolbot.coordinator import device_is_fresh
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
@@ -439,6 +440,47 @@ async def test_a_stalled_reconnect_fails_in_time(
         await hass.async_block_till_done()
 
 
+async def test_staleness_is_rechecked_while_a_pass_is_held_up(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A cooler goes unavailable on time even while a pass waits on the network.
+
+    Ticks that find a pass still running start no new one, so without a
+    recheck there the last reading would stay on screen until the pass ended.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    pinging = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_ping() -> None:
+        pinging.set()
+        await release.wait()
+
+    mock_client.async_ping.side_effect = blocked_ping
+    freezer.tick(MAINTENANCE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await pinging.wait()
+    assert hass.states.get(ROOM_TEMPERATURE).state != "unavailable"
+
+    freezer.tick(timedelta(seconds=STALE_AFTER_SECONDS))
+    async_fire_time_changed(hass)
+    for _ in range(20):
+        await asyncio.sleep(0)
+
+    assert hass.states.get(ROOM_TEMPERATURE).state == "unavailable"
+    assert "Walk-in cooler has stopped reporting" in caplog.text
+    # Only the readings are stale; the service itself has not failed.
+    assert mock_config_entry.runtime_data.last_update_success
+
+    release.set()
+    await hass.async_block_till_done()
+
+
 async def test_failed_maintenance_marks_data_stale_then_recovers(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -488,8 +530,7 @@ async def test_auth_failure_during_maintenance_closes_the_socket(
 
     Nothing useful can happen until the password is fixed, so the socket must
     not be left open for however long that takes. No reauth flow starts yet;
-    that arrives in a follow-up PR, which is also why this does not raise
-    ConfigEntryAuthFailed: it would offer a repair that cannot open.
+    that arrives in a follow-up PR.
     """
     assert await setup_integration(hass, mock_config_entry)
     mock_client.async_close.reset_mock()

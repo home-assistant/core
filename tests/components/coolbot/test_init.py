@@ -86,15 +86,16 @@ async def test_setup_fails_as_an_auth_error_on_bad_credentials(
 ) -> None:
     """Rejected credentials fail setup outright instead of retrying.
 
-    ConfigEntryError marks the entry SETUP_ERROR rather than scheduling retries,
-    which a wrong password would never satisfy. Deliberately not
-    ConfigEntryAuthFailed: that starts a reauth flow, and the flow that would
-    let the user fix the password in place arrives in a follow-up PR.
+    ConfigEntryAuthFailed marks the entry SETUP_ERROR rather than scheduling
+    retries, which a wrong password would never satisfy. No reauth flow opens
+    yet: the one that lets the user fix the password in place arrives in a
+    follow-up PR.
     """
     mock_client.async_connect.side_effect = CoolbotAuthError("rejected")
 
     assert not await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_hardware_details_that_replay_late_reach_the_registry(
