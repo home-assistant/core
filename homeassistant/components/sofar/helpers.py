@@ -28,5 +28,5 @@ def create_modbus_params(
 
 
 def fault_log_store(hass: HomeAssistant, entry_id: str) -> Store[StoredEntries]:
-    """Return the store of the log entries an entry has handled."""
+    """Return the store of the newest log entry an entry has handled."""
     return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.fault_log")

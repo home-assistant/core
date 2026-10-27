@@ -279,24 +279,24 @@ async def test_update_while_loading_keeps_pending_entries(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_handled_entries_are_stored_until_the_entry_is_removed(
+async def test_newest_handled_entry_is_stored_until_the_entry_is_removed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
     hass_storage: dict[str, Any],
     stored_entry: MockConfigEntry,
 ) -> None:
-    """Test handled entries are stored, and dropped with their entry."""
+    """Test the newest handled entry is stored, and dropped with its entry."""
     stored_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(stored_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-    _seed_log(mock_connection.for_unit(1), GRID_OVER_VOLTAGE)
+    _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
     await _poll(hass, freezer)
     # Store writes are batched on a timer; let it run.
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass_storage[STORE_KEY]["data"] == [[1, "2026-10-09T17:01:23"]]
+    assert hass_storage[STORE_KEY]["data"] == [[3, "2026-10-09T18:30:05"]]
 
     await hass.config_entries.async_remove(stored_entry.entry_id)
     await hass.async_block_till_done()

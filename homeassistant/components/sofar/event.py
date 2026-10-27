@@ -85,7 +85,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
                 for fault_id, occurred_at in stored
             }
         elif self.available:
-            self._remember(self._logged())
+            self._remember(self._newest())
         await super().async_added_to_hass()
 
     @callback
@@ -101,7 +101,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         if self.hass.state is not CoreState.running:
             return
         if (known := self._known) is None:
-            self._remember(self._logged())
+            self._remember(self._newest())
             return
         for entry in reversed(
             list(
@@ -123,16 +123,16 @@ class SofarFaultEvent(SofarEntity, EventEntity):
             )
             # One write per event, so each reaches state triggers.
             self.async_write_ha_state()
-        if (logged := self._logged()) != known:
-            self._remember(logged)
+        if (newest := self._newest()) != known:
+            self._remember(newest)
 
     def _entries(self) -> tuple[FaultLogEntry, ...]:
         """Return the log entries, newest first."""
         return self.entity_description.entries_fn(self.coordinator.device)
 
-    def _logged(self) -> set[EntryKey]:
-        """Return every entry the log holds now."""
-        return {_key(entry) for entry in self._entries()}
+    def _newest(self) -> set[EntryKey]:
+        """Return the newest entry the log holds now, if any."""
+        return {_key(entry) for entry in self._entries()[:1]}
 
     def _remember(self, known: set[EntryKey]) -> None:
         """Take entries as handled, and keep them across restarts."""
