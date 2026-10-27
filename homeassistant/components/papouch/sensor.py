@@ -15,7 +15,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PapouchConfigEntry, PapouchNetworkDataUpdateCoordinator
+from . import PapouchConfigEntry
+from .coordinator import PapouchNetworkDataUpdateCoordinator
 from .entity import PapouchEntity
 
 PARALLEL_UPDATES = 0

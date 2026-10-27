@@ -1,5 +1,6 @@
 """Data update coordinator for the Papouch integration."""
 
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -11,9 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type PapouchConfigEntry = ConfigEntry[PapouchNetworkDataUpdateCoordinator]
 
 
 class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
@@ -23,7 +26,7 @@ class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         api_client: PapouchHTTPClient,
-        entry: ConfigEntry,
+        entry: PapouchConfigEntry,
         device: PapouchNetworkDevice,
     ) -> None:
         """Initialize the coordinator."""
@@ -33,6 +36,7 @@ class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.api_client = api_client
         self.device = device

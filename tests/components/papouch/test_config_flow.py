@@ -4,12 +4,11 @@ from unittest.mock import patch
 
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import data_entry_flow
 from homeassistant.components.papouch.const import DOMAIN, WEB_MODE_INDEX
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -52,7 +51,7 @@ async def test_user_success(
         DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -64,7 +63,8 @@ async def test_user_success(
         },
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
@@ -84,8 +84,14 @@ async def test_invalid_ip_format(hass: HomeAssistant) -> None:
         {"ip_address": "999.invalid.ip", "password": "supersecret"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"]["ip_address"] == "invalid_ip_format"
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
+    assert result2.get("errors") == {"ip_address": "invalid_ip_format"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
+    )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> None:
@@ -102,8 +108,13 @@ async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> No
         {"ip_address": "192.168.1.50", "password": "supersecret"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
+    )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
@@ -120,8 +131,13 @@ async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
         {"ip_address": "192.168.1.50", "password": "wrong"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
+    )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
@@ -138,7 +154,7 @@ async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
         {"ip_address": "192.168.1.50"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "mode_is_missing"
 
 
@@ -156,7 +172,7 @@ async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> N
         {"ip_address": "192.168.1.50"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "web_mode_required"
 
 
@@ -180,8 +196,13 @@ async def test_user_mac_auth_error(
         },
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
+    )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_mac_connection_error(
@@ -201,8 +222,13 @@ async def test_user_mac_connection_error(
         {"ip_address": "192.168.1.50", "password": "admin"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
+    )
+    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> None:
@@ -219,7 +245,7 @@ async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> 
         {"ip_address": "192.168.1.50", "password": "password"},
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -231,7 +257,7 @@ async def test_user_success_no_password(
         DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -241,7 +267,8 @@ async def test_user_success_no_password(
         },
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] is None
@@ -267,5 +294,6 @@ async def test_user_success_empty_string_password(
         },
     )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"]["password"] == ""

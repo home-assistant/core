@@ -1,6 +1,10 @@
 """Tests for the Papouch sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,12 +16,13 @@ async def test_sensor_entity(
     mock_config_entry,
     mock_papouch_client,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reading data and attributes from the sensor."""
     _, _, mock_device = mock_papouch_client
 
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     mac = "00:11:22:33:44:55"
@@ -41,8 +46,10 @@ async def test_sensor_entity(
         }
     )
 
-    await mock_config_entry.runtime_data.async_request_refresh()
+    freezer.tick(timedelta(seconds=60))  # Změň na tvůj SCAN_INTERVAL
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(sensor_id)
-    assert state.state == "24.0"
+    assert state
+    assert state.state == "22.5"

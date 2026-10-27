@@ -23,7 +23,7 @@ PLATFORMS = [Platform.SENSOR]
 type PapouchConfigEntry = ConfigEntry[PapouchNetworkDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> None:
     """Set up Papouch device from a config entry."""
 
     session = async_get_clientsession(hass)
@@ -86,9 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

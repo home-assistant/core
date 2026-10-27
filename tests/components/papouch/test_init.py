@@ -4,12 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_and_reload(
@@ -28,7 +27,9 @@ async def test_setup_unload_and_reload(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_auth_error(
