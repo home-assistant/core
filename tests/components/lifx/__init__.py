@@ -11,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -40,6 +40,7 @@ async def async_setup_lifx_entry(
         unique_id=SERIAL,
     )
     entry.add_to_hass(hass)
+    ar.async_get(hass).async_get_or_create(device.state.group.label)
     with patch("homeassistant.components.lifx.Device.connect", return_value=device):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -61,6 +62,8 @@ async def async_setup_lifx_entries(
     ]
     for entry in entries:
         entry.add_to_hass(hass)
+    for device in devices:
+        ar.async_get(hass).async_get_or_create(device.state.group.label)
 
     devices_by_host = {device.ip: device for device in devices}
     with patch(

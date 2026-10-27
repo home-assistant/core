@@ -2124,6 +2124,7 @@ async def test_esphome_device_with_suggested_area(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a device with suggested area."""
+    kitchen = area_registry.async_create("kitchen")
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"suggested_area": "kitchen"},
@@ -2133,7 +2134,7 @@ async def test_esphome_device_with_suggested_area(
     dev = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
-    assert dev.area_id == area_registry.async_get_area_by_name("kitchen").id
+    assert dev.area_id == kitchen.id
 
 
 async def test_esphome_device_area_priority(
@@ -2144,6 +2145,8 @@ async def test_esphome_device_area_priority(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that device_info.area takes priority over suggested_area."""
+    area_registry.async_create("kitchen")
+    living_room = area_registry.async_create("Living Room")
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -2157,7 +2160,7 @@ async def test_esphome_device_area_priority(
         (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     # Should use device_info.area.name instead of suggested_area
-    assert dev.area_id == area_registry.async_get_area_by_name("Living Room").id
+    assert dev.area_id == living_room.id
 
 
 async def test_esphome_device_with_project(
@@ -2628,6 +2631,10 @@ async def test_sub_device_creation(
         "area": AreaInfo(area_id=0, name="Main Hub"),
     }
 
+    main_hub = area_registry.async_create("Main Hub")
+    living_room = area_registry.async_create("Living Room")
+    bedroom = area_registry.async_create("Bedroom")
+
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info=device_info,
@@ -2639,7 +2646,7 @@ async def test_sub_device_creation(
         device.entry.entry_id,
     )
     assert main_device is not None
-    assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
+    assert main_device.area_id == main_hub.id
 
     # Check sub devices are created
     sub_device_1 = device_registry.async_get_device_by_identifier(
@@ -2647,9 +2654,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
-    assert (
-        sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
-    )
+    assert sub_device_1.area_id == living_room.id
     assert sub_device_1.via_device_id == main_device.id
 
     sub_device_2 = device_registry.async_get_device_by_identifier(
@@ -2657,9 +2662,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
-    assert (
-        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
-    )
+    assert sub_device_2.area_id == living_room.id
     assert sub_device_2.via_device_id == main_device.id
 
     sub_device_3 = device_registry.async_get_device_by_identifier(
@@ -2667,7 +2670,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
-    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
+    assert sub_device_3.area_id == bedroom.id
     assert sub_device_3.via_device_id == main_device.id
 
 
@@ -2846,6 +2849,10 @@ async def test_sub_device_references_main_device_area(
         "area": AreaInfo(area_id=0, name="Main Hub Area"),
     }
 
+    main_hub_area = area_registry.async_create("Main Hub Area")
+    living_room = area_registry.async_create("Living Room")
+    bedroom = area_registry.async_create("Bedroom")
+
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info=device_info,
@@ -2857,34 +2864,28 @@ async def test_sub_device_references_main_device_area(
         device.entry.entry_id,
     )
     assert main_device is not None
-    assert (
-        main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
-    )
+    assert main_device.area_id == main_hub_area.id
 
     # Check sub device 1 uses main device's area
     sub_device_1 = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
-    assert (
-        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
-    )
+    assert sub_device_1.area_id == main_hub_area.id
 
     # Check sub device 2 uses Living Room
     sub_device_2 = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
-    assert (
-        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
-    )
+    assert sub_device_2.area_id == living_room.id
 
     # Check sub device 3 uses Bedroom
     sub_device_3 = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert sub_device_3 is not None
-    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
+    assert sub_device_3.area_id == bedroom.id
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")

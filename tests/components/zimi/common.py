@@ -8,6 +8,7 @@ from zcc.device import ControlPointDevice
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 DEVICE_INFO = {
@@ -74,6 +75,7 @@ async def setup_platform(
         domain=DOMAIN, data={CONF_HOST: INPUT_HOST, CONF_PORT: INPUT_PORT}
     )
     mock_config.add_to_hass(hass)
+    ar.async_get(hass).async_create(ENTITY_INFO["room"])
 
     with patch("homeassistant.components.zimi.PLATFORMS", [platform]):
         assert await async_setup_component(hass, DOMAIN, {})

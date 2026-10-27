@@ -8,12 +8,14 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from .common import create_conf, mrp_service
 
 
 async def test_keyboard_focus_entity_created_on_setup(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_async_zeroconf: MagicMock,
 ) -> None:
     """Test the keyboard focus binary sensor is created when the device supports it.
@@ -47,6 +49,7 @@ async def test_keyboard_focus_entity_created_on_setup(
         },
     )
     entry.add_to_hass(hass)
+    area_registry.async_create("Living Room")
 
     scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
 

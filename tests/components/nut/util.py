@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 
 
 def _get_mock_nutclient(
@@ -61,6 +61,8 @@ async def async_init_integration(
         ups_fixture = f"{ups_fixture}.json"
         if list_vars is None:
             list_vars = await async_load_json_object_fixture(hass, ups_fixture, DOMAIN)
+        if location := list_vars.get("device.location"):
+            ar.async_get(hass).async_create(location)
 
     mock_pynut = _get_mock_nutclient(
         list_ups=list_ups,

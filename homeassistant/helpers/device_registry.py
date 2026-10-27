@@ -2723,8 +2723,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     # Circular dep
                     from . import area_registry as ar  # noqa: PLC0415
 
-                    area = ar.async_get(self.hass).async_get_or_create(suggested_area)
-                    area_id = area.id
+                    if (
+                        area := ar.async_get(self.hass).async_get_area_by_name(
+                            suggested_area
+                        )
+                    ) is not None:
+                        area_id = area.id
                 device = DeviceEntry(
                     area_id=area_id,
                     config_entry_id=config_entry_id,
@@ -3117,8 +3121,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     # Circular dep
                     from . import area_registry as ar  # noqa: PLC0415
 
-                    area = ar.async_get(self.hass).async_get_or_create(suggested_area)
-                    area_id = area.id
+                    if (
+                        area := ar.async_get(self.hass).async_get_area_by_name(
+                            suggested_area
+                        )
+                    ) is not None:
+                        area_id = area.id
                 child_device = ChildDeviceEntry(
                     area_id=area_id,
                     config_entry_id=config_entry_id,

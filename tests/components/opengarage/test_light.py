@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 ENTITY_ID = "light.garage_abcdef_light"
@@ -30,11 +30,13 @@ async def test_light_entity(
     mock_opengarage: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
     initial: int,
     expected: str,
 ) -> None:
     """Test light creation, unique ID, and initial device-reported state."""
     mock_opengarage.update_state.return_value["light"] = initial
+    area_registry.async_create("Garage")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

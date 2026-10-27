@@ -1937,7 +1937,7 @@ async def help_test_entity_device_info_with_identifier(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
-    area_registry = ar.async_get(hass)
+    area = ar.async_get(hass).async_create("default_area")
     device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
@@ -1955,7 +1955,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
+    assert device.area_id == area.id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1975,7 +1975,7 @@ async def help_test_entity_device_info_with_connection(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
     config["unique_id"] = "veryunique"
 
-    area_registry = ar.async_get(hass)
+    area = ar.async_get(hass).async_create("default_area")
     device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
@@ -1994,7 +1994,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
+    assert device.area_id == area.id
     assert device.configuration_url == "http://example.com"
 
 
@@ -2090,6 +2090,7 @@ async def help_test_entity_name(
     This is a test helper for the _setup_common_attributes_from_config mixin.
     """
     await mqtt_mock_entry()
+    ar.async_get(hass).async_create("default_area")
     # Add device settings to config
     config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -2352,6 +2353,7 @@ async def help_test_entity_debug_info_message(
     """
     # Add device settings to config
     await mqtt_mock_entry()
+    ar.async_get(hass).async_create("default_area")
     config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
@@ -2456,6 +2458,7 @@ async def help_test_entity_debug_info_remove(
     This is a test helper for MQTT debug_info.
     """
     await mqtt_mock_entry()
+    ar.async_get(hass).async_create("default_area")
     # Add device settings to config
     config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -2511,6 +2514,7 @@ async def help_test_entity_debug_info_update_entity_id(
     This is a test helper for MQTT debug_info.
     """
     await mqtt_mock_entry()
+    ar.async_get(hass).async_create("default_area")
     # Add device settings to config
     config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)

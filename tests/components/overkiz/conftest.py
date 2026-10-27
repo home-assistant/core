@@ -7,12 +7,13 @@ from unittest.mock import AsyncMock, patch
 
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import APIType
-from pyoverkiz.models import Event, ServerConfig, Setup
+from pyoverkiz.models import Event, Place, ServerConfig, Setup
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
@@ -175,6 +176,14 @@ def mock_client() -> MockOverkizClient:
     return MockOverkizClient()
 
 
+def _create_areas(area_registry: ar.AreaRegistry, place: Place) -> None:
+    """Create an area for each place and its sub places."""
+    if place.label:
+        area_registry.async_get_or_create(place.label)
+    for sub_place in place.sub_places or []:
+        _create_areas(area_registry, sub_place)
+
+
 @pytest.fixture
 def setup_overkiz_integration(
     hass: HomeAssistant,
@@ -190,6 +199,8 @@ def setup_overkiz_integration(
         mock_config_entry.add_to_hass(hass)
 
         mock_client.set_setup_fixture(fixture)
+        if (root_place := mock_client.setup.root_place) is not None:
+            _create_areas(ar.async_get(hass), root_place)
 
         with (
             patch(

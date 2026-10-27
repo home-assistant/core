@@ -8,17 +8,19 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_probe_plus")
 async def test_sensor(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor platform."""
+    area_registry.async_create("Kitchen")
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -36,10 +38,12 @@ async def test_sensor(
 
 async def test_dynamic_probe_discovery(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_probe_plus: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test dynamic discovery of probe entities."""
+    area_registry.async_create("Kitchen")
     mock_probe_plus.device_state.probes = [mock_probe_plus.device_state.probes[0]]
     mock_config_entry.add_to_hass(hass)
 

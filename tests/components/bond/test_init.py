@@ -248,6 +248,7 @@ async def test_smart_by_bond_device_suggested_area(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can setup a smart by bond device and get the suggested area."""
+    area_registry.async_create("Den")
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -295,6 +296,7 @@ async def test_bridge_device_suggested_area(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can setup a bridge bond device and get the suggested area."""
+    area_registry.async_create("Office")
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},

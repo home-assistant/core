@@ -40,7 +40,7 @@ async def test_device_info(
     assert device.sw_version == "6.1.2+11023"
 
     # `location` from /api/v1/info is set as suggested_area; the device gets
-    # placed in that area (created on the fly when not pre-existing).
+    # placed in the existing area with that name.
     assert device.area_id is not None
     area = area_registry.async_get_area(device.area_id)
     assert area is not None

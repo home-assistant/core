@@ -1605,10 +1605,12 @@ async def test_removed_device(
 @pytest.mark.usefixtures("client", "eaton_rf9640_dimmer")
 async def test_suggested_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that suggested area works."""
+    area = area_registry.async_create("LivingRoom")
     entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1619,7 +1621,7 @@ async def test_suggested_area(
     assert entity_entry.device_id is not None
     device = device_registry.async_get(entity_entry.device_id)
     assert device
-    assert device.area_id is not None
+    assert device.area_id == area.id
 
 
 async def test_node_removed(

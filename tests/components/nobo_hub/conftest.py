@@ -12,6 +12,7 @@ from homeassistant.components.nobo_hub import PLATFORMS
 from homeassistant.components.nobo_hub.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 SERIAL = "102000013098"
 STORED_IP = "192.168.1.122"
@@ -162,6 +163,7 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Nobø Ecohub integration."""
     mock_config_entry.add_to_hass(hass)
+    ar.async_get(hass).async_create("Living room")
     with patch("homeassistant.components.nobo_hub.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

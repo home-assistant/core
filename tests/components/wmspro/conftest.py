@@ -10,6 +10,7 @@ from wmspro.action import Action, ActionList
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from . import remove_config_entry
 
@@ -90,6 +91,9 @@ async def mock_hub_configuration(
 ) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getConfiguration with a param fixture file."""
     hub_config = await async_load_json_object_fixture(hass, request.param, DOMAIN)
+    area_registry = ar.async_get(hass)
+    for room in hub_config["rooms"]:
+        area_registry.async_create(room["name"])
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
         return_value=hub_config,

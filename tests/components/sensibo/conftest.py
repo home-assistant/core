@@ -13,6 +13,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.sensibo.const import DOMAIN, PLATFORMS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from . import ENTRY_CONFIG
 
@@ -48,6 +49,9 @@ async def load_int(
     )
 
     config_entry.add_to_hass(hass)
+    area_registry = ar.async_get(hass)
+    for area in ("Bedroom", "Hallway", "Kitchen"):
+        area_registry.async_create(area)
 
     with patch("homeassistant.components.sensibo.PLATFORMS", load_platforms):
         await hass.config_entries.async_setup(config_entry.entry_id)

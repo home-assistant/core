@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from .conftest import make_mock_module, make_mock_zone
 
@@ -17,6 +18,7 @@ async def test_battery_sensor_with_battery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_touchlinesl_client: MagicMock,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test that the battery sensor reports the correct level."""
     zone = make_mock_zone()
@@ -24,6 +26,7 @@ async def test_battery_sensor_with_battery(
     module = make_mock_module([zone])
     mock_touchlinesl_client.modules = AsyncMock(return_value=[module])
 
+    area_registry.async_create("Zone 1")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -55,6 +58,7 @@ async def test_battery_sensor_only_created_for_zones_with_battery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_touchlinesl_client: MagicMock,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test that battery sensors are only created for wireless zones."""
     wired_zone = make_mock_zone(zone_id=1, name="Wired Zone")
@@ -65,6 +69,8 @@ async def test_battery_sensor_only_created_for_zones_with_battery(
     module = make_mock_module([wired_zone, wireless_zone])
     mock_touchlinesl_client.modules = AsyncMock(return_value=[module])
 
+    area_registry.async_create("Wired Zone")
+    area_registry.async_create("Wireless Zone")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -78,6 +84,7 @@ async def test_battery_sensor_unavailable_on_alarm(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_touchlinesl_client: MagicMock,
+    area_registry: ar.AreaRegistry,
     alarm: str,
 ) -> None:
     """Test that the battery sensor is unavailable when the zone has an alarm."""
@@ -86,6 +93,7 @@ async def test_battery_sensor_unavailable_on_alarm(
     module = make_mock_module([zone])
     mock_touchlinesl_client.modules = AsyncMock(return_value=[module])
 
+    area_registry.async_create("Zone 1")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

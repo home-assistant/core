@@ -19,6 +19,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_
 from homeassistant.components.aosmith.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 FIXTURE_USER_INPUT = {
@@ -221,6 +222,7 @@ async def init_integration(
         "homeassistant.components.aosmith.AOSmithAPIClient", return_value=mock_client
     ):
         mock_config_entry.add_to_hass(hass)
+        ar.async_get(hass).async_create("Basement")
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -20,6 +20,7 @@ from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType
 
@@ -262,6 +263,7 @@ async def setup_bridge(
 ) -> None:
     """Load the Hue integration with the provided bridge."""
     mock_bridge.config_entry = config_entry
+    ar.async_get(hass).async_get_or_create("Test Room")
     with patch.object(
         hue.migration, "is_v2_bridge", return_value=mock_bridge.api_version == 2
     ):

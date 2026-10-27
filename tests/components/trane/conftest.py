@@ -11,6 +11,7 @@ from homeassistant.components.trane import PLATFORMS
 from homeassistant.components.trane.const import CONF_SECRET_KEY, DOMAIN
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 MOCK_HOST = "192.168.1.100"
 MOCK_SECRET_KEY = "test_secret_key"
@@ -68,7 +69,7 @@ def _make_state() -> ThermostatState:
 
 
 @pytest.fixture
-def mock_connection() -> Generator[MagicMock]:
+def mock_connection(hass: HomeAssistant) -> Generator[MagicMock]:
     """Return a mocked ThermostatConnection."""
     with (
         patch(
@@ -93,6 +94,9 @@ def mock_connection() -> Generator[MagicMock]:
         conn.add_event_callback = MagicMock(return_value=MagicMock())
         conn.state = _make_state()
         conn.secret_key = MOCK_SECRET_KEY
+        area_registry = ar.async_get(hass)
+        for zone in conn.state.zones.values():
+            area_registry.async_create(zone.name)
         yield conn
 
 

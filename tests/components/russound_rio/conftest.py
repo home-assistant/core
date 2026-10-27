@@ -10,6 +10,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.russound_rio.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from .const import API_VERSION, HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
 
@@ -46,7 +48,7 @@ def mock_serial_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_russound_client() -> Generator[AsyncMock]:
+def mock_russound_client(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock the Russound RIO client."""
     with (
         patch(
@@ -79,8 +81,10 @@ def mock_russound_client() -> Generator[AsyncMock]:
             for k, v in load_json_object_fixture("get_sources.json", DOMAIN).items()
         }
         client.state = load_json_object_fixture("get_state.json", DOMAIN)
+        area_registry = ar.async_get(hass)
         for controller_id, zones in controller_zones.items():
             for zone_id, zone in zones.items():
+                area_registry.async_create(zone.name)
                 zone.device_str = zone_device_str(controller_id, zone_id)
                 zone.fetch_current_source = Mock(
                     side_effect=lambda current_source=zone.current_source: (

@@ -13,7 +13,7 @@ import pytest
 from homeassistant.components.hue.v2.select import HueSceneSelectEntity
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
@@ -531,6 +531,7 @@ async def test_scene_select_removed_when_group_deleted(
 )
 async def test_scene_select_created_when_group_added(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
     source_id: str,
@@ -539,6 +540,7 @@ async def test_scene_select_created_when_group_added(
     entity_id: str,
 ) -> None:
     """Test that adding a Hue group at runtime creates its scene select entity."""
+    area_registry.async_create(new_name)
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, [Platform.SCENE, Platform.SELECT])
 

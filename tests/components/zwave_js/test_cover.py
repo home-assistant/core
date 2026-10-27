@@ -44,6 +44,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from .common import replace_value_of_zwave_value
 
@@ -933,11 +934,13 @@ async def test_motor_barrier_cover_no_primary_value(
 
 async def test_fibaro_fgr222_shutter_cover_no_tilt(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     client: MagicMock,
     fibaro_fgr222_shutter_state: dict[str, Any],
     integration: MockConfigEntry,
 ) -> None:
     """Test tilt function of the Fibaro Shutter devices with tilt value is None."""
+    area_registry.async_create("test location")
     node_state = replace_value_of_zwave_value(
         fibaro_fgr222_shutter_state,
         [
@@ -966,6 +969,7 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
 
 async def test_fibaro_fgr223_shutter_cover_no_tilt(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     client: MagicMock,
     fibaro_fgr223_shutter_state: dict[str, Any],
     integration: MockConfigEntry,
@@ -974,6 +978,7 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
 
     Fibaro Shutter devices can have operating mode set to roller blind (1).
     """
+    area_registry.async_create("test location")
     node_state = replace_value_of_zwave_value(
         fibaro_fgr223_shutter_state,
         [

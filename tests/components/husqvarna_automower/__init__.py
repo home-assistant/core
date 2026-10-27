@@ -3,6 +3,7 @@
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -13,4 +14,5 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     # the Home Assistant config.
     await hass.config.async_set_time_zone("Europe/Berlin")
     config_entry.add_to_hass(hass)
+    ar.async_get(hass).async_get_or_create("Garden")
     await hass.config_entries.async_setup(config_entry.entry_id)

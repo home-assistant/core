@@ -130,6 +130,7 @@ async def test_device_registry_not_portable(
     soco,
 ) -> None:
     """Test non-portable sonos device has area suggested."""
+    area = area_registry.async_create("Zone A")
     soco.get_battery_info.return_value = {}
     await async_setup_sonos()
 
@@ -137,7 +138,7 @@ async def test_device_registry_not_portable(
         ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
-    assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
+    assert reg_device.area_id == area.id
 
 
 async def test_entity_basic(

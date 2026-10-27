@@ -612,6 +612,7 @@ async def test_assist_api(
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
 
+    area_registry.async_create("Test Area")
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("test", "1234")},
@@ -753,6 +754,8 @@ async def test_assist_api_prompt(
 
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
+    area_registry.async_create("Test Area")
+    area_registry.async_create("Test Area 2")
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={("test", "123456")},

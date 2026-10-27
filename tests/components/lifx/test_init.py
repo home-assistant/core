@@ -14,11 +14,17 @@ from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import IP_ADDRESS, SERIAL, _patch_config_flow_try_connect, async_setup_lifx_entry
+from . import (
+    GROUP,
+    IP_ADDRESS,
+    SERIAL,
+    _patch_config_flow_try_connect,
+    async_setup_lifx_entry,
+)
 from .helpers import create_mock_light
 
 
@@ -131,8 +137,11 @@ async def test_setup_connection_error_schedules_retry_without_discovery(
     assert f"Unable to connect to the LIFX device at {IP_ADDRESS}" in caplog.text
 
 
-async def test_config_entry_owns_one_persistent_device(hass: HomeAssistant) -> None:
+async def test_config_entry_owns_one_persistent_device(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
     """Test setup refreshes and unload closes the persistent device."""
+    area_registry.async_create(GROUP)
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )

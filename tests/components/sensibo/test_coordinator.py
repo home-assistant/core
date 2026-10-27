@@ -14,6 +14,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from . import ENTRY_CONFIG
 
@@ -24,8 +25,10 @@ async def test_coordinator(
     get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test the Sensibo coordinator with errors."""
+    area_registry.async_create("Hallway")
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_CONFIG,

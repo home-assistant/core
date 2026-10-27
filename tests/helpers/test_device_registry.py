@@ -151,6 +151,7 @@ async def test_get_or_create_returns_same_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Make sure we do not duplicate entries."""
+    game_room_area = area_registry.async_create("Game Room")
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -175,8 +176,7 @@ async def test_get_or_create_returns_same_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    game_room_area = area_registry.async_get_area_by_name("Game Room")
-    assert game_room_area is not None
+    assert area_registry.async_get_area_by_name("Game Room") is game_room_area
     assert len(area_registry.areas) == 1
 
     assert len(device_registry.devices) == 1
@@ -5180,9 +5180,12 @@ async def test_via_device_prefers_same_domain(
 
 
 async def test_loading_saving_data(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that we load/save data correctly."""
+    area_registry.async_create("Kitchen")
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -5686,6 +5689,8 @@ async def test_update_suggested_area(
     Updating the suggested area of a device should not create a new area, nor should
     it change the area_id of the device.
     """
+    if initial_area is not None:
+        area_registry.async_create(initial_area)
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -5732,6 +5737,23 @@ async def test_update_suggested_area(
     assert mock_save_2.call_count == 0
     assert updated_entry != entry
     assert updated_entry.area_id == device_area_id
+
+
+@pytest.mark.usefixtures("hass")
+async def test_create_with_unknown_suggested_area(
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a suggested area that does not exist is not created for a new device."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "1")},
+        suggested_area="Pool",
+    )
+    assert entry.area_id is None
+    assert area_registry.async_get_area_by_name("Pool") is None
+    assert len(area_registry.areas) == 0
 
 
 @pytest.mark.usefixtures("hass")
@@ -6990,11 +7012,13 @@ async def test_cleanup_entity_registry_change(
 @pytest.mark.usefixtures("freezer")
 async def test_restore_device(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
     initial_area: str | None,
 ) -> None:
     """Make sure device id is stable."""
+    area_registry.async_create("suggested_area_orig")
     entry_id = mock_config_entry_with_subentries.entry_id
     subentry_id = "mock-subentry-id-1-1"
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
@@ -7266,12 +7290,14 @@ async def test_deleted_device_to_device_entry_uses_reregistered_identity(
 @pytest.mark.usefixtures("freezer")
 async def test_restore_migrated_device_disabled_by(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     device_disabled_by: dr.DeviceEntryDisabler | UndefinedType | None,
     expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
+    area_registry.async_create("suggested_area_orig")
     entry_id = mock_config_entry.entry_id
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
@@ -7432,6 +7458,7 @@ async def test_restore_migrated_device_disabled_by(
 @pytest.mark.usefixtures("freezer")
 async def test_restore_disabled_by(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
@@ -7439,6 +7466,7 @@ async def test_restore_disabled_by(
     device_disabled_by_restored: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
+    area_registry.async_create("suggested_area_orig")
     entry_id = mock_config_entry.entry_id
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     await hass.config_entries.async_set_disabled_by(
@@ -8671,6 +8699,7 @@ async def test_suggested_area_deprecation(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Make sure we do not duplicate entries."""
+    game_room_area = area_registry.async_create("Game Room")
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -8682,8 +8711,7 @@ async def test_suggested_area_deprecation(
         suggested_area="Game Room",
     )
 
-    game_room_area = area_registry.async_get_area_by_name("Game Room")
-    assert game_room_area is not None
+    assert area_registry.async_get_area_by_name("Game Room") is game_room_area
     assert len(area_registry.areas) == 1
 
     assert len(device_registry.devices) == 1
@@ -10956,6 +10984,7 @@ async def test_child_device_create_with_suggested_area(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test suggested_area sets the initial area of a new child device only."""
+    garden = area_registry.async_create("Garden")
     parent = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("test", "strip")},
@@ -10968,8 +10997,6 @@ async def test_child_device_create_with_suggested_area(
         name="Outlet 1",
         suggested_area="Garden",
     )
-    garden = area_registry.async_get_area_by_name("Garden")
-    assert garden is not None
     assert child_device.area_id == garden.id
 
     # suggested_area is a one-shot hint for a new child device
@@ -10981,6 +11008,30 @@ async def test_child_device_create_with_suggested_area(
         suggested_area="Garage",
     )
     assert child_device_2.area_id == garden.id
+
+
+@pytest.mark.usefixtures("hass")
+async def test_child_device_create_with_unknown_suggested_area(
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a suggested area that does not exist is not created for a new child device."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+        suggested_area="Garden",
+    )
+    assert child_device.area_id is None
+    assert area_registry.async_get_area_by_name("Garden") is None
+    assert len(area_registry.areas) == 0
 
 
 @pytest.mark.parametrize(

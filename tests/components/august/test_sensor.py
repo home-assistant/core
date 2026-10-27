@@ -7,7 +7,7 @@ from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from homeassistant import core as ha
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 
 from .mocks import (
     _create_august_with_devices,
@@ -57,9 +57,12 @@ async def test_create_doorbell_hardwired(hass: HomeAssistant) -> None:
 
 
 async def test_create_lock_with_linked_keypad(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test creation of a lock with a linked keypad that both have a battery."""
+    area_registry.async_create("Front")
     lock_one = await _mock_lock_from_fixture(hass, "get_lock.doorsense_init.json")
     await _create_august_with_devices(hass, [lock_one])
 
@@ -89,9 +92,12 @@ async def test_create_lock_with_linked_keypad(
 
 
 async def test_create_lock_with_low_battery_linked_keypad(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test creation of a lock with a linked keypad that both have a battery."""
+    area_registry.async_create("Front")
     lock_one = await _mock_lock_from_fixture(hass, "get_lock.low_keypad_battery.json")
     await _create_august_with_devices(hass, [lock_one])
     states = hass.states

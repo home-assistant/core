@@ -26,6 +26,7 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 
 @pytest.fixture
@@ -113,6 +114,7 @@ def reeflex_mock():
 
 @pytest.fixture
 def eheimdigital_hub_mock(
+    hass: HomeAssistant,
     classic_led_ctrl_mock: MagicMock,
     heater_mock: MagicMock,
     classic_vario_mock: MagicMock,
@@ -138,6 +140,9 @@ def eheimdigital_hub_mock(
             "00:00:00:00:00:05": reeflex_mock,
         }
         eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
+        area_registry = ar.async_get(hass)
+        for device in eheimdigital_hub_mock.return_value.devices.values():
+            area_registry.async_get_or_create(device.aquarium_name)
         yield eheimdigital_hub_mock
 
 

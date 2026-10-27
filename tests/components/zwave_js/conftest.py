@@ -25,6 +25,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.util.json import JsonArrayType
 
 # State fixtures
@@ -1046,6 +1047,10 @@ async def integration_fixture(
         unique_id=str(client.driver.controller.home_id),
     )
     entry.add_to_hass(hass)
+    area_registry = ar.async_get(hass)
+    for node in client.driver.controller.nodes.values():
+        if node.location:
+            area_registry.async_get_or_create(node.location)
     with patch("homeassistant.components.zwave_js.PLATFORMS", platforms):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

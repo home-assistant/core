@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
-from .conftest import setup_integration
+from .conftest import create_suggested_areas, setup_integration
 
 
 async def test_setup_retry_client_os_error(
@@ -221,6 +221,7 @@ async def test_device_preregistration(
     """Test all thermostat and zone devices are preregistered."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
+    create_suggested_areas(hass, mock_nexia_home)
 
     _preregister_devices(hass, entry, mock_nexia_home)
 

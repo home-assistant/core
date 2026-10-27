@@ -19,7 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
@@ -145,6 +145,9 @@ def get_fixture_name(device_id: str) -> str:
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
+    area_registry = ar.async_get(hass)
+    for room in ("Theater", "Toilet"):
+        area_registry.async_create(room)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
