@@ -906,4 +906,3 @@ def _stop_is_configured(
         and subentry.data.get(CONF_STOP_ID) == stop_id
         for subentry in entry.subentries.values()
     )
-

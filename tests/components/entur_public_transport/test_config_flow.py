@@ -1501,4 +1501,3 @@ async def test_config_flow_defensive_paths(hass: HomeAssistant) -> None:
         PLATFORM_MODE_ALL,
         [],
     )
-
