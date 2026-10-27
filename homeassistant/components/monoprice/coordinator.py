@@ -39,6 +39,8 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
         )
         self.client = client
         self._startup_zones: tuple[int, ...] | None = startup_zones
+        # pymonoprice only locks single calls. Hold this lock for a whole poll or
+        # a whole command with its read-back, so they cannot interleave.
         self._operation_lock = asyncio.Lock()
 
     @callback
