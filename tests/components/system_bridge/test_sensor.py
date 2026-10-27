@@ -145,20 +145,28 @@ async def test_sensor_battery_empty(
         pytest.param("sensor.hostname_mouse_battery_state", id="device"),
     ],
 )
+@pytest.mark.parametrize(
+    "unknown_state",
+    [
+        pytest.param(BatteryState.UNKNOWN, id="enum"),
+        pytest.param("unknown", id="raw"),
+    ],
+)
 async def test_sensor_battery_state_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: MagicMock,
     entity_id: str,
+    unknown_state: BatteryState | str,
 ) -> None:
     """Test an unknown battery state is reported as unknown, not as an option."""
     mock_websocket_client.get_data.return_value = replace(
         mock_websocket_client.get_data.return_value,
         battery=replace(
             FIXTURE_BATTERY,
-            state=BatteryState.UNKNOWN,
+            state=unknown_state,
             batteries=[
-                replace(battery, state=BatteryState.UNKNOWN)
+                replace(battery, state=unknown_state)
                 for battery in FIXTURE_BATTERY.batteries
             ],
         ),
@@ -174,6 +182,42 @@ async def test_sensor_battery_state_unknown(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
     assert BatteryState.UNKNOWN not in state.attributes["options"]
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+@pytest.mark.parametrize(
+    ("entity_id", "disabled_by"),
+    [
+        pytest.param(
+            "sensor.hostname_model_battery",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="system_level",
+        ),
+        pytest.param(
+            "sensor.hostname_model_battery_state",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="system_state",
+        ),
+        pytest.param("sensor.hostname_mouse_battery", None, id="device_level"),
+        pytest.param("sensor.hostname_mouse_battery_state", None, id="device_state"),
+    ],
+)
+async def test_sensor_battery_info_enabled_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test only peripheral battery sensors are enabled by default."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is disabled_by
 
 
 @pytest.mark.usefixtures("mock_version")

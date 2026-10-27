@@ -76,7 +76,7 @@ def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
 
 def battery_state(state: BatteryState | None) -> str | None:
     """Return the battery state, or None when it is unknown."""
-    if state is None or state is BatteryState.UNKNOWN:
+    if state is None or state == BatteryState.UNKNOWN:
         return None
     return state
 
