@@ -43,8 +43,10 @@ class StookwijzerCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
+        last_updated = self.client.last_updated
         await self.client.async_update()
-        if self.client.advice is None:
+        # The client keeps its previous advice when a request fails
+        if self.client.advice is None or self.client.last_updated == last_updated:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_data_received",

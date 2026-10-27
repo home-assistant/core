@@ -10,6 +10,7 @@ from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.components.stookwijzer.services import Forecast
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -80,6 +81,12 @@ def mock_stookwijzer() -> Generator[MagicMock]:
         client.windspeed_ms = 2.5
         client.windspeed_bft = 2
         client.advice = "code_yellow"
+        client.last_updated = None
+
+        async def mock_async_update() -> None:
+            client.last_updated = dt_util.utcnow()
+
+        client.async_update.side_effect = mock_async_update
         client.async_get_forecast.return_value = (
             Forecast(
                 datetime="2025-02-12T17:00:00+01:00",
