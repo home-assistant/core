@@ -44,9 +44,9 @@ class XboxBaseEntityDescription(EntityDescription):
     """Xbox base entity description."""
 
     entity_picture_fn: Callable[[Person, Title | None], str | None] | None = None
-    attributes_fn: Callable[[Person, Title | None], Mapping[str, Any] | None] | None = (
-        None
-    )
+    attributes_fn: (
+        Callable[[Person, Title | None, int | None], Mapping[str, Any] | None] | None
+    ) = None
     deprecated: bool | None = None
 
 
@@ -88,6 +88,11 @@ class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
         return self.coordinator.data.title_info.get(self.xuid)
 
     @property
+    def achievement_total(self) -> int | None:
+        """Return the real achievement total, if titlehub did not report it."""
+        return self.coordinator.data.achievement_totals.get(self.xuid)
+
+    @property
     @override
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
@@ -105,7 +110,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
     def extra_state_attributes(self) -> Mapping[str, float | None] | None:
         """Return entity specific state attributes."""
         return (
-            fn(self.data, self.title_info)
+            fn(self.data, self.title_info, self.achievement_total)
             if (fn := self.entity_description.attributes_fn)
             else super().extra_state_attributes
         )
@@ -215,6 +220,7 @@ def check_deprecated_entity(
                     DOMAIN,
                     f"deprecated_entity_{xuid}_{entity_description.key}",
                     breaks_in_ha_version="2027.4.0",
+                    config_entry_id=entity_entry.config_entry_id,
                     is_fixable=True,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_entity",

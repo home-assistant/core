@@ -1,12 +1,17 @@
 """The tests for the Logger component."""
 
 from collections import defaultdict
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import logger
 from homeassistant.components.logger import DOMAIN, LOGSEVERITY
@@ -16,8 +21,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_call_logger_set_level, async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -427,7 +430,7 @@ async def test_log_once_removed_from_store(
     assert hass_storage["core.logger"]["data"] == store_contents["data"]
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + datetime.timedelta(seconds=SAVE_DELAY_LONG)
+        hass, dt_util.utcnow() + dt.timedelta(seconds=SAVE_DELAY_LONG)
     )
     await hass.async_block_till_done()
 

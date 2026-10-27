@@ -72,10 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
         tasks.append(data.ftth.async_config_entry_first_refresh())
     await asyncio.gather(*tasks)
 
-    host: str = entry.data[CONF_HOST]
-    configuration_url = (
-        host if host.startswith(("http://", "https://")) else f"http://{host}"
-    )
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -85,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
         model=None,
         model_id=system_info.product_id,
         sw_version=system_info.version_mainfirmware,
-        configuration_url=configuration_url,
+        configuration_url=box.url,
     )
 
     entry.runtime_data = data

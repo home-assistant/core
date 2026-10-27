@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from dsmr_parser.exceptions import DecryptionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serialx.common import UnknownUriScheme
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.usb import SerialDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
 SERIAL_DATA_SWEDEN = {"serial_id": None, "serial_id_gas": None}
@@ -44,7 +43,7 @@ async def test_setup_network(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -88,7 +87,7 @@ async def test_setup_network_rfxtrx(
     # this will retry with RFXtrxDSMRProtocol
     protocol.telegram = {}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -199,7 +198,7 @@ async def test_setup_serial(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"port": port.device, "dsmr_version": version},
@@ -246,7 +245,7 @@ async def test_setup_serial_encrypted(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"encryption_key": "aabbccddeeff00112233445566778899"},
@@ -305,7 +304,7 @@ async def test_setup_serial_encrypted_invalid_key(
 
     protocol.decryption_error = None
     connection_factory.reset_mock()
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"encryption_key": "aabbccddeeff00112233445566778899"},
@@ -355,7 +354,7 @@ async def test_setup_serial_encrypted_malformed_key(
     # A malformed key must not reach the reader
     connection_factory.assert_not_called()
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"encryption_key": "aabbccddeeff00112233445566778899"},
@@ -399,7 +398,7 @@ async def test_setup_serial_encrypted_cannot_communicate(
     # Encrypted meters must not retry over the RFXtrx protocol
     assert validate.call_count == 1
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"encryption_key": "aabbccddeeff00112233445566778899"},
@@ -433,7 +432,7 @@ async def test_setup_serial_rfxtrx(
     # this will retry with RFXtrxDSMRProtocol
     protocol.telegram = {}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
@@ -499,7 +498,7 @@ async def test_setup_serial_fail(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
@@ -547,7 +546,7 @@ async def test_setup_serial_timeout(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
         )
@@ -558,7 +557,7 @@ async def test_setup_serial_timeout(
 
     protocol.wait_closed = wait_closed
     connection_factory.reset_mock()
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
@@ -608,7 +607,7 @@ async def test_setup_serial_wrong_telegram(
 
     protocol.telegram = telegram
     connection_factory.reset_mock()
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"port": port.device, "dsmr_version": "2.2"},
@@ -646,8 +645,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     with (
-        patch("homeassistant.components.dsmr.async_setup_entry", return_value=True),
-        patch("homeassistant.components.dsmr.async_unload_entry", return_value=True),
+        patch("homeassistant.components.dsmr.async_setup_entry", return_value=None),
+        patch("homeassistant.components.dsmr.async_unload_entry", return_value=None),
     ):
         assert result["type"] is FlowResultType.CREATE_ENTRY
 

@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -23,9 +25,6 @@ from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_generate_data_preferred_entity(
@@ -101,10 +100,14 @@ async def test_generate_data_preferred_entity(
     assert state.state != STATE_UNKNOWN
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.llm_api.api is llm_api
+        # The session records the user of the task context.
+        assert session.user_id == context.user_id
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
@@ -153,7 +156,9 @@ async def test_run_data_task_updates_chat_log(
     assert result.data == "Mock result"
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.content == snapshot

@@ -38,6 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from .app import async_check_app_running
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
 from .services import async_setup_services
@@ -96,6 +97,7 @@ async def async_setup_entry(  # noqa: C901
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await mass.connect()
     except (TimeoutError, CannotConnect) as err:
+        async_check_app_running(hass, mass_url)
         raise ConfigEntryNotReady(
             f"Failed to connect to music assistant server {mass_url}"
         ) from err

@@ -1,6 +1,7 @@
 {
   "domain": "firefly_iii",
   "name": "Firefly III",
+  "categories": ["finance"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/firefly_iii",

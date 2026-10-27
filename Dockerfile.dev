@@ -58,6 +58,15 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     --mount=type=bind,source=requirements_test_pre_commit.txt,target=requirements_test_pre_commit.txt \
     uv pip install -r requirements.txt -r requirements_test.txt
 
+# Bootstrap installs Core and points the editable package at the workspace.
+COPY --chown=vscode:vscode packages/pytest-home-assistant/pyproject.toml \
+    packages/pytest-home-assistant/README.md \
+    packages/pytest-home-assistant/LICENSE.md /home/vscode/pytest-home-assistant/
+COPY --chown=vscode:vscode packages/pytest-home-assistant/pytest_homeassistant \
+    /home/vscode/pytest-home-assistant/pytest_homeassistant
+RUN uv pip install --no-deps -e /home/vscode/pytest-home-assistant \
+    --config-settings editable_mode=compat
+
 # Claude Code native install
 RUN curl -fsSL https://claude.ai/install.sh | bash
 

@@ -107,6 +107,7 @@ async def async_setup_entry(
             hass=hass,
             domain=DOMAIN,
             issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            config_entry_id=entry.entry_id,
             translation_key="unsupported_version",
             translation_placeholders={"host": entry.data[CONF_HOST]},
             severity=IssueSeverity.ERROR,

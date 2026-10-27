@@ -1,5 +1,7 @@
 """Test the Ruuvi Gateway setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.components.ruuvi_gateway.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -7,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .consts import BASE_DATA, EXPECTED_TITLE, GATEWAY_MAC, GATEWAY_MAC_LOWER
-
-from tests.common import MockConfigEntry
 
 
 async def test_scanner_device(

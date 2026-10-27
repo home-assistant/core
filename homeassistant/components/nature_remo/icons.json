@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "illuminance": {
+        "default": "mdi:brightness-6"
+      },
+      "last_motion": {
+        "default": "mdi:motion-sensor"
+      }
+    }
+  }
+}

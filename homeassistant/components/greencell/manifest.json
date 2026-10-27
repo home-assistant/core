@@ -1,6 +1,7 @@
 {
   "domain": "greencell",
   "name": "Greencell",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@BrzezowskiGC"],
   "config_flow": true,
   "dependencies": ["mqtt"],

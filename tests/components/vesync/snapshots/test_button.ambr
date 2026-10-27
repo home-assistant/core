@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_button_state[button.air_purifier_200s_reset_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vesync', 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.air_purifier_200s_reset_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset filter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter',
+    'platform': 'vesync',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter',
+    'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-reset_filter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_state[button.air_purifier_200s_reset_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Reset filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.air_purifier_200s_reset_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

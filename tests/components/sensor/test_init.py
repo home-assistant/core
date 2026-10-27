@@ -8,6 +8,18 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import sensor
 from homeassistant.components.number import (
@@ -21,7 +33,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
-    UPTIME_DEFAULT_TOLERANCE_SECONDS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -29,7 +40,11 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
-from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVERTERS
+from homeassistant.components.sensor.const import (
+    STATE_CLASS_UNITS,
+    UNIT_CONVERTERS,
+    UPTIME_DEFAULT_TOLERANCE_SECONDS,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -72,19 +87,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockRestoreSensor, MockSensor
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    async_mock_restore_state_shutdown_restart,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -975,6 +977,60 @@ async def test_custom_unit(
 
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options["sensor"]["suggested_display_precision"] == suggested_precision
+
+
+@pytest.mark.parametrize(
+    ("native_unit", "custom_unit", "expected_state"),
+    [
+        pytest.param(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            STATE_UNKNOWN,
+            id="km_per_kwh_to_kwh_per_100km",
+        ),
+        pytest.param(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            STATE_UNKNOWN,
+            id="kwh_per_100km_to_mi_per_kwh",
+        ),
+        pytest.param(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+            "0.0",
+            id="kwh_per_100km_to_wh_per_km",
+        ),
+    ],
+)
+async def test_custom_unit_zero_between_inverse_units(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    native_unit: str,
+    custom_unit: str,
+    expected_state: str,
+) -> None:
+    """Test a zero value converted between inverse units gives an unknown state."""
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    entity0 = MockSensor(
+        name="Test",
+        native_value="0",
+        native_unit_of_measurement=native_unit,
+        device_class=SensorDeviceClass.ENERGY_DISTANCE,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
 
 
 @pytest.mark.parametrize(
@@ -2887,12 +2943,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.SENSOR]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

@@ -1,6 +1,7 @@
 {
   "domain": "synology_dsm",
   "name": "Synology DSM",
+  "categories": ["computers_network.nas_servers", "security_safety.cameras"],
   "codeowners": ["@Quentame", "@mib1185"],
   "config_flow": true,
   "dependencies": ["http"],

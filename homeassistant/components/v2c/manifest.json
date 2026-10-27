@@ -1,6 +1,7 @@
 {
   "domain": "v2c",
   "name": "V2C",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/v2c",

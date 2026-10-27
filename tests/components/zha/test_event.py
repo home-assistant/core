@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 from zha.application.platforms.event.const import (
     ATTR_MULTI_PRESS_COUNT,
@@ -32,8 +33,6 @@ from homeassistant.components.zha.helpers import (
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
 

@@ -5,13 +5,13 @@ from types import SimpleNamespace
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from theben_conexa_smgw import UnexpectedReturnCode
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_setup import FrozenDateTimeFactory
 
 
