@@ -1,6 +1,7 @@
 {
   "domain": "yi",
   "name": "Yi Home Cameras",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@bachya"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/yi",

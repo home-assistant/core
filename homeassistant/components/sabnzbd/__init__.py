@@ -13,7 +13,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> None:
     """Set up the SabNzbd Component."""
 
     sab_api = await get_client(hass, entry.data)
@@ -26,9 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> None:
     """Unload a Sabnzbd config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

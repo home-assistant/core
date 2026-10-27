@@ -98,7 +98,6 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: ip_address},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": self._name, "host": ip_address}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

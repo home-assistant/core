@@ -4,7 +4,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyfronius import FroniusError
+from fronius_solarapi import FroniusError
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.fronius.const import DOMAIN, SOLAR_NET_RESCAN_TIMER
 from homeassistant.config_entries import ConfigEntryState
@@ -13,10 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import mock_responses, setup_fronius_integration
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_unload_config_entry(
@@ -42,13 +41,14 @@ async def test_unload_config_entry(
 async def test_migrate_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test migration adds the default Modbus port to old config entries."""
+    """Test migration adds the Modbus settings to old config entries."""
     mock_responses(aioclient_mock)
     entry = await setup_fronius_integration(hass)
 
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data["modbus_port"] == 502
+    assert entry.data["auto_revert_power_limit"] is False
 
 
 async def test_logger_error(
@@ -67,7 +67,7 @@ async def test_inverter_error(
     """Test setup when inverter_info reports an error."""
     mock_responses(aioclient_mock)
     with patch(
-        "pyfronius.Fronius.inverter_info",
+        "fronius_solarapi.FroniusSolarApi.inverter_info",
         side_effect=FroniusError,
     ):
         config_entry = await setup_fronius_integration(hass)
@@ -128,7 +128,7 @@ async def test_inverter_rescan_interruption(
     )
 
     with patch(
-        "pyfronius.Fronius.inverter_info",
+        "fronius_solarapi.FroniusSolarApi.inverter_info",
         side_effect=FroniusError,
     ):
         freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER))

@@ -1,8 +1,8 @@
 """Constants for the Tesla Fleet tests."""
 
-from homeassistant.components.tesla_fleet.const import DOMAIN, TeslaFleetState
+from pytest_homeassistant.common import load_json_object_fixture
 
-from tests.common import load_json_object_fixture
+from homeassistant.components.tesla_fleet.const import DOMAIN, TeslaFleetState
 
 VEHICLE_ONLINE = {"response": {"state": TeslaFleetState.ONLINE}, "error": None}
 VEHICLE_ASLEEP = {"response": {"state": TeslaFleetState.ASLEEP}, "error": None}
@@ -12,6 +12,9 @@ VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
+ENERGY_HISTORY_OVERNIGHT = load_json_object_fixture(
+    "energy_history_overnight.json", DOMAIN
+)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}

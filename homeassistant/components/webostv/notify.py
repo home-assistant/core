@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import WebOsTvConfigEntry
 from .const import DOMAIN, WEBOSTV_EXCEPTIONS
+from .coordinator import WebOsTvConfigEntry
 
 PARALLEL_UPDATES = 0
 

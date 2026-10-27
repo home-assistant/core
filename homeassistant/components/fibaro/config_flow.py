@@ -21,7 +21,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_IMPORT_PLUGINS, default=False): bool,
     }
 )
@@ -60,7 +60,7 @@ def _normalize_url(url: str) -> str:
 class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fibaro."""
 
-    VERSION = 1
+    VERSION = 2
 
     @override
     async def async_step_user(
@@ -115,7 +115,9 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
             description_placeholders={
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],

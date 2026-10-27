@@ -1,6 +1,7 @@
 {
   "domain": "webmin",
   "name": "Webmin",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@autinerd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webmin",

@@ -23,7 +23,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import YaleConfigEntry, YaleData
+from . import YaleConfigEntry
+from .data import YaleData
 from .entity import YaleDescriptionEntity
 from .util import (
     retrieve_ding_activity,

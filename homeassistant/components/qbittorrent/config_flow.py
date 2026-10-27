@@ -18,7 +18,7 @@ USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL, default=DEFAULT_URL): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 )

@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TRACKED_APPS, CONF_TRACKED_INTEGRATIONS
+from .const import CONF_TRACKED_APPS, CONF_TRACKED_INTEGRATIONS, DOMAIN
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -32,14 +32,17 @@ class AnalyticsInsightsData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Set up Homeassistant Analytics from a config entry."""
     client = HomeassistantAnalyticsClient(session=async_get_clientsession(hass))
 
     try:
         integrations = await client.get_integrations(Environment.NEXT)
     except HomeassistantAnalyticsConnectionError as ex:
-        raise ConfigEntryNotReady("Could not fetch integration list") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="integration_list_fetch_failed",
+        ) from ex
 
     names = {}
     for integration in entry.options[CONF_TRACKED_INTEGRATIONS]:
@@ -56,12 +59,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Migrate to a new version."""
     # Migration for switching add-ons to apps
     if entry.version < 2:
@@ -80,11 +81,9 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(entry, version=2, options=options)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
