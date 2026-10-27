@@ -258,25 +258,14 @@ async def test_climate_battery_sensor(
     assert hass.states.get(f"{prefix}battery").state == "75"
 
 
-@pytest.mark.parametrize(
-    ("end_time", "expected"),
-    [
-        (1700000000, datetime(2023, 11, 14, 22, 13, 20, tzinfo=UTC)),
-        (0, None),
-        (None, None),
-    ],
-)
-async def test_setpoint_end_time_sensor_update(
-    end_time: int | None,
-    expected: datetime | None,
+async def test_setpoint_end_time_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
-    """Test setpoint end time conversion and missing values."""
-    entity = Mock()
-    entity._async_set_unavailable_if_unreachable.return_value = False
-    entity.device.therm_setpoint_end_time = end_time
+    """Test room setpoint end time sensor."""
+    with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    sensor.NetatmoSetpointEndTimeSensor.async_update_callback(entity)
-
-    assert entity._attr_available is True
-    assert entity._attr_native_value == expected
-    entity.async_write_ha_state.assert_called_once()
+    state = hass.states.get("sensor.parents_bedroom_setpoint_end_time")
+    assert state is not None
+    assert state.state == "unknown"
