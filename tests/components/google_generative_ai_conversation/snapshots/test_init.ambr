@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': <ConfigSubentry subentry_type='conversation' title='Google AI Conversation'>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -32,7 +32,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': <ConfigSubentry subentry_type='stt' title='Google AI STT'>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -60,7 +60,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': <ConfigSubentry subentry_type='tts' title='Google AI TTS'>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': <ConfigSubentry subentry_type='ai_task_data' title='Google AI Task'>,
       'configuration_url': None,
       'connections': set({
       }),

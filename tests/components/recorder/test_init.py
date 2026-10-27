@@ -290,8 +290,12 @@ async def test_commit_future_covers_startup_batch(
         release_batch.wait()
         real_pre_process(startup_task_or_events)
 
-    with patch.object(
-        instance, "_pre_process_startup_events", _pre_process_startup_events
+    with (
+        patch.object(
+            instance, "_pre_process_startup_events", _pre_process_startup_events
+        ),
+        # Periodic tasks run on the wall clock and could queue a task
+        patch.object(instance, "_async_setup_periodic_tasks"),
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         try:

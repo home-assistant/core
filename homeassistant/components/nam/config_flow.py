@@ -34,7 +34,7 @@ AUTH_SCHEMA = probatio.Schema(
 
 
 async def async_get_nam(
-    hass: HomeAssistant, host: str, data: dict[str, Any]
+    hass: HomeAssistant, host: str, data: Mapping[str, Any]
 ) -> NettigoAirMonitor:
     """Get NAM client."""
     websession = async_get_clientsession(hass)
@@ -210,7 +210,11 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                nam = await async_get_nam(self.hass, user_input[CONF_HOST], {})
+                nam = await async_get_nam(
+                    self.hass, user_input[CONF_HOST], reconfigure_entry.data
+                )
+            except AuthFailedError:
+                errors["base"] = "invalid_auth"
             except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
