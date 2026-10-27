@@ -421,9 +421,12 @@ def _convert_change(
 
     For example, a change of 10 °C is a change of 18 °F, not of 50 °F.
     """
-    if change is None:
+    if change is None or (converted := convert(change)) is None:
         return None
-    return cast(float, convert(change)) - cast(float, convert(0))
+    # Zero has no value in an inverse unit, such as km/kWh
+    if (offset := convert(0)) is None:
+        return converted
+    return converted - offset
 
 
 def _get_display_to_statistic_unit_converter_func(
@@ -2091,9 +2094,11 @@ def _augment_result_with_change(
     for statistic_id, rows in result.items():
         # A statistic without an earlier row starts from a sum of 0
         prev_sum = prev_sums.get(statistic_id) or 0
-        if (convert := converters[statistic_id]) is not None:
-            # The sums of the rows are converted already
-            prev_sum = cast(float, convert(prev_sum))
+        # The sums of the rows are converted already
+        if (convert := converters[statistic_id]) is not None and (
+            converted_prev_sum := convert(prev_sum)
+        ) is not None:
+            prev_sum = converted_prev_sum
         for statistics_row in rows:
             if "sum" not in statistics_row:
                 continue

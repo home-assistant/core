@@ -1679,17 +1679,43 @@ async def test_statistics_during_period_stream_error_falls_back(
 
 
 @pytest.mark.parametrize(
-    ("units", "change_whole", "change_from_second", "row_changes"),
+    (
+        "unit_class",
+        "unit",
+        "units",
+        "change_whole",
+        "change_from_second",
+        "row_changes",
+    ),
     [
-        pytest.param(None, 30.0, 20.0, [10.0, 10.0, 10.0], id="celsius"),
         pytest.param(
-            {"temperature": "°F"}, 54.0, 36.0, [18.0, 18.0, 18.0], id="fahrenheit"
+            "temperature", "°C", None, 50.0, 40.0, [10.0, 10.0, 30.0], id="celsius"
+        ),
+        pytest.param(
+            "temperature",
+            "°C",
+            {"temperature": "°F"},
+            90.0,
+            72.0,
+            [18.0, 18.0, 54.0],
+            id="fahrenheit",
+        ),
+        pytest.param(
+            "energy_distance",
+            "kWh/100km",
+            {"energy_distance": "km/kWh"},
+            2.0,
+            2.5,
+            [10.0, -5.0, -3.0],
+            id="inverse_unit",
         ),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock")
 async def test_change_converted_without_offset(
     hass: HomeAssistant,
+    unit_class: str,
+    unit: str,
     units: dict[str, str] | None,
     change_whole: float,
     change_from_second: float,
@@ -1708,12 +1734,12 @@ async def test_change_converted_without_offset(
             "name": None,
             "source": "recorder",
             "statistic_id": "sensor.test",
-            "unit_class": "temperature",
-            "unit_of_measurement": "°C",
+            "unit_class": unit_class,
+            "unit_of_measurement": unit,
         },
         [
-            {"start": start + timedelta(hours=i), "sum": 10.0 * (i + 1)}
-            for i in range(3)
+            {"start": start + timedelta(hours=i), "sum": value}
+            for i, value in enumerate((10.0, 20.0, 50.0))
         ],
     )
     await async_wait_recording_done(hass)
