@@ -6,11 +6,20 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from aiopvapi.resources.shade import ShadePosition
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     load_json_object_fixture,
     load_json_value_fixture,
 )
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+
+from .const import MOCK_MAC
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mocked config entry."""
+    return MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
 
 
 @pytest.fixture

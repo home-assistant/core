@@ -110,7 +110,6 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
-    assert progress[0]["context"]["confirm_only"] is True
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
 

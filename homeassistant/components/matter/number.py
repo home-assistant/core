@@ -844,4 +844,22 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.WindowCovering.Attributes.WagoSlatRotationTime,),
         vendor_id=(5428,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="AqaraLedStripMusicSyncSensitivity",
+            translation_key="music_sync_sensitivity",
+            native_min_value=1,
+            native_max_value=100,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            native_step=1,
+            mode=NumberMode.SLIDER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncSensitivity,
+        ),
+        vendor_id=(4447,),
+    ),
 ]
