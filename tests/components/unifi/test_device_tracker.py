@@ -950,6 +950,18 @@ async def test_pruning_unlisted_devices(
             ],
             id="stale",
         ),
+        # Recent record from just before the network device was adopted
+        pytest.param(
+            [
+                {
+                    "hostname": "recent",
+                    "is_wired": True,
+                    "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                    "mac": SWITCH_1["mac"],
+                }
+            ],
+            id="recent",
+        ),
         # A DHCP reservation for the network device has no last_seen
         pytest.param(
             [
