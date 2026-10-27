@@ -29,10 +29,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
     NumberSelector,
-    NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
-    SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
 )
@@ -41,11 +39,12 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_MAX_TOKENS,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -61,14 +60,20 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
-    THINKING_EFFORT_NONE_SUPPORTED_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
 from .coordinator import async_create_client, model_alias
+from .model_options import (
+    get_supported_efforts,
+    get_supported_thinking_types,
+    get_unsupported_tool_options,
+    is_effort_compatible_with_thinking,
+    reconcile_model_options,
+)
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +107,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
     VERSION = 2
-    MINOR_VERSION = 4
+    MINOR_VERSION = 5
 
     @override
     async def async_step_user(
@@ -169,6 +174,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         elif self.source == SOURCE_RECONFIGURE:
             step_id = "reconfigure"
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=STEP_USER_DATA_SCHEMA,
@@ -246,10 +252,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         hass_apis: list[SelectOptionDict] = [
-            SelectOptionDict(
-                label=api.name,
-                value=api.id,
-            )
+            {"label": api.name, "value": api.id}
             for api in llm.async_get_apis(self.hass)
         ]
         if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
@@ -276,9 +279,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Optional(CONF_PROMPT): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                    ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
-                    ),
+                    ): SelectSelector({"options": hass_apis, "multiple": True}),
                 }
             )
 
@@ -326,6 +327,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage additional options."""
+        coordinator = self._get_entry().runtime_data
+        if user_input is None:
+            await coordinator.async_refresh()
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -334,24 +339,23 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
-                SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
+                {"options": self._get_model_list(), "custom_value": True}
             ),
             probatio.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],
             ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[x.value for x in PromptCaching],
-                    translation_key=CONF_PROMPT_CACHING,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+                {
+                    "options": [x.value for x in PromptCaching],
+                    "translation_key": CONF_PROMPT_CACHING,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
             ),
         }
 
         if user_input is not None:
             self.options.update(user_input)
 
-            coordinator = self._get_entry().runtime_data
             self.model_info, status = coordinator.get_model_info(
                 self.options[CONF_CHAT_MODEL]
             )
@@ -370,7 +374,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         err.message if isinstance(err, anthropic.APIError) else str(err)
                     )
 
+            if not errors and self.model_info.lifecycle == "retired":
+                errors[CONF_CHAT_MODEL] = "model_retired"
+
             if not errors:
+                reconcile_model_options(self.options, self.model_info)
                 return await self.async_step_model()
 
         return self.async_show_form(
@@ -387,99 +395,101 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage model-specific options."""
         errors: dict[str, str] = {}
+        if user_input is not None:
+            self.options.update(user_input)
 
         step_schema: VolDictType = {
             probatio.Optional(
                 CONF_MAX_TOKENS,
-                default=DEFAULT[CONF_MAX_TOKENS],
+                default=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             ): probatio.All(
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
-                ),
+                NumberSelector({"min": 0, "max": self.model_info.max_tokens}),
                 probatio.Coerce(int),
             )
             if self.model_info.max_tokens
             else cv.positive_int,
         }
 
-        if (
-            self.model_info.capabilities
-            and self.model_info.capabilities.thinking.supported
-            and not self.model_info.capabilities.thinking.types.adaptive.supported
-        ):
+        thinking_types = get_supported_thinking_types(self.model_info.capabilities)
+        if len(thinking_types) > 1:
             step_schema[
                 probatio.Optional(
-                    CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
+                    CONF_THINKING_TYPE, default=self.options[CONF_THINKING_TYPE]
+                )
+            ] = SelectSelector(
+                {
+                    "options": thinking_types,
+                    "translation_key": CONF_THINKING_TYPE,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
+            )
+
+        if "enabled" in thinking_types:
+            step_schema[
+                probatio.Optional(
+                    CONF_THINKING_BUDGET, default=self.options[CONF_THINKING_BUDGET]
                 )
             ] = (
                 probatio.All(
                     NumberSelector(
-                        NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                        {
+                            "min": MIN_THINKING_BUDGET,
+                            "max": self.model_info.max_tokens,
+                        }
                     ),
                     probatio.Coerce(int),
                 )
                 if self.model_info.max_tokens
-                else cv.positive_int
+                else probatio.All(
+                    cv.positive_int, probatio.Range(min=MIN_THINKING_BUDGET)
+                )
             )
-        else:
-            self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if (
-            self.model_info.capabilities
-            and (effort_capability := self.model_info.capabilities.effort).supported
-        ):
-            effort_options: list[str] = []
-            if self.model_info.capabilities.thinking.types.adaptive.supported:
-                if (
-                    model_alias(self.model_info.id)
-                    in THINKING_EFFORT_NONE_SUPPORTED_MODELS
-                ):
-                    effort_options.append("none")
-                elif self.options.get(CONF_THINKING_EFFORT) == "none":
-                    self.options.pop(CONF_THINKING_EFFORT)
-            if effort_capability.low.supported:
-                effort_options.append("low")
-            if effort_capability.medium.supported:
-                effort_options.append("medium")
-            if effort_capability.high.supported:
-                effort_options.append("high")
-            if effort_capability.xhigh and effort_capability.xhigh.supported:
-                effort_options.append("xhigh")
-            if effort_capability.max.supported:
-                effort_options.append("max")
+        if effort_options := get_supported_efforts(self.model_info.capabilities):
             step_schema[
                 probatio.Optional(
-                    CONF_THINKING_EFFORT,
-                    default=DEFAULT[CONF_THINKING_EFFORT],
+                    CONF_EFFORT,
+                    default=self.options[CONF_EFFORT],
                 )
             ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=effort_options,
-                    translation_key=CONF_THINKING_EFFORT,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+                {
+                    "options": effort_options,
+                    "translation_key": CONF_EFFORT,
+                    "mode": SelectSelectorMode.DROPDOWN,
+                }
             )
-        else:
-            self.options.pop(CONF_THINKING_EFFORT, None)
+
+        unsupported_tool_options = get_unsupported_tool_options(
+            self.model_info.capabilities
+        )
+
+        if CONF_CODE_EXECUTION not in unsupported_tool_options:
+            step_schema[
+                probatio.Optional(
+                    CONF_CODE_EXECUTION, default=DEFAULT[CONF_CODE_EXECUTION]
+                )
+            ] = bool
+
+        if CONF_WEB_SEARCH not in unsupported_tool_options:
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): cv.positive_int,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
 
         step_schema.update(
             {
-                probatio.Optional(
-                    CONF_CODE_EXECUTION,
-                    default=DEFAULT[CONF_CODE_EXECUTION],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH,
-                    default=DEFAULT[CONF_WEB_SEARCH],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_MAX_USES,
-                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): cv.positive_int,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                ): bool,
                 probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
@@ -496,17 +506,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
-        model = self.options[CONF_CHAT_MODEL]
-
-        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+        if not self.model_info.id.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
                 probatio.Optional(
                     CONF_TOOL_SEARCH,
                     default=DEFAULT[CONF_TOOL_SEARCH],
                 )
             ] = bool
-        else:
-            self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
             # Currently our schema is always present, but if one day it becomes empty,
@@ -514,22 +520,23 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             user_input = {}  # pragma: no cover
 
         if user_input is not None:
-            if (
-                CONF_THINKING_BUDGET in user_input
-                and user_input[CONF_THINKING_BUDGET] >= MIN_THINKING_BUDGET
-                and user_input[CONF_THINKING_BUDGET]
-                >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
-            ):
+            if self.options.get(CONF_THINKING_TYPE) == "enabled" and self.options[
+                CONF_THINKING_BUDGET
+            ] >= self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]):
                 errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
+            if CONF_EFFORT in self.options and not is_effort_compatible_with_thinking(
+                self.model_info,
+                self.options.get(CONF_THINKING_TYPE),
+                self.options[CONF_EFFORT],
+            ):
+                errors[CONF_EFFORT] = "effort_requires_thinking"
 
             if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
                 if user_input.get(
                     CONF_WEB_SEARCH_USER_LOCATION,
                     DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                 ):
-                    user_input.update(await self._get_location_data())
-
-            self.options.update(user_input)
+                    self.options.update(await self._get_location_data())
 
             if not errors:
                 if self._is_new:
@@ -557,11 +564,20 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         """Get list of available models."""
         coordinator = self._get_entry().runtime_data
         return [
-            SelectOptionDict(
-                label=model_info.display_name,
-                value=model_alias(model_info.id),
-            )
+            {
+                "label": model_info.display_name,
+                "value": model_alias(model_info.id),
+            }
             for model_info in coordinator.data or []
+            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
+            != "retired"
+            and (
+                self._subentry_type != "ai_task_data"
+                or (
+                    model_info.capabilities
+                    and model_info.capabilities.structured_outputs.supported
+                )
+            )
         ]
 
     async def _get_location_data(self) -> dict[str, str]:

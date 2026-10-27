@@ -48,8 +48,6 @@ BINARY_SENSOR_TYPES: Final[tuple[ComelitBinarySensorEntityDescription, ...]] = (
     ),
     ComelitBinarySensorEntityDescription(
         key="presence",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="motion",
         object_type=ALARM_ZONE,
         device_class=BinarySensorDeviceClass.MOTION,
         is_on_fn=lambda obj: cast(ComelitVedoZoneObject, obj).status_api == "0001",

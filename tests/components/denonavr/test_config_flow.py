@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from denonavr.exceptions import AvrNetworkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.denonavr.config_flow import (
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
@@ -83,7 +82,7 @@ def denonavr_connect_fixture():
         ),
         patch(
             "homeassistant.components.denonavr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -224,6 +223,17 @@ async def test_config_flow_manual_discover_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
+
+    with patch(
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
+        return_value=TEST_DISCOVER_1_RECEIVER,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:

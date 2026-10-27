@@ -1,6 +1,10 @@
 {
   "domain": "vizio",
   "name": "VIZIO SmartCast",
+  "categories": [
+    "media_entertainment.tv_streaming",
+    "media_entertainment.speakers_audio"
+  ],
   "codeowners": ["@raman325"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vizio",

@@ -3,6 +3,8 @@
 from typing import cast
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
     CONFIG_VERSION,
@@ -21,8 +23,6 @@ from .conftest import (
     MOCK_DEVICE_USN,
     MOCK_SOURCE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(

@@ -8,6 +8,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -372,10 +373,15 @@ class MinMaxSensor(SensorEntity):
                 device_classes.append(None)
 
         # Only inherit device_class if all entities have the same non-None device_class
-        if device_classes and all(
-            dc is not None and dc == device_classes[0] for dc in device_classes
+        # and it allows the measurement state class, e.g. not energy
+        first = device_classes[0] if device_classes else None
+        if (
+            first is not None
+            and all(dc == first for dc in device_classes)
+            and SensorStateClass.MEASUREMENT
+            in DEVICE_CLASS_STATE_CLASSES.get(first, {SensorStateClass.MEASUREMENT})
         ):
-            self._attr_device_class = device_classes[0]
+            self._attr_device_class = first
 
     @callback
     def _calc_values(self) -> None:

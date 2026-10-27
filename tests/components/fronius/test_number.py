@@ -6,6 +6,8 @@ from fronius_modbus.testing import build_sunspec_map
 from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -18,9 +20,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_responses, setup_fronius_integration
 from .test_modbus import GEN24_HYBRID_MODULES, assert_state
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 POWER_LIMIT = "number.gen24_storage_ac_power_limit"
 CHARGE_LIMIT = "number.gen24_storage_battery_charge_power_limit"
@@ -171,25 +170,9 @@ async def test_battery_rates_are_signed(
     assert getattr(storage, field) == -50.0
 
 
-@pytest.mark.parametrize(
-    ("charge_limit", "refused"),
-    [(100, False), (40, True), (0, True)],
-)
-async def test_forcing_within_the_other_limit(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_fronius_modbus: MockModbusConnection,
-    charge_limit: float,
-    refused: bool,
-) -> None:
-    """Test a forcing rate beyond the other active limit is refused up front.
-
-    With both limits on, the device refuses a charge limit below the negated
-    discharge limit - with a bare Modbus error, so it is caught before.
-    """
-    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+async def _limit_both_ways(config_entry: MockConfigEntry, charge_limit: float) -> None:
+    """Enable both battery limits, the charge limit at the given rate."""
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
-    storage = coordinator.modbus_inverter.storage
     for field, value in (
         ("charge_limit", charge_limit),
         ("charge_limit_enabled", True),
@@ -197,24 +180,61 @@ async def test_forcing_within_the_other_limit(
     ):
         await coordinator.async_write(lambda inverter: inverter.storage, field, value)
 
-    call = hass.services.async_call(
+
+async def test_forcing_within_the_other_limit(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test forcing up to the other active limit is written."""
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    storage = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.storage
+    await _limit_both_ways(config_entry, 100)
+
+    await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
         blocking=True,
     )
-    if refused:
-        with pytest.raises(ServiceValidationError) as err:
-            await call
-        assert err.value.translation_key == "battery_limits_conflict"
-        assert err.value.translation_placeholders == {
-            "charge_limit": f"{charge_limit:g}",
-            "discharge_limit": "-100",
-        }
-        assert storage.discharge_limit == 0.0
-    else:
-        await call
-        assert storage.discharge_limit == -100.0
+
+    assert storage.discharge_limit == -100.0
+
+
+@pytest.mark.parametrize("charge_limit", [40, 0])
+async def test_forcing_beyond_the_other_limit_is_refused(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    charge_limit: float,
+) -> None:
+    """Test a forcing rate beyond the other active limit is refused up front.
+
+    With both limits on, the device refuses a charge limit below the negated
+    discharge limit - with a bare Modbus error, so it is caught before.
+    """
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    storage = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.storage
+    await _limit_both_ways(config_entry, charge_limit)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "battery_limits_conflict"
+    assert err.value.translation_placeholders == {
+        "charge_limit": f"{charge_limit:g}",
+        "discharge_limit": "-100",
+    }
+    assert storage.discharge_limit == 0.0
 
 
 async def test_a_refused_write_raises(

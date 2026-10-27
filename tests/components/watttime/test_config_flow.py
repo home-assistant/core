@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.watttime.config_flow import (
@@ -26,15 +27,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     ("exc", "error"),
     [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")],
 )
+@pytest.mark.usefixtures("setup_watttime")
 async def test_auth_errors(
-    hass: HomeAssistant, config_auth: dict[str, Any], exc: type[Exception], error: str
+    hass: HomeAssistant,
+    config_auth: dict[str, Any],
+    config_coordinates: dict[str, Any],
+    config_location_type: dict[str, Any],
+    exc: type[Exception],
+    error: str,
 ) -> None:
     """Test that issues with auth show the correct error."""
     result = await hass.config_entries.flow.async_init(
@@ -53,6 +58,19 @@ async def test_auth_errors(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_auth
+    )
+    assert result["step_id"] == "location"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_location_type
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_coordinates
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -74,6 +92,8 @@ async def test_coordinate_errors(
     config_auth: dict[str, Any],
     config_coordinates: dict[str, Any],
     config_location_type: dict[str, Any],
+    data_grid_region: dict[str, Any],
+    get_grid_region: AsyncMock,
     errors: dict[str, str],
 ) -> None:
     """Test that issues with coordinates show the correct error."""
@@ -103,6 +123,14 @@ async def test_coordinate_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
+
+    get_grid_region.side_effect = None
+    get_grid_region.return_value = data_grid_region
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config_coordinates
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -139,7 +167,7 @@ async def test_duplicate_error(
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     with patch(
-        "homeassistant.components.watttime.async_setup_entry", return_value=True
+        "homeassistant.components.watttime.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -203,7 +231,7 @@ async def test_step_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -
     result = await config_entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

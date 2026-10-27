@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 from lunatone_rest_api_client.models import InfoData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -24,8 +25,6 @@ from . import (
     build_info_data,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(BASE_IP),
@@ -78,6 +77,7 @@ async def test_full_flow(
     assert result["result"].unique_id == expected_unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
@@ -97,6 +97,14 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "missing_device_info"}
+
+    mock_lunatone_info.data = build_info_data()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: BASE_URL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_already_configured(

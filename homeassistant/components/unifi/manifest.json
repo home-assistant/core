@@ -1,6 +1,10 @@
 {
   "domain": "unifi",
   "name": "UniFi Network",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@Kane610"],
   "config_flow": true,
   "dependencies": ["unifi_discovery"],

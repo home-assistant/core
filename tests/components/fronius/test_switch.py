@@ -6,6 +6,8 @@ from fronius_modbus.testing import build_sunspec_map
 from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -21,9 +23,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_responses, setup_fronius_integration
 from .test_modbus import GEN24_HYBRID_MODULES, assert_state
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 POWER_LIMITING = "switch.gen24_storage_ac_power_limiting"
 CHARGE_LIMITING = "switch.gen24_storage_battery_charge_power_limiting"
@@ -158,6 +157,37 @@ async def test_enabling_a_limit_into_an_empty_window_is_refused(
         )
 
     assert storage.discharge_limit_enabled is False
+
+
+async def test_other_settings_stay_writable_with_refused_limits(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test the limit guard doesn't block settings that don't touch the limits.
+
+    Another controller may leave limits the device would refuse; grid
+    charging has to stay switchable regardless.
+    """
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    storage = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.storage
+    # written past the guard, as another controller would
+    for field, value in (
+        ("charge_limit", -50),
+        ("discharge_limit", -50),
+        ("charge_limit_enabled", True),
+        ("discharge_limit_enabled", True),
+    ):
+        await storage.write(field, value)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: GRID_CHARGING}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert_state(hass, GRID_CHARGING, STATE_ON)
 
 
 async def test_a_refused_write_raises(

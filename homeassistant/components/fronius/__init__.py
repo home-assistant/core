@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Final
-from urllib.parse import urlsplit
 
 from fronius_modbus import (
     GEN24_UNIT_ID,
@@ -12,12 +11,12 @@ from fronius_modbus import (
     SunSpecError,
     datamanager_unit_id,
 )
+from fronius_solarapi import FroniusError, FroniusSolarApi
 from modbus_connection import ModbusError, ModbusTcpParams
-from pyfronius import Fronius, FroniusError
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -36,6 +35,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
     discovery_signal,
+    host_from_config,
 )
 from .coordinator import (
     FroniusCoordinatorBase,
@@ -90,11 +90,11 @@ def _async_fix_modbus_sensor_unique_ids(
         registry.async_update_entity(entity.entity_id, new_unique_id=unique_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Set up fronius from a config entry."""
     _async_fix_modbus_sensor_unique_ids(hass, entry)
     host = entry.data[CONF_HOST]
-    fronius = Fronius(
+    fronius = FroniusSolarApi(
         async_get_clientsession(
             hass,
             # Fronius Gen24 firmware 1.35.4-1 redirects to HTTPS with self-signed
@@ -108,10 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> b
 
     entry.runtime_data = solar_net
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.minor_version < 2:
         # add the Modbus port setting
@@ -121,12 +120,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FroniusConfigEntry) ->
         # add the Modbus setpoint fallback setting
         data = {CONF_AUTO_REVERT_POWER_LIMIT: False, **entry.data}
         hass.config_entries.async_update_entry(entry, data=data, minor_version=3)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -142,7 +140,7 @@ class FroniusSolarNet:
     """The FroniusSolarNet class routes received values to sensor entities."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fronius: Fronius
+        self, hass: HomeAssistant, entry: ConfigEntry, fronius: FroniusSolarApi
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
@@ -248,18 +246,14 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            # API v0 doesn't provide product_type
-            solar_net_device[ATTR_MODEL] = _logger_info.get("product_type", {}).get(
-                "value", "Datalogger Web"
-            )
-            solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
-                "value"
-            ]
+            # API v0 doesn't provide a product id
+            solar_net_device.model = _logger_info.product_id or "Datalogger Web"
+            solar_net_device.sw_version = _logger_info.software_version
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self.config_entry.entry_id,
-            **solar_net_device,
+            device_info=solar_net_device,
         )
         return solar_net_device
 
@@ -317,7 +311,7 @@ class FroniusSolarNet:
         inverter_infos: list[FroniusDeviceInfo] = []
 
         try:
-            _inverter_info = await self.fronius.inverter_info()
+            response = await self.fronius.inverter_info()
         except FroniusError as err:
             if self.config_entry.state is ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
@@ -333,16 +327,14 @@ class FroniusSolarNet:
                 },
             ) from err
 
-        for inverter in _inverter_info["inverters"]:
-            solar_net_id = inverter["device_id"]["value"]
-            unique_id = inverter["unique_id"]["value"]
+        for solar_net_id, inverter in response.data.items():
+            unique_id = inverter.unique_id
+            model = inverter.model
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
-                manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
-                model=inverter["device_type"].get(
-                    "model", inverter["device_type"]["value"]
-                ),
-                name=inverter.get("custom_name", {}).get("value"),
+                manufacturer=model.manufacturer if model else "Fronius",
+                model=model.model if model else str(inverter.device_type),
+                name=inverter.custom_name,
                 via_device_id=dr.async_get_device_id_by_identifier(
                     self.hass,
                     (DOMAIN, self.solar_net_device_id),
@@ -366,9 +358,7 @@ class FroniusSolarNet:
 
     def _modbus_params(self) -> ModbusTcpParams | None:
         """Return the Modbus link settings, or None for an unusable host."""
-        # the configured host may be a bare host name or a full URL
-        url = self.host if "://" in self.host else f"//{self.host}"
-        if (modbus_host := urlsplit(url).hostname) is None:
+        if (modbus_host := host_from_config(self.host)) is None:
             return None
         return ModbusTcpParams(
             host=modbus_host, port=self.config_entry.data[CONF_MODBUS_PORT]

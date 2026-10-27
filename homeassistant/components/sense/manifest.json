@@ -1,6 +1,7 @@
 {
   "domain": "sense",
   "name": "Sense",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@kbickar"],
   "config_flow": true,
   "dhcp": [

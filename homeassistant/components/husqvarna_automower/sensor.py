@@ -35,9 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AutomowerConfigEntry
 from .const import ERROR_KEYS, ERROR_STATES
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
     WorkAreaAvailableEntity,

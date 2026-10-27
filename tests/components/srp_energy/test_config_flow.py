@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
@@ -29,8 +30,6 @@ from . import (
     TEST_CONFIG_HOME,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("mock_srp_energy_config_flow")
 async def test_show_form(
@@ -47,7 +46,7 @@ async def test_show_form(
 
     with patch(
         "homeassistant.components.srp_energy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
@@ -70,8 +69,8 @@ async def test_show_form(
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("recorder_mock", "mock_setup_entry")
 async def test_form_invalid_account(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,
 ) -> None:
@@ -89,9 +88,16 @@ async def test_form_invalid_account(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_account"}
 
+    mock_srp_energy_config_flow.validate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
+    )
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("recorder_mock", "mock_setup_entry")
 async def test_form_invalid_auth(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,
 ) -> None:
@@ -108,6 +114,13 @@ async def test_form_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_srp_energy_config_flow.validate.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(

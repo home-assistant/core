@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mitsubishi_comfort.const import (
@@ -21,8 +22,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -30,11 +29,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
         patch(
             "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock
@@ -203,6 +202,7 @@ async def test_user_step_retry_replays_partial_credentials(
 async def test_user_step_empty_account_response_keeps_cached_credentials(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
 ) -> None:
     """Test a transient empty device list does not wipe recovered fields.
 
@@ -228,10 +228,12 @@ async def test_user_step_empty_account_response_keeps_cached_credentials(
     )
     assert result["errors"] == {"base": "no_devices"}
 
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_cloud_account.discover_devices.call_args.kwargs[
         "cached_credentials"
     ] == {
@@ -246,6 +248,7 @@ async def test_user_step_empty_account_response_keeps_cached_credentials(
 async def test_user_step_username_change_drops_cached_credentials(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
 ) -> None:
     """Test fields recovered for one account are not replayed for another."""
     mock_cloud_account.discover_devices.return_value = {
@@ -269,6 +272,13 @@ async def test_user_step_username_change_drops_cached_credentials(
     assert (
         mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
     )
+
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -321,6 +331,7 @@ async def test_user_step_username_change_drops_cached_credentials(
 async def test_user_step_errors(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
     side_effect: Exception | None,
     discover_return: dict | None,
     expected_error: str,
@@ -340,6 +351,14 @@ async def test_user_step_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    mock_cloud_account.login.side_effect = None
+    mock_cloud_account.discover_devices.return_value = {MOCK_SERIAL: mock_device_info}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_already_configured(

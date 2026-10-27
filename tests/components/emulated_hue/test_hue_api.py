@@ -10,7 +10,14 @@ from unittest.mock import _patch, patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_mock_service,
+    get_test_instance_port,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import const, setup
 from homeassistant.components import (
@@ -35,6 +42,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_TRANSITION,
     HUE_API_STATE_XY,
     HUE_API_USERNAME,
+    STATE_CACHED_TIMEOUT,
     HueAllGroupsStateView,
     HueAllLightsStateView,
     HueConfigView,
@@ -58,13 +66,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import (
-    async_fire_time_changed,
-    async_mock_service,
-    get_test_instance_port,
-)
-from tests.typing import ClientSessionGenerator
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -1092,7 +1093,7 @@ async def test_set_position_cover(
 
 
 async def test_put_light_state_fan(
-    hass_hue: HomeAssistant, hue_client: TestClient
+    hass_hue: HomeAssistant, hue_client: TestClient, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test turning on fan and setting speed."""
     # Turn the fan off first
@@ -1137,13 +1138,12 @@ async def test_put_light_state_fan(
     assert (
         hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 33
     )
-    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
-        fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTPStatus.OK
-        )
-        assert fan_json["state"][HUE_API_STATE_ON] is True
-        assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 33
+    freezer.tick(timedelta(seconds=STATE_CACHED_TIMEOUT))
+    fan_json = await perform_get_light_state(
+        hue_client, "fan.living_room_fan", HTTPStatus.OK
+    )
+    assert fan_json["state"][HUE_API_STATE_ON] is True
+    assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 33
 
     await perform_put_light_state(
         hass_hue,
@@ -1155,15 +1155,14 @@ async def test_put_light_state_fan(
     assert (
         hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 66
     )
-    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
-        fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTPStatus.OK
-        )
-        assert fan_json["state"][HUE_API_STATE_ON] is True
-        assert (
-            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 66
-        )  # small rounding error in inverse operation
+    freezer.tick(timedelta(seconds=STATE_CACHED_TIMEOUT))
+    fan_json = await perform_get_light_state(
+        hue_client, "fan.living_room_fan", HTTPStatus.OK
+    )
+    assert fan_json["state"][HUE_API_STATE_ON] is True
+    assert (
+        round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 66
+    )  # small rounding error in inverse operation
 
     await perform_put_light_state(
         hass_hue,
@@ -1176,13 +1175,12 @@ async def test_put_light_state_fan(
         hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE]
         == 100
     )
-    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
-        fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTPStatus.OK
-        )
-        assert fan_json["state"][HUE_API_STATE_ON] is True
-        assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
+    freezer.tick(timedelta(seconds=STATE_CACHED_TIMEOUT))
+    fan_json = await perform_get_light_state(
+        hue_client, "fan.living_room_fan", HTTPStatus.OK
+    )
+    assert fan_json["state"][HUE_API_STATE_ON] is True
+    assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
 
     await perform_put_light_state(
         hass_hue,
@@ -1194,13 +1192,12 @@ async def test_put_light_state_fan(
     assert (
         hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 0
     )
-    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
-        fan_json = await perform_get_light_state(
-            hue_client, "fan.living_room_fan", HTTPStatus.OK
-        )
-        assert fan_json["state"][HUE_API_STATE_ON] is False
-        assert fan_json["state"][HUE_API_STATE_BRI] == 1
+    freezer.tick(timedelta(seconds=STATE_CACHED_TIMEOUT))
+    fan_json = await perform_get_light_state(
+        hue_client, "fan.living_room_fan", HTTPStatus.OK
+    )
+    assert fan_json["state"][HUE_API_STATE_ON] is False
+    assert fan_json["state"][HUE_API_STATE_BRI] == 1
 
 
 async def test_put_with_form_urlencoded_content_type(
@@ -1452,7 +1449,10 @@ async def test_unauthorized_user_blocked(hue_client: TestClient) -> None:
 
 
 async def test_put_then_get_cached_properly(
-    hass: HomeAssistant, hass_hue: HomeAssistant, hue_client: TestClient
+    hass: HomeAssistant,
+    hass_hue: HomeAssistant,
+    hue_client: TestClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting light states and immediate readback reads the same."""
 
@@ -1573,19 +1573,18 @@ async def test_put_then_get_cached_properly(
     assert ceiling_json["state"][HUE_API_STATE_SAT] == 127
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 254
 
-    with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
-        await asyncio.sleep(0.000001)
+    freezer.tick(timedelta(seconds=STATE_CACHED_TIMEOUT))
 
-        # go through api to get the state back, the value returned
-        # should now match the actual values.
-        ceiling_json = await perform_get_light_state(
-            hue_client, "light.ceiling_lights", HTTPStatus.OK
-        )
+    # go through api to get the state back, the value returned
+    # should now match the actual values.
+    ceiling_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
+    )
 
-        # Once we're after the cached duration, we should see the real value.
-        assert ceiling_json["state"][HUE_API_STATE_HUE] == 41869
-        assert ceiling_json["state"][HUE_API_STATE_SAT] == 217
-        assert ceiling_json["state"][HUE_API_STATE_BRI] == 127
+    # Once we're after the cached duration, we should see the real value.
+    assert ceiling_json["state"][HUE_API_STATE_HUE] == 41869
+    assert ceiling_json["state"][HUE_API_STATE_SAT] == 217
+    assert ceiling_json["state"][HUE_API_STATE_BRI] == 127
 
 
 async def test_put_than_get_when_service_call_fails(

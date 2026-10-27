@@ -8,13 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from govee_local_api import GoveeDevice, GoveeLightCapabilities, GoveeLightFeatures
 from govee_local_api.light_capabilities import COMMON_FEATURES, SCENE_CODES
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.components.govee_light_local.coordinator import GoveeController
 from homeassistant.components.network import Adapter
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 NETWORK_ADAPTERS: list[Adapter] = [
     {
@@ -111,7 +110,7 @@ def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.govee_light_local.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

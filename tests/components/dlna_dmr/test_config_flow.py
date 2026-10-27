@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dlna_dmr.const import (
@@ -39,8 +40,6 @@ from .conftest import (
     MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 # Auto-use the domain_data_mock and dmr_device_mock fixtures for every test
 pytestmark = [
@@ -108,7 +107,7 @@ def mock_get_mac_address() -> Generator[Mock]:
 def mock_setup_entry() -> Generator[Mock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 
@@ -232,6 +231,13 @@ async def test_user_flow_uncontactable(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
 
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_embedded_st(
     hass: HomeAssistant, domain_data_mock: Mock
@@ -295,6 +301,13 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
+
+    upnp_device.device_type = MOCK_DEVICE_TYPE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:

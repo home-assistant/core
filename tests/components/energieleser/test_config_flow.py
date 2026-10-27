@@ -10,6 +10,7 @@ from energieleser import (
     GasleserDevice,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import GASLESER_DEVICE_ID, STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
-
-from tests.common import MockConfigEntry
 
 
 def _stromleser_zeroconf(ip: str = "192.168.1.100") -> ZeroconfServiceInfo:
@@ -122,6 +121,14 @@ async def test_user_flow_client_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    mock_energieleser_client.get_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.100"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_energieleser_client")

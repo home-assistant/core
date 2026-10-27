@@ -29,9 +29,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._attr_unique_id = (
             f"{system.uuid}_{key}" if key is not None else system.uuid
         )
-        self._configuration_url = (
-            f"http://{self._hostname}:{api_port}/app/settings.html"
-        )
+        self._configuration_url = f"http://{self._hostname}:{api_port}/settings"
         self._mac_address = system.mac_address
         self._uuid = system.uuid
         self._version = system.version

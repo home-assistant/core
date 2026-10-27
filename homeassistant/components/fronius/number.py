@@ -1,5 +1,6 @@
 """Number entities for the Fronius Modbus setpoints."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
@@ -10,7 +11,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import discovery_signal
-from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
+from .entity import (
+    FroniusEntity,
+    FroniusEntityDescription,
+    ModbusComponentFn,
+    ModbusValues,
+)
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -24,16 +30,25 @@ PARALLEL_UPDATES: Final = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class FroniusNumberEntityDescription(FroniusEntityDescription, NumberEntityDescription):
+class FroniusNumberEntityDescription(
+    FroniusEntityDescription[ModbusValues], NumberEntityDescription
+):
     """Describes a Fronius Modbus number entity.
 
     ``field`` is the writable field of the model the setpoint lives in, and
     ``enable_field`` the one that puts it into effect, where there is one.
     """
 
+    value_fn: Callable[[ModbusValues], float | None]
     component_fn: ModbusComponentFn
     field: str
     enable_field: str | None = None
+
+
+def _modbus_value(key: str) -> Callable[[ModbusValues], float | None]:
+    """Return a function reading a setpoint of a Modbus coordinator."""
+
+    return lambda values: values.get(key)
 
 
 # The battery rates are signed: a negative one turns the direction around, so
@@ -42,6 +57,7 @@ class FroniusNumberEntityDescription(FroniusEntityDescription, NumberEntityDescr
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
         key="ac_power_limit",
+        value_fn=_modbus_value("ac_power_limit"),
         component_fn=lambda inverter: inverter.controls,
         field="power_limit",
         enable_field="enabled",
@@ -53,6 +69,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_charge_power_limit",
+        value_fn=_modbus_value("battery_charge_power_limit"),
         component_fn=lambda inverter: inverter.storage,
         field="charge_limit",
         enable_field="charge_limit_enabled",
@@ -64,6 +81,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_discharge_power_limit",
+        value_fn=_modbus_value("battery_discharge_power_limit"),
         component_fn=lambda inverter: inverter.storage,
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
@@ -75,6 +93,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     ),
     FroniusNumberEntityDescription(
         key="battery_minimum_reserve",
+        value_fn=_modbus_value("battery_minimum_reserve"),
         component_fn=lambda inverter: inverter.storage,
         field="minimum_reserve",
         native_unit_of_measurement=PERCENTAGE,
@@ -137,7 +156,7 @@ class ModbusSetpointNumber(FroniusEntity, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return the setpoint as the device reports it."""
-        return self._device_data()[self.response_key]["value"]  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device_data())
 
     @override
     async def async_set_native_value(self, value: float) -> None:

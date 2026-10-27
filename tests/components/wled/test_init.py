@@ -5,14 +5,13 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wled import WLEDConnectionClosedError, WLEDConnectionError
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
@@ -197,7 +196,6 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
 async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
     hass: HomeAssistant,
     config_entry_v1: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Abort migration when there is another non-ignored entry with the same MAC."""
     config_entry_v1.add_to_hass(hass)
@@ -220,7 +218,10 @@ async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 1
     assert config_entry_v1.unique_id == "AABBCCDDEEFF"
-    assert "multiple WLED config entries with the same MAC address" in caplog.text
+    assert config_entry_v1.reason == (
+        "Multiple WLED configuration entries exist for MAC address aabbccddeeff,"
+        " remove the duplicates to migrate"
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")

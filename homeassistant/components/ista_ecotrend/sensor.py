@@ -1,11 +1,12 @@
 """Sensor platform for Ista EcoTrend integration."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from enum import StrEnum
 import logging
 from typing import override
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
@@ -13,7 +14,6 @@ from homeassistant.components.recorder.models.statistics import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    get_instance,
     get_last_statistics,
 )
 from homeassistant.components.sensor import (
@@ -131,7 +131,6 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER,
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key=IstaSensorEntity.WATER,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -263,9 +262,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
         if last_stats:
             statistics_sum = last_stats[statistic_id][0].get("sum") or 0.0
-            statistics_since = datetime.datetime.fromtimestamp(
-                last_stats[statistic_id][0].get("end") or 0, tz=datetime.UTC
-            ) + datetime.timedelta(days=1)
+            statistics_since = dt.datetime.fromtimestamp(
+                last_stats[statistic_id][0].get("end") or 0, tz=dt.UTC
+            ) + dt.timedelta(days=1)
 
         if monthly_consumptions := get_statistics(
             self.coordinator.data[self.consumption_unit],

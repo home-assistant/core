@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
@@ -29,15 +31,12 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, pytest
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.telegram_bot.async_setup_entry", return_value=True
+        "homeassistant.components.telegram_bot.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -634,6 +633,7 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "chat_not_found"
 
     # test: chat id already configured

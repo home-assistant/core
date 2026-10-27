@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -23,10 +23,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 from .types import RainbirdConfigEntry
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+UPDATE_INTERVAL = dt.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
-CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
+CALENDAR_UPDATE_INTERVAL = dt.timedelta(minutes=15)
 CALENDAR_TIMEOUT_SECONDS = 30
 
 # The valves state are not immediately reflected after issuing a command. We add
@@ -116,7 +116,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         # The unique id is the formatted MAC for current config entries, but was
         # historically the serial number, so derive the connection from the MAC.
         if mac_address := self.config_entry.data.get(CONF_MAC):
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac_address)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, mac_address)}
         return device_info
 
     @override

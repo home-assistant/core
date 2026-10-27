@@ -216,7 +216,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     ),
     NRGkickSensorEntityDescription(
         key="network_rssi",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="network_rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,

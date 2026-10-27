@@ -52,7 +52,9 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return the switch is available or not."""
-        return self.coordinator.data.zones[self._zone_id].is_enabled
+        return (
+            super().available and self.coordinator.data.zones[self._zone_id].is_enabled
+        )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

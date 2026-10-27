@@ -1,6 +1,8 @@
 """Test the conversation session."""
 
+import asyncio
 from collections.abc import AsyncGenerator
+import contextvars
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -9,6 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import (
@@ -29,12 +32,10 @@ from homeassistant.components.conversation.chat_log import (
 )
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +50,7 @@ async def test_cleanup(
 ) -> None:
     """Test cleanup of the chat log."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         conversation_id = session.conversation_id
@@ -81,7 +82,7 @@ async def test_default_content(
 ) -> None:
     """Test filtering of messages."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log2,
     ):
@@ -99,7 +100,7 @@ async def test_llm_api(
 ) -> None:
     """Test when we reference an LLM API."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -112,6 +113,151 @@ async def test_llm_api(
     assert chat_log.llm_api.api.id == "assist"
 
 
+class CountingAPI(llm.API):
+    """Test API that counts the created instances."""
+
+    instances = 0
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        self.instances += 1
+        return llm.APIInstance(self, "Counting API Prompt", llm_context, [])
+
+
+@pytest.mark.parametrize(
+    (
+        "agent_id",
+        "user_id",
+        "device_id",
+        "llm_hass_api",
+        "extra_system_prompt",
+        "instances",
+    ),
+    [
+        pytest.param(
+            "mock-agent-id", None, None, ["counting"], None, 1, id="same_agent"
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be brief",
+            1,
+            id="same_extra_prompt",
+        ),
+        pytest.param(
+            "other-agent-id", None, None, ["counting"], None, 2, id="other_agent"
+        ),
+        pytest.param(
+            "mock-agent-id",
+            "other-user-id",
+            None,
+            ["counting"],
+            None,
+            2,
+            id="other_user",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            "other-device-id",
+            ["counting"],
+            None,
+            2,
+            id="other_device",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting", "assist"],
+            None,
+            2,
+            id="other_apis",
+        ),
+        pytest.param(
+            "mock-agent-id",
+            None,
+            None,
+            ["counting"],
+            "Be long",
+            2,
+            id="new_extra_prompt",
+        ),
+        pytest.param(None, None, None, ["counting"], None, 2, id="no_agent"),
+    ],
+)
+async def test_llm_api_reuse(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    agent_id: str | None,
+    user_id: str | None,
+    device_id: str | None,
+    llm_hass_api: list[str],
+    extra_system_prompt: str | None,
+    instances: int,
+) -> None:
+    """Test the LLM API instance is reused only for the same agent and user."""
+    api = CountingAPI(hass=hass, id="counting", name="Counting")
+    llm.async_register_api(hass, api)
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["counting"],
+                user_extra_system_prompt="Be brief",
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+            system_prompt = chat_log.content[0]
+
+        llm_context = mock_conversation_input.as_llm_context("test")
+        llm_context.agent_id = agent_id
+        llm_context.context = Context(user_id=user_id)
+        llm_context.device_id = device_id
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                llm_context,
+                user_llm_hass_api=llm_hass_api,
+                user_extra_system_prompt=extra_system_prompt,
+            )
+
+    assert api.instances == instances
+    # A reused instance keeps the system prompt as it was.
+    assert (chat_log.content[0] is system_prompt) == (instances == 1)
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context is llm_context
+
+
+async def test_llm_api_cleared(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test the LLM API instance is cleared when no LLM API is requested."""
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            assert chat_log.llm_api is not None
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("other")
+            )
+
+    assert chat_log.llm_api is None
+
+
 async def test_unknown_llm_api(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
@@ -119,7 +265,7 @@ async def test_unknown_llm_api(
 ) -> None:
     """Test when we reference an LLM API that does not exists."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         pytest.raises(ConverseError) as exc_info,
     ):
@@ -131,6 +277,112 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+
+
+async def test_new_chat_log_parallel_turns_cleanup(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test the cleanup after parallel first turns of a new conversation."""
+
+    async def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        # A new context runs the request like a separate task would.
+        await asyncio.create_task(run_turn(), context=contextvars.Context())
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hello")
+        )
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2,
+    )
+
+    assert "koala" not in hass.data[DATA_CHAT_LOGS]
+    assert "koala" not in hass.data[chat_session.DATA_CHAT_SESSION]
+
+
+class AdminAPI(llm.API):
+    """Test API that requires an admin user."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return the API instance."""
+        return llm.APIInstance(self, "Admin API Prompt", llm_context, [])
+
+
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param(None, id="no_user"),
+        pytest.param("unknown-user", id="unknown_user"),
+        pytest.param("non-admin-user", id="non_admin_user"),
+    ],
+)
+async def test_llm_api_object_requires_admin_unauthorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test an admin-only LLM API object is refused for a non-admin context."""
+    MockUser(id="non-admin-user").add_to_hass(hass)
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(Unauthorized),
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=user_id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api is None
+
+
+async def test_llm_api_object_requires_admin_authorized(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test an admin-only LLM API object is allowed for an admin user."""
+    api = AdminAPI(hass=hass, id="admin-api", name="Admin", requires_admin=True)
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            llm.LLMContext(
+                platform="test",
+                context=Context(user_id=hass_admin_user.id),
+                language="en",
+                assistant=None,
+                device_id=None,
+            ),
+            user_llm_hass_api=api,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api is api
 
 
 async def test_multiple_llm_apis(
@@ -162,7 +414,7 @@ async def test_multiple_llm_apis(
     llm.async_register_api(hass, api)
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -206,7 +458,7 @@ async def test_dynamic_time_injection(
 
     # Case 1: No API used -> prompt should contain the time
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         chat_log._async_expand_prompt_template = fake_expand_prompt_template
@@ -220,7 +472,7 @@ async def test_dynamic_time_injection(
 
     # Case 2: Single API (not assist) -> prompt should contain the time
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         chat_log._async_expand_prompt_template = fake_expand_prompt_template
@@ -234,7 +486,7 @@ async def test_dynamic_time_injection(
 
     # Case 3: Single API (assist) -> prompt should NOT contain the time
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         chat_log._async_expand_prompt_template = fake_expand_prompt_template
@@ -248,7 +500,7 @@ async def test_dynamic_time_injection(
 
     # Case 4: Merged API (without assist) -> prompt should contain the time
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         chat_log._async_expand_prompt_template = fake_expand_prompt_template
@@ -262,7 +514,7 @@ async def test_dynamic_time_injection(
 
     # Case 5: Merged API (with assist) -> prompt should NOT contain the time
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         chat_log._async_expand_prompt_template = fake_expand_prompt_template
@@ -282,7 +534,7 @@ async def test_template_error(
 ) -> None:
     """Test that template error handling works."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         pytest.raises(ConverseError) as exc_info,
     ):
@@ -306,7 +558,7 @@ async def test_template_variables(
     mock_conversation_input.context = Context(user_id=mock_user.id)
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
@@ -342,7 +594,7 @@ async def test_extra_systen_prompt(
     mock_conversation_input.extra_system_prompt = extra_system_prompt
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -366,7 +618,9 @@ async def test_extra_systen_prompt(
     mock_conversation_input.extra_system_prompt = None
 
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -383,7 +637,9 @@ async def test_extra_systen_prompt(
     mock_conversation_input.extra_system_prompt = extra_system_prompt2
 
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -407,7 +663,9 @@ async def test_extra_systen_prompt(
     mock_conversation_input.extra_system_prompt = None
 
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -451,7 +709,7 @@ async def test_tool_call(
             new_callable=AsyncMock,
             return_value=LLMTools(tools=[mock_tool]),
         ),
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -529,7 +787,7 @@ async def test_tool_call_exception(
             new_callable=AsyncMock,
             return_value=LLMTools(tools=[mock_tool]),
         ),
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
@@ -731,7 +989,7 @@ async def test_add_delta_content_stream(
             new_callable=AsyncMock,
             return_value=LLMTools(tools=[mock_tool]),
         ),
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(
             hass,
             session,
@@ -797,7 +1055,7 @@ async def test_add_delta_content_stream_empty_content(
             yield delta
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         results = [
@@ -825,7 +1083,7 @@ async def test_add_delta_content_stream_errors(
             yield d
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         # Stream content without LLM API set
@@ -881,7 +1139,7 @@ async def test_chat_log_reuse(
 ) -> None:
     """Test that we can reuse a chat log."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.conversation_id == session.conversation_id
@@ -904,7 +1162,7 @@ async def test_chat_log_continue_conversation(
 ) -> None:
     """Test continue conversation."""
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         assert chat_log.continue_conversation is False
@@ -982,7 +1240,7 @@ async def test_chat_log_subscription(
     unsubscribe = async_subscribe_chat_logs(hass, event_callback)
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         conversation_id = session.conversation_id
@@ -1121,7 +1379,7 @@ async def test_chat_log_subscription(
 
     # Create a new session and add content - should not receive events
     with (
-        chat_session.async_get_chat_session(hass) as session2,
+        chat_session.async_get_chat_session(hass, context=None) as session2,
         async_get_chat_log(hass, session2, mock_conversation_input) as chat_log2,
     ):
         chat_log2.async_add_assistant_content_without_tools(
@@ -1165,7 +1423,7 @@ async def test_add_delta_content_stream_deprecated_tool_result(
         }
 
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         pytest.raises(RuntimeError, match="tool result delta"),
     ):

@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "invalid_channel": {
+      "message": "Invalid channel: {channel}."
+    }
+  }
+}

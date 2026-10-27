@@ -1,6 +1,6 @@
 """InfluxDB component which allows you to get data from an Influx database."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Final, override
 
@@ -66,7 +66,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
+SCAN_INTERVAL: Final = dt.timedelta(seconds=60)
 
 
 def _merge_connection_config_into_query(conf, query):
