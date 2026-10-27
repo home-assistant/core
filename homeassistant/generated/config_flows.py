@@ -789,6 +789,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "soundtouch",
+        "spacexsi",
         "specialized_turbo",
         "speedtestdotnet",
         "spin_ble",

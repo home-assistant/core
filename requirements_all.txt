@@ -3224,6 +3224,9 @@ solyx-energy-api-client==0.2.0
 # homeassistant.components.sonos
 sonos-websocket==0.2.0
 
+# homeassistant.components.spacexsi
+spacexai-subscription-client==0.1.2
+
 # homeassistant.components.marytts
 speak2mary==1.4.0
 
