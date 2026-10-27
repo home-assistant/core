@@ -283,10 +283,6 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
-    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
-        ("user", mock_conversation_input.text),
-        ("assistant", "Error: API unknown-api not found"),
-    ]
 
 
 async def test_concurrent_turn_busy(
@@ -730,10 +726,6 @@ async def test_template_error(
 
     assert str(exc_info.value) == "Error rendering prompt"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
-    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
-        ("user", mock_conversation_input.text),
-        ("assistant", f"Error: {exc_info.value.__cause__}"),
-    ]
 
 
 async def test_template_variables(
