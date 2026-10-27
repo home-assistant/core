@@ -26,6 +26,9 @@
     },
     "zone_invalid": {
       "message": "Unknown zone \"{zone}\""
+    },
+    "zone_radius_invalid": {
+      "message": "Zone \"{zone}\" has a radius of {radius} meters, but Todoist location reminders need a radius between 1 and {max_radius} meters"
     }
   },
   "selector": {

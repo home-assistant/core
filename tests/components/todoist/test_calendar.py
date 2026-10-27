@@ -558,6 +558,32 @@ async def test_create_task_service_call_with_unknown_zone(
 
 
 @pytest.mark.parametrize(
+    "radius",
+    [pytest.param(0.5, id="too_small"), pytest.param(6000, id="too_large")],
+)
+async def test_create_task_service_call_with_zone_radius_out_of_range(
+    hass: HomeAssistant, api: AsyncMock, radius: float
+) -> None:
+    """Test a zone whose radius Todoist doesn't accept raises an error."""
+    hass.states.async_set(
+        ZONE_ENTITY_ID,
+        "zoning",
+        {"latitude": 37.7749, "longitude": -122.4194, "radius": radius},
+    )
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {CONTENT: "task", PROJECT_NAME: "Name", REMINDER_ZONE: ZONE_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "zone_radius_invalid"
+    api.add_task.assert_not_called()
+
+
+@pytest.mark.parametrize(
     "reminder_fields",
     [
         # Coordinate fields must all be supplied together.

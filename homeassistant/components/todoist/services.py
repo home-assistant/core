@@ -130,7 +130,19 @@ def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
         name = zone.name
         latitude = zone.attributes[ATTR_LATITUDE]
         longitude = zone.attributes[ATTR_LONGITUDE]
-        radius = zone.attributes[ATTR_RADIUS]
+        # Zones don't limit their radius, so apply the same bounds as coordinates.
+        zone_radius = zone.attributes[ATTR_RADIUS]
+        radius = int(zone_radius)
+        if not 1 <= radius <= MAX_REMINDER_RADIUS:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="zone_radius_invalid",
+                translation_placeholders={
+                    "zone": zone_entity_id,
+                    "radius": f"{zone_radius:g}",
+                    "max_radius": str(MAX_REMINDER_RADIUS),
+                },
+            )
     elif REMINDER_LOCATION_NAME in call.data:
         name = call.data[REMINDER_LOCATION_NAME]
         latitude = call.data[REMINDER_LATITUDE]
@@ -145,7 +157,7 @@ def _get_reminder_location(call: ServiceCall) -> dict[str, Any] | None:
         "loc_lat": str(latitude),
         "loc_long": str(longitude),
         "loc_trigger": call.data[REMINDER_LOCATION_DIRECTION],
-        "radius": int(radius),
+        "radius": radius,
     }
 
 
