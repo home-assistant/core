@@ -57,7 +57,7 @@ def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
     return outlet_numbers
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
     # strip out the stale options CONF_RESOURCES,
@@ -137,15 +137,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         coordinator, data, unique_id, user_available_commands
     )
 
-    connections: set[tuple[str, str]] | None = None
-    if data.device_info.mac_address is not None:
-        connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+    device_info = dr.DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
-        connections=connections,
         name=data.name.title(),
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
@@ -154,15 +147,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         serial_number=data.device_info.serial,
         suggested_area=data.device_info.device_location,
     )
+    if data.device_info.mac_address is not None:
+        device_info.connections = {
+            (CONNECTION_NETWORK_MAC, data.device_info.mac_address)
+        }
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

@@ -1,6 +1,6 @@
 """Support for manual alarms controllable via MQTT."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -61,9 +61,9 @@ CONF_ALARM_PENDING = "pending"
 CONF_ALARM_TRIGGERED = "triggered"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
-DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
+DEFAULT_DELAY_TIME = dt.timedelta(seconds=0)
+DEFAULT_PENDING_TIME = dt.timedelta(seconds=60)
+DEFAULT_TRIGGER_TIME = dt.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
@@ -435,7 +435,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
             self._async_schedule_update(self._state_ts + pending_time)
 
     @callback
-    def _async_schedule_update(self, point_in_time: datetime.datetime) -> None:
+    def _async_schedule_update(self, point_in_time: dt.datetime) -> None:
         """Schedule a state update at a point in time."""
         self._scheduled_update_unsubs.append(
             async_track_point_in_time(

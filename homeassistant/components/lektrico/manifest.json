@@ -1,6 +1,7 @@
 {
   "domain": "lektrico",
   "name": "Lektrico Charging Station",
+  "categories": ["energy.ev_charging", "energy.meters_monitoring"],
   "codeowners": ["@lektrico"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lektrico",

@@ -5,11 +5,10 @@ from uuid import uuid4
 
 import blinkpy
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 CAMERA_ATTRIBUTES = {
     "name": "Camera 1",
@@ -51,6 +50,20 @@ def camera() -> MagicMock:
     return mock_blink_camera
 
 
+@pytest.fixture
+def sync_module() -> MagicMock:
+    """Set up a Blink sync module fixture."""
+    mock_sync_module = create_autospec(
+        blinkpy.sync_module.BlinkSyncModule, instance=True
+    )
+    mock_sync_module.serial = "67890"
+    mock_sync_module.version = "4.5.41"
+    mock_sync_module.attributes = {}
+    mock_sync_module.cameras = {}
+    mock_sync_module.arm = False
+    return mock_sync_module
+
+
 @pytest.fixture(name="mock_blink_api")
 def blink_api_fixture(camera) -> MagicMock:
     """Set up Blink API fixture."""
@@ -85,9 +98,10 @@ def mock_config_fixture():
         data={
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "Password",
-            "hardware_id": "Home Assistant",
+            "hardware_id": "e1233333-0909-09cd-777a-123456789012",
             "uid": "BlinkCamera_e1233333e2-0909-09cd-777a-123456789012",
             "token": "A_token",
+            "refresh_token": "A_refresh_token",
             "unique_id": "an_email@email.com",
             "host": "u034.immedia-semi.com",
             "region_id": "u034",
@@ -95,5 +109,5 @@ def mock_config_fixture():
             "account_id": 654321,
         },
         entry_id=str(uuid4()),
-        version=4,
+        version=5,
     )

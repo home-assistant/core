@@ -43,8 +43,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_current_scanners,
     async_discovered_service_info,
     async_last_service_info,
+    async_register_advertisement_callback,
     async_request_active_scan,
     async_scanner_count,
 )
@@ -64,6 +68,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
 from .const import (
+    BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
     CONF_SITE_ID,
     CONF_VIN,
@@ -250,15 +255,25 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
             if CONF_VIN in subentry.data
         }
+        vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
         choices = {
             vehicle.vin: vehicle.device["name"] or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
             if vehicle.vin not in already_added
+            # Vehicles without the command protocol (pre-2021 Model S/X) report
+            # False and cannot be controlled over Bluetooth; None or a VIN not
+            # yet in the metadata means unknown.
+            and vehicle_metadata.get(vehicle.vin, {}).get("proxy") is not False
         }
         if not choices:
-            if entry.runtime_data.vehicles:
-                return self.async_abort(reason="all_vehicles_added")
-            return self.async_abort(reason="no_vehicles")
+            if not entry.runtime_data.vehicles:
+                return self.async_abort(reason="no_vehicles")
+            if any(
+                vehicle.vin not in already_added
+                for vehicle in entry.runtime_data.vehicles
+            ):
+                return self.async_abort(reason="no_supported_vehicles")
+            return self.async_abort(reason="all_vehicles_added")
 
         if user_input is not None:
             self._vin = user_input[CONF_VIN]
@@ -291,21 +306,57 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
-                device = None
-                # The name is only in scan responses, so an active scan may be needed to see it.
-                await async_request_active_scan(self.hass)
-                for info in async_discovered_service_info(self.hass, connectable=True):
-                    if info.name and info.name.startswith(expected):
-                        device = info.device
-                        self._address = info.address
-                        break
+                if (info := self._async_find_vehicle(expected)) is None:
+                    # The name is only in scan responses, so an active scan may be needed to see it.
+                    await async_request_active_scan(self.hass)
+                    if (info := self._async_find_vehicle(expected)) is None:
+                        LOGGER.debug(
+                            "No connectable advertisement matched Bluetooth name %s",
+                            expected,
+                        )
+                    else:
+                        # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
+                        heard: asyncio.Future[BluetoothServiceInfoBleak] = (
+                            self.hass.loop.create_future()
+                        )
 
-                if device is None:
+                        @callback
+                        def _async_heard(
+                            service_info: BluetoothServiceInfoBleak,
+                        ) -> None:
+                            # An Auto scanner still in the scan's active window has yet to restart discovery.
+                            if (
+                                service_info.connectable
+                                and not heard.done()
+                                and not any(
+                                    scanner.requested_mode is BluetoothScanningMode.AUTO
+                                    and scanner.current_mode
+                                    is BluetoothScanningMode.ACTIVE
+                                    for scanner in async_current_scanners(self.hass)
+                                )
+                            ):
+                                heard.set_result(service_info)
+
+                        cancel = async_register_advertisement_callback(
+                            self.hass, _async_heard, info.address
+                        )
+                        try:
+                            async with asyncio.timeout(BLE_ADVERTISEMENT_TIMEOUT):
+                                info = await heard
+                        except TimeoutError:
+                            LOGGER.debug(
+                                "Vehicle not heard again after the active scan"
+                            )
+                        finally:
+                            cancel()
+
+                if info is None:
                     errors["base"] = "device_not_found"
                 else:
+                    self._address = info.address
                     # Uses default keepalive so the link survives the on-screen key-approval wait.
                     self._vehicle = parent.vehicles.createBluetooth(
-                        self._vin, device=device
+                        self._vin, device=info.device
                     )
                     try:
                         await self._vehicle.connect()
@@ -314,7 +365,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                         await self._async_disconnect()
                         cause = err.__cause__
                         last_info = async_last_service_info(
-                            self.hass, device.address, connectable=True
+                            self.hass, info.address, connectable=True
                         )
                         if not isinstance(
                             cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
@@ -342,6 +393,18 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             description_placeholders=placeholders,
         )
 
+    @callback
+    def _async_find_vehicle(self, name_prefix: str) -> BluetoothServiceInfoBleak | None:
+        """Return the discovered vehicle whose advertised name matches, if any."""
+        return next(
+            (
+                info
+                for info in async_discovered_service_info(self.hass, connectable=True)
+                if info.name and info.name.startswith(name_prefix)
+            ),
+            None,
+        )
+
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -355,6 +418,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 # The key is already on the vehicle; say so rather than prompt a re-pair.
@@ -478,6 +542,12 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self.hass.async_create_task(self._async_disconnect())
 
 
+def _energy_site_name(energy_data: TeslemetryEnergyData) -> str | None:
+    """Return the name of an energy site, if it has one."""
+    name = energy_data.device.name
+    return name if isinstance(name, str) else None
+
+
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
@@ -525,7 +595,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
-            self._site_name = energy_data.device.get("name") or "Energy Site"
+            self._site_name = _energy_site_name(energy_data) or "Energy Site"
             try:
                 await self._prepare_energy_site(energy_data)
                 return await self._async_begin_pairing()
@@ -540,7 +610,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     probatio.Required(CONF_SITE_ID): probatio.In(
                         {
-                            site_id: energy_data.device.get("name") or site_id
+                            site_id: _energy_site_name(energy_data) or site_id
                             for site_id, energy_data in available.items()
                         }
                     )

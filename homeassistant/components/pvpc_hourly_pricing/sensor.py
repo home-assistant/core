@@ -186,6 +186,7 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data.availability.get(

@@ -21,12 +21,9 @@ from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import (
-    EXCLUDED_REQUIREMENTS_ALL,
-    normalize_package_name,
-)
 
 from .model import Config, Integration
+from .requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
@@ -35,6 +32,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
+    "httpx2": "SemVer",
     "lxml": "SemVer",
     "mashumaro": "SemVer",
     "numpy": "SemVer",
@@ -127,7 +125,7 @@ FORBIDDEN_PACKAGES = {
     "dataclasses-json": "be removed (it can break in Python 3.15)",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
-    # See https://developers.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
+    # See https://contributors.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
     "pyserial-asyncio": "be replaced by serialx",
     # Only needed for tests
     "pytest": "not be a runtime dependency",
@@ -144,7 +142,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - package is the package (can be transitive) referencing the dependency
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
-    "airthings": {"airthings-cloud": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
@@ -183,7 +180,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
@@ -232,8 +228,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
-    "slimproto": {"aioslimproto": {"async-timeout"}},
-    "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
@@ -305,11 +299,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         # Coloredlogs, unmaintained - coloredlogs.pth
         "locationsharinglib": {"coloredlogs"},
     },
-    # https://github.com/NabuCasa/universal-silabs-flasher
-    "homeassistant_hardware": {
-        # Coloredlogs, unmaintained - coloredlogs.pth
-        "universal-silabs-flasher": {"coloredlogs"},
-    },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
     # https://github.com/hthiery/python-lacrosse
@@ -340,8 +329,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/smappee/pysmappee
     "smappee": {"homeassistant": {"pysmappee"}},
-    # https://github.com/mosquito/caio/pull/75
-    "velbus": {"aiofile": {"caio"}},
     # https://github.com/watergate-ai/watergate-local-api-python
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client

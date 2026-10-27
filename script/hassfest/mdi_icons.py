@@ -7,7 +7,7 @@ import json
 from .model import Config, Integration
 from .serializer import format_python_namespace
 
-_TARGET = "pylint/plugins/pylint_home_assistant/generated/mdi_icons.py"
+_TARGET = "packages/pylint-home-assistant/pylint_home_assistant/generated/mdi_icons.py"
 _REQUIREMENT_PREFIX = "home-assistant-frontend=="
 
 

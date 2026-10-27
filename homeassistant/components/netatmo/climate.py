@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast, override
 
-from pyatmo.modules import NATherm1
+from pyatmo.modules import BNS, NATherm1
 from pyatmo.modules.device_types import DeviceType
 
 from homeassistant.components.climate import (
@@ -139,7 +139,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_preset_modes = SUPPORT_PRESET
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
@@ -148,6 +148,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _away_temperature: float | None = None
     _hg_temperature: float | None = None
     _boilerstatus: bool | None = None
+    _coolerstatus: bool | None = None
 
     def __init__(self, room: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -234,9 +235,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
-                self._attr_target_temperature = self._hg_temperature
+                self._attr_native_target_temperature = self._hg_temperature
             elif self._attr_preset_mode == PRESET_AWAY:
-                self._attr_target_temperature = self._away_temperature
+                self._attr_native_target_temperature = self._away_temperature
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
@@ -252,17 +253,21 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                     self._attr_hvac_mode = HVACMode.OFF
                     self._attr_preset_mode = STATE_NETATMO_OFF
-                    self._attr_target_temperature = 0
+                    self._attr_native_target_temperature = 0
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                     self._attr_hvac_mode = HVACMode.HEAT
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_BOOST]
-                    self._attr_target_temperature = DEFAULT_MAX_TEMP
+                    self._attr_native_target_temperature = DEFAULT_MAX_TEMP
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
                     self._attr_hvac_mode = HVACMode.HEAT
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
+                    self._attr_native_target_temperature = room[
+                        "therm_setpoint_temperature"
+                    ]
                 else:
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
-                    if self._attr_target_temperature == DEFAULT_MAX_TEMP:
+                    self._attr_native_target_temperature = room[
+                        "therm_setpoint_temperature"
+                    ]
+                    if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
                 self.async_write_ha_state()
                 return
@@ -282,8 +287,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self.device_type != NA_VALVE and self._boilerstatus is not None:
-            return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
+        if self.device_type != NA_VALVE:
+            if self._coolerstatus and not self._boilerstatus:
+                return HVACAction.COOLING
+            if self._boilerstatus is not None:
+                return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
             heating_req := getattr(self.device, "heating_power_request", 0)
@@ -380,8 +388,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         self._away_temperature = self.home.get_away_temp()
         self._hg_temperature = self.home.get_hg_temp()
-        self._attr_current_temperature = self.device.therm_measured_temperature
-        self._attr_target_temperature = self.device.therm_setpoint_temperature
+        self._attr_native_current_temperature = self.device.therm_measured_temperature
+        self._attr_native_target_temperature = self.device.therm_setpoint_temperature
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
 
@@ -411,6 +419,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     module = cast(NATherm1, module)
                     if module.boiler_status is not None:
                         self._boilerstatus = module.boiler_status
+                        if hasattr(module, "cooler_status"):
+                            self._coolerstatus = cast(BNS, module).cooler_status
                         break
 
         self.async_write_ha_state()

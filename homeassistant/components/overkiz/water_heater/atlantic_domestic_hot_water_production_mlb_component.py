@@ -15,14 +15,14 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.util import dt as dt_util
 
-from .. import OverkizDataUpdateCoordinator
+from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 
 class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of AtlanticDomesticHotWaterProductionMBLComponent (modbuslink)."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -56,7 +56,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return cast(
             float,
@@ -67,7 +67,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature corresponding to the PRESET."""
         return cast(
             float,
@@ -128,7 +128,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         ):
             # STATE_ELECTRIC is a substitution for OverkizCommandParam.MANUAL
             # to keep up with the conventional state usage only
-            # https://developers.home-assistant.io/docs/core/entity/water-heater/#states
+            # https://contributors.home-assistant.io/core/entities/water-heater/#states
             return STATE_ELECTRIC
 
         return STATE_OFF

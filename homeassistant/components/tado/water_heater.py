@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from PyTado.const import CONST_HVAC_HEAT
+
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -12,7 +14,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
     CONST_MODE_HEAT,
     CONST_MODE_OFF,
@@ -109,7 +110,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     _attr_name = None
     _attr_operation_list = OPERATION_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -159,7 +160,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._tado_zone_data.target_temp
 

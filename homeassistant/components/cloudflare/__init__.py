@@ -1,6 +1,6 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -17,18 +17,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> None:
     """Set up Cloudflare from a config entry."""
     entry.runtime_data = CloudflareCoordinator(hass, entry)
     await entry.runtime_data.async_config_entry_first_refresh()
 
     # Since we are not using coordinator for data reads, we need to add dummy listener
-    entry.async_on_unload(entry.runtime_data.async_add_listener(lambda: None))
-
-    return True
+    entry.async_on_unload(entry.runtime_data.async_add_listener(async_noop))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -> None:
     """Unload Cloudflare config entry."""
-
-    return True

@@ -14,8 +14,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import SmartyConfigEntry
-from .coordinator import SmartyCoordinator
+from .coordinator import SmartyConfigEntry, SmartyCoordinator
 from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)

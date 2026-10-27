@@ -6,16 +6,20 @@ from datetime import datetime, timedelta
 from typing import Any, override
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfInformation,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import NODE_ONLINE, ProxmoxPermission
@@ -138,7 +142,6 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
-        translation_key="node_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data.node["uptime"]))
@@ -240,7 +243,6 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
-        translation_key="vm_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
@@ -360,7 +362,6 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
-        translation_key="container_uptime",
         value_fn=(
             lambda data: (
                 (dt_util.utcnow() - timedelta(seconds=data["uptime"]))

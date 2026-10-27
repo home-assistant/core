@@ -227,7 +227,7 @@ async def create_climate_entity(
 class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_translation_key = DOMAIN
     _available = False
@@ -356,7 +356,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self._tado_zone_data.current_temp
 
@@ -444,7 +444,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._current_tado_hvac_mode == CONST_MODE_OFF:
             return TADO_DEFAULT_MIN_TEMP
