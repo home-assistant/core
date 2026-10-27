@@ -1,7 +1,8 @@
 """DataUpdateCoordinator for the Forecast.Solar integration."""
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
+from itertools import pairwise
 from typing import Any, cast, override
 
 from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
@@ -29,6 +30,20 @@ from .const import (
 from .plane import SensorUpdateFailed, sensor_angle
 
 type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
+
+
+def energy_by_period_start(wh_period: Mapping[datetime, int]) -> dict[datetime, int]:
+    """Key each energy value by the start of its period.
+
+    The API keys each value by the end of its period, so each value moves
+    to the previous timestamp.
+    """
+    return {
+        start: wh_period[end]
+        for start, end in pairwise(sorted(wh_period))
+        # A zero at midnight starts a new API day, not a period that ended there.
+        if wh_period[end] != 0 or (end.hour, end.minute, end.second) != (0, 0, 0)
+    }
 
 
 def _resolve_location(

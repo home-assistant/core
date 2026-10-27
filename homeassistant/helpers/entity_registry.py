@@ -1344,7 +1344,7 @@ def _validate_item(
 
 
 @callback
-def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+def _has_own_area_without_own_name(entry: RegistryEntry) -> bool:
     """Return if an entity has an area of its own but no name of its own."""
     return (
         entry.area_id is not None
@@ -2192,7 +2192,7 @@ class EntityRegistry(BaseRegistry):
         new = attr.evolve(old, **new_values)
 
         child_device: dr.ChildDeviceEntry | None = None
-        if _has_own_area_without_own_name(self.hass, new):
+        if _has_own_area_without_own_name(new):
             # The child device only takes the area over when the entity moved to it
             if "device_id" in new_values:
                 child_device = _async_get_child_device_accepting_area(self.hass, new)
@@ -3052,7 +3052,7 @@ def _async_setup_own_area_without_own_name_issues(
     def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
         if (entry := registry.async_get(event.data["entity_id"])) is None:
             return
-        if _has_own_area_without_own_name(hass, entry):
+        if _has_own_area_without_own_name(entry):
             _async_create_issue(entry)
         else:
             ir.async_delete_issue(
@@ -3071,7 +3071,7 @@ def _async_setup_own_area_without_own_name_issues(
     @callback
     def _async_create_issues(_: Event) -> None:
         for entry in registry.entities.values():
-            if _has_own_area_without_own_name(hass, entry):
+            if _has_own_area_without_own_name(entry):
                 _async_create_issue(entry)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)

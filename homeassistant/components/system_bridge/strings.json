@@ -68,6 +68,18 @@
       "cpu_voltage": {
         "name": "CPU voltage"
       },
+      "disk_device_read_rate": {
+        "name": "{disk} read rate"
+      },
+      "disk_device_write_rate": {
+        "name": "{disk} write rate"
+      },
+      "disk_read_rate": {
+        "name": "Disk read rate"
+      },
+      "disk_write_rate": {
+        "name": "Disk write rate"
+      },
       "display_refresh_rate": {
         "name": "Display {display_id} refresh rate"
       },

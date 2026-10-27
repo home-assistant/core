@@ -14,7 +14,7 @@ import hass_nabucasa
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
     chat_session,
     device_registry as dr,
@@ -847,6 +847,11 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except Unauthorized as src_error:
+            raise IntentRecognitionError(
+                code="intent-unauthorized",
+                message="Not allowed to continue this conversation",
+            ) from src_error
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
