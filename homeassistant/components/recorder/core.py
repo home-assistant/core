@@ -1468,14 +1468,17 @@ class Recorder(threading.Thread):
         engine_url = get_engine_db_url(self.db_url)
         backend_name = engine_url.get_backend_name()
         driver_name = engine_url.get_driver_name()
-        using_file_sqlite = is_file_sqlite_url(engine_url)
+        # Other SQLite drivers, such as the encrypted pysqlcipher, can't be
+        # opened by the plain sqlite3 file checks
+        using_pysqlite = backend_name == "sqlite" and driver_name == "pysqlite"
+        using_file_sqlite = using_pysqlite and is_file_sqlite_url(engine_url)
 
-        if backend_name == "sqlite" and not using_file_sqlite:
+        if using_pysqlite and not using_file_sqlite:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = MutexPool
             MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
-        elif backend_name == "sqlite":
+        elif using_pysqlite:
             kwargs["poolclass"] = RecorderPool
             kwargs["recorder_and_worker_thread_ids"] = (
                 self.recorder_and_worker_thread_ids
@@ -1495,7 +1498,7 @@ class Recorder(threading.Thread):
                     kwargs["connect_args"]["conv"] = build_mysqldb_conv()
 
         # Disable extended logging for non SQLite databases
-        if backend_name != "sqlite":
+        if not using_pysqlite:
             kwargs["echo"] = False
 
         if using_file_sqlite:

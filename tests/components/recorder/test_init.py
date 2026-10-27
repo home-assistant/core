@@ -2456,27 +2456,58 @@ async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("config_url", "poolclass", "charset"),
+    ("config_url", "poolclass", "charset", "echo", "checks_file"),
     [
-        pytest.param("sqlite://", MutexPool, None, id="sqlite_memory"),
+        pytest.param("sqlite://", MutexPool, None, None, False, id="sqlite_memory"),
         pytest.param(
-            "sqlite:///:memory:", MutexPool, None, id="sqlite_memory_database"
+            "sqlite:///:memory:",
+            MutexPool,
+            None,
+            None,
+            False,
+            id="sqlite_memory_database",
         ),
-        pytest.param("sqlite:///blabla", RecorderPool, None, id="sqlite_file"),
         pytest.param(
-            "sqlite+pysqlite:///blabla", RecorderPool, None, id="pysqlite_file"
+            "sqlite:///blabla", RecorderPool, None, None, True, id="sqlite_file"
         ),
-        pytest.param("mysql://user:pass@host/db", None, "utf8mb4", id="mysqldb"),
         pytest.param(
-            "mariadb+pymysql://user:pass@host/db", None, "utf8mb4", id="pymysql"
+            "sqlite+pysqlite:///blabla",
+            RecorderPool,
+            None,
+            None,
+            True,
+            id="pysqlite_file",
+        ),
+        pytest.param(
+            "sqlite+pysqlcipher://:key@/blabla",
+            None,
+            None,
+            False,
+            False,
+            id="pysqlcipher_file",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/db", None, "utf8mb4", False, False, id="mysqldb"
+        ),
+        pytest.param(
+            "mariadb+pymysql://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="pymysql",
         ),
         pytest.param(
             "mariadb+mariadbconnector://user:pass@host/db",
             None,
             None,
+            False,
+            False,
             id="mariadbconnector",
         ),
-        pytest.param("postgresql://user:pass@host/db", None, None, id="postgresql"),
+        pytest.param(
+            "postgresql://user:pass@host/db", None, None, False, False, id="postgresql"
+        ),
     ],
 )
 async def test_engine_options_for_backend_and_driver(
@@ -2484,8 +2515,14 @@ async def test_engine_options_for_backend_and_driver(
     config_url: str,
     poolclass: type[MutexPool | RecorderPool] | None,
     charset: str | None,
+    echo: bool | None,
+    checks_file: bool,
 ) -> None:
-    """Test the engine options are chosen from the backend and driver of the URL."""
+    """Test the engine options are chosen from the backend and driver of the URL.
+
+    Only pysqlite databases are checked with sqlite3 before connecting, as
+    other SQLite drivers such as pysqlcipher use files sqlite3 can't open.
+    """
     recorder_helper.async_initialize_recorder(hass)
 
     class MockEvent:
@@ -2499,6 +2536,9 @@ async def test_engine_options_for_backend_and_driver(
         ) as create_engine_mock,
         patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch(
+            "homeassistant.components.recorder.core.validate_or_move_away_sqlite_database"
+        ) as validate_mock,
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()
@@ -2506,6 +2546,8 @@ async def test_engine_options_for_backend_and_driver(
     kwargs = create_engine_mock.mock_calls[0].kwargs
     assert kwargs.get("poolclass") is poolclass
     assert kwargs.get("connect_args", {}).get("charset") == charset
+    assert kwargs.get("echo") is echo
+    assert validate_mock.called is checks_file
 
 
 @pytest.mark.parametrize(
