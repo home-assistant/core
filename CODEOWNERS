@@ -1336,6 +1336,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/nintendo_parental_controls/ @pantherale0
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/noaa_tides/ @jdelaney72
+/tests/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/nordpool/ @gjohansson-ST
@@ -1478,6 +1479,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
 /tests/components/pglab/ @pglab-electronics
+/homeassistant/components/philips_infrared/ @javitonino
+/tests/components/philips_infrared/ @javitonino
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
 /homeassistant/components/pi_hole/ @shenxn
