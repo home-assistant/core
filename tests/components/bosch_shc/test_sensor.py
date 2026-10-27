@@ -15,7 +15,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import setup_integration, thermostat_device, thermostat_gen2_device
+from .conftest import (
+    motion_detector2_device,
+    setup_integration,
+    thermostat_device,
+    thermostat_gen2_device,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -233,3 +238,19 @@ async def test_room_thermostat_no_floor_temperature_for_other_probe(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(temperature=21.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Motion Detector II reports its temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
