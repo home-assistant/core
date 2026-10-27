@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -22,8 +22,8 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/category_registry/list",
-        vol.Required("scope"): str,
+        probatio.Required("type"): "config/category_registry/list",
+        probatio.Required("scope"): str,
     }
 )
 @callback
@@ -43,10 +43,10 @@ def websocket_list_categories(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/category_registry/create",
-        vol.Required("scope"): str,
-        vol.Required("name"): str,
-        vol.Optional("icon"): vol.Any(cv.icon, None),
+        probatio.Required("type"): "config/category_registry/create",
+        probatio.Required("scope"): str,
+        probatio.Required("name"): str,
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
     }
 )
 @websocket_api.require_admin
@@ -71,9 +71,9 @@ def websocket_create_category(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/category_registry/delete",
-        vol.Required("scope"): str,
-        vol.Required("category_id"): str,
+        probatio.Required("type"): "config/category_registry/delete",
+        probatio.Required("scope"): str,
+        probatio.Required("category_id"): str,
     }
 )
 @websocket_api.require_admin
@@ -96,11 +96,11 @@ def websocket_delete_category(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/category_registry/update",
-        vol.Required("scope"): str,
-        vol.Required("category_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("icon"): vol.Any(cv.icon, None),
+        probatio.Required("type"): "config/category_registry/update",
+        probatio.Required("scope"): str,
+        probatio.Required("category_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("icon"): probatio.Any(cv.icon, None),
     }
 )
 @websocket_api.require_admin

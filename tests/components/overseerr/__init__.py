@@ -4,13 +4,12 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.core import HomeAssistant
 
 from .const import WEBHOOK_ID
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

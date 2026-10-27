@@ -1,0 +1,8 @@
+[
+  {
+    "repository": "hacs-test-org/removed-repository",
+    "removal_type": "removed",
+    "link": "https://github.com/hacs-test-org/removed-repository",
+    "reason": "Repository removed from GitHub"
+  }
+]

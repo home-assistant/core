@@ -1,0 +1,20 @@
+{
+  "property": {
+    "operation": {
+      "airPurifierOperationMode": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": ["POWER_ON", "POWER_OFF"],
+          "w": ["POWER_ON", "POWER_OFF"]
+        }
+      }
+    },
+    "sleepTimer": {
+      "relativeHourToStop": {
+        "mode": ["r", "w"],
+        "type": "number"
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 """Tests for Victron GX MQTT sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_victron_battery_sensor(
@@ -197,6 +196,27 @@ async def test_native_unit_of_measurement_with_device_class(
     state = hass.states.get("sensor.battery_dc_bus_current")
     assert state is not None
     assert state.attributes["unit_of_measurement"] == "A"
+
+
+async def test_timestamp_device_class(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test timestamp metrics use the timestamp device class."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/DynamicEss/LastScheduledStart",
+        '{"value": 1756684800}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.victron_venus_dynamic_ess_last_scheduled_start")
+    assert state is not None
+    assert state.state == "2025-09-01T00:00:00+00:00"
+    assert state.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
 
 
 async def test_native_unit_of_measurement_special_unit(

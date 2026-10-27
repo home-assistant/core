@@ -40,7 +40,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         HotSpringLightEntity(coordinator, zone.zone_id)
-        for zone in coordinator.data.light_zones
+        for zone in coordinator.data.light_zones.values()
         if zone.is_enabled
     )
 
@@ -65,10 +65,7 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     @property
     def _zone(self) -> LightZone:
         """Return the light zone data."""
-        for zone in self.coordinator.data.light_zones:
-            if zone.zone_id == self._zone_id:
-                return zone
-        raise AssertionError("Light zone must exist in coordinator data")
+        return self.coordinator.data.light_zones[self._zone_id]
 
     @property
     @override

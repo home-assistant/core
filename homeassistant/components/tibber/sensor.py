@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -538,6 +537,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -688,10 +688,10 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.translation_key
 
-        self._attr_unique_id = f"{device.external_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{device.id}_{self.entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.external_id)},
+            identifiers={(DOMAIN, device.id)},
             name=device.name,
             manufacturer=device.brand,
             model=device.model,
@@ -733,7 +733,7 @@ class TibberSensor(SensorEntity):
             manufacturer=MANUFACTURER,
         )
         if self._model is not None:
-            device_info["model"] = self._model
+            device_info.model = self._model
         return device_info
 
 
@@ -997,7 +997,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TibberConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: TibberHome,
     ) -> None:

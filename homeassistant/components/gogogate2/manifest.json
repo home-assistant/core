@@ -1,6 +1,7 @@
 {
   "domain": "gogogate2",
   "name": "Gogogate2 and ismartgate",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@vangorra"],
   "config_flow": true,
   "dhcp": [

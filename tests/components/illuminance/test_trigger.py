@@ -3,8 +3,23 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_numerical_state_value_changed_trigger_states,
+    parametrize_numerical_state_value_crossed_threshold_trigger_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.illuminance.trigger import TRIGGERS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -14,19 +29,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    parametrize_numerical_state_value_changed_trigger_states,
-    parametrize_numerical_state_value_crossed_threshold_trigger_states,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture
@@ -43,6 +45,14 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "detected": TargetSupport.STANDARD,
+    "cleared": TargetSupport.STANDARD,
+    "changed": TargetSupport.STANDARD,
+    "crossed_threshold": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -69,6 +79,11 @@ async def test_illuminance_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 # --- Binary sensor detected/cleared tests ---

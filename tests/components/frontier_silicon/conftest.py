@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from afsapi import Equaliser, PlayCaps, PlayerMode, PlayState, Preset
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.frontier_silicon.const import CONF_WEBFSAPI_URL, DOMAIN
 from homeassistant.const import CONF_PIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.frontier_silicon.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -56,6 +55,8 @@ def mock_afsapi() -> Generator[AsyncMock]:
         client.get_volume.return_value = 3
         client.get_volume_steps.return_value = 2
         client.get_play_caps.return_value = PlayCaps(0)
+        client.get_dst.return_value = True
+        client.set_dst.return_value = True
 
         modes = [
             PlayerMode(

@@ -13,6 +13,7 @@ async def test_import(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_IMPORT}, data={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -30,11 +31,20 @@ async def test_user_confirm(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_onboarding_flow(hass: HomeAssistant) -> None:
@@ -46,3 +56,4 @@ async def test_onboarding_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Shopping list"
     assert result["data"] == {}
+    assert result["result"].unique_id == DOMAIN

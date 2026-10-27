@@ -10,6 +10,7 @@ from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
@@ -23,8 +24,6 @@ from homeassistant.components.mysensors.const import (
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="mqtt")
@@ -198,9 +197,8 @@ def gateway_fixture(
 
 def load_nodes_state(fixture_path: str) -> dict:
     """Load mysensors nodes fixture."""
-    return json.loads(
-        load_fixture(fixture_path, integration=DOMAIN), cls=MySensorsJSONDecoder
-    )
+    fixture = load_fixture(fixture_path, integration=DOMAIN)
+    return json.loads(fixture, cls=MySensorsJSONDecoder)
 
 
 def update_gateway_nodes(

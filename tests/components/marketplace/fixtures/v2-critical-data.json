@@ -1,0 +1,7 @@
+[
+  {
+    "repository": "test/test",
+    "reason": "Security issues, known to steal auth tokens.",
+    "link": "https://github.com/hacs/default/pull/2"
+  }
+]

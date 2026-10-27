@@ -13,6 +13,8 @@ from aiohomeconnect.model.error import (
 )
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.home_connect.const import DOMAIN
@@ -37,9 +39,6 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_entry_setup(
@@ -340,7 +339,7 @@ async def test_entity_migration(
         patch("homeassistant.components.home_connect.PLATFORMS", platforms),
         patch(
             "homeassistant.components.home_connect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
@@ -372,7 +371,7 @@ async def test_config_entry_unique_id_migration(
 
     with patch(
         "homeassistant.components.home_connect.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
         await hass.async_block_till_done()

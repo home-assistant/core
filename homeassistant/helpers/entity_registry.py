@@ -8,6 +8,7 @@ registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping, Sequence
 import dataclasses
@@ -19,7 +20,7 @@ import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -32,11 +33,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
     Event,
     HomeAssistant,
     callback,
     split_entity_id,
     valid_entity_id,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
@@ -47,14 +51,26 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import area_registry as ar, device_registry as dr, floor_registry as fr, storage
+from . import (
+    area_registry as ar,
+    device_registry as dr,
+    floor_registry as fr,
+    issue_registry as ir,
+    storage,
+)
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
 )
 from .frame import ReportBehavior, report_usage
-from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
-from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .json import (
+    JSON_DUMP,
+    cached_json_bytes,
+    cached_json_fragment,
+    find_paths_unserializable_data,
+    json_fragment,
+)
+from .registry import BaseRegistry, BaseRegistryItems, NextNamePart, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -74,7 +90,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 23
+STORAGE_VERSION_MINOR = 24
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -110,6 +126,7 @@ def _deserialize_aliases(aliases: list[str | None]) -> list[AliasEntry]:
 # Attributes relevant to describing entity
 # to external services.
 ENTITY_DESCRIBING_ATTRIBUTES = {
+    "area_id",
     "capabilities",
     "device_class",
     "entity_id",
@@ -130,6 +147,28 @@ class RegistryEntryDisabler(StrEnum):
     USER = "user"
 
 
+# Values of disabled_by which follow from the state of the config entry and device
+_DERIVED_DISABLED_BY: set[RegistryEntryDisabler | None] = {
+    RegistryEntryDisabler.CONFIG_ENTRY,
+    RegistryEntryDisabler.DEVICE,
+    None,
+}
+
+
+def _derived_disabled_by(
+    config_entry: ConfigEntry | None, device: dr.AnyDeviceEntry | None
+) -> RegistryEntryDisabler | None:
+    """Return the disabler implied by the state of the config entry and device.
+
+    A disabled config entry takes precedence over a disabled device.
+    """
+    if config_entry is not None and config_entry.disabled_by is not None:
+        return RegistryEntryDisabler.CONFIG_ENTRY
+    if device is not None and device.disabled:
+        return RegistryEntryDisabler.DEVICE
+    return None
+
+
 class RegistryEntryHider(StrEnum):
     """What hid a registry entry."""
 
@@ -144,6 +183,7 @@ class EntityNamePart(StrEnum):
     DEVICE = "device"
     ENTITY = "entity"
     FLOOR = "floor"
+    PARENT_DEVICE = "parent_device"
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -183,6 +223,7 @@ DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id", False),
     ("lb", "labels", True),
     ("di", "device_id", False),
+    ("np", "next_name_part", False),
     ("ic", "icon", False),
     ("tk", "translation_key", False),
 )
@@ -206,6 +247,17 @@ def _protect_optional_entity_options(
     if data is None:
         return ReadOnlyDict({})
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
+
+
+def _entity_next_name_part(
+    area_id: str | None, device_id: str | None
+) -> NextNamePart | None:
+    """Compute the next name part of an entity."""
+    if area_id is not None:
+        return NextNamePart.AREA
+    if device_id is not None:
+        return NextNamePart.DEVICE
+    return None
 
 
 @attr.s(frozen=True, kw_only=True, slots=True)
@@ -250,6 +302,7 @@ class RegistryEntry:
 
     # For backwards compatibility, should be removed in the future
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
+    compat_name: str | None = attr.ib(default=None)
 
     # original_name_unprefixed is used to store the result of stripping
     # the device name prefix from the original_name, if possible.
@@ -274,6 +327,20 @@ class RegistryEntry:
         return self.hidden_by is not None
 
     @property
+    def entity_name(self) -> str:
+        """Return the entity's own name, without the device name prefix."""
+        if self.name is not None:
+            return self.name
+        if self.original_name_unprefixed is not None:
+            return self.original_name_unprefixed
+        return self.original_name or ""
+
+    @property
+    def next_name_part(self) -> NextNamePart | None:
+        """Next name part of the entity."""
+        return _entity_next_name_part(self.area_id, self.device_id)
+
+    @property
     def _as_display_dict(self) -> dict[str, Any] | None:
         """Return a partial dict representation of the entry.
 
@@ -291,18 +358,7 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
-        if self.has_entity_name:
-            display_dict["hn"] = True
-        name = (
-            self.name
-            if self.name is not None
-            else (
-                self.original_name_unprefixed
-                if self.original_name_unprefixed is not None
-                else self.original_name
-            )
-        )
-        if name is not None:
+        if name := self.entity_name:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
             if (precision := sensor_options.get("display_precision")) is not None or (
@@ -319,7 +375,9 @@ class RegistryEntry:
         """
         try:
             dict_repr = self._as_display_dict
-            json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
+            json_repr: bytes | None = (
+                cached_json_bytes(dict_repr) if dict_repr else None
+            )
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -352,13 +410,13 @@ class RegistryEntry:
             "disabled_by": self.disabled_by,
             "entity_category": self.entity_category,
             "entity_id": self.entity_id,
-            "has_entity_name": self.has_entity_name,
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,
             "labels": list(self.labels),
             "modified_at": self.modified_at.timestamp(),
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "options": self.options,
             "original_name": original_name,
             "platform": self.platform,
@@ -386,7 +444,7 @@ class RegistryEntry:
         """Return a cached partial JSON representation of the entry."""
         try:
             dict_repr = self.as_partial_dict
-            return json_bytes(dict_repr)
+            return cached_json_bytes(dict_repr)
         except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
@@ -400,43 +458,42 @@ class RegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "capabilities": self.capabilities,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "device_id": self.device_id,
-                    "disabled_by": self.disabled_by,
-                    "entity_category": self.entity_category,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "has_entity_name": self.has_entity_name,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "object_id_base": self.object_id_base,
-                    "options": self.options,
-                    "original_device_class": self.original_device_class,
-                    "original_icon": self.original_icon,
-                    "original_name": self.original_name,
-                    "platform": self.platform,
-                    "suggested_object_id": self.suggested_object_id,
-                    "supported_features": self.supported_features,
-                    "translation_key": self.translation_key,
-                    "unique_id": self.unique_id,
-                    "previous_unique_id": self.previous_unique_id,
-                    "unit_of_measurement": self.unit_of_measurement,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "capabilities": self.capabilities,
+                "compat_name": self.compat_name,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "device_id": self.device_id,
+                "disabled_by": self.disabled_by,
+                "entity_category": self.entity_category,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by,
+                "icon": self.icon,
+                "id": self.id,
+                "has_entity_name": self.has_entity_name,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "object_id_base": self.object_id_base,
+                "options": self.options,
+                "original_device_class": self.original_device_class,
+                "original_icon": self.original_icon,
+                "original_name": self.original_name,
+                "platform": self.platform,
+                "suggested_object_id": self.suggested_object_id,
+                "supported_features": self.supported_features,
+                "translation_key": self.translation_key,
+                "unique_id": self.unique_id,
+                "previous_unique_id": self.previous_unique_id,
+                "unit_of_measurement": self.unit_of_measurement,
+            }
         )
 
     @callback
@@ -455,8 +512,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self)
-        if name:
+        if name := async_get_legacy_friendly_name(hass, self):
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
         if self.supported_features is not None:
@@ -469,27 +525,6 @@ class RegistryEntry:
 
 
 @callback
-def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
-    """Get the entity name with device name prefix stripped, if applicable."""
-    name = entry.name
-    if name is not None:
-        if (
-            entry.device_id is not None
-            and (device := dr.async_get(hass).async_get(entry.device_id)) is not None
-        ):
-            device_name = device.name_by_user or device.name
-            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
-            if unprefixed_name is not None:
-                return unprefixed_name
-        return name
-
-    if entry.original_name_unprefixed is not None:
-        return entry.original_name_unprefixed
-
-    return entry.original_name or ""
-
-
-@callback
 def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
@@ -498,27 +533,51 @@ def _async_get_full_entity_name(
     fallback: str,
     has_entity_name: bool,
     name: str | None,
+    next_name_part: NextNamePart | None,
     original_name: str | None,
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
     overridden_name: str | None = None,
     parts: Sequence[EntityNamePart],
-    unprefix_name: bool = False,
-    use_legacy_naming: bool = False,
+    use_next_name_part: bool = True,
 ) -> str:
     """Get full name for an entity.
 
     This includes the device and area name if appropriate.
+    With use_next_name_part, owners contribute their name part only while
+    the next_name_part links reach them.
     Used for both full entity name and entity ID.
     """
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
-    elif not use_legacy_naming or name is None:
+    else:
+        raw_device_name: str | None = None
         device_name: str | None = None
+        parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
-                device_name = device.name_by_user or device.name
+                raw_device_name = device.name_by_user or device.name
+
+                if not use_next_name_part or next_name_part is NextNamePart.DEVICE:
+                    device_name = raw_device_name
+                    if (
+                        EntityNamePart.PARENT_DEVICE in parts
+                        and isinstance(device, dr.ChildDeviceEntry)
+                        and (
+                            not use_next_name_part
+                            or device.next_name_part is NextNamePart.PARENT_DEVICE
+                        )
+                        and (
+                            parent_device := device_registry.async_get(
+                                device.parent_device_id, include_child_devices=False
+                            )
+                        )
+                        is not None
+                    ):
+                        parent_device_name = (
+                            parent_device.name_by_user or parent_device.name
+                        )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -543,7 +602,7 @@ def _async_get_full_entity_name(
         if entity_name is None:
             if original_name_unprefixed is UNDEFINED:
                 original_name_unprefixed = (
-                    _async_strip_prefix_from_entity_name(original_name, device_name)
+                    _async_strip_prefix_from_entity_name(original_name, raw_device_name)
                     if not has_entity_name
                     else None
                 )
@@ -553,23 +612,17 @@ def _async_get_full_entity_name(
                 if original_name_unprefixed is not None
                 else original_name
             )
-        elif unprefix_name:
-            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
-            if unprefixed_name is not None:
-                entity_name = unprefixed_name
 
         part_names = {
             EntityNamePart.AREA: area_name,
             EntityNamePart.DEVICE: device_name,
             EntityNamePart.ENTITY: entity_name,
             EntityNamePart.FLOOR: floor_name,
+            EntityNamePart.PARENT_DEVICE: parent_device_name,
         }
         full_name = " ".join(
             part_name for part in parts if (part_name := part_names[part])
         )
-
-    else:
-        full_name = name
 
     if not full_name:
         return fallback
@@ -578,12 +631,15 @@ def _async_get_full_entity_name(
 
 
 @callback
-def async_get_full_entity_name(
+def async_get_legacy_friendly_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
 ) -> str:
-    """Get full entity name for an entry."""
+    """Get the legacy friendly name for an entity entry."""
+    if entry.compat_name is not None:
+        return entry.compat_name
+
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
     if original_name is UNDEFINED or original_name == entry.original_name:
         original_name = entry.original_name
@@ -596,10 +652,33 @@ def async_get_full_entity_name(
         fallback="",
         has_entity_name=entry.has_entity_name,
         name=entry.name,
+        next_name_part=entry.next_name_part,
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
         parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
-        use_legacy_naming=True,
+        use_next_name_part=False,
+    )
+
+
+@callback
+def async_get_full_entity_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
+    """Get the computed name for an entity entry."""
+    return _async_get_full_entity_name(
+        hass,
+        area_id=entry.area_id,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        next_name_part=entry.next_name_part,
+        original_name=entry.original_name,
+        original_name_unprefixed=entry.original_name_unprefixed,
+        parts=(
+            EntityNamePart.PARENT_DEVICE,
+            EntityNamePart.DEVICE,
+            EntityNamePart.ENTITY,
+        ),
+        use_next_name_part=True,
     )
 
 
@@ -613,7 +692,8 @@ def async_get_entity_aliases(
     """Get all names/aliases for an entity.
 
     Processes entry aliases where COMPUTED_NAME entries are replaced with the
-    computed full entity name. String entries are used as-is.
+    computed full entity name, which follows the next_name_part links.
+    String entries are used as-is.
 
     The returned list preserves the order set by the user.
     """
@@ -630,6 +710,25 @@ def async_get_entity_aliases(
         aliases.append(alias.strip())
 
     return aliases
+
+
+@callback
+def async_preserve_compat_name_as_alias(hass: HomeAssistant, entity_id: str) -> None:
+    """Keep the pre-1.24 name as the primary alias.
+
+    Integrations exposing entities by name call this from their own one-time
+    migration. Once the primary alias is no longer the computed name, calls
+    from other integrations are no-ops.
+    """
+    registry = async_get(hass)
+    if (
+        (entry := registry.async_get(entity_id)) is None
+        or (compat_name := entry.compat_name) is None
+        or (entry.aliases and entry.aliases[0] is not COMPUTED_NAME)
+    ):
+        return
+
+    registry.async_update_entity(entity_id, aliases=[compat_name, *entry.aliases[1:]])
 
 
 @callback
@@ -738,38 +837,36 @@ class DeletedRegistryEntry:
     @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "aliases": self.compat_aliases,
-                    "aliases_v2": _serialize_aliases(self.aliases),
-                    "area_id": self.area_id,
-                    "categories": self.categories,
-                    "config_entry_id": self.config_entry_id,
-                    "config_subentry_id": self.config_subentry_id,
-                    "created_at": self.created_at,
-                    "device_class": self.device_class,
-                    "disabled_by": self.disabled_by
-                    if self.disabled_by is not UNDEFINED
-                    else None,
-                    "disabled_by_undefined": self.disabled_by is UNDEFINED,
-                    "entity_id": self.entity_id,
-                    "hidden_by": self.hidden_by
-                    if self.hidden_by is not UNDEFINED
-                    else None,
-                    "hidden_by_undefined": self.hidden_by is UNDEFINED,
-                    "icon": self.icon,
-                    "id": self.id,
-                    "labels": list(self.labels),
-                    "modified_at": self.modified_at,
-                    "name": self.name,
-                    "options": self.options if self.options is not UNDEFINED else {},
-                    "options_undefined": self.options is UNDEFINED,
-                    "orphaned_timestamp": self.orphaned_timestamp,
-                    "platform": self.platform,
-                    "unique_id": self.unique_id,
-                }
-            )
+        return cached_json_fragment(
+            {
+                "aliases": self.compat_aliases,
+                "aliases_v2": _serialize_aliases(self.aliases),
+                "area_id": self.area_id,
+                "categories": self.categories,
+                "config_entry_id": self.config_entry_id,
+                "config_subentry_id": self.config_subentry_id,
+                "created_at": self.created_at,
+                "device_class": self.device_class,
+                "disabled_by": self.disabled_by
+                if self.disabled_by is not UNDEFINED
+                else None,
+                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "entity_id": self.entity_id,
+                "hidden_by": self.hidden_by
+                if self.hidden_by is not UNDEFINED
+                else None,
+                "hidden_by_undefined": self.hidden_by is UNDEFINED,
+                "icon": self.icon,
+                "id": self.id,
+                "labels": list(self.labels),
+                "modified_at": self.modified_at,
+                "name": self.name,
+                "options": self.options if self.options is not UNDEFINED else {},
+                "options_undefined": self.options is UNDEFINED,
+                "orphaned_timestamp": self.orphaned_timestamp,
+                "platform": self.platform,
+                "unique_id": self.unique_id,
+            }
         )
 
 
@@ -952,6 +1049,53 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
             if old_minor_version < 23:
                 # Version 1.23 adds settings
                 data["settings"] = {"entity_id_parts": None}
+
+            if old_minor_version < 24:
+                # Version 1.24 computes the full name dynamically, prefixing the
+                # device name also for user-overridden names, so the device name
+                # prefix is stripped from the stored name. Where the full name
+                # changes, the old name is kept in compat_name for integrations to
+                # preserve it as an alias, and is preserved as the computed name
+                # alias right away for entities exposed to the conversation agent.
+                device_registry = dr.async_get(self.hass)
+
+                for entity in data["entities"]:
+                    entity["compat_name"] = None
+                    name = entity["name"]
+
+                    if (
+                        not name
+                        or (device_id := entity["device_id"]) is None
+                        or (device := device_registry.async_get(device_id)) is None
+                        or not (device_name := device.name_by_user or device.name)
+                    ):
+                        continue
+
+                    # The device is not a name part of an entity with its own area
+                    if (
+                        entity["area_id"] is None
+                        and (
+                            stripped := _async_strip_prefix_from_entity_name(
+                                name, device_name
+                            )
+                        )
+                        is not None
+                    ):
+                        entity["name"] = stripped
+                        continue
+
+                    entity["compat_name"] = name
+                    if (
+                        entity["options"].get("conversation", {}).get("should_expose")
+                        and (aliases := entity["aliases_v2"])
+                        and aliases[0] is None
+                    ):
+                        aliases[0] = name
+
+                for entity in data["deleted_entities"]:
+                    # We don't know what the device name was, so the only thing we can
+                    # do is to clear the overwritten name to not mislead users.
+                    entity["name"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1199,6 +1343,16 @@ def _validate_item(
         )
 
 
+@callback
+def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+    """Return if an entity has an area of its own but no name of its own."""
+    return (
+        entry.area_id is not None
+        and entry.device_id is not None
+        and not entry.entity_name
+    )
+
+
 class EntityRegistry(BaseRegistry):
     """Class to hold a registry of entities."""
 
@@ -1210,6 +1364,7 @@ class EntityRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1366,7 +1521,12 @@ class EntityRegistry(BaseRegistry):
         """
         parts = self.settings.entity_id_parts
         if parts is None:
-            parts = (EntityNamePart.AREA, EntityNamePart.DEVICE, EntityNamePart.ENTITY)
+            parts = (
+                EntityNamePart.AREA,
+                EntityNamePart.PARENT_DEVICE,
+                EntityNamePart.DEVICE,
+                EntityNamePart.ENTITY,
+            )
         object_id = _async_get_full_entity_name(
             self.hass,
             area_id=area_id,
@@ -1374,10 +1534,10 @@ class EntityRegistry(BaseRegistry):
             fallback=f"{platform}_{unique_id}",
             has_entity_name=has_entity_name,
             name=name,
+            next_name_part=_entity_next_name_part(area_id, device_id),
             original_name=object_id_base,
             overridden_name=suggested_object_id,
             parts=parts,
-            unprefix_name=True,
         )
         return self.async_get_available_entity_id(
             domain,
@@ -1414,6 +1574,7 @@ class EntityRegistry(BaseRegistry):
         )
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
@@ -1478,7 +1639,6 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
-        self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
         device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
@@ -1506,14 +1666,9 @@ class EntityRegistry(BaseRegistry):
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
                 disabled_by = deleted_entity.disabled_by
-                # Adjust disabled_by based on config entry state
-                if config_entry and config_entry is not UNDEFINED:
-                    if config_entry.disabled_by:
-                        if disabled_by is None:
-                            disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
-                    elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                        disabled_by = None
-                elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                # A stored derived disabled_by can be stale, so reset it to be
+                # derived again below
+                if disabled_by in _DERIVED_DISABLED_BY:
                     disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
@@ -1566,14 +1721,22 @@ class EntityRegistry(BaseRegistry):
         original_name_unprefixed = _unprefix_original_name(
             self.hass, original_name, has_entity_name_bool, device_id
         )
+        config_entry = none_if_undefined(config_entry)
 
         if (
             disabled_by is None
-            and config_entry
-            and config_entry is not UNDEFINED
+            and config_entry is not None
             and config_entry.pref_disable_new_entities
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
+        # Not explicitly disabled, so derive disabled_by
+        if disabled_by is None:
+            device = (
+                dr.async_get(self.hass).async_get(device_id)
+                if device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(config_entry, device)
 
         entry = RegistryEntry(
             aliases=aliases,
@@ -1622,9 +1785,9 @@ class EntityRegistry(BaseRegistry):
         return entry
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_remove")
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.hass.verify_event_loop_thread("entity_registry.async_remove")
         if entity_id not in self.entities:
             # Allow attempts to remove an entity which does not exist. If this is
             # not allowed, there will be races during cleanup where we iterate over
@@ -1659,6 +1822,9 @@ class EntityRegistry(BaseRegistry):
             orphaned_timestamp=orphaned_timestamp,
             platform=entity.platform,
             unique_id=entity.unique_id,
+        )
+        ir.async_delete_issue(
+            self.hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entity)
         )
         self.hass.bus.async_fire_internal(
             EVENT_ENTITY_REGISTRY_UPDATED,
@@ -1749,57 +1915,44 @@ class EntityRegistry(BaseRegistry):
             )
             device_name = device.name_by_user or device.name
             for entity in entities:
-                if entity.has_entity_name:
-                    continue
-
-                # When a user renames a device, update entity names to reflect
-                # the new device name.
-                # An empty name_unprefixed means the entity name equals
-                # the device name (e.g. a main sensor); a non-empty one
-                # is appended as a suffix.
                 name: str | UndefinedType | None = UNDEFINED
-                if (
-                    by_user
-                    and entity.name is None
-                    and (name_unprefixed := entity.original_name_unprefixed) is not None
-                ):
-                    if not name_unprefixed:
-                        name = device_name
-                    elif device_name:
-                        name = f"{device_name} {name_unprefixed}"
-
-                original_name_unprefixed = _async_strip_prefix_from_entity_name(
-                    entity.original_name, device_name
-                )
+                original_name_unprefixed: str | UndefinedType | None = UNDEFINED
+                if not entity.has_entity_name:
+                    # When a user renames a device, pin the previously stripped
+                    # original name so the new device name is not prefixed twice.
+                    if by_user and entity.name is None:
+                        name = entity.original_name_unprefixed
+                    original_name_unprefixed = _async_strip_prefix_from_entity_name(
+                        entity.original_name, device_name
+                    )
 
                 self._async_update_entity(
                     entity.entity_id,
+                    compat_name=None if entity.compat_name is not None else UNDEFINED,
                     name=name,
                     original_name_unprefixed=original_name_unprefixed,
                 )
 
-        # Re-enable disabled entities if the device is no longer disabled
-        if not device.disabled:
-            entities = async_entries_for_device(
-                self, event.data["device_id"], include_disabled_entities=True
-            )
-            for entity in entities:
-                if entity.disabled_by is not RegistryEntryDisabler.DEVICE:
-                    continue
-                self.async_update_entity(entity.entity_id, disabled_by=None)
+        if "disabled_by" not in changes:
             return
 
-        # Ignore device disabled by config entry, this is handled by
-        # async_config_entry_disabled_by_changed
-        if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
-            return
-
-        # Fetch entities which are not already disabled and disable them
-        entities = async_entries_for_device(self, event.data["device_id"])
+        # The disabled state of the device changed, so derive disabled_by of its
+        # entities again
+        entities = async_entries_for_device(
+            self, event.data["device_id"], include_disabled_entities=True
+        )
         for entity in entities:
-            self.async_update_entity(
-                entity.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-            )
+            if entity.disabled_by not in _DERIVED_DISABLED_BY:
+                continue
+            config_entry = None
+            if entity.config_entry_id is not None:
+                config_entry = self.hass.config_entries.async_get_entry(
+                    entity.config_entry_id
+                )
+            disabled_by = _derived_disabled_by(config_entry, device)
+            if disabled_by is entity.disabled_by:
+                continue
+            self.async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
     @callback
     def _ignore_composite_device_id(
@@ -1817,7 +1970,10 @@ class EntityRegistry(BaseRegistry):
         device_registry = dr.async_get(self.hass)
         if (
             device_registry.async_get(
-                device_id, include_main_devices=False, include_child_devices=False
+                device_id,
+                include_main_devices=False,
+                include_child_devices=False,
+                include_composite_devices=True,
             )
             is None
         ):
@@ -1839,6 +1995,7 @@ class EntityRegistry(BaseRegistry):
         return UNDEFINED
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_entity")
     def _async_update_entity(
         self,
         entity_id: str,
@@ -1847,6 +2004,7 @@ class EntityRegistry(BaseRegistry):
         area_id: str | UndefinedType | None = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | UndefinedType | None = UNDEFINED,
+        compat_name: str | UndefinedType | None = UNDEFINED,
         config_entry_id: str | UndefinedType | None = UNDEFINED,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         device_class: str | UndefinedType | None = UNDEFINED,
@@ -1877,6 +2035,27 @@ class EntityRegistry(BaseRegistry):
 
         device_id = self._ignore_composite_device_id(old.platform, device_id)
 
+        if disabled_by is None or (
+            disabled_by is UNDEFINED
+            and (config_entry_id is not UNDEFINED or device_id is not UNDEFINED)
+            and old.disabled_by in _DERIVED_DISABLED_BY
+        ):
+            new_config_entry_id = (
+                old.config_entry_id if config_entry_id is UNDEFINED else config_entry_id
+            )
+            new_device_id = old.device_id if device_id is UNDEFINED else device_id
+            new_config_entry = (
+                self.hass.config_entries.async_get_entry(new_config_entry_id)
+                if new_config_entry_id is not None
+                else None
+            )
+            new_device = (
+                dr.async_get(self.hass).async_get(new_device_id)
+                if new_device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(new_config_entry, new_device)
+
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
@@ -1885,6 +2064,7 @@ class EntityRegistry(BaseRegistry):
             ("area_id", area_id),
             ("categories", categories),
             ("capabilities", capabilities),
+            ("compat_name", compat_name),
             ("config_entry_id", config_entry_id),
             ("config_subentry_id", config_subentry_id),
             ("device_class", device_class),
@@ -1928,20 +2108,6 @@ class EntityRegistry(BaseRegistry):
                 unique_id=new_unique_id,
             )
 
-        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
-            if config_entry_id:
-                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-                if TYPE_CHECKING:
-                    # We've checked the config_entry exists in _validate_item
-                    assert config_entry is not None
-                if config_entry.disabled_by:
-                    if old.disabled_by is None:
-                        new_values["disabled_by"] = RegistryEntryDisabler.CONFIG_ENTRY
-                elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                    new_values["disabled_by"] = None
-            elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                new_values["disabled_by"] = None
-
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if not self._entity_id_available(new_entity_id):
                 raise ValueError("Entity with this ID is already registered")
@@ -1952,7 +2118,6 @@ class EntityRegistry(BaseRegistry):
             if split_entity_id(new_entity_id)[0] != split_entity_id(entity_id)[0]:
                 raise ValueError("New entity ID should be same domain")
 
-            self.entities.pop(entity_id)
             entity_id = new_values["entity_id"] = new_entity_id
             old_values["entity_id"] = old.entity_id
 
@@ -1974,8 +2139,6 @@ class EntityRegistry(BaseRegistry):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
-
         if original_name_unprefixed is UNDEFINED and (
             original_name is not UNDEFINED
             or device_id is not UNDEFINED
@@ -1996,10 +2159,33 @@ class EntityRegistry(BaseRegistry):
             )
             new_values["original_name_unprefixed"] = original_name_unprefixed
 
-        new = self.entities[entity_id] = attr.evolve(old, **new_values)
+        if (
+            compat_name is UNDEFINED
+            and old.compat_name is not None
+            and any(
+                key in new_values for key in ("device_id", "has_entity_name", "name")
+            )
+        ):
+            new_values["compat_name"] = None
+
+        new = attr.evolve(old, **new_values)
+
+        # Only user edits are rejected, integration updates surface as a repair issue
+        if (
+            "area_id" in new_values or "name" in new_values
+        ) and _has_own_area_without_own_name(self.hass, new):
+            raise ValueError(
+                "An entity without a name of its own cannot have an area of its own, "
+                "set the area on its device instead"
+            )
+
+        if entity_id != old.entity_id:
+            self.entities.pop(old.entity_id)
+        self.entities[entity_id] = new
 
         self.async_schedule_save()
 
+        old_values.pop("compat_name", None)
         old_values.pop("original_name_unprefixed", None)
 
         data: _EventEntityRegistryUpdatedData_Update = {
@@ -2127,14 +2313,13 @@ class EntityRegistry(BaseRegistry):
         return self._async_update_entity(entity_id, options=new_options)
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_settings")
     def async_update_settings(
         self,
         *,
         entity_id_parts: list[EntityNamePart] | UndefinedType | None = UNDEFINED,
     ) -> EntityRegistrySettings:
         """Update entity registry settings."""
-        self.hass.verify_event_loop_thread("entity_registry.async_update_settings")
-
         old = self.settings
         new = old
         if entity_id_parts is not UNDEFINED:
@@ -2155,6 +2340,9 @@ class EntityRegistry(BaseRegistry):
     @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        if self._loaded_event.is_set():
+            raise RuntimeError("Entity registry is already loaded")
+
         # Device registry must be loaded before entity registry because
         # migration and entity processing reference device names, and because entities
         # are moved to the correct device when a pre-migration composite device was
@@ -2164,6 +2352,7 @@ class EntityRegistry(BaseRegistry):
 
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
+        _async_setup_own_area_without_own_name_issues(self.hass, self)
 
         data = await self._store.async_load()
         entities = EntityRegistryItems(self.hass)
@@ -2256,6 +2445,7 @@ class EntityRegistry(BaseRegistry):
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     compat_aliases=entity["aliases"],
+                    compat_name=entity["compat_name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -2360,14 +2550,48 @@ class EntityRegistry(BaseRegistry):
                     entity_id_parts=tuple(EntityNamePart(part) for part in parts_data)
                 )
 
+        # A stored derived disabled_by can be stale, when an earlier version
+        # handled it incorrectly or when not all registries were saved before a
+        # shutdown, so derive it again from the loaded state.
+        # Config entries and device registry load concurrently with the entity
+        # registry; device registry load was already awaited above.
+        await self.hass.config_entries.async_wait_initialized()
+        disabled_by_changed = False
+        for entry in list(entities.values()):
+            if entry.disabled_by not in _DERIVED_DISABLED_BY:
+                continue
+            config_entry = (
+                self.hass.config_entries.async_get_entry(entry.config_entry_id)
+                if entry.config_entry_id is not None
+                else None
+            )
+            device = (
+                device_registry.async_get(entry.device_id)
+                if entry.device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(config_entry, device)
+            if disabled_by is entry.disabled_by:
+                continue
+            entities[entry.entity_id] = attr.evolve(
+                entry, disabled_by=disabled_by, modified_at=utcnow()
+            )
+            disabled_by_changed = True
+
         self.entities = entities
         self.deleted_entities = deleted_entities
         self.settings = settings
         self._entities_data = entities.data
 
-        # Persist entities moved off a split pre-migration composite device
-        if migrated_composite_device:
+        # Persist entities repaired on load
+        if migrated_composite_device or disabled_by_changed:
             self.async_schedule_save()
+
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the entity registry is fully loaded."""
+        await self._loaded_event.wait()
 
     @override
     def _data_to_save(self) -> dict[str, Any]:
@@ -2498,7 +2722,6 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
-    assert DATA_REGISTRY not in hass.data
     await async_get(hass).async_load(load_empty=load_empty)
 
 
@@ -2580,28 +2803,20 @@ def async_config_entry_disabled_by_changed(
 ) -> None:
     """Handle a config entry being disabled or enabled.
 
-    Disable entities in the registry that are associated with a config entry when
-    the config entry is disabled, enable entities in the registry that are associated
-    with a config entry when the config entry is enabled and the entities are marked
-    DISABLED_CONFIG_ENTRY.
+    The disabled state of the config entry changed, so derive disabled_by of its
+    entities again.
     """
-
-    entities = async_entries_for_config_entry(registry, config_entry.entry_id)
-
-    if not config_entry.disabled_by:
-        for entity in entities:
-            if entity.disabled_by is not RegistryEntryDisabler.CONFIG_ENTRY:
-                continue
-            registry.async_update_entity(entity.entity_id, disabled_by=None)
-        return
-
-    for entity in entities:
-        if entity.disabled:
-            # Entity already disabled, do not overwrite
+    device_registry = dr.async_get(registry.hass)
+    for entity in async_entries_for_config_entry(registry, config_entry.entry_id):
+        if entity.disabled_by not in _DERIVED_DISABLED_BY:
             continue
-        registry.async_update_entity(
-            entity.entity_id, disabled_by=RegistryEntryDisabler.CONFIG_ENTRY
-        )
+        device = None
+        if entity.device_id is not None:
+            device = device_registry.async_get(entity.device_id)
+        disabled_by = _derived_disabled_by(config_entry, device)
+        if disabled_by is entity.disabled_by:
+            continue
+        registry.async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
 
 @callback
@@ -2665,40 +2880,56 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     """Set up the entity restore mechanism."""
 
     @callback
-    def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
-        """Clean up restored states filter."""
-        return (event_data["action"] == "remove") or (
-            event_data["action"] == "update"
-            and "old_entity_id" in event_data
+    def sync_restored_state_filter(event_data: Mapping[str, Any]) -> bool:
+        """Filter registry events that may affect a restored state."""
+        if event_data["action"] == "remove":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return (
+            "old_entity_id" in event_data
             and event_data["entity_id"] != event_data["old_entity_id"]
-        )
+        ) or "disabled_by" in event_data["changes"]
 
     @callback
-    def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
-        """Clean up restored states."""
-        if event.data["action"] == "update":
-            old_entity_id = event.data["old_entity_id"]
-            old_state = hass.states.get(old_entity_id)
-            if old_state is None or not old_state.attributes.get(
-                EntityStateAttribute.RESTORED
-            ):
-                return
-            hass.states.async_remove(old_entity_id, context=event.context)
-            if entry := registry.async_get(event.data["entity_id"]):
-                entry.write_unavailable_state(hass)
-            return
-
-        state = hass.states.get(event.data["entity_id"])
-
+    def remove_restored_state(entity_id: str, context: Context) -> bool:
+        """Remove the restored state of an entity, if it has one."""
+        state = hass.states.get(entity_id)
         if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
+            return False
+        hass.states.async_remove(entity_id, context=context)
+        return True
+
+    @callback
+    def sync_restored_state(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        """Keep the restored state of an entity in sync with its registry entry."""
+        data = event.data
+        entity_id = data["entity_id"]
+        if data["action"] == "remove":
+            remove_restored_state(entity_id, event.context)
             return
 
-        hass.states.async_remove(event.data["entity_id"], context=event.context)
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+
+        had_restored_state = (
+            old_entity_id := data.get("old_entity_id")
+        ) is not None and remove_restored_state(old_entity_id, event.context)
+
+        entry = registry.async_get(entity_id)
+        if entry is None or entry.disabled:
+            remove_restored_state(entity_id, event.context)
+            return
+
+        if not had_restored_state and "disabled_by" not in data["changes"]:
+            return
+        if hass.states.get(entity_id) is None:
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
-        cleanup_restored_states,
-        event_filter=cleanup_restored_states_filter,
+        sync_restored_state,
+        event_filter=sync_restored_state_filter,
     )
 
     if hass.is_running:
@@ -2716,6 +2947,89 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
             entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+
+
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE = "entity_own_area_without_own_name"
+_OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS = {
+    "area_id",
+    "device_id",
+    "entity_id",
+    "has_entity_name",
+    "name",
+    "original_name",
+}
+
+
+def _own_area_without_own_name_issue_id(entry: RegistryEntry) -> str:
+    """Return the issue ID of an entry, keyed on its stable ID."""
+    return f"{_OWN_AREA_WITHOUT_OWN_NAME_ISSUE}_{entry.id}"
+
+
+@callback
+def _async_setup_own_area_without_own_name_issues(
+    hass: HomeAssistant, registry: EntityRegistry
+) -> None:
+    """Report entities with an area of their own but no name of their own.
+
+    Removals are handled directly by the registry, since the remove event lacks
+    the entry ID.
+    """
+
+    @callback
+    def _async_create_issue(entry: RegistryEntry) -> None:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            _own_area_without_own_name_issue_id(entry),
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=_OWN_AREA_WITHOUT_OWN_NAME_ISSUE,
+            translation_placeholders={
+                "entity_id": entry.entity_id,
+                "entity_settings_url": (
+                    f"/config/devices/device/{entry.device_id}"
+                    f"?more-info-entity-id={entry.entity_id}&more-info-view=settings"
+                ),
+            },
+        )
+
+    @callback
+    def _relevant_changes_filter(event_data: Mapping[str, Any]) -> bool:
+        if event_data["action"] == "create":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return not _OWN_AREA_WITHOUT_OWN_NAME_ISSUE_FIELDS.isdisjoint(
+            event_data["changes"]
+        )
+
+    @callback
+    def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        if (entry := registry.async_get(event.data["entity_id"])) is None:
+            return
+        if _has_own_area_without_own_name(hass, entry):
+            _async_create_issue(entry)
+        else:
+            ir.async_delete_issue(
+                hass, HOMEASSISTANT_DOMAIN, _own_area_without_own_name_issue_id(entry)
+            )
+
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        _handle_registry_update,
+        event_filter=_relevant_changes_filter,
+    )
+
+    if hass.is_running:
+        return
+
+    @callback
+    def _async_create_issues(_: Event) -> None:
+        for entry in registry.entities.values():
+            if _has_own_area_without_own_name(hass, entry):
+                _async_create_issue(entry)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)
 
 
 async def async_migrate_entries(
@@ -2742,13 +3056,13 @@ async def async_migrate_entries(
 def async_validate_entity_id(registry: EntityRegistry, entity_id_or_uuid: str) -> str:
     """Validate and resolve an entity id or UUID to an entity id.
 
-    Raises vol.Invalid if the entity or UUID is invalid, or if the UUID is not
+    Raises probatio.Invalid if the entity or UUID is invalid, or if the UUID is not
     associated with an entity registry item.
     """
     if valid_entity_id(entity_id_or_uuid):
         return entity_id_or_uuid
     if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
-        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        raise probatio.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
     return entry.entity_id
 
 
@@ -2775,7 +3089,7 @@ def async_validate_entity_ids(
     """Validate and resolve a list of entity ids or UUIDs to a list of entity ids.
 
     Returns a list with UUID resolved to entity_ids.
-    Raises vol.Invalid if any item is invalid, or if any a UUID is not associated with
+    Raises probatio.Invalid if any item is invalid, or if any a UUID is not associated with
     an entity registry item.
     """
 

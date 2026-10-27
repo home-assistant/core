@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_data": "No data is available for the location or zone you have selected.",
@@ -11,8 +8,7 @@
     "step": {
       "coordinates": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       },
       "country": {

@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SEN
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DormakabaDkeyConfigEntry
-) -> bool:
+) -> None:
     """Set up Dormakaba dKey from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
@@ -63,11 +63,10 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
     entry.async_on_unload(coordinator.lock.disconnect)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DormakabaDkeyConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

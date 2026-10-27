@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -60,6 +58,17 @@
     "sensor": {
       "certificate_expiration": {
         "name": "Certificate expiration"
+      },
+      "dns_rcode": {
+        "name": "DNS response code",
+        "state": {
+          "format_error": "Format error",
+          "no_error": "No error",
+          "non_existent_domain": "Non-existent domain",
+          "not_implemented": "Not implemented",
+          "refused": "Refused",
+          "server_failure": "Server failure"
+        }
       },
       "last_event": {
         "name": "Last event",

@@ -1,6 +1,7 @@
 {
   "domain": "amazon_polly",
   "name": "Amazon Polly",
+  "categories": ["ai_voice.speech"],
   "codeowners": ["@jschlyter"],
   "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
   "iot_class": "cloud_push",

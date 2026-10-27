@@ -15,6 +15,39 @@ _PYTHON_VERSION_ERROR = (
 
 @patch("sys.exit")
 @pytest.mark.parametrize(
+    ("is_venv", "is_docker", "expected_exit_calls", "expected_stderr"),
+    [
+        (
+            False,
+            False,
+            [call(1)],
+            "Home Assistant must be run in a Python virtual environment or a container.\n",
+        ),
+        (True, False, [], ""),
+        (False, True, [], ""),
+        (True, True, [], ""),
+    ],
+)
+def test_validate_environment(
+    mock_exit: Mock,
+    is_venv: bool,
+    is_docker: bool,
+    expected_exit_calls: list[call],
+    expected_stderr: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test validate Python environment."""
+    with (
+        patch("homeassistant.__main__.is_virtual_env", return_value=is_venv),
+        patch("homeassistant.__main__.is_docker_env", return_value=is_docker),
+    ):
+        main.validate_environment()
+    assert mock_exit.call_args_list == expected_exit_calls
+    assert capsys.readouterr().err == expected_stderr
+
+
+@patch("sys.exit")
+@pytest.mark.parametrize(
     ("version_info", "expected_exit_calls", "expected_stderr"),
     [
         ((2, 7, 8), [call(1)], _PYTHON_VERSION_ERROR),

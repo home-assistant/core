@@ -38,7 +38,10 @@ class KnockiCoordinator(DataUpdateCoordinator[dict[int, Trigger]]):
         try:
             triggers = await self.client.get_triggers()
         except KnockiConnectionError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from exc
         current_triggers = {
             (trigger.device_id, trigger.details.trigger_id) for trigger in triggers
         }

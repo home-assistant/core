@@ -1,0 +1,34 @@
+{
+  "deviceClass": "Thermostat",
+  "deviceType": "Thermostat",
+  "deviceID": "LCC-AABBCC000011",
+  "macID": "AABBCC000011",
+  "name": "Hallway",
+  "deviceModel": "T9-T10",
+  "units": "Celsius",
+  "indoorTemperature": 21.5,
+  "allowedModes": ["Heat", "Off", "Cool", "Auto"],
+  "minHeatSetpoint": 4.5,
+  "maxHeatSetpoint": 32,
+  "minCoolSetpoint": 10,
+  "maxCoolSetpoint": 37,
+  "changeableValues": {
+    "mode": "Heat",
+    "autoChangeoverActive": false,
+    "heatSetpoint": 20,
+    "coolSetpoint": 24,
+    "thermostatSetpointStatus": "NoHold",
+    "heatCoolMode": "Heat"
+  },
+  "operationStatus": {
+    "mode": "Heat"
+  },
+  "settings": {
+    "fan": {
+      "allowedModes": ["On", "Auto", "Circulate"],
+      "changeableValues": {
+        "mode": "Auto"
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -35,7 +36,10 @@ class ViCareFlowHandler(
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if self.source != SOURCE_REAUTH and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return await super().async_step_user(user_input)
 
@@ -81,6 +85,9 @@ class ViCareFlowHandler(
         self._abort_if_unique_id_configured()
 
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return await self.async_step_user()

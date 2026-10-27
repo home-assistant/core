@@ -1,6 +1,7 @@
 {
   "domain": "google_photos",
   "name": "Google Photos",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

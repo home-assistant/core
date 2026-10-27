@@ -9,7 +9,8 @@ from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject
-import voluptuous as vol
+import probatio
+from serialx import SerialException
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -120,7 +121,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await reader_factory()
-        except OSError:
+        except OSError, SerialException:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -215,10 +216,10 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PORT): SerialPortSelector(),
-                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
+                probatio.Required(CONF_PORT): SerialPortSelector(),
+                probatio.Required(CONF_DSMR_VERSION): probatio.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -246,7 +247,9 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=vol.Schema({vol.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -294,14 +297,14 @@ class DSMROptionFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TIME_BETWEEN_UPDATE,
                         default=self.config_entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
                 }
             ),
         )

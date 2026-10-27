@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Wrong account: Please authenticate with the right account."
     },
     "error": {
@@ -136,6 +135,13 @@
       }
     },
     "select": {
+      "cleaning_cycles": {
+        "name": "Cleaning cycles",
+        "state": {
+          "one": "1x",
+          "two": "2x"
+        }
+      },
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
@@ -732,11 +738,20 @@
     "invalid_fan_speed": {
       "message": "Invalid fan speed: {fan_speed}"
     },
+    "invalid_q10_coordinate": {
+      "message": "Coordinates ({x}, {y}) are not valid for this vacuum"
+    },
+    "invalid_q10_zone": {
+      "message": "The zone coordinates are not valid for this vacuum"
+    },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
     },
     "map_failure": {
       "message": "Something went wrong creating the map"
+    },
+    "map_not_found": {
+      "message": "Map not found"
     },
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."

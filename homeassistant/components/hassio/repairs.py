@@ -6,7 +6,7 @@ from typing import Any, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -41,6 +41,7 @@ from .issues import Issue, Suggestion
 
 SUGGESTION_CONFIRMATION_REQUIRED = {
     "addon_execute_remove",
+    "mount_execute_remove",
     "mount_move_local_data",
     "system_adopt_data_disk",
     "system_execute_reboot",
@@ -89,7 +90,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         """Return form for suggestion."""
         return self.async_show_form(
             step_id=suggestion.key,
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=self.description_placeholders,
             last_step=True,
         )
@@ -232,10 +233,10 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
             placeholders[PLACEHOLDER_KEY_ADDON_INFO] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/info"
+                f"homeassistant://config/app/{self.issue.reference}/info"
             )
             placeholders[PLACEHOLDER_KEY_ADDON_DOCUMENTATION] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/documentation"
+                f"homeassistant://config/app/{self.issue.reference}/documentation"
             )
         return placeholders or None
 

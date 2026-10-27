@@ -1,14 +1,13 @@
 """Tests for the diagnostics data provided by the YouTube integration."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import ComponentSetup
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

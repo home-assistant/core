@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from harbor.config import HarborCameraConfig
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
@@ -19,19 +19,19 @@ HOSTNAME_PREFIX = "harborc-"
 TEXT_SELECTOR = selector.TextSelector(selector.TextSelectorConfig())
 PEM_SELECTOR = selector.TextSelector(selector.TextSelectorConfig(multiline=True))
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL): TEXT_SELECTOR,
-        vol.Required(CONF_CERT_PEM): PEM_SELECTOR,
-        vol.Required(CONF_KEY_PEM): PEM_SELECTOR,
-        vol.Required(CONF_IP_ADDRESS): TEXT_SELECTOR,
+        probatio.Required(CONF_SERIAL): TEXT_SELECTOR,
+        probatio.Required(CONF_CERT_PEM): PEM_SELECTOR,
+        probatio.Required(CONF_KEY_PEM): PEM_SELECTOR,
+        probatio.Required(CONF_IP_ADDRESS): TEXT_SELECTOR,
     }
 )
 
-STEP_DISCOVERY_CONFIRM_SCHEMA = vol.Schema(
+STEP_DISCOVERY_CONFIRM_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CERT_PEM): PEM_SELECTOR,
-        vol.Required(CONF_KEY_PEM): PEM_SELECTOR,
+        probatio.Required(CONF_CERT_PEM): PEM_SELECTOR,
+        probatio.Required(CONF_KEY_PEM): PEM_SELECTOR,
     }
 )
 

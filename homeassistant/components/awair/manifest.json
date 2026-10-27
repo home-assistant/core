@@ -1,6 +1,7 @@
 {
   "domain": "awair",
   "name": "Awair",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@ahayworth", "@ricohageman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/awair",

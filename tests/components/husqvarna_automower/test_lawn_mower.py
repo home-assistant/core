@@ -6,8 +6,9 @@ from unittest.mock import AsyncMock
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -46,6 +45,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
             MowerActivities.GOING_HOME,
             MowerStates.RESTRICTED,
             LawnMowerActivity.RETURNING,
+        ),
+        (
+            MowerActivities.NOT_APPLICABLE,
+            MowerStates.STOPPED,
+            LawnMowerActivity.IDLE,
         ),
     ],
 )
