@@ -18,9 +18,9 @@ MOCK_SERVICE_POINT = "SP001"
 MOCK_SERVICE_POINT_2 = "SP002"
 
 # Device names embed "<account_id>-<service_point>" so entity_ids carry both.
-ENTITY_ELECTRIC_USAGE = "sensor.electric_meter_1234567890_sp001_last_billing_usage"
+ENTITY_ELECTRIC_USAGE = "sensor.electric_meter_1234567890_sp001_latest_daily_usage"
 ENTITY_ELECTRIC_COST = "sensor.electric_meter_1234567890_sp001_last_billing_cost"
-ENTITY_GAS_USAGE = "sensor.gas_meter_1234567890_sp002_last_billing_usage"
+ENTITY_GAS_USAGE = "sensor.gas_meter_1234567890_sp002_latest_daily_usage"
 ENTITY_GAS_COST = "sensor.gas_meter_1234567890_sp002_last_billing_cost"
 
 

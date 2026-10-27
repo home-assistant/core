@@ -193,6 +193,9 @@ class NationalGridDataUpdateCoordinator(
 
         if not usages:
             return None
+        # One daily reading. If py-nationalgrid falls back to its 15-minute
+        # endpoint, a day holds several interval records and this under-reports
+        # until usage moves to summed statistics (planned follow-up).
         return max(usages, key=lambda u: u["date"])["quantity"]
 
     def _cache_computed_values(self, data: NationalGridCoordinatorData) -> None:

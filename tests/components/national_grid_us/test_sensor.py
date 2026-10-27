@@ -174,10 +174,10 @@ async def test_shared_service_point_across_accounts_no_collision(
     assert device_1.id != device_2.id
 
     state_1 = hass.states.get(
-        f"sensor.electric_meter_{MOCK_ACCOUNT_ID}_sp001_last_billing_usage"
+        f"sensor.electric_meter_{MOCK_ACCOUNT_ID}_sp001_latest_daily_usage"
     )
     state_2 = hass.states.get(
-        f"sensor.electric_meter_{MOCK_ACCOUNT_ID_2}_sp001_last_billing_usage"
+        f"sensor.electric_meter_{MOCK_ACCOUNT_ID_2}_sp001_latest_daily_usage"
     )
     assert state_1 is not None
     assert state_2 is not None

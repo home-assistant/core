@@ -38,7 +38,7 @@
         "name": "Last billing cost"
       },
       "energy_usage": {
-        "name": "Last billing usage"
+        "name": "Latest daily usage"
       }
     }
   }
