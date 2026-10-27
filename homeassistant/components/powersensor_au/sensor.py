@@ -747,13 +747,14 @@ class PowersensorPlugEntity(PowersensorMeasurementEntity):
 
 
 class PowersensorHouseholdEntity(SensorEntity):
-    """Sensor entity backed by the Powersensor VirtualHousehold calculation engine."""
+    """Sensor entity backed by the Powersensor VirtualHousehold calculation engine.
 
-    # Household entities are always considered available because VirtualHousehold
-    # is a pure in-process calculation layer.  If the underlying devices go offline,
-    # their own entities become unavailable — marking the VHH unavailable too would
-    # cause unnecessary dashboard churn.
-    _attr_available = True
+    Always available, unlike the device entities: VirtualHousehold is an
+    in-process calculation, and the device entities it derives from already
+    show when their data stops.  Marking these unavailable as well would only
+    add dashboard churn.
+    """
+
     _attr_has_entity_name = True
     _attr_should_poll = False
 
