@@ -522,7 +522,7 @@ class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes and group entities."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
-    _attr_tpl: Callable[[ReceiveMessage], ReceivePayloadType] | None = None
+    _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
     _message_callback: Callable[
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
@@ -610,7 +610,9 @@ class MqttAttributesMixin(Entity):
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
         """Update extra state attributes."""
-        payload = self._attr_tpl(msg) if self._attr_tpl is not None else msg.payload
+        payload = (
+            self._attr_tpl(msg.payload) if self._attr_tpl is not None else msg.payload
+        )
         try:
             json_dict = json_loads(payload) if isinstance(payload, str) else None
         except ValueError:
@@ -729,7 +731,7 @@ class MqttAvailabilityMixin(Entity):
         topic = msg.topic
         avail_topic = self._avail_topics[topic]
         template = avail_topic[CONF_AVAILABILITY_TEMPLATE]
-        payload = template(msg) if template else msg.payload
+        payload = template(msg.payload) if template else msg.payload
 
         if payload == avail_topic[CONF_PAYLOAD_AVAILABLE]:
             self._available[topic] = True

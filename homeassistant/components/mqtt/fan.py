@@ -215,7 +215,7 @@ class MqttFan(MqttEntity, FanEntity):
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
-    _value_templates: dict[str, Callable[[ReceiveMessage], ReceivePayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
     _feature_percentage: bool
     _feature_preset_mode: bool
     _topic: dict[str, Any]
@@ -338,7 +338,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message."""
-        payload = self._value_templates[CONF_STATE](msg)
+        payload = self._value_templates[CONF_STATE](msg.payload)
         if not payload:
             _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
             return
@@ -352,7 +352,9 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _percentage_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the percentage."""
-        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](msg)
+        rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
+            msg.payload
+        )
         if not rendered_percentage_payload:
             _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
             return
@@ -390,7 +392,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _preset_mode_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for preset mode."""
-        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg))
+        preset_mode = str(self._value_templates[ATTR_PRESET_MODE](msg.payload))
         if preset_mode == self._payload["PRESET_MODE_RESET"]:
             self._attr_preset_mode = None
             return
@@ -411,7 +413,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _oscillation_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the oscillation."""
-        payload = self._value_templates[ATTR_OSCILLATING](msg)
+        payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
         if not payload:
             _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
             return
@@ -423,7 +425,7 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _direction_received(self, msg: ReceiveMessage) -> None:
         """Handle new received MQTT message for the direction."""
-        direction = self._value_templates[ATTR_DIRECTION](msg)
+        direction = self._value_templates[ATTR_DIRECTION](msg.payload)
         if not direction:
             _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
             return

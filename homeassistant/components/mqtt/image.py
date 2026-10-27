@@ -105,7 +105,7 @@ class MqttImage(MqttEntity, ImageEntity):
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx2.AsyncClient
-    _url_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 
     def __init__(
@@ -170,7 +170,7 @@ class MqttImage(MqttEntity, ImageEntity):
     def _image_from_url_request_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         try:
-            url = cv.url(self._url_template(msg))
+            url = cv.url(self._url_template(msg.payload))
             self._attr_image_url = url
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)

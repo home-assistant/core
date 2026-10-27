@@ -406,14 +406,14 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     _topic: dict[str, Any]
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
-    _value_templates: dict[str, Callable[[ReceiveMessage], ReceivePayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
 
     def render_template(
         self, msg: ReceiveMessage, template_name: str
     ) -> ReceivePayloadType:
         """Render a template by name."""
         template = self._value_templates[template_name]
-        return template(msg)
+        return template(msg.payload)
 
     @callback
     def _parse_float_payload(

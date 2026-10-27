@@ -122,7 +122,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     _compiled_pattern: re.Pattern[Any] | None
     _optimistic: bool
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -156,7 +156,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving state message via MQTT."""
-        payload = str(self._value_template(msg))
+        payload = str(self._value_template(msg.payload))
         if check_state_too_long(_LOGGER, payload, self.entity_id, msg):
             return
         self._attr_native_value = payload

@@ -82,6 +82,7 @@ from .const import (
 )
 from .models import (
     DATA_MQTT,
+    LAST_PAYLOAD_JSON,
     MessageCallbackType,
     MqttData,
     PublishMessage,
@@ -1397,8 +1398,7 @@ class MQTT:
                     )
             else:
                 self.hass.async_run_hass_job(job, receive_msg)
-        for receive_msg in msg_cache_by_subscription_topic.values():
-            receive_msg.clear_payload_json()
+        LAST_PAYLOAD_JSON.clear()
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback

@@ -169,7 +169,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Run when new MQTT message has been received."""
-        payload = self._value_template(msg)
+        payload = self._value_template(msg.payload)
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",

@@ -100,7 +100,7 @@ def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
 class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     """MQTT Tag scanner."""
 
-    _value_template: Callable[[ReceiveMessage, str], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
 
     def __init__(
         self,
@@ -142,7 +142,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
         """Handle new tag scanned."""
         try:
-            tag_id = str(self._value_template(msg, "")).strip()
+            tag_id = str(self._value_template(msg.payload, "")).strip()
         except MqttValueTemplateException as exc:
             _LOGGER.warning(exc)
             return

@@ -108,7 +108,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _attributes_extra_blocked = MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _command_topics: dict[str, str]
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -158,7 +158,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        payload = str(self._value_template(msg))
+        payload = str(self._value_template(msg.payload))
         if not payload:
             _LOGGER.debug(
                 "Invalid empty activity payload from topic %s, for entity %s",

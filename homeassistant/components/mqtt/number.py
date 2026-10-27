@@ -140,7 +140,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
     _optimistic: bool
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -173,7 +173,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
     def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         num_value: int | float | None
-        payload = str(self._value_template(msg))
+        payload = str(self._value_template(msg.payload))
         if not payload.strip():
             _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
             return

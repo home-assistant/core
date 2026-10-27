@@ -137,7 +137,7 @@ class MqttSiren(MqttEntity, SirenEntity):
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
     ]
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _state_on: str
     _state_off: str
     _optimistic: bool
@@ -203,7 +203,7 @@ class MqttSiren(MqttEntity, SirenEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        payload = self._value_template(msg)
+        payload = self._value_template(msg.payload)
         if not payload or payload == PAYLOAD_EMPTY_JSON:
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",

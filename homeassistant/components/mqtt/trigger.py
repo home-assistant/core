@@ -67,7 +67,7 @@ async def async_attach_trigger(
     command_template: Callable[
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
     ] = MqttCommandTemplate(config.get(CONF_PAYLOAD)).async_render
-    value_template: Callable[[ReceiveMessage, str], ReceivePayloadType]
+    value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
     value_template = MqttValueTemplate(
         config.get(CONF_VALUE_TEMPLATE)
     ).async_render_with_possible_json_value
@@ -88,7 +88,7 @@ async def async_attach_trigger(
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
         """Listen for MQTT messages."""
         if wanted_payload is None or (
-            (payload := value_template(mqttmsg, PayloadSentinel.DEFAULT))
+            (payload := value_template(mqttmsg.payload, PayloadSentinel.DEFAULT))
             and payload is not PayloadSentinel.DEFAULT
             and wanted_payload == payload
         ):

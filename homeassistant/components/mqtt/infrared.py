@@ -170,7 +170,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
     _default_name = DEFAULT_RECEIVER_NAME
     _entity_id_format = infrared.ENTITY_ID_FORMAT
 
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
     @override
@@ -192,7 +192,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
         if msg.retain:
             _LOGGER.debug("Ignoring retained infrared signal on topic %s", msg.topic)
             return
-        payload = self._value_template(msg)
+        payload = self._value_template(msg.payload)
         if not payload or payload in (PAYLOAD_NONE, "null", '""'):
             _LOGGER.debug(
                 "Ignoring payload for %s on topic %s, with template %s",

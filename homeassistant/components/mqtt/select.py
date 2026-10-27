@@ -89,7 +89,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     _entity_id_format = select.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
-    _value_template: Callable[[ReceiveMessage], ReceivePayloadType]
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _optimistic: bool = False
 
     @staticmethod
@@ -115,7 +115,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        payload = str(self._value_template(msg))
+        payload = str(self._value_template(msg.payload))
         if not payload.strip():  # No output from template, ignore
             _LOGGER.debug(
                 "Ignoring empty payload '%s' after rendering for topic %s",

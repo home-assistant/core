@@ -5,7 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
@@ -145,15 +145,6 @@ class PublishMessage:
     retain: bool
 
 
-class _Unparsed(Enum):
-    """Marker for a payload that has not been parsed yet."""
-
-    UNPARSED = 0
-
-
-_UNPARSED = _Unparsed.UNPARSED
-
-
 # eq=False so we use the id() of the object for comparison
 # since client will only generate one instance of this object
 # per messages/subscribed_topic.
@@ -167,23 +158,6 @@ class ReceiveMessage:
     retain: bool
     subscribed_topic: str
     timestamp: float
-    _payload_json: Any = field(default=_UNPARSED, init=False, repr=False)
-
-    @property
-    def payload_json(self) -> Any | UndefinedType:
-        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
-        if (value := self._payload_json) is _UNPARSED:
-            try:
-                value = json_loads(self.payload)
-            except JSON_DECODE_EXCEPTIONS:
-                value = UNDEFINED
-            # The dataclass is frozen, this only caches
-            object.__setattr__(self, "_payload_json", value)
-        return value
-
-    def clear_payload_json(self) -> None:
-        """Drop the parsed payload, debug info keeps messages around."""
-        object.__setattr__(self, "_payload_json", _UNPARSED)
 
 
 type MessageCallbackType = Callable[[ReceiveMessage], None]
@@ -383,6 +357,39 @@ class MqttValueTemplateException(TemplateError):
         return self._message
 
 
+class _LastPayloadJson:
+    """The payload parsed last as JSON.
+
+    The client hands every subscriber of a topic the same payload object, so the
+    templates of all entities on that topic share one parse. Cleared after each
+    message by the client.
+    """
+
+    __slots__ = ("parsed", "payload")
+
+    def __init__(self) -> None:
+        self.payload: object = None
+        self.parsed: Any = UNDEFINED
+
+    def loads(self, payload: ReceivePayloadType) -> Any | UndefinedType:
+        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
+        if payload is not self.payload:
+            try:
+                self.parsed = json_loads(payload)
+            except JSON_DECODE_EXCEPTIONS:
+                self.parsed = UNDEFINED
+            self.payload = payload
+        return self.parsed
+
+    def clear(self) -> None:
+        """Drop the payload and its parse."""
+        self.payload = None
+        self.parsed = UNDEFINED
+
+
+LAST_PAYLOAD_JSON = _LastPayloadJson()
+
+
 class MqttValueTemplate:
     """Class for rendering MQTT value template with possible json values."""
 
@@ -402,20 +409,21 @@ class MqttValueTemplate:
     @callback
     def async_render_with_possible_json_value(
         self,
-        msg: ReceiveMessage,
+        payload: ReceivePayloadType,
         default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
         rendered_payload: ReceivePayloadType
-        payload = msg.payload
 
         if self._value_template is None:
             return payload
 
-        if self._value_template.is_static:
-            return self._value_template.template
-
+        value_json = (
+            UNDEFINED
+            if self._value_template.is_static
+            else LAST_PAYLOAD_JSON.loads(payload)
+        )
         values: dict[str, Any] = {}
 
         if variables is not None:
@@ -447,7 +455,7 @@ class MqttValueTemplate:
             try:
                 rendered_payload = (
                     self._value_template.async_render_with_possible_json_value(
-                        payload, variables=values, value_json=msg.payload_json
+                        payload, variables=values, value_json=value_json
                     )
                 )
             except TEMPLATE_ERRORS as exc:
@@ -473,7 +481,7 @@ class MqttValueTemplate:
         try:
             rendered_payload = (
                 self._value_template.async_render_with_possible_json_value(
-                    payload, default, variables=values, value_json=msg.payload_json
+                    payload, default, variables=values, value_json=value_json
                 )
             )
         except TEMPLATE_ERRORS as exc:
