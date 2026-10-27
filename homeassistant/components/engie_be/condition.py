@@ -122,7 +122,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     "epex_hour_price_is_negative": EpexHourPriceIsNegativeCondition,
     "epex_hour_price_is_in_range": EpexHourPriceIsInRangeCondition,
     "epex_quarter_hour_price_is_negative": EpexQuarterHourPriceIsNegativeCondition,
-    "epex_quarter_hour_price_is_in_range": (EpexQuarterHourPriceIsInRangeCondition),
+    "epex_quarter_hour_price_is_in_range": EpexQuarterHourPriceIsInRangeCondition,
 }
 
 

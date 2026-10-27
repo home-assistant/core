@@ -84,14 +84,12 @@ class _EpexTrigger(Trigger):
         """Return the price to add to the trigger data, or None to leave it out."""
         return None
 
-    def _trigger_data(self, device_id: str) -> dict[str, Any]:
+    def _trigger_data(
+        self, device_id: str, data: EngieBeEpexData, now: datetime
+    ) -> dict[str, Any]:
         """Return the trigger data passed to the automation."""
         trigger_data: dict[str, Any] = {ATTR_DEVICE_ID: device_id}
-        data = async_get_device_epex_data(self._hass, device_id)
-        if (
-            data is not None
-            and (price := self._price(data, dt_util.utcnow())) is not None
-        ):
+        if (price := self._price(data, now)) is not None:
             trigger_data[ATTR_PRICE] = price
         return trigger_data
 
@@ -142,9 +140,14 @@ class _EpexTrigger(Trigger):
                 tracked_coordinator = coordinator
                 previous = UNDEFINED
 
-            current = self._device_value(device_id)
+            data = async_get_device_epex_data(self._hass, device_id)
+            if data is None:
+                previous = UNDEFINED
+                return
+            now = dt_util.utcnow()
+            current = self._value(data, now)
             if previous is False and current is True:
-                run_action(self._trigger_data(device_id), description)
+                run_action(self._trigger_data(device_id, data, now), description)
             previous = current
 
         @callback

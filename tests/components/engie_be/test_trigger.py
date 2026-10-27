@@ -175,36 +175,41 @@ _THRESHOLD_MOMENTS = [
 
 
 @pytest.mark.parametrize(
-    ("trigger_key", "options", "expected_counts"),
+    ("trigger_key", "options", "expected_counts", "expected_price"),
     [
         pytest.param(
             "epex_current_hour_crossed_threshold",
             {"above": 0.155},
             [0, 0, 0, 1, 1],
+            0.16,
             id="current_hour",
         ),
         pytest.param(
             "epex_next_hour_crossed_threshold",
             {"above": 0.165},
             [0, 0, 0, 1, 1],
+            0.17,
             id="next_hour",
         ),
         pytest.param(
             "epex_current_quarter_hour_crossed_threshold",
             {"above": 0.156},
             [0, 0, 1, 1, 1],
+            0.1575,
             id="current_quarter_hour",
         ),
         pytest.param(
             "epex_next_quarter_hour_crossed_threshold",
             {"above": 0.156},
             [0, 1, 1, 1, 1],
+            0.1575,
             id="next_quarter_hour",
         ),
         pytest.param(
             "epex_current_quarter_hour_crossed_threshold",
             {"above": 0.151, "below": 0.156},
             [1, 1, 1, 1, 1],
+            0.1525,
             id="range",
         ),
     ],
@@ -220,6 +225,7 @@ async def test_crossed_threshold_trigger(
     trigger_key: str,
     options: dict[str, float],
     expected_counts: list[int],
+    expected_price: float,
 ) -> None:
     """Test the threshold triggers fire once when their price enters the range."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
@@ -232,6 +238,10 @@ async def test_crossed_threshold_trigger(
         await _async_count_calls_along(hass, freezer, service_calls, _THRESHOLD_MOMENTS)
         == expected_counts
     )
+    assert automation_calls(service_calls)[0].data == {
+        "device_id": device_id,
+        "price": pytest.approx(expected_price),
+    }
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -252,6 +262,7 @@ async def test_tomorrow_prices_published_trigger(
     await _async_setup_trigger_automation(
         hass, "epex_tomorrow_prices_published", {"device_id": device_id}
     )
+    events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
 
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
         build_epex_payload
@@ -261,6 +272,13 @@ async def test_tomorrow_prices_published_trigger(
     await hass.async_block_till_done()
 
     assert len(automation_calls(service_calls)) == 1
+    assert automation_calls(service_calls)[0].data == {
+        "device_id": device_id,
+        "price": None,
+    }
+    assert events[0].data[ATTR_SOURCE] == (
+        "EPEX prices for tomorrow published for Main street 1, 1000 Brussels"
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
