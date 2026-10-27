@@ -1,9 +1,12 @@
 """Helper functions for the Broadlink integration."""
 
+from __future__ import annotations
+
 import asyncio
 from base64 import b64decode
 import ipaddress
 import logging
+import time
 
 import broadlink_async as blk
 
@@ -15,6 +18,24 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+_DISCOVERY_LOCK = asyncio.Lock()
+_DISCOVERED_CACHE: dict[str, tuple[str, blk.Device]] = {}
+_CACHE_TIMESTAMP: float = 0.0
+_CACHE_TTL: float = 30.0
+
+
+def _get_subnet_hosts(fallback_ip: str | None) -> list[str]:
+    """Return list of host IP addresses to probe on the private local subnet."""
+    if fallback_ip:
+        try:
+            ip_obj = ipaddress.ip_address(fallback_ip)
+            if isinstance(ip_obj, ipaddress.IPv4Address) and ip_obj.is_private:
+                net = ipaddress.ip_network(f"{fallback_ip}/24", strict=False)
+                return [str(h) for h in net.hosts()]
+        except ValueError:
+            pass
+    return [str(h) for h in ipaddress.ip_network("192.168.1.0/24").hosts()]
+
 
 async def async_find_device_by_mac(
     target_mac: str | bytes,
@@ -23,59 +44,61 @@ async def async_find_device_by_mac(
 ) -> tuple[str, blk.Device] | None:
     """Find a Broadlink device by its MAC address across the local subnet.
 
-    Probes all addresses concurrently in milliseconds without blocking.
+    Probes private subnet addresses concurrently with bounded concurrency
+    and short-term caching to prevent broadcast storms.
     """
+    global _CACHE_TIMESTAMP
+
     if isinstance(target_mac, bytes):
         target_mac_clean = target_mac.hex().lower()
     else:
         target_mac_clean = str(target_mac).lower().replace(":", "")
 
-    # Determine subnet base prefix from fallback_ip or default to 192.168.1.
-    subnet_prefix = "192.168.1."
-    if fallback_ip:
-        try:
-            ipaddress.ip_address(fallback_ip)
-            parts = fallback_ip.split(".")
-            if len(parts) == 4:
-                subnet_prefix = f"{parts[0]}.{parts[1]}.{parts[2]}."
-        except ValueError:
-            pass
+    # Check cache first
+    now = time.monotonic()
+    if now - _CACHE_TIMESTAMP < _CACHE_TTL and target_mac_clean in _DISCOVERED_CACHE:
+        _LOGGER.debug(
+            "Found cached Broadlink MAC %s at %s",
+            target_mac_clean,
+            _DISCOVERED_CACHE[target_mac_clean][0],
+        )
+        return _DISCOVERED_CACHE[target_mac_clean]
 
-    async def probe(ip: str) -> tuple[str, blk.Device] | None:
-        try:
-            dev = await asyncio.wait_for(blk.hello(ip), timeout=timeout_per_probe)
-            if dev.mac.hex().lower() == target_mac_clean:
-                return (ip, dev)
-        except Exception:
-            pass
-        return None
+    async with _DISCOVERY_LOCK:
+        # Double check cache after acquiring lock
+        now = time.monotonic()
+        if now - _CACHE_TIMESTAMP < _CACHE_TTL and target_mac_clean in _DISCOVERED_CACHE:
+            return _DISCOVERED_CACHE[target_mac_clean]
 
-    # Try up to 2 attempts
-    for attempt in range(2):
-        tasks = [
-            asyncio.create_task(probe(f"{subnet_prefix}{i}")) for i in range(1, 255)
-        ]
-        found = None
-        try:
-            for f in asyncio.as_completed(tasks):
-                res = await f
-                if res:
-                    found = res
-                    break
-        finally:
-            for t in tasks:
-                if not t.done():
-                    t.cancel()
+        hosts = _get_subnet_hosts(fallback_ip)
+        semaphore = asyncio.Semaphore(32)
 
-        if found:
-            _LOGGER.info(
-                "Resolved Broadlink MAC %s to active IP %s (attempt %d)",
-                target_mac_clean,
-                found[0],
-                attempt + 1,
-            )
-            return found
-        await asyncio.sleep(0.2)
+        async def probe(ip: str) -> None:
+            async with semaphore:
+                try:
+                    dev = await asyncio.wait_for(blk.hello(ip), timeout=timeout_per_probe)
+                    dev_mac = dev.mac.hex().lower()
+                    _DISCOVERED_CACHE[dev_mac] = (ip, dev)
+                except Exception:
+                    pass
+
+        # Probe hosts
+        for attempt in range(2):
+            tasks = [asyncio.create_task(probe(ip)) for ip in hosts]
+            await asyncio.gather(*tasks, return_exceptions=True)
+            _CACHE_TIMESTAMP = time.monotonic()
+
+            if target_mac_clean in _DISCOVERED_CACHE:
+                found = _DISCOVERED_CACHE[target_mac_clean]
+                _LOGGER.info(
+                    "Resolved Broadlink MAC %s to active IP %s (attempt %d)",
+                    target_mac_clean,
+                    found[0],
+                    attempt + 1,
+                )
+                return found
+            if attempt == 0:
+                await asyncio.sleep(0.2)
 
     return None
 

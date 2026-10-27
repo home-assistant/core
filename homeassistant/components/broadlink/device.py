@@ -18,7 +18,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
-    CONF_NAME,
     CONF_TIMEOUT,
     CONF_TYPE,
     Platform,
@@ -27,7 +26,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 from .updater import BroadlinkUpdateManager, get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,9 +167,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             raise
 
         self.update_manager = update_manager
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        self.hass.data[DOMAIN].devices[config.entry_id] = self
+        self.hass.data[BROADLINK_DATA].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         # Forward entry setup to related domains.
@@ -292,4 +289,4 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             self.api.host[0],
         )
 
-        self.config.async_start_reauth(self.hass, data={CONF_NAME: self.name})
+        self.config.async_start_reauth(self.hass)
