@@ -163,7 +163,7 @@ async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
                     "temperature": {
                         "id": 1,
                         "type": "temperature",
-                        "friendly_name": "Outdoor",
+                        "name": "Outdoor",
                     }
                 }
             }
@@ -265,7 +265,7 @@ async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
                 {
                     "id": sensor_id,
                     "type": "temperature_humidity_battery",
-                    "friendly_name": "Outdoor",
+                    "name": "Outdoor",
                 },
             )
             assert result["type"] == "create_entry"
