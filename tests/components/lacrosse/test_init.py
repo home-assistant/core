@@ -7,7 +7,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from serial import SerialException
 
-from homeassistant.components.lacrosse import async_remove_config_entry_device
 from homeassistant.components.lacrosse.const import (
     CONF_YAML_IMPORTED,
     DOMAIN,
@@ -355,13 +354,13 @@ async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
     assert entity_registry.async_get("sensor.battery") is not None
 
 
-async def test_remove_sensor_device(
+async def test_remove_sensor_subentry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test deleting a running device removes its configuration permanently."""
+    """Test deleting a running sensor subentry removes its device permanently."""
     entry = config_entry
     with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -370,7 +369,8 @@ async def test_remove_sensor_device(
             (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id
         )
         assert device is not None
-        assert await async_remove_config_entry_device(hass, entry, device)
+        subentry_id = next(iter(entry.subentries))
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
         await hass.async_block_till_done()
         assert not entry.subentries
         assert device_registry.async_get(device.id) is None
@@ -379,21 +379,6 @@ async def test_remove_sensor_device(
         assert entry.state is ConfigEntryState.LOADED
         assert await hass.config_entries.async_reload(entry.entry_id)
         assert device_registry.async_get(device.id) is None
-
-
-async def test_remove_device_without_sensor_subentry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    device_registry: DeviceRegistry,
-) -> None:
-    """Test devices without a sensor subentry cannot be removed by the integration."""
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "/dev/ttyUSB0_orphan")},
-    )
-
-    assert not await async_remove_config_entry_device(hass, config_entry, device)
-    assert config_entry.subentries
 
 
 async def test_add_sensor_to_running_hub(
