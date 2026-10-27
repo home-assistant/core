@@ -344,6 +344,8 @@ SAMPLE_STRINGS = {
             "name": "Main device",
         },
         "secondary_device": {
+            "manufacturer": "Unknown",
+            "model": "Secondary model",
             "name": "Secondary device",
         },
     },

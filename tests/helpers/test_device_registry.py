@@ -8169,6 +8169,201 @@ async def test_device_name_translation_placeholders(
 
 
 @pytest.mark.parametrize(
+    ("name", "expected_device_name"),
+    [
+        ("Device Bla", "Device Bla"),
+        (None, "test_device"),
+        (UNDEFINED, "test_device"),
+    ],
+)
+async def test_device_name_without_translation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    name: str | UndefinedType | None,
+    expected_device_name: str,
+) -> None:
+    """Test a translation key without a name translation keeps the given name."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        return_value={
+            "component.test.device.test_device.model": "English model",
+        },
+    ):
+        entry1 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name=name,
+            translation_key="test_device",
+        )
+    assert entry1.name == expected_device_name
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_manufacturer",
+        "expected_model",
+    ),
+    [
+        (None, None, None, "Manufacturer Bla", "Model Bla"),
+        ("test_device", {}, None, "Manufacturer Bla", "Model Bla"),
+        (
+            "test_device",
+            {
+                "component.test.device.test_device.manufacturer": "English maker",
+                "component.test.device.test_device.model": "English model",
+            },
+            None,
+            "English maker",
+            "English model",
+        ),
+        (
+            "test_device",
+            {
+                "component.test.device.test_device.model": "English model",
+            },
+            None,
+            "Manufacturer Bla",
+            "English model",
+        ),
+        (
+            "test_device",
+            {
+                "component.test.device.test_device.manufacturer": "English maker",
+            },
+            None,
+            "English maker",
+            "Model Bla",
+        ),
+        (
+            "test_device",
+            {
+                "component.test.device.test_device.model": (
+                    "English model {placeholder}"
+                ),
+            },
+            {"placeholder": "special"},
+            "Manufacturer Bla",
+            "English model special",
+        ),
+    ],
+)
+async def test_device_manufacturer_model_translation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_manufacturer: str,
+    expected_model: str,
+) -> None:
+    """Test device manufacturer and model are translated with the translation key."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        return_value=translations,
+    ):
+        entry1 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            manufacturer="Manufacturer Bla",
+            model="Model Bla",
+            name="Device Bla",
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
+    assert entry1.manufacturer == expected_manufacturer
+    assert entry1.model == expected_model
+    assert entry1.name == "Device Bla"
+
+
+async def test_device_manufacturer_model_translation_without_value(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a translation supplies manufacturer and model when none is given."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        return_value={
+            "component.test.device.test_device.manufacturer": "English maker",
+            "component.test.device.test_device.model": "English model",
+        },
+    ):
+        entry1 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            translation_key="test_device",
+        )
+    assert entry1.manufacturer == "English maker"
+    assert entry1.model == "English model"
+    assert entry1.name == "test_device"
+
+
+async def test_device_manufacturer_model_translation_follows_language(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test manufacturer and model are updated with the language on the next call."""
+
+    def async_get_cached_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return {
+            "en": {
+                "component.test.device.test_device.manufacturer": "Unknown",
+                "component.test.device.test_device.model": "Unknown model",
+            },
+            "de": {
+                "component.test.device.test_device.manufacturer": "Unbekannt",
+                "component.test.device.test_device.model": "Unbekanntes Modell",
+            },
+        }[language]
+
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    with patch(
+        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
+        side_effect=async_get_cached_translations,
+    ):
+        entry1 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            manufacturer="Unknown",
+            model="Unknown model",
+            name="Device Bla",
+            translation_key="test_device",
+        )
+        assert entry1.manufacturer == "Unknown"
+        assert entry1.model == "Unknown model"
+
+        hass.config.language = "de"
+        entry2 = device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            manufacturer="Unknown",
+            model="Unknown model",
+            name="Device Bla",
+            translation_key="test_device",
+        )
+    assert entry2.id == entry1.id
+    assert entry2.manufacturer == "Unbekannt"
+    assert entry2.model == "Unbekanntes Modell"
+    assert entry2.name == "Device Bla"
+
+
+@pytest.mark.parametrize(
     (
         "translation_key",
         "translations",
