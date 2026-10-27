@@ -4,7 +4,7 @@ DOMAIN = "iammeter"
 
 # Default config for iammeter.
 DEFAULT_IP = "192.168.2.15"
-DEFAULT_NAME = "IamMeter"
+DEFAULT_NAME = "IAMMETER"
 DEVICE_3080 = "WEM3080"
 DEVICE_3080T = "WEM3080T"
 DEVICE_2067 = "WEM2067"

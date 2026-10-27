@@ -4,9 +4,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from iammeter.async_client import (
+    IammeterAuthError as HTTPError,
+    IammeterConnectionError as ConnectionError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests.exceptions import ConnectionError, HTTPError, Timeout
 
 from homeassistant.components.iammeter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -32,21 +35,20 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_INPUT
     assert result["result"].unique_id == "test-meter"
-    assert result["title"] == "IamMeter"
+    assert result["title"] == "IAMMETER WEM3080 test-meter"
 
 
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
         (ConnectionError(), "cannot_connect"),
-        (Timeout(), "cannot_connect"),
         (TimeoutError(), "cannot_connect"),
-        (HTTPError(), "cannot_connect"),
+        (HTTPError(), "invalid_auth"),
         (ValueError(), "invalid_data"),
-        (KeyError(), "invalid_data"),
-        (IndexError(), "invalid_data"),
-        (TypeError(), "invalid_data"),
-        (UnboundLocalError(), "invalid_data"),
+        (KeyError(), "unknown"),
+        (IndexError(), "unknown"),
+        (TypeError(), "unknown"),
+        (UnboundLocalError(), "unknown"),
         (RuntimeError(), "unknown"),
     ],
 )
@@ -73,9 +75,9 @@ async def test_errors_and_recovery(
 @pytest.mark.parametrize(
     "data",
     [
-        {**MOCK_DATA, "sn": ""},
-        {**MOCK_DATA, "sn": "   "},
-        {**MOCK_DATA, "sn": None},
+        {**MOCK_DATA, "sn": "", "mac": ""},
+        {**MOCK_DATA, "sn": "   ", "mac": ""},
+        {**MOCK_DATA, "sn": None, "mac": None},
         {**MOCK_DATA, "Model": "unsupported"},
     ],
 )
@@ -83,7 +85,7 @@ async def test_invalid_identity(
     hass: HomeAssistant, mock_meter: MagicMock, data: dict[str, Any]
 ) -> None:
     """Reject endpoints without a stable, supported identity."""
-    mock_meter.return_value.measurement = data
+    mock_meter.return_value.async_get_data.return_value = data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -91,7 +93,7 @@ async def test_invalid_identity(
         result["flow_id"], MOCK_INPUT
     )
     assert result["errors"] == {"base": "invalid_data"}
-    mock_meter.return_value.measurement = MOCK_DATA.copy()
+    mock_meter.return_value.async_get_data.return_value = MOCK_DATA.copy()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_INPUT
     )
@@ -118,7 +120,10 @@ async def test_multiple_devices(
 ) -> None:
     """A different serial creates a second entry."""
     mock_entry.add_to_hass(hass)
-    mock_meter.return_value.measurement = {**MOCK_DATA, "sn": "second-meter"}
+    mock_meter.return_value.async_get_data.return_value = {
+        **MOCK_DATA,
+        "sn": "second-meter",
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -131,7 +136,8 @@ async def test_multiple_devices(
 
 
 @pytest.mark.parametrize(
-    ("name", "title"), [({}, "IamMeter"), ({CONF_NAME: "Solar"}, "Solar")]
+    ("name", "title"),
+    [({}, "IAMMETER WEM3080 test-meter"), ({CONF_NAME: "Solar"}, "Solar")],
 )
 async def test_import(hass: HomeAssistant, name: dict[str, str], title: str) -> None:
     """Import the legacy platform name without storing YAML-only keys."""
@@ -190,7 +196,10 @@ async def test_reconfigure_wrong_meter(
 ) -> None:
     """Do not transfer historical entities to a different physical meter."""
     mock_entry.add_to_hass(hass)
-    mock_meter.return_value.measurement = {**MOCK_DATA, "sn": "other-meter"}
+    mock_meter.return_value.async_get_data.return_value = {
+        **MOCK_DATA,
+        "sn": "other-meter",
+    }
     result = await mock_entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.0.2.2", CONF_PORT: 80}
@@ -252,16 +261,14 @@ async def test_name_interval_and_url(
         {
             CONF_HOST: address,
             CONF_PORT: 80,
-            CONF_NAME: "Solar meter",
-            CONF_SCAN_INTERVAL: 60,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "test-meter"
-    assert result["title"] == "Solar meter"
+    assert result["title"] == "IAMMETER WEM3080 test-meter"
     assert result["data"] == {CONF_HOST: expected_host, CONF_PORT: expected_port}
-    assert result["options"] == {CONF_SCAN_INTERVAL: 60}
-    mock_meter.assert_called_once_with(expected_host, expected_port)
+    assert result["options"] == {}
+    assert mock_meter.call_args.args[1:] == (expected_host, expected_port)
 
 
 @pytest.mark.parametrize(
@@ -299,7 +306,6 @@ async def test_reconfigure_interval(
             {
                 CONF_HOST: "http://192.0.2.2:8080/",
                 CONF_PORT: 80,
-                CONF_SCAN_INTERVAL: 120,
             },
         )
         await hass.async_block_till_done()
@@ -308,7 +314,7 @@ async def test_reconfigure_interval(
         CONF_HOST: "http://192.0.2.2:8080/monitorjson",
         CONF_PORT: 8080,
     }
-    assert mock_entry.options == {CONF_SCAN_INTERVAL: 120}
+    assert mock_entry.options == {CONF_SCAN_INTERVAL: 60}
     assert mock_entry.title == "IamMeter"
     assert mock_entry.unique_id == "test-meter"
 
@@ -384,7 +390,7 @@ async def test_full_data_url(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "test-meter"
     assert result["data"] == {CONF_HOST: expected_url, CONF_PORT: port}
-    mock_meter.assert_called_once_with(expected_url, port)
+    assert mock_meter.call_args.args[1:] == (expected_url, port)
 
 
 async def test_reconfigure_url_to_host(hass: HomeAssistant) -> None:
@@ -400,7 +406,7 @@ async def test_reconfigure_url_to_host(hass: HomeAssistant) -> None:
     with patch.object(hass.config_entries, "async_reload", new_callable=AsyncMock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.0.2.1", CONF_PORT: 8080, CONF_SCAN_INTERVAL: 30},
+            {CONF_HOST: "192.0.2.1", CONF_PORT: 8080},
         )
         await hass.async_block_till_done()
     assert result["reason"] == "reconfigure_successful"

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from requests_mock import Mocker
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.iammeter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -22,20 +22,23 @@ A = [230.0, 1.0, 230.0, 11.0, 1.0, 50.0, 0.91]
 B = [240.0, 2.0, 480.0, 22.0, 2.0, 49.0, 0.92]
 NET = [235.0, 0.0, 710.0, 44.0, 4.0, 49.5, 0.94]
 SERIAL = "test-meter-2067"
-ENDPOINT = "http://admin:admin@192.0.2.1:80/monitorjson"
+ENDPOINT = "http://192.0.2.1:80/monitorjson"
 
 
 def mock_readings(
-    requests_mock: Mocker, rows: list[list[float]], endpoint: str = ENDPOINT
+    aioclient_mock: AiohttpClientMocker,
+    rows: list[list[float]],
+    endpoint: str = ENDPOINT,
 ) -> None:
     """Serve a complete raw two-channel payload through the real library."""
-    requests_mock.get(
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
         endpoint,
         json={
             "method": "5-test",
             "SN": SERIAL,
             "mac": "00:00:00:00:00:01",
-            "Datas": rows,
+            "Datas": rows,  # codespell:ignore datas
         },
     )
 
@@ -55,12 +58,12 @@ def make_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 async def test_setup_without_net(
     hass: HomeAssistant,
-    requests_mock: Mocker,
+    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Expose the two physical channels, preserving energy semantics and IDs."""
-    mock_readings(requests_mock, [A, B])
+    mock_readings(aioclient_mock, [A, B])
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -90,10 +93,12 @@ async def test_setup_without_net(
 
 
 async def test_setup_with_net(
-    hass: HomeAssistant, requests_mock: Mocker, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Treat the third row as NET and retain the existing NET measurement keys."""
-    mock_readings(requests_mock, [A, B, NET])
+    mock_readings(aioclient_mock, [A, B, NET])
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -118,18 +123,18 @@ async def test_setup_with_net(
     assert hass.states.get(net_power).attributes["friendly_name"].endswith("Net power")
     assert hass.states.get(net_energy).state == "44.0"
     assert hass.states.get(net_energy).attributes["state_class"] == "total_increasing"
-    assert hass.states.get(net_pf).state == "94.0"
-    assert hass.states.get(net_pf).attributes["unit_of_measurement"] == "%"
+    assert hass.states.get(net_pf).state == "0.94"
+    assert "unit_of_measurement" not in hass.states.get(net_pf).attributes
 
 
 async def test_net_discovery_loss_and_recovery(
     hass: HomeAssistant,
-    requests_mock: Mocker,
+    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Discover NET once, then mark it unavailable without disrupting A/B."""
-    mock_readings(requests_mock, [A, B])
+    mock_readings(aioclient_mock, [A, B])
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -139,7 +144,7 @@ async def test_net_discovery_loss_and_recovery(
         )
         is None
     )
-    mock_readings(requests_mock, [A, B, NET])
+    mock_readings(aioclient_mock, [A, B, NET])
     freezer.tick(timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -151,7 +156,7 @@ async def test_net_discovery_loss_and_recovery(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(net_power).state == "710.0"
-    mock_readings(requests_mock, [A, B])
+    mock_readings(aioclient_mock, [A, B])
     freezer.tick(timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -160,7 +165,7 @@ async def test_net_discovery_loss_and_recovery(
         Platform.SENSOR, DOMAIN, f"{SERIAL}_Power_B"
     )
     assert hass.states.get(power_b).state == "480.0"
-    mock_readings(requests_mock, [A, B, NET])
+    mock_readings(aioclient_mock, [A, B, NET])
     freezer.tick(timedelta(seconds=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -169,28 +174,32 @@ async def test_net_discovery_loss_and_recovery(
 
 
 async def test_unload_removes_discovery_listener(
-    hass: HomeAssistant, requests_mock: Mocker, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Unloading stops polling even with the optional-discovery listener."""
-    mock_readings(requests_mock, [A, B])
+    mock_readings(aioclient_mock, [A, B])
     entry = make_entry(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
-    calls = requests_mock.call_count
+    calls = aioclient_mock.call_count
     freezer.tick(timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert requests_mock.call_count == calls
+    assert aioclient_mock.call_count == calls
 
 
 async def test_user_flow_with_dual_channel_payload(
-    hass: HomeAssistant, requests_mock: Mocker, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Accept WEM2067 through the full configuration and setup path."""
-    mock_readings(requests_mock, [A, B], "https://meter.example/WEM2067/monitorjson")
+    mock_readings(aioclient_mock, [A, B], "https://meter.example/WEM2067/monitorjson")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

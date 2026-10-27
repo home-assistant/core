@@ -1,6 +1,6 @@
 {
   "domain": "iammeter",
-  "name": "IamMeter",
+  "name": "IAMMETER",
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@lewei50", "@IAMMETER", "@miwyf"],
   "config_flow": true,
@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["iammeter"],
   "quality_scale": "legacy",
-  "requirements": ["iammeter==0.2.2"]
+  "requirements": ["iammeter==0.3.0"]
 }

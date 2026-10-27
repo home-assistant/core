@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from iammeter.client import Client
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -14,13 +13,12 @@ from . import MOCK_DATA, MOCK_INPUT
 
 @pytest.fixture
 def mock_meter() -> Generator[MagicMock]:
-    """Mock the synchronous meter client."""
+    """Mock the injected asynchronous meter client."""
     with patch(
-        "homeassistant.components.iammeter.coordinator.IamMeter", autospec=True
+        "homeassistant.components.iammeter.coordinator.AsyncClient", autospec=True
     ) as meter:
-        meter.return_value.client = MagicMock(spec=Client)
-        meter.return_value.measurement = MOCK_DATA.copy()
-        meter.return_value.client.get_data.return_value = MOCK_DATA.copy()
+        meter.return_value.endpoint = "http://192.0.2.1:80/monitorjson"
+        meter.return_value.async_get_data = AsyncMock(return_value=MOCK_DATA.copy())
         yield meter
 
 

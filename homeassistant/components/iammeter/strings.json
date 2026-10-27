@@ -3,44 +3,60 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:component::iammeter::config::error::invalid_auth%]",
       "invalid_data": "[%key:component::iammeter::config::error::invalid_data%]",
-      "unique_id_mismatch": "The device is not the same meter. Reconfigure using the original meter.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_host": "[%key:component::iammeter::config::error::invalid_host%]",
-      "invalid_interval": "The polling interval must be between 1 and 3600 seconds."
+      "invalid_interval": "The polling interval must be between 1 and 3600 seconds.",
+      "unique_id_mismatch": "The device is not the same meter. Reconfigure using the original meter.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_data": "The device did not return valid data for a supported IAMMETER with a serial number.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_host": "Enter a hostname, IP address or a valid HTTP/HTTPS data URL without embedded credentials or fragments."
+      "invalid_auth": "The meter rejected authentication. Check the username and password.",
+      "invalid_data": "The device did not return supported meter data with a serial number or a stable MAC address.",
+      "invalid_host": "Enter a hostname, IP address or a valid HTTP/HTTPS data URL without embedded credentials or fragments.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "host": "Host or data URL",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Hostname or HTTP/HTTPS URL. /monitorjson is appended when needed. A URL determines its own protocol and port.",
+          "password": "Password for protected monitoring access.",
+          "username": "Leave blank to use anonymous access and automatic legacy authentication."
+        },
+        "title": "Update meter authentication"
+      },
       "reconfigure": {
         "data": {
           "host": "Host or data URL",
+          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "scan_interval": "Polling interval (seconds)"
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "Hostname, IP address or HTTP/HTTPS URL. /monitorjson is appended to the path unless already present. A full URL determines its own port.",
-          "port": "HTTP port for a hostname or IP address. Ignored when a full URL is entered.",
-          "scan_interval": "How often to read the meter, from 1 to 3600 seconds. The default is 30 seconds."
+          "host": "Hostname or HTTP/HTTPS URL. /monitorjson is appended when needed. A URL determines its own protocol and port.",
+          "password": "Password for protected monitoring access.",
+          "username": "Leave blank to use anonymous access and automatic legacy authentication."
         },
         "title": "Update the meter connection"
       },
       "user": {
         "data": {
           "host": "Host or data URL",
+          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "scan_interval": "Polling interval (seconds)",
-          "name": "[%key:common::config_flow::data::name%]"
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "Hostname, IP address or HTTP/HTTPS URL. /monitorjson is appended to the path unless already present. A full URL determines its own port.",
-          "port": "HTTP port for a hostname or IP address. Ignored when a full URL is entered.",
-          "scan_interval": "How often to read the meter, from 1 to 3600 seconds. The default is 30 seconds.",
-          "name": "The display name for this meter."
+          "host": "Hostname or HTTP/HTTPS URL. /monitorjson is appended when needed. A URL determines its own protocol and port.",
+          "password": "Password for protected monitoring access.",
+          "username": "Leave blank to use anonymous access and automatic legacy authentication."
         },
         "title": "Connect to your IAMMETER"
       }
@@ -48,6 +64,19 @@
   },
   "entity": {
     "sensor": {
+      "capacitive_reactive_energy": {
+        "name": "Capacitive reactive energy"
+      },
+      "capacitive_reactive_energy_a": {
+        "name": "Capacitive reactive energy A"
+      },
+      "capacitive_reactive_energy_b": {
+        "name": "Capacitive reactive energy B"
+      },
+      "capacitive_reactive_energy_c": {
+        "name": "Capacitive reactive energy C"
+      },
+      "current": {},
       "current_a": {
         "name": "Current A"
       },
@@ -57,15 +86,22 @@
       "current_c": {
         "name": "Current C"
       },
+      "export_grid": {
+        "name": "Export energy"
+      },
       "export_grid_a": {
-        "name": "ExportGrid A"
+        "name": "Export energy A"
       },
       "export_grid_b": {
-        "name": "ExportGrid B"
+        "name": "Export energy B"
       },
       "export_grid_c": {
-        "name": "ExportGrid C"
+        "name": "Export energy C"
       },
+      "export_grid_net": {
+        "name": "Net export energy"
+      },
+      "frequency": {},
       "frequency_a": {
         "name": "Frequency A"
       },
@@ -75,24 +111,50 @@
       "frequency_c": {
         "name": "Frequency C"
       },
+      "frequency_net": {
+        "name": "Net frequency"
+      },
+      "import_energy": {
+        "name": "Import energy"
+      },
       "import_energy_a": {
-        "name": "ImportEnergy A"
+        "name": "Import energy A"
       },
       "import_energy_b": {
-        "name": "ImportEnergy B"
+        "name": "Import energy B"
       },
       "import_energy_c": {
-        "name": "ImportEnergy C"
+        "name": "Import energy C"
       },
+      "import_energy_net": {
+        "name": "Net import energy"
+      },
+      "inductive_reactive_energy": {
+        "name": "Inductive reactive energy"
+      },
+      "inductive_reactive_energy_a": {
+        "name": "Inductive reactive energy A"
+      },
+      "inductive_reactive_energy_b": {
+        "name": "Inductive reactive energy B"
+      },
+      "inductive_reactive_energy_c": {
+        "name": "Inductive reactive energy C"
+      },
+      "pf": {},
       "pf_a": {
-        "name": "PF A"
+        "name": "Power factor A"
       },
       "pf_b": {
-        "name": "PF B"
+        "name": "Power factor B"
       },
       "pf_c": {
-        "name": "PF C"
+        "name": "Power factor C"
       },
+      "pf_net": {
+        "name": "Net power factor"
+      },
+      "power": {},
       "power_a": {
         "name": "Power A"
       },
@@ -102,6 +164,20 @@
       "power_c": {
         "name": "Power C"
       },
+      "power_net": {
+        "name": "Net power"
+      },
+      "reactive_power": {},
+      "reactive_power_a": {
+        "name": "Reactive power A"
+      },
+      "reactive_power_b": {
+        "name": "Reactive power B"
+      },
+      "reactive_power_c": {
+        "name": "Reactive power C"
+      },
+      "voltage": {},
       "voltage_a": {
         "name": "Voltage A"
       },
@@ -113,22 +189,21 @@
       },
       "voltage_net": {
         "name": "Net voltage"
-      },
-      "power_net": {
-        "name": "Net power"
-      },
-      "import_energy_net": {
-        "name": "Net import energy"
-      },
-      "export_grid_net": {
-        "name": "Net export energy"
-      },
-      "frequency_net": {
-        "name": "Net frequency"
-      },
-      "pf_net": {
-        "name": "Net power factor"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to read meter data. Check the connection and device response."
+    },
+    "invalid_auth": {
+      "message": "The meter rejected authentication. Check the username and password."
+    }
+  },
+  "issues": {
+    "identity_changed": {
+      "description": "The address configured for {name} now returns a different meter identity. Readings continue, but another meter may now be contributing to the existing history. If the original meter changed IP, open [the IAMMETER integration](/config/integrations/integration/iammeter) and reconfigure its address. If you replaced the meter, add it as a new device to keep histories separate. This warning clears when the original meter returns.",
+      "title": "The meter identity has changed"
     }
   }
 }

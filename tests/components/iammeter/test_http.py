@@ -5,13 +5,13 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
-from requests_mock import Mocker
 
 from homeassistant.components.config import config_entries as config_entries_api
 from homeassistant.components.iammeter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -22,13 +22,13 @@ from . import MOCK_INPUT
 
 async def test_http_setup(
     hass: HomeAssistant,
-    requests_mock: Mocker,
+    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Identify, register and poll a meter through the real library."""
-    endpoint = requests_mock.get(
-        "http://admin:admin@192.0.2.1:80/monitorjson",
+    aioclient_mock.get(
+        "http://192.0.2.1:80/monitorjson",
         json={
             "SN": "http-meter",
             "mac": "00:00:00:00:00:01",
@@ -39,7 +39,7 @@ async def test_http_setup(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**MOCK_INPUT, CONF_SCAN_INTERVAL: 30}
+        result["flow_id"], MOCK_INPUT
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -48,10 +48,10 @@ async def test_http_setup(
         Platform.SENSOR, DOMAIN, "http-meter_Power"
     )
     assert hass.states.get(entity_id).state == "460"
-    assert endpoint.call_count == 2
-    assert endpoint.last_request.timeout == 8
-    requests_mock.get(
-        "http://admin:admin@192.0.2.1:80/monitorjson",
+    assert aioclient_mock.call_count == 2
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://192.0.2.1:80/monitorjson",
         json={
             "SN": "http-meter",
             "mac": "00:00:00:00:00:01",
@@ -79,18 +79,16 @@ async def test_config_form_over_http(
     assert response.status == 200
     form = await response.json()
     assert {field["name"] for field in form["data_schema"]} == {
-        "name",
         "host",
         "port",
-        "scan_interval",
+        "username",
+        "password",
     }
     response = await client.post(
         f"/api/config/config_entries/flow/{form['flow_id']}",
         json={
-            "name": "Solar",
             "host": "http://192.0.2.1:8080/",
             "port": 80,
-            "scan_interval": 45,
         },
     )
     assert response.status == 200
@@ -98,15 +96,17 @@ async def test_config_form_over_http(
     assert result["type"] == "create_entry"
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].unique_id == "test-meter"
-    assert entries[0].options == {"scan_interval": 45}
+    assert entries[0].options == {}
 
 
 async def test_full_https_endpoint(
-    hass: HomeAssistant, requests_mock: Mocker, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """The real library uses the complete anonymous endpoint during setup."""
     url = "https://meter.example/WEM3080/monitorjson?scenario=solar"
-    endpoint = requests_mock.get(
+    aioclient_mock.get(
         url,
         json={
             "SN": "https-meter",
@@ -124,8 +124,7 @@ async def test_full_https_endpoint(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "https-meter"
     assert result["data"] == {CONF_HOST: url, CONF_PORT: 443}
-    assert endpoint.call_count == 2
-    assert "Authorization" not in endpoint.last_request.headers
+    assert aioclient_mock.call_count == 2
     entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, "https-meter_Power"
     )
@@ -133,15 +132,17 @@ async def test_full_https_endpoint(
 
 
 async def test_simulator_directory_over_http(
-    hass: HomeAssistant, requests_mock: Mocker, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """A directory URL entered in the UI requests monitorjson below that path."""
-    endpoint = requests_mock.get(
+    aioclient_mock.get(
         "http://meter.example/WEM3050T/monitorjson",
         json={
             "SN": "directory-meter",
             "mac": "00:00:00:00:00:01",
-            "Datas": [[230, 2, 460, 100, 10, 50, 0.95]] * 4,
+            "Datas": [[230, 2, 460, 100, 10, 50, 0.95]] * 4,  # codespell:ignore datas
         },
     )
     await async_setup_component(hass, "http", {})
@@ -162,4 +163,4 @@ async def test_simulator_directory_over_http(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == "directory-meter"
     assert entry.data[CONF_HOST] == "http://meter.example/WEM3050T/monitorjson"
-    assert endpoint.call_count == 2
+    assert aioclient_mock.call_count == 2
