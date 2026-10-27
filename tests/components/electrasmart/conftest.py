@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.device import OperationMode
 from electrasmart.device.const import Feature
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -74,9 +75,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture(name="setup_integration")
 async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Set up the integration with a single mocked AC."""
+    """Set up the integration with a single mocked AC.
+
+    Takes the freezer so that the integration is set up with a frozen clock:
+    the coordinator schedules its polls against the event loop's clock, so a
+    test that freezes only after setup would see a first poll immediately.
+    """
     config_entry.add_to_hass(hass)
 
     with patch(
