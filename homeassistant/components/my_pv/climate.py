@@ -32,7 +32,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     if (
-        coordinator.device.supports_main_mode(MyPVDeviceMainMode.SPACE_HEATING)
+        coordinator.device.primary_mode == MyPVDeviceMainMode.SPACE_HEATING
         and coordinator.device.current_temperature is not None
         and (configuration := coordinator.device.get_setup_configuration("rh1_target"))
     ):

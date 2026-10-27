@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from my_pv import MyPVDeviceMainMode
 from my_pv.exceptions import (
     MyPVAuthenticationError,
     MyPVConnectionError,
@@ -44,7 +45,8 @@ def setup_configuration(setup_configuration: dict[str, Any]) -> dict[str, Any]:
 
 @pytest.fixture
 def mock_my_pv_client(mock_my_pv_client: AsyncMock) -> AsyncMock:
-    """Return a client with room heating temperatures."""
+    """Return a client in room heating mode."""
+    mock_my_pv_client.primary_mode = MyPVDeviceMainMode.SPACE_HEATING
     mock_my_pv_client.current_temperature = 20.5
     mock_my_pv_client.target_temperature = 21.0
     return mock_my_pv_client
