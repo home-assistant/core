@@ -14,7 +14,11 @@ from music_assistant_client.exceptions import (
     MusicAssistantClientException,
 )
 from music_assistant_models.api import ServerInfoMessage
-from music_assistant_models.errors import AuthenticationFailed, InvalidToken
+from music_assistant_models.errors import (
+    AuthenticationFailed,
+    InvalidToken,
+    MusicAssistantError,
+)
 import probatio
 
 from homeassistant.components.hassio import AddonError, AddonState
@@ -46,12 +50,19 @@ from .const import (
     DOMAIN,
     HASSIO_DISCOVERY_SCHEMA_VERSION,
     LOGGER,
+    SENDSPIN_PAIR_SCHEMA_VERSION,
 )
+
+if TYPE_CHECKING:
+    from . import MusicAssistantConfigEntry
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
 
 CONF_USE_APP = "use_app"
+
+# Sendspin pairing token, version 0
+SENDSPIN_TOKEN_PREFIX = "SP:0"
 
 # Frontend path of the app ingress page
 APP_PANEL_PATH = f"/app/{APP_SLUG}"
@@ -132,6 +143,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self._onboarding_task: asyncio.Task | None = None
         self._onboarding_url: str | None = None
         self._removed = False
+        self._sendspin_name: str | None = None
+        self._sendspin_token: str | None = None
 
     @override
     async def async_step_user(
@@ -425,15 +438,21 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Home Assistant app discovery.
 
-        This flow is triggered by the Music Assistant app.
+        This flow is triggered by the Music Assistant app, or by an app
+        running a Sendspin player that asks to be paired.
         """
+        if "pairing_token" in discovery_info.config:
+            return await self._async_step_hassio_sendspin(discovery_info)
+
         # A user flow either sets up the app entry itself or lets the user
         # choose the app, so do not start a second flow next to it
         if any(
             flow["context"]["source"] == SOURCE_USER
             for flow in self._async_in_progress()
         ):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain="homeassistant"
+            )
 
         # Build URL from app discovery info
         # The app exposes the API on port 8095, but also
@@ -501,6 +520,70 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
+
+    async def _async_step_hassio_sendspin(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle the discovery of a Sendspin player asking to be paired."""
+        # Unique per player, so the app posting again on every start does not
+        # stack flows and an ignored player stays ignored
+        await self.async_set_unique_id(discovery_info.config["client_id"])
+        self._abort_if_unique_id_configured()
+
+        token = discovery_info.config["pairing_token"]
+        if not isinstance(token, str) or not token.startswith(SENDSPIN_TOKEN_PREFIX):
+            return self.async_abort(reason="invalid_pairing_token")
+
+        self._sendspin_token = token
+        self._sendspin_name = name = discovery_info.config["name"]
+        self.context["title_placeholders"] = {"name": name}
+        return await self.async_step_sendspin_confirm()
+
+    async def async_step_sendspin_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user approve pairing the Sendspin player."""
+        if TYPE_CHECKING:
+            assert self._sendspin_name is not None
+            assert self._sendspin_token is not None
+
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="sendspin_confirm",
+                description_placeholders={"name": self._sendspin_name},
+            )
+
+        entries: list[MusicAssistantConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        if not entries:
+            return self.async_abort(reason="sendspin_no_server")
+        if len(entries) > 1:
+            return self.async_abort(reason="sendspin_multiple_servers")
+
+        try:
+            await entries[0].runtime_data.mass.send_command(
+                "sendspin/pair_with_token",
+                require_schema=SENDSPIN_PAIR_SCHEMA_VERSION,
+                pairing_token=self._sendspin_token,
+            )
+        except InvalidServerVersion:
+            return self.async_abort(reason="sendspin_server_unsupported")
+        except MusicAssistantClientException:
+            return self.async_abort(reason="cannot_connect")
+        except MusicAssistantError as err:
+            # The client keeps only the server's English message, which
+            # names why pairing failed but never carries the token
+            return self.async_abort(
+                reason="sendspin_pairing_failed",
+                description_placeholders={"error": str(err)},
+            )
+
+        return self.async_abort(
+            reason="sendspin_player_paired",
+            description_placeholders={"name": self._sendspin_name},
+        )
 
     @override
     async def async_step_zeroconf(

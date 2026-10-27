@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from ipaddress import ip_address
+import logging
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -17,7 +18,11 @@ from music_assistant_client.exceptions import (
     MusicAssistantClientException,
 )
 from music_assistant_models.api import ServerInfoMessage
-from music_assistant_models.errors import AuthenticationFailed, InvalidToken
+from music_assistant_models.errors import (
+    AuthenticationFailed,
+    InvalidCommand,
+    InvalidToken,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
@@ -33,6 +38,7 @@ from homeassistant.components.music_assistant.const import (
     AUTH_SCHEMA_VERSION,
     DEFAULT_NAME,
     DOMAIN,
+    SENDSPIN_PAIR_SCHEMA_VERSION,
 )
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
@@ -1770,3 +1776,237 @@ async def test_hassio_discovery_during_user_flow(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+SENDSPIN_TOKEN = "SP:0dGVzdF9jbGllbnRfa2V5X2FuZF9wc2s"
+SENDSPIN_CLIENT_ID = "q4mHn0VjQ3yS8wXcKfD2bLpT6uZeR1aGiO5sNvE7hYk"
+
+HASSIO_SENDSPIN_DATA = HassioServiceInfo(
+    config={
+        "client_id": SENDSPIN_CLIENT_ID,
+        "name": "Kitchen",
+        "port": 8928,
+        "pairing_token": SENDSPIN_TOKEN,
+    },
+    name="Local Audio",
+    slug="local_audio",
+    uuid="5678",
+)
+
+
+@pytest.fixture(name="loaded_server_entry")
+def loaded_server_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a loaded Music Assistant server entry with a mocked client."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://localhost:8095"},
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    entry.runtime_data = MagicMock(mass=AsyncMock())
+    entry.runtime_data.mass.send_command.return_value = None
+    return entry
+
+
+async def test_hassio_sendspin_flow(
+    hass: HomeAssistant,
+    loaded_server_entry: MockConfigEntry,
+    mock_get_server_info: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test pairing a Sendspin player discovered through an app."""
+    caplog.set_level(logging.DEBUG)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HASSIO_SENDSPIN_DATA,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sendspin_confirm"
+    assert result["description_placeholders"] == {"name": "Kitchen"}
+    progress = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert progress[0]["context"]["unique_id"] == SENDSPIN_CLIENT_ID
+    assert progress[0]["context"]["title_placeholders"] == {"name": "Kitchen"}
+    # The server app discovery path never runs for a Sendspin player
+    mock_get_server_info.assert_not_called()
+    loaded_server_entry.runtime_data.mass.send_command.assert_not_called()
+
+    confirm_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {}
+    )
+    assert confirm_result["type"] is FlowResultType.ABORT
+    assert confirm_result["reason"] == "sendspin_player_paired"
+    assert confirm_result["description_placeholders"] == {"name": "Kitchen"}
+    loaded_server_entry.runtime_data.mass.send_command.assert_awaited_once_with(
+        "sendspin/pair_with_token",
+        require_schema=SENDSPIN_PAIR_SCHEMA_VERSION,
+        pairing_token=SENDSPIN_TOKEN,
+    )
+    # No entry is created for the player
+    assert hass.config_entries.async_entries(DOMAIN) == [loaded_server_entry]
+    # The token never leaves the flow
+    assert SENDSPIN_TOKEN not in str(result)
+    assert SENDSPIN_TOKEN not in str(progress)
+    assert SENDSPIN_TOKEN not in str(confirm_result)
+    assert SENDSPIN_TOKEN not in caplog.text
+
+
+async def test_hassio_sendspin_flow_during_user_flow(
+    hass: HomeAssistant,
+    supervisor: MagicMock,
+    loaded_server_entry: MockConfigEntry,
+) -> None:
+    """Test a Sendspin player discovery is not blocked by a user flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sendspin_confirm"
+
+
+async def test_hassio_sendspin_flow_duplicate(
+    hass: HomeAssistant,
+    loaded_server_entry: MockConfigEntry,
+) -> None:
+    """Test the app posting the same player again does not stack flows."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+
+
+async def test_hassio_sendspin_flow_ignored(
+    hass: HomeAssistant,
+    loaded_server_entry: MockConfigEntry,
+) -> None:
+    """Test an ignored Sendspin player stays ignored."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IGNORE,
+        unique_id=SENDSPIN_CLIENT_ID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_hassio_sendspin_flow_invalid_token(
+    hass: HomeAssistant,
+    loaded_server_entry: MockConfigEntry,
+) -> None:
+    """Test a discovery with a malformed pairing token aborts."""
+    data = deepcopy(HASSIO_SENDSPIN_DATA)
+    data.config["pairing_token"] = "SP:1dGVzdA"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=data
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_pairing_token"
+    assert "SP:1dGVzdA" not in str(result)
+
+
+@pytest.mark.parametrize(
+    ("entry_states", "reason"),
+    [
+        pytest.param([], "sendspin_no_server", id="no_entry"),
+        pytest.param(
+            [ConfigEntryState.SETUP_RETRY], "sendspin_no_server", id="not_loaded"
+        ),
+        pytest.param(
+            [ConfigEntryState.LOADED, ConfigEntryState.LOADED],
+            "sendspin_multiple_servers",
+            id="multiple_loaded",
+        ),
+    ],
+)
+async def test_hassio_sendspin_flow_no_single_server(
+    hass: HomeAssistant,
+    entry_states: list[ConfigEntryState],
+    reason: str,
+) -> None:
+    """Test pairing aborts without exactly one loaded server entry."""
+    for index, state in enumerate(entry_states):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_URL: f"http://server-{index}:8095"},
+            unique_id=f"server-{index}",
+        )
+        entry.add_to_hass(hass)
+        entry.mock_state(hass, state)
+        entry.runtime_data = MagicMock(mass=AsyncMock())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason", "placeholders"),
+    [
+        pytest.param(
+            InvalidServerVersion("too old"),
+            "sendspin_server_unsupported",
+            None,
+            id="server_too_old",
+        ),
+        pytest.param(
+            CannotConnect(OSError("connection lost")),
+            "cannot_connect",
+            None,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            InvalidCommand("The pairing token is not valid"),
+            "sendspin_pairing_failed",
+            {"error": "The pairing token is not valid"},
+            id="invalid_token",
+        ),
+        pytest.param(
+            InvalidCommand(f"Client {SENDSPIN_CLIENT_ID} did not register"),
+            "sendspin_pairing_failed",
+            {"error": f"Client {SENDSPIN_CLIENT_ID} did not register"},
+            id="not_connected",
+        ),
+    ],
+)
+async def test_hassio_sendspin_flow_pairing_errors(
+    hass: HomeAssistant,
+    loaded_server_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test a failing pairing command ends in a named abort."""
+    caplog.set_level(logging.DEBUG)
+    loaded_server_entry.runtime_data.mass.send_command.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_SENDSPIN_DATA
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result["description_placeholders"] == placeholders
+    assert SENDSPIN_TOKEN not in str(result)
+    assert SENDSPIN_TOKEN not in caplog.text

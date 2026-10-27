@@ -11,6 +11,8 @@ DEFAULT_NAME = "Music Assistant"
 AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+# Schema version where the sendspin/pair_with_token command was added
+SENDSPIN_PAIR_SCHEMA_VERSION = 100
 
 # The official Music Assistant Home Assistant app
 APP_SLUG = "d5369777_music_assistant"
