@@ -427,6 +427,7 @@ homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.music_assistant.*
 homeassistant.components.my.*
+homeassistant.components.my_pv.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
@@ -582,6 +583,7 @@ homeassistant.components.snooz.*
 homeassistant.components.sofar.*
 homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
+homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
@@ -594,6 +596,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
+homeassistant.components.steamvr_base_station.*
 homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*

@@ -275,7 +275,7 @@ def _async_update_vehicle_repairs(
     vehicle_metadata: dict[str, Any],
 ) -> None:
     """Create repair issues for vehicle metadata issues and delete all others."""
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
@@ -742,7 +742,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
     # Energy sites which are gone or no longer set up leave issues to be deleted
-    gateway_refresh = ir.async_begin_issues_refresh(
+    gateway_refresh = ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",

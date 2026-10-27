@@ -496,6 +496,33 @@ async def test_failed_turn_trigger_sentence_result(
     assert content[-1].content == "Error: Automation failed"
 
 
+async def test_streamed_reply_sent_to_subscribers(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test subscribers get a streamed reply."""
+    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
+    async_subscribe_chat_logs(
+        hass, lambda _conversation_id, event, data: events.append((event, data))
+    )
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        yield {"content": "Hi"}
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        async for _ in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            pass
+
+    event, data = events[-1]
+    assert event == ChatLogEventType.CONTENT_ADDED
+    assert data["content"]["content"] == "Hi"
+
+
 class AdminAPI(llm.API):
     """Test API that requires an admin user."""
 

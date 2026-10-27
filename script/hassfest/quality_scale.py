@@ -792,7 +792,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "simulated",
     "sinch",
     "sisyphus",
-    "sky_hub",
     "sky_remote",
     "skybeacon",
     "skybell",

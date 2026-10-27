@@ -801,7 +801,7 @@ def check_unavailable_agents(hass: HomeAssistant, manager: BackupManager) -> Non
             missing_agent_ids,
         )
 
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_",

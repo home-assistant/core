@@ -507,6 +507,12 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
 
         if (
             not isinstance(content, AssistantContent)
