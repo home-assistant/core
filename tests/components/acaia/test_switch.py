@@ -279,3 +279,67 @@ async def test_turning_on_during_pending_connect_does_not_connect_twice(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_off_on_off_during_pending_connect_does_not_reconnect(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a turn-on queued behind a pending connect is dropped once turned off."""
+
+    await setup_integration(hass, mock_config_entry)
+    mock_scale.connected = False
+    mock_scale.connect.reset_mock()
+    connect_started = asyncio.Event()
+    release_connect = asyncio.Event()
+
+    async def _blocked_connect(**kwargs: bool) -> None:
+        connect_started.set()
+        await release_connect.wait()
+        mock_scale.connected = True
+
+    async def _disconnect() -> None:
+        mock_scale.connected = False
+
+    mock_scale.connect.side_effect = _blocked_connect
+    mock_scale.disconnect.side_effect = _disconnect
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await connect_started.wait()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    turn_on = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    release_connect.set()
+    await turn_on
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_called_once()
+    mock_scale.disconnect.assert_called_once()
+    assert not mock_scale.connected
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_OFF

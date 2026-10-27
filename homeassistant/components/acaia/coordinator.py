@@ -182,7 +182,8 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         """Connect to the scale and set up its background tasks if needed."""
 
         async with self._connect_lock:
-            if self._scale.connected:
+            # keep_connected may have been turned off while waiting for the lock.
+            if self._scale.connected or not self.keep_connected:
                 return
 
             try:
