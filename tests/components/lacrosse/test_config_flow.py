@@ -31,18 +31,18 @@ RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
 TEMPERATURE_SENSOR = {
     "id": 1,
     "type": "temperature",
-    "friendly_name": "Outdoor",
+    "name": "Outdoor",
 }
 SENSORS = {
     "1_temperature": {
         "id": 1,
         "type": "temperature",
-        "friendly_name": "Outdoor",
+        "name": "Outdoor",
     },
     "1_humidity": {
         "id": 1,
         "type": "humidity",
-        "friendly_name": "Outdoor",
+        "name": "Outdoor",
     },
     "2_temperature": {"id": 2, "type": "temperature"},
 }
@@ -66,9 +66,9 @@ def test_sensor_entity_key(
     assert sensor_entity_key(subentry_id, sensor_type) == expected_key
 
 
-def test_sensor_subentries_empty_friendly_name_uses_sensor_id() -> None:
+def test_sensor_subentries_empty_name_uses_sensor_id() -> None:
     """Test an empty friendly name falls back to the generated subentry title."""
-    subentries = sensor_subentries({"1_temperature": {"id": 1, "friendly_name": ""}})
+    subentries = sensor_subentries({"1_temperature": {"id": 1, "name": ""}})
 
     assert subentries[0]["title"] == "LaCrosse sensor 1"
 
@@ -169,7 +169,7 @@ async def test_add_sensors_with_colliding_keys(
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {**TEMPERATURE_SENSOR, "id": sensor_id, "friendly_name": "Shared"},
+            {**TEMPERATURE_SENSOR, "id": sensor_id, "name": "Shared"},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
     new_subentries = [
@@ -333,8 +333,8 @@ async def test_import_flow(
     )
     assert heating.data[CONF_YAML_IMPORTED] is True
     assert set(heating.data["sensors"]) == {"heating", "heating_temperature"}
-    assert heating.data["sensors"]["heating"]["friendly_name"] == "heating"
-    assert heating.data["sensors"]["heating_temperature"]["friendly_name"] == "Heating"
+    assert heating.data["sensors"]["heating"]["name"] == "heating"
+    assert heating.data["sensors"]["heating_temperature"]["name"] == "Heating"
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -440,7 +440,7 @@ async def test_update_sensor(
     assert all(
         "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
-    assert "friendly_name" not in subentry.data["sensors"][f"{sensor_id}_temperature"]
+    assert "name" not in subentry.data["sensors"][f"{sensor_id}_temperature"]
     assert subentry.data["sensors"][f"{sensor_id}_temperature"]["id"] == 7
     updated_device = device_registry.async_get(device.id)
     assert updated_device.identifiers == {(DOMAIN, "/dev/ttyUSB0_7")}
@@ -526,14 +526,14 @@ async def test_update_sensor_remove_type(
         pytest.param(2, 7, id="unnamed-sensor-id-changes"),
     ],
 )
-@pytest.mark.parametrize("friendly_name", ["Renamed", ""])
+@pytest.mark.parametrize("name", ["Renamed", ""])
 async def test_update_sensor_preserves_entity_keys(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     sensor_id: int,
     new_id: int,
-    friendly_name: str,
+    name: str,
 ) -> None:
     """Test retained keys remain stable when the sensor ID changes."""
     subentry = config_entry.subentries[f"sensor_{sensor_id}"]
@@ -552,7 +552,7 @@ async def test_update_sensor_preserves_entity_keys(
         {
             **TEMPERATURE_SENSOR,
             "id": new_id,
-            "friendly_name": friendly_name,
+            "name": name,
             "type": "temperature_battery",
         },
     )
@@ -562,12 +562,12 @@ async def test_update_sensor_preserves_entity_keys(
         f"{sensor_id}_temperature": {
             "id": new_id,
             "type": "temperature",
-            "friendly_name": friendly_name,
+            "name": name,
         },
         f"sensor_{sensor_id}_battery": {
             "id": new_id,
             "type": "battery",
-            "friendly_name": friendly_name,
+            "name": name,
         },
     }
     assert entity_registry.async_get(entity.entity_id) == entity
@@ -612,13 +612,13 @@ async def test_update_imported_sensor_uses_unused_entity_key(
         "temperature": {
             "id": 1,
             "type": "temperature",
-            "friendly_name": "Outdoor",
+            "name": "Outdoor",
         },
-        "humidity": {"id": 1, "type": "battery", "friendly_name": "Outdoor"},
+        "humidity": {"id": 1, "type": "battery", "name": "Outdoor"},
         "sensor_1_humidity_2": {
             "id": 1,
             "type": "humidity",
-            "friendly_name": "Outdoor",
+            "name": "Outdoor",
         },
     }
 
@@ -650,7 +650,7 @@ async def test_update_sensor_new_type_unique_key(
         {
             **TEMPERATURE_SENSOR,
             "id": 7,
-            "friendly_name": "Renamed",
+            "name": "Renamed",
             "type": "temperature_battery",
         },
     )
@@ -762,7 +762,7 @@ async def test_add_multiple_sensors_to_imported_entry_keeps_type_keys(
             {
                 **TEMPERATURE_SENSOR,
                 "id": sensor_id,
-                "friendly_name": "Outdoor",
+                "name": "Outdoor",
                 "type": "temperature_humidity_battery",
             },
         )
