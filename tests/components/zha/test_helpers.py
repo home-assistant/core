@@ -368,6 +368,7 @@ def test_zha_group_proxy_device_info() -> None:
     assert device_info == dr.DeviceInfo(
         identifiers={(zha_const.DOMAIN, "test_entry_id_group_0x1001")},
         name="Test Group",
+        configuration_url=f"homeassistant://config/zha/group/{0x1001}",
         manufacturer="Zigbee",
         model="Group",
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -441,6 +442,9 @@ async def test_zha_group_device_creation_with_entities(
     assert device.manufacturer == "Zigbee"
     assert device.model == "Group"
     assert device.entry_type == dr.DeviceEntryType.SERVICE
+    assert device.configuration_url == (
+        f"homeassistant://config/zha/group/{FIXTURE_GRP_WITH_ENTITIES_ID}"
+    )
 
     # Verify via_device points to coordinator
     gateway = get_zha_gateway(hass)

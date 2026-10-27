@@ -373,6 +373,7 @@ class ZHAGroupProxy(LogMixin):
         return dr.DeviceInfo(
             identifiers={(DOMAIN, self.device_identifier)},
             name=self.group.name,
+            configuration_url=f"homeassistant://config/zha/group/{int(self.group.group_id)}",
             manufacturer="Zigbee",
             model="Group",
             entry_type=dr.DeviceEntryType.SERVICE,
