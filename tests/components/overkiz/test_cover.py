@@ -114,7 +114,13 @@ DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_2.json",
     "io://1234-5678-1516/3656107",
-    "cover.maple_residence_hallway_shutter",
+    "cover.front_door_shutter",
+)
+# Device that only reports TargetClosureState (no ClosureState/OpenClosedState)
+POSITIONABLE_SCREEN_UNO = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/3959838",
+    "cover.patio_screen",
 )
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
@@ -1720,3 +1726,154 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_action_group.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("target_closure", "expected_state", "expected_position"),
+    [
+        pytest.param(0, CoverState.OPEN, 100, id="open"),
+        pytest.param(40, CoverState.OPEN, 60, id="intermediate"),
+        pytest.param(100, CoverState.CLOSED, 0, id="closed"),
+        pytest.param(124, STATE_UNKNOWN, None, id="unknown"),
+    ],
+)
+async def test_positionable_screen_uno_position(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    target_closure: int,
+    expected_state: CoverState | str,
+    expected_position: int | None,
+) -> None:
+    """Test position and state are derived from TargetClosureState."""
+    await setup_overkiz_integration(fixture=POSITIONABLE_SCREEN_UNO.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=POSITIONABLE_SCREEN_UNO.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                        "type": 1,
+                        "value": target_closure,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(POSITIONABLE_SCREEN_UNO.entity_id)
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "command_name", "parameters"),
+    [
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 25},
+            "setDeployment",
+            [75],
+            id="set-position",
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 0},
+            "setDeployment",
+            [100],
+            id="set-position-closed",
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 100},
+            "setDeployment",
+            [0],
+            id="set-position-open",
+        ),
+        pytest.param(SERVICE_OPEN_COVER, {}, "open", None, id="open"),
+        pytest.param(SERVICE_CLOSE_COVER, {}, "close", None, id="close"),
+        pytest.param(SERVICE_STOP_COVER, {}, "stop", None, id="stop"),
+    ],
+)
+async def test_positionable_screen_uno_commands(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    service: str,
+    service_data: dict[str, Any],
+    command_name: str,
+    parameters: list[Any] | None,
+) -> None:
+    """Test commands sent for a PositionableScreenUno.
+
+    setClosure does not move this receiver, so positions are sent through
+    setDeployment, inverted like TargetClosureState.
+    """
+    await setup_overkiz_integration(fixture=POSITIONABLE_SCREEN_UNO.fixture)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: POSITIONABLE_SCREEN_UNO.entity_id, **service_data},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=POSITIONABLE_SCREEN_UNO.device_url,
+        command_name=command_name,
+        parameters=parameters,
+    )
+
+
+@pytest.mark.parametrize(
+    ("target_closure", "expected_state", "expected_position"),
+    [
+        pytest.param(30, CoverState.OPEN, 70, id="target-known"),
+        pytest.param(124, STATE_UNKNOWN, None, id="target-unknown"),
+    ],
+)
+async def test_unknown_closure_falls_back_to_target_closure(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    target_closure: int,
+    expected_state: CoverState | str,
+    expected_position: int | None,
+) -> None:
+    """Test ClosureState=124 falls back to TargetClosureState unless also 124."""
+    await setup_overkiz_integration(fixture=POSITIONABLE_ROLLER_SHUTTER_UNO.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=POSITIONABLE_ROLLER_SHUTTER_UNO.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_CLOSURE.value,
+                        "type": 1,
+                        "value": 124,
+                    },
+                    {
+                        "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                        "type": 1,
+                        "value": target_closure,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(POSITIONABLE_ROLLER_SHUTTER_UNO.entity_id)
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
