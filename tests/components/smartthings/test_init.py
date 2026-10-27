@@ -557,6 +557,37 @@ async def test_unloading(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            SmartThingsConnectionError("Timeout"),
+            id="connection_error",
+        ),
+        pytest.param(
+            SmartThingsQuotaExceededError("Quota exceeded"),
+            id="quota_exceeded",
+        ),
+    ],
+)
+async def test_unloading_subscription_deletion_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test unloading finishes when deleting the subscription fails."""
+    await setup_integration(hass, mock_config_entry)
+    devices.delete_subscription.side_effect = exception
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_shutdown(
     hass: HomeAssistant,
     devices: AsyncMock,

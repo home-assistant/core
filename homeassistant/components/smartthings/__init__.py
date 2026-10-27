@@ -386,7 +386,9 @@ async def async_unload_entry(
     """Unload a config entry."""
     client = entry.runtime_data.client
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        with contextlib.suppress(SmartThingsConnectionError):
+        with contextlib.suppress(
+            SmartThingsConnectionError, SmartThingsQuotaExceededError
+        ):
             await client.delete_subscription(subscription_id)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
