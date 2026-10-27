@@ -323,6 +323,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                         "frost_point",
                         "heat_index",
                         "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
                     )
                 )
                 or sensor.temp_unit != "°C"

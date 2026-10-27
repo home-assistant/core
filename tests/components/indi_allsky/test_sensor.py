@@ -487,6 +487,37 @@ async def test_hardware_sensor_fahrenheit_units(
             state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
         )
 
+    # Return to Fahrenheit before verifying CPU-only Celsius transition
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(fahrenheit_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert state.state == "113.0"
+
+    # Verify CPU-only update with sensor_temp_10 in °C switches unit to °C
+    celsius_cpu_update = SensorData.from_dict(
+        {
+            "sensors": {
+                "sensor_temp_10": {
+                    "name": "CPU Temperature",
+                    "value": 45.0,
+                    "unit": "°C",
+                },
+            },
+            "sensor_temp": [0.0] * 10 + [45.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(celsius_cpu_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_cpu_temperature")
+    assert state is not None
+    assert float(state.state) == pytest.approx(113.0, abs=0.05)
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+
 
 async def test_dynamic_hardware_sensor_discovery(
     hass: HomeAssistant,
