@@ -540,14 +540,13 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         )
         if not appliance.connected:
             self.data.update(HomeConnectApplianceData.empty(appliance))
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="appliance_disconnected",
-                translation_placeholders={
-                    "appliance_name": appliance.name,
-                    "ha_id": appliance.ha_id,
-                },
+            self.logger.info(
+                "Appliance %s (%s) is disconnected, not possible to fetch data",
+                appliance.name,
+                appliance.ha_id,
             )
+            self.last_update_success = False
+            return
         try:
             settings = {
                 setting.key: setting

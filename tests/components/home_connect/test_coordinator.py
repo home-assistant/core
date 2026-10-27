@@ -214,6 +214,7 @@ async def test_coordinator_failure_refresh_and_stream(
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 async def test_coordinator_not_fetching_on_disconnected_appliance(
+    hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -227,6 +228,21 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
 
     for method in INITIAL_FETCH_CLIENT_METHODS:
         assert getattr(client, method).call_count == 0
+
+    appliance.connected = True
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        getattr(client, method).assert_awaited_once()
 
 
 @pytest.mark.parametrize(
