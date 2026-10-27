@@ -334,7 +334,25 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 sensor.temp_unit if has_declared_temp_unit else old_temp_unit
             )
 
-            if has_declared_temp_unit:
+            has_retained_declared_temp_unit = (
+                has_declared_temp_unit
+                or bool(merged_data and merged_data.get("temp_unit"))
+                or new_temp_unit != "°C"
+                or any(
+                    isinstance(entry := merged_sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
+                    )
+                )
+            )
+
+            if has_retained_declared_temp_unit:
                 for key, val in sensor.sensors.items():
                     entry = merged_sensors.get(key)
                     if (

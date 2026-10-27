@@ -613,11 +613,10 @@ async def test_hardware_sensor_fahrenheit_units(
         callback(staggered_step1)
     await hass.async_block_till_done()
 
-    # Step 2: Subsequent update declares temp_unit °C (no change in global unit)
+    # Step 2: Subsequent update omits temp_unit (relies on retained global unit)
     # and supplies fresh ambient_temperature without unit; must reconcile to °C
     staggered_step2 = SensorData.from_dict(
         {
-            "temp_unit": "°C",
             "sensors": {
                 "ambient_temperature": 20.0,
             },
