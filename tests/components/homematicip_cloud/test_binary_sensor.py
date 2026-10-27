@@ -935,6 +935,29 @@ async def test_hmip_binary_sensor_second_channel(
     ) == ["3014F711000000000000TWO2_1_motion", "3014F711000000000000TWO2_2_motion"]
 
 
+async def test_hmip_chamber_degraded_per_channel(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the chamber sensor follows the channel that reports the field."""
+    fixture = json.loads(FIXTURE_DATA)["devices"]
+    device_data = fixture["3014F7110000000000000019"]
+    device_data["functionalChannels"]["2"] = dict(
+        fixture["3014F7110000000000000018"]["functionalChannels"]["1"], index=2
+    )
+    device_data.update(id="3014F711000000000000TWO2", label="Two smoke channels")
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Two smoke channels"], extra_devices=[device_data]
+    )
+
+    assert [
+        entry.unique_id
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.endswith("_chamber_degraded")
+    ] == ["3014F711000000000000TWO2_1_chamber_degraded"]
+
+
 async def test_hmip_smoke_detector_unknown_device_type(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:

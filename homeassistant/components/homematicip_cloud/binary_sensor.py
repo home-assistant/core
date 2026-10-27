@@ -42,7 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
+from .helpers import get_channel_index_by_type
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -136,8 +136,9 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
             translation_key="chamber_degraded",
             device_class=BinarySensorDeviceClass.PROBLEM,
             value_fn=lambda channel: channel.chamberDegraded,
-            exists_fn=lambda channel: smoke_detector_channel_data_exists(
-                channel.device, "chamberDegraded"
+            # the library defaults the field, only the payload tells it was sent
+            exists_fn=lambda channel: (
+                "chamberDegraded" in getattr(channel, "_rawJSONData", {})
             ),
             unique_id_channel=1,
         ),
