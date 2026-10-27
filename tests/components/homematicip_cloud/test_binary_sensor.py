@@ -1,5 +1,6 @@
 """Tests for HomematicIP Cloud binary sensor."""
 
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -9,6 +10,7 @@ from homematicip.base.enums import (
     SmokeDetectorAlarmType,
     WindowState,
 )
+from homematicip.device import WaterSensor
 import pytest
 from pytest_homeassistant.common import (
     async_load_json_object_fixture,
@@ -28,7 +30,6 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_PRESENCE_DETECTED,
     ATTR_WATER_LEVEL_DETECTED,
     ATTR_WINDOW_STATE,
-    SIMPLE_BINARY_SENSOR_DESCRIPTIONS,
 )
 from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -48,7 +49,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
+from .helper import (
+    FIXTURE_DATA,
+    HomeFactory,
+    async_manipulate_test_data,
+    get_and_check_entity_basics,
+)
 
 
 async def test_hmip_full_flush_lock_controller_binary_sensors(
@@ -386,7 +392,9 @@ async def test_hmip_motion_detector(
     )
 
     assert ha_state.state == STATE_OFF
-    await async_manipulate_test_data(hass, hmip_device, "motionDetected", True)
+    await async_manipulate_test_data(
+        hass, hmip_device, "motionDetected", True, channel_real_index=3
+    )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
@@ -878,18 +886,202 @@ async def test_hmip_multi_contact_interface(
     assert ha_state.state == STATE_UNKNOWN
 
 
-def test_simple_binary_sensor_descriptions_no_overlap() -> None:
-    """Every Device subclass must match at most one description group."""
-    groups = list(SIMPLE_BINARY_SENSOR_DESCRIPTIONS)
-    for i, group_a in enumerate(groups):
-        for group_b in groups[i + 1 :]:
-            for cls in group_a:
-                assert not issubclass(cls, group_b), (
-                    f"{cls.__name__} matches both {group_a} and {group_b}; "
-                    "duplicate entities would be created"
-                )
-            for cls in group_b:
-                assert not issubclass(cls, group_a), (
-                    f"{cls.__name__} matches both {group_b} and {group_a}; "
-                    "duplicate entities would be created"
-                )
+async def test_hmip_binary_sensor_unknown_device_type(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device type the library does not know gets its water sensor."""
+    device_data = json.loads(FIXTURE_DATA)["devices"]["3014F7110000000000000050"]
+    device_data.update(
+        id="3014F711000000000000UNKN", label="Unknown sensor", type="NEW_SENSOR"
+    )
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Unknown sensor"], extra_devices=[device_data]
+    )
+    entity_id = "binary_sensor.unknown_sensor_moisture"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    assert not isinstance(hmip_device, WaterSensor)
+    assert (
+        entity_registry.async_get(entity_id).unique_id
+        == "3014F711000000000000UNKN_1_water"
+    )
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_manipulate_test_data(
+        hass, hmip_device, "moistureDetected", True, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_hmip_binary_sensor_unique_ids(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that every binary sensor keeps its unique id."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=None, test_groups=None
+    )
+
+    assert {
+        entry.entity_id: entry.unique_id
+        for entry in entity_registry.entities.values()
+        if entry.domain == "binary_sensor"
+    } == {
+        "binary_sensor.alarm_melder_battery": "3014F7110000000000000052_0_battery",
+        "binary_sensor.alarmsirene_aussen_battery": "3014F7110000ABCDABCD0033_0_battery",
+        "binary_sensor.alarmsirene_battery": "3014F7110000000000BBBBB8_0_battery",
+        "binary_sensor.aussen_kuche_battery": "3014F71100000000000BBB17_0_battery",
+        "binary_sensor.aussen_kuche_motion": "3014F71100000000000BBB17_1_motion",
+        "binary_sensor.balkon_heizung_battery": "3014F7110000000000000017_0_battery",
+        "binary_sensor.balkonfenster_battery": "3014F7110000000000000002_0_battery",
+        "binary_sensor.balkonfenster_door": "3014F7110000000000000002_1_shutter_contact",
+        "binary_sensor.balkonture_battery": "3014F7110000000000000000_0_battery",
+        "binary_sensor.balkonture_door": "3014F7110000000000000000_1_shutter_contact",
+        "binary_sensor.bewaesserungsaktor_battery": "3014F71100000000000SHWSM_0_battery",
+        "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen_battery": "3014F711000000000AAAAA25_0_battery",
+        "binary_sensor.bewegungsmelder_fur_55er_rahmen_innen_motion": "3014F711000000000AAAAA25_1_motion",
+        "binary_sensor.bewegungsmelder_haustur_motion": "3014F711000000000SMO230A_1_motion",
+        "binary_sensor.buro_sensors": "00000000-0000-0000-0000-000000000009_security",
+        "binary_sensor.bwth_1_heating": "3014F7110000000000000055_2_heating",
+        "binary_sensor.dsdpcb_klingel_battery": "3014F7110000000000DSDPCB_0_battery",
+        "binary_sensor.eingangsturkontakt_battery": "3014F7110000000000005551_0_battery",
+        "binary_sensor.eingangsturkontakt_door": "3014F7110000000000005551_1_shutter_contact",
+        "binary_sensor.elvshctv_battery": "3014F71100000000000SVCTH_0_battery",
+        "binary_sensor.esi_gas_battery": "3014F7110000000000ESIGAS_0_battery",
+        "binary_sensor.esi_iec2_battery": "3014F711000000000ESIIEC2_0_battery",
+        "binary_sensor.esi_iec_battery": "3014F7110000000000ESIIEC_0_battery",
+        "binary_sensor.esi_led_battery": "3014F7110000000000ESIIE3_0_battery",
+        "binary_sensor.external_securityzone": "00000000-0000-0000-0000-000000000005_security_zone",
+        "binary_sensor.fenster_battery": "3014F7110000000000000001_0_battery",
+        "binary_sensor.fenster_battery_2": "3014F7110000000000000004_0_battery",
+        "binary_sensor.fenster_door": "3014F7110000000000000001_1_shutter_contact",
+        "binary_sensor.fenster_door_2": "3014F7110000000000000004_1_shutter_contact",
+        "binary_sensor.fenstergriffsensor_battery": "3014F711AAAA000000000004_0_battery",
+        "binary_sensor.fenstergriffsensor_door": "3014F711AAAA000000000004_1_shutter_contact",
+        "binary_sensor.fernbedienung_8_tasten_battery": "3014F711BBBBBBBBBBBBB016_0_battery",
+        "binary_sensor.garage_neigungs_und_erschutterungssensor_battery": "3014F7110TILTVIBRATIONSENSOR_0_battery",
+        "binary_sensor.garage_neigungs_und_erschutterungssensor_moving": "3014F7110TILTVIBRATIONSENSOR_1_tilt_vibration",
+        "binary_sensor.garagentor_battery": "3014F7110000000000000031_0_battery",
+        "binary_sensor.garagentor_battery_2": "3014F7110000000000000WGC_0_battery",
+        "binary_sensor.garagentor_moving": "3014F7110000000000000031_1_acceleration",
+        "binary_sensor.haustuer_battery": "3014F7110000000000000DLD_0_battery",
+        "binary_sensor.heizkorperthermostat2_battery": "3014F7110000000000000013_0_battery",
+        "binary_sensor.heizkorperthermostat3_battery": "3014F7110000000000000016_0_battery",
+        "binary_sensor.heizkorperthermostat4_battery": "3014F71100000000ETRV0013_0_battery",
+        "binary_sensor.heizkorperthermostat_battery": "3014F7110000000000000012_0_battery",
+        "binary_sensor.heizung_battery": "3014F7110000000000000011_0_battery",
+        "binary_sensor.home_cloud_connection": "00000000-0000-0000-0000-000000000001_cloud_connection",
+        "binary_sensor.internal_securityzone": "00000000-0000-0000-0000-000000000016_security_zone",
+        "binary_sensor.kombisignalmelder_battery": "3014F7110000000000000MP3_0_battery",
+        "binary_sensor.kontakt_schnittstelle_unterputz_1_fach_battery": "3014F7110000000000000029_0_battery",
+        "binary_sensor.kontakt_schnittstelle_unterputz_1_fach_opening": "3014F7110000000000000029_1_contact",
+        "binary_sensor.kuche_battery": "3014F7110000000000000003_0_battery",
+        "binary_sensor.kuche_door": "3014F7110000000000000003_1_shutter_contact",
+        "binary_sensor.kuche_heizung_battery": "3014F7110000000000000014_0_battery",
+        "binary_sensor.licht_flur_1": "3014F7110000000000056775_1_contact",
+        "binary_sensor.licht_flur_2": "3014F7110000000000056775_2_contact",
+        "binary_sensor.licht_flur_4": "3014F7110000000000056775_4_contact",
+        "binary_sensor.licht_flur_5": "3014F7110000000000056775_5_contact",
+        "binary_sensor.licht_flur_6": "3014F7110000000000056775_6_contact",
+        "binary_sensor.licht_flur_tur": "3014F7110000000000056775_3_contact",
+        "binary_sensor.lichtsensor_nord_battery": "3014F711SLO0000000000026_0_battery",
+        "binary_sensor.neigungssensor_tor_battery": "3014F7110000000000000CTV_0_battery",
+        "binary_sensor.neigungssensor_tor_moving": "3014F7110000000000000CTV_1_tilt_vibration",
+        "binary_sensor.netzausfalluberwachung_power": "3014F7110000000000ABCD50_1_mains_failure",
+        "binary_sensor.rauchwarnmelder2_battery": "3014F7110000000000000019_0_battery",
+        "binary_sensor.rauchwarnmelder2_smoke": "3014F7110000000000000019_1_smoke",
+        "binary_sensor.rauchwarnmelder3_battery": "3014F7110000000000000020_0_battery",
+        "binary_sensor.rauchwarnmelder3_smoke": "3014F7110000000000000020_1_smoke",
+        "binary_sensor.rauchwarnmelder4_battery": "3014F7110000000000000021_0_battery",
+        "binary_sensor.rauchwarnmelder4_smoke": "3014F7110000000000000021_1_smoke",
+        "binary_sensor.rauchwarnmelder_battery": "3014F7110000000000000018_0_battery",
+        "binary_sensor.rauchwarnmelder_chamber_degraded": "3014F7110000000000000018_1_chamber_degraded",
+        "binary_sensor.rauchwarnmelder_smoke": "3014F7110000000000000018_1_smoke",
+        "binary_sensor.raumbediengerat_analog_battery": "3014F711000000BBBB000005_0_battery",
+        "binary_sensor.raumbediengerat_battery": "3014F711000BBBB000000000_0_battery",
+        "binary_sensor.regensensor_raining": "3014F7110000RAIN_SENSOR_1_rain",
+        "binary_sensor.schlafzimmer_sensors": "00000000-0000-0000-0000-000000000013_security",
+        "binary_sensor.schliesser_magnet_battery": "3014F7110000000000000064_0_battery",
+        "binary_sensor.schliesser_magnet_opening": "3014F7110000000000000064_1_contact",
+        "binary_sensor.sitzplatzture_battery": "3014F7110SHUTTER_OPTICAL_0_battery",
+        "binary_sensor.sitzplatzture_door": "3014F7110SHUTTER_OPTICAL_1_shutter_contact",
+        "binary_sensor.soil_sensor_battery": "3014F7110000000000000SMS_0_battery",
+        "binary_sensor.sonnenschutz_balkontur_battery": "3014F71100BLIND_MODULE00_0_battery",
+        "binary_sensor.spdr_1_battery": "3014F7110000000000000054_0_battery",
+        "binary_sensor.spi_1_battery": "3014F711AAAAAAAAAAAAAA51_0_battery",
+        "binary_sensor.spi_1_presence": "3014F711AAAAAAAAAAAAAA51_1_presence",
+        "binary_sensor.ste2_battery": "3014F7110000000000STE2015_0_battery",
+        "binary_sensor.temperatur_und_luftfeuchtigkeitssensor_aussen_battery": "3014F711AAAA000000000002_0_battery",
+        "binary_sensor.thermostat_evo_battery": "3014F7110000000000000E70_0_battery",
+        "binary_sensor.thermostat_schlafen_tal_battery": "3014F711000000000000AAA5_0_battery",
+        "binary_sensor.vorzimmer_battery": "3014F7110000000000000007_0_battery",
+        "binary_sensor.vorzimmer_door": "3014F7110000000000000007_1_shutter_contact",
+        "binary_sensor.vorzimmer_sensors": "00000000-0000-0000-0000-000000000015_security",
+        "binary_sensor.wandtaster_6_fach_battery": "3014F711BBBBBBBBBBBBB017_0_battery",
+        "binary_sensor.wandtaster_battery": "3014F711PUSH_BUTTON_FLAT_0_battery",
+        "binary_sensor.wandthermostat2_battery": "3014F7110000000000000024_0_battery",
+        "binary_sensor.wandthermostat3_battery": "3014F7110000000000000025_0_battery",
+        "binary_sensor.wandthermostat4_battery": "3014F7110000000000000023_0_battery",
+        "binary_sensor.wandthermostat_battery": "3014F7110000000000000022_0_battery",
+        "binary_sensor.wassersensor_battery": "3014F7110000000000000050_0_battery",
+        "binary_sensor.wassersensor_moisture": "3014F7110000000000000050_1_water",
+        "binary_sensor.wasserstopp_battery": "3014F7110000000000000WSS_0_battery",
+        "binary_sensor.wasserstopp_water_alarm": "3014F7110000000000000WSS_1_water_alarm",
+        "binary_sensor.wassertemperatursensor_battery": "3014F711000000000000TACO_0_battery",
+        "binary_sensor.wassertemperatursensor_moving": "3014F711000000000000TACO_2_tilt_vibration",
+        "binary_sensor.weather_sensor_plus_battery": "3014F7110000000000000038_0_battery",
+        "binary_sensor.weather_sensor_plus_raining": "3014F7110000000000000038_1_rain",
+        "binary_sensor.weather_sensor_plus_storm": "3014F7110000000000000038_1_storm",
+        "binary_sensor.weather_sensor_plus_sunshine": "3014F7110000000000000038_1_sunshine",
+        "binary_sensor.wettersensor_battery": "3014F711AAAA000000000003_0_battery",
+        "binary_sensor.wettersensor_pro_battery": "3014F711AAAA000000000001_0_battery",
+        "binary_sensor.wettersensor_pro_raining": "3014F711AAAA000000000001_1_rain",
+        "binary_sensor.wettersensor_pro_storm": "3014F711AAAA000000000001_1_storm",
+        "binary_sensor.wettersensor_pro_sunshine": "3014F711AAAA000000000001_1_sunshine",
+        "binary_sensor.wettersensor_storm": "3014F711AAAA000000000003_1_storm",
+        "binary_sensor.wettersensor_sunshine": "3014F711AAAA000000000003_1_sunshine",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel1": "3014F711000WIREDINPUT32_1_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel10": "3014F711000WIREDINPUT32_10_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel11": "3014F711000WIREDINPUT32_11_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel12": "3014F711000WIREDINPUT32_12_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel13": "3014F711000WIREDINPUT32_13_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel14": "3014F711000WIREDINPUT32_14_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel15": "3014F711000WIREDINPUT32_15_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel16": "3014F711000WIREDINPUT32_16_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel17": "3014F711000WIREDINPUT32_17_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel18": "3014F711000WIREDINPUT32_18_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel19": "3014F711000WIREDINPUT32_19_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel2": "3014F711000WIREDINPUT32_2_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel20": "3014F711000WIREDINPUT32_20_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel21": "3014F711000WIREDINPUT32_21_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel22": "3014F711000WIREDINPUT32_22_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel23": "3014F711000WIREDINPUT32_23_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel24": "3014F711000WIREDINPUT32_24_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel25": "3014F711000WIREDINPUT32_25_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel26": "3014F711000WIREDINPUT32_26_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel27": "3014F711000WIREDINPUT32_27_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel28": "3014F711000WIREDINPUT32_28_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel29": "3014F711000WIREDINPUT32_29_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel3": "3014F711000WIREDINPUT32_3_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel30": "3014F711000WIREDINPUT32_30_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel31": "3014F711000WIREDINPUT32_31_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel32": "3014F711000WIREDINPUT32_32_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel4": "3014F711000WIREDINPUT32_4_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel5": "3014F711000WIREDINPUT32_5_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel6": "3014F711000WIREDINPUT32_6_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel7": "3014F711000WIREDINPUT32_7_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel8": "3014F711000WIREDINPUT32_8_contact",
+        "binary_sensor.wired_eingangsmodul_32_fach_channel9": "3014F711000WIREDINPUT32_9_contact",
+        "binary_sensor.wohnungsture_battery": "3014F7110000000000000006_0_battery",
+        "binary_sensor.wohnungsture_door": "3014F7110000000000000006_1_shutter_contact",
+        "binary_sensor.wohnzimmer_3_battery": "3014F71100000000ABCDEF10_0_battery",
+        "binary_sensor.wohnzimmer_battery": "3014F711000000000000BB11_0_battery",
+        "binary_sensor.wohnzimmer_battery_2": "3014F7110000000000000005_0_battery",
+        "binary_sensor.wohnzimmer_door": "3014F7110000000000000005_1_shutter_contact",
+        "binary_sensor.wohnzimmer_heizung_battery": "3014F7110000000000000015_0_battery",
+        "binary_sensor.wohnzimmer_motion": "3014F711000000000000BB11_1_motion",
+        "binary_sensor.wohnzimmer_sensors": "00000000-0000-0000-0000-000000000006_security",
+        "binary_sensor.zisterne_battery": "3014F711000000000000DUSI_0_battery",
+    }

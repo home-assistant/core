@@ -14,25 +14,14 @@ from homematicip.base.enums import (
 from homematicip.base.functionalChannels import FunctionalChannel, MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
+    BaseDevice,
     ContactInterface,
-    Device,
     FullFlushContactInterface,
     FullFlushContactInterface6,
-    MotionDetectorIndoor,
-    MotionDetectorOutdoor,
-    MotionDetectorPushButton,
-    MotionDetectorSwitchOutdoor,
-    PluggableMainsFailureSurveillance,
-    PresenceDetectorIndoor,
-    RainSensor,
     RotaryHandleSensor,
     ShutterContact,
     ShutterContactMagnetic,
-    SmokeDetector,
     TiltVibrationSensor,
-    WallMountedThermostatPro,
-    WaterSensor,
-    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -52,11 +41,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import (
-    get_channel_index_by_type,
-    get_channels_from_device,
-    smoke_detector_channel_data_exists,
-)
+from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -88,212 +73,139 @@ SAM_DEVICE_ATTRIBUTES = {
 }
 
 
-def _always_exists(_device: Device) -> bool:
-    """Default exists_fn: every matched device gets the entity."""
-    return True
-
-
 @dataclass(frozen=True, kw_only=True)
-class HmipBinarySensorDescription[_DeviceT: Device](BinarySensorEntityDescription):
-    """Describe a simple HomematicIP binary sensor."""
+class HmipBinarySensorDescription(BinarySensorEntityDescription):
+    """Describe a simple HomematicIP binary sensor on a functional channel."""
 
-    value_fn: Callable[[_DeviceT], bool | None] = lambda _: None
-    # for values that live on the channel instead of the device
-    channel_value_fn: Callable[[FunctionalChannel], bool | None] | None = None
-    exists_fn: Callable[[_DeviceT], bool] = _always_exists
-    # Required: contributes to unique_id via {device.id}_{channel}_{key}. An
-    # implicit default would silently lean on get_channel_index()'s fallback
-    # and create a migration footgun.
-    channel: int
-    # for devices whose channel does not sit at the position `channel` names
-    channel_type: FunctionalChannelType | None = None
+    value_fn: Callable[[FunctionalChannel], bool | None] = lambda _: None
+    # for values the library reads only on the device
+    device_value_fn: Callable[[BaseDevice], bool | None] | None = None
+    exists_fn: Callable[[FunctionalChannel], bool] = lambda _: True
+    # sensors that predate the lookup by channel type keep the fixed channel of
+    # their unique id, even where the channel sits at another index
+    unique_id_channel: int | None = None
 
 
-MOTION_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[
-        MotionDetectorIndoor | MotionDetectorOutdoor | MotionDetectorPushButton
-    ],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="motion",
-        device_class=BinarySensorDeviceClass.MOTION,
-        value_fn=lambda device: device.motionDetected,
-        channel=1,
-    ),
+MOTION_DESCRIPTION = HmipBinarySensorDescription(
+    key="motion",
+    device_class=BinarySensorDeviceClass.MOTION,
+    value_fn=lambda channel: channel.motionDetected,
+    unique_id_channel=1,
 )
 
-MOTION_SWITCH_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[MotionDetectorSwitchOutdoor],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="motion",
-        device_class=BinarySensorDeviceClass.MOTION,
-        channel_value_fn=lambda channel: channel.motionDetected,
-        channel=1,
-        channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
-    ),
+RAIN_DESCRIPTION = HmipBinarySensorDescription(
+    key="rain",
+    translation_key="raining",
+    device_class=BinarySensorDeviceClass.MOISTURE,
+    value_fn=lambda channel: channel.raining,
+    unique_id_channel=1,
 )
 
-PRESENCE_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[PresenceDetectorIndoor],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="presence",
-        device_class=BinarySensorDeviceClass.PRESENCE,
-        value_fn=lambda device: device.presenceDetected,
-        channel=1,
-    ),
-)
-
-SMOKE_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[SmokeDetector],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="smoke",
-        device_class=BinarySensorDeviceClass.SMOKE,
-        value_fn=lambda device: (
-            device.smokeDetectorAlarmType == SmokeDetectorAlarmType.PRIMARY_ALARM
-        ),
-        channel=1,
-    ),
-    HmipBinarySensorDescription(
-        key="chamber_degraded",
-        translation_key="chamber_degraded",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda device: device.chamberDegraded,
-        exists_fn=lambda device: smoke_detector_channel_data_exists(
-            device, "chamberDegraded"
-        ),
-        channel=1,
-    ),
-)
-
-WATER_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[WaterSensor],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="water",
-        device_class=BinarySensorDeviceClass.MOISTURE,
-        value_fn=lambda device: device.moistureDetected or device.waterlevelDetected,
-        channel=1,
-    ),
-)
-
-RAIN_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[RainSensor | WeatherSensorPlus | WeatherSensorPro],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="rain",
-        translation_key="raining",
-        device_class=BinarySensorDeviceClass.MOISTURE,
-        value_fn=lambda device: device.raining,
-        channel=1,
-    ),
-)
-
-MAINS_FAILURE_SENSOR_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[PluggableMainsFailureSurveillance],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="mains_failure",
-        device_class=BinarySensorDeviceClass.POWER,
-        value_fn=lambda device: not device.powerMainsFailure,
-        channel=1,
-    ),
-)
-
-
-WALL_THERMOSTAT_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[WallMountedThermostatPro],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="heating",
-        translation_key="heating",
-        channel_value_fn=lambda channel: (
-            None if channel.valvePosition is None else channel.valvePosition > 0
-        ),
-        exists_fn=lambda device: any(
-            channel.internalSwitchOutputEnabled
-            for channel in get_channels_from_device(
-                device, FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
-            )
-        ),
-        channel=1,
-        channel_type=FunctionalChannelType.INTERNAL_SWITCH_CHANNEL,
-    ),
-)
-
-WATER_SUPPLY_STOP_DESCRIPTIONS: tuple[
-    HmipBinarySensorDescription[WaterSupplyStop],
-    ...,
-] = (
-    HmipBinarySensorDescription(
-        key="water_alarm",
-        translation_key="water_alarm",
-        device_class=BinarySensorDeviceClass.SAFETY,
-        channel_value_fn=lambda channel: channel.waterAlarmActive,
-        channel=1,
-        channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
-    ),
-)
-
-BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
+BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription(
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
-    value_fn=lambda device: bool(device.lowBat),
-    channel=0,
+    device_value_fn=lambda device: bool(getattr(device, "lowBat", None)),
 )
 
 SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
-    tuple[type, ...], tuple[HmipBinarySensorDescription[Any], ...]
+    FunctionalChannelType, tuple[HmipBinarySensorDescription, ...]
 ] = {
-    (
-        MotionDetectorIndoor,
-        MotionDetectorOutdoor,
-        MotionDetectorPushButton,
-    ): MOTION_SENSOR_DESCRIPTIONS,
-    (MotionDetectorSwitchOutdoor,): MOTION_SWITCH_SENSOR_DESCRIPTIONS,
-    (PresenceDetectorIndoor,): PRESENCE_SENSOR_DESCRIPTIONS,
-    (SmokeDetector,): SMOKE_SENSOR_DESCRIPTIONS,
-    (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,
-    (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
-    (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
-    (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
-    (WaterSupplyStop,): WATER_SUPPLY_STOP_DESCRIPTIONS,
+    FunctionalChannelType.MOTION_DETECTION_CHANNEL: (MOTION_DESCRIPTION,),
+    FunctionalChannelType.PRESENCE_DETECTION_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="presence",
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            value_fn=lambda channel: channel.presenceDetected,
+            unique_id_channel=1,
+        ),
+    ),
+    FunctionalChannelType.SMOKE_DETECTOR_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="smoke",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            device_value_fn=lambda device: (
+                getattr(device, "smokeDetectorAlarmType", None)
+                == SmokeDetectorAlarmType.PRIMARY_ALARM
+            ),
+            unique_id_channel=1,
+        ),
+        HmipBinarySensorDescription(
+            key="chamber_degraded",
+            translation_key="chamber_degraded",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            value_fn=lambda channel: channel.chamberDegraded,
+            exists_fn=lambda channel: smoke_detector_channel_data_exists(
+                channel.device, "chamberDegraded"
+            ),
+            unique_id_channel=1,
+        ),
+    ),
+    FunctionalChannelType.WATER_SENSOR_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="water",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            value_fn=lambda channel: (
+                channel.moistureDetected or channel.waterlevelDetected
+            ),
+            unique_id_channel=1,
+        ),
+    ),
+    FunctionalChannelType.RAIN_DETECTION_CHANNEL: (RAIN_DESCRIPTION,),
+    FunctionalChannelType.WEATHER_SENSOR_PLUS_CHANNEL: (RAIN_DESCRIPTION,),
+    FunctionalChannelType.WEATHER_SENSOR_PRO_CHANNEL: (RAIN_DESCRIPTION,),
+    FunctionalChannelType.MAINS_FAILURE_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="mains_failure",
+            device_class=BinarySensorDeviceClass.POWER,
+            value_fn=lambda channel: not channel.powerMainsFailure,
+            unique_id_channel=1,
+        ),
+    ),
+    FunctionalChannelType.INTERNAL_SWITCH_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="heating",
+            translation_key="heating",
+            value_fn=lambda channel: (
+                None if channel.valvePosition is None else channel.valvePosition > 0
+            ),
+            exists_fn=lambda channel: bool(channel.internalSwitchOutputEnabled),
+        ),
+    ),
+    FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="water_alarm",
+            translation_key="water_alarm",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            value_fn=lambda channel: channel.waterAlarmActive,
+        ),
+    ),
 }
 
 
 def _create_simple_binary_sensors(
     hap: HomematicipHAP,
-    device: Device,
-) -> list[HomematicipSimpleBinarySensor[Any]]:
-    """Create all simple described binary sensors for a device."""
-    entities: list[HomematicipSimpleBinarySensor[Any]] = []
-
-    for device_types, descriptions in SIMPLE_BINARY_SENSOR_DESCRIPTIONS.items():
-        if not isinstance(device, device_types):
-            continue
-        entities.extend(
-            HomematicipSimpleBinarySensor(hap, device, description)
-            for description in descriptions
-            if description.exists_fn(device)
+    device: BaseDevice,
+) -> list[HomematicipGenericEntity]:
+    """Create the described binary sensors for the channels of a device."""
+    entities: list[HomematicipGenericEntity] = [
+        HomematicipSimpleBinarySensor(hap, device, channel, description)
+        for channel in device.functionalChannels
+        for description in SIMPLE_BINARY_SENSOR_DESCRIPTIONS.get(
+            channel.functionalChannelType, ()
         )
-        # Each device class matches at most one group key (enforced by
-        # test_simple_binary_sensor_descriptions_no_overlap), so further
-        # iteration cannot add entities.
-        break
+        if description.exists_fn(channel)
+    ]
 
-    if device.lowBat is not None:
+    if getattr(device, "lowBat", None) is not None and (
+        base_channel := next(
+            (channel for channel in device.functionalChannels if channel.index == 0),
+            None,
+        )
+    ):
         entities.append(
-            HomematicipSimpleBinarySensor(hap, device, BATTERY_SENSOR_DESCRIPTION)
+            HomematicipSimpleBinarySensor(
+                hap, device, base_channel, BATTERY_SENSOR_DESCRIPTION
+            )
         )
 
     return entities
@@ -358,8 +270,7 @@ async def async_setup_entry(
             entities.append(HomematicipShutterContact(hap, device))
         if isinstance(device, RotaryHandleSensor):
             entities.append(HomematicipShutterContact(hap, device, True))
-        if isinstance(device, Device):
-            entities.extend(_create_simple_binary_sensors(hap, device))
+        entities.extend(_create_simple_binary_sensors(hap, device))
 
         if _is_full_flush_lock_controller(device):
             entities.append(HomematicipFullFlushLockControllerLocked(hap, device))
@@ -377,30 +288,24 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HomematicipSimpleBinarySensor[_DeviceT: Device](
-    HomematicipGenericEntity, BinarySensorEntity
-):
+class HomematicipSimpleBinarySensor(HomematicipGenericEntity, BinarySensorEntity):
     """A simple HomematicIP binary sensor backed by an entity description."""
 
-    entity_description: HmipBinarySensorDescription[_DeviceT]
+    entity_description: HmipBinarySensorDescription
 
     def __init__(
         self,
         hap: HomematicipHAP,
-        device: _DeviceT,
-        description: HmipBinarySensorDescription[_DeviceT],
+        device: BaseDevice,
+        channel: FunctionalChannel,
+        description: HmipBinarySensorDescription,
     ) -> None:
         """Initialize the described binary sensor."""
-        channel_real_index = (
-            get_channel_index_by_type(device, description.channel_type)
-            if description.channel_type is not None
-            else None
-        )
         super().__init__(
             hap,
             device,
-            channel=description.channel,
-            channel_real_index=channel_real_index,
+            channel=channel.index,
+            channel_real_index=channel.index,
             feature_id=description.key,
             use_description_name=True,
         )
@@ -408,13 +313,21 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
 
     @property
     @override
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if (channel := self.entity_description.unique_id_channel) is None:
+            return super().unique_id
+        return f"{self._device.id}_{channel}_{self._feature_id}"
+
+    @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether the binary sensor is on."""
         description = self.entity_description
-        if description.channel_value_fn is not None:
-            channel = self.functional_channel
-            return description.channel_value_fn(channel) if channel else None
-        return description.value_fn(self._device)
+        if description.device_value_fn is not None:
+            return description.device_value_fn(self._device)
+        channel = self.functional_channel
+        return description.value_fn(channel) if channel else None
 
 
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
