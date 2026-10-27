@@ -33,6 +33,8 @@ from .const import (
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
+    InputNumberService,
+    InputNumberServiceArgument,
 )
 from .entity import InputNumber
 from .services import async_setup_services
@@ -43,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 MODE_SLIDER = "slider"
 MODE_BOX = "box"
 
-ATTR_INITIAL = "initial"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
@@ -67,6 +68,8 @@ __all__ = [
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
     "InputNumber",
+    "InputNumberService",
+    "InputNumberServiceArgument",
 ]
 
 

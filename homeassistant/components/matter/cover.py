@@ -33,6 +33,8 @@ OPERATIONAL_STATUS_MASK = 0b11
 # writes to avoid writing intermittent states.
 STATE_WRITE_DEBOUNCE_COOLDOWN = 0.1
 
+WAGO_BLIND_TYPE_ROLLER_SHUTTER = 0
+
 # map Matter window cover types to HA device class
 TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
@@ -291,6 +293,18 @@ class MatterCover(MatterEntity, CoverEntity):
             and feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
         ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        # The WAGO Home Blind Control keeps reporting the tilt feature and a
+        # tilt blind Type when configured as a roller shutter
+        if (
+            self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.WagoBlindType
+            )
+            == WAGO_BLIND_TYPE_ROLLER_SHUTTER
+        ):
+            self._attr_device_class = CoverDeviceClass.SHUTTER
+            self._attr_current_cover_tilt_position = None
+            supported_features &= ~CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
 
@@ -366,6 +380,7 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
             clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
             clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
+            clusters.WindowCovering.Attributes.WagoBlindType,
         ),
     ),
 ]

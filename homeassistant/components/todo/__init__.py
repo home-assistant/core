@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServiceArgument,
     TodoServices,
 )
 from .entity import TodoItem, TodoListEntity, api_items_factory, serialize_todo_item
@@ -57,6 +58,7 @@ __all__ = [
     "TodoItemStatus",
     "TodoListEntity",
     "TodoListEntityFeature",
+    "TodoServiceArgument",
     "TodoServices",
 ]
 

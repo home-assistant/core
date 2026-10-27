@@ -51,7 +51,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.lametric.async_setup_entry", return_value=True
+        "homeassistant.components.lametric.async_setup_entry", return_value=None
     ):
         yield
 

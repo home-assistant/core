@@ -75,7 +75,6 @@ async def _async_trigger_client_fetch(hass: HomeAssistant) -> None:
 async def test_client_created_once_and_reused(
     hass: HomeAssistant,
     tibber_client_cls: MagicMock,
-    tibber_mock: MagicMock,
 ) -> None:
     """Ensure setup builds one authenticated client that later fetches reuse."""
     tibber_client_cls.assert_called_once_with(
@@ -90,21 +89,18 @@ async def test_client_created_once_and_reused(
     refresh_access_token = tibber_client_cls.call_args.kwargs["refresh_access_token"]
     assert await refresh_access_token() == "test-token"
 
-    tibber_mock.set_access_token.reset_mock()
     await _async_trigger_client_fetch(hass)
 
     tibber_client_cls.assert_called_once()
-    tibber_mock.set_access_token.assert_awaited_once_with("test-token")
 
 
 @pytest.mark.usefixtures("recorder_mock", "mock_tibber_setup")
-async def test_rotated_token_pushed_to_cached_client(
+async def test_rotated_token_returned_by_refresh_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     tibber_client_cls: MagicMock,
-    tibber_mock: MagicMock,
 ) -> None:
-    """Ensure a rotated OAuth token reaches the cached client on the next fetch."""
+    """Ensure the refresh callback returns a rotated OAuth token."""
     hass.config_entries.async_update_entry(
         config_entry,
         data={
@@ -113,11 +109,11 @@ async def test_rotated_token_pushed_to_cached_client(
         },
     )
 
-    tibber_mock.set_access_token.reset_mock()
     await _async_trigger_client_fetch(hass)
 
     tibber_client_cls.assert_called_once()
-    tibber_mock.set_access_token.assert_awaited_once_with("token-2")
+    refresh_access_token = tibber_client_cls.call_args.kwargs["refresh_access_token"]
+    assert await refresh_access_token() == "token-2"
 
 
 @pytest.mark.usefixtures("recorder_mock", "tibber_mock", "setup_credentials")

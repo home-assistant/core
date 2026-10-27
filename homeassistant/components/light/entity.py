@@ -11,8 +11,6 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.util import color as color_util
 
 from .const import (
-    ATTR_BRIGHTNESS,
-    ATTR_WHITE,
     COLOR_MODES_BRIGHTNESS,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
@@ -22,6 +20,7 @@ from .const import (
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from .helper import (
     brightness_supported,
@@ -431,7 +430,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Toggle the entity."""
         if not self.is_on:
             params = process_turn_on_params(self.hass, self, kwargs)
-            if params.get(ATTR_BRIGHTNESS) != 0 and params.get(ATTR_WHITE) != 0:
+            if (
+                params.get(LightServiceArgument.BRIGHTNESS) != 0
+                and params.get(LightServiceArgument.WHITE) != 0
+            ):
                 await self.async_turn_on(**filter_turn_on_params(self, params))
                 return
 

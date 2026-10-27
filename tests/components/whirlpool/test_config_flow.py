@@ -68,7 +68,7 @@ def assert_successful_reauth_flow(
 def fixture_mock_whirlpool_setup_entry():
     """Set up async_setup_entry fixture."""
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
+        "homeassistant.components.whirlpool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
