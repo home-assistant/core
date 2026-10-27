@@ -67,7 +67,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.util import dt as dt_util
 
 from .helpers import SetupIntegration
@@ -1998,3 +1998,40 @@ async def test_panel_number_collision_before_completion(
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [existing]
     mock_connection_test.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_serial_proxy_not_ready_retry(hass: HomeAssistant) -> None:
+    """A proxy still loading leaves the serial form available for retry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: DeviceType.SERIAL.title()}
+    )
+    path = "esphome-hass://esphome/entry-id?port_name=uart"
+    with patch(
+        "homeassistant.components.visonic.connection_test.VisonicClient", autospec=True
+    ) as factory:
+        probe = factory.return_value.async_test_connection
+        probe.side_effect = [ConfigEntryNotReady("ESPHome is not loaded"), 9600]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: path}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == FORM_SERIAL
+        assert result["errors"] == {"base": "cannot_connect"}
+        assert not hass.config_entries.async_entries(DOMAIN)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: path}
+        )
+        assert result["step_id"] == FORM_POWERLINK
+        assert probe.await_count == 2
+        assert factory.call_args.args[0].path == path
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USER_CODE_SLOT: 1}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].data[CONF_DEVICE] == path

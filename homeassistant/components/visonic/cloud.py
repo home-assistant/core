@@ -2,8 +2,7 @@
 
 import asyncio
 from collections.abc import Sequence
-from copy import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from typing import Any, override
 import uuid
@@ -434,14 +433,8 @@ class VisonicCloudConnection(VisonicConnection):
                     model=self.settings.panel_name,  # .panel_model,
                 )
                 return self._last_snapshot
-            # Here when it's disconnected but within the timeout so return last times data i.e. we have been connected
-            # The frozen snapshot may contain read-only mappings that cannot be deep-copied.
-            d: VisonicCoordinatorData = copy(self._last_snapshot)
-            LOGGER.debug(
-                "Updating data - returning copy of existing data, connected set to %s",
-                str(d.connected),
-            )
-            return d
+            LOGGER.debug("Cloud panel disconnected; waiting before reconnecting")
+            return replace(self._last_snapshot, connected=False)
 
         # The visonic cloud server is currently connected to the panel and the panel is responding
         self.last_connected_timestamp = timenow

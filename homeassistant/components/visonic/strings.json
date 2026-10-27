@@ -12,6 +12,7 @@
     },
     "error": {
       "already_in_progress": "[%key:component::visonic::config::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_connect_refused": "Connection refused",
       "cannot_connect_timeout": "Connection timed out. Ensure the device is online.",
       "cloud_error": "The cloud server rejected the request. Check the Home Assistant logs for the error type.",

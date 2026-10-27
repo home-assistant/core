@@ -12,7 +12,9 @@ from pyvisonicalarm.exceptions import (
     ConnectionTimeoutError,
     Error,
     InvalidUserCodeError,
+    SessionTokenError,
     UnauthorizedError,
+    UserAuthRequiredError,
     UserCodeIncorrectError,
     WrongPanelSerialOrMasterUserCodeError,
     WrongUsernameOrPasswordError,
@@ -27,11 +29,13 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_CLOUD_APP_ID,
     CONF_DEVICE_BAUD,
     CONF_PANEL_SERIAL,
+    CONFIG_CANNOT_CONNECT,
     CONFIG_CLOUD_ERROR,
     CONFIG_CONNECTION_REFUSED,
     CONFIG_CONNECTION_TIMEOUT,
@@ -150,11 +154,15 @@ class ConnectionTest:
             if device_type == DeviceType.CLOUD:
                 return await self._test_cloud(data)
             await self._test_direct(device_type, data)
+        except (UnauthorizedError, SessionTokenError, UserAuthRequiredError) as err:
+            LOGGER.debug("Cloud validation session rejected (%s)", type(err).__name__)
+            self._cloud_api = None
+            return CONFIG_INVALID_AUTH_OR_PIN
         except CLOUD_AUTH_ERRORS as err:
             LOGGER.debug("Cloud validation failed (%s)", type(err).__name__)
-            if isinstance(err, UnauthorizedError):
-                self._cloud_api = None
             return CONFIG_INVALID_AUTH_OR_PIN
+        except ConfigEntryNotReady:
+            return CONFIG_CANNOT_CONNECT
         except TimeoutError, ConnectionTimeoutError:
             return CONFIG_CONNECTION_TIMEOUT
         except ValueError:

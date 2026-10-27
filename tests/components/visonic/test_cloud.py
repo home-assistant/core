@@ -991,11 +991,11 @@ async def test_snapshot_retries_disconnected_session_after_timeout(
     assert caplog.record_tuples == []
 
 
-async def test_snapshot_returns_existing_data_during_disconnect(
+async def test_snapshot_marks_disconnected_during_reconnect_grace_period(
     cloud: VisonicCloudConnection,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Cache successful data without reading the coordinator during a disconnect."""
+    """Retain cached data but report known outages before reconnecting."""
     cloud.settings.panel_name = "previous"
     cloud.cloud_alarm.get_status = AsyncMock(
         side_effect=[Status(STATUS_DATA), Status({"connected": False})]
@@ -1006,11 +1006,14 @@ async def test_snapshot_returns_existing_data_during_disconnect(
     previous = await cloud.create_state_snapshot()
     caplog.set_level(logging.INFO, logger=LOGGER.name)
 
-    snapshot = await cloud.create_state_snapshot()
+    with patch.object(cloud, "_async_panel_reconnect") as reconnect:
+        snapshot = await cloud.create_state_snapshot()
 
     assert snapshot is not previous
-    assert snapshot == previous
-    assert snapshot.connected
+    assert replace(snapshot, connected=True) == previous
+    assert snapshot.connected is False
+    assert previous.connected is True
+    reconnect.assert_not_awaited()
     assert snapshot.model == "previous"
     assert caplog.record_tuples == []
 

@@ -12,7 +12,9 @@ from pyvisonicalarm.exceptions import (
     InternalServerError,
     InvalidUserCodeError,
     NotFoundError,
+    SessionTokenError,
     UnauthorizedError,
+    UserAuthRequiredError,
     WrongUsernameOrPasswordError,
 )
 
@@ -118,12 +120,22 @@ async def test_cloud_discovery_cannot_select_panel(
     cloud_api.panel_login.assert_not_awaited()
 
 
-async def test_cloud_expired_token_clears_cached_account(cloud_api: MagicMock) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(UnauthorizedError(), id="unauthorized"),
+        pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
+    ],
+)
+async def test_cloud_expired_token_clears_cached_account(
+    cloud_api: MagicMock, error: Exception
+) -> None:
     """A rejected cached token forces fresh account authentication on retry."""
     tester = ConnectionTest(MagicMock(spec=aiohttp.ClientSession))
     account = {key: value for key, value in CLOUD_DATA.items() if key != CONF_CODE}
     assert await tester.test_connection(DeviceType.CLOUD, account) is None
-    cloud_api.panel_login.side_effect = UnauthorizedError()
+    cloud_api.panel_login.side_effect = error
     assert (
         await tester.test_connection(DeviceType.CLOUD, dict(CLOUD_DATA))
         == "invalid_auth"
