@@ -210,6 +210,7 @@ def execute_stmt_lambda_element(
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
     orm_rows: bool = True,
+    stream: bool = False,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -221,6 +222,11 @@ def execute_stmt_lambda_element(
     when selecting non-ranged rows (ie selecting
     specific entities) since they are usually faster
     with .all().
+
+    If stream is True the result is returned without building a list of
+    rows, so rows can be consumed one at a time and freed right away, which
+    avoids promoting large result sets into the oldest garbage collector
+    generation. Errors raised while consuming the rows are not retried.
     """
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
@@ -229,6 +235,8 @@ def execute_stmt_lambda_element(
                 executed = session.execute(stmt)
             else:
                 executed = session.connection().execute(stmt)
+            if stream:
+                return executed
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)

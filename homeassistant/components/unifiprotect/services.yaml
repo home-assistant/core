@@ -30,14 +30,17 @@ set_chime_paired_doorbells:
         device:
           integration: unifiprotect
     doorbells:
-      example: "binary_sensor.front_doorbell_doorbell"
+      example: "event.front_doorbell_doorbell"
       required: false
       selector:
         target:
           entity:
-            integration: unifiprotect
-            domain: binary_sensor
-            device_class: occupancy
+            - integration: unifiprotect
+              domain: event
+              device_class: doorbell
+            - integration: unifiprotect
+              domain: binary_sensor
+              device_class: occupancy
 remove_privacy_zone:
   fields:
     device_id:
