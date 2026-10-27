@@ -4845,7 +4845,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[sensor.hood_program_start_time-entry]
+# name: test_all_entities[sensor.hood_program_running_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4859,7 +4859,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hood_program_start_time',
+    'entity_id': 'sensor.hood_program_running_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4867,29 +4867,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Program start time',
+    'object_id_base': 'Program running time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Program start time',
+    'original_name': 'Program running time',
     'platform': 'home_connect',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'program_start_time',
+    'translation_key': 'program_running_time',
     'unique_id': 'BOSCH-HCS000000-D00000000004-BSH.Common.Option.ElapsedProgramTime',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_entities[sensor.hood_program_start_time-state]
+# name: test_all_entities[sensor.hood_program_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Program start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Program running time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hood_program_start_time',
+    'entity_id': 'sensor.hood_program_running_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5682,7 +5686,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[sensor.oven_program_start_time-entry]
+# name: test_all_entities[sensor.oven_program_running_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5696,7 +5700,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.oven_program_start_time',
+    'entity_id': 'sensor.oven_program_running_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5704,29 +5708,33 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Program start time',
+    'object_id_base': 'Program running time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Program start time',
+    'original_name': 'Program running time',
     'platform': 'home_connect',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'program_start_time',
+    'translation_key': 'program_running_time',
     'unique_id': 'BOSCH-HCS01OVN1-43E0065FE245-BSH.Common.Option.ElapsedProgramTime',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_entities[sensor.oven_program_start_time-state]
+# name: test_all_entities[sensor.oven_program_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Program start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Program running time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.oven_program_start_time',
+    'entity_id': 'sensor.oven_program_running_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

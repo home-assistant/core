@@ -149,8 +149,8 @@
       "program_progress": {
         "default": "mdi:progress-clock"
       },
-      "program_start_time": {
-        "default": "mdi:clock-start"
+      "program_running_time": {
+        "default": "mdi:timer-outline"
       },
       "refrigerator_door_alarm": {
         "default": "mdi:fridge",

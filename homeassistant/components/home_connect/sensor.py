@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -73,11 +73,11 @@ BSH_PROGRAM_SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        translation_key="program_start_time",
-        value_fn=lambda elapsed: (
-            dt_util.utcnow() - timedelta(seconds=cast(float, elapsed))
-        ),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        translation_key="program_running_time",
+        # Limit state changes to one per minute
+        value_fn=lambda elapsed: round(cast(float, elapsed) / 60),
         appliance_types=("Hood", "Oven"),
     ),
     HomeConnectSensorEntityDescription(

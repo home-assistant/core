@@ -945,7 +945,7 @@ async def test_all_entities(
 
 OVEN_FINISH_TIME_ENTITY_ID = "sensor.oven_program_finish_time"
 OVEN_PROGRESS_ENTITY_ID = "sensor.oven_program_progress"
-OVEN_START_TIME_ENTITY_ID = "sensor.oven_program_start_time"
+OVEN_RUNNING_TIME_ENTITY_ID = "sensor.oven_program_running_time"
 PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
 
 
@@ -1443,64 +1443,63 @@ async def test_program_finish_time_kept_on_pause(
 
 
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_program_start_time(
+async def test_program_running_time(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test the program start time follows the elapsed program time."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    """Test the program running time is rounded to whole minutes."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, STATE_UNAVAILABLE)
+    assert hass.states.is_state(OVEN_RUNNING_TIME_ENTITY_ID, STATE_UNAVAILABLE)
 
-    for seconds, events, expected_state in (
+    for events, expected_state in (
         (
-            0,
             {
                 EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0},
                 EventType.STATUS: {
                     EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
                 },
             },
-            "2021-01-09T12:00:00+00:00",
+            "0",
+        ),
+        # The appliance reports the elapsed time shortly before each full minute
+        (
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 59}},
+            "1",
         ),
         (
-            60,
-            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 60}},
-            "2021-01-09T12:00:00+00:00",
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 119}},
+            "2",
         ),
         (
-            0,
             {
+                EventType.NOTIFY: {
+                    EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 135
+                },
                 EventType.STATUS: {
                     EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
                         BSH_OPERATION_STATE_PAUSE
                     )
-                }
+                },
             },
-            "2021-01-09T12:00:00+00:00",
+            "2",
         ),
         (
-            60,
             {
                 EventType.STATUS: {
                     EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
                 }
             },
-            "2021-01-09T12:00:00+00:00",
-        ),
-        # The elapsed program time doesn't increase while paused
-        (
-            60,
-            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 120}},
-            "2021-01-09T12:01:00+00:00",
+            "2",
         ),
         (
-            0,
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 179}},
+            "3",
+        ),
+        (
             {
                 EventType.STATUS: {
                     EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
@@ -1511,7 +1510,6 @@ async def test_program_start_time(
             STATE_UNAVAILABLE,
         ),
     ):
-        freezer.tick(seconds)
         await client.add_events(
             [
                 create_event_message(appliance.ha_id, event_type, items)
@@ -1519,4 +1517,4 @@ async def test_program_start_time(
             ]
         )
         await hass.async_block_till_done()
-        assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, expected_state)
+        assert hass.states.is_state(OVEN_RUNNING_TIME_ENTITY_ID, expected_state)
