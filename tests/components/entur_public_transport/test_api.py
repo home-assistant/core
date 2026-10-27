@@ -1,18 +1,22 @@
 """Tests for the Entur API helpers."""
 
 from aiohttp import ClientResponseError
+from enturclient import EnturApiError
+from enturclient.discovery import (
+    GEOCODER_AUTOCOMPLETE_URL,
+    GEOCODER_PLACE_URL,
+    JOURNEY_PLANNER_URL,
+)
+from enturclient.queries import (
+    DISCOVERY_STOP_PLACE_LINES_QUERY as STOP_PLACE_LINES_QUERY,
+    DISCOVERY_STOP_PLACE_QUAYS_QUERY as STOP_PLACE_QUAYS_QUERY,
+)
 import pytest
 
 from homeassistant.components.entur_public_transport.api import (
-    STOP_PLACE_LINES_QUERY,
-    STOP_PLACE_QUAYS_QUERY,
-    EnturApiError,
     EnturQuay,
     EnturRoute,
     EnturStopPlace,
-    _parse_stop_places,
-    _parse_stop_quays,
-    _parse_stop_routes,
     async_get_stop_place,
     async_get_stop_quays,
     async_get_stop_routes,
@@ -20,12 +24,7 @@ from homeassistant.components.entur_public_transport.api import (
     format_stop_place_title,
     line_id_label,
 )
-from homeassistant.components.entur_public_transport.const import (
-    ENTUR_CLIENT_NAME,
-    GEOCODER_AUTOCOMPLETE_URL,
-    GEOCODER_PLACE_URL,
-    JOURNEY_PLANNER_URL,
-)
+from homeassistant.components.entur_public_transport.const import ENTUR_CLIENT_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -275,100 +274,6 @@ async def test_search_stop_places_handles_http_error(
     assert isinstance(err.value.__cause__, ClientResponseError)
 
 
-def test_parse_stop_places_ignores_incomplete_geocoder_features() -> None:
-    """Test tolerant parsing of incomplete Geocoder features."""
-    places = _parse_stop_places(
-        {
-            "features": [
-                None,
-                {},
-                {"properties": None},
-                {"properties": {"id": "NSR:Quay:1"}},
-                {
-                    "properties": {
-                        "id": "NSR:StopPlace:1",
-                        "names": "not a mapping",
-                        "address": "not a mapping",
-                        "transportModes": [None, {"mode": "bus"}, {"mode": 3}],
-                        "stopPlaceRole": 3,
-                        "stopPlaceTypes": ["busStation", 3],
-                    }
-                },
-            ]
-        }
-    )
-
-    assert places == (
-        EnturStopPlace(
-            stop_id="NSR:StopPlace:1",
-            name="NSR:StopPlace:1",
-            display_name="NSR:StopPlace:1",
-            locality="",
-            transport_modes=("bus",),
-            role="standalone",
-            stop_place_types=("busStation",),
-        ),
-    )
-
-
-def test_parse_routes_and_quays_ignores_incomplete_journey_planner_data() -> None:
-    """Test tolerant parsing of incomplete route and platform data."""
-    routes = _parse_stop_routes(
-        {
-            "data": {
-                "stopPlaces": [
-                    None,
-                    {},
-                    {"estimatedCalls": [None, {}, {"serviceJourney": None}]},
-                    {
-                        "estimatedCalls": [
-                            {
-                                "serviceJourney": {
-                                    "journeyPattern": {
-                                        "line": {
-                                            "id": "RUT:Line:1",
-                                            "publicCode": "1",
-                                            "transportMode": "bus",
-                                        }
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                ]
-            }
-        }
-    )
-    quays = _parse_stop_quays(
-        {
-            "data": {
-                "stopPlaces": [
-                    None,
-                    {},
-                    {"quays": [None, {}, {"id": "NSR:Quay:1", "name": 3}]},
-                    {
-                        "quays": [
-                            {"id": "NSR:Quay:1", "name": "Platform 1"},
-                            {"id": "NSR:Quay:1", "name": "Platform 1"},
-                        ]
-                    },
-                ]
-            }
-        }
-    )
-
-    assert routes == (
-        EnturRoute(
-            line_id="RUT:Line:1",
-            public_code="1",
-            transport_mode="bus",
-        ),
-    )
-    assert quays == (
-        EnturQuay(quay_id="NSR:Quay:1", name="Platform 1", public_code=None),
-    )
-
-
 def test_route_and_stop_place_labels_cover_fallbacks() -> None:
     """Test labels when Entur supplies no public code or known stop type."""
     route = EnturRoute(line_id="unknown", public_code="", transport_mode="bus", name="")
@@ -390,3 +295,4 @@ def test_route_and_stop_place_labels_cover_fallbacks() -> None:
     assert place.type_icons == "🚉"
     assert line_id_label("unknown") == "unknown"
     assert format_stop_place_title("Stop", "🚏", [], {}) == "🚏 Stop · all routes"
+

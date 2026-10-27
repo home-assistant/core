@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
+from enturclient import EnturApiError
 import probatio
 import pytest
 
@@ -124,15 +125,17 @@ async def test_async_setup_platform_creates_entities(
 
 
 @pytest.mark.parametrize("method", ["expand_all_quays", "update"])
+@pytest.mark.parametrize("error", [ClientError, EnturApiError])
 async def test_async_setup_retries_after_entur_connection_error(
     hass: HomeAssistant,
     method: str,
+    error: type[Exception],
 ) -> None:
     """Test temporary Entur errors leave the platform ready to retry."""
     api = Mock()
     api.expand_all_quays = AsyncMock()
     api.update = AsyncMock()
-    getattr(api, method).side_effect = ClientError
+    getattr(api, method).side_effect = error
     add_entities = Mock()
     config = PLATFORM_SCHEMA(
         {"platform": "entur_public_transport", "stop_ids": ["NSR:StopPlace:1"]}
@@ -147,6 +150,50 @@ async def test_async_setup_retries_after_entur_connection_error(
     ):
         await _async_setup(hass, config, add_entities)
 
+    add_entities.assert_not_called()
+
+
+async def test_async_setup_does_not_add_partial_entities_when_later_stop_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Do not publish earlier stop entities before all stops are ready."""
+    config = PLATFORM_SCHEMA({"platform": "entur_public_transport", "stop_ids": []})
+    subentries = [
+        SimpleNamespace(
+            subentry_id=subentry_id,
+            subentry_type="stop_place",
+            data={"stop_id": stop_id, "line_whitelist": []},
+        )
+        for subentry_id, stop_id in (
+            ("stop-1", "NSR:StopPlace:1"),
+            ("stop-2", "NSR:StopPlace:2"),
+        )
+    ]
+    first_api = Mock()
+    first_api.expand_all_quays = AsyncMock()
+    first_api.update = AsyncMock()
+    first_api.all_stop_places_quays.return_value = ["NSR:StopPlace:1"]
+    first_api.get_stop_info.return_value = SimpleNamespace(name="First stop")
+    second_api = Mock()
+    second_api.expand_all_quays = AsyncMock()
+    second_api.update = AsyncMock(side_effect=ClientError)
+
+    add_entities = Mock()
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.EnturPublicTransportData",
+            side_effect=[first_api, second_api],
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.sensor.async_get_clientsession",
+            return_value=Mock(),
+        ),
+        pytest.raises(PlatformNotReady),
+    ):
+        await _async_setup(hass, config, add_entities, subentries)
+
+    first_api.update.assert_awaited_once()
+    second_api.update.assert_awaited_once()
     add_entities.assert_not_called()
 
 
@@ -427,3 +474,4 @@ async def test_sensor_update_sets_departure_attributes() -> None:
         "departure_#3": "ca. 12:30 2 Airport",
     }
     api.async_update.assert_awaited_once()
+

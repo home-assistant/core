@@ -6,10 +6,6 @@ DOMAIN = "entur_public_transport"
 
 API_CLIENT_NAME = "homeassistant-{}"
 ENTUR_CLIENT_NAME = "homeassistant-entur-public-transport"
-GEOCODER_AUTOCOMPLETE_URL = "https://api.entur.io/geocoder/v3/autocomplete"
-GEOCODER_PLACE_URL = "https://api.entur.io/geocoder/v3/place"
-JOURNEY_PLANNER_URL = "https://api.entur.io/journey-planner/v3/graphql"
-ENTUR_STOP_PLACE_URL = "https://entur.no/nearby-stop-place-detail?id={}"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_STOP_ID = "stop_id"
@@ -48,27 +44,6 @@ ICONS = {
     "water": "mdi:ferry",
 }
 
-# NeTEx StopPlaceType values returned by the Entur Geocoder.  A stop place can
-# have more than one type, so the UI title may contain more than one icon.
-STOP_PLACE_TYPE_ICONS = {
-    "airport": "✈️",
-    "busStation": "🚌",
-    "busPlatform": "🚏",
-    "coachStation": "🚌",
-    "ferryPort": "⚓",
-    "ferryStop": "⛴️",
-    "harbourPort": "⚓",
-    "liftStation": "🚡",
-    "metroStation": "🚇",
-    "onstreetBus": "🚏",
-    "onstreetTram": "🚋",
-    "other": "🚉",
-    "railStation": "🚆",
-    "taxiRank": "🚕",
-    "tramStation": "🚋",
-    "vehicleRailInterchange": "🚗",
-}
-
 SCAN_INTERVAL = timedelta(seconds=45)
 
 ATTR_STOP_ID = "stop_id"
@@ -87,3 +62,4 @@ ATTR_NEXT_UP_DELAY = "next_delay"
 ATTR_NEXT_UP_REALTIME = "next_real_time"
 
 ATTR_TRANSPORT_MODE = "transport_mode"
+

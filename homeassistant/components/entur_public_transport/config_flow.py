@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from enturclient import EnturApiError
 import probatio
 
 from homeassistant.config_entries import (
@@ -27,7 +28,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import (
-    EnturApiError,
     EnturQuay,
     EnturRoute,
     EnturStopPlace,
@@ -174,8 +174,10 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._quays = await async_get_stop_quays(
                         self.hass, self._selected_place.stop_id
                     )
+                    self._quay_discovery_failed = False
                 except EnturApiError:
                     self._quays = ()
+                    self._quay_discovery_failed = True
                 return await self.async_step_select_routes()
 
         return self.async_show_form(
@@ -263,19 +265,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=_confirm_schema(),
             description_placeholders=_place_description(self._selected_place),
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import an Entur platform configuration from YAML."""
-        data = dict(import_data)
-        data.pop("platform", None)
-        stop_ids = data[CONF_STOP_IDS]
-        for key, value in _entry_data(stop_ids).items():
-            data.setdefault(key, value)
-        data[CONF_NAME] = import_data.get(CONF_NAME, DEFAULT_NAME)
-        return self.async_create_entry(
-            title=data[CONF_NAME],
-            data=data,
         )
 
 
@@ -437,6 +426,7 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
         self._existing_platform_mode = PLATFORM_MODE_ALL
         self._existing_quay_ids: list[str] = []
         self._existing_show_on_map = False
+        self._quay_discovery_failed = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -517,8 +507,10 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
             self._quays = await async_get_stop_quays(
                 self.hass, self._selected_place.stop_id
             )
+            self._quay_discovery_failed = False
         except EnturApiError:
             self._quays = ()
+            self._quay_discovery_failed = True
             if self._existing_platform_mode == PLATFORM_MODE_SELECTED:
                 return self._show_reconfigure_form(errors={"base": "cannot_connect"})
         return await self.async_step_select_routes()
@@ -735,7 +727,15 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                     self._get_reconfigure_subentry(),
                     self._selected_place.stop_id,
                     self._selected_platform_mode,
-                    self._selected_quay_ids,
+                    (
+                        None
+                        if self._quay_discovery_failed
+                        else (
+                            [quay.quay_id for quay in self._quays]
+                            if self._selected_platform_mode == PLATFORM_MODE_ALL
+                            else self._selected_quay_ids
+                        )
+                    ),
                 )
                 return self.async_update_and_abort(
                     entry,
@@ -841,7 +841,7 @@ def _async_reconcile_subentry_entities(
     subentry: ConfigSubentry,
     stop_id: str,
     platform_mode: str,
-    quay_ids: list[str],
+    quay_ids: list[str] | None,
 ) -> None:
     """Remove registry entries no longer created by a reconfigured stop place."""
     entity_registry = er.async_get(hass)
@@ -855,16 +855,15 @@ def _async_reconcile_subentry_entities(
         )
         return
 
-    # When all platforms are selected, the set is determined by Entur during setup.
-    # Keep the existing platform entries; setup will add the current set after reload.
-    if platform_mode == PLATFORM_MODE_ALL:
+    # Keep the existing set until Entur can confirm the current active quays.
+    if platform_mode == PLATFORM_MODE_ALL and quay_ids is None:
         return
 
-    expected_unique_ids = (
-        set(quay_ids)
-        if platform_mode == PLATFORM_MODE_SELECTED and quay_ids
-        else {stop_id}
-    )
+    expected_unique_ids = {stop_id}
+    if platform_mode == PLATFORM_MODE_ALL:
+        expected_unique_ids.update(quay_ids or [])
+    elif platform_mode == PLATFORM_MODE_SELECTED:
+        expected_unique_ids = set(quay_ids or [])
     for registry_entry in entity_registry.entities.get_entries_for_config_entry_id(
         entry.entry_id
     ):
@@ -889,3 +888,4 @@ def _stop_is_configured(
         and subentry.data.get(CONF_STOP_ID) == stop_id
         for subentry in entry.subentries.values()
     )
+

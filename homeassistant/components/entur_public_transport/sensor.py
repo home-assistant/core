@@ -8,7 +8,7 @@ from random import randint
 from typing import Any, cast, override
 
 from aiohttp import ClientError
-from enturclient import EnturPublicTransportData
+from enturclient import EnturApiError, EnturPublicTransportData
 import probatio
 
 from homeassistant.components.sensor import (
@@ -137,6 +137,7 @@ async def _async_setup(
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
+    entities_by_subentry: list[tuple[list[EnturPublicTransportSensor], str | None]] = []
     for stop_config in _stop_configurations(config, subentries):
         entities = []
         data = EnturPublicTransportData(
@@ -153,7 +154,7 @@ async def _async_setup(
             if stop_config.expand_platforms:
                 await data.expand_all_quays()
             await data.update()
-        except (ClientError, TimeoutError) as err:
+        except (ClientError, EnturApiError, TimeoutError) as err:
             raise PlatformNotReady from err
 
         proxy = EnturProxy(data)
@@ -189,13 +190,16 @@ async def _async_setup(
                 )
             )
 
-        if stop_config.config_subentry_id is None:
+        entities_by_subentry.append((entities, stop_config.config_subentry_id))
+
+    for entities, config_subentry_id in entities_by_subentry:
+        if config_subentry_id is None:
             async_add_entities(entities, True)
         else:
             cast(AddConfigEntryEntitiesCallback, async_add_entities)(
                 entities,
                 True,
-                config_subentry_id=stop_config.config_subentry_id,
+                config_subentry_id=config_subentry_id,
             )
 
 
@@ -399,3 +403,4 @@ class EnturPublicTransportSensor(SensorEntity):
                 f"{'' if bool(call.is_realtime) else 'ca. '}"
                 f"{call.expected_departure_time.strftime('%H:%M')} {call.front_display}"
             )
+

@@ -1,18 +1,12 @@
 """Tests for the Entur config flow."""
 
-from typing import Any
 from unittest.mock import patch
 
+from enturclient import EnturApiError, EnturQuay, EnturRoute, EnturStopPlace
 import pytest
 
 from homeassistant.components.entur_public_transport import (
     _async_migrate_subentry_display_data,
-)
-from homeassistant.components.entur_public_transport.api import (
-    EnturApiError,
-    EnturQuay,
-    EnturRoute,
-    EnturStopPlace,
 )
 from homeassistant.components.entur_public_transport.config_flow import (
     EnturConfigFlow,
@@ -51,12 +45,7 @@ from homeassistant.components.entur_public_transport.const import (
     RECONFIGURE_ACTION_EDIT,
     RECONFIGURE_ACTION_REPLACE,
 )
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    FlowType,
-)
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, FlowType
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -702,6 +691,94 @@ async def test_reconfigure_removes_deselected_platform_entities(
     assert registry.async_get_entity_id("sensor", DOMAIN, removed_quay_id) is None
 
 
+async def test_reconfigure_all_platforms_removes_inactive_quays(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Keep the stop and active quays while removing quays no longer returned."""
+    stop_id = "NSR:StopPlace:1"
+    active_quay_id = "NSR:Quay:1"
+    removed_quay_id = "NSR:Quay:2"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Stop",
+                "unique_id": stop_id,
+                "data": {CONF_STOP_ID: stop_id},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    registry = entity_registry
+    for unique_id in (stop_id, active_quay_id, removed_quay_id):
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            unique_id,
+            config_entry=entry,
+            config_subentry_id="stop-subentry",
+        )
+
+    _async_reconcile_subentry_entities(
+        hass,
+        entry,
+        entry.subentries["stop-subentry"],
+        stop_id,
+        PLATFORM_MODE_ALL,
+        [active_quay_id],
+    )
+
+    assert registry.async_get_entity_id("sensor", DOMAIN, stop_id) is not None
+    assert registry.async_get_entity_id("sensor", DOMAIN, active_quay_id) is not None
+    assert registry.async_get_entity_id("sensor", DOMAIN, removed_quay_id) is None
+
+
+async def test_reconfigure_all_platforms_keeps_quays_when_discovery_fails(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Do not remove registered quays based on a failed Entur discovery call."""
+    stop_id = "NSR:StopPlace:1"
+    quay_id = "NSR:Quay:1"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "Stop",
+                "unique_id": stop_id,
+                "data": {CONF_STOP_ID: stop_id},
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    registry = entity_registry
+    for unique_id in (stop_id, quay_id):
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            unique_id,
+            config_entry=entry,
+            config_subentry_id="stop-subentry",
+        )
+
+    _async_reconcile_subentry_entities(
+        hass,
+        entry,
+        entry.subentries["stop-subentry"],
+        stop_id,
+        PLATFORM_MODE_ALL,
+        None,
+    )
+
+    assert registry.async_get_entity_id("sensor", DOMAIN, stop_id) is not None
+    assert registry.async_get_entity_id("sensor", DOMAIN, quay_id) is not None
+
+
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:
     """Test that the UI explains when Entur cannot be reached."""
     with patch(
@@ -750,38 +827,6 @@ async def test_user_flow_rejects_invalid_selection(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_stop"
-
-
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test importing an existing YAML platform configuration."""
-    import_data: dict[str, Any] = {
-        "platform": DOMAIN,
-        CONF_NAME: "Transport",
-        CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: False,
-        CONF_SHOW_ON_MAP: True,
-        CONF_WHITELIST_LINES: ["RUT:Line:1"],
-        CONF_OMIT_NON_BOARDING: False,
-        CONF_NUMBER_OF_DEPARTURES: 4,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=import_data,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Transport"
-    assert result["data"] == {
-        CONF_NAME: "Transport",
-        CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: False,
-        CONF_SHOW_ON_MAP: True,
-        CONF_WHITELIST_LINES: ["RUT:Line:1"],
-        CONF_OMIT_NON_BOARDING: False,
-        CONF_NUMBER_OF_DEPARTURES: 4,
-    }
 
 
 async def test_migrate_legacy_subentry_display_data(hass: HomeAssistant) -> None:
@@ -1179,3 +1224,4 @@ async def test_config_flow_defensive_paths(hass: HomeAssistant) -> None:
         PLATFORM_MODE_ALL,
         [],
     )
+

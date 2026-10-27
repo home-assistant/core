@@ -1,11 +1,12 @@
 """Component for integrating entur public transport."""
 
+from enturclient import EnturApiError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
 
 from .api import (
-    EnturApiError,
     async_get_stop_place,
     async_get_stop_routes,
     format_stop_place_title,
@@ -102,3 +103,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the integration when a stop subentry changes."""
     await hass.config_entries.async_reload(entry.entry_id)
+

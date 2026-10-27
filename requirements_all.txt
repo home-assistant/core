@@ -971,7 +971,7 @@ energyzero==5.1.0
 enocean-async==0.4.2
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.4
+enturclient==0.4.0
 
 # homeassistant.components.environment_canada
 env-canada==0.20.0
@@ -3580,3 +3580,4 @@ zwave-js-server-python==0.73.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
+
