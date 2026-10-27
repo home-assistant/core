@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyintelliclima import FanMode, FanSpeed, IntelliClimaDevices
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -33,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import setup_integration
+from . import async_poll, setup_integration
 
 FAN_ENTITY_ID = "fan.test_vmc_3"
 SELECT_ENTITY_ID = "select.test_vmc_3_fan_direction_mode"
@@ -207,6 +208,7 @@ async def test_filter_warning(
 
 async def test_mixed_account_and_device_disappears(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
@@ -222,12 +224,11 @@ async def test_mixed_account_and_device_disappears(
         "11223344"
     )
 
-    single_eco3_device.ecocomfort3_devices = {}
-    mock_config_entry.runtime_data.devices_coordinator.async_set_updated_data(
-        single_eco3_device
-    )
-    await hass.async_block_till_done()
+    mock_cloud_interface.get_all_device_status.reset_mock()
+    mock_cloud_interface.get_all_device_status.return_value = single_eco_device
+    await async_poll(hass, freezer)
 
+    mock_cloud_interface.get_all_device_status.assert_awaited_once()
     assert hass.states.get("fan.test_vmc").state == STATE_ON
     assert hass.states.get(FAN_ENTITY_ID).state == STATE_UNAVAILABLE
     assert hass.states.get(FILTER_ENTITY_ID).state == STATE_UNAVAILABLE
