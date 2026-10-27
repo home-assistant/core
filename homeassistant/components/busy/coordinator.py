@@ -60,7 +60,12 @@ class BusyCoordinator(DataUpdateCoordinator[BusyData]):
             return BusyData(await self.client.status(), await self.client.wifi_status())
         except BusyBarError as err:
             if isinstance(err, BusyBarAPIError) and err.status_code in (401, 403):
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
-                ) from err
+                try:
+                    mode = (await self.client.access()).mode
+                except (BusyBarError, ValueError) as access_err:
+                    raise UpdateFailed("Cannot read API access mode") from access_err
+                if mode in ("enabled", "key"):
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN, translation_key="invalid_auth"
+                    ) from err
             raise UpdateFailed("Cannot read BUSY Bar") from err

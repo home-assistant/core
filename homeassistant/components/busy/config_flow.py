@@ -10,22 +10,14 @@ import probatio
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
+from homeassistant.helpers.selector import TextSelector, TextSelectorType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
 USER_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 KEY_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_API_KEY): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        )
-    }
+    {probatio.Required(CONF_API_KEY): TextSelector({"type": TextSelectorType.PASSWORD})}
 )
 
 
