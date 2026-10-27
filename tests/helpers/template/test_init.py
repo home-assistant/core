@@ -599,6 +599,9 @@ def test_dict_function(hass: HomeAssistant) -> None:
         "{{ dict(states.sensor.test.attributes, b=2) }}", hass
     ).async_render() == {"a": 1, "b": 2}
     assert hass.states.get("sensor.test").attributes == {"a": 1}
+    assert template.Template("{{ dict(self='x') }}", hass).async_render() == {
+        "self": "x"
+    }
 
 
 @pytest.mark.parametrize(

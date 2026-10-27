@@ -848,7 +848,7 @@ class _TemplateDict:
     keys = staticmethod(dict.keys)
     values = staticmethod(dict.values)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> dict[Any, Any]:
+    def __call__(self, /, *args: Any, **kwargs: Any) -> dict[Any, Any]:
         """Build a dict."""
         return dict(*args, **kwargs)
 
