@@ -114,7 +114,7 @@ async def test_gen24_storage_mppt(
     assert entity_entry.unique_id == "12345678-modbus-mppt_1_power_dc"
 
     solar_net = config_entry.runtime_data
-    assert len(solar_net.modbus_inverter_coordinators) == 1
+    assert len(solar_net.modbus.inverter_coordinators) == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -308,7 +308,7 @@ async def test_modbus_unavailable(
     )
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert not config_entry.runtime_data.modbus_inverter_coordinators
+    assert not config_entry.runtime_data.modbus.inverter_coordinators
     assert not [
         entry
         for entry in er.async_entries_for_config_entry(
@@ -339,7 +339,7 @@ async def test_no_mppt_model(
     )
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.runtime_data.modbus_inverter_coordinators == []
+    assert config_entry.runtime_data.modbus.inverter_coordinators == []
     modbus_entities = [
         entry
         for entry in er.async_entries_for_config_entry(
@@ -356,7 +356,7 @@ async def test_no_mppt_model(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # the re-scan finds the controls already set up
-    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
+    assert len(config_entry.runtime_data.modbus.settings_coordinators) == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -447,7 +447,7 @@ async def test_connection_lost_recovers(
         config_entry = await setup_fronius_integration(
             hass, is_logger=False, unique_id="12345678"
         )
-    assert config_entry.runtime_data.modbus_inverter_coordinators
+    assert config_entry.runtime_data.modbus.inverter_coordinators
 
     mock_fronius_modbus.simulate_connection_lost()
     await hass.async_block_till_done()
@@ -458,7 +458,7 @@ async def test_connection_lost_recovers(
 
     # the entry was not reloaded and the values are back
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.runtime_data.modbus_inverter_coordinators
+    assert config_entry.runtime_data.modbus.inverter_coordinators
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
 
 
@@ -482,7 +482,7 @@ async def test_modbus_retried_after_setup(
         config_entry = await setup_fronius_integration(
             hass, is_logger=False, unique_id="12345678"
         )
-    assert not config_entry.runtime_data.modbus_inverter_coordinators
+    assert not config_entry.runtime_data.modbus.inverter_coordinators
     assert hass.states.get("sensor.gen24_storage_mppt_1_dc_power") is None
 
     # the inverter wakes up and starts answering
@@ -496,7 +496,7 @@ async def test_modbus_retried_after_setup(
     # the re-scan refreshes the new coordinator in a background task
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert config_entry.runtime_data.modbus_inverter_coordinators
+    assert config_entry.runtime_data.modbus.inverter_coordinators
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
     # the Modbus sensors of the re-scan are told apart from the SolarAPI ones
     entry = entity_registry.async_get("sensor.gen24_storage_mppt_1_dc_power")
@@ -529,7 +529,7 @@ async def test_control_refused_creates_no_control_entities(
             hass, is_logger=False, unique_id="12345678"
         )
 
-    assert config_entry.runtime_data.modbus_settings_coordinators == []
+    assert config_entry.runtime_data.modbus.settings_coordinators == []
     assert not [
         entry
         for entry in er.async_entries_for_config_entry(
@@ -587,7 +587,7 @@ async def test_limit_carries_the_configured_fallback_period(
     config_entry = await _setup_with_controls(
         hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
     )
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
 
@@ -608,7 +608,7 @@ async def test_active_limit_is_sent_again_before_it_reverts(
     config_entry = await _setup_with_controls(
         hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
     )
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     await _turn_on_power_limit(hass, 60)
@@ -639,7 +639,7 @@ async def test_heartbeat_leaves_a_released_limit_released(
     config_entry = await _setup_with_controls(
         hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
     )
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     assert controls.enabled is False
@@ -662,7 +662,7 @@ async def test_limit_without_a_fallback_period_is_left_alone(
 ) -> None:
     """Test a limit is not refreshed while the inverter is not to revert it."""
     config_entry = await _setup_with_controls(hass, aioclient_mock, mock_fronius_modbus)
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     await _turn_on_power_limit(hass, 60)
@@ -708,7 +708,7 @@ async def test_turning_the_setting_off_frees_a_running_limit(
     freezer.tick(FroniusModbusSettingsUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
     assert controls.enabled is True
     assert controls.revert_seconds == 0
@@ -727,8 +727,8 @@ async def test_heartbeat_stops_with_the_limit(
     # silence the pollers and let the runs they had scheduled drain, so that
     # anything reaching the device from here on is the heartbeat
     for coordinator in (
-        *config_entry.runtime_data.modbus_inverter_coordinators,
-        *config_entry.runtime_data.modbus_settings_coordinators,
+        *config_entry.runtime_data.modbus.inverter_coordinators,
+        *config_entry.runtime_data.modbus.settings_coordinators,
     ):
         coordinator.update_interval = None
     freezer.tick(timedelta(minutes=5))
@@ -809,7 +809,7 @@ async def test_heartbeat_leaves_a_limit_released_on_the_device_released(
     config_entry = await _setup_with_controls(
         hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
     )
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     await _turn_on_power_limit(hass, 60)
@@ -868,7 +868,7 @@ async def test_controls_enabled_later_get_their_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert config_entry.runtime_data.modbus_settings_coordinators
+    assert config_entry.runtime_data.modbus.settings_coordinators
     assert hass.states.get("number.gen24_storage_ac_power_limit")
     assert hass.states.get("switch.gen24_storage_ac_power_limiting")
     assert not [record for record in caplog.records if record.levelno >= ERROR]
@@ -895,16 +895,16 @@ async def test_readings_recover_when_only_the_controls_came_up(
         config_entry = await setup_fronius_integration(
             hass, is_logger=False, unique_id="12345678"
         )
-        assert not config_entry.runtime_data.modbus_inverter_coordinators
-        assert config_entry.runtime_data.modbus_settings_coordinators
+        assert not config_entry.runtime_data.modbus.inverter_coordinators
+        assert config_entry.runtime_data.modbus.settings_coordinators
 
     freezer.tick(timedelta(minutes=SOLAR_NET_RESCAN_TIMER, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert config_entry.runtime_data.modbus_inverter_coordinators
+    assert config_entry.runtime_data.modbus.inverter_coordinators
     # the settings coordinator that was already up is not added a second time
-    assert len(config_entry.runtime_data.modbus_settings_coordinators) == 1
+    assert len(config_entry.runtime_data.modbus.settings_coordinators) == 1
 
 
 async def test_unloading_stops_the_heartbeat(
@@ -947,13 +947,13 @@ async def test_heartbeat_does_not_undo_a_write_it_overlaps(
     config_entry = await _setup_with_controls(
         hass, aioclient_mock, mock_fronius_modbus, auto_revert_power_limit=True
     )
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
     # silence the pollers and drain what they had scheduled, so that the beat
     # is the only thing reading the device
     for poller in (
-        *config_entry.runtime_data.modbus_inverter_coordinators,
-        *config_entry.runtime_data.modbus_settings_coordinators,
+        *config_entry.runtime_data.modbus.inverter_coordinators,
+        *config_entry.runtime_data.modbus.settings_coordinators,
     ):
         poller.update_interval = None
     freezer.tick(timedelta(minutes=5))
@@ -1030,7 +1030,7 @@ async def test_clearing_the_period_is_tried_again(
         )
         await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
     assert failed
     await controls.async_update()

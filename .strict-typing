@@ -485,6 +485,7 @@ homeassistant.components.peco.*
 homeassistant.components.pegel_online.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.person.*
+homeassistant.components.philips_infrared.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
@@ -581,6 +582,7 @@ homeassistant.components.snooz.*
 homeassistant.components.sofar.*
 homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
+homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
@@ -593,6 +595,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
+homeassistant.components.steamvr_base_station.*
 homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
