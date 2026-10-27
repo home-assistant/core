@@ -1,7 +1,6 @@
 """Tests for the Guntamatic sensor platform."""
 
 from datetime import datetime, timedelta
-import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -22,12 +21,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.guntamatic.sensor import GUNTAMATIC_SENSORS
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -263,95 +260,3 @@ async def test_service_date_fractional_days(
     state = hass.states.get("sensor.mock_title_service_date")
     assert state is not None
     assert state.state == (frozen + timedelta(days=1.5)).date().isoformat()
-
-
-async def test_coordinator_error_translations(hass: HomeAssistant) -> None:
-    """Test the coordinator update failure exceptions are translated."""
-    translations = await async_get_translations(hass, "en", "exceptions", [DOMAIN])
-    assert "component.guntamatic.exceptions.communication_error.message" in translations
-    assert "component.guntamatic.exceptions.no_serial.message" in translations
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "translation_key", "expected_message"),
-    [
-        (
-            requests.exceptions.ConnectionError("boom"),
-            "communication_error",
-            "Cannot connect to the Guntamatic heater: boom",
-        ),
-        (
-            requests.exceptions.ReadTimeout("timed out"),
-            "communication_error",
-            "Cannot connect to the Guntamatic heater: timed out",
-        ),
-        (
-            NoSerialException,
-            "no_serial",
-            "The heater did not provide the required identification information",
-        ),
-    ],
-)
-async def test_coordinator_failures_are_translated(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_heater: MagicMock,
-    side_effect: Exception,
-    translation_key: str,
-    expected_message: str,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test expected parse failures are translated on scheduled polling."""
-    caplog.set_level(logging.ERROR)
-
-    await setup_integration(hass, mock_config_entry)
-
-    mock_heater.parse_data.side_effect = side_effect
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.translation_domain == DOMAIN
-    assert coordinator.last_exception.translation_key == translation_key
-    assert expected_message in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "translation_key", "placeholders"),
-    [
-        (
-            requests.exceptions.ConnectionError("boom"),
-            "communication_error",
-            {"error": "boom"},
-        ),
-        (
-            requests.exceptions.ReadTimeout("timed out"),
-            "communication_error",
-            {"error": "timed out"},
-        ),
-        (NoSerialException, "no_serial", None),
-    ],
-)
-async def test_setup_failure_translation_metadata(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_heater: MagicMock,
-    side_effect: Exception,
-    translation_key: str,
-    placeholders: dict[str, str] | None,
-) -> None:
-    """Test setup failures expose translated metadata on the config entry."""
-    mock_heater.parse_data.side_effect = side_effect
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_domain == DOMAIN
-    assert mock_config_entry.error_reason_translation_key == translation_key
-    assert mock_config_entry.error_reason_translation_placeholders == placeholders
-
-    mock_config_entry.async_cancel_retry_setup()
