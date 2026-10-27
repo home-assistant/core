@@ -191,8 +191,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         return areas
 
     @callback
-    def async_execution_started(self) -> None:
-        """Show the in-progress state and poll fast until executions finish."""
+    def async_execution_started(self, exec_id: str, actions: list[Action]) -> None:
+        """Track a new execution, show its in-progress state and poll fast."""
+        self.register_execution(exec_id, actions)
         self.async_update_listeners()
         if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
             self.update_interval = UPDATE_INTERVAL_EXECUTION

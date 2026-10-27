@@ -75,8 +75,7 @@ class OverkizExecutor:
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
         # to register it here.
-        self.coordinator.register_execution(exec_id, actions)
-        self.coordinator.async_execution_started()
+        self.coordinator.async_execution_started(exec_id, actions)
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
