@@ -27,8 +27,8 @@ class IRobotEntity(Entity):
             identifiers={(DOMAIN, self.robot_unique_id)},
             serial_number=self.vacuum_state.get("hwPartsRev", {}).get("navSerialNo"),
             manufacturer="iRobot",
-            model=self.vacuum_state.get("sku") or "Roomba",
-            name=str(self.vacuum_state.get("name") or "Roomba"),
+            model=self.vacuum_state.get("sku"),
+            name=str(self.vacuum_state.get("name")),
             sw_version=self.vacuum_state.get("softwareVer"),
             hw_version=(
                 str(hw_rev)
