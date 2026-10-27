@@ -181,8 +181,8 @@
         "speed": {
           "name": "[%key:component::cover::common::field_speed_name%]",
           "state": {
-            "default": "Default",
             "fast": "Fast",
+            "medium": "[%key:common::state::medium%]",
             "slow": "Slow"
           }
         }
