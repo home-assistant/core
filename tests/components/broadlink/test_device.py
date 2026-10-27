@@ -436,7 +436,7 @@ async def test_device_setup_rediscovery_by_mac(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.broadlink.helpers.async_find_device_by_mac",
+            "homeassistant.components.broadlink.device.helpers.async_find_device_by_mac",
             return_value=(new_ip, mock_api),
         ) as mock_find,
         patch(DEVICE_FACTORY, return_value=mock_api),
