@@ -41,7 +41,7 @@ class ReolinkLightEntityDescription(
     get_color_temp_fn: Callable[[Host, int], int | None] | None = None
     is_on_fn: Callable[[Host, int], bool]
     set_color_temp_fn: Callable[[Host, int, int], Any] | None = None
-    turn_on_off_fn: Callable[[Host, int, bool, int], Any]
+    turn_on_off_fn: Callable[[Host, int, bool, int | None], Any]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,7 +63,9 @@ LIGHT_ENTITIES = (
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
-        turn_on_off_fn=lambda api, ch, state, bright: api.set_whiteled(ch, state=state, brightness=bright),
+        turn_on_off_fn=lambda api, ch, state, bright: api.set_whiteled(
+            ch, state=state, brightness=bright
+        ),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
         get_color_temp_fn=lambda api, ch: api.whiteled_color_temperature(ch),
         set_color_temp_fn=lambda api, ch, value: api.baichuan.set_floodlight(
@@ -181,7 +183,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.entity_description.turn_on_off_fn(
-            self._host.api, self._channel, False
+            self._host.api, self._channel, False, None
         )
         self.async_write_ha_state()
 
