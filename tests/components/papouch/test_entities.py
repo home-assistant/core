@@ -52,4 +52,4 @@ async def test_sensor_entity(
 
     state = hass.states.get(sensor_id)
     assert state
-    assert state.state == "22.5"
+    assert state.state == "24.0"

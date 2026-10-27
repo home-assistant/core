@@ -73,7 +73,9 @@ async def test_user_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_ip_format(hass: HomeAssistant) -> None:
+async def test_invalid_ip_format(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
     """Test handling of invalid IP address format during setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -94,10 +96,12 @@ async def test_invalid_ip_format(hass: HomeAssistant) -> None:
     assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> None:
+async def test_user_connection_error(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
     """Test handling of connection errors during first step."""
     _, mock_mode, _, _ = mock_api_client
-    mock_mode.side_effect = DeviceConnectionError
+    mock_mode.side_effect = [DeviceConnectionError, WEB_MODE_INDEX]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -117,10 +121,12 @@ async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> No
     assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
+async def test_user_auth_error(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
     """Test handling of authentication errors during first step."""
     _, mock_mode, _, _ = mock_api_client
-    mock_mode.side_effect = DeviceAuthError
+    mock_mode.side_effect = [DeviceAuthError, WEB_MODE_INDEX]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -177,12 +183,11 @@ async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> N
 
 
 async def test_user_mac_auth_error(
-    hass: HomeAssistant,
-    mock_api_client,
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
 ) -> None:
     """Test auth error gracefully failing when retrieving MAC address."""
     _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = DeviceAuthError
+    mock_mac.side_effect = [DeviceAuthError, "00:11:22:33:44:55"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -206,12 +211,11 @@ async def test_user_mac_auth_error(
 
 
 async def test_user_mac_connection_error(
-    hass: HomeAssistant,
-    mock_api_client,
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
 ) -> None:
     """Test manual flow aborts if getting MAC address fails due to logic/connection error."""
     _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = DeviceConnectionError
+    mock_mac.side_effect = [DeviceConnectionError, "00:11:22:33:44:55"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
