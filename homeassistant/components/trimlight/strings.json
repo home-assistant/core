@@ -4,11 +4,22 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_discovery_info": "The discovery data from the controller is invalid",
-      "invalid_response": "The controller returned an invalid response",
-      "not_supported": "Trimlight controllers are configured through automatic network discovery. Make sure the controller is powered on and connected to the same network as Home Assistant, then wait for it to appear in the Discovered section."
+      "invalid_response": "The controller returned an invalid response"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "[%key:component::trimlight::config::abort::invalid_response%]"
     },
     "flow_title": "{name}",
     "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Trimlight controller."
+        }
+      },
       "zeroconf_confirm": {
         "description": "Add {name} at {host} to Home Assistant?",
         "title": "Add Trimlight controller"

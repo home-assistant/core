@@ -11,6 +11,7 @@ from aiotrimlight import (
     TrimlightProtocolError,
     parse_discovery_properties,
 )
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
@@ -35,7 +36,35 @@ class TrimlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a user-initiated flow."""
-        return self.async_abort(reason="not_supported")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            try:
+                client = TrimlightClient(host, async_get_clientsession(self.hass))
+                device_info = await client.get_device_info()
+            except TrimlightConnectionError, TrimlightHTTPError, ValueError:
+                errors["base"] = "cannot_connect"
+            except TrimlightCommandError, TrimlightProtocolError:
+                errors["base"] = "invalid_response"
+            else:
+                await self.async_set_unique_id(device_info.did, raise_on_progress=False)
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                return self.async_create_entry(
+                    title=device_info.device_name,
+                    data={
+                        CONF_HOST: host,
+                        CONF_DID: device_info.did,
+                        CONF_MAC: format_mac(device_info.mac_address),
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}), user_input
+            ),
+            errors=errors,
+        )
 
     @override
     async def async_step_zeroconf(

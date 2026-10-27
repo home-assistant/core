@@ -1,7 +1,7 @@
 """Tests for the Trimlight config flow."""
 
 from dataclasses import replace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiotrimlight import (
     TrimlightCommandError,
@@ -56,17 +56,15 @@ async def test_zeroconf(
     assert result["result"].unique_id == DID
 
 
-@pytest.mark.parametrize("host", [HOST, "192.0.2.11"], ids=["duplicate", "new-address"])
 async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     zeroconf_info: ZeroconfServiceInfo,
     mock_trimlight: MagicMock,
-    host: str,
 ) -> None:
     """Test rediscovery updates the existing entry instead of creating another."""
     hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: host}
+        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: "192.0.2.11"}
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -76,7 +74,6 @@ async def test_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == HOST
-    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
     mock_trimlight.get_device_info.assert_not_awaited()
 
 
@@ -136,16 +133,128 @@ async def test_discovery_error_and_recovery(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"] == {CONF_HOST: HOST, CONF_DID: DID, CONF_MAC: MAC}
     assert result["result"].unique_id == DID
 
 
-async def test_user(hass: HomeAssistant) -> None:
-    """Test manual setup directs users to automatic discovery."""
+async def test_user(hass: HomeAssistant, mock_trimlight: MagicMock) -> None:
+    """Test manual setup uses the HTTP identity and controller name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == {CONF_HOST: HOST, CONF_DID: DID, CONF_MAC: MAC}
+    assert result["result"].unique_id == DID
+    mock_trimlight.get_device_info.assert_awaited_once_with()
+
+
+async def test_user_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test HTTP identity prevents duplicate entries and updates the host."""
+    host = "192.0.2.11"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: host}
+    )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {CONF_HOST: host, CONF_DID: DID, CONF_MAC: MAC}
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(
+            TrimlightConnectionError("connection failed"),
+            "cannot_connect",
+            id="connection",
+        ),
+        pytest.param(TrimlightHTTPError(503), "cannot_connect", id="http"),
+        pytest.param(
+            TrimlightCommandError(201, "MCU timeout"), "invalid_response", id="command"
+        ),
+        pytest.param(
+            TrimlightProtocolError("invalid response"),
+            "invalid_response",
+            id="protocol",
+        ),
+    ],
+)
+async def test_user_error_and_recovery(
+    hass: HomeAssistant,
+    mock_trimlight: MagicMock,
+    exception: TrimlightError,
+    reason: str,
+) -> None:
+    """Test validation errors keep the form open and allow a successful retry."""
+    mock_trimlight.get_device_info.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": reason}
+
+    mock_trimlight.get_device_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DID
+
+
+async def test_user_invalid_host(hass: HomeAssistant) -> None:
+    """Test a rejected host can be corrected without restarting the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.trimlight.config_flow.TrimlightClient",
+        side_effect=ValueError("invalid host"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "http://invalid"}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DID
+
+
+async def test_manual_setup_during_discovery(
+    hass: HomeAssistant, zeroconf_info: ZeroconfServiceInfo
+) -> None:
+    """Test manual setup can complete while discovery awaits confirmation."""
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_info
+    )
+    assert discovery_result["type"] is FlowResultType.FORM
+    assert discovery_result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DID

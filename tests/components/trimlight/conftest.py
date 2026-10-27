@@ -48,7 +48,10 @@ def mock_trimlight(
     ):
         client = mock_client.return_value
         client.get_device_info.return_value = TrimlightDeviceInfo(
-            firmware_version="1.0.38.1.0.13r", ic_type=ic_type
+            firmware_version="1.0.38.1.0.13r",
+            ic_type=ic_type,
+            did=DID,
+            device_name=NAME,
         )
         client.get_light_state.return_value = TrimlightLightState(
             is_on=initial_is_on,

@@ -484,7 +484,7 @@ aiothreema==0.2.0
 aiotractive==2.0.0
 
 # homeassistant.components.trimlight
-aiotrimlight==0.3.1
+aiotrimlight==0.4.0
 
 # homeassistant.components.unifi
 aiounifi==97

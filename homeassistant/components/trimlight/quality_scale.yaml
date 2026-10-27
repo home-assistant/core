@@ -35,9 +35,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: This integration does not provide an options flow.
-  docs-installation-parameters:
-    status: exempt
-    comment: Setup only requires confirming the discovered controller.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -78,9 +76,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The light entity uses the default platform icon.
-  reconfiguration-flow:
-    status: exempt
-    comment: The config flow has no user-configurable settings.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration has no known issues that require repair.

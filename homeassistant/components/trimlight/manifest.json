@@ -8,6 +8,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiotrimlight==0.3.1"],
+  "requirements": ["aiotrimlight==0.4.0"],
   "zeroconf": ["_tlight._tcp.local."]
 }
