@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
     thermostat_device,
@@ -327,3 +328,19 @@ async def test_outdoor_siren_without_power_supply(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.outdoor_siren_siren_battery") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(temperature=21.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Motion Detector II reports its temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"

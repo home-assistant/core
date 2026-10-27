@@ -923,6 +923,7 @@ def motion_detector2_device(
     long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
     occupied: bool = False,
     was_tampered: bool = False,
+    temperature: float = 21.5,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -943,6 +944,7 @@ def motion_detector2_device(
     device.latestmotion = latestmotion
     device.occupied = occupied
     device.was_tampered = was_tampered
+    device.temperature = temperature
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity
