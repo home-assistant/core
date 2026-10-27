@@ -1,7 +1,9 @@
 "Test SMLIGHT SLZB device integration initialization."
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, call
 
+from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
@@ -16,7 +18,13 @@ from homeassistant.components.smlight.const import (
 )
 from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
@@ -32,34 +40,129 @@ pytestmark = [
 
 
 async def test_async_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
 ) -> None:
     """Test async_setup_entry."""
     entry = await setup_integration(hass, mock_config_entry)
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+    mock_smlight_client.check_auth_needed.assert_not_awaited()
+    assert (
+        mock_smlight_client.authenticate.await_args_list
+        == [
+            call(
+                mock_config_entry.data[CONF_USERNAME],
+                mock_config_entry.data[CONF_PASSWORD],
+            ),
+        ]
+        * 2
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    "successful_authentications",
+    [pytest.param(0, id="data"), pytest.param(1, id="firmware")],
+)
 async def test_async_setup_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    successful_authentications: int,
 ) -> None:
-    """Test async_setup_entry when authentication fails."""
-    mock_smlight_client.check_auth_needed.return_value = True
-    mock_smlight_client.authenticate.side_effect = SmlightAuthError
+    """Test rejected credentials from either coordinator trigger reauthentication."""
+    mock_smlight_client.authenticate.side_effect = [
+        *([True] * successful_authentications),
+        SmlightAuthError,
+    ]
     entry = await setup_integration(hass, mock_config_entry)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_smlight_client.authenticate.await_count == successful_authentications + 1
+    )
+    mock_smlight_client.check_auth_needed.assert_not_awaited()
+    assert len(list(entry.async_get_active_flows(hass, {"reauth"}))) == 1
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+
+async def test_async_setup_info_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test initial device information rejecting authentication triggers reauth."""
+    mock_smlight_client.get_info.side_effect = SmlightAuthError
+
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    mock_smlight_client.authenticate.assert_awaited_once_with(
+        mock_config_entry.data[CONF_USERNAME],
+        mock_config_entry.data[CONF_PASSWORD],
+    )
+    assert len(list(entry.async_get_active_flows(hass, {"reauth"}))) == 1
+
+
+async def test_async_setup_without_credentials(
+    hass: HomeAssistant,
+    mock_config_entry_host: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test an open device still loads without credentials."""
+    entry = await setup_integration(hass, mock_config_entry_host)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_smlight_client.check_auth_needed.await_count == 2
+    mock_smlight_client.authenticate.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "successful_authentications",
+    [pytest.param(0, id="data"), pytest.param(1, id="firmware")],
+)
+async def test_async_setup_authentication_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    successful_authentications: int,
+) -> None:
+    """Test HTTP framing errors during authentication recover on automatic retry."""
+    mock_smlight_client.authenticate.side_effect = [
+        *([True] * successful_authentications),
+        ClientResponseError(
+            request_info=MagicMock(spec=RequestInfo),
+            history=(),
+            status=400,
+            message="Data after `Connection: close`",
+        ),
+    ]
+
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_smlight_client.authenticate.await_count == successful_authentications + 1
+    )
+    assert not any(entry.async_get_active_flows(hass, {"reauth"}))
+    mock_smlight_client.check_auth_needed.assert_not_awaited()
+    mock_smlight_client.authenticate.side_effect = None
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        mock_smlight_client.authenticate.await_count == successful_authentications + 3
+    )
+    mock_smlight_client.check_auth_needed.assert_not_awaited()
 
 
 async def test_async_setup_missing_credentials(

@@ -313,6 +313,13 @@
       }
     },
     "select": {
+      "blind_type": {
+        "name": "Blind type",
+        "state": {
+          "roller_shutter": "Roller shutter",
+          "venetian_blind": "Venetian blind"
+        }
+      },
       "clean_mode": {
         "name": "Clean mode"
       },

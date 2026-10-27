@@ -136,6 +136,9 @@
       },
       "station_action_empty_dustbin": {
         "name": "Empty dustbin"
+      },
+      "station_action_wash_mop": {
+        "name": "Wash mop"
       }
     },
     "event": {
@@ -164,6 +167,9 @@
       "cut_direction": {
         "name": "Cut direction"
       },
+      "mop_wash_interval": {
+        "name": "Mop wash interval"
+      },
       "volume": {
         "name": "Volume"
       },
@@ -183,6 +189,13 @@
           "min_15": "15 minutes",
           "min_25": "25 minutes",
           "smart": "Smart"
+        }
+      },
+      "efficiency_mode": {
+        "name": "Efficiency mode",
+        "state": {
+          "energy_efficient_mode": "Energy efficient",
+          "standard_mode": "Standard"
         }
       },
       "water_amount": {
@@ -337,6 +350,9 @@
     "switch": {
       "advanced_mode": {
         "name": "Advanced mode"
+      },
+      "auto_empty": {
+        "name": "Auto-empty"
       },
       "border_spin": {
         "name": "Border spin"

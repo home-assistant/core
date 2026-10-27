@@ -23,6 +23,7 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
+    MotionDetectorSwitchOutdoor,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -300,6 +301,16 @@ ILLUMINANCE_DESC = HmipSensorDescription[Device](
     channel=1,
 )
 
+MOTION_SWITCH_ILLUMINANCE_DESC = HmipSensorDescription[Device](
+    key="illuminance",
+    device_class=SensorDeviceClass.ILLUMINANCE,
+    native_unit_of_measurement=LIGHT_LUX,
+    state_class=SensorStateClass.MEASUREMENT,
+    channel_value_fn=lambda channel: channel.illumination,
+    channel=1,
+    channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
+)
+
 POWER_DESC = HmipSensorDescription[Device](
     key="power",
     device_class=SensorDeviceClass.POWER,
@@ -466,6 +477,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     LightSensor: (ILLUMINANCE_DESC,),
     MotionDetectorIndoor: (ILLUMINANCE_DESC,),
     MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
+    MotionDetectorSwitchOutdoor: (MOTION_SWITCH_ILLUMINANCE_DESC,),
     PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
     SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
     PassageDetector: (PASSAGE_COUNTER_DESC,),
