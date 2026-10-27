@@ -9,13 +9,12 @@ import wave
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud.texttospeech_v1.types import cloud_tts
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tts
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 TTS_ENTITY_ID = "tts.my_google_cloud_title"
 CHIRP_VOICE = "en-US-Chirp3-HD-Achernar"
