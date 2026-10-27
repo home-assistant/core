@@ -23,6 +23,7 @@ from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
 
+ATTR_CATEGORY = "category"
 ATTR_FAULT_ID = "fault_id"
 ATTR_OCCURRED_AT = "occurred_at"
 
@@ -115,7 +116,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
                 entry.fault.key,
                 {
                     ATTR_FAULT_ID: entry.fault.id,
-                    "category": entry.fault.category.value,
+                    ATTR_CATEGORY: entry.fault.category.value,
                     ATTR_OCCURRED_AT: entry.occurred_at.replace(
                         tzinfo=dt_util.get_default_time_zone()
                     ).isoformat(),
