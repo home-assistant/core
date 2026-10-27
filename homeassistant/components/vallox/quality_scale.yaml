@@ -24,7 +24,7 @@ rules:
       only accepts IP addresses. Accept hostnames or correct the description.
       (2) config_entry.data["name"] and the config.abort strings in strings.json
       are leftovers of the removed YAML import. Remove the name with a migration
-      that keeps custom names from the YAML era (r.g. PR 134841), and remove the
+      that keeps custom names from the YAML era (e.g. PR 134841), and remove the
       unused abort strings.
   dependency-transparency: done
   docs-actions:
