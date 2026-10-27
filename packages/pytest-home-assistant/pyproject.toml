@@ -44,7 +44,7 @@ bluetooth = [
   "habluetooth==7.1.2",
   "serialx==1.15.0",
 ]
-infrared = ["infrared-protocols==10.4.1"]
+infrared = ["infrared-protocols==10.5.0"]
 radio-frequency = ["rf-protocols==4.3.0"]
 
 [project.urls]

@@ -165,6 +165,9 @@ class LLMContext:
     device_id: str | None
     """Device that is making the request."""
 
+    agent_id: str | None = None
+    """Conversation agent or AI task entity that is handling the LLM request."""
+
 
 @dataclass(slots=True)
 class ToolInput:
@@ -200,7 +203,11 @@ class ToolAnnotations:
 
 
 class Tool:
-    """LLM Tool base class."""
+    """LLM Tool base class.
+
+    Tools may implement equality to allow merged APIs to deduplicate
+    interchangeable instances with the same name.
+    """
 
     name: str
     title: str | None = None
@@ -503,18 +510,42 @@ class MergedAPI(API):
             await llm_api.async_get_api_instance(llm_context)
             for llm_api in self.llm_apis
         ]
-        prompt_parts = []
-        tools: list[Tool] = []
+        tools_by_name: dict[str, list[tuple[str, Tool]]] = {}
         for api_instance in llm_apis:
-            namespace = unicode_slug.slugify(api_instance.api.name)
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            for tool in api_instance.tools:
+                entries = tools_by_name.setdefault(tool.name, [])
+                if all(candidate != tool for _, candidate in entries):
+                    entries.append((namespace, tool))
+
+        tools = [
+            tool if len(entries) == 1 else NamespacedTool(namespace, tool)
+            for entries in tools_by_name.values()
+            for namespace, tool in entries
+        ]
+
+        if len({tool.name for tool in tools}) != len(tools):
+            raise ValueError("Merged tool names must be unique")
+
+        prompt_parts = []
+        for api_instance in llm_apis:
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            tool_names = []
+            for tool in api_instance.tools:
+                entries = tools_by_name[tool.name]
+                if len(entries) == 1:
+                    tool_names.append(tool.name)
+                else:
+                    tool_namespace = next(
+                        ns for ns, candidate in entries if candidate == tool
+                    )
+                    tool_names.append(f"{tool_namespace}__{tool.name}")
             prompt_parts.append(
-                f'Follow these instructions for tools from "{namespace}":\n'
+                f'Follow these instructions for tools from "{namespace}" '
+                f"({', '.join(tool_names)}):\n"
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
-            tools.extend(
-                [NamespacedTool(namespace, tool) for tool in api_instance.tools]
-            )
 
         return APIInstance(
             api=self,
