@@ -15,6 +15,7 @@ from deebot_client.commands.json import (
     SetSafeProtect,
     SetTrueDetect,
 )
+from deebot_client.commands.json.auto_empty import SetAutoEmpty
 from deebot_client.events import (
     AdvancedModeEvent,
     BorderSpinEvent,
@@ -27,6 +28,7 @@ from deebot_client.events import (
     MoveUpWarningEvent,
     SafeProtectEvent,
     TrueDetectEvent,
+    auto_empty,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -156,6 +158,11 @@ class SwitchTestCase:
                     "switch.dbmini_border_spin",
                     BorderSpinEvent(True),
                     SetBorderSpin,
+                ),
+                SwitchTestCase(
+                    "switch.dbmini_auto_empty",
+                    auto_empty.AutoEmptyEvent(True, auto_empty.Frequency.AUTO),
+                    SetAutoEmpty,
                 ),
             ],
         ),

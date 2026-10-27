@@ -305,6 +305,9 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         except KeyError as ex:
             raise UpdateFailed("Missing power flow data, skipping update") from ex
 
+        if power_flow is None:
+            raise UpdateFailed("Missing power flow data, skipping update")
+
         power_from = []
         power_to = []
 
