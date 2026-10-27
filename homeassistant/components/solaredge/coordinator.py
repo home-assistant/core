@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
-from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb
 
 from homeassistant.components.recorder import get_instance
@@ -27,6 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util, slugify, snakecase
 from homeassistant.util.unit_conversion import EnergyConverter
 
+from .api import SolarEdgeV2
 from .const import (
     CONF_SITE_ID,
     DETAILS_UPDATE_DELAY,
@@ -53,7 +53,7 @@ class SolarEdgeDataService(ABC):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the data object."""
@@ -215,7 +215,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the power flow data service."""
@@ -282,7 +282,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         self,
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
+        api: SolarEdgeV2,
         site_id: str,
     ) -> None:
         """Initialize the power flow data service."""
@@ -332,18 +332,20 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 self.attributes[key] = {"status": value["status"]}
 
             if key == "GRID":
-                export = key.lower() in power_to
-                if self.data[key]:
-                    self.data[key] *= -1 if export else 1
-                self.data["grid_flow_direction"] = "export" if export else "import"
+                if key.lower() in power_to:
+                    if self.data[key]:
+                        self.data[key] *= -1
+                    self.data["grid_flow_direction"] = "export"
+                elif key.lower() in power_from:
+                    self.data["grid_flow_direction"] = "import"
 
             if key == "STORAGE":
-                charge = key.lower() in power_to
-                if self.data[key]:
-                    self.data[key] *= -1 if charge else 1
-                self.data["storage_flow_direction"] = (
-                    "charge" if charge else "discharge"
-                )
+                if key.lower() in power_to:
+                    if self.data[key]:
+                        self.data[key] *= -1
+                    self.data["storage_flow_direction"] = "charge"
+                elif key.lower() in power_from:
+                    self.data["storage_flow_direction"] = "discharge"
                 self.data["storage_level"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)

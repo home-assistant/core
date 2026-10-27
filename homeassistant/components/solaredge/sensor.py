@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any, override
 
-from aiosolaredge import SolarEdge
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .api import SolarEdgeV2
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
 from .coordinator import (
     SolarEdgeDataService,
@@ -39,6 +38,7 @@ class SolarEdgeSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for SolarEdge."""
 
     json_key: str
+    supported: bool = True
 
 
 SENSOR_TYPES = [
@@ -102,6 +102,7 @@ SENSOR_TYPES = [
         json_key="sensors",
         translation_key="sensors",
         entity_registry_enabled_default=False,
+        supported=False,
     ),
     SolarEdgeSensorEntityDescription(
         key="gateways",
@@ -343,7 +344,7 @@ class SolarEdgeSensorFactory:
         hass: HomeAssistant,
         config_entry: SolarEdgeConfigEntry,
         site_id: str,
-        api: SolarEdge,
+        api: SolarEdgeV2,
     ) -> None:
         """Initialize the factory."""
 
@@ -480,6 +481,12 @@ class SolarEdgeSensorEntity(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data_service.site_id)}, manufacturer="SolarEdge"
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the sensor is supported and its coordinator is available."""
+        return self.entity_description.supported and super().available
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
