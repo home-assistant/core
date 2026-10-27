@@ -78,21 +78,12 @@ async def test_entry_and_binary_sensor_subentry(
         },
     )
 
-    assert result["type"] == FlowResultType.MENU
-    assert result["step_id"] == "subentries_menu"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": Platform.BINARY_SENSOR},
-    )
-
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
-
-    _, next_flow_id = result["next_flow"]
-
-    result = await hass.config_entries.subentries.async_configure(next_flow_id)
+    result = await hass.config_entries.subentries.async_init(
+        (result["result"].entry_id, Platform.BINARY_SENSOR),
+        context=config_entries.SubentryFlowContext(source=config_entries.SOURCE_USER),
+    )
 
     assert result["type"] == FlowResultType.FORM
     _, subentry_type = result["handler"]
@@ -100,7 +91,7 @@ async def test_entry_and_binary_sensor_subentry(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
-        next_flow_id, get_subentry_data[BINARY_SENSOR_DATA]["data"]
+        result["flow_id"], get_subentry_data[BINARY_SENSOR_DATA]["data"]
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     states = hass.states.async_all(Platform.BINARY_SENSOR)
@@ -176,37 +167,6 @@ async def test_sensor_subentry_flow(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "timeout_error"
-
-
-async def test_config_entry_flow_only(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    get_config_entry_data: dict[str, Any],
-) -> None:
-    """Test the config entry flow without next_flow."""
-
-    aioclient_mock.get(
-        "http://localhost",
-        status=HTTPStatus.OK,
-        json={"key": "on"},
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], get_config_entry_data
-    )
-    assert result["type"] == FlowResultType.MENU
-    assert result["step_id"] == "subentries_menu"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "none"}
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert "next_flow" not in result
-
-    assert (entries := hass.config_entries.async_entries(DOMAIN))
-    assert entries[0].data == get_config_entry_data
 
 
 async def test_config_flow_subentry_flow_no_data(
@@ -440,7 +400,7 @@ async def test_xml_parse_error(
     aioclient_mock: AiohttpClientMocker,
     get_config_entry_data: dict[str, Any],
 ) -> None:
-    """Test if the subentry user flow handles ExpatErrors correctly."""
+    """Test that the subentry user flow handles ExpatErrors correctly."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -489,11 +449,6 @@ async def test_xml_parse_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], get_config_entry_data
     )
-    assert result["type"] == FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": Platform.BINARY_SENSOR},
-    )
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
@@ -533,10 +488,6 @@ async def test_config_flow_decode_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], get_config_entry_data
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": Platform.BINARY_SENSOR},
-    )
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
@@ -566,9 +517,5 @@ async def test_config_flow_codec_not_found(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], get_config_entry_data
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": Platform.BINARY_SENSOR},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY

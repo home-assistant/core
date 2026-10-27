@@ -2,8 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
-from types import MethodType
 from typing import Any, override
 from urllib.parse import urlsplit
 from xml.parsers.expat import ExpatError
@@ -16,14 +14,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
 )
 from homeassistant.config_entries import (
-    SOURCE_USER,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    FlowType,
-    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -34,14 +29,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PARAMS,
     CONF_PAYLOAD,
-    CONF_PLATFORM,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     Platform,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import Template
 
@@ -87,10 +80,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    _data: dict[str, Any]
-    _next_flow_platform: Platform | str
-    _title: str
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,14 +113,15 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             except LookupError:
                 errors[CONF_ENCODING] = "codec_not_found"
             if not errors:
-                resource = urlsplit(
+                resource = urlsplit(  # strip out auth parameters
                     Template(user_input[CONF_RESOURCE], self.hass).async_render()
-                )  # strip out auth parameters
-                self._title = (
-                    f"{user_input[CONF_METHOD]} {resource.scheme}://{resource.hostname}"
                 )
-                self._data = user_input
-                return await self.async_step_subentries_menu()
+                return self.async_create_entry(
+                    title=(
+                        f"{user_input[CONF_METHOD]} {resource.scheme}://{resource.hostname}"
+                    ),
+                    data=user_input,
+                )
         suggested_values = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -149,40 +139,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    async def async_step_subentries_menu(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show menu for subentry creation."""
-
-        async def _async_subentry_step(
-            self: RestConfigFlow, user_input: dict[str, Any] | None, platform: str
-        ) -> ConfigFlowResult:
-            return await self.async_step_create_entry({CONF_PLATFORM: platform})
-
-        menu_options = [*SUBENTRY_CONFIG.keys(), NO_PLATFORM]
-        for platform in menu_options:
-            setattr(
-                self,
-                f"async_step_{platform}",
-                MethodType(partial(_async_subentry_step, platform=platform), self),
-            )
-
-        return self.async_show_menu(
-            step_id="subentries_menu",
-            menu_options=menu_options,
-            description_placeholders={"entry_title": self._title},
-        )
-
-    async def async_step_create_entry(
-        self, user_input: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Show menu for next flow."""
-        self._next_flow_platform = user_input[CONF_PLATFORM]
-        return self.async_create_entry(
-            title=self._title,
-            data=self._data,
-        )
-
     @classmethod
     @callback
     @override
@@ -191,21 +147,6 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return dict.fromkeys(SUBENTRY_CONFIG.keys(), RestSubentryFlow)
-
-    @override
-    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
-        """Create subentry flow after creating the main entry."""
-        if self._next_flow_platform != NO_PLATFORM:
-            subentry_result = await self.hass.config_entries.subentries.async_init(
-                (result["result"].entry_id, self._next_flow_platform),
-                context=SubentryFlowContext(source=SOURCE_USER),
-            )
-            if subentry_result["type"] is FlowResultType.FORM:
-                result["next_flow"] = (
-                    FlowType.CONFIG_SUBENTRIES_FLOW,
-                    subentry_result["flow_id"],
-                )
-        return result
 
 
 def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
