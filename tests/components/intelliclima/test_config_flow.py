@@ -135,7 +135,11 @@ async def test_user_flow_ecocomfort3(
     """An account containing only an ECOCOMFORT 3 can be configured."""
     mock_cloud_interface.get_all_device_status.return_value = single_eco3_device
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=DATA_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], DATA_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

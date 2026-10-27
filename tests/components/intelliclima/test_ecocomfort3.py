@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyintelliclima import FanMode, FanSpeed, IntelliClimaDevices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -33,8 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 FAN_ENTITY_ID = "fan.test_vmc_3"
 SELECT_ENTITY_ID = "select.test_vmc_3_fan_direction_mode"
