@@ -31,6 +31,7 @@ from homeassistant.components.conversation.chat_log import (
     ChatLogEventType,
     async_subscribe_chat_logs,
 )
+from homeassistant.components.conversation.trace import async_conversation_trace
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -358,6 +359,33 @@ async def test_streamed_first_reply_sent_to_subscribers(
     event, data = events[-1]
     assert event == ChatLogEventType.UPDATED
     assert data["chat_log"]["content"][-1]["content"] == "Hi"
+
+
+async def test_trace_keeps_messages_of_its_turn(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a later turn does not change the messages in the trace of a turn."""
+    with (
+        async_conversation_trace() as conversation_trace,
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=None,
+            user_llm_prompt=None,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi")
+        )
+
+    with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi again")
+        )
+
+    messages = conversation_trace.as_dict()["events"][-1]["data"]["messages"]
+    assert [message["role"] for message in messages] == ["system", "user"]
 
 
 async def test_failed_turn_stored(

@@ -808,7 +808,9 @@ class ChatLog:
             # providers can cache them. Tool calls use the context of this turn.
             self.llm_api.llm_context = llm_context
             self.llm_input_provided_index = len(self.content)
-            self.async_trace({"messages": self.content, "tools": self.llm_api.tools})
+            self.async_trace(
+                {"messages": list(self.content), "tools": self.llm_api.tools}
+            )
             return
 
         if not user_llm_hass_api:
@@ -907,7 +909,7 @@ class ChatLog:
 
         self.async_trace(
             {
-                "messages": self.content,
+                "messages": list(self.content),
                 "tools": self.llm_api.tools if self.llm_api else None,
             }
         )
