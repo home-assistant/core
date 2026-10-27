@@ -131,6 +131,7 @@ class UnifiEntityLoader:
                 ]
             ),
         )
+        # Pruning removes clients that weren't restored, so restore must run first
         self._restore_inactive_clients()
         self._prune_client_trackers()
         self._prune_unlisted_devices()
@@ -200,7 +201,6 @@ class UnifiEntityLoader:
         api = self.hub.api
         entity_registry = er.async_get(self.hub.hass)
         device_registry = dr.async_get(self.hub.hass)
-        now = dt_util.utcnow()
         always_restore = self._always_restore_clients()
 
         # A client missing from clients_all only means it was removed from the
@@ -223,10 +223,7 @@ class UnifiEntityLoader:
                 pruned += 1
                 continue
 
-            if (client := api.clients_all.get(mac)) is None:
-                if not prune_unlisted:
-                    continue
-            elif not self._client_is_stale(client, now):
+            if mac not in api.clients_all and not prune_unlisted:
                 continue
 
             if not devices_loaded:
