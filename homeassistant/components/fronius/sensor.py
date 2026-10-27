@@ -9,9 +9,12 @@ from fronius_solarapi import (
     CommonInverterData,
     DeviceDetails,
     DeviceStatus,
+    InverterState,
     LoggerInfo,
     MeterData,
+    MeterLocation,
     OhmpilotData,
+    OhmpilotState,
     PowerFlow,
     StorageController,
 )
@@ -42,17 +45,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    DOMAIN,
-    INVERTER_ERROR_CODES,
-    InverterStatusCodeOption,
-    MeterLocationCodeOption,
-    OhmPilotStateCodeOption,
-    discovery_signal,
-    get_inverter_status_message,
-    get_meter_location_description,
-    get_ohmpilot_state_message,
-)
+from .const import DOMAIN, INVERTER_ERROR_CODES, discovery_signal
 from .coordinator import (
     FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
@@ -209,6 +202,23 @@ _NO_DEVICE_STATUS: Final = DeviceStatus(
 def _device_status(data: CommonInverterData) -> DeviceStatus:
     """Return the status of an inverter, empty when it reported none."""
     return data.device_status or _NO_DEVICE_STATUS
+
+
+def _inverter_state(data: CommonInverterData) -> InverterState | None:
+    """Return the operational state of an inverter, `None` when unknown."""
+    if (state := _device_status(data).state) is InverterState.UNKNOWN:
+        return None
+    return state
+
+
+# the entity states and their translations use these, not the library's names
+_METER_LOCATION_OPTIONS: Final[dict[MeterLocation, str]] = {
+    MeterLocation.GRID: "feed_in",
+    MeterLocation.LOAD: "consumption_path",
+    MeterLocation.EXTERNAL_GENERATOR: "external_generator",
+    MeterLocation.EXTERNAL_GENERATOR_WITH_BATTERY: "external_battery",
+    MeterLocation.SUBLOAD: "subload",
+}
 
 
 def _positive(value: float | None) -> float | None:
@@ -393,13 +403,13 @@ INVERTER_ENTITY_DESCRIPTIONS: list[
     ),
     FroniusSensorEntityDescription(
         key="status_message",
-        value_fn=lambda data: get_inverter_status_message(
-            _device_status(data).status_code
-        ),
+        value_fn=_inverter_state,
         exists_fn=lambda data: _device_status(data).status_code is not None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[opt.value for opt in InverterStatusCodeOption],
+        options=[
+            state.value for state in InverterState if state is not InverterState.UNKNOWN
+        ],
     ),
     FroniusSensorEntityDescription(
         key="led_state",
@@ -615,13 +625,13 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription[MeterData]] = [
         key="meter_location_description",
         value_fn=lambda data: (
             None
-            if (code := data.meter_location_code) is None
-            else get_meter_location_description(code)
+            if (location := data.meter_location) is None
+            else _METER_LOCATION_OPTIONS[location]
         ),
         exists_fn=lambda data: data.meter_location_code is not None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[opt.value for opt in MeterLocationCodeOption],
+        options=list(_METER_LOCATION_OPTIONS.values()),
     ),
     FroniusSensorEntityDescription(
         key="power_apparent_phase_1",
@@ -830,11 +840,13 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription[OhmpilotData]]
     ),
     FroniusSensorEntityDescription(
         key="state_message",
-        value_fn=lambda data: get_ohmpilot_state_message(data.state_code),
+        value_fn=lambda data: (
+            None if (state := data.state) is None else state.name.lower()
+        ),
         exists_fn=lambda data: data.state_code is not None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[opt.value for opt in OhmPilotStateCodeOption],
+        options=[state.name.lower() for state in OhmpilotState],
     ),
 ]
 
