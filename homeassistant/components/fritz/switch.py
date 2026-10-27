@@ -100,15 +100,14 @@ async def _migrate_to_new_unique_id(
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
         new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{network['switch_name']}"
 
+        if old_unique_id == new_unique_id:
+            continue
+
         entity_id = entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, old_unique_id
         )
 
-        existing_entity_id = entity_registry.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, new_unique_id
-        )
-
-        if entity_id is not None and existing_entity_id is None:
+        if entity_id is not None:
             entity_registry.async_update_entity(
                 entity_id,
                 new_unique_id=new_unique_id,
