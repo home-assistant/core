@@ -47,6 +47,29 @@ async def test_media_player_camera_remove(
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
 
+async def test_media_player_adopted_at_runtime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A speaker camera adopted while running gets the speaker unique ID and name."""
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)
+
+    doorbell._api = ufp.api
+    await adopt_devices(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
+
+    entity = entity_registry.async_get("media_player.test_camera_speaker")
+    assert entity
+    assert entity.unique_id == f"{doorbell.mac}_speaker"
+    state = hass.states.get("media_player.test_camera_speaker")
+    assert state
+    assert state.name == "Test Camera Speaker"
+
+
 async def test_media_player_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

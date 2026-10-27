@@ -937,17 +937,15 @@ class ZHAGatewayProxy(EventBase):
             self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
 
             device_registry = dr.async_get(self.hass)
-            device_registry_device = device_registry.async_get_or_create_device(
+            device_registry_device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
-                    identifiers={(DOMAIN, str(zha_device.ieee))},
-                    name=zha_device.name,
-                    manufacturer=zha_device.manufacturer,
-                    model=zha_device.model,
-                    sw_version=zha_device.firmware_version,
-                    via_device_id=via_device_id,
-                ),
+                connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
+                identifiers={(DOMAIN, str(zha_device.ieee))},
+                name=zha_device.name,
+                manufacturer=zha_device.manufacturer,
+                model=zha_device.model,
+                sw_version=zha_device.firmware_version,
+                via_device_id=via_device_id,
             )
             zha_device_proxy.device_id = device_registry_device.id
             zha_device_proxy.attach_event_handlers()
@@ -1491,6 +1489,18 @@ async def convert_zha_error_to_ha_error() -> AsyncGenerator[None]:
 def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     """Return a new dictionary excluding keys with None values."""
     return {k: v for k, v in obj.items() if v is not None}
+
+
+@callback
+def async_update_device_path(
+    hass: HomeAssistant, config_entry: ConfigEntry, new_path: str
+) -> None:
+    """Point a config entry at the new path of its radio."""
+    device = config_entry.data[CONF_DEVICE]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, CONF_DEVICE: {**device, CONF_DEVICE_PATH: new_path}},
+    )
 
 
 def get_config_entry_unique_id(network_info: NetworkInfo) -> str:

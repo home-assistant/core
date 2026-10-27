@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiocomelit import CannotAuthenticate, CannotConnect
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import BRIDGE, COVER, VEDO
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -12,12 +12,24 @@ from homeassistant.components.comelit.config_flow import (
     InvalidVedoAuth,
     InvalidVedoPin,
 )
-from homeassistant.components.comelit.const import CONF_VEDO_PIN, DOMAIN
+from homeassistant.components.comelit.const import (
+    CONF_TRAVEL_TIME,
+    CONF_VEDO_PIN,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_HOST,
+    CONF_PIN,
+    CONF_PORT,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .const import (
     BAD_PIN,
     BRIDGE_HOST,
@@ -265,6 +277,31 @@ async def test_reconfigure_successful(
     assert mock_serial_bridge_config_entry.data[CONF_HOST] == new_host
 
 
+async def test_reconfigure_legacy_entry_without_port(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+) -> None:
+    """Test reconfiguring an entry created before the port field existed."""
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_TYPE: BRIDGE,
+        },
+        entry_id="legacy_serial_bridge_config_entry_id",
+    )
+    legacy_entry.add_to_hass(hass)
+
+    result = await legacy_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    port_marker = next(key for key in result["data_schema"].schema if key == CONF_PORT)
+    assert port_marker.default() == DEFAULT_PORT
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -489,3 +526,106 @@ async def test_flow_serial_bridge_with_vedo_auth_failure(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_flow_cover_travel_time(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting a cover travel time via the options flow."""
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    entity_selector = result["data_schema"].schema[CONF_ENTITY_ID]
+    assert entity_selector.config["include_entities"] == ["cover.cover0"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENTITY_ID: "cover.cover0"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cover_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRAVEL_TIME: 40},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-0": 40}}
+    assert mock_serial_bridge_config_entry.options == {
+        CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-0": 40}
+    }
+
+
+async def test_options_flow_cover_travel_time_update_preserves_others(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating one cover's travel time preserves other covers' values."""
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_serial_bridge_config_entry,
+        options={CONF_TRAVEL_TIME: {"serial_bridge_config_entry_id-1": 50}},
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENTITY_ID: "cover.cover0"},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRAVEL_TIME: 40},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_TRAVEL_TIME: {
+            "serial_bridge_config_entry_id-1": 50,
+            "serial_bridge_config_entry_id-0": 40,
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("config_entry_fixture", "supports_options"),
+    [
+        pytest.param("mock_serial_bridge_config_entry", True, id="bridge"),
+        pytest.param("mock_vedo_config_entry", False, id="vedo"),
+    ],
+)
+@pytest.mark.usefixtures("mock_serial_bridge", "mock_vedo")
+async def test_options_flow_support(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    config_entry_fixture: str,
+    supports_options: bool,
+) -> None:
+    """Test the options flow is only offered for bridge entries."""
+    config_entry: MockConfigEntry = request.getfixturevalue(config_entry_fixture)
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.supports_options is supports_options
+
+
+async def test_options_flow_no_covers(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow aborts when the bridge has no covers."""
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {}
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_covers"
