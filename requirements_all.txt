@@ -1382,7 +1382,7 @@ hyperion-py==0.7.6
 hyponcloud==1.0.2
 
 # homeassistant.components.iammeter
-iammeter==0.2.1
+iammeter==0.2.2
 
 # homeassistant.components.iaqualink
 iaqualink==0.7.0

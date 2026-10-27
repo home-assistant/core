@@ -1,13 +1,11 @@
 """Support for iammeter via local API."""
 
-from asyncio import timeout
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import override
 
-from iammeter.client import IamMeter
 import probatio
 
 from homeassistant.components.sensor import (
@@ -17,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -29,36 +28,34 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
     config_validation as cv,
-    debounce,
     entity_registry as er,
-    update_coordinator,
+    issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_3080, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_2067, DEVICE_3080, DOMAIN
+from .coordinator import IammeterConfigEntry, IammeterDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_PORT = 80
-DEFAULT_DEVICE_NAME = "IamMeter"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
-
-SCAN_INTERVAL = timedelta(seconds=30)
-PLATFORM_TIMEOUT = 8
 
 
 def _migrate_to_new_unique_id(
@@ -75,7 +72,7 @@ def _migrate_to_new_unique_id(
         "Frequency",
         "PF",
     ]
-    phase_list = ["A", "B", "C", "NET"]
+    phase_list = ["A", "B", "C", "Net"]
     id_phase_range = 1 if model == DEVICE_3080 else 4
     id_name_range = 5 if model == DEVICE_3080 else 7
     for row in range(id_phase_range):
@@ -86,22 +83,27 @@ def _migrate_to_new_unique_id(
                 if model == DEVICE_3080
                 else f"{serial_number}_{name_list[idx]}_{phase_list[row]}"
             )
-            entity_id = ent_reg.async_get_entity_id(
-                Platform.SENSOR, DOMAIN, old_unique_id
-            )
-            if entity_id is not None:
+            old_unique_ids = [old_unique_id]
+            if row == 3:
+                old_unique_ids.append(f"{serial_number}_{name_list[idx]}_NET")
+            for previous_id in old_unique_ids:
+                entity_id = ent_reg.async_get_entity_id(
+                    Platform.SENSOR, DOMAIN, previous_id
+                )
+                if entity_id is None:
+                    continue
                 try:
                     ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
                 except ValueError:
                     _LOGGER.warning(
                         "Skip migration of id [%s] to [%s] because it already exists",
-                        old_unique_id,
+                        previous_id,
                         new_unique_id,
                     )
                 else:
                     _LOGGER.debug(
                         "Migrating unique_id from [%s] to [%s]",
-                        old_unique_id,
+                        previous_id,
                         new_unique_id,
                     )
 
@@ -112,39 +114,61 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Platform setup."""
-    config_host = config[CONF_HOST]
-    config_port = config[CONF_PORT]
-    config_name = config[CONF_NAME]
-    try:
-        api = await hass.async_add_executor_job(
-            IamMeter, config_host, config_port, config_name
-        )
-    except TimeoutError as err:
-        _LOGGER.error("Device is not ready")
-        raise PlatformNotReady from err
-
-    async def async_update_data():
-        try:
-            async with timeout(PLATFORM_TIMEOUT):
-                return await hass.async_add_executor_job(api.client.get_data)
-        except TimeoutError as err:
-            raise UpdateFailed from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name=config_name,
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-        request_refresh_debouncer=debounce.Debouncer(
-            hass, _LOGGER, cooldown=0.3, immediate=True
-        ),
+    """Import a YAML sensor platform and retry if the meter is offline."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
     )
-    await coordinator.async_refresh()
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        raise PlatformNotReady("Unable to import IAMMETER; check the meter connection")
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": DEFAULT_NAME},
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: IammeterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up IAMMETER sensors from a config entry."""
+    coordinator = entry.runtime_data
     model = coordinator.data["Model"]
     serial_number = coordinator.data["sn"]
+    if model == DEVICE_2067:
+        added_keys: set[str] = set()
+
+        @callback
+        def async_add_discovered_sensors() -> None:
+            """Add optional NET sensors when the meter first reports them."""
+            descriptions = [
+                description
+                for description in SENSOR_TYPES_2067
+                if description.key in coordinator.data
+                and description.key not in added_keys
+            ]
+            if not descriptions:
+                return
+            added_keys.update(description.key for description in descriptions)
+            async_add_entities(
+                IammeterSensor(coordinator, description) for description in descriptions
+            )
+
+        async_add_discovered_sensors()
+        entry.async_on_unload(
+            coordinator.async_add_listener(async_add_discovered_sensors)
+        )
+        return
+
     _migrate_to_new_unique_id(hass, model, serial_number)
     if model == DEVICE_3080:
         async_add_entities(
@@ -158,26 +182,37 @@ async def async_setup_platform(
         )
 
 
-class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class IammeterSensor(CoordinatorEntity[IammeterDataUpdateCoordinator], SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: IammeterSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: IammeterDataUpdateCoordinator,
         description: IammeterSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
+        if coordinator.data["Model"] != DEVICE_2067:
+            self._attr_name = None
         self._attr_unique_id = f"{coordinator.data['sn']}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["sn"])},
             manufacturer="IamMeter",
             name=coordinator.name,
+            model=DEVICE_2067 if coordinator.data["Model"] == DEVICE_2067 else None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Mark previously discovered dual-channel readings unavailable if absent."""
+        return super().available and (
+            self.coordinator.data["Model"] != DEVICE_2067
+            or self.entity_description.key in self.coordinator.data
         )
 
     @property
@@ -185,7 +220,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the native sensor value."""
         raw_attr = self.coordinator.data.get(self.entity_description.key, None)
-        if self.entity_description.value:
+        if raw_attr is not None and self.entity_description.value:
             return self.entity_description.value(raw_attr)
         return raw_attr
 
@@ -431,6 +466,7 @@ SENSOR_TYPES_3080T: tuple[IammeterSensorEntityDescription, ...] = (
     ),
     IammeterSensorEntityDescription(
         key="Power_Net",
+        translation_key="power_net",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -474,4 +510,11 @@ SENSOR_TYPES_3080T: tuple[IammeterSensorEntityDescription, ...] = (
         value=lambda value: value * 100,
         entity_registry_enabled_default=False,
     ),
+)
+
+
+SENSOR_TYPES_2067: tuple[IammeterSensorEntityDescription, ...] = tuple(
+    description
+    for description in SENSOR_TYPES_3080T
+    if not description.key.endswith("_C")
 )

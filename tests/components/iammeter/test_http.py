@@ -1,0 +1,165 @@
+"""Test the complete flow using the actual Python library and HTTP parsing."""
+
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
+from requests_mock import Mocker
+
+from homeassistant.components.config import config_entries as config_entries_api
+from homeassistant.components.iammeter.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from . import MOCK_INPUT
+
+
+async def test_http_setup(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Identify, register and poll a meter through the real library."""
+    endpoint = requests_mock.get(
+        "http://admin:admin@192.0.2.1:80/monitorjson",
+        json={
+            "SN": "http-meter",
+            "mac": "00:00:00:00:00:01",
+            "Data": [230, 2, 460, 100, 10],
+        },
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_INPUT, CONF_SCAN_INTERVAL: 30}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "http-meter"
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "http-meter_Power"
+    )
+    assert hass.states.get(entity_id).state == "460"
+    assert endpoint.call_count == 2
+    assert endpoint.last_request.timeout == 8
+    requests_mock.get(
+        "http://admin:admin@192.0.2.1:80/monitorjson",
+        json={
+            "SN": "http-meter",
+            "mac": "00:00:00:00:00:01",
+            "Data": [230, 3, 690, 101, 10],
+        },
+    )
+    freezer.tick(timedelta(seconds=40))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "690"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_meter")
+async def test_config_form_over_http(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Serialize the actual UI schema and submit an HTTP-prefixed address."""
+    await async_setup_component(hass, "http", {})
+    config_entries_api.async_setup(hass)
+    client = await hass_client()
+    response = await client.post(
+        "/api/config/config_entries/flow", json={"handler": DOMAIN}
+    )
+    assert response.status == 200
+    form = await response.json()
+    assert {field["name"] for field in form["data_schema"]} == {
+        "name",
+        "host",
+        "port",
+        "scan_interval",
+    }
+    response = await client.post(
+        f"/api/config/config_entries/flow/{form['flow_id']}",
+        json={
+            "name": "Solar",
+            "host": "http://192.0.2.1:8080/",
+            "port": 80,
+            "scan_interval": 45,
+        },
+    )
+    assert response.status == 200
+    result = await response.json()
+    assert result["type"] == "create_entry"
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries[0].unique_id == "test-meter"
+    assert entries[0].options == {"scan_interval": 45}
+
+
+async def test_full_https_endpoint(
+    hass: HomeAssistant, requests_mock: Mocker, entity_registry: er.EntityRegistry
+) -> None:
+    """The real library uses the complete anonymous endpoint during setup."""
+    url = "https://meter.example/WEM3080/monitorjson?scenario=solar"
+    endpoint = requests_mock.get(
+        url,
+        json={
+            "SN": "https-meter",
+            "mac": "00:00:00:00:00:01",
+            "Data": [230, 2, 460, 100, 10],
+        },
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: url, CONF_PORT: 80}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "https-meter"
+    assert result["data"] == {CONF_HOST: url, CONF_PORT: 443}
+    assert endpoint.call_count == 2
+    assert "Authorization" not in endpoint.last_request.headers
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "https-meter_Power"
+    )
+    assert hass.states.get(entity_id).state == "460"
+
+
+async def test_simulator_directory_over_http(
+    hass: HomeAssistant, requests_mock: Mocker, hass_client: ClientSessionGenerator
+) -> None:
+    """A directory URL entered in the UI requests monitorjson below that path."""
+    endpoint = requests_mock.get(
+        "http://meter.example/WEM3050T/monitorjson",
+        json={
+            "SN": "directory-meter",
+            "mac": "00:00:00:00:00:01",
+            "Datas": [[230, 2, 460, 100, 10, 50, 0.95]] * 4,
+        },
+    )
+    await async_setup_component(hass, "http", {})
+    config_entries_api.async_setup(hass)
+    client = await hass_client()
+    response = await client.post(
+        "/api/config/config_entries/flow", json={"handler": DOMAIN}
+    )
+    form = await response.json()
+    response = await client.post(
+        f"/api/config/config_entries/flow/{form['flow_id']}",
+        json={"host": "http://meter.example/WEM3050T/", "port": 80},
+    )
+    assert response.status == 200
+    result = await response.json()
+    await hass.async_block_till_done()
+    assert result["type"] == "create_entry"
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.unique_id == "directory-meter"
+    assert entry.data[CONF_HOST] == "http://meter.example/WEM3050T/monitorjson"
+    assert endpoint.call_count == 2
