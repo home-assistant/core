@@ -27,16 +27,14 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BAUD,
     CONF_DATARATE,
-    CONF_DISABLED_BY_DEFAULT,
     CONF_FREQUENCY,
     CONF_JEELINK_LED,
+    CONF_LEGACY_CONFIGURED_TYPES,
+    CONF_LEGACY_ENTITY_KEYS,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
-    CONF_YAML_IMPORTED,
     DEFAULT_BAUD,
     DOMAIN,
-    LaCrosseSensorType,
-    sensor_entity_key,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,53 +116,45 @@ def _step_receiver_data_schema() -> probatio.Schema:
 def sensor_subentries(
     sensors: Mapping[str, dict[str, Any]],
 ) -> list[ConfigSubentryData]:
-    """Group sensor entities into physical sensor subentries."""
-    grouped: dict[int, dict[str, dict[str, Any]]] = {}
+    """Group legacy YAML sensors into physical sensor subentries."""
+    grouped: dict[int, dict[str, Any]] = {}
     for key, sensor in sensors.items():
-        grouped.setdefault(sensor[CONF_ID], {})[key] = sensor
-    used_keys = set(sensors)
-    for sensor_id, sensor_data in grouped.items():
-        configured_types = {sensor[CONF_TYPE] for sensor in sensor_data.values()}
-        for sensor_type in LaCrosseSensorType:
-            if sensor_type.key in configured_types:
-                continue
-            entity_key = sensor_entity_key(str(sensor_id), sensor_type.key)
-            key = entity_key
-            suffix = 2
-            while key in used_keys:
-                key = f"{entity_key}_{suffix}"
-                suffix += 1
-            sensor_data[key] = {
-                CONF_ID: sensor_id,
-                CONF_TYPE: sensor_type.key,
-                CONF_DISABLED_BY_DEFAULT: True,
-            }
-            used_keys.add(key)
+        sensor_id = sensor[CONF_ID]
+        subentry = grouped.setdefault(
+            sensor_id,
+            {
+                CONF_NAME: sensor.get(CONF_NAME) or f"LaCrosse sensor {sensor_id}",
+                CONF_LEGACY_CONFIGURED_TYPES: set(),
+                CONF_LEGACY_ENTITY_KEYS: {},
+            },
+        )
+        subentry[CONF_LEGACY_CONFIGURED_TYPES].add(sensor[CONF_TYPE])
+        entity_keys = subentry[CONF_LEGACY_ENTITY_KEYS]
+        entity_keys.setdefault(sensor[CONF_TYPE], []).append(key)
+
     return [
         ConfigSubentryData(
-            data={CONF_SENSORS: sensor_data, CONF_YAML_IMPORTED: True},
+            data={
+                CONF_ID: sensor_id,
+                **subentry,
+                CONF_LEGACY_CONFIGURED_TYPES: sorted(
+                    subentry[CONF_LEGACY_CONFIGURED_TYPES]
+                ),
+            },
             subentry_type="sensor",
-            title=next(iter(sensor_data.values())).get(CONF_NAME)
-            or f"LaCrosse sensor {sensor_id}",
+            title=subentry[CONF_NAME] or f"LaCrosse sensor {sensor_id}",
             unique_id=str(sensor_id),
         )
-        for sensor_id, sensor_data in grouped.items()
+        for sensor_id, subentry in grouped.items()
     ]
-
-
-def _sensor_id_is_configured(
-    sensor_id: int, sensors: Iterable[Mapping[str, Any]]
-) -> bool:
-    """Check if a sensor ID is already configured on the receiver."""
-    return any(sensor[CONF_ID] == sensor_id for sensor in sensors)
 
 
 def _sensor_input_error(
     sensor_id: int,
-    configured_sensors: Iterable[Mapping[str, Any]],
+    configured_sensor_ids: Iterable[str],
 ) -> str | None:
     """Return a validation error for the sensor ID."""
-    if _sensor_id_is_configured(sensor_id, configured_sensors):
+    if str(sensor_id) in configured_sensor_ids:
         return "sensor_already_configured"
     return None
 
@@ -289,29 +279,22 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             sensor_id = user_input[CONF_ID]
-            configured_sensors = (
-                sensor
+            configured_sensor_ids = (
+                subentry.unique_id
                 for subentry in self._get_entry().subentries.values()
-                for sensor in subentry.data[CONF_SENSORS].values()
+                if subentry.unique_id is not None
             )
             if error := _sensor_input_error(
                 sensor_id,
-                configured_sensors,
+                configured_sensor_ids,
             ):
                 errors["base"] = error
             else:
                 name = user_input.get(CONF_NAME) or f"LaCrosse sensor {sensor_id}"
-                sensors: dict[str, dict[str, Any]] = {}
-                for sensor_type in LaCrosseSensorType:
-                    sensors[sensor_type.key] = {
-                        **user_input,
-                        CONF_NAME: name,
-                        CONF_TYPE: sensor_type.key,
-                    }
                 return self.async_create_entry(
                     title=name,
                     unique_id=str(sensor_id),
-                    data={CONF_SENSORS: sensors},
+                    data={CONF_ID: sensor_id, CONF_NAME: name},
                 )
         return self.async_show_form(
             step_id="user",
@@ -325,31 +308,34 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
         """Update only the sensor ID, preserving its entities and names."""
         entry = self._get_entry()
         reconfigure_subentry = self._get_reconfigure_subentry()
-        sensors = reconfigure_subentry.data[CONF_SENSORS]
-        sensor = next(iter(sensors.values()))
+        sensor_id = int(
+            reconfigure_subentry.unique_id
+            if reconfigure_subentry.unique_id is not None
+            else reconfigure_subentry.data[CONF_ID]
+        )
         errors: dict[str, str] = {}
         if user_input is not None:
             new_id = user_input[CONF_ID]
-            configured_sensors = (
-                configured
+            configured_sensor_ids = (
+                other.unique_id
                 for other in entry.subentries.values()
                 if other.subentry_id != reconfigure_subentry.subentry_id
-                for configured in other.data[CONF_SENSORS].values()
+                and other.unique_id is not None
             )
             if error := _sensor_input_error(
                 new_id,
-                configured_sensors,
+                configured_sensor_ids,
             ):
                 errors["base"] = error
             else:
-                updated = {
-                    key: {**configured, CONF_ID: new_id}
-                    for key, configured in sensors.items()
+                updated_data = {
+                    **reconfigure_subentry.data,
+                    CONF_ID: new_id,
                 }
                 receiver = entry.data[CONF_DEVICE]
                 device_registry = dr.async_get(self.hass)
                 if device := device_registry.async_get_device_by_identifier(
-                    (DOMAIN, f"{receiver}_{sensor[CONF_ID]}"), entry.entry_id
+                    (DOMAIN, f"{receiver}_{sensor_id}"), entry.entry_id
                 ):
                     device_registry.async_update_device(
                         device.id,
@@ -360,14 +346,14 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     entry,
                     reconfigure_subentry,
                     unique_id=str(new_id),
-                    data={**reconfigure_subentry.data, CONF_SENSORS: updated},
+                    data=updated_data,
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema({probatio.Required(CONF_ID): cv.positive_int}),
-                {CONF_ID: sensor[CONF_ID]},
+                {CONF_ID: sensor_id},
             ),
             errors=errors,
         )

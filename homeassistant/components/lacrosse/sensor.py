@@ -44,12 +44,14 @@ from .const import (
     CONF_EXPIRE_AFTER,
     CONF_FREQUENCY,
     CONF_JEELINK_LED,
+    CONF_LEGACY_CONFIGURED_TYPES,
+    CONF_LEGACY_ENTITY_KEYS,
     CONF_TOGGLE_INTERVAL,
     CONF_TOGGLE_MASK,
-    CONF_YAML_IMPORTED,
     DEFAULT_BAUD,
     DOMAIN,
     TYPES,
+    LaCrosseSensorType,
     sensor_entity_key,
 )
 
@@ -85,12 +87,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up LaCrosse sensors from a config entry."""
     for subentry in entry.subentries.values():
+        legacy_entity_keys = subentry.data.get(CONF_LEGACY_ENTITY_KEYS, {})
+        legacy_configured_types = subentry.data.get(CONF_LEGACY_CONFIGURED_TYPES)
         sensors = {
-            sensor_entity_key(subentry.subentry_id, sensor[CONF_TYPE])
-            if not subentry.data.get(CONF_YAML_IMPORTED, False)
-            and key == sensor[CONF_TYPE]
-            else key: sensor
-            for key, sensor in subentry.data[CONF_SENSORS].items()
+            entity_key: {
+                CONF_ID: subentry.data[CONF_ID],
+                CONF_TYPE: sensor_type.key,
+                **(
+                    {CONF_DISABLED_BY_DEFAULT: True}
+                    if legacy_configured_types is not None
+                    and sensor_type.key not in legacy_configured_types
+                    else {}
+                ),
+                **(
+                    {CONF_NAME: subentry.data[CONF_NAME]}
+                    if CONF_NAME in subentry.data
+                    else {}
+                ),
+            }
+            for sensor_type in LaCrosseSensorType
+            for entity_key in legacy_entity_keys.get(
+                sensor_type.key,
+                [sensor_entity_key(subentry.subentry_id, sensor_type.key)],
+            )
         }
         _add_sensors(
             hass,

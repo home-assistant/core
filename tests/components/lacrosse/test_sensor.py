@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.lacrosse.const import DOMAIN
+from homeassistant.components.lacrosse.const import DOMAIN, sensor_entity_key
 from homeassistant.components.lacrosse.sensor import (
     PLATFORM_SCHEMA,
     LaCrosseBattery,
@@ -36,7 +36,7 @@ async def test_import_creates_all_entities(
     entity_registry: er.EntityRegistry,
     sensor_types: tuple[str, ...],
 ) -> None:
-    """Test missing YAML measurements are registered but disabled."""
+    """Test YAML imports create every supported measurement."""
     with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -65,18 +65,25 @@ async def test_import_creates_all_entities(
         "Humidity",
         "Battery",
     }
-    for sensor_type in sensor_types:
-        entity = entity_registry.async_get(f"sensor.outdoor_{sensor_type}")
+    subentry = next(iter(entry.subentries.values()))
+    for sensor_type in ("temperature", "humidity", "battery"):
+        entity_key = (
+            f"outdoor_{sensor_type}"
+            if sensor_type in sensor_types
+            else sensor_entity_key(subentry.subentry_id, sensor_type)
+        )
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{entry.entry_id}_{entity_key}"
+        )
+        assert entity_id is not None
+        entity = entity_registry.async_get(entity_id)
         assert entity is not None
-        assert entity.disabled_by is None
-        assert hass.states.get(entity.entity_id) is not None
-    disabled = [entity for entity in entities if entity.disabled_by is not None]
-    assert len(disabled) == 3 - len(sensor_types)
-    assert all(
-        entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        for entity in disabled
-    )
-    assert all(hass.states.get(entity.entity_id) is None for entity in disabled)
+        if sensor_type in sensor_types:
+            assert entity.disabled_by is None
+            assert hass.states.get(entity_id) is not None
+        else:
+            assert entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+            assert hass.states.get(entity_id) is None
 
 
 async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) -> None:
