@@ -108,7 +108,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="outdoor_air_temperature_airflow_reduction_10percent",
-        translation_key="outdoor_air_temperature_airflow_reduction_10percent",
+        translation_key="outdoor_air_temperature_airflow_reduction",
+        translation_placeholders={"percentage": "10"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="outside_temperature",
@@ -119,7 +120,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="outdoor_air_temperature_airflow_reduction_20percent",
-        translation_key="outdoor_air_temperature_airflow_reduction_20percent",
+        translation_key="outdoor_air_temperature_airflow_reduction",
+        translation_placeholders={"percentage": "20"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="outside_temperature",
@@ -293,7 +295,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="heating_stage_1_operating_hours",
-        translation_key="heating_stage_1_operating_hours",
+        translation_key="heating_stage_operating_hours",
+        translation_placeholders={"stage": "1"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",
@@ -304,7 +307,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="heating_stage_2_operating_hours",
-        translation_key="heating_stage_2_operating_hours",
+        translation_key="heating_stage_operating_hours",
+        translation_placeholders={"stage": "2"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",
@@ -315,7 +319,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="fan_level_0_operating_hours",
-        translation_key="fan_level_0_operating_hours",
+        translation_key="fan_level_operating_hours",
+        translation_placeholders={"level": "0"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",
@@ -326,7 +331,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="fan_level_1_operating_hours",
-        translation_key="fan_level_1_operating_hours",
+        translation_key="fan_level_operating_hours",
+        translation_placeholders={"level": "1"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",
@@ -337,7 +343,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="fan_level_2_operating_hours",
-        translation_key="fan_level_2_operating_hours",
+        translation_key="fan_level_operating_hours",
+        translation_placeholders={"level": "2"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",
@@ -348,7 +355,8 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
     ),
     AerosmartSensorEntityDescription(
         key="fan_level_3_operating_hours",
-        translation_key="fan_level_3_operating_hours",
+        translation_key="fan_level_operating_hours",
+        translation_placeholders={"level": "3"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         component="ventilation",

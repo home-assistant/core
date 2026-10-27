@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect. Check the connection settings and both station addresses.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_integer": "Enter a whole number.",
       "same_unit": "The ventilation and heat pump unit IDs must be different."
     },
@@ -12,30 +12,30 @@
       "serial": {
         "data": {
           "baudrate": "Baud rate",
-          "device": "Serial port",
+          "device": "[%key:common::config_flow::data::device%]",
           "unit_heat_pump": "Heat pump unit",
           "unit_ventilation": "Ventilation unit"
         },
         "data_description": {
           "baudrate": "Speed of the Modbus RTU connection.",
           "device": "Serial port connected to the aerosmart Modbus bus.",
-          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default 2).",
-          "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default {default_unit_heat_pump}).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default {default_unit_ventilation})."
         },
         "description": "Enter the serial port and both station addresses used by the aerosmart installation."
       },
       "tcp": {
         "data": {
-          "host": "Host",
+          "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_heat_pump": "Heat pump unit",
-          "unit_ventilation": "Ventilation unit"
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data::unit_ventilation%]"
         },
         "data_description": {
           "host": "Hostname or IP address of the Modbus TCP gateway.",
-          "port": "TCP port of the Modbus gateway (default 502).",
-          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default 2).",
-          "unit_ventilation": "The ventilation controller's Modbus station address (default 1)."
+          "port": "TCP port of the Modbus gateway (default {default_port}).",
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data_description::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data_description::unit_ventilation%]"
         },
         "description": "Enter the Modbus TCP gateway and the two station addresses used by the aerosmart installation."
       },
@@ -86,17 +86,8 @@
       "extract_air_fan_operating_hours": {
         "name": "Extract air fan operating hours"
       },
-      "fan_level_0_operating_hours": {
-        "name": "Fan level 0 operating hours"
-      },
-      "fan_level_1_operating_hours": {
-        "name": "Fan level 1 operating hours"
-      },
-      "fan_level_2_operating_hours": {
-        "name": "Fan level 2 operating hours"
-      },
-      "fan_level_3_operating_hours": {
-        "name": "Fan level 3 operating hours"
+      "fan_level_operating_hours": {
+        "name": "Fan level {level} operating hours"
       },
       "fan_level_reduction": {
         "name": "Fan level reduction"
@@ -128,11 +119,8 @@
           "starting_compressor": "Starting compressor"
         }
       },
-      "heating_stage_1_operating_hours": {
-        "name": "Heating stage 1 operating hours"
-      },
-      "heating_stage_2_operating_hours": {
-        "name": "Heating stage 2 operating hours"
+      "heating_stage_operating_hours": {
+        "name": "Heating stage {stage} operating hours"
       },
       "hot_gas_solenoid_valve_operating_hours": {
         "name": "Hot gas solenoid valve operating hours"
@@ -158,11 +146,8 @@
       "outdoor_air_temperature": {
         "name": "Outdoor air temperature"
       },
-      "outdoor_air_temperature_airflow_reduction_10percent": {
-        "name": "Outdoor air temperature airflow reduction 10%"
-      },
-      "outdoor_air_temperature_airflow_reduction_20percent": {
-        "name": "Outdoor air temperature airflow reduction 20%"
+      "outdoor_air_temperature_airflow_reduction": {
+        "name": "Outdoor air temperature airflow reduction {percentage}%"
       },
       "outdoor_air_temperature_cooling_off": {
         "name": "Outdoor air temperature cooling off"

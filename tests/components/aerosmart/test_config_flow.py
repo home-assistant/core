@@ -1,11 +1,13 @@
 """Tests for the aerosmart config flow."""
 
 import asyncio
-from typing import cast
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any, cast
 from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusConnectionError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection import ModbusConnectionError, ModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -18,6 +20,7 @@ from homeassistant.components.aerosmart.const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -115,6 +118,7 @@ async def test_same_unit_ids(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
 @pytest.mark.parametrize(
     ("connection_type", "invalid_field", "data"),
     [
@@ -189,14 +193,9 @@ async def test_fractional_connection_values_are_rejected(
         CONF_UNIT_HEAT_PUMP: 2,
         CONF_BAUDRATE: 19200,
     }[invalid_field]
-    with patch(
-        "homeassistant.components.aerosmart.config_flow."
-        "AerosmartConfigFlow._async_can_connect",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], valid_data
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], valid_data
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_setup_entry.assert_called_once()
@@ -253,6 +252,7 @@ async def test_controller_read_failure(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
     mock_modbus_api: MockModbusApi,
+    mock_modbus_connection: MockModbusConnection,
     mock_setup_entry: AsyncMock,
     unit_fixture: str,
 ) -> None:
@@ -261,29 +261,10 @@ async def test_controller_read_failure(
     unit.fail_requests(ModbusConnectionError("simulated read failure"))
 
     flow_id = await _start_flow(hass, TYPE_TCP)
-    result = await hass.config_entries.flow.async_configure(
-        flow_id,
-        {
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 502,
-            CONF_UNIT_VENTILATION: 1,
-            CONF_UNIT_HEAT_PUMP: 2,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert mock_modbus_api.temporary_unit.call_count == 2
-    mock_setup_entry.assert_not_called()
-
-    unit.fail_requests(None)
-    with patch(
-        "homeassistant.components.aerosmart.config_flow."
-        "AerosmartConfigFlow._async_can_connect",
-        return_value=True,
-    ):
+    # A closed mock connection cannot reopen, so keep it open for the retry.
+    with patch.object(mock_modbus_connection, "close"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            flow_id,
             {
                 CONF_HOST: "1.2.3.4",
                 CONF_PORT: 502,
@@ -291,6 +272,22 @@ async def test_controller_read_failure(
                 CONF_UNIT_HEAT_PUMP: 2,
             },
         )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_modbus_api.temporary_unit.call_count == 2
+    mock_setup_entry.assert_not_called()
+
+    unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: 502,
+            CONF_UNIT_VENTILATION: 1,
+            CONF_UNIT_HEAT_PUMP: 2,
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_setup_entry.assert_called_once()
@@ -353,6 +350,7 @@ async def test_duplicate_serial_entry_ignores_baudrate(
 @pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
 async def test_concurrent_flows_create_one_entry(
     hass: HomeAssistant,
+    mock_modbus_api: MockModbusApi,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """A second matching flow aborts after both probes complete."""
@@ -366,19 +364,17 @@ async def test_concurrent_flows_create_one_entry(
         CONF_UNIT_HEAT_PUMP: 2,
     }
 
-    async def _simultaneous_probe(_: dict[str, object]) -> bool:
+    @asynccontextmanager
+    async def _simultaneous_unit(*args: Any) -> AsyncGenerator[ModbusUnit]:
         await probe_barrier.wait()
-        return True
+        async with async_get_temporary_unit(*args) as unit:
+            yield unit
 
-    with patch(
-        "homeassistant.components.aerosmart.config_flow."
-        "AerosmartConfigFlow._async_can_connect",
-        side_effect=_simultaneous_probe,
-    ):
-        result_one, result_two = await asyncio.gather(
-            hass.config_entries.flow.async_configure(flow_id_one, data),
-            hass.config_entries.flow.async_configure(flow_id_two, data),
-        )
+    mock_modbus_api.temporary_unit.side_effect = _simultaneous_unit
+    result_one, result_two = await asyncio.gather(
+        hass.config_entries.flow.async_configure(flow_id_one, data),
+        hass.config_entries.flow.async_configure(flow_id_two, data),
+    )
 
     assert sorted((result_one["type"], result_two["type"]), key=str) == [
         FlowResultType.ABORT,

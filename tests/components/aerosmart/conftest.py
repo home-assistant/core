@@ -105,6 +105,7 @@ def mock_config_entry(
     return MockConfigEntry(
         domain=DOMAIN,
         title="aerosmart",
+        entry_id="01JZ8M2Q4T6Y9V3B5N7K1W0XAE",
         data={
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: "1.2.3.4",

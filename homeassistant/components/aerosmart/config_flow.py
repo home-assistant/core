@@ -73,6 +73,13 @@ STEP_SERIAL = probatio.Schema(
 )
 
 
+DESCRIPTION_PLACEHOLDERS = {
+    "default_port": str(DEFAULT_PORT),
+    "default_unit_heat_pump": str(DEFAULT_UNIT_HEAT_PUMP),
+    "default_unit_ventilation": str(DEFAULT_UNIT_VENTILATION),
+}
+
+
 class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for aerosmart."""
 
@@ -111,6 +118,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                         STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP
                     ),
                     errors=errors,
+                    description_placeholders=DESCRIPTION_PLACEHOLDERS,
                 )
 
             user_input = self._normalize_input(connection_type, user_input)
@@ -143,6 +151,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=connection_type,
             data_schema=STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP,
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
     @staticmethod
