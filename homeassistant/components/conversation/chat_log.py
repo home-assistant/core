@@ -101,7 +101,7 @@ def async_get_chat_log(
             chat_log.async_add_error(agent_id, err)
             raise
         finally:
-            chat_log.async_trace({"messages": list(chat_log.content)})
+            chat_log.async_trace_turn()
         return
 
     all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
@@ -113,11 +113,13 @@ def async_get_chat_log(
         if chat_log.turn_active:
             raise ConversationBusyError(session.conversation_id)
         is_new_log = False
+        chat_log.turn_start = len(chat_log.content)
         if user_input is not None:
             chat_log.async_add_user_content(UserContent(content=user_input.text))
     else:
         chat_log = ChatLog(hass, session.conversation_id)
         is_new_log = True
+        chat_log.turn_start = len(chat_log.content)
         if user_input is not None:
             chat_log.content.append(UserContent(content=user_input.text))
         all_chat_logs[session.conversation_id] = chat_log
@@ -150,7 +152,7 @@ def async_get_chat_log(
             chat_log.async_add_assistant_content_without_tools(
                 AssistantContent(agent_id=agent_id, content="(no response)")
             )
-        chat_log.async_trace({"messages": list(chat_log.content)})
+        chat_log.async_trace_turn()
 
         if not is_new_log:
             _async_notify_subscribers(
@@ -392,6 +394,7 @@ class ChatLog:
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
     turn_active: bool = field(default=False, init=False, repr=False)
+    turn_start: int = field(default=0, init=False, repr=False)
     last_error: BaseException | None = field(default=None, init=False, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
@@ -915,6 +918,13 @@ class ChatLog:
                 "messages": list(self.content),
                 "tools": self.llm_api.tools if self.llm_api else None,
             }
+        )
+
+    def async_trace_turn(self) -> None:
+        """Add the content of the current turn to the conversation trace."""
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.TURN_CONTENT,
+            {"content": self.content[self.turn_start :]},
         )
 
     def async_trace(self, agent_details: dict[str, Any]) -> None:

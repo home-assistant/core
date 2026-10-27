@@ -60,13 +60,11 @@ async def test_converation_trace(
         },
     }
 
-    # The messages at the end of the turn
     trace_event = last_trace["events"][2]
     assert (
-        trace_event.get("event_type") == trace.ConversationTraceEventType.AGENT_DETAIL
+        trace_event.get("event_type") == trace.ConversationTraceEventType.TURN_CONTENT
     )
-    assert [message["role"] for message in trace_event["data"]["messages"]] == [
-        "system",
+    assert [content["role"] for content in trace_event["data"]["content"]] == [
         "user",
         "assistant",
         "tool_result",

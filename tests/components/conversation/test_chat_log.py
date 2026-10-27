@@ -31,7 +31,10 @@ from homeassistant.components.conversation.chat_log import (
     ChatLogEventType,
     async_subscribe_chat_logs,
 )
-from homeassistant.components.conversation.trace import async_conversation_trace
+from homeassistant.components.conversation.trace import (
+    ConversationTraceEventType,
+    async_conversation_trace,
+)
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -384,11 +387,16 @@ async def test_trace_keeps_messages_of_its_turn(
             AssistantContent(agent_id="mock-agent-id", content="Hi again")
         )
 
-    # The messages before the reply, and the messages at the end of the turn.
-    assert [
-        [message["role"] for message in event["data"]["messages"]]
-        for event in conversation_trace.as_dict()["events"]
-    ] == [["system", "user"], ["system", "user", "assistant"]]
+    detail, turn = conversation_trace.as_dict()["events"]
+    assert [message["role"] for message in detail["data"]["messages"]] == [
+        "system",
+        "user",
+    ]
+    assert turn["event_type"] == ConversationTraceEventType.TURN_CONTENT
+    assert [content["role"] for content in turn["data"]["content"]] == [
+        "user",
+        "assistant",
+    ]
 
 
 async def test_failed_turn_stored(
