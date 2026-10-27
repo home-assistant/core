@@ -157,8 +157,9 @@ class _EpexTrigger(Trigger):
             The first update of a new coordinator arrives before the entry
             is loaded, so it can not provide a value to compare against.
             """
-            nonlocal previous
+            nonlocal previous, tracked_coordinator
             if entry.state is ConfigEntryState.LOADED and previous is UNDEFINED:
+                tracked_coordinator = async_get_device_epex(self._hass, device_id)
                 previous = self._device_value(device_id)
 
         remove_dispatcher = async_dispatcher_connect(

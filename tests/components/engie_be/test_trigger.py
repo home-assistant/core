@@ -18,8 +18,14 @@ from pytest_homeassistant.common import (
 from homeassistant.components import automation
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.components.engie_be.coordinator import (
+    SIGNAL_EPEX_UPDATED,
+    EngieBeEpexCoordinator,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -674,3 +680,50 @@ async def test_reload_keeps_other_entry_baseline(
     assert sorted(
         call.data["device_id"] for call in automation_calls(service_calls)
     ) == sorted(device_ids)
+
+
+async def test_trigger_attached_during_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a trigger attached after the first EPEX fetch but before the load fires."""
+    await _async_move_to(hass, freezer, _brussels(3, 14, 30))
+    mock_engie_client.return_value.async_get_energy_contracts.return_value = (
+        build_contracts(dynamic=True)
+    )
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN)}
+    )
+    attached_states: list[ConfigEntryState] = []
+
+    @callback
+    def async_attach_once(coordinator: EngieBeEpexCoordinator) -> None:
+        """Attach the automation on the first EPEX update of the setup."""
+        remove_listener()
+        attached_states.append(mock_config_entry.state)
+        hass.async_create_task(
+            _async_setup_trigger_automation(
+                hass,
+                "epex_current_quarter_hour_crossed_threshold",
+                {"device_id": device.id, "above": 0.156},
+            ),
+            eager_start=True,
+        )
+
+    remove_listener = async_dispatcher_connect(
+        hass,
+        SIGNAL_EPEX_UPDATED.format(mock_config_entry.entry_id),
+        async_attach_once,
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert attached_states == [ConfigEntryState.SETUP_IN_PROGRESS]
+    assert await _async_count_calls_along(
+        hass, freezer, service_calls, [_brussels(3, 14, 45)]
+    ) == [1]
