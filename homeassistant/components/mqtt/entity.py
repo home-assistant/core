@@ -1704,14 +1704,14 @@ class MqttEntityDeviceInfo(Entity):
         device_specifications = self._device_specifications_from_config(config)
         ensure_via_device_exists(self.hass, device_specifications, self._config_entry)
         device = self.async_register_device(device_specifications)
+        device_id = device.id if device is not None else None
         # The entity platform only links the device when the entity is added
         if (
-            device is None
-            or self.registry_entry is None
-            or (old_device_id := self.registry_entry.device_id) == device.id
+            self.registry_entry is None
+            or (old_device_id := self.registry_entry.device_id) == device_id
         ):
             return
-        er.async_get(self.hass).async_update_entity(self.entity_id, device_id=device.id)
+        er.async_get(self.hass).async_update_entity(self.entity_id, device_id=device_id)
         await async_cleanup_device_registry(
             self.hass,
             old_device_id,
