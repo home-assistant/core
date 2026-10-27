@@ -33,7 +33,7 @@ async def test_converation_trace(
     assert traces
     last_trace = traces[-1].as_dict()
     assert last_trace.get("events")
-    assert len(last_trace.get("events")) == 2
+    assert len(last_trace.get("events")) == 3
     trace_event = last_trace["events"][0]
     assert (
         trace_event.get("event_type") == trace.ConversationTraceEventType.ASYNC_PROCESS
@@ -59,6 +59,19 @@ async def test_converation_trace(
             "item": "apples",
         },
     }
+
+    # The messages at the end of the turn
+    trace_event = last_trace["events"][2]
+    assert (
+        trace_event.get("event_type") == trace.ConversationTraceEventType.AGENT_DETAIL
+    )
+    assert [message["role"] for message in trace_event["data"]["messages"]] == [
+        "system",
+        "user",
+        "assistant",
+        "tool_result",
+        "assistant",
+    ]
 
 
 async def test_converation_trace_uncaught_error(

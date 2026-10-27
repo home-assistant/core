@@ -384,8 +384,11 @@ async def test_trace_keeps_messages_of_its_turn(
             AssistantContent(agent_id="mock-agent-id", content="Hi again")
         )
 
-    messages = conversation_trace.as_dict()["events"][-1]["data"]["messages"]
-    assert [message["role"] for message in messages] == ["system", "user"]
+    # The messages before the reply, and the messages at the end of the turn.
+    assert [
+        [message["role"] for message in event["data"]["messages"]]
+        for event in conversation_trace.as_dict()["events"]
+    ] == [["system", "user"], ["system", "user", "assistant"]]
 
 
 async def test_failed_turn_stored(

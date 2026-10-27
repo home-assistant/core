@@ -100,6 +100,8 @@ def async_get_chat_log(
             # The caller may handle the error before the outer turn ends.
             chat_log.async_add_error(agent_id, err)
             raise
+        finally:
+            chat_log.async_trace({"messages": list(chat_log.content)})
         return
 
     all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
@@ -148,6 +150,7 @@ def async_get_chat_log(
             chat_log.async_add_assistant_content_without_tools(
                 AssistantContent(agent_id=agent_id, content="(no response)")
             )
+        chat_log.async_trace({"messages": list(chat_log.content)})
 
         if not is_new_log:
             _async_notify_subscribers(
