@@ -1,5 +1,6 @@
 """Tests for the acaia number entities."""
 
+import asyncio
 from collections.abc import Callable, Generator
 from datetime import timedelta
 from typing import Any
@@ -272,3 +273,40 @@ async def test_fractional_idle_timeout_rounds_up(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "1"
+
+
+@pytest.mark.usefixtures("bluetooth_callbacks")
+async def test_disabling_idle_timeout_during_pending_idle_disconnect_reconnects(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test disabling the timeout while an idle disconnect is in progress."""
+
+    await setup_integration(hass, mock_config_entry)
+    await _set_idle_timeout(hass, 5)
+    mock_scale.connect.reset_mock()
+    disconnect_started = asyncio.Event()
+    release_disconnect = asyncio.Event()
+
+    async def _disconnect() -> None:
+        disconnect_started.set()
+        await release_disconnect.wait()
+        mock_scale.connected = False
+
+    mock_scale.disconnect.side_effect = _disconnect
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await disconnect_started.wait()
+    disable = hass.async_create_task(_set_idle_timeout(hass, 0))
+    for _ in range(5):
+        await asyncio.sleep(0)
+    mock_scale.connect.assert_not_called()
+
+    release_disconnect.set()
+    await disable
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_called_once()

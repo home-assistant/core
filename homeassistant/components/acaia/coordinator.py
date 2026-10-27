@@ -122,7 +122,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         )
         if not idle_timeout and self._idle_disconnected:
             self._clear_idle_disconnect()
-            await self.async_request_refresh()
+            await self._async_sync_connection()
 
     @callback
     def _async_handle_notification(self) -> None:
@@ -158,35 +158,33 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
-
-        if not self.keep_connected or self._idle_disconnected:
-            return
-
-        if not self._scale.connected:
-            await self._async_sync_connection()
-            return
-
-        if self.idle_timeout and dt_util.utcnow() - self._last_activity >= timedelta(
-            minutes=self.idle_timeout
-        ):
-            _LOGGER.debug(
-                "No weight change on scale %s for %s minutes, disconnecting",
-                self.config_entry.data[CONF_ADDRESS],
-                self.idle_timeout,
-            )
-            self._idle_disconnected = True
-            await self._async_sync_connection()
+        await self._async_sync_connection(check_idle=True)
 
     def _should_connect(self) -> bool:
         """Return whether the scale should currently be connected."""
         return self.keep_connected and not self._idle_disconnected
 
-    async def _async_sync_connection(self) -> None:
+    async def _async_sync_connection(self, *, check_idle: bool = False) -> None:
         """Connect or disconnect the scale to match the connection preferences."""
 
         # The preferences may have changed while waiting for the lock or for an
         # earlier transition, so they are rechecked here and after connect().
         async with self._connect_lock:
+            if (
+                check_idle
+                and self.idle_timeout
+                and self._scale.connected
+                and self._should_connect()
+                and dt_util.utcnow() - self._last_activity
+                >= timedelta(minutes=self.idle_timeout)
+            ):
+                _LOGGER.debug(
+                    "No weight change on scale %s for %s minutes, disconnecting",
+                    self.config_entry.data[CONF_ADDRESS],
+                    self.idle_timeout,
+                )
+                self._idle_disconnected = True
+
             if not self._should_connect():
                 if self._scale.connected:
                     await self._scale.disconnect()

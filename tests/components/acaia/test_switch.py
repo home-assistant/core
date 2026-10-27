@@ -387,3 +387,38 @@ async def test_turning_on_during_pending_idle_disconnect_reconnects(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_poll_during_off_on_does_not_idle_disconnect(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll queued behind an off/on toggle does not undo the turn-on."""
+
+    await setup_integration(hass, mock_config_entry)
+    await mock_config_entry.runtime_data.async_set_idle_timeout(5)
+    mock_scale.connect.reset_mock()
+    disconnect_started, release_disconnect = _block_disconnect(mock_scale)
+
+    async def _connect(**kwargs: bool) -> None:
+        mock_scale.connected = True
+
+    mock_scale.connect.side_effect = _connect
+
+    turn_off = _switch_call(hass, SERVICE_TURN_OFF)
+    await disconnect_started.wait()
+    turn_on = _switch_call(hass, SERVICE_TURN_ON)
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await _yield()
+
+    release_disconnect.set()
+    await turn_off
+    await turn_on
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_called_once()
+    mock_scale.disconnect.assert_called_once()
+    assert mock_scale.connected
