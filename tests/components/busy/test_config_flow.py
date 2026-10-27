@@ -41,20 +41,21 @@ async def start_user(hass: HomeAssistant) -> ConfigFlowResult:
     )
 
 
-async def test_manual(hass: HomeAssistant, mock_client: AsyncMock) -> None:
-    """Pair a manually addressed bar."""
-    result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_USER}
+async def test_manual_supersedes_discovery(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Pair manually while discovery is awaiting confirmation."""
+    discovered = await hass.config_entries.flow.async_init(
+        "busy", context={"source": SOURCE_ZEROCONF}, data=discovery()
     )
-    assert result["step_id"] == "user"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": HOST}
-    )
+    assert discovered["step_id"] == "zeroconf_confirm"
+    result = await start_user(hass)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": HOST, "token": "12345678-token"}
     assert result["title"] == "BUSY Bar"
     assert result["result"].unique_id == DEVICE_ID
     mock_client.access_token_mint.assert_awaited_once()
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_zeroconf(hass: HomeAssistant, mock_client: AsyncMock) -> None:

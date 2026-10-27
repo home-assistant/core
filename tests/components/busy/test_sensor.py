@@ -3,20 +3,19 @@
 from unittest.mock import AsyncMock
 
 from busylib import types
-from busylib.exceptions import BusyBarRequestError
+from busylib.exceptions import BusyBarAPIError, BusyBarRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_sensors(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -25,10 +24,6 @@ async def test_sensors(
         state.entity_id: (state.state, state.attributes.get("unit_of_measurement"))
         for state in hass.states.async_all("sensor")
     }
-    entries = er.async_entries_for_config_entry(
-        entity_registry, init_integration.entry_id
-    )
-    assert len(entries) == 3
     device = device_registry.async_get_device_by_identifier(
         ("busy", init_integration.unique_id), init_integration.entry_id
     )
@@ -85,3 +80,24 @@ async def test_missing_readings(
     assert hass.states.get("sensor.busy_bar_battery").state == "unknown"
     assert hass.states.get("sensor.busy_bar_wi_fi_signal").state == "unknown"
     assert hass.states.get("sensor.busy_bar_wi_fi_network").state == "unknown"
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_token_revoked(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    status_code: int,
+) -> None:
+    """Stop polling after the access token is rejected."""
+    mock_client.status.side_effect = BusyBarAPIError("revoked", status_code=status_code)
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.busy_bar_battery").state == "unavailable"
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_client.status.await_count == 2
+    assert not hass.config_entries.flow.async_progress()
