@@ -1,5 +1,6 @@
 """Test the Backup SFTP Location platform."""
 
+import asyncio
 from io import BytesIO, StringIO
 import json
 from typing import Any
@@ -12,7 +13,7 @@ import pytest
 from pytest_homeassistant.common import get_fixture_path
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, async_get_manager
 from homeassistant.components.sftp_storage import client as sftp_client
 from homeassistant.components.sftp_storage.backup import (
     async_register_backup_agents_listener,
@@ -639,3 +640,50 @@ async def test_agents_download_closes_connection_on_open_error(
 
     assert not downloaded_files
     assert [conn.close.call_count for conn in ssh_connections] == [1, 1, 1]
+
+
+async def test_agents_download_closed_while_connecting(
+    hass: HomeAssistant,
+    mock_ssh_connection: SSHClientConnectionMock,
+    ssh_connections: list[SSHClientConnectionMock],
+    downloaded_files: list[SFTPOpenMock],
+) -> None:
+    """Test the connection is closed if the download is closed while connecting.
+
+    The backup integration doesn't close a download from another task while it is
+    read, so the download stream is used directly.
+    """
+    agent = async_get_manager(hass).backup_agents[f"{DOMAIN}.{TEST_AGENT_ID}"]
+    stream = await agent.async_download_backup(TEST_AGENT_BACKUP.backup_id)
+
+    connect = sftp_client.connect.side_effect
+    connecting = asyncio.Event()
+    connected = asyncio.Event()
+
+    @async_context_manager
+    async def paused_connect(*args: Any, **kwargs: Any) -> SSHClientConnectionMock:
+        connecting.set()
+        await connected.wait()
+        return await connect(*args, **kwargs)
+
+    sftp_client.connect.side_effect = paused_connect
+    open_file = mock_ssh_connection._sftp.open
+
+    @async_context_manager
+    async def mock_open(path: str, *args: Any, **kwargs: Any) -> SFTPOpenMock:
+        if path == BACKUP_METADATA["file_path"]:
+            raise SFTPError(0, "no file")
+        return await open_file(path, *args, **kwargs)
+
+    mock_ssh_connection._sftp.open = mock_open
+
+    read = asyncio.create_task(anext(stream))
+    await connecting.wait()
+    stream.close()
+    connected.set()
+    with pytest.raises(SFTPError, match="no file"):
+        await read
+
+    assert not downloaded_files
+    # One connection to find the archive, one to read it
+    assert [conn.close.call_count for conn in ssh_connections] == [1, 1]

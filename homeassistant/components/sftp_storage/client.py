@@ -73,11 +73,14 @@ class RemoteFileReader:
         """Open the SSH connection and the remote file."""
         LOGGER.debug("Opening file: %s", self.file_path)
         self._client = client = BackupAgentClient(self.cfg, self.hass)
-        await client.open()
-        self._fileobj = await client.sftp.open(self.file_path, "rb")
+        try:
+            await client.open()
+            self._fileobj = await client.sftp.open(self.file_path, "rb")
+        finally:
+            # Closing while opening can't close a connection which isn't made yet
+            if self._closed:
+                client.abort()
         if self._closed:
-            # Closed while opening
-            client.abort()
             return None
         return self._fileobj
 
