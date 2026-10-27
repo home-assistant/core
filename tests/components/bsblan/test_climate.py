@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, _Call, call
 
 from bsblan import BSBLANError, HeatingCircuitStatus, State, StaticState
 from freezegun.api import FrozenDateTimeFactory
@@ -395,8 +395,15 @@ async def test_async_set_hvac_mode(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode_int", "mode"),
-    [(3, HVACMode.HEAT), (2, HVACMode.HEAT), (1, HVACMode.AUTO), (0, HVACMode.OFF)],
+    ("hvac_mode_int", "mode", "expected_calls"),
+    [
+        # Rewriting heat would turn permanent reduced into comfort
+        (3, HVACMode.HEAT, []),
+        (2, HVACMode.HEAT, []),
+        # Selecting auto again ends a preset override
+        (1, HVACMode.AUTO, [call(temporary_mode=0, circuit=1)]),
+        (0, HVACMode.OFF, [call(hvac_mode=0, circuit=1)]),
+    ],
 )
 async def test_set_hvac_mode_already_active(
     hass: HomeAssistant,
@@ -404,8 +411,9 @@ async def test_set_hvac_mode_already_active(
     mock_config_entry: MockConfigEntry,
     hvac_mode_int: int,
     mode: HVACMode,
+    expected_calls: list[_Call],
 ) -> None:
-    """Test setting the HVAC mode the circuit is already in writes nothing."""
+    """Test setting the HVAC mode the circuit is already in."""
     mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, None)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
@@ -416,7 +424,7 @@ async def test_set_hvac_mode_already_active(
         blocking=True,
     )
 
-    mock_bsblan.thermostat.assert_not_called()
+    assert mock_bsblan.thermostat.call_args_list == expected_calls
 
 
 @pytest.mark.parametrize(
@@ -719,37 +727,35 @@ async def test_set_temperature_writes_permanent_level(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode_int", "service_hvac_mode", "translation_key"),
+    ("hvac_mode_int", "service_hvac_mode", "expected_calls"),
     [
-        (1, None, "set_temperature_in_auto_mode"),
-        (3, HVACMode.AUTO, "set_temperature_in_auto_mode"),
-        (0, None, "set_temperature_when_off"),
-        (3, HVACMode.OFF, "set_temperature_when_off"),
+        (1, None, []),
+        (3, HVACMode.AUTO, [call(hvac_mode=1, circuit=1)]),
+        (0, None, []),
+        (3, HVACMode.OFF, [call(hvac_mode=0, circuit=1)]),
     ],
     ids=["in_auto", "switching_to_auto", "off", "switching_to_off"],
 )
-async def test_set_temperature_rejected_in_auto_or_off(
+async def test_set_temperature_ignored_in_auto_or_off(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     hvac_mode_int: int,
     service_hvac_mode: HVACMode | None,
-    translation_key: str,
+    expected_calls: list[_Call],
 ) -> None:
-    """Test the target temperature cannot be set in auto or off."""
+    """Test the target temperature is not written in auto or off."""
     mock_bsblan.state.return_value = _circuit_state(hvac_mode_int, "20.0")
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
     service_data: dict[str, Any] = {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5}
     if service_hvac_mode is not None:
         service_data[ATTR_HVAC_MODE] = service_hvac_mode
 
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, service_data, blocking=True
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, service_data, blocking=True
+    )
 
-    assert exc.value.translation_key == translation_key
-    mock_bsblan.thermostat.assert_not_called()
+    assert mock_bsblan.thermostat.call_args_list == expected_calls
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
@@ -786,58 +792,27 @@ async def test_restore_scene_in_auto(
         ],
     )
 
-    mock_bsblan.thermostat.assert_called_once_with(
-        temporary_mode=temporary_mode, circuit=1
-    )
+    assert mock_bsblan.thermostat.call_args_list == [
+        call(temporary_mode=0, circuit=1),
+        call(temporary_mode=temporary_mode, circuit=1),
+    ]
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
-@pytest.mark.parametrize(
-    "current_setpoint",
-    [
-        pytest.param("8.0", id="protection_in_effect"),
-        # Read before the controller applies the protection setpoint
-        pytest.param("20.0", id="previous_setpoint"),
-    ],
-)
 async def test_restore_scene_in_off(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    current_setpoint: str,
 ) -> None:
-    """Test restoring a scene in off keeps the comfort setpoint."""
-    mock_bsblan.state.return_value = _circuit_state(0, current_setpoint)
+    """Test restoring a scene in off only writes the mode."""
+    mock_bsblan.state.return_value = _circuit_state(0, "8.0")
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await async_reproduce_state(
         hass, [HassState(ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 8.0})]
     )
 
-    mock_bsblan.thermostat.assert_not_called()
-
-
-async def test_restore_scene_in_off_after_protection_change(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test an off scene accepts a protection setpoint changed after startup."""
-    mock_bsblan.state.return_value = _circuit_state(0, "20.0")
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-    mock_bsblan.static_values.return_value = StaticState.model_validate(
-        {"heating_protective_setpoint": _temp_param("10.0")}
-    )
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    await async_reproduce_state(
-        hass, [HassState(ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 10.0})]
-    )
-
-    mock_bsblan.thermostat.assert_not_called()
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=0, circuit=1)
 
 
 @pytest.mark.usefixtures("mock_reduced_setpoint")
