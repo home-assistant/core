@@ -14,12 +14,11 @@ from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .const import LAST_HANDLED_FAULT
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
-from .helpers import StoredEntries, fault_log_store
 
 PARALLEL_UPDATES = 0
 
@@ -73,17 +72,16 @@ class SofarFaultEvent(SofarEntity, EventEntity):
 
     entity_description: SofarEventEntityDescription
     _known: set[EntryKey] | None = None
-    _store: Store[StoredEntries]
 
     @override
     async def async_added_to_hass(self) -> None:
         """Resume from the entries handled before, or take all as known."""
-        self._store = fault_log_store(self.hass, self.coordinator.config_entry.entry_id)
-        # Before subscribing: an update during the load would mark all known.
-        if (stored := await self._store.async_load()) is not None:
+        if (
+            handled := self.coordinator.config_entry.data.get(LAST_HANDLED_FAULT)
+        ) is not None:
             self._known = {
                 (fault_id, datetime.fromisoformat(occurred_at))
-                for fault_id, occurred_at in stored
+                for fault_id, occurred_at in handled
             }
         elif self.available:
             self._remember(self._newest())
@@ -138,6 +136,13 @@ class SofarFaultEvent(SofarEntity, EventEntity):
     def _remember(self, known: set[EntryKey]) -> None:
         """Take entries as handled, and keep them across restarts."""
         self._known = known
-        self._store.async_delay_save(
-            lambda: [(fault_id, at.isoformat()) for fault_id, at in known]
+        entry = self.coordinator.config_entry
+        self.hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                LAST_HANDLED_FAULT: [
+                    [fault_id, at.isoformat()] for fault_id, at in known
+                ],
+            },
         )

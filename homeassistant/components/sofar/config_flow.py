@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_UNIT_ID,
     DOMAIN,
     HAS_FAULT_LOG,
+    LAST_HANDLED_FAULT,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -178,9 +179,15 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            data = {CONF_TYPE: connection_type, **user_input}
-            if entry.data.get(HAS_FAULT_LOG):
-                data[HAS_FAULT_LOG] = True
+            data = {
+                CONF_TYPE: connection_type,
+                **user_input,
+                **{
+                    key: entry.data[key]
+                    for key in (HAS_FAULT_LOG, LAST_HANDLED_FAULT)
+                    if key in entry.data
+                },
+            }
 
             relinking = False
             if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):

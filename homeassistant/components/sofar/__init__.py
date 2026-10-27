@@ -35,7 +35,7 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .helpers import create_modbus_params, fault_log_store
+from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
@@ -203,11 +203,6 @@ def _battery_pack_number(serial: str, identifier: str) -> int | None:
     suffix = identifier.removeprefix(prefix)
     number = int(suffix) if suffix.isdecimal() else None
     return number if number in BATTERY_STRING_COMPONENTS else None
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
-    """Remove the fault log entries a deleted entry has handled."""
-    await fault_log_store(hass, entry.entry_id).async_remove()
 
 
 async def async_remove_config_entry_device(

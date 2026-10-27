@@ -21,6 +21,7 @@ from homeassistant.components.sofar.const import (
     DEFAULT_NAME,
     DOMAIN,
     HAS_FAULT_LOG,
+    LAST_HANDLED_FAULT,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -321,12 +322,19 @@ async def _start_reconfigure(
     [
         pytest.param({}, id="no_fault_log_stored"),
         pytest.param({HAS_FAULT_LOG: True}, id="fault_log_stored"),
+        pytest.param(
+            {
+                HAS_FAULT_LOG: True,
+                LAST_HANDLED_FAULT: [[3, "2026-10-09T18:30:05"]],
+            },
+            id="handled_fault_stored",
+        ),
     ],
 )
 async def test_reconfigure_updates_the_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, stored: dict[str, Any]
 ) -> None:
-    """Test reconfigure updates the entry, keeping a known fault log."""
+    """Test reconfigure updates the entry, keeping what it detected."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=MOCK_SERIAL, data={**MOCK_ENTRY_DATA, **stored}
     )
@@ -563,7 +571,11 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "inverter_silent"}
-    assert entry.data == {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True}
+    assert entry.data == {
+        **MOCK_SERIAL_ENTRY_DATA,
+        HAS_FAULT_LOG: True,
+        LAST_HANDLED_FAULT: [],
+    }
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
@@ -599,7 +611,11 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert entry.data == {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True}
+    assert entry.data == {
+        **MOCK_SERIAL_ENTRY_DATA,
+        HAS_FAULT_LOG: True,
+        LAST_HANDLED_FAULT: [],
+    }
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 

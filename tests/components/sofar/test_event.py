@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from datetime import datetime, timedelta
-from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,18 +18,20 @@ from pytest_homeassistant.components.common import arm_trigger
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.components.sofar.const import DOMAIN, HAS_FAULT_LOG, SCAN_INTERVAL
+from homeassistant.components.sofar.const import (
+    DOMAIN,
+    HAS_FAULT_LOG,
+    LAST_HANDLED_FAULT,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import EVENT_STATE_CHANGED, Platform
 from homeassistant.core import CoreState, Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.storage import Store
 
 from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL
 
 ENTITY_ID = "event.4_4_ktlx_g3_fault"
 FAULT_LOG_REGISTER = 0x1480
-ENTRY_ID = "fault_log_entry"
-STORE_KEY = f"sofar.{ENTRY_ID}.fault_log"
 
 # Log entries as (fault id, inverter clock).
 GRID_OVER_VOLTAGE = (1, datetime(2026, 10, 9, 17, 1, 23))
@@ -46,28 +47,19 @@ def platforms() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-def stored_entry() -> MockConfigEntry:
-    """Mock a Sofar config entry with a known store key."""
+def _handled_entry(*entries: tuple[int, datetime]) -> MockConfigEntry:
+    """Mock a Sofar config entry from a run that handled ``entries``."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data=MOCK_ENTRY_DATA,
+        data={
+            **MOCK_ENTRY_DATA,
+            LAST_HANDLED_FAULT: [
+                [fault_id, when.isoformat()] for fault_id, when in entries
+            ],
+        },
         title=MOCK_MODEL,
-        entry_id=ENTRY_ID,
     )
-
-
-def _stored(*entries: tuple[int, datetime]) -> dict[str, Any]:
-    """Return storage as a run that handled ``entries`` leaves it."""
-    return {
-        STORE_KEY: {
-            "version": 1,
-            "minor_version": 1,
-            "key": STORE_KEY,
-            "data": [[fault_id, when.isoformat()] for fault_id, when in entries],
-        }
-    }
 
 
 def _seed_log(unit: MockModbusUnit, *entries: tuple[int, datetime]) -> None:
@@ -166,11 +158,15 @@ async def test_entry_fires_once(
 
 
 @pytest.mark.parametrize(
-    ("stored", "expected"),
+    ("entry", "expected"),
     [
-        pytest.param({}, [], id="first_run"),
         pytest.param(
-            _stored(GRID_OVER_VOLTAGE),
+            MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA),
+            [],
+            id="first_run",
+        ),
+        pytest.param(
+            _handled_entry(GRID_OVER_VOLTAGE),
             [
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
                 ("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00"),
@@ -178,7 +174,7 @@ async def test_entry_fires_once(
             id="stored_entry_in_log",
         ),
         pytest.param(
-            _stored((169, datetime(2026, 10, 1, 9, 0, 0))),
+            _handled_entry((169, datetime(2026, 10, 1, 9, 0, 0))),
             [
                 ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
@@ -187,7 +183,7 @@ async def test_entry_fires_once(
             id="stored_entry_rotated_out",
         ),
         pytest.param(
-            _stored(),
+            _handled_entry(),
             [
                 ("grid_over_voltage", 1, "2026-10-09T17:01:23-07:00"),
                 ("fan_1_fault", 169, "2026-10-09T17:01:23-07:00"),
@@ -202,19 +198,16 @@ async def test_setup_fires_only_entries_logged_since_last_run(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
-    hass_storage: dict[str, Any],
-    stored_entry: MockConfigEntry,
-    stored: dict[str, Any],
+    entry: MockConfigEntry,
     expected: list[tuple[str, int, str]],
 ) -> None:
     """Test a restart fires what was logged since the last run, no more."""
-    hass_storage.update(stored)
     _seed_log(
         mock_connection.for_unit(1), GRID_OVERFREQUENCY, FAN_1_FAULT, GRID_OVER_VOLTAGE
     )
-    stored_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    await hass.config_entries.async_setup(stored_entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     await _poll(hass, freezer)
 
@@ -226,16 +219,14 @@ async def test_entries_wait_until_home_assistant_runs(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
-    hass_storage: dict[str, Any],
-    stored_entry: MockConfigEntry,
 ) -> None:
     """Test entries logged while down fire once triggers can see them."""
-    hass_storage.update(_stored(GRID_OVER_VOLTAGE))
+    entry = _handled_entry(GRID_OVER_VOLTAGE)
     _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
     hass.set_state(CoreState.starting)
-    stored_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    await hass.config_entries.async_setup(stored_entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     await _poll(hass, freezer)
 
@@ -247,61 +238,17 @@ async def test_entries_wait_until_home_assistant_runs(
     assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
 
 
-@pytest.mark.usefixtures("mock_get_unit")
-async def test_update_while_loading_keeps_pending_entries(
+async def test_newest_handled_entry_is_stored(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
-    hass_storage: dict[str, Any],
-    stored_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
-    """Test an update during the checkpoint load does not mark all known."""
-    hass_storage.update(_stored(GRID_OVER_VOLTAGE))
-    _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
-    stored_entry.add_to_hass(hass)
-    load = Store.async_load
-
-    async def load_after_update(store: Store[Any]) -> Any:
-        """Notify listeners as a poll would while the checkpoint loads."""
-        if store.key == STORE_KEY:
-            stored_entry.runtime_data.coordinator_for(
-                "fault_log"
-            ).async_update_listeners()
-        return await load(store)
-
-    events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    with patch.object(Store, "async_load", load_after_update):
-        await hass.config_entries.async_setup(stored_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-    await _poll(hass, freezer)
-
-    assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
-
-
-@pytest.mark.usefixtures("mock_get_unit")
-async def test_newest_handled_entry_is_stored_until_the_entry_is_removed(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_connection: MockModbusConnection,
-    hass_storage: dict[str, Any],
-    stored_entry: MockConfigEntry,
-) -> None:
-    """Test the newest handled entry is stored, and dropped with its entry."""
-    stored_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(stored_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    """Test only the newest handled entry is kept in the config entry."""
     _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
     await _poll(hass, freezer)
-    # Store writes are batched on a timer; let it run.
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
-    assert hass_storage[STORE_KEY]["data"] == [[3, "2026-10-09T18:30:05"]]
-
-    await hass.config_entries.async_remove(stored_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert STORE_KEY not in hass_storage
+    assert init_integration.data[LAST_HANDLED_FAULT] == [[3, "2026-10-09T18:30:05"]]
 
 
 @pytest.mark.usefixtures("mock_get_unit")

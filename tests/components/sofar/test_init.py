@@ -30,6 +30,7 @@ from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     DOMAIN,
     HAS_FAULT_LOG,
+    LAST_HANDLED_FAULT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
@@ -1078,12 +1079,12 @@ async def test_a_removed_pack_comes_back_without_a_restart(
     [
         pytest.param(
             MOCK_TCP_INPUT,
-            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True},
+            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: []},
             id="legacy_tcp",
         ),
         pytest.param(
             MOCK_SERIAL_ENTRY_DATA,
-            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True},
+            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: []},
             id="reconfigured_while_disabled",
         ),
     ],
