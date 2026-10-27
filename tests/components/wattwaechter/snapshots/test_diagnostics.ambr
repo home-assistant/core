@@ -188,7 +188,9 @@
       }),
       'esp': dict({
         'esp_id': 'ABC123',
+        'model_id': 'ww_plus',
         'os_version': '1.2.3',
+        'product_name': 'WattWächter Plus',
       }),
       'heap': dict({
         'free_heap': '120000',

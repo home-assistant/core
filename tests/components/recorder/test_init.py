@@ -290,8 +290,12 @@ async def test_commit_future_covers_startup_batch(
         release_batch.wait()
         real_pre_process(startup_task_or_events)
 
-    with patch.object(
-        instance, "_pre_process_startup_events", _pre_process_startup_events
+    with (
+        patch.object(
+            instance, "_pre_process_startup_events", _pre_process_startup_events
+        ),
+        # Periodic tasks run on the wall clock and could queue a task
+        patch.object(instance, "_async_setup_periodic_tasks"),
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         try:
@@ -305,6 +309,70 @@ async def test_commit_future_covers_startup_batch(
     await commit_future
     with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 1
+
+
+async def test_queued_states_until_ready(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test state changes queued before the recorder is ready are indexed."""
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(
+        async_setup_recorder_instance(hass, {"exclude": {"entities": "test.excluded"}})
+    )
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    hass.states.async_set("test.excluded", "on")
+    hass.states.async_remove("test.recorder")
+    hass.states.async_set("test.recorder", "off")
+    hass.states.async_set("test.other", "on")
+
+    queued = instance.async_get_queued_states(
+        ["test.recorder", "test.excluded", "test.unknown"]
+    )
+    assert queued is not None
+    assert list(queued) == ["test.recorder"]
+    assert [state and state.state for state in queued["test.recorder"]] == [
+        "on",
+        None,
+        "off",
+    ]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await async_wait_recording_done(hass)
+    assert instance.async_recorder_ready.is_set()
+    assert instance.async_get_queued_states(["test.recorder"]) is None
+
+    # The index is not kept up to date once the recorder is ready
+    hass.states.async_set("test.recorder", "on")
+    await async_wait_recording_done(hass)
+    assert instance._queued_states is None
+
+
+async def test_queued_states_frozen_when_recording_stops(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test the queued states are kept when recording stops.
+
+    That happens when the queue grows too large; later changes are not queued,
+    so they are missing from the index too.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    with patch.object(instance, "_reached_max_backlog", return_value=True):
+        instance._async_check_queue()
+    hass.states.async_set("test.recorder", "off")
+
+    queued = instance.async_get_queued_states(["test.recorder"])
+    assert queued is not None
+    assert [state and state.state for state in queued["test.recorder"]] == ["on"]
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:

@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
 
     with patch(
         "homeassistant.components.devolo_home_network.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,7 +84,7 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -126,7 +126,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -174,7 +174,7 @@ async def test_zeroconf_wrong_auth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -193,7 +193,7 @@ async def test_zeroconf_wrong_auth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -266,7 +266,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -285,7 +285,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",
@@ -316,7 +316,7 @@ async def test_form_reauth_without_password(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.devolo_home_network.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.devolo_home_network.config_flow.Device",

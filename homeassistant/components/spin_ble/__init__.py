@@ -7,7 +7,7 @@ from .const import PLATFORMS
 from .coordinator import SpinEvConfigEntry, SpinEvCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> None:
     """Set up a charger from a config entry."""
     coordinator = SpinEvCoordinator(hass, entry)
     entry.async_on_unload(coordinator.async_release)
@@ -24,12 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bo
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> None:

@@ -69,7 +69,7 @@ async def test_setup(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     with patch(
-        "homeassistant.components.sensecap_lorawan.async_setup_entry", return_value=True
+        "homeassistant.components.sensecap_lorawan.async_setup_entry", return_value=None
     ) as setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()

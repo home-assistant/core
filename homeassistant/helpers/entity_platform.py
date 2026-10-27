@@ -42,7 +42,14 @@ from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntr
 from .event import async_call_later
 from .frame import ReportBehavior, report_usage
 from .issue_registry import IssueSeverity, async_create_issue
-from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
+from .typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+    VolDictType,
+    VolSchemaType,
+)
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -538,7 +545,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -849,7 +857,7 @@ class EntityPlatform:
             return entity.device_entry
         dev_reg = dr.async_get(self.hass)
         if isinstance(device_info, dr.ChildDeviceInfo):
-            return dev_reg.async_get_or_create_child_device(
+            return dev_reg.async_get_or_create_child_from_info(
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,
@@ -858,7 +866,7 @@ class EntityPlatform:
             # A device info without any field means no device
             if not device_info.as_dict():
                 return entity.device_entry
-            return dev_reg.async_get_or_create_device(
+            return dev_reg.async_get_or_create_from_info(
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,
@@ -1096,7 +1104,7 @@ class EntityPlatform:
 
             suggested_object_id, object_id_base = _async_derive_object_ids(entity, self)
 
-            disabled_by: RegistryEntryDisabler | None = None
+            disabled_by: RegistryEntryDisabler | UndefinedType = UNDEFINED
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
@@ -1105,7 +1113,7 @@ class EntityPlatform:
                 hidden_by = RegistryEntryHider.INTEGRATION
 
             if (
-                disabled_by is None
+                disabled_by is UNDEFINED
                 and not registered_entity_id
                 and self.config_entry is not None
                 and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
