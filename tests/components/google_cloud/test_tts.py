@@ -102,7 +102,7 @@ async def test_stream_tts_audio(
         assert wav_file.getframerate() == 24000
         assert wav_file.getsampwidth() == 2
         assert wav_file.getnchannels() == 1
-    assert data[44:] == bytes(300)
+        assert wav_file.readframes(150) == bytes(300)
     assert requests == snapshot
     mock_api_tts.synthesize_speech.assert_not_called()
 

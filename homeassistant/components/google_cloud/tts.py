@@ -1,11 +1,10 @@
 """Support for the Google Cloud TTS service."""
 
 from collections.abc import AsyncGenerator
-import io
 import logging
 from pathlib import Path
+import struct
 from typing import Any, cast, override
-import wave
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
@@ -347,13 +346,23 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
             if text := boundary_detector.finish():
                 yield text_request(text)
 
-        # WAV header with nframes = 0 for streaming
-        with io.BytesIO() as wav_io:
-            with wave.open(wav_io, "wb") as wav_file:
-                wav_file.setframerate(STREAMING_SAMPLE_RATE)
-                wav_file.setsampwidth(2)
-                wav_file.setnchannels(1)
-            yield wav_io.getvalue()
+        # WAV readers take a data size of 0 literally, so mark the sizes unknown
+        yield struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF",
+            0xFFFFFFFF,
+            b"WAVE",
+            b"fmt ",
+            16,
+            1,  # PCM
+            1,
+            STREAMING_SAMPLE_RATE,
+            STREAMING_SAMPLE_RATE * 2,
+            2,
+            16,
+            b"data",
+            0xFFFFFFFF,
+        )
 
         responses = await self._client.streaming_synthesize(request_gen())
         try:
