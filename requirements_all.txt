@@ -736,6 +736,9 @@ bluetooth-auto-recovery==1.6.4
 # homeassistant.components.private_ble_device
 bluetooth-data-tools==1.29.24
 
+# homeassistant.components.bmx_monitor
+bluetooth-sensor-state-data==1.9.2
+
 # homeassistant.components.bluetti_modbus
 bluetti-modbus==0.52.0
 

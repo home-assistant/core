@@ -78,14 +78,8 @@
           "normal": "Normal"
         }
       },
-      "battery_voltage": {
-        "name": "Voltage"
-      },
       "bm2_generation": {
         "name": "BM2 generation"
-      },
-      "signal_strength": {
-        "name": "Signal strength"
       }
     }
   },

@@ -6,6 +6,7 @@ from bleak import BLEDevice
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
 from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensor_state_data import SensorUpdate
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -22,8 +23,6 @@ from homeassistant.components.bmx_monitor.const import (
     DOMAIN,
 )
 from homeassistant.components.bmx_monitor.device_data import BMxBluetoothDeviceData
-
-from tests.common import MockConfigEntry
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 

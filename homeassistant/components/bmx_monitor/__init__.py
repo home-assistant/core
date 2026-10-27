@@ -120,4 +120,4 @@ async def async_unload_entry(
     config_entry: BMxConfigEntry,
 ) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

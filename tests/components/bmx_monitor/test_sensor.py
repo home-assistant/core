@@ -8,6 +8,13 @@ from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
 from bmx_ble.battery import Battery
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    async_setup_with_default_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+)
 from sensor_state_data import DeviceKey, SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -23,14 +30,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    async_setup_with_default_adapter,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source_connectable,
-)
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 

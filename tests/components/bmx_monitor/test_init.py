@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import bmx_monitor as integration
 from homeassistant.components.bluetooth import (
@@ -13,8 +14,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bmx_monitor.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import CoreState, HomeAssistant
-
-from tests.common import MockConfigEntry
+from homeassistant.exceptions import ConfigEntryError
 
 pytestmark = pytest.mark.usefixtures("mock_bluetooth")
 
@@ -222,9 +222,24 @@ async def test_poll_gate(
     assert data.poll_needed.call_count == int(state is CoreState.running)
 
 
-@pytest.mark.parametrize("success", [True, False])
+@pytest.mark.parametrize(
+    ("unload_error", "success", "expected_state"),
+    [
+        pytest.param(None, True, ConfigEntryState.NOT_LOADED, id="success"),
+        pytest.param(
+            ConfigEntryError("Platform unload failed"),
+            False,
+            ConfigEntryState.FAILED_UNLOAD,
+            id="failure",
+        ),
+    ],
+)
 async def test_unload(
-    hass: HomeAssistant, entry: MockConfigEntry, success: bool
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    unload_error: ConfigEntryError | None,
+    success: bool,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Exercise unload through the config-entry manager."""
     with (
@@ -238,7 +253,11 @@ async def test_unload(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         with patch.object(
-            hass.config_entries, "async_unload_platforms", return_value=success
+            hass.config_entries,
+            "async_unload_platforms_or_raise",
+            side_effect=unload_error,
+            return_value=None,
         ) as unload:
             assert await hass.config_entries.async_unload(entry.entry_id) is success
     unload.assert_awaited_once_with(entry, integration.PLATFORMS)
+    assert entry.state is expected_state

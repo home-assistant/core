@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from sensor_state_data import SensorUpdate
 
 from homeassistant.components.bluetooth import (
@@ -24,8 +25,6 @@ from homeassistant.components.bmx_monitor.device_data import BMxBluetoothDeviceD
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_bluetooth")
 ADDRESS = "AA:BB:CC:DD:EE:FF"

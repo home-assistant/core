@@ -31,5 +31,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["bmx-ble==0.3.2"]
+  "requirements": ["bluetooth-sensor-state-data==1.9.2", "bmx-ble==0.3.2"]
 }

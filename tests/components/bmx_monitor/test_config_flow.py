@@ -10,6 +10,13 @@ from bmx_ble import BM2Generation
 from bmx_ble.battery import Battery
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    async_setup_with_default_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+)
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -45,14 +52,6 @@ from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.selector import SelectSelector
 from homeassistant.helpers.translation import async_get_translations
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    async_setup_with_default_adapter,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source_connectable,
-)
-
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 CUSTOM_DETAILS = {
     CONF_CUSTOM_BATTERY_CHEMISTRY: "Lead Acid",
@@ -70,7 +69,7 @@ def mock_setup_entry() -> Iterator[None]:
     """Prevent a newly created entry from opening a real Bluetooth connection."""
     with patch(
         "homeassistant.components.bmx_monitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -231,6 +230,8 @@ async def test_manual_unnamed_device_can_be_validated(
     validate.assert_awaited_once()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
+    assert result["result"].unique_id == ADDRESS
+
 
 @pytest.mark.parametrize(
     ("validation", "error"),
@@ -262,6 +263,8 @@ async def test_manual_validation_error_and_retry(
             {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert result["result"].unique_id == ADDRESS
 
 
 async def test_manual_without_devices(hass: HomeAssistant) -> None:
@@ -310,6 +313,8 @@ async def test_manual_device_reappears(
     validate.assert_awaited_once()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
+    assert result["result"].unique_id == ADDRESS
+
 
 async def test_manual_excludes_configured_devices(
     hass: HomeAssistant, service_info: MagicMock
@@ -348,13 +353,13 @@ async def test_manual_duplicate(hass: HomeAssistant, service_info: MagicMock) ->
 async def test_manual_custom_must_validate_device(
     hass: HomeAssistant, service_info: MagicMock
 ) -> None:
-    """A custom chemistry cannot bypass device validation."""
+    """A custom chemistry requires validation and allows retrying a rejected device."""
     result = await _manual_form(hass, service_info)
     with (
         patch.object(
             config_flow.BMxConfigFlow,
             "_async_validate_device",
-            return_value="not_bm2",
+            side_effect=["not_bm2", "valid_active"],
         ) as validate,
         patch.object(
             config_flow, "async_discovered_service_info", return_value=[service_info]
@@ -364,10 +369,26 @@ async def test_manual_custom_must_validate_device(
             result["flow_id"],
             {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: Battery.custom.value},
         )
-    validate.assert_awaited_once()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "not_bm2"}
+        validate.assert_awaited_once_with(service_info)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "not_bm2"}
+        assert not hass.config_entries.async_entries(DOMAIN)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: ADDRESS, CONF_BATTERY_TYPE: Battery.custom.value},
+        )
+        assert validate.await_count == 2
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "custom_battery_details"
+        assert not result["errors"]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CUSTOM_DETAILS.copy()
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ADDRESS
+    assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
 
 
 async def test_manual_custom_details(
@@ -465,6 +486,8 @@ async def test_manual_custom_voltage_out_of_range(
     for key, value in CUSTOM_DETAILS.items():
         assert result["options"][key] == value
 
+    assert result["result"].unique_id == ADDRESS
+
 
 @pytest.mark.parametrize(
     "field",
@@ -506,6 +529,8 @@ async def test_bluetooth_custom_voltage_out_of_range(
     assert result["options"][CONF_BATTERY_TYPE] == Battery.custom.value
     for key, value in CUSTOM_DETAILS.items():
         assert result["options"][key] == value
+
+    assert result["result"].unique_id == ADDRESS
 
 
 @pytest.mark.parametrize(
@@ -559,6 +584,8 @@ async def test_options_custom_voltage_out_of_range(
     for key, value in CUSTOM_DETAILS.items():
         assert result["data"][key] == value
 
+    assert entry.unique_id == ADDRESS
+
 
 @pytest.mark.parametrize(
     "field",
@@ -595,6 +622,8 @@ async def test_custom_voltages_out_of_order(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
+    assert result["result"].unique_id == ADDRESS
+
 
 async def test_options_regular(hass: HomeAssistant) -> None:
     """Saving ordinary options completes the flow."""
@@ -613,6 +642,8 @@ async def test_options_regular(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == options
+
+    assert entry.unique_id == ADDRESS
 
 
 async def test_options_switch_from_custom(hass: HomeAssistant) -> None:
@@ -634,6 +665,8 @@ async def test_options_switch_from_custom(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == options
+
+    assert entry.unique_id == ADDRESS
 
 
 async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
@@ -663,6 +696,8 @@ async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_RATE_LIMIT] == 12
     assert result["data"][CONF_CUSTOM_NUMPY_VOLTS] == [11.0, 11.5, 12.3, 12.8]
+
+    assert entry.unique_id == ADDRESS
 
 
 @pytest.mark.parametrize(
