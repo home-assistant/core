@@ -18,6 +18,12 @@
       }
     }
   },
+  "issues": {
+    "too_many_polling_routes": {
+      "description": "More than {max_routes} Waze Travel Time entries are polling automatically. Updating all these routes once exceeds the request budget for a two-hour window and may lead to Waze blocking updates.\n\nTo reduce the number of automatically polled routes, remove entries you no longer need, or disable automatic polling for some entries:\n1. Go to Settings > Devices & services and find the Waze Travel Time entry.\n2. Open the entry menu, select System options, and turn off automatic polling.\n3. Use the `homeassistant.update_entity` action in an automation to update these routes only when needed.\n\nThe warning will clear when no more than {max_routes} routes poll automatically. On-demand updates and other requests from your public IP can still exceed the limit.",
+      "title": "Too many Waze routes polling automatically"
+    }
+  },
   "options": {
     "step": {
       "init": {
