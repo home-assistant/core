@@ -35,6 +35,8 @@ from .const import (
     VacuumEntityCapabilityAttribute,
     VacuumEntityFeature,
     VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
 from .entity import Segment, StateVacuumEntity, StateVacuumEntityDescription
 from .services import async_setup_services
@@ -87,6 +89,8 @@ __all__ = [
     "VacuumEntityCapabilityAttribute",
     "VacuumEntityFeature",
     "VacuumEntityStateAttribute",
+    "VacuumService",
+    "VacuumServiceArgument",
 ]
 
 # mypy: disallow-any-generics

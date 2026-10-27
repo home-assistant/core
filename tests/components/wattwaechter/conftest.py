@@ -54,6 +54,14 @@ MOCK_METER_DATA_MINIMAL = _parse_meter_data(
     load_json_object_fixture("meter_data_minimal.json", DOMAIN)
 )
 
+MOCK_SYSTEM_INFO_GAS = _parse_system_info(
+    load_json_object_fixture("system_info_gas.json", DOMAIN)
+)
+
+MOCK_SYSTEM_INFO_WATER = _parse_system_info(
+    load_json_object_fixture("system_info_water.json", DOMAIN)
+)
+
 MOCK_OTA_CHECK = OtaCheckResponse(
     ok=True,
     data=OtaData(
@@ -111,6 +119,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title=MOCK_DEVICE_NAME,
         data=MOCK_CONFIG_DATA,
         unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
