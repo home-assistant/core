@@ -1,4 +1,4 @@
-"""The WattWächter Plus integration."""
+"""The WattWächter integration."""
 
 import logging
 
@@ -21,7 +21,7 @@ PLATFORMS = [Platform.SENSOR, Platform.UPDATE]
 async def async_setup_entry(
     hass: HomeAssistant, entry: WattwaechterConfigEntry
 ) -> None:
-    """Set up WattWächter Plus from a config entry."""
+    """Set up WattWächter from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data.get(CONF_TOKEN)
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, entry: WattwaechterConfigEntry
 ) -> None:
-    """Unload a WattWächter Plus config entry."""
+    """Unload a WattWächter config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
