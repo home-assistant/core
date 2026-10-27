@@ -127,16 +127,16 @@ async def test_radon_averages_corentium_home_2(
 
 
 @pytest.mark.parametrize(
-    ("unique_suffix", "disabled"),
+    ("unique_suffix", "disabled_by"),
     [
-        ("radon_1day_avg", False),
-        ("radon_1day_level", False),
-        ("radon_week_avg", True),
-        ("radon_week_level", True),
-        ("radon_month_avg", True),
-        ("radon_month_level", True),
-        ("radon_year_avg", False),
-        ("radon_year_level", False),
+        ("radon_1day_avg", None),
+        ("radon_1day_level", None),
+        ("radon_week_avg", er.RegistryEntryDisabler.INTEGRATION),
+        ("radon_week_level", er.RegistryEntryDisabler.INTEGRATION),
+        ("radon_month_avg", er.RegistryEntryDisabler.INTEGRATION),
+        ("radon_month_level", er.RegistryEntryDisabler.INTEGRATION),
+        ("radon_year_avg", None),
+        ("radon_year_level", None),
     ],
 )
 async def test_radon_averages_enabled_default_corentium_home_2(
@@ -144,7 +144,7 @@ async def test_radon_averages_enabled_default_corentium_home_2(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     unique_suffix: str,
-    disabled: bool,
+    disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Test that the 7-day and 30-day radon sensors are disabled by default."""
     entry = create_entry(
@@ -171,10 +171,7 @@ async def test_radon_averages_enabled_default_corentium_home_2(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
-    if disabled:
-        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    else:
-        assert entity_entry.disabled_by is None
+    assert entity_entry.disabled_by is disabled_by
 
 
 async def test_disabled_connectivity_mode_corentium_home_2(
