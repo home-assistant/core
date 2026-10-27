@@ -323,5 +323,10 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except ValueError, ImplementationUnavailableError:
                 return await self.async_step_user()
+            if (
+                getattr(self.flow_impl, "client_id", None)
+                == HOME_ASSISTANT_CLOUD_CLIENT_ID
+            ):
+                return await self.async_step_user()
             return await self.async_step_auth()
         return await self.async_step_user()
