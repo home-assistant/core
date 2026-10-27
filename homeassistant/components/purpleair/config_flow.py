@@ -346,12 +346,13 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
         validation = ValidationResult()
 
         if user_input is not None:
+            location = user_input[CONF_LOCATION]
             validation = await async_validate_coordinates(
                 self.hass,
                 self.config_entry.data[CONF_API_KEY],
-                user_input[CONF_LOCATION][CONF_LATITUDE],
-                user_input[CONF_LOCATION][CONF_LONGITUDE],
-                user_input[CONF_LOCATION][CONF_RADIUS] / 1000,
+                location[CONF_LATITUDE],
+                location[CONF_LONGITUDE],
+                location.get(CONF_RADIUS, DEFAULT_DISTANCE) / 1000,
             )
 
             if not validation.errors:
