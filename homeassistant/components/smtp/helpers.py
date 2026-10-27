@@ -19,7 +19,6 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.os_error import os_read_error
 
 from .const import ATTR_HTML, DOMAIN
 
@@ -231,11 +230,9 @@ async def _resolve_media(
             translation_key="media_source_not_supported",
             translation_placeholders={"media_content_id": media_content_id},
         )
-    try:
-        return (
-            await hass.async_add_executor_job(media.path.read_bytes),
-            media.mime_type,
-            media.path.name,
-        )
-    except OSError as err:
-        raise os_read_error(err, str(media.path)) from err
+
+    return (
+        await hass.async_add_executor_job(media.path.read_bytes),
+        media.mime_type,
+        media.path.name,
+    )
