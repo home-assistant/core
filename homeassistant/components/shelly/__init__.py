@@ -450,13 +450,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         # and user woke up the device when adding it, we can continue setup
         # otherwise we will wait for the device to wake up
         if sleep_period:
-            # Not eager, so a connect that resumes setup runs after the entry is loaded
-            entry.async_create_background_task(
-                hass,
-                runtime_data.rpc.async_device_online("setup"),
-                "rpc device online setup",
-                eager_start=False,
-            )
+            await runtime_data.rpc.async_device_online("setup")
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline RPC device %s", entry.title)
