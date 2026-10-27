@@ -174,9 +174,6 @@
       "boiler_circuit_pump_power": {
         "name": "Boiler circuit pump"
       },
-      "boiler_operating_phase": {
-        "name": "Boiler operating phase"
-      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },

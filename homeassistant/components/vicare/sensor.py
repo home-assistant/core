@@ -1200,12 +1200,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getBoilerCuircuitPumpCurrentLevel(),
     ),
     ViCareSensorEntityDescription(
-        key="boiler_operating_phase",
-        translation_key="boiler_operating_phase",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_getter=lambda api: api.getBoilerState(),
-    ),
-    ViCareSensorEntityDescription(
         key="hydraulic_separator_temperature",
         translation_key="hydraulic_separator_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
