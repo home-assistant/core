@@ -43,6 +43,7 @@ def _mock_device(mac: str, name: str) -> Mock:
         is_horizontal_swing=Mock(return_value=False),
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
+        get_filter_clean_required=Mock(return_value=False),
         get_measurement_temperature=Mock(side_effect=MEASUREMENT_TEMPERATURES.get),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
