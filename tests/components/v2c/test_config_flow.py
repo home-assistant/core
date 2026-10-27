@@ -3,9 +3,10 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrydan.exceptions import TrydanError
 
-from homeassistant.components.v2c.const import DOMAIN
+from homeassistant.components.v2c.const import CONF_PV_AVAILABLE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,26 @@ async def test_full_flow(
     assert result["data"] == {CONF_HOST: "1.1.1.1"}
     assert result["result"].unique_id == "ABC123"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("pv_available", [True, False])
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    pv_available: bool,
+) -> None:
+    """Test configuring photovoltaic availability."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_PV_AVAILABLE: pv_available}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_PV_AVAILABLE: pv_available}
 
 
 @pytest.mark.parametrize(
