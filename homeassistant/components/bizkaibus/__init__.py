@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_STOP_ID): cv.string,
-        probatio.Optional(CONF_LINES): cv.string,
+        probatio.Optional(CONF_LINES): probatio.EnsureList,
     }
 )
 

@@ -41,6 +41,15 @@ USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _normalize_route_ids(route_ids: str | list[str] | None) -> list[str]:
+    """Normalize configured route IDs to a list of strings."""
+    if route_ids is None:
+        return []
+    if isinstance(route_ids, str):
+        return [route_ids]
+    return [route_id for route_id in route_ids if route_id is not None]
+
+
 def _lines_schema(
     line_ids: list[str], lines: dict[str, Any], selected_line_ids: list[str]
 ) -> probatio.Schema:
@@ -149,14 +158,18 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_STOP_ID] = "stop_not_found"
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=USER_DATA_SCHEMA,
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, user_input
+                        ),
                         errors=errors,
                     )
                 except BizkaibusConnectionError:
                     errors["base"] = "cannot_connect"
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=USER_DATA_SCHEMA,
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, user_input
+                        ),
                         errors=errors,
                     )
 
@@ -164,7 +177,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "api_parse_error"
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=USER_DATA_SCHEMA,
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, user_input
+                        ),
                         errors=errors,
                     )
 
@@ -174,7 +189,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "api_parse_error"
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=USER_DATA_SCHEMA,
+                        data_schema=self.add_suggested_values_to_schema(
+                            USER_DATA_SCHEMA, user_input
+                        ),
                         errors=errors,
                     )
                 if self._line_ids == []:
@@ -186,7 +203,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "api_parse_error"
                         return self.async_show_form(
                             step_id="user",
-                            data_schema=USER_DATA_SCHEMA,
+                            data_schema=self.add_suggested_values_to_schema(
+                                USER_DATA_SCHEMA, user_input
+                            ),
                             errors=errors,
                         )
                     if title is None:
@@ -197,7 +216,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
         )
 
@@ -343,7 +364,9 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         if line_ids == []:
             return self.async_abort(reason="cannot_connect")
 
-        route_ids = info.get(CONF_LINE_IDS, [info.get(OLD_CONF_ROUTE_ID)])
+        route_ids = _normalize_route_ids(
+            info.get(CONF_LINE_IDS, info.get(OLD_CONF_ROUTE_ID))
+        )
 
         route_ids = [route_id for route_id in route_ids if route_id in line_ids]
 

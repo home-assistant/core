@@ -90,6 +90,37 @@ async def test_user_flow_with_valid_stop_id(hass: HomeAssistant) -> None:
         )
 
 
+async def test_import_flow_accepts_multicharacter_route_id_string(
+    hass: HomeAssistant,
+) -> None:
+    """Test imported route IDs are normalized before filtering."""
+    line = SimpleNamespace(id="A1", route="Route A1")
+    timetable = SimpleNamespace(id="stop_1234", name="Central Station")
+
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        _mock_api(
+            mock_api_class,
+            lines=[line],
+            timetable=timetable,
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "A1"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
+    assert result["data"] == {CONF_STOP_ID: "1234"}
+    assert result["options"] == {
+        CONF_LINE_IDS: ["A1"],
+        CONF_LINES: {"A1": "Route A1"},
+    }
+
+
 async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
     """Test the user flow recovers when the stop comes back online."""
     stop_id = "9999"
