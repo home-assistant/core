@@ -709,6 +709,14 @@ async def test_restoring_client(
         ]
     ],
 )
+@pytest.mark.parametrize(
+    ("device_payload", "pruned"),
+    [
+        pytest.param([SWITCH_1], True, id="devices_loaded"),
+        # A network device could share a MAC with a client tracker
+        pytest.param([], False, id="devices_not_loaded"),
+    ],
+)
 async def test_pruning_stale_restored_clients(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -716,6 +724,7 @@ async def test_pruning_stale_restored_clients(
     config_entry: MockConfigEntry,
     config_entry_factory: ConfigEntryFactoryType,
     clients_all_payload: list[dict[str, Any]],
+    pruned: bool,
 ) -> None:
     """Restore recently seen inactive clients but prune stale and unlisted ones."""
     recent, stale = clients_all_payload
@@ -749,24 +758,19 @@ async def test_pruning_stale_restored_clients(
         (dr.CONNECTION_NETWORK_MAC, recent["mac"]), config_entry.entry_id
     )
 
-    # Stale client is pruned together with its device
+    # Stale client is not restored
     assert not hass.states.get("device_tracker.stale")
-    assert entity_registry.async_get(entries[stale["mac"]].entity_id) is None
-    assert (
-        device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, stale["mac"]), config_entry.entry_id
-        )
-        is None
-    )
 
-    # Client absent from a loaded clients_all is pruned together with its device
-    assert entity_registry.async_get(entries[absent_mac].entity_id) is None
-    assert (
-        device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, absent_mac), config_entry.entry_id
-        )
-        is None
-    )
+    # Stale client and client absent from a loaded clients_all are pruned
+    # together with their device, once network devices are known
+    for mac in (stale["mac"], absent_mac):
+        assert (entity_registry.async_get(entries[mac].entity_id) is None) is pruned
+        assert (
+            device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+            )
+            is None
+        ) is pruned
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
@@ -900,7 +904,14 @@ async def test_pruning_unlisted_client_devices(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
-@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.parametrize(
+    ("device_payload", "client_tracker_removed"),
+    [
+        pytest.param([SWITCH_1], True, id="devices_loaded"),
+        # Device list did not load, the network device would look like a client
+        pytest.param([], False, id="devices_not_loaded"),
+    ],
+)
 @pytest.mark.parametrize(
     "clients_all_payload",
     [
@@ -934,6 +945,7 @@ async def test_pruning_keeps_network_device_with_client_tracker(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     config_entry_factory: ConfigEntryFactoryType,
+    client_tracker_removed: bool,
 ) -> None:
     """Remove a client tracker left on a network device but keep the device."""
     # Tracker from when the network device was seen as a client
@@ -953,7 +965,9 @@ async def test_pruning_keeps_network_device_with_client_tracker(
 
     await config_entry_factory()
 
-    assert entity_registry.async_get(client_tracker.entity_id) is None
+    assert (
+        entity_registry.async_get(client_tracker.entity_id) is None
+    ) is client_tracker_removed
     assert not [
         event
         for event in events

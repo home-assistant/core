@@ -186,6 +186,9 @@ class UnifiEntityLoader:
         # controller when that list loaded. A failed fetch leaves it empty,
         # which would otherwise wipe every tracker and its device.
         prune_unlisted = clients_all_loaded and bool(api.clients_all.values())
+        # A failed devices fetch can be swallowed, leaving the list empty, and a
+        # network device then can't be told apart from a client sharing its MAC
+        devices_loaded = bool(api.devices.values())
 
         pruned = 0
         for entry in er.async_entries_for_config_entry(
@@ -212,12 +215,15 @@ class UnifiEntityLoader:
                 api.clients.process_raw([dict(client.raw)])
                 continue
 
+            if not devices_loaded:
+                continue
+
             self._remove_client(entity_registry, device_registry, entry.entity_id, mac)
             pruned += 1
 
         # Network devices are not in clients_all, so their list has to be
         # loaded too before a device missing from both is taken as removed
-        if prune_unlisted and api.devices.values():
+        if prune_unlisted and devices_loaded:
             pruned += self._prune_unlisted_client_devices(
                 device_registry, always_restore
             )
