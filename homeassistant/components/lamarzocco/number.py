@@ -47,6 +47,9 @@ class LaMarzoccoNumberEntityDescription(
 
     native_value_fn: Callable[[LaMarzoccoMachine], float | int]
     set_value_fn: Callable[[LaMarzoccoMachine, float | int], Coroutine[Any, Any, bool]]
+    native_min_value_fn: Callable[[LaMarzoccoMachine], float] | None = None
+    native_max_value_fn: Callable[[LaMarzoccoMachine], float] | None = None
+    native_step_fn: Callable[[LaMarzoccoMachine], float] | None = None
 
 
 ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
@@ -55,9 +58,21 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         translation_key="coffee_temp",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_step=PRECISION_TENTHS,
-        native_min_value=85,
-        native_max_value=104,
+        native_min_value_fn=lambda machine: (
+            cast(
+                CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+            ).target_temperature_min
+        ),
+        native_max_value_fn=lambda machine: (
+            cast(
+                CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+            ).target_temperature_max
+        ),
+        native_step_fn=lambda machine: (
+            cast(
+                CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+            ).target_temperature_step
+        ),
         set_value_fn=lambda machine, temp: machine.set_coffee_target_temperature(temp),
         native_value_fn=(
             lambda machine: (
@@ -348,6 +363,30 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     """La Marzocco number entity."""
 
     entity_description: LaMarzoccoNumberEntityDescription
+
+    @property
+    @override
+    def native_min_value(self) -> float:
+        """Return the machine's minimum value, if provided."""
+        if value_fn := self.entity_description.native_min_value_fn:
+            return value_fn(self.coordinator.device)
+        return super().native_min_value
+
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Return the machine's maximum value, if provided."""
+        if value_fn := self.entity_description.native_max_value_fn:
+            return value_fn(self.coordinator.device)
+        return super().native_max_value
+
+    @property
+    @override
+    def native_step(self) -> float | None:
+        """Return the machine's value step, if provided."""
+        if value_fn := self.entity_description.native_step_fn:
+            return value_fn(self.coordinator.device)
+        return super().native_step
 
     @property
     @override
