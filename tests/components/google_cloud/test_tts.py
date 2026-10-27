@@ -3,10 +3,10 @@
 from collections.abc import AsyncGenerator, AsyncIterator
 import io
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 import wave
 
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud.texttospeech_v1.types import cloud_tts
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -37,6 +37,7 @@ def mock_streaming_synthesize(
     mock_api_tts: AsyncMock,
     audio_chunks: list[bytes],
     error: Exception | None = None,
+    call_error: Exception | None = None,
 ) -> list[cloud_tts.StreamingSynthesizeRequest]:
     """Mock streaming synthesis and return the list of sent requests."""
     requests: list[cloud_tts.StreamingSynthesizeRequest] = []
@@ -50,6 +51,8 @@ def mock_streaming_synthesize(
     async def streaming_synthesize(
         request_gen: AsyncIterator[cloud_tts.StreamingSynthesizeRequest],
     ) -> AsyncGenerator[cloud_tts.StreamingSynthesizeResponse]:
+        if call_error:
+            raise call_error
         requests.extend([request async for request in request_gen])
         return response_gen()
 
@@ -140,12 +143,21 @@ async def test_stream_tts_audio_not_supported(
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("error", "call_error"),
+    [
+        pytest.param(GoogleAPIError("error"), None, id="response"),
+        pytest.param(None, GoogleAPIError("error"), id="call"),
+    ],
+)
 async def test_stream_tts_audio_error(
     hass: HomeAssistant,
     mock_api_tts: AsyncMock,
+    error: Exception | None,
+    call_error: Exception | None,
 ) -> None:
     """Test an error during streaming synthesis."""
-    mock_streaming_synthesize(mock_api_tts, [bytes(100)], GoogleAPIError("error"))
+    mock_streaming_synthesize(mock_api_tts, [bytes(100)], error, call_error)
 
     with pytest.raises(
         HomeAssistantError, match="Error occurred during Google Cloud TTS call"
@@ -153,6 +165,26 @@ async def test_stream_tts_audio_error(
         await stream_audio(
             hass, {"voice": CHIRP_VOICE, tts.ATTR_PREFERRED_FORMAT: "wav"}
         )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stream_tts_audio_unauthenticated(
+    hass: HomeAssistant,
+    mock_api_tts: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth is started when the credentials are rejected."""
+    mock_streaming_synthesize(mock_api_tts, [], call_error=Unauthenticated("error"))
+
+    with (
+        patch.object(mock_config_entry, "async_start_reauth") as mock_start_reauth,
+        pytest.raises(HomeAssistantError),
+    ):
+        await stream_audio(
+            hass, {"voice": CHIRP_VOICE, tts.ATTR_PREFERRED_FORMAT: "wav"}
+        )
+
+    mock_start_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.usefixtures("setup_integration")

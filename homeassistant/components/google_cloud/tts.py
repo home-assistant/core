@@ -364,11 +364,13 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
             0xFFFFFFFF,
         )
 
-        responses = await self._client.streaming_synthesize(request_gen())
         try:
+            responses = await self._client.streaming_synthesize(request_gen())
             async for response in responses:
                 yield response.audio_content
         except GoogleAPIError as err:
+            if isinstance(err, Unauthenticated):
+                self._entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 f"Error occurred during Google Cloud TTS call: {err}"
             ) from err
