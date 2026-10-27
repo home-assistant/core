@@ -39,6 +39,7 @@ async def async_setup_entry(
     update_from_router()
 
     registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
     for entity_entry in registry.entities.get_entries_for_config_entry_id(
@@ -48,13 +49,20 @@ async def async_setup_entry(
             mac = entity_entry.unique_id.partition("_")[0]
             if mac not in tracked:
                 tracked.add(mac)
+                # Only set for trackers not added since their device carries the
+                # client name, can be removed in HA Core 2027.5
+                name = entity_entry.original_name
+                if (
+                    name is None
+                    and entity_entry.device_id
+                    and (device := device_registry.async_get(entity_entry.device_id))
+                ):
+                    name = device.name
                 restored.append(
                     KeeneticTracker(
                         Device(
                             mac=mac,
-                            # None for a tracker named by its device, which then
-                            # keeps its name
-                            name=entity_entry.original_name,
+                            name=name,
                             ip=None,
                             interface=None,
                         ),

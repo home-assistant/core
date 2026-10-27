@@ -119,7 +119,7 @@ async def test_hostname_change_renames_device(
     mock_port_scanner.scan.return_value = _scan_result("laptop.lan")
     freezer.tick(timedelta(seconds=TRACKER_SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_HOME
@@ -133,7 +133,7 @@ async def test_hostname_change_renames_device(
     mock_port_scanner.scan.return_value = _scan_result("")
     freezer.tick(timedelta(seconds=TRACKER_SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == "laptop"
     device = device_registry.async_get(device.id)

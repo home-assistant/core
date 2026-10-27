@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -168,6 +169,15 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     @override
     def _device_unique_id(self) -> str:
         return self.mac_address
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return the device info of the tracked device."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self._hostname or self.mac_address,
+        )
 
     @property
     @override

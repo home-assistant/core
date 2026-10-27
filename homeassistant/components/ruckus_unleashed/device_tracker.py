@@ -37,9 +37,14 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(router_update))
 
-    registry = er.async_get(hass)
     restore_entities(
-        registry, coordinator, entry, async_add_entities, tracked, mac_filter
+        er.async_get(hass),
+        dr.async_get(hass),
+        coordinator,
+        entry,
+        async_add_entities,
+        tracked,
+        mac_filter,
     )
 
 
@@ -66,6 +71,7 @@ def add_new_entities(coordinator, async_add_entities, tracked, mac_filter):
 @callback
 def restore_entities(
     registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     coordinator: RuckusDataUpdateCoordinator,
     entry: RuckusUnleashedConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -81,9 +87,16 @@ def restore_entities(
             and entity.unique_id not in coordinator.data[KEY_SYS_CLIENTS]
             and (not mac_filter or entity.unique_id in mac_filter)
         ):
-            missing.append(
-                RuckusDevice(coordinator, entity.unique_id, entity.original_name)
-            )
+            # Only set for trackers not added since their device carries the
+            # client name, can be removed in HA Core 2027.5
+            name = entity.original_name
+            if (
+                name is None
+                and entity.device_id
+                and (device := device_registry.async_get(entity.device_id))
+            ):
+                name = device.name
+            missing.append(RuckusDevice(coordinator, entity.unique_id, name))
             tracked.add(entity.unique_id)
 
     _LOGGER.debug("added %d missing devices", len(missing))
