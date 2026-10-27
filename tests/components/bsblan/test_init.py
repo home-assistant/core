@@ -664,8 +664,8 @@ async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data.fast_coordinator
-    initial_sensor = coordinator.data.sensor
+    assert (state := hass.states.get("sensor.bsb_lan_outside_temperature"))
+    assert state.state == "6.1"
 
     mock_bsblan.sensor.side_effect = BSBLANError(
         "None of the requested parameters are valid for this section"
@@ -675,8 +675,8 @@ async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
-    assert coordinator.data.sensor is initial_sensor
+    assert (state := hass.states.get("sensor.bsb_lan_outside_temperature"))
+    assert state.state == "6.1"
 
 
 async def test_coordinator_fast_state_error_marks_update_failed(
