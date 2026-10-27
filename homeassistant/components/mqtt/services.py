@@ -39,9 +39,9 @@ from .models import (
     convert_outgoing_mqtt_payload,
 )
 from .util import (
-    async_begin_mqtt_issues_refresh,
     async_check_config_schema,
     async_forward_entry_setup_and_setup_discovery,
+    async_refresh_mqtt_issues,
     mqtt_config_entry_enabled,
     platforms_from_config,
     valid_publish_topic,
@@ -160,7 +160,7 @@ async def _async_reload_config(call: ServiceCall) -> None:
     await async_check_config_schema(hass, config_yaml)
 
     # Reload handlers re-create issues of items which are still invalid
-    with async_begin_mqtt_issues_refresh(hass):
+    with async_refresh_mqtt_issues(hass):
         mqtt_data.config = new_config
 
         # Reload the modern yaml platforms
