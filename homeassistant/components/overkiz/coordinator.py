@@ -1,6 +1,7 @@
 """Helpers to help coordinate updates."""
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -19,6 +20,7 @@ from pyoverkiz.exceptions import (
     TooManyRequestsError,
 )
 from pyoverkiz.models import (
+    Action,
     Device,
     DeviceEvent,
     DeviceRemovedEvent,
@@ -56,6 +58,14 @@ EVENT_HANDLERS: Registry[
 ] = Registry()
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OverkizDeviceCommand:
+    """A command sent to a device as part of an execution."""
+
+    device_url: str
+    command_name: str
+
+
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
@@ -84,7 +94,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, list[dict[str, str]]] = {}
+        self.executions: dict[str, set[OverkizDeviceCommand]] = {}
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -182,6 +192,18 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.update_interval = update_interval
         self._default_update_interval = update_interval
 
+    def register_execution(self, exec_id: str, actions: list[Action]) -> None:
+        """Track the device commands of an execution until it completes or fails."""
+        # The action queue can merge concurrent action groups under one
+        # exec_id, so accumulate rather than overwrite.
+        self.executions.setdefault(exec_id, set()).update(
+            OverkizDeviceCommand(
+                device_url=action.device_url, command_name=command.name
+            )
+            for action in actions
+            for command in action.commands
+        )
+
 
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
 async def on_device_available(
@@ -248,8 +270,7 @@ async def on_execution_registered(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = []
+    coordinator.executions.setdefault(event.exec_id, set())
 
     if not coordinator.is_stateless:
         coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
