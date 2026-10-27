@@ -12,6 +12,7 @@ from homeassistant.components.google_weather.const import (
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
 )
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -24,7 +25,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 def _assert_create_entry_result(
-    result: dict, expected_referrer: str | None = None
+    hass: HomeAssistant,
+    result: dict,
+    expected_referrer: str | None = None,
 ) -> None:
     """Assert that the result is a create entry result."""
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -36,10 +39,10 @@ def _assert_create_entry_result(
     assert len(result["subentries"]) == 1
     subentry = result["subentries"][0]
     assert subentry["subentry_type"] == "location"
-    assert subentry["title"] == "test-name"
+    assert subentry["title"] == hass.config.location_name
     assert subentry["data"] == {
-        CONF_LATITUDE: 10.1,
-        CONF_LONGITUDE: 20.1,
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
     }
 
 
@@ -54,24 +57,20 @@ async def test_create_entry(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert set(result["data_schema"].schema) == {CONF_API_KEY, SECTION_API_KEY_OPTIONS}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_API_KEY: "test-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
-            },
         },
     )
 
     mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
-        latitude=10.1, longitude=20.1
+        latitude=hass.config.latitude, longitude=hass.config.longitude
     )
 
-    _assert_create_entry_result(result)
+    _assert_create_entry_result(hass, result)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -90,23 +89,18 @@ async def test_form_with_referrer(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_API_KEY: "test-api-key",
             SECTION_API_KEY_OPTIONS: {
                 CONF_REFERRER: "test-referrer",
-            },
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
             },
         },
     )
 
     mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
-        latitude=10.1, longitude=20.1
+        latitude=hass.config.latitude, longitude=hass.config.longitude
     )
 
-    _assert_create_entry_result(result, expected_referrer="test-referrer")
+    _assert_create_entry_result(hass, result, expected_referrer="test-referrer")
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -133,12 +127,7 @@ async def test_form_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_API_KEY: "test-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
-            },
         },
     )
 
@@ -146,12 +135,7 @@ async def test_form_exceptions(
     assert result["errors"] == {"base": expected_error}
     # On error, the form should have the previous user input
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, CONF_NAME) == "test-name"
     assert get_schema_suggested_value(data_schema, CONF_API_KEY) == "test-api-key"
-    assert get_schema_suggested_value(data_schema, CONF_LOCATION) == {
-        CONF_LATITUDE: 10.1,
-        CONF_LONGITUDE: 20.1,
-    }
 
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
@@ -161,16 +145,11 @@ async def test_form_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_API_KEY: "test-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
-            },
         },
     )
 
-    _assert_create_entry_result(result)
+    _assert_create_entry_result(hass, result)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -187,12 +166,7 @@ async def test_form_api_key_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
             CONF_API_KEY: "test-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.2,
-                CONF_LONGITUDE: 20.2,
-            },
         },
     )
 
@@ -201,12 +175,33 @@ async def test_form_api_key_already_configured(
     assert mock_google_weather_api.async_get_current_conditions.call_count == 0
 
 
-async def test_form_location_already_configured(
+async def test_form_home_location_in_other_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     mock_google_weather_api: AsyncMock,
 ) -> None:
-    """Test user input for a location that already exists."""
+    """Test a second entry can be created when the home location is already configured."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Google Weather",
+        data={
+            CONF_API_KEY: "existing-api-key",
+        },
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_LATITUDE: hass.config.latitude,
+                    CONF_LONGITUDE: hass.config.longitude,
+                },
+                subentry_type="location",
+                title="Home",
+                subentry_id="existing-home-subentry-id",
+                unique_id=None,
+            )
+        ],
+    )
+    existing_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -214,27 +209,30 @@ async def test_form_location_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "test-name",
-            CONF_API_KEY: "another-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1001,
-                CONF_LONGITUDE: 20.0999,
-            },
+            CONF_API_KEY: "test-api-key",
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_google_weather_api.async_get_current_conditions.call_count == 0
+    mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = result["subentries"][0]
+    assert subentry["title"] == hass.config.location_name
+    assert subentry["data"] == {
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
+    }
 
 
-async def test_form_not_already_configured(
+async def test_create_entry_different_api_key(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
 ) -> None:
-    """Test user input for config_entry different than the existing one."""
+    """Test creating a new entry with a different API key than an existing entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -242,17 +240,12 @@ async def test_form_not_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "new-test-name",
             CONF_API_KEY: "new-test-api-key",
-            CONF_LOCATION: {
-                CONF_LATITUDE: 10.1002,
-                CONF_LONGITUDE: 20.0998,
-            },
         },
     )
 
     mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
-        latitude=10.1002, longitude=20.0998
+        latitude=hass.config.latitude, longitude=hass.config.longitude
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -264,10 +257,10 @@ async def test_form_not_already_configured(
     assert len(result["subentries"]) == 1
     subentry = result["subentries"][0]
     assert subentry["subentry_type"] == "location"
-    assert subentry["title"] == "new-test-name"
+    assert subentry["title"] == hass.config.location_name
     assert subentry["data"] == {
-        CONF_LATITUDE: 10.1002,
-        CONF_LONGITUDE: 20.0998,
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
     }
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -376,6 +369,10 @@ async def test_reauth(
         {
             CONF_API_KEY: "new-api-key",
         },
+    )
+
+    mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
+        latitude=10.1, longitude=20.1
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -501,6 +498,10 @@ async def test_reconfigure(
         },
     )
 
+    mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
+        latitude=10.1, longitude=20.1
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
@@ -596,6 +597,10 @@ async def test_reconfigure_no_subentries(
         {
             CONF_API_KEY: "new-api-key",
         },
+    )
+
+    mock_google_weather_api.async_get_current_conditions.assert_called_once_with(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
     )
 
     assert result["type"] is FlowResultType.ABORT
