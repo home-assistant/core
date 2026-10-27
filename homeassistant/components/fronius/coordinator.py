@@ -38,7 +38,7 @@ from .const import (
     SolarNetId,
 )
 from .entity import ModbusComponentFn, ModbusValues
-from .heartbeat import PowerLimitHeartbeat
+from .heartbeat import LimitHeartbeat
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -223,7 +223,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             if self.config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT]
             else 0
         )
-        self._heartbeat = PowerLimitHeartbeat(
+        self._heartbeat = LimitHeartbeat(
             self.hass,
             self.modbus_inverter,
             device_lock=self._device_lock,
@@ -233,7 +233,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         )
 
     async def async_start_heartbeat(self) -> None:
-        """Start keeping an active power limit alive, until the entry unloads."""
+        """Start keeping active limits alive, until the entry unloads."""
         self.config_entry.async_on_unload(self._heartbeat.async_stop)
         await self._heartbeat.async_start()
 
@@ -255,9 +255,11 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         tried again while the device holds a period it should not.
         """
         controls = self.modbus_inverter.controls
-        if controls is None or controls.revert_seconds != AUTO_REVERT_SECONDS:
-            return
-        await self._heartbeat.async_resend_power_limit()
+        if controls is not None and controls.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._heartbeat.async_resend_power_limit()
+        storage = self.modbus_inverter.storage
+        if storage is not None and storage.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._heartbeat.async_resend_battery_limits()
 
     @override
     async def _refresh_components(self) -> None:
@@ -284,8 +286,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         move when the data type setting is changed on the device.
 
         A device holding a different fallback period than the configured one
-        is corrected first, so an output power limit the user sets reverts on
-        the schedule they chose.
+        is corrected first, so an output power or battery limit the user sets
+        reverts on the schedule they chose.
 
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
@@ -303,11 +305,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         try:
             async with self._device_lock:
                 await component.async_update()
-                if (
-                    isinstance(component, Controls)
-                    and component.revert_seconds != self._revert_seconds
-                ):
-                    await component.write("revert_seconds", self._revert_seconds)
                 if isinstance(component, Storage) and (
                     refused := _refused_battery_limits(component, field, value)
                 ):
@@ -319,6 +316,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                             "discharge_limit": f"{refused[1]:g}",
                         },
                     )
+                if (
+                    isinstance(component, Controls)
+                    or (
+                        isinstance(component, Storage) and field in BATTERY_LIMIT_FIELDS
+                    )
+                ) and component.revert_seconds != self._revert_seconds:
+                    await component.write("revert_seconds", self._revert_seconds)
                 await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
@@ -328,8 +332,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 translation_key="modbus_write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        # the write restarted the device's period, so the beat starts over
-        self._heartbeat.async_cancel()
         # not debounced: the entity should settle on what the device reports
         # back, and writes are rare and user initiated
         await self.async_refresh()

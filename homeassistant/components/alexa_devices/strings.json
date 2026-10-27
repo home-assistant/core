@@ -110,6 +110,9 @@
       "announcements": {
         "name": "Announcements"
       },
+      "aqm_led": {
+        "name": "LED indicator"
+      },
       "communications": {
         "name": "Communications"
       },
