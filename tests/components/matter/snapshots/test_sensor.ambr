@@ -1687,17 +1687,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Bottom)',
+    'object_id_base': 'Current switch position (bottom)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Bottom)',
+    'original_name': 'Current switch position (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_bottom',
     'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -1705,7 +1705,7 @@
 # name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (Bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (bottom)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1740,17 +1740,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Top)',
+    'object_id_base': 'Current switch position (top)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Top)',
+    'original_name': 'Current switch position (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_top',
     'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -1758,7 +1758,7 @@
 # name: test_sensors[aqara_light_switch_h2_us_4099][sensor.aqara_smart_wall_switch_current_switch_position_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (top)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2322,17 +2322,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Bottom)',
+    'object_id_base': 'Current switch position (bottom)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Bottom)',
+    'original_name': 'Current switch position (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_bottom',
     'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -2340,7 +2340,7 @@
 # name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_bottom_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (Bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (bottom)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2375,17 +2375,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Top)',
+    'object_id_base': 'Current switch position (top)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Top)',
+    'original_name': 'Current switch position (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_top',
     'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -2393,7 +2393,7 @@
 # name: test_sensors[aqara_light_switch_h2_us_4100][sensor.aqara_smart_wall_switch_current_switch_position_top_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (top)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2933,7 +2933,7 @@
     'state': 'software_reset',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_1-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2949,7 +2949,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_1',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2957,36 +2957,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (1)',
+    'object_id_base': 'Current switch position (row 1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (1)',
+    'original_name': 'Current switch position (row 1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row',
     'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_1-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (row 1)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_1',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_2-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3002,7 +3002,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3010,36 +3010,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (2)',
+    'object_id_base': 'Current switch position (row 2)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (2)',
+    'original_name': 'Current switch position (row 2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row',
     'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_2-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (row 2)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_2',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_3-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3055,7 +3055,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3063,36 +3063,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (3)',
+    'object_id_base': 'Current switch position (row 3)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (3)',
+    'original_name': 'Current switch position (row 3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row',
     'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-6-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_3-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (row 3)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_3',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4-entry]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3108,7 +3108,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3116,29 +3116,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (4)',
+    'object_id_base': 'Current switch position (row 4)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (4)',
+    'original_name': 'Current switch position (row 4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row',
     'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-7-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_4-state]
+# name: test_sensors[aqara_light_switch_h2_us_4101][sensor.aqara_smart_wall_switch_current_switch_position_row_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (4)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Current switch position (row 4)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_4',
+    'entity_id': 'sensor.aqara_smart_wall_switch_current_switch_position_row_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5390,17 +5390,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Bottom)',
+    'object_id_base': 'Current switch position (bottom)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Bottom)',
+    'original_name': 'Current switch position (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_bottom',
     'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -5408,7 +5408,7 @@
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (Bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (bottom)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -5443,17 +5443,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Middle)',
+    'object_id_base': 'Current switch position (middle)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Middle)',
+    'original_name': 'Current switch position (middle)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_middle',
     'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -5461,7 +5461,7 @@
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_middle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (Middle)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (middle)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -5496,17 +5496,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Top)',
+    'object_id_base': 'Current switch position (top)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Top)',
+    'original_name': 'Current switch position (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_top',
     'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -5514,7 +5514,7 @@
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate Sensor W100 Current switch position (top)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -6045,7 +6045,7 @@
     'state': 'power_on_reboot',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_right-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6061,7 +6061,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_right',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6069,12 +6069,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Right)',
+    'object_id_base': 'Current switch position (2)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Right)',
+    'original_name': 'Current switch position (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6084,21 +6084,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_right-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Current switch position (Right)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Current switch position (2)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_right',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_right_2-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6114,7 +6114,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_right_2',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6122,12 +6122,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Right)',
+    'object_id_base': 'Current switch position (3)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Right)',
+    'original_name': 'Current switch position (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6137,14 +6137,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_right_2-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Current switch position (Right)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Current switch position (3)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_right_2',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_current_switch_position_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8876,7 +8876,7 @@
     'state': 'unspecified',
   })
 # ---
-# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_2-entry]
+# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_row_1_column_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8892,7 +8892,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_2',
+    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_row_1_column_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8900,36 +8900,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (2)',
+    'object_id_base': 'Current switch position (row 1, column 1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (2)',
+    'original_name': 'Current switch position (row 1, column 1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row_column',
     'unique_id': '00000000000004D2-000000000000041B-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_2-state]
+# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_row_1_column_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Current switch position (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Current switch position (row 1, column 1)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_2',
+    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_row_1_column_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_3-entry]
+# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_row_2_column_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8945,7 +8945,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_3',
+    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_row_2_column_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8953,29 +8953,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (3)',
+    'object_id_base': 'Current switch position (row 2, column 1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (3)',
+    'original_name': 'Current switch position (row 2, column 1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_row_column',
     'unique_id': '00000000000004D2-000000000000041B-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_3-state]
+# name: test_sensors[cync_keypad_dimmer][sensor.cync_keypad_dimmer_current_switch_position_row_2_column_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Current switch position (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Current switch position (row 2, column 1)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_3',
+    'entity_id': 'sensor.cync_keypad_dimmer_current_switch_position_row_2_column_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -18401,17 +18401,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Bottom)',
+    'object_id_base': 'Current switch position (bottom)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Bottom)',
+    'original_name': 'Current switch position (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_bottom',
     'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -18419,7 +18419,7 @@
 # name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Current switch position (Bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Current switch position (bottom)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -18454,17 +18454,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Top)',
+    'object_id_base': 'Current switch position (top)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Top)',
+    'original_name': 'Current switch position (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_top',
     'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
@@ -18472,7 +18472,7 @@
 # name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_current_switch_position_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Current switch position (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA dual button Current switch position (top)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -18925,7 +18925,7 @@
     'state': '2.57',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18941,7 +18941,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18949,36 +18949,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Down)',
+    'object_id_base': 'Current switch position (column 1, down)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Down)',
+    'original_name': 'Current switch position (column 1, down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_column_down',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Down)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 1, down)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down_2-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_toggle_next_previous-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18994,7 +18994,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down_2',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_toggle_next_previous',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19002,142 +19002,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Down)',
+    'object_id_base': 'Current switch position (column 1, toggle, next, previous)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Down)',
+    'original_name': 'Current switch position (column 1, toggle, next, previous)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Down)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (Down)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (Down)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-8-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_down_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Down)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_down_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (Toggle Next Previous)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (Toggle Next Previous)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_column_toggle_next_previous',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_toggle_next_previous-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Toggle Next Previous)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 1, toggle, next, previous)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_toggle_next_previous',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_2-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -19153,7 +19047,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_2',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19161,142 +19055,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Toggle Next Previous)',
+    'object_id_base': 'Current switch position (column 1, up)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Toggle Next Previous)',
+    'original_name': 'Current switch position (column 1, up)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-6-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Toggle Next Previous)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (Toggle Next Previous)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (Toggle Next Previous)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-9-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Toggle Next Previous)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_toggle_next_previous_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (Up)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (Up)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_column_up',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_1_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Up)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 1, up)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_1_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up_2-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -19312,7 +19100,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up_2',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19320,36 +19108,142 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Up)',
+    'object_id_base': 'Current switch position (column 2, down)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Up)',
+    'original_name': 'Current switch position (column 2, down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_column_down',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 2, down)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_toggle_next_previous-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_toggle_next_previous',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (column 2, toggle, next, previous)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (column 2, toggle, next, previous)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position_column_toggle_next_previous',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-6-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_toggle_next_previous-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 2, toggle, next, previous)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_toggle_next_previous',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (column 2, up)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (column 2, up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position_column_up',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up_2-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_2_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Up)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 2, up)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up_2',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_2_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up_3-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -19365,7 +19259,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up_3',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19373,29 +19267,135 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current switch position (Up)',
+    'object_id_base': 'Current switch position (column 3, down)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current switch position (Up)',
+    'original_name': 'Current switch position (column 3, down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_current_position',
+    'translation_key': 'switch_current_position_column_down',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-8-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 3, down)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_toggle_next_previous-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_toggle_next_previous',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (column 3, toggle, next, previous)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (column 3, toggle, next, previous)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position_column_toggle_next_previous',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-9-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_toggle_next_previous-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 3, toggle, next, previous)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_toggle_next_previous',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000002-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (column 3, up)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (column 3, up)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position_column_up',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-7-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_up_3-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_column_3_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (Up)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BILRESA scroll wheel Current switch position (column 3, up)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_up_3',
+    'entity_id': 'sensor.bilresa_scroll_wheel_current_switch_position_column_3_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29185,7 +29185,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_temperature_left-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29201,7 +29201,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_left',
+    'entity_id': 'sensor.mock_oven_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29209,7 +29209,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature (Left)',
+    'object_id_base': 'Temperature (2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -29217,65 +29217,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature (Left)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[mock_oven][sensor.mock_oven_temperature_left-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature (Left)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_left',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[mock_oven][sensor.mock_oven_temperature_top-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000029-MatterNodeDevice'), ('matter', 'serial_serial_41')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_top',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature (Top)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature (Top)',
+    'original_name': 'Temperature (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29285,20 +29227,78 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_temperature_top-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature (2)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_top',
+    'entity_id': 'sensor.mock_oven_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '65.55',
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000029-MatterNodeDevice'), ('matter', 'serial_serial_41')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_temperature_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature (4)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature (4)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_temperature_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[mock_oven][sensor.mock_oven_uptime-entry]

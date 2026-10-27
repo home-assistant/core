@@ -92,35 +92,71 @@ class _CommonPositionNamespaceTag(IntEnum):
     TOP = 0x02
     BOTTOM = 0x03
     MIDDLE = 0x04
+    ROW = 0x05  # numeral provided in the Label field
+    COLUMN = 0x06  # numeral provided in the Label field
 
 
-# Translation key suffix (see strings.json) for each standard Switches tag,
-# except CUSTOM which carries a free-text vendor label instead.
-_SWITCHES_TAG_TRANSLATION_KEYS: dict[int, str] = {
-    _SwitchesNamespaceTag.ON: "on",
-    _SwitchesNamespaceTag.OFF: "off",
-    _SwitchesNamespaceTag.TOGGLE: "toggle",
-    _SwitchesNamespaceTag.UP: "up",
-    _SwitchesNamespaceTag.DOWN: "down",
-    _SwitchesNamespaceTag.NEXT: "next",
-    _SwitchesNamespaceTag.PREVIOUS: "previous",
-    _SwitchesNamespaceTag.ENTER_OK_SELECT: "enter_ok_select",
-    _SwitchesNamespaceTag.OPEN: "open",
-    _SwitchesNamespaceTag.CLOSE: "close",
-    _SwitchesNamespaceTag.STOP: "stop",
+# Entities whose (entity-description-level) translation_key this postfix
+# logic applies to: the Generic Switch event and its current-position
+# sensor, i.e. the stateless, non-output controls this is meant for. It
+# deliberately excludes e.g. Identify buttons and output-unit entities
+# (lights, outlets, covers), which #186033's child devices will eventually
+# own, so the same endpoint doesn't get inconsistent names across its
+# entities, and so there's no overlap with that migration's scope.
+_SEMANTIC_TAG_SCOPED_TRANSLATION_KEYS = frozenset({"button", "switch_current_position"})
+
+# Translation key suffix (see strings.json) for each combination of Common
+# Position tags this recognizes. A combination not listed here is not used:
+# the spec only guarantees distinct tags between siblings, not that every
+# combination maps to a sensible English phrase.
+_POSITION_TAG_SUFFIXES: dict[frozenset[int], str] = {
+    frozenset({_CommonPositionNamespaceTag.TOP}): "top",
+    frozenset({_CommonPositionNamespaceTag.BOTTOM}): "bottom",
+    frozenset({_CommonPositionNamespaceTag.LEFT}): "left",
+    frozenset({_CommonPositionNamespaceTag.RIGHT}): "right",
+    frozenset({_CommonPositionNamespaceTag.MIDDLE}): "middle",
+    frozenset(
+        {_CommonPositionNamespaceTag.TOP, _CommonPositionNamespaceTag.LEFT}
+    ): "top_left",
+    frozenset(
+        {_CommonPositionNamespaceTag.TOP, _CommonPositionNamespaceTag.RIGHT}
+    ): "top_right",
+    frozenset(
+        {_CommonPositionNamespaceTag.BOTTOM, _CommonPositionNamespaceTag.LEFT}
+    ): "bottom_left",
+    frozenset(
+        {_CommonPositionNamespaceTag.BOTTOM, _CommonPositionNamespaceTag.RIGHT}
+    ): "bottom_right",
 }
 
-# Order matters: when a device combines two of these tags (e.g. Top + Right
-# for a corner position), they are read out in this canonical order so the
-# result reads naturally ("Top Right", not "Right Top"), regardless of the
-# order the device lists them in.
-_COMMON_POSITION_TAG_TRANSLATION_KEYS: dict[int, str] = {
-    _CommonPositionNamespaceTag.TOP: "top",
-    _CommonPositionNamespaceTag.BOTTOM: "bottom",
-    _CommonPositionNamespaceTag.MIDDLE: "middle",
-    _CommonPositionNamespaceTag.LEFT: "left",
-    _CommonPositionNamespaceTag.RIGHT: "right",
+# Same idea for Switches tags, except CUSTOM (free-text label, handled
+# separately) and ON/OFF/etc. combined with each other (not a real device
+# pattern). TOGGLE + NEXT + PREVIOUS is the one combination seen in the
+# wild (a 3-way rocker button).
+_SWITCHES_TAG_SUFFIXES: dict[frozenset[int], str] = {
+    frozenset({_SwitchesNamespaceTag.ON}): "on",
+    frozenset({_SwitchesNamespaceTag.OFF}): "off",
+    frozenset({_SwitchesNamespaceTag.TOGGLE}): "toggle",
+    frozenset({_SwitchesNamespaceTag.UP}): "up",
+    frozenset({_SwitchesNamespaceTag.DOWN}): "down",
+    frozenset({_SwitchesNamespaceTag.NEXT}): "next",
+    frozenset({_SwitchesNamespaceTag.PREVIOUS}): "previous",
+    frozenset({_SwitchesNamespaceTag.ENTER_OK_SELECT}): "enter_ok_select",
+    frozenset({_SwitchesNamespaceTag.OPEN}): "open",
+    frozenset({_SwitchesNamespaceTag.CLOSE}): "close",
+    frozenset({_SwitchesNamespaceTag.STOP}): "stop",
+    frozenset(
+        {
+            _SwitchesNamespaceTag.TOGGLE,
+            _SwitchesNamespaceTag.NEXT,
+            _SwitchesNamespaceTag.PREVIOUS,
+        }
+    ): "toggle_next_previous",
 }
+
+# Row/Column combined with each Switches suffix that's registered as a
+# translation (see strings.json): a numbered rocker/rotary control.
+_ROW_COLUMN_SWITCHES_SUFFIXES = frozenset({"up", "down", "toggle_next_previous"})
 
 
 def catch_matter_error[_R, **P](
@@ -156,7 +192,6 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
-    _name_postfix_needs_translation = False
     _platform_translation_key: str | None = None
     # Cooldown in seconds to debounce state writes on updates from the device.
     # Platforms which derive their state from multiple attributes can set this
@@ -209,26 +244,38 @@ class MatterEntity(Entity):
             if not self._name_postfix:
                 self._attr_name = None
 
-        # Matter labels or semantic tags (Descriptor TagList) can be used to
-        # modify the entity name by appending the text. Structured semantic
-        # tags (position/action) are preferred over a Custom tag's free-text
-        # label, which often just repeats the entity's own generic name
-        # (e.g. a "button 1" label on an entity already named "Button").
-        # Semantic tags only replace a postfix that disambiguation already
-        # requires: a tag on an endpoint's own primary cluster (e.g. a Common
-        # Number tag on the root endpoint) is not reason enough to add one.
+        # Matter labels can be used to modify the entity name by appending
+        # the text.
         if name_modifier := self._get_name_modifier():
             self._name_postfix = name_modifier
         elif (
-            needs_disambiguation and self._has_translatable_semantic_tag_name_modifier()
+            needs_disambiguation
+            and self.translation_key in _SEMANTIC_TAG_SCOPED_TRANSLATION_KEYS
+            and (own_variant := self._semantic_tag_variant(self._endpoint))
+            and not self._semantic_tag_disambiguation_conflicts(own_variant)
         ):
-            # the translated word is only known once platform translations
-            # are available, so defer the lookup to `name`
-            self._name_postfix_needs_translation = True
-        elif needs_disambiguation and (
-            name_modifier := self._find_untranslated_semantic_tag_name_modifier()
-        ):
-            self._name_postfix = name_modifier
+            # Semantic tags (Descriptor TagList) are a second source for a
+            # name modifier, limited to the Generic Switch entities this is
+            # meant for (see `_SEMANTIC_TAG_SCOPED_TRANSLATION_KEYS`) and
+            # only applied if every sibling endpoint that needs
+            # disambiguation gets a distinct one from it; otherwise the
+            # numeric postfix set above is kept for all of them.
+            kind, payload, placeholders = own_variant
+            if kind == "translated":
+                # one translation key per full combination (not individual
+                # words glued together), so translators see the whole
+                # phrase and can reorder it for their language. The new key's
+                # own name string already carries the modifier, replacing
+                # the numeric postfix set above.
+                self._name_postfix = None
+                self._attr_translation_key = f"{self.translation_key}_{payload}"
+                if placeholders:
+                    self._attr_translation_placeholders = dict(placeholders)
+            else:
+                # "number" (a plain, language-independent digit) or
+                # "custom" (a vendor-supplied free-text label): used as-is,
+                # no translation needed
+                self._name_postfix = payload
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -270,106 +317,185 @@ class MatterEntity(Entity):
             return found_labels[0]
         return None
 
-    def _get_semantic_tags(self) -> list[clusters.Globals.Structs.semtag]:
-        """Get the semantic tags (Descriptor TagList) for the endpoint."""
-        return (
-            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
-            or []
+    def _get_semantic_tags(
+        self, endpoint: MatterEndpoint
+    ) -> list[clusters.Globals.Structs.semtag]:
+        """Get the semantic tags (Descriptor TagList) for an endpoint.
+
+        A tag from a manufacturer-specific namespace (mfgCode set) is
+        excluded: its namespace/tag ids are vendor-defined and must not be
+        read as one of the standard namespaces below.
+        """
+        tags = endpoint.get_attribute_value(
+            None, clusters.Descriptor.Attributes.TagList
         )
+        return [tag for tag in tags or [] if tag.mfgCode in (None, NullValue)]
 
-    def _has_translatable_semantic_tag_name_modifier(self) -> bool:
-        """Return whether the endpoint has a semantic tag that needs translation.
+    def _semantic_tag_variant(
+        self, endpoint: MatterEndpoint
+    ) -> tuple[str, str, tuple[tuple[str, str], ...]] | None:
+        """Return a language-independent identity for endpoint's semantic tags.
 
-        Used to decide, at __init__ time, whether the (higher-priority)
-        translated tier applies, without yet resolving the actual translated
-        word, which requires platform translations that are not available
-        until the entity has been added to hass (see `name`).
+        ("translated", key_suffix, placeholders) for a structured
+        combination of Common Position and/or Switches tags this
+        recognizes (see `_POSITION_TAG_SUFFIXES`/`_SWITCHES_TAG_SUFFIXES`);
+        ("number", value) for a plain Common Number tag; ("custom", label)
+        for a vendor Custom tag label. None if nothing usable is present,
+        or if the combination present isn't one this recognizes.
+
+        Comparing this identity rather than the resolved text lets sibling
+        endpoints be checked against each other for a naming conflict
+        before platform translations are available (see
+        `_semantic_tag_disambiguation_conflicts`).
         """
         namespace = clusters.Globals.Enums.namespace
-        return any(
+        tags = self._get_semantic_tags(endpoint)
+        position_tags = {
+            tag.tag for tag in tags if tag.namespaceID == namespace.kCommonPosition
+        }
+        # CUSTOM is excluded here: it's not a structured action and has no
+        # registered suffix, it's handled by the literal fallback below.
+        switches_tags = {
+            tag.tag
+            for tag in tags
+            if tag.namespaceID == namespace.kSwitches
+            and tag.tag != _SwitchesNamespaceTag.CUSTOM
+        }
+
+        key_parts: list[str] = []
+        placeholders: dict[str, str] = {}
+        for axis, axis_tag in (
+            ("row", _CommonPositionNamespaceTag.ROW),
+            ("column", _CommonPositionNamespaceTag.COLUMN),
+        ):
+            if axis_tag not in position_tags:
+                continue
+            label = next(
+                (
+                    tag.label
+                    for tag in tags
+                    if tag.namespaceID == namespace.kCommonPosition
+                    and tag.tag == axis_tag
+                    and isinstance(tag.label, str)
+                ),
+                None,
+            )
+            if label is None:
+                # the spec requires a numeral label here; without one this
+                # tag can't be used
+                return None
+            key_parts.append(axis)
+            placeholders[axis] = label
+
+        if placeholders:
+            # Row/Column (numeral labels) and the word-based positions
+            # below are mutually exclusive on a single endpoint in the
+            # combinations this recognizes.
+            if position_tags - {
+                _CommonPositionNamespaceTag.ROW,
+                _CommonPositionNamespaceTag.COLUMN,
+            }:
+                return None
+            # A Switches tag combines with Row/Column (a numbered
+            # rocker/rotary control), but only one this is registered for.
+            if switches_tags:
+                suffix = _SWITCHES_TAG_SUFFIXES.get(frozenset(switches_tags))
+                if suffix is None or suffix not in _ROW_COLUMN_SWITCHES_SUFFIXES:
+                    return None
+                key_parts.append(suffix)
+        elif position_tags:
+            # A word-based position, once resolved, is used on its own:
+            # any Switches tags also present (e.g. a Custom label repeating
+            # what the position already says) are not needed to tell this
+            # endpoint apart from its siblings and are ignored.
+            suffix = _POSITION_TAG_SUFFIXES.get(frozenset(position_tags))
+            if suffix is None:
+                return None
+            key_parts.append(suffix)
+        elif switches_tags:
+            # No position at all: a Switches action tag is the fallback.
+            suffix = _SWITCHES_TAG_SUFFIXES.get(frozenset(switches_tags))
+            if suffix is None:
+                return None
+            key_parts.append(suffix)
+
+        if key_parts:
+            return (
+                "translated",
+                "_".join(key_parts),
+                tuple(sorted(placeholders.items())),
+            )
+
+        number = next(
+            (tag.tag for tag in tags if tag.namespaceID == namespace.kCommonNumber),
+            None,
+        )
+        if number is not None:
+            return ("number", str(number), ())
+
+        custom_label = next(
             (
-                tag.namespaceID == namespace.kCommonPosition
-                and tag.tag in _COMMON_POSITION_TAG_TRANSLATION_KEYS
-            )
-            or (
-                tag.namespaceID == namespace.kSwitches
-                and tag.tag in _SWITCHES_TAG_TRANSLATION_KEYS
-            )
-            for tag in self._get_semantic_tags()
-        )
-
-    def _find_untranslated_semantic_tag_name_modifier(self) -> str | None:
-        """Find a name modifier from the endpoint's semantic tags.
-
-        Only used as a fallback when no structured, translatable tag
-        (Common Position or Switches action) is present. Handles the tags
-        that need no translation: a Common Number tag (whose value is a
-        plain, language-independent digit) or, as a last resort, an explicit
-        vendor-supplied Custom tag label.
-        """
-        namespace = clusters.Globals.Enums.namespace
-        tags = self._get_semantic_tags()
-        for tag in tags:
-            if tag.namespaceID == namespace.kCommonNumber:
-                return str(tag.tag)
-        for tag in tags:
-            if (
-                tag.namespaceID == namespace.kSwitches
+                tag.label
+                for tag in tags
+                if tag.namespaceID == namespace.kSwitches
                 and tag.tag == _SwitchesNamespaceTag.CUSTOM
                 and isinstance(tag.label, str)
-            ):
-                return tag.label
-        return None
-
-    def _find_translated_semantic_tag_name_modifier(self) -> str | None:
-        """Find a translated name modifier from the endpoint's semantic tags.
-
-        Handles the tags whose meaning is a word that needs translation
-        (a position or an action), so it can only run once platform
-        translations are available (see `_name_postfix_needs_translation`).
-        A namespace can carry multiple tags at once (e.g. Top + Right for a
-        corner position), in which case all of them are combined.
-        """
-        namespace = clusters.Globals.Enums.namespace
-        tags = self._get_semantic_tags()
-        if words := self._translate_semantic_tags(
-            tags, namespace.kCommonPosition, _COMMON_POSITION_TAG_TRANSLATION_KEYS
-        ):
-            return " ".join(words)
-        if words := self._translate_semantic_tags(
-            tags, namespace.kSwitches, _SWITCHES_TAG_TRANSLATION_KEYS
-        ):
-            return " ".join(words)
-        return None
-
-    def _translate_semantic_tags(
-        self,
-        tags: list[clusters.Globals.Structs.semtag],
-        namespace_id: int,
-        translation_keys: dict[int, str],
-    ) -> list[str]:
-        """Translate all semantic tags of a given namespace present on the endpoint.
-
-        Words are combined in the canonical order of `translation_keys`,
-        regardless of the order the device lists the tags in.
-        """
-        device_tags = {tag.tag for tag in tags if tag.namespaceID == namespace_id}
-        words = []
-        for tag_id, translation_key in translation_keys.items():
-            if tag_id not in device_tags:
-                continue
-            if translated := self._translate_semantic_tag(translation_key):
-                words.append(translated)
-        return words
-
-    def _translate_semantic_tag(self, translation_key: str) -> str | None:
-        """Look up the translated word for a semantic tag."""
-        platform_data = self.platform_data
-        full_key = (
-            f"component.{platform_data.platform_name}.entity.{platform_data.domain}"
-            f".matter_semantic_tag_{translation_key}.name"
+            ),
+            None,
         )
-        return platform_data.platform_translations.get(full_key)
+        if custom_label is not None:
+            return ("custom", custom_label, ())
+
+        return None
+
+    def _endpoint_has_label_modifier(self, endpoint: MatterEndpoint) -> bool:
+        """Return whether endpoint has a vendor label that would modify its name.
+
+        Mirrors `_find_matching_labels`, for a sibling endpoint: such an
+        endpoint already gets its name from that unrelated, pre-existing
+        mechanism, so it doesn't need a semantic tag of its own to be
+        considered covered by `_semantic_tag_disambiguation_conflicts`.
+        """
+        device_info = endpoint.device_info
+        if device_info is None:
+            return False
+        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID
+        )
+        if not labeling_list:
+            return False
+        user_label_list = (
+            endpoint.get_attribute_value(None, clusters.UserLabel.Attributes.LabelList)
+            or []
+        )
+        fixed_label_list = (
+            endpoint.get_attribute_value(None, clusters.FixedLabel.Attributes.LabelList)
+            or []
+        )
+        return any(
+            lbl.label.lower() in labeling_list
+            for lbl in (*user_label_list, *fixed_label_list)
+        )
+
+    def _semantic_tag_disambiguation_conflicts(
+        self, own_variant: tuple[str, str, tuple[tuple[str, str], ...]]
+    ) -> bool:
+        """Return whether `own_variant` can't safely be used as a name modifier.
+
+        True if a sibling endpoint that also needs disambiguation, and
+        doesn't already get its name some other way (a vendor label), has
+        no semantic-tag variant of its own, or has the same one as this
+        endpoint: the spec only guarantees that the whole set of tags
+        differs between such siblings, not that the subset this looks at
+        does, or that it maps to a distinct name.
+        """
+        return any(
+            not self._endpoint_has_label_modifier(ep)
+            and self._semantic_tag_variant(ep) in (None, own_variant)
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, self._entity_info.primary_attribute)
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -470,13 +596,8 @@ class MatterEntity(Entity):
             # an explicit entity name was defined, we use that
             return self._attr_name
         name = super().name
-        postfix = self._name_postfix
-        if self._name_postfix_needs_translation and (
-            translated := self._find_translated_semantic_tag_name_modifier()
-        ):
-            postfix = translated
-        if name and postfix:
-            name = f"{name} ({postfix})"
+        if name and self._name_postfix:
+            name = f"{name} ({self._name_postfix})"
         return name
 
     @cached_property

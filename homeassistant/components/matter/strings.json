@@ -200,53 +200,731 @@
           }
         }
       },
-      "matter_semantic_tag_bottom": {
-        "name": "Bottom"
+      "button_bottom": {
+        "name": "Button (bottom)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_close": {
-        "name": "[%key:common::action::close%]"
+      "button_bottom_left": {
+        "name": "Button (bottom left)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_down": {
-        "name": "Down"
+      "button_bottom_right": {
+        "name": "Button (bottom right)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_enter_ok_select": {
-        "name": "Enter/OK"
+      "button_close": {
+        "name": "Button (close)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_left": {
-        "name": "Left"
+      "button_column": {
+        "name": "Button (column {column})",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_middle": {
-        "name": "Middle"
+      "button_column_down": {
+        "name": "Button (column {column}, down)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_next": {
-        "name": "Next"
+      "button_column_toggle_next_previous": {
+        "name": "Button (column {column}, toggle, next, previous)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_off": {
-        "name": "[%key:common::state::off%]"
+      "button_column_up": {
+        "name": "Button (column {column}, up)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_on": {
-        "name": "[%key:common::state::on%]"
+      "button_down": {
+        "name": "Button (down)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_open": {
-        "name": "[%key:common::action::open%]"
+      "button_enter_ok_select": {
+        "name": "Button (enter, ok, select)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_previous": {
-        "name": "Previous"
+      "button_left": {
+        "name": "Button (left)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_right": {
-        "name": "Right"
+      "button_middle": {
+        "name": "Button (middle)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_stop": {
-        "name": "[%key:common::action::stop%]"
+      "button_next": {
+        "name": "Button (next)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_toggle": {
-        "name": "[%key:common::action::toggle%]"
+      "button_off": {
+        "name": "Button (off)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_top": {
-        "name": "Top"
+      "button_on": {
+        "name": "Button (on)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       },
-      "matter_semantic_tag_up": {
-        "name": "Up"
+      "button_open": {
+        "name": "Button (open)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_previous": {
+        "name": "Button (previous)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_right": {
+        "name": "Button (right)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row": {
+        "name": "Button (row {row})",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_column": {
+        "name": "Button (row {row}, column {column})",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_column_down": {
+        "name": "Button (row {row}, column {column}, down)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_column_toggle_next_previous": {
+        "name": "Button (row {row}, column {column}, toggle, next, previous)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_column_up": {
+        "name": "Button (row {row}, column {column}, up)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_down": {
+        "name": "Button (row {row}, down)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_toggle_next_previous": {
+        "name": "Button (row {row}, toggle, next, previous)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_row_up": {
+        "name": "Button (row {row}, up)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_stop": {
+        "name": "Button (stop)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_toggle": {
+        "name": "Button (toggle)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_toggle_next_previous": {
+        "name": "Button (toggle, next, previous)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_top": {
+        "name": "Button (top)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_top_left": {
+        "name": "Button (top left)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_top_right": {
+        "name": "Button (top right)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
+      },
+      "button_up": {
+        "name": "Button (up)",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "initial_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::initial_press%]",
+              "long_press": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::long_release%]",
+              "multi_press_1": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_1%]",
+              "multi_press_2": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_2%]",
+              "multi_press_3": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_3%]",
+              "multi_press_4": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_4%]",
+              "multi_press_5": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_5%]",
+              "multi_press_6": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_6%]",
+              "multi_press_7": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_7%]",
+              "multi_press_8": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::multi_press_8%]",
+              "short_release": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::short_release%]",
+              "switch_latched": "[%key:component::matter::entity::event::button::state_attributes::event_type::state::switch_latched%]"
+            }
+          }
+        }
       }
     },
     "fan": {
@@ -638,54 +1316,6 @@
       "hepa_filter_condition": {
         "name": "HEPA filter condition"
       },
-      "matter_semantic_tag_bottom": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_bottom::name%]"
-      },
-      "matter_semantic_tag_close": {
-        "name": "[%key:common::action::close%]"
-      },
-      "matter_semantic_tag_down": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_down::name%]"
-      },
-      "matter_semantic_tag_enter_ok_select": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_enter_ok_select::name%]"
-      },
-      "matter_semantic_tag_left": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_left::name%]"
-      },
-      "matter_semantic_tag_middle": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_middle::name%]"
-      },
-      "matter_semantic_tag_next": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_next::name%]"
-      },
-      "matter_semantic_tag_off": {
-        "name": "[%key:common::state::off%]"
-      },
-      "matter_semantic_tag_on": {
-        "name": "[%key:common::state::on%]"
-      },
-      "matter_semantic_tag_open": {
-        "name": "[%key:common::action::open%]"
-      },
-      "matter_semantic_tag_previous": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_previous::name%]"
-      },
-      "matter_semantic_tag_right": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_right::name%]"
-      },
-      "matter_semantic_tag_stop": {
-        "name": "[%key:common::action::stop%]"
-      },
-      "matter_semantic_tag_toggle": {
-        "name": "[%key:common::action::toggle%]"
-      },
-      "matter_semantic_tag_top": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_top::name%]"
-      },
-      "matter_semantic_tag_up": {
-        "name": "[%key:component::matter::entity::event::matter_semantic_tag_up::name%]"
-      },
       "nitrogen_dioxide": {
         "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
@@ -776,6 +1406,105 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "switch_current_position_bottom": {
+        "name": "Current switch position (bottom)"
+      },
+      "switch_current_position_bottom_left": {
+        "name": "Current switch position (bottom left)"
+      },
+      "switch_current_position_bottom_right": {
+        "name": "Current switch position (bottom right)"
+      },
+      "switch_current_position_close": {
+        "name": "Current switch position (close)"
+      },
+      "switch_current_position_column": {
+        "name": "Current switch position (column {column})"
+      },
+      "switch_current_position_column_down": {
+        "name": "Current switch position (column {column}, down)"
+      },
+      "switch_current_position_column_toggle_next_previous": {
+        "name": "Current switch position (column {column}, toggle, next, previous)"
+      },
+      "switch_current_position_column_up": {
+        "name": "Current switch position (column {column}, up)"
+      },
+      "switch_current_position_down": {
+        "name": "Current switch position (down)"
+      },
+      "switch_current_position_enter_ok_select": {
+        "name": "Current switch position (enter, ok, select)"
+      },
+      "switch_current_position_left": {
+        "name": "Current switch position (left)"
+      },
+      "switch_current_position_middle": {
+        "name": "Current switch position (middle)"
+      },
+      "switch_current_position_next": {
+        "name": "Current switch position (next)"
+      },
+      "switch_current_position_off": {
+        "name": "Current switch position (off)"
+      },
+      "switch_current_position_on": {
+        "name": "Current switch position (on)"
+      },
+      "switch_current_position_open": {
+        "name": "Current switch position (open)"
+      },
+      "switch_current_position_previous": {
+        "name": "Current switch position (previous)"
+      },
+      "switch_current_position_right": {
+        "name": "Current switch position (right)"
+      },
+      "switch_current_position_row": {
+        "name": "Current switch position (row {row})"
+      },
+      "switch_current_position_row_column": {
+        "name": "Current switch position (row {row}, column {column})"
+      },
+      "switch_current_position_row_column_down": {
+        "name": "Current switch position (row {row}, column {column}, down)"
+      },
+      "switch_current_position_row_column_toggle_next_previous": {
+        "name": "Current switch position (row {row}, column {column}, toggle, next, previous)"
+      },
+      "switch_current_position_row_column_up": {
+        "name": "Current switch position (row {row}, column {column}, up)"
+      },
+      "switch_current_position_row_down": {
+        "name": "Current switch position (row {row}, down)"
+      },
+      "switch_current_position_row_toggle_next_previous": {
+        "name": "Current switch position (row {row}, toggle, next, previous)"
+      },
+      "switch_current_position_row_up": {
+        "name": "Current switch position (row {row}, up)"
+      },
+      "switch_current_position_stop": {
+        "name": "Current switch position (stop)"
+      },
+      "switch_current_position_toggle": {
+        "name": "Current switch position (toggle)"
+      },
+      "switch_current_position_toggle_next_previous": {
+        "name": "Current switch position (toggle, next, previous)"
+      },
+      "switch_current_position_top": {
+        "name": "Current switch position (top)"
+      },
+      "switch_current_position_top_left": {
+        "name": "Current switch position (top left)"
+      },
+      "switch_current_position_top_right": {
+        "name": "Current switch position (top right)"
+      },
+      "switch_current_position_up": {
+        "name": "Current switch position (up)"
       },
       "tank_percentage": {
         "name": "Hot water level"

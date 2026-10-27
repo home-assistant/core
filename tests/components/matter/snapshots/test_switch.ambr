@@ -1208,7 +1208,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_1-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_41-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1222,7 +1222,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_switch_1',
+    'entity_id': 'switch.kitchen_switch_switch_41',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1230,12 +1230,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch (1)',
+    'object_id_base': 'Switch (41)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch (1)',
+    'original_name': 'Switch (41)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1245,21 +1245,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_1-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_41-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (41)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_switch_1',
+    'entity_id': 'switch.kitchen_switch_switch_41',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_2-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_42-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1273,7 +1273,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_switch_2',
+    'entity_id': 'switch.kitchen_switch_switch_42',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1281,12 +1281,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch (2)',
+    'object_id_base': 'Switch (42)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch (2)',
+    'original_name': 'Switch (42)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1296,21 +1296,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_2-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_42-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (2)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (42)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_switch_2',
+    'entity_id': 'switch.kitchen_switch_switch_42',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_3-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_43-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1324,7 +1324,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_switch_3',
+    'entity_id': 'switch.kitchen_switch_switch_43',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1332,12 +1332,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch (3)',
+    'object_id_base': 'Switch (43)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch (3)',
+    'original_name': 'Switch (43)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1347,21 +1347,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_3-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_43-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (3)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (43)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_switch_3',
+    'entity_id': 'switch.kitchen_switch_switch_43',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_4-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_44-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1375,7 +1375,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_switch_4',
+    'entity_id': 'switch.kitchen_switch_switch_44',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1383,12 +1383,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch (4)',
+    'object_id_base': 'Switch (44)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch (4)',
+    'original_name': 'Switch (44)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1398,14 +1398,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_4-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_switch_44-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (4)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Switch (44)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_switch_4',
+    'entity_id': 'switch.kitchen_switch_switch_44',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
