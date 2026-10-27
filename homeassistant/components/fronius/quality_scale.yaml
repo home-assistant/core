@@ -6,11 +6,7 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      The shared entity base is in entity.py and the coordinators are in
-      coordinator.py.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -43,9 +39,8 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: |
-      This integration has no options flow. The Modbus port and the limit
-      fallback are set during setup and changed by reconfiguring the entry,
-      so they are covered by docs-installation-parameters.
+      No options flow. Settings are changed by reconfiguring the entry and
+      are documented with the installation parameters.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -53,11 +48,9 @@ rules:
   parallel-updates:
     status: done
     comment: |
-      Coordinators are used and an asyncio.Lock across them rate-limits the
-      Solar API requests. Modbus coordinators use a separate transport that
-      serializes its requests internally. The binary sensor and sensor
-      platforms only read coordinator data (PARALLEL_UPDATES = 0). The number
-      and switch platforms write one setting at a time (PARALLEL_UPDATES = 1).
+      The read-only platforms use coordinators (PARALLEL_UPDATES = 0). The
+      number and switch platforms write one setting at a time to the device
+      (PARALLEL_UPDATES = 1).
   reauthentication-flow:
     status: exempt
     comment: |
