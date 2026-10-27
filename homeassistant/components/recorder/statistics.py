@@ -24,7 +24,9 @@ from sqlalchemy import (
     lambda_stmt,
     select,
     text,
+    update,
 )
+from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -108,6 +110,7 @@ from .models import (
     process_timestamp,
 )
 from .util import (
+    _rollback_read_only_session,
     execute,
     execute_stmt_lambda_element,
     filter_unique_constraint_integrity_error,
@@ -900,33 +903,42 @@ def _insert_statistics(
     return stat
 
 
-def _update_statistics(
+def _statistic_ids_by_start(
     session: Session,
     table: type[StatisticsBase],
-    stat_id: int,
-    statistic: StatisticData,
-) -> None:
-    """Insert statistics in the database."""
-    try:
-        session.query(table).filter_by(id=stat_id).update(
-            {
-                table.mean: statistic.get("mean"),
-                table.min: statistic.get("min"),
-                table.max: statistic.get("max"),
-                table.last_reset_ts: datetime_to_timestamp_or_none(
-                    statistic.get("last_reset")
-                ),
-                table.state: statistic.get("state"),
-                table.sum: statistic.get("sum"),
-            },
-            synchronize_session=False,
+    metadata_id: int,
+    start_timestamps: list[float],
+    max_bind_vars: int,
+) -> dict[float | None, int]:
+    """Return the ids of existing statistics rows by start timestamp."""
+    ids: dict[float | None, int] = {}
+    if not start_timestamps:
+        return ids
+    # One bind variable is used by metadata_id
+    for start_ts_chunk in chunked_or_all(start_timestamps, max_bind_vars - 1):
+        ids.update(
+            session.execute(
+                select(table.start_ts, table.id).where(
+                    table.metadata_id == metadata_id,
+                    table.start_ts.in_(start_ts_chunk),
+                )
+            )
+            .tuples()
+            .all()
         )
-    except SQLAlchemyError:
-        _LOGGER.exception(
-            "Unexpected exception when updating statistics %s:%s ",
-            stat_id,
-            statistic,
-        )
+    return ids
+
+
+def _statistic_update_values(statistic: StatisticData) -> dict[str, Any]:
+    """Return the columns to update when importing an existing statistic."""
+    return {
+        "mean": statistic.get("mean"),
+        "min": statistic.get("min"),
+        "max": statistic.get("max"),
+        "last_reset_ts": datetime_to_timestamp_or_none(statistic.get("last_reset")),
+        "state": statistic.get("state"),
+        "sum": statistic.get("sum"),
+    }
 
 
 def get_metadata_with_session(
@@ -1210,74 +1222,72 @@ def list_statistic_ids(
     return _flatten_list_statistic_ids_metadata_result(result)
 
 
-def _reduce_statistics(
-    stats: dict[str, list[StatisticsRow]],
+def _reduce_statistic(
+    statistic_id: str,
+    stat_list: list[StatisticsRow],
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]],
-) -> dict[str, list[StatisticsRow]]:
-    """Reduce hourly statistics to daily or monthly statistics."""
-    result: dict[str, list[StatisticsRow]] = defaultdict(list)
+) -> list[StatisticsRow]:
+    """Reduce the hourly statistics of one statistic to daily or monthly."""
+    result: list[StatisticsRow] = []
     _want_mean = "mean" in types
     _want_min = "min" in types
     _want_max = "max" in types
     _want_last_reset = "last_reset" in types
     _want_state = "state" in types
     _want_sum = "sum" in types
-    for statistic_id, stat_list in stats.items():
-        max_values: list[float] = []
-        mean_values: list[tuple[float, float]] = []
-        min_values: list[float] = []
-        prev_stat: StatisticsRow = stat_list[0]
-        # A fixed offset could land inside a period lengthened by DST
-        fake_entry: StatisticsRow = {
-            "start": period_start_end(stat_list[-1]["start"])[1]
-        }
+    max_values: list[float] = []
+    mean_values: list[tuple[float, float]] = []
+    min_values: list[float] = []
+    prev_stat: StatisticsRow = stat_list[0]
+    # A fixed offset could land inside a period lengthened by DST
+    fake_entry: StatisticsRow = {"start": period_start_end(stat_list[-1]["start"])[1]}
 
-        # Loop over the hourly statistics + a fake entry to end the period
-        for statistic in chain(stat_list, (fake_entry,)):
-            if not same_period(prev_stat["start"], statistic["start"]):
-                start, end = period_start_end(prev_stat["start"])
-                # The previous statistic was the last entry of the period
-                row: StatisticsRow = {
-                    "start": start,
-                    "end": end,
-                }
-                if _want_mean:
-                    row["mean"] = None
-                    row["mean_weight"] = None
-                    if mean_values:
-                        match metadata[statistic_id][1]["mean_type"]:
-                            case StatisticMeanType.ARITHMETIC:
-                                row["mean"] = mean([x[0] for x in mean_values])
-                            case StatisticMeanType.CIRCULAR:
-                                row["mean"], row["mean_weight"] = (
-                                    weighted_circular_mean(mean_values)
-                                )
-                    mean_values.clear()
-                if _want_min:
-                    row["min"] = min(min_values) if min_values else None
-                    min_values.clear()
-                if _want_max:
-                    row["max"] = max(max_values) if max_values else None
-                    max_values.clear()
-                if _want_last_reset:
-                    row["last_reset"] = prev_stat.get("last_reset")
-                if _want_state:
-                    row["state"] = prev_stat.get("state")
-                if _want_sum:
-                    row["sum"] = prev_stat["sum"]
-                result[statistic_id].append(row)
-            if _want_max and (_max := statistic.get("max")) is not None:
-                max_values.append(_max)
+    # Loop over the hourly statistics + a fake entry to end the period
+    for statistic in chain(stat_list, (fake_entry,)):
+        if not same_period(prev_stat["start"], statistic["start"]):
+            start, end = period_start_end(prev_stat["start"])
+            # The previous statistic was the last entry of the period
+            row: StatisticsRow = {
+                "start": start,
+                "end": end,
+            }
             if _want_mean:
-                if (_mean := statistic.get("mean")) is not None:
-                    _mean_weight = statistic.get("mean_weight") or 0.0
-                    mean_values.append((_mean, _mean_weight))
-            if _want_min and (_min := statistic.get("min")) is not None:
-                min_values.append(_min)
-            prev_stat = statistic
+                row["mean"] = None
+                row["mean_weight"] = None
+                if mean_values:
+                    match metadata[statistic_id][1]["mean_type"]:
+                        case StatisticMeanType.ARITHMETIC:
+                            row["mean"] = mean([x[0] for x in mean_values])
+                        case StatisticMeanType.CIRCULAR:
+                            row["mean"], row["mean_weight"] = weighted_circular_mean(
+                                mean_values
+                            )
+                mean_values.clear()
+            if _want_min:
+                row["min"] = min(min_values) if min_values else None
+                min_values.clear()
+            if _want_max:
+                row["max"] = max(max_values) if max_values else None
+                max_values.clear()
+            if _want_last_reset:
+                row["last_reset"] = prev_stat.get("last_reset")
+            if _want_state:
+                row["state"] = prev_stat.get("state")
+            if _want_sum:
+                row["sum"] = prev_stat["sum"]
+            result.append(row)
+        if _want_max and (_max := statistic.get("max")) is not None:
+            max_values.append(_max)
+        if _want_mean:
+            if (_mean := statistic.get("mean")) is not None:
+                _mean_weight = statistic.get("mean_weight") or 0.0
+                mean_values.append((_mean, _mean_weight))
+        if _want_min and (_min := statistic.get("min")) is not None:
+            min_values.append(_min)
+        prev_stat = statistic
 
     return result
 
@@ -1319,16 +1329,6 @@ def reduce_day_ts_factory() -> tuple[
     return _same_day_ts, _day_start_end_ts_cached
 
 
-def _reduce_statistics_per_day(
-    stats: dict[str, list[StatisticsRow]],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    metadata: dict[str, tuple[int, StatisticMetaData]],
-) -> dict[str, list[StatisticsRow]]:
-    """Reduce hourly statistics to daily statistics."""
-    _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
-    return _reduce_statistics(stats, _same_day_ts, _day_start_end_ts, types, metadata)
-
-
 def reduce_week_ts_factory() -> tuple[
     Callable[[float, float], bool],
     Callable[[float], tuple[float, float]],
@@ -1365,16 +1365,6 @@ def reduce_week_ts_factory() -> tuple[
     _week_start_end_ts_cached = lru_cache(maxsize=6)(_week_start_end_ts)
 
     return _same_week_ts, _week_start_end_ts_cached
-
-
-def _reduce_statistics_per_week(
-    stats: dict[str, list[StatisticsRow]],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    metadata: dict[str, tuple[int, StatisticMetaData]],
-) -> dict[str, list[StatisticsRow]]:
-    """Reduce hourly statistics to weekly statistics."""
-    _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
-    return _reduce_statistics(stats, _same_week_ts, _week_start_end_ts, types, metadata)
 
 
 def _find_month_end_time(timestamp: datetime) -> datetime:
@@ -1420,18 +1410,6 @@ def reduce_month_ts_factory() -> tuple[
     return _same_month_ts, _month_start_end_ts_cached
 
 
-def _reduce_statistics_per_month(
-    stats: dict[str, list[StatisticsRow]],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    metadata: dict[str, tuple[int, StatisticMetaData]],
-) -> dict[str, list[StatisticsRow]]:
-    """Reduce hourly statistics to monthly statistics."""
-    _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
-    return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, types, metadata
-    )
-
-
 def reduce_year_ts_factory() -> tuple[
     Callable[[float, float], bool],
     Callable[[float], tuple[float, float]],
@@ -1469,14 +1447,18 @@ def reduce_year_ts_factory() -> tuple[
     return _same_year_ts, _year_start_end_ts_cached
 
 
-def _reduce_statistics_per_year(
-    stats: dict[str, list[StatisticsRow]],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    metadata: dict[str, tuple[int, StatisticMetaData]],
-) -> dict[str, list[StatisticsRow]]:
-    """Reduce hourly statistics to yearly statistics."""
-    _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
-    return _reduce_statistics(stats, _same_year_ts, _year_start_end_ts, types, metadata)
+_REDUCE_TS_FACTORIES: dict[
+    str,
+    Callable[
+        [],
+        tuple[Callable[[float, float], bool], Callable[[float], tuple[float, float]]],
+    ],
+] = {
+    "day": reduce_day_ts_factory,
+    "week": reduce_week_ts_factory,
+    "month": reduce_month_ts_factory,
+    "year": reduce_year_ts_factory,
+}
 
 
 def _generate_statistics_during_period_stmt(
@@ -2202,35 +2184,45 @@ def _statistics_during_period_with_session(
     stmt = _generate_statistics_during_period_stmt(
         start_time, end_time, metadata_ids, table, types
     )
-    stats = cast(
-        Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
-    )
-
-    if not stats:
-        return {}
-
-    result = _sorted_statistics_to_dict(
+    reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None
+    if factory := _REDUCE_TS_FACTORIES.get(period):
+        # Reduce each statistic as soon as its rows are built so the hourly
+        # rows of all statistics never have to be kept in memory at once
+        same_period, period_start_end = factory()
+        reducer = partial(
+            _reduce_statistic,
+            same_period=same_period,
+            period_start_end=period_start_end,
+            types=types,
+            metadata=metadata,
+        )
+    to_dict = partial(
+        _sorted_statistics_to_dict,
         hass,
-        stats,
-        statistic_ids,
-        metadata,
-        True,
-        table,
-        units,
-        types,
+        statistic_ids=statistic_ids,
+        _metadata=metadata,
+        convert_units=True,
+        table=table,
+        units=units,
+        types=types,
+        reducer=reducer,
     )
-
-    if period == "day":
-        result = _reduce_statistics_per_day(result, types, metadata)
-
-    if period == "week":
-        result = _reduce_statistics_per_week(result, types, metadata)
-
-    if period == "month":
-        result = _reduce_statistics_per_month(result, types, metadata)
-
-    if period == "year":
-        result = _reduce_statistics_per_year(result, types, metadata)
+    stats = cast(
+        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    )
+    try:
+        result = to_dict(stats, fields=stats.keys())
+    except SQLAlchemyError as err:
+        # Streamed rows are read outside the retry loop of
+        # execute_stmt_lambda_element, fall back to reading all rows at once
+        _LOGGER.error("Error reading statistics, retrying: %s", err)
+        _rollback_read_only_session(session)
+        rows = cast(
+            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+        )
+        result = to_dict(rows, fields=stats.keys())
+    if not result:
+        return {}
 
     if "change" in _types:
         _augment_result_with_change(
@@ -2585,7 +2577,7 @@ def _statistics_at_time(
 
 
 def _build_sum_converted_stats(
-    db_rows: list[Row],
+    db_rows: Iterable[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
@@ -2603,7 +2595,7 @@ def _build_sum_converted_stats(
 
 
 def _build_sum_stats(
-    db_rows: list[Row],
+    db_rows: Iterable[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     sum_idx: int,
@@ -2620,7 +2612,7 @@ def _build_sum_stats(
 
 
 def _build_stats(
-    db_rows: list[Row],
+    db_rows: Iterable[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     row_mapping: tuple[tuple[str, int], ...],
@@ -2640,7 +2632,7 @@ _NOT_CONVERTED_COLUMNS = {"last_reset", "mean_weight"}
 
 
 def _build_converted_stats(
-    db_rows: list[Row],
+    db_rows: Iterable[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
     row_mapping: tuple[tuple[str, int], ...],
@@ -2670,37 +2662,28 @@ def _build_converted_stats(
 
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
-    stats: Sequence[Row[Any]],
+    stats: Iterable[Row[Any]],
     statistic_ids: set[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[StatisticsBase],
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    fields: Iterable[str] | None = None,
+    reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
-    """Convert SQL results into JSON friendly data structure."""
-    assert stats, "stats must not be empty"  # Guard against implementation error
+    """Convert SQL results into JSON friendly data structure.
+
+    stats may be a streamed result, in which case fields must be passed.
+    """
+    if fields is None:
+        assert isinstance(stats, Sequence) and stats, "stats must not be empty"
+        fields = stats[0]._fields
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
     metadata = dict(_metadata.values())
-    # Identify metadata IDs for which no data was available at the requested start time
-    field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
+    field_map: dict[str, int] = {key: idx for idx, key in enumerate(fields)}
     metadata_id_idx = field_map["metadata_id"]
     start_ts_idx = field_map["start_ts"]
-    stats_by_meta_id: dict[int, list[Row]] = {}
-    seen_statistic_ids: set[str] = set()
-    key_func = itemgetter(metadata_id_idx)
-    for meta_id, group in groupby(stats, key_func):
-        stats_by_meta_id[meta_id] = list(group)
-        seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
-
-    # Set all statistic IDs to empty lists in result set to maintain the order
-    if statistic_ids is not None:
-        for stat_id in statistic_ids:
-            # Only set the statistic ID if it is in the data to
-            # avoid having to do a second loop to remove the
-            # statistic IDs that are not in the data at the end
-            if stat_id in seen_statistic_ids:
-                result[stat_id] = []
 
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
@@ -2717,7 +2700,7 @@ def _sorted_statistics_to_dict(
     )
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
-    for meta_id, db_rows in stats_by_meta_id.items():
+    for meta_id, db_rows in groupby(stats, itemgetter(metadata_id_idx)):
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
@@ -2750,8 +2733,15 @@ def _sorted_statistics_to_dict(
         else:
             _stats = _build_stats(*build_args, row_mapping)
 
-        result[statistic_id] = _stats
+        result[statistic_id] = reducer(statistic_id, _stats) if reducer else _stats
 
+    if statistic_ids is not None and len(result) > 1:
+        # Keep the order of the requested statistic_ids
+        ordered: dict[str, list[StatisticsRow]] = defaultdict(list)
+        for stat_id in statistic_ids:
+            if stat_id in result:
+                ordered[stat_id] = result[stat_id]
+        return ordered
     return result
 
 
@@ -2782,22 +2772,6 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
                 platform_update_statistics_issues(
                     hass, session, custom_equivalent_units_per_entity
                 )
-
-
-def _statistics_exists(
-    session: Session,
-    table: type[StatisticsBase],
-    metadata_id: int,
-    start: datetime,
-) -> int | None:
-    """Return id if a statistics entry already exists."""
-    start_ts = start.timestamp()
-    result = (
-        session.query(table.id)
-        .filter((table.metadata_id == metadata_id) & (table.start_ts == start_ts))
-        .first()
-    )
-    return result.id if result else None
 
 
 @callback
@@ -2950,11 +2924,26 @@ def _import_statistics_with_session(
         session, metadata, old_metadata_dict
     )
     now_timestamp = time_time()
-    for stat in statistics:
-        if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
-            _update_statistics(session, table, stat_id, stat)
-        else:
-            _insert_statistics(session, table, metadata_id, stat, now_timestamp)
+    statistics = list(statistics)
+    start_timestamps = [stat["start"].timestamp() for stat in statistics]
+    existing_ids = _statistic_ids_by_start(
+        session, table, metadata_id, start_timestamps, instance.max_bind_vars
+    )
+    updates: dict[int, dict[str, Any]] = {}
+    inserted: dict[float, StatisticsBase] = {}
+    for start_ts, stat in zip(start_timestamps, statistics, strict=True):
+        if (stat_id := existing_ids.get(start_ts)) is not None:
+            updates[stat_id] = {"id": stat_id, **_statistic_update_values(stat)}
+        elif (row := inserted.get(start_ts)) is not None:
+            # The same start twice in one batch, the later one updates the new row
+            for key, value in _statistic_update_values(stat).items():
+                setattr(row, key, value)
+        elif new_row := _insert_statistics(
+            session, table, metadata_id, stat, now_timestamp
+        ):
+            inserted[start_ts] = new_row
+    if updates:
+        session.execute(update(table), list(updates.values()))
 
     if table != StatisticsShortTerm:
         return True
@@ -3098,20 +3087,23 @@ def _change_statistics_unit_for_table(
     metadata_id: int,
     convert: Callable[[float | None], float | None],
 ) -> None:
-    """Insert statistics in the database."""
+    """Convert the statistics of a statistic to a new unit."""
     columns = (table.id, table.mean, table.min, table.max, table.state, table.sum)
     query = session.query(*columns).filter_by(metadata_id=bindparam("metadata_id"))
-    rows = execute(query.params(metadata_id=metadata_id))
-    for row in rows:
-        session.query(table).filter(table.id == row.id).update(
-            {
-                table.mean: convert(row.mean),
-                table.min: convert(row.min),
-                table.max: convert(row.max),
-                table.state: convert(row.state),
-                table.sum: convert(row.sum),
-            },
-            synchronize_session=False,
+    if rows := execute(query.params(metadata_id=metadata_id)):
+        session.execute(
+            update(table),
+            [
+                {
+                    "id": row.id,
+                    "mean": convert(row.mean),
+                    "min": convert(row.min),
+                    "max": convert(row.max),
+                    "state": convert(row.state),
+                    "sum": convert(row.sum),
+                }
+                for row in rows
+            ],
         )
 
 

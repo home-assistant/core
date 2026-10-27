@@ -712,6 +712,15 @@ def gen_homeassistant_schema(
                 },
                 slug_validator=translation_key_validator,
             ),
+            # The protocols Home Assistant uses to reach the devices or
+            # service of an integration.
+            probatio.Optional("integration_connectivity"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Required("description"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
         }
     )
     return _with_integration(schema, config, integration)

@@ -1,0 +1,33 @@
+{
+  "timestamp": 1704067200,
+  "datetime": "2024-01-01T00:00:00",
+  "gw": {
+    "ok": true,
+    "medium": "gas",
+    "ticks": 1234,
+    "revolutions": 308.5,
+    "activeCoils": 3,
+    "coils": 3,
+    "referenceCoil": 0,
+    "cycles": 308,
+    "catchUp": 0,
+    "dropped": 0,
+    "refLost": 0,
+    "hysteresis": 12.0,
+    "energyFactor": 10.5,
+    "field": 120,
+    "extreme": 180.5,
+    "rising": false,
+    "meterSince": 1700000000
+  },
+  "7-0:3.0.0": {
+    "value": 1234.567,
+    "unit": "m³",
+    "name": "Meter Reading"
+  },
+  "7-0:43.0.0": {
+    "value": 0.42,
+    "unit": "m³/h",
+    "name": "Flow Rate"
+  }
+}
