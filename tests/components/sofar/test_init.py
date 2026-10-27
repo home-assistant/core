@@ -42,6 +42,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
+    FAULT_LOG_REGISTER,
     MOCK_ENTRY_DATA,
     MOCK_HW_VERSION,
     MOCK_HYBRID_MODEL,
@@ -60,7 +61,6 @@ from . import (
 )
 
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
-FAULT_LOG_REGISTER = 0x1480
 
 
 def _heal_after_one_failure(unit: MockModbusUnit, address: int) -> None:

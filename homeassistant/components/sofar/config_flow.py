@@ -203,7 +203,6 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data={
                         **data,
-                        # Read late: the loaded entry may handle faults meanwhile.
                         **{
                             key: entry.data[key]
                             for key in (HAS_FAULT_LOG, LAST_HANDLED_FAULT)
