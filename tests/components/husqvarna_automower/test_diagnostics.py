@@ -69,7 +69,7 @@ async def test_device_diagnostics(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_child_device_diagnostics(
     hass: HomeAssistant,
