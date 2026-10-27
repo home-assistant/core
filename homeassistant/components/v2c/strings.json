@@ -57,6 +57,16 @@
           "monophasic": "Monophasic",
           "threephasic": "Three-phase"
         }
+      },
+      "dynamic_power_mode": {
+        "name": "Dynamic power mode",
+        "state": {
+          "profile": "Profile",
+          "pv_exclusive": "PV exclusive",
+          "pv_grid": "PV + grid",
+          "pv_minimum": "PV + minimum power",
+          "stop": "Stop"
+        }
       }
     },
     "sensor": {
