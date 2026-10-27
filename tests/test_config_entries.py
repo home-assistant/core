@@ -9889,6 +9889,53 @@ async def test_non_awaited_async_forward_entry_setups(
         await task
 
 
+async def test_concurrent_async_forward_entry_setups_after_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test concurrent async_forward_entry_setups calls after setup."""
+    forward_event = asyncio.Event()
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await forward_event.wait()
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(
+        hass, "test.switch", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    await manager.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    # The second forward finds the setup lock held by the first one
+    light_task = create_eager_task(
+        hass.config_entries.async_forward_entry_setups(entry, ["light"])
+    )
+    switch_task = create_eager_task(
+        hass.config_entries.async_forward_entry_setups(entry, ["switch"])
+    )
+    await hass.async_block_till_done()
+    forward_event.set()
+
+    await light_task
+    await switch_task
+    assert hass.config.components >= {"test.light", "test.switch"}
+
+
 async def test_config_entry_unloaded_during_platform_setup(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,

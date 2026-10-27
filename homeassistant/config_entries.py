@@ -2990,7 +2990,8 @@ class ConfigEntries:
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
 
-        if not entry.setup_lock.locked():
+        # A loaded entry's lock is held by another forward, so wait for it
+        if not entry.setup_lock.locked() or entry.state is ConfigEntryState.LOADED:
             async with entry.setup_lock:
                 if entry.state is not ConfigEntryState.LOADED:
                     raise OperationNotAllowed(
