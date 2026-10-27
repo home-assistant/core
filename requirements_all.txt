@@ -144,6 +144,9 @@ adguardhome==1.0.0
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
 
+# homeassistant.components.aerosmart
+aerosmart-modbus==0.3.1
+
 # homeassistant.components.frontier_silicon
 afsapi==1.0.2
 
@@ -3014,6 +3017,9 @@ radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
+
+# homeassistant.components.rainbowminer
+rainbowminer-api-client==0.2.3
 
 # homeassistant.components.rapt_ble
 rapt-ble==2.0.0

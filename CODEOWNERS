@@ -65,6 +65,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
 /tests/components/aemet/ @Noltari
+/homeassistant/components/aerosmart/ @kayloehmann
+/tests/components/aerosmart/ @kayloehmann
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/ai_task/ @home-assistant/core
@@ -1590,6 +1592,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
 /tests/components/rainbird/ @konikvranik @allenporter
+/homeassistant/components/rainbowminer/ @El1t3Mult1pl3x0r
+/tests/components/rainbowminer/ @El1t3Mult1pl3x0r
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainforest_raven/ @cottsay
@@ -1760,6 +1764,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/signal_messenger/ @bbernhard
 /homeassistant/components/silla_prism/ @ebaschiera
 /tests/components/silla_prism/ @ebaschiera
+/homeassistant/components/silvercrest_infrared/ @tr4nt0r
+/tests/components/silvercrest_infrared/ @tr4nt0r
 /homeassistant/components/simplefin/ @scottg489 @jeeftor
 /tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87
