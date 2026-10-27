@@ -18,6 +18,11 @@ STALE_AFTER_SECONDS: Final = 120
 #: silent only becomes unavailable when something re-examines it.
 MAINTENANCE_INTERVAL: Final = timedelta(seconds=30)
 
+#: How long a reconnect may take before it counts as failed. A drop is noticed
+#: within one maintenance interval, so this keeps a stalled reconnect from
+#: holding the last readings on screen past STALE_AFTER_SECONDS.
+CONNECT_TIMEOUT_SECONDS: Final = 60
+
 #: How often the account profile is re-read, to notice coolers added to or
 #: removed from the account. The profile is otherwise only read on connect, and
 #: it is a whole-account document, so this is far longer than the update

@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONNECT_TIMEOUT_SECONDS,
     DOMAIN,
     MAINTENANCE_INTERVAL,
     PROFILE_REFRESH_INTERVAL,
@@ -172,7 +173,15 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 return
             _LOGGER.debug("Socket is down, reconnecting")
             await self._async_shutdown_client()
-            await self._async_connect()
+            # Nothing is published while this runs, so an unbounded stall
+            # would leave the last readings showing; failing in time lets the
+            # error mark them unavailable instead. Cancellation closes the
+            # half-open client in _async_connect.
+            try:
+                async with asyncio.timeout(CONNECT_TIMEOUT_SECONDS):
+                    await self._async_connect()
+            except TimeoutError as err:
+                raise CoolbotError("Timed out reconnecting") from err
 
     @callback
     def _schedule_maintenance(self, _now: datetime) -> None:

@@ -13,6 +13,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.coolbot.const import (
+    CONNECT_TIMEOUT_SECONDS,
     DOMAIN,
     MAINTENANCE_INTERVAL,
     PROFILE_REFRESH_INTERVAL,
@@ -399,6 +400,43 @@ async def test_dropped_socket_reconnects_on_next_maintenance(
 
     assert mock_client.async_connect.await_count == 2
     assert mock_config_entry.runtime_data.last_update_success
+
+
+async def test_a_stalled_reconnect_fails_in_time(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A reconnect that hangs gives up before the readings would go stale.
+
+    Nothing is published while it hangs, so without a limit the last
+    temperature would stay on screen for as long as the connect took.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+    mock_client.connected = False
+    clients = _BlockedClients()
+
+    with patch("homeassistant.components.coolbot.coordinator.CoolbotClient", clients):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+        )
+        await clients.connecting.wait()
+        assert mock_config_entry.runtime_data.last_update_success
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + MAINTENANCE_INTERVAL
+            + timedelta(seconds=CONNECT_TIMEOUT_SECONDS + 1),
+        )
+        # Not async_block_till_done: a pass the tick starts would block too.
+        for _ in range(20):
+            await asyncio.sleep(0)
+
+        assert not mock_config_entry.runtime_data.last_update_success
+        assert hass.states.get(ROOM_TEMPERATURE).state == "unavailable"
+        clients.created[0].async_close.assert_awaited()
+
+        clients.release.set()
+        await hass.async_block_till_done()
 
 
 async def test_failed_maintenance_marks_data_stale_then_recovers(
