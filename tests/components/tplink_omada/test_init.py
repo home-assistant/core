@@ -198,6 +198,7 @@ async def test_remove_config_entry_device(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test users can remove a site device but not the controller."""
     mock_config_entry.add_to_hass(hass)
@@ -215,6 +216,24 @@ async def test_remove_config_entry_device(
     assert controller_device is not None
 
     assert await async_remove_config_entry_device(hass, entry, switch_device)
+    assert not await async_remove_config_entry_device(hass, entry, controller_device)
+
+    # A manual removal survives an empty controller response: the cached device
+    # list was pruned, so registration does not recreate the device.
+    device_registry.async_remove_device(switch_device.id)
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(return_value=[])
+    await _async_poll_devices(hass, freezer)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "54-AF-97-00-00-01"), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    # The removal API can be called after unload, when runtime data is gone.
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     assert not await async_remove_config_entry_device(hass, entry, controller_device)
 
 

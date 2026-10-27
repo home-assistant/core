@@ -158,6 +158,19 @@ class OmadaSiteController:
         if coordinator is not None:
             await coordinator.async_shutdown()
 
+    @callback
+    def forget_cached_device(self, mac: str) -> None:
+        """Drop a manually removed device from the cached device list."""
+        devices = self._devices_coordinator.data
+        if devices and mac in devices:
+            self._devices_coordinator.async_set_updated_data(
+                {
+                    device_mac: device
+                    for device_mac, device in devices.items()
+                    if device_mac != mac
+                }
+            )
+
     async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
         """Remove a device entry and drop its cached coordinator state."""
         await self.async_forget_device(mac)

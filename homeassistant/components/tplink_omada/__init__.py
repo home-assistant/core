@@ -14,8 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -97,6 +96,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a device from the registry and drop its cached state."""
+    controller = getattr(config_entry, "runtime_data", None)
+    if controller is None:
+        return False
     mac = next(
         (
             identifier[1]
@@ -105,11 +107,11 @@ async def async_remove_config_entry_device(
         ),
         None,
     )
-    controller = config_entry.runtime_data
     controller_status = controller.controller_status_coordinator.data
     if mac is None or (controller_status is not None and mac == controller_status.mac):
         return False
     await controller.async_forget_device(mac)
+    controller.forget_cached_device(mac)
     return True
 
 
