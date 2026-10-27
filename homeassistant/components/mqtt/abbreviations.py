@@ -18,7 +18,6 @@ ABBREVIATIONS = {
     "bri_stat_t": "brightness_state_topic",
     "bri_tpl": "brightness_template",
     "bri_val_tpl": "brightness_value_template",
-    "cdevs": "child_devices",
     "cln_segmnts_cmd_t": "clean_segments_command_topic",
     "cln_segmnts_cmd_tpl": "clean_segments_command_template",
     "clr_temp_cmd_tpl": "color_temp_command_template",
@@ -221,6 +220,7 @@ ABBREVIATIONS = {
     "strt_mw_cmd_t": "start_mowing_command_topic",
     "strt_mw_cmd_tpl": "start_mowing_command_template",
     "stype": "subtype",
+    "sub_devs": "sub_devices",
     "sug_dsp_prc": "suggested_display_precision",
     "sup_dur": "support_duration",
     "sup_vol": "support_volume_set",
@@ -291,7 +291,7 @@ DEVICE_ABBREVIATIONS = {
     "sw": "sw_version",
     "sa": "suggested_area",
     "sn": "serial_number",
-    "cdev": "child_device",
+    "sub_dev": "sub_device",
 }
 
 ORIGIN_ABBREVIATIONS = {

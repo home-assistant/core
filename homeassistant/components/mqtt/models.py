@@ -198,15 +198,15 @@ class DiscoveredDisabledEntity:
     discovery_data: DiscoveryInfoType
 
 
-class MqttChildDeviceConfig(TypedDict, total=False):
-    """Child device config of an MQTT entity."""
+class MqttSubDeviceConfig(TypedDict, total=False):
+    """Sub device config of an MQTT entity."""
 
     identifiers: Required[str | list[str]]
     name: str
 
 
-class MqttDiscoveryChildDevice(MqttChildDeviceConfig):
-    """Child device with its components in a device discovery payload."""
+class MqttDiscoverySubDevice(MqttSubDeviceConfig):
+    """Sub device with its components in a device discovery payload."""
 
     components: Required[dict[str, dict[str, Any]]]
 

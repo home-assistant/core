@@ -37,11 +37,11 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
-    CONF_CHILD_DEVICE,
-    CONF_CHILD_DEVICES,
     CONF_COMPONENTS,
     CONF_DISCOVERY_QOS,
     CONF_ORIGIN,
+    CONF_SUB_DEVICE,
+    CONF_SUB_DEVICES,
     CONF_TOPIC,
     DOMAIN,
     SUPPORTED_COMPONENTS,
@@ -49,10 +49,10 @@ from .const import (
 from .models import (
     DATA_MQTT,
     DiscoveredDisabledEntity,
-    MqttChildDeviceConfig,
     MqttComponentConfig,
-    MqttDiscoveryChildDevice,
+    MqttDiscoverySubDevice,
     MqttOriginInfo,
+    MqttSubDeviceConfig,
     ReceiveMessage,
 )
 from .schemas import (
@@ -110,7 +110,7 @@ class _DeviceDiscoveryComponent:
 
     component_id: str
     config: dict[str, Any]
-    child_device: MqttChildDeviceConfig | None = None
+    sub_device: MqttSubDeviceConfig | None = None
 
 
 @dataclass(frozen=True)
@@ -231,23 +231,21 @@ def _replace_all_abbreviations(
     if CONF_DEVICE in discovery_payload:
         device = discovery_payload[CONF_DEVICE]
         _replace_abbreviations(device, DEVICE_ABBREVIATIONS, DEVICE_ABBREVIATIONS_SET)
-        if isinstance(device, dict) and CONF_CHILD_DEVICE in device:
+        if isinstance(device, dict) and CONF_SUB_DEVICE in device:
             _replace_abbreviations(
-                device[CONF_CHILD_DEVICE],
+                device[CONF_SUB_DEVICE],
                 DEVICE_ABBREVIATIONS,
                 DEVICE_ABBREVIATIONS_SET,
             )
 
-    for child_device in probatio.EnsureList()(
-        discovery_payload.get(CONF_CHILD_DEVICES)
-    ):
-        if not isinstance(child_device, dict):
+    for sub_device in probatio.EnsureList()(discovery_payload.get(CONF_SUB_DEVICES)):
+        if not isinstance(sub_device, dict):
             continue
         _replace_abbreviations(
-            child_device, DEVICE_ABBREVIATIONS, DEVICE_ABBREVIATIONS_SET
+            sub_device, DEVICE_ABBREVIATIONS, DEVICE_ABBREVIATIONS_SET
         )
-        _replace_abbreviations(child_device, ABBREVIATIONS, ABBREVIATIONS_SET)
-        _replace_component_abbreviations(child_device)
+        _replace_abbreviations(sub_device, ABBREVIATIONS, ABBREVIATIONS_SET)
+        _replace_component_abbreviations(sub_device)
 
     _replace_component_abbreviations(discovery_payload)
 
@@ -638,16 +636,16 @@ async def async_start(  # noqa: C901
                     CONF_COMPONENTS, {}
                 ).items()
             ]
-            child_device: MqttDiscoveryChildDevice
-            for child_device in device_discovery_payload.get(CONF_CHILD_DEVICES, []):
-                child_device_config = MqttChildDeviceConfig(
-                    identifiers=child_device["identifiers"]
+            sub_device: MqttDiscoverySubDevice
+            for sub_device in device_discovery_payload.get(CONF_SUB_DEVICES, []):
+                sub_device_config = MqttSubDeviceConfig(
+                    identifiers=sub_device["identifiers"]
                 )
-                if "name" in child_device:
-                    child_device_config["name"] = child_device["name"]
+                if "name" in sub_device:
+                    sub_device_config["name"] = sub_device["name"]
                 device_components.extend(
-                    _DeviceDiscoveryComponent(component_id, config, child_device_config)
-                    for component_id, config in child_device["components"].items()
+                    _DeviceDiscoveryComponent(component_id, config, sub_device_config)
+                    for component_id, config in sub_device["components"].items()
                 )
             for device_component in device_components:
                 component_id = device_component.component_id
@@ -669,12 +667,12 @@ async def async_start(  # noqa: C901
                 if discovery_payload := MQTTDiscoveryPayload(config):
                     discovery_payload[CONF_DEVICE] = (
                         device_config
-                        if device_component.child_device is None
+                        if device_component.sub_device is None
                         # All components share the device config, so a component of
-                        # a child device gets a new dict with its child device
+                        # a sub device gets a new dict with its sub device
                         else {
                             **device_config,
-                            CONF_CHILD_DEVICE: device_component.child_device,
+                            CONF_SUB_DEVICE: device_component.sub_device,
                         }
                     )
                     discovery_payload[CONF_ORIGIN] = origin_config

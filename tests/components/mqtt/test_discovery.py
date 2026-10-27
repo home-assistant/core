@@ -4079,13 +4079,13 @@ async def test_discovery_with_late_via_device_discovery(
 
     await hass.async_block_till_done()
 
-    # The child device links to the stub via device by via_device_id
+    # The sub device links to the stub via device by via_device_id
     stub_id = via_device_entry.id
-    child_device_entry = device_registry.async_get_device_by_identifier(
+    sub_device_entry = device_registry.async_get_device_by_identifier(
         ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
     )
-    assert child_device_entry is not None
-    assert child_device_entry.via_device_id == stub_id
+    assert sub_device_entry is not None
+    assert sub_device_entry.via_device_id == stub_id
 
     # Now discover the via device (a switch)
     via_device_config = {
@@ -4110,13 +4110,13 @@ async def test_discovery_with_late_via_device_discovery(
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
     # The stub merges into the announced device, keeping its id, so the link
-    # from the child device survives
+    # from the sub device survives
     assert via_device_entry.id == stub_id
-    child_device_entry = device_registry.async_get_device_by_identifier(
+    sub_device_entry = device_registry.async_get_device_by_identifier(
         ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
     )
-    assert child_device_entry is not None
-    assert child_device_entry.via_device_id == stub_id
+    assert sub_device_entry is not None
+    assert sub_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
@@ -4175,13 +4175,13 @@ async def test_discovery_with_late_via_device_update(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    # The discovery update established the via_device_id link on the child device
+    # The discovery update established the via_device_id link on the sub device
     stub_id = via_device_entry.id
-    child_device_entry = device_registry.async_get_device_by_identifier(
+    sub_device_entry = device_registry.async_get_device_by_identifier(
         ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
     )
-    assert child_device_entry is not None
-    assert child_device_entry.via_device_id == stub_id
+    assert sub_device_entry is not None
+    assert sub_device_entry.via_device_id == stub_id
 
     # Now discover the via device (a switch)
     via_device_config = {
@@ -4206,11 +4206,11 @@ async def test_discovery_with_late_via_device_update(
     assert via_device_entry is not None
     assert via_device_entry.name == "My Switch"
     assert via_device_entry.id == stub_id
-    child_device_entry = device_registry.async_get_device_by_identifier(
+    sub_device_entry = device_registry.async_get_device_by_identifier(
         ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
     )
-    assert child_device_entry is not None
-    assert child_device_entry.via_device_id == stub_id
+    assert sub_device_entry is not None
+    assert sub_device_entry.via_device_id == stub_id
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
@@ -4345,7 +4345,7 @@ async def test_shared_options_in_sync_with_device_schema() -> None:
         "device",
         "origin",
         "components",
-        "child_devices",
+        "sub_devices",
     }:
         assert option in SHARED_OPTIONS
 
