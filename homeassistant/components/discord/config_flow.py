@@ -61,14 +61,6 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if info and (entry := await self.async_set_unique_id(str(info.id))):
-                if entry.update_listeners:
-                    # A loaded entry reloads through its update listener, so don't
-                    # schedule a second reload here.
-                    return self.async_update_and_abort(
-                        entry, data=entry.data | user_input
-                    )
-                # An unloaded entry (e.g. reauth after a setup failure) has no
-                # listener, so reload it explicitly.
                 return self.async_update_reload_and_abort(
                     entry, data=entry.data | user_input
                 )

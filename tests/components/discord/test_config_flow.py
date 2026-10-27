@@ -25,7 +25,6 @@ from . import (
     mock_exception,
     mocked_discord_info,
     patch_discord_login,
-    setup_integration,
 )
 from .conftest import TARGET
 
@@ -208,34 +207,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data == CONF_DATA | new_conf
-
-
-async def test_flow_reauth_loaded_entry(hass: HomeAssistant) -> None:
-    """Test reauth of a loaded entry reloads once via its update listener."""
-    entry = create_entry(hass)
-    await setup_integration(hass, entry)
-    assert entry.update_listeners
-
-    result = await entry.start_reauth_flow(hass)
-    new_conf = {CONF_API_TOKEN: "1234567890123"}
-    with (
-        mocked_discord_info(),
-        patch_discord_login(),
-        patch.object(
-            hass.config_entries, "async_reload", new=AsyncMock()
-        ) as reload_mock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=new_conf,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data == CONF_DATA | new_conf
-    # A single reload, scheduled by the update listener, not a second one here.
-    assert reload_mock.call_count == 1
 
 
 async def test_subentry_flow_target(hass: HomeAssistant) -> None:
