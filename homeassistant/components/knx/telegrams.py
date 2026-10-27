@@ -306,7 +306,7 @@ class Telegrams:
         _LOGGER.debug("Evicted %d expired KNX telegrams from storage", deleted)
 
     async def stop(self) -> None:
-        """Stop history store."""
+        """Stop history store. Safe to call more than once."""
         if self._store_init_task is not None:
             self._store_init_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -327,8 +327,11 @@ class Telegrams:
             _LOGGER.warning(
                 "Database error stopping KNX telegram storage backend: %s", err
             )
+            return
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Error stopping KNX telegram storage backend: %s", err)
+            return
+        self.store = None
 
     def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
