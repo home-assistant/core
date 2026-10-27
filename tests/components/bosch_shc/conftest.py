@@ -520,6 +520,9 @@ def thermostat_gen2_device(
     valve_type: WallThermostatConfiguration.ValveType | None = None,
     heater_type: WallThermostatConfiguration.HeaterType | None = None,
     terminal_type: TerminalConfiguration.Type | None = None,
+    temperature: float = 21.0,
+    humidity: float | None = None,
+    terminal_temperature: float | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -557,6 +560,10 @@ def thermostat_gen2_device(
     if spec is SHCRoomThermostat2:
         device.supports_terminal_configuration = terminal_type is not None
         device.terminal_type = terminal_type
+        device.temperature = temperature
+        device.supports_humidity = humidity is not None
+        device.humidity = humidity
+        device.terminal_temperature = terminal_temperature
     return device
 
 
