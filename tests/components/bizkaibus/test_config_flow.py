@@ -101,7 +101,9 @@ async def test_import_flow_accepts_multicharacter_route_id_string(
         patch(
             "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
         ) as mock_api_class,
-        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=None),
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=None
+        ),
     ):
         _mock_api(
             mock_api_class,
