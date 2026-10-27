@@ -229,12 +229,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         )
 
     async def async_start_heartbeat(self) -> None:
-        """Keep an active power limit alive against the device's fallback.
+        """Keep active limits alive against the device's fallback.
 
-        The device holds a power limit only for as long as it keeps hearing
-        it, so with the setting on the limit is sent again well before the
-        period is up - starting right away, because the device may have been
-        counting down while Home Assistant was not running.
+        The device holds the AC power limit and the battery limits only for
+        as long as it keeps hearing them, so with the setting on they are sent
+        again well before the period is up - starting right away, because the
+        device may have been counting down while Home Assistant was not
+        running.
         """
         self.config_entry.async_on_unload(self._async_stop_heartbeat)
         # the first refresh may have scheduled a beat already
@@ -243,20 +244,22 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             await self._async_send_heartbeat()
 
     async def _async_send_heartbeat(self, _now: datetime | None = None) -> None:
-        """Send the limit again and line up the next beat."""
+        """Send the limits again and line up the next beat."""
         self._heartbeat_unsub = None
         await self._async_resend_power_limit()
+        await self._async_resend_battery_limits()
         self._async_update_heartbeat()
 
     @callback
     def _async_update_heartbeat(self) -> None:
         """Beat only while there is a limit to keep alive."""
-        controls = self.modbus_inverter.controls
         if (
             self._heartbeat_stopped
             or not self._revert_seconds
-            or controls is None
-            or not controls.enabled
+            or not (
+                _power_limit_active(self.modbus_inverter.controls)
+                or _battery_limits_active(self.modbus_inverter.storage)
+            )
         ):
             self._async_cancel_heartbeat()
             return
@@ -296,7 +299,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         try:
             async with self._device_lock:
                 await controls.async_update()
-                if not controls.enabled or (limit := controls.power_limit) is None:
+                if not _power_limit_active(controls) or (
+                    (limit := controls.power_limit) is None
+                ):
                     return
                 # the same registers `set_power_limit` writes - but that one
                 # would enable the limit, and this may only refresh a running one
@@ -306,6 +311,40 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         except (ModbusError, SunSpecError) as err:
             self.logger.warning(
                 "Could not send the AC power limit to inverter %s again: %s",
+                self.inverter_info.solar_net_id,
+                err,
+            )
+
+    async def _async_resend_battery_limits(self) -> None:
+        """Send active battery limits again to restart the fallback period.
+
+        Like the power limit, decided on a fresh read and only while a limit
+        is in force.
+        """
+        storage = self.modbus_inverter.storage
+        if storage is None:
+            return
+        try:
+            async with self._device_lock:
+                await storage.async_update()
+                if not _battery_limits_active(storage):
+                    return
+                await storage.write("revert_seconds", self._revert_seconds)
+                enable_fields = []
+                for field, enable_field in (
+                    ("charge_limit", "charge_limit_enabled"),
+                    ("discharge_limit", "discharge_limit_enabled"),
+                ):
+                    if getattr(storage, enable_field) is not True:
+                        continue
+                    if (limit := getattr(storage, field)) is not None:
+                        await storage.write(field, limit)
+                    enable_fields.append(enable_field)
+                # both switches share one register, which a write merges into
+                await storage.write(enable_fields[0], True)
+        except (ModbusError, SunSpecError) as err:
+            self.logger.warning(
+                "Could not send the battery limits to inverter %s again: %s",
                 self.inverter_info.solar_net_id,
                 err,
             )
@@ -328,9 +367,11 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         tried again while the device holds a period it should not.
         """
         controls = self.modbus_inverter.controls
-        if controls is None or controls.revert_seconds != AUTO_REVERT_SECONDS:
-            return
-        await self._async_resend_power_limit()
+        if controls is not None and controls.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._async_resend_power_limit()
+        storage = self.modbus_inverter.storage
+        if storage is not None and storage.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._async_resend_battery_limits()
 
     @override
     async def _refresh_components(self) -> None:
@@ -357,8 +398,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         move when the data type setting is changed on the device.
 
         A device holding a different fallback period than the configured one
-        is corrected first, so an output power limit the user sets reverts on
-        the schedule they chose.
+        is corrected first, so an output power or battery limit the user sets
+        reverts on the schedule they chose.
 
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
@@ -376,11 +417,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         try:
             async with self._device_lock:
                 await component.async_update()
-                if (
-                    isinstance(component, Controls)
-                    and component.revert_seconds != self._revert_seconds
-                ):
-                    await component.write("revert_seconds", self._revert_seconds)
                 if isinstance(component, Storage) and (
                     refused := _refused_battery_limits(component, field, value)
                 ):
@@ -392,6 +428,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                             "discharge_limit": f"{refused[1]:g}",
                         },
                     )
+                if (
+                    isinstance(component, Controls)
+                    or (
+                        isinstance(component, Storage) and field in BATTERY_LIMIT_FIELDS
+                    )
+                ) and component.revert_seconds != self._revert_seconds:
+                    await component.write("revert_seconds", self._revert_seconds)
                 await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
@@ -401,8 +444,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 translation_key="modbus_write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        # the write restarted the device's period, so the beat starts over
-        self._async_cancel_heartbeat()
         # not debounced: the entity should settle on what the device reports
         # back, and writes are rare and user initiated
         await self.async_refresh()
@@ -438,6 +479,18 @@ BATTERY_LIMIT_FIELDS: Final = frozenset(
         "discharge_limit_enabled",
     }
 )
+
+
+def _power_limit_active(controls: Controls | None) -> bool:
+    """Return whether an AC power limit is in force."""
+    return controls is not None and controls.enabled is True
+
+
+def _battery_limits_active(storage: Storage | None) -> bool:
+    """Return whether a battery charge or discharge limit is in force."""
+    return storage is not None and (
+        storage.charge_limit_enabled is True or storage.discharge_limit_enabled is True
+    )
 
 
 def _refused_battery_limits(
