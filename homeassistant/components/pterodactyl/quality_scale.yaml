@@ -46,7 +46,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration doesn't support any configuration parameters.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: done
     comment: Handled by coordinator.
@@ -56,7 +56,7 @@ rules:
     comment: Handled by coordinator.
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
@@ -69,13 +69,13 @@ rules:
     comment: |
       No discovery possible. Users can use the (local or public) hostname instead of an IP address,
       if static IP addresses cannot be configured.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
