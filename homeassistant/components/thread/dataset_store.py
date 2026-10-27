@@ -564,6 +564,10 @@ class DatasetStore:
         """Schedule saving the dataset store."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
+    async def async_save(self) -> None:
+        """Write the dataset store now, ahead of any scheduled save."""
+        await self._store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
         """Return data of datasets to store in a file."""
