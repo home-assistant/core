@@ -1,6 +1,6 @@
 """Test the V2C config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -8,7 +8,7 @@ from pytrydan.exceptions import TrydanError
 
 from homeassistant.components.v2c.const import CONF_PV_AVAILABLE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -54,6 +54,37 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {CONF_PV_AVAILABLE: pv_available}
+
+
+@pytest.mark.usefixtures("mock_v2c_client")
+async def test_options_reload_entities(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test updating the options reloads the mode selector."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.v2c.PLATFORMS", [Platform.SELECT]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert hass.states.get("select.evse_1_1_1_1_dynamic_power_mode") is None
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_PV_AVAILABLE: True}
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("select.evse_1_1_1_1_dynamic_power_mode") is not None
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_PV_AVAILABLE: False}
+        )
+        await hass.async_block_till_done()
+        assert hass.states.is_state(
+            "select.evse_1_1_1_1_dynamic_power_mode", STATE_UNAVAILABLE
+        )
 
 
 @pytest.mark.parametrize(
