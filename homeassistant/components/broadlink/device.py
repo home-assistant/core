@@ -15,19 +15,13 @@ from broadlink_async.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
+from . import helpers
 from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .helpers import async_find_device_by_mac
 from .updater import BroadlinkUpdateManager, get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
@@ -230,14 +224,6 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return await function(*args, **kwargs)
         except EndpointClosedError:
             raise
-        except (NetworkTimeoutError, OSError):
-            if await self._async_rediscover_by_mac():
-                if await self.async_auth():
-                    func_name = getattr(function, "__name__", None)
-                    if func_name and hasattr(self.api, func_name):
-                        return await getattr(self.api, func_name)(*args, **kwargs)
-                    return await function(*args, **kwargs)
-            raise
         except (AuthorizationError, ConnectionClosedError):
             if not await self.async_auth():
                 raise
@@ -247,7 +233,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         """Attempt to locate device by MAC address and update host."""
         target_mac = self.mac_address
         current_ip = self.config.data.get(CONF_HOST)
-        result = await async_find_device_by_mac(target_mac, fallback_ip=current_ip)
+        result = await helpers.async_find_device_by_mac(
+            target_mac, fallback_ip=current_ip
+        )
         if result is None:
             _LOGGER.debug(
                 "MAC rediscovery failed to locate %s (MAC: %s)",

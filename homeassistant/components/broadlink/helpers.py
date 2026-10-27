@@ -100,7 +100,9 @@ async def async_find_device_by_mac(
         async def probe(ip: str) -> None:
             async with semaphore:
                 try:
-                    dev = await asyncio.wait_for(blk.hello(ip), timeout=timeout_per_probe)
+                    dev = await asyncio.wait_for(
+                        blk.hello(ip), timeout=timeout_per_probe
+                    )
                     dev_mac = dev.mac.hex().lower()
                     _DISCOVERED_CACHE[dev_mac] = (ip, dev)
                 except (BroadlinkException, OSError, TimeoutError):
