@@ -315,6 +315,11 @@ async def test_turn_without_reply_removed(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test a turn that adds no assistant message is removed from the chat log."""
+    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
+    async_subscribe_chat_logs(
+        hass, lambda _conversation_id, event, data: events.append((event, data))
+    )
+
     with (
         chat_session.async_get_chat_session(hass, "koala", context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
@@ -329,6 +334,14 @@ async def test_turn_without_reply_removed(
 
     assert hass.data[DATA_CHAT_LOGS]["koala"] is chat_log
     assert [item.role for item in chat_log.content] == [
+        "system",
+        "user",
+        "assistant",
+    ]
+    # Subscribers learn that the message of the removed turn is gone.
+    event, data = events[-1]
+    assert event == ChatLogEventType.UPDATED
+    assert [item["role"] for item in data["chat_log"]["content"]] == [
         "system",
         "user",
         "assistant",

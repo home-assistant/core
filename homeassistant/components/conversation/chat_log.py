@@ -147,20 +147,29 @@ def async_get_chat_log(
         current_chat_log.reset(token)
         chat_log.delta_listener = None
 
-        if chat_log.content[-1] is last_message:
+        no_reply = chat_log.content[-1] is last_message
+        if no_reply:
             LOGGER.debug(
                 "Chat Log opened but no assistant message was added, removing the turn"
             )
             del chat_log.content[turn_start:]
-            if is_new_log:
-                all_chat_logs.pop(session.conversation_id)
-                _async_notify_subscribers(
-                    hass,
-                    session.conversation_id,
-                    ChatLogEventType.DELETED,
-                    {},
-                )
-        elif is_new_log:
+
+        if not is_new_log:
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.UPDATED,
+                {"chat_log": chat_log.as_dict()},
+            )
+        elif no_reply:
+            all_chat_logs.pop(session.conversation_id)
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.DELETED,
+                {},
+            )
+        else:
 
             @callback
             def do_cleanup() -> None:
@@ -174,13 +183,6 @@ def async_get_chat_log(
                 )
 
             session.async_on_cleanup(do_cleanup)
-        else:
-            _async_notify_subscribers(
-                hass,
-                session.conversation_id,
-                ChatLogEventType.UPDATED,
-                {"chat_log": chat_log.as_dict()},
-            )
 
 
 class ConverseError(HomeAssistantError):
