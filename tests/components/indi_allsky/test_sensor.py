@@ -567,6 +567,71 @@ async def test_hardware_sensor_fahrenheit_units(
     assert float(state.state) == pytest.approx(77.0, abs=0.05)
     assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
 
+    # Return to Fahrenheit before verifying metadata-only updates do not relabel values
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(fahrenheit_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert state.state == "68.0"
+
+    # Verify metadata-only update with temp_unit °C does not relabel cached reading
+    metadata_only_update = SensorData.from_dict(
+        {
+            "temp_unit": "°C",
+            "sensors": {
+                "ambient_temperature": {"name": "Ambient Temp Renamed"},
+            },
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(metadata_only_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert state.state == "68.0"
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+
+    # Return to Fahrenheit before verifying staggered updates
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(fahrenheit_update)
+    await hass.async_block_till_done()
+
+    # Step 1: Global temp_unit switches to °C in an update that omits ambient_temperature
+    staggered_step1 = SensorData.from_dict(
+        {
+            "temp_unit": "°C",
+            "sensors": {
+                "dew_point": 20.0,
+            },
+            "sensor_user": [0, 0, 20.0],
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(staggered_step1)
+    await hass.async_block_till_done()
+
+    # Step 2: Subsequent update declares temp_unit °C (no change in global unit)
+    # and supplies fresh ambient_temperature without unit; must reconcile to °C
+    staggered_step2 = SensorData.from_dict(
+        {
+            "temp_unit": "°C",
+            "sensors": {
+                "ambient_temperature": 20.0,
+            },
+        }
+    )
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(staggered_step2)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.indi_allsky_ambient_temperature")
+    assert state is not None
+    assert float(state.state) == pytest.approx(68.0, abs=0.05)
+    assert state.attributes.get("unit_of_measurement") == UnitOfTemperature.FAHRENHEIT
+
 
 async def test_dynamic_hardware_sensor_discovery(
     hass: HomeAssistant,
