@@ -455,7 +455,7 @@
         "state": {
           "not_possible": "Not possible",
           "not_started": "Not started",
-          "start": "[%key:common::action::start%]",
+          "start": "Starting",
           "started": "Started"
         }
       },
