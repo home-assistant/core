@@ -208,7 +208,7 @@
         "name": "Chlorine setpoint"
       },
       "heating_temp": {
-        "name": "Temperature setpoint"
+        "name": "Heating mode temperature"
       },
       "hidro": {
         "name": "Hydrolysis target production level"
@@ -218,6 +218,9 @@
       },
       "hidro_shutdown_temperature": {
         "name": "Hydrolysis shutdown temp. threshold"
+      },
+      "intelligent_temp": {
+        "name": "Intelligent mode temperature"
       },
       "ph1": {
         "name": "pH max limit"
@@ -414,6 +417,9 @@
           "manual": "[%key:common::state::manual%]",
           "smart": "Smart"
         }
+      },
+      "filtration_remaining": {
+        "name": "Filtration time remaining"
       },
       "filtration_speed": {
         "name": "Current filtration speed",

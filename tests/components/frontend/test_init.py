@@ -36,6 +36,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_get_theme_names,
     async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
@@ -762,6 +763,15 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
     assert async_panel_exists(hass, "test_panel") is False
 
 
+@pytest.mark.usefixtures("ignore_frontend_deps")
+async def test_async_get_theme_names(hass: HomeAssistant) -> None:
+    """Test async_get_theme_names helper."""
+    assert async_get_theme_names(hass) == []
+
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
+    assert async_get_theme_names(hass) == sorted(MOCK_THEMES)
+
+
 async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
     """Test that the collision error says which component holds the URL path.
 
@@ -1121,6 +1131,52 @@ async def test_get_icons_for_integrations(ws_client: MockHAClientWebSocket) -> N
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert set(msg["result"]["resources"]) == {"frontend", "http"}
+
+
+async def test_get_icons_for_integration_categories(
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_icons gives the icons of the integration categories."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "frontend/get_icons",
+            "integration": "homeassistant",
+            "category": "integration_category",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    energy = msg["result"]["resources"]["homeassistant"]["energy"]
+    assert energy["default"] == "mdi:lightning-bolt"
+    assert energy["subcategory"]["solar_batteries"] == {
+        "default": "mdi:solar-power-variant"
+    }
+
+
+async def test_get_icons_for_integration_connectivity(
+    ws_client: MockHAClientWebSocket,
+) -> None:
+    """Test get_icons gives the icons of the connectivity values."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "frontend/get_icons",
+            "integration": "homeassistant",
+            "category": "integration_connectivity",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    connectivity = msg["result"]["resources"]["homeassistant"]
+    assert connectivity["zigbee"] == {"default": "mdi:zigbee"}
+    assert connectivity["matter"] == {"default": "mdi:matter"}
 
 
 async def test_get_icons_for_single_integration(

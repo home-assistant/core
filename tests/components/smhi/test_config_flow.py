@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -35,7 +36,7 @@ async def test_form(
 
     with patch(
         "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -183,7 +184,10 @@ async def test_reconfigure_flow(
     entry.add_to_hass(hass)
 
     entity = entity_registry.async_get_or_create(
-        WEATHER_DOMAIN, DOMAIN, "57.2898, 13.6304"
+        WEATHER_DOMAIN, DOMAIN, "57.2898, 13.6304", config_entry=entry
+    )
+    sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-thunder", config_entry=entry
     )
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -237,6 +241,107 @@ async def test_reconfigure_flow(
     entity = entity_registry.async_get(entity.entity_id)
     assert entity
     assert entity.unique_id == "58.2898, 14.6304"
+    sensor = entity_registry.async_get(sensor.entity_id)
+    assert sensor
+    assert sensor.unique_id == "58.2898, 14.6304-thunder"
     device = device_registry.async_get(device.id)
     assert device
     assert device.identifiers == {(DOMAIN, "58.2898, 14.6304")}
+
+
+async def test_reconfigure_flow_unique_id_taken(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_fire_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfigure skips sensors whose new unique ID is already taken."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="57.2898-13.6304",
+        data={"location": {"latitude": 57.2898, "longitude": 13.6304}},
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-thunder", config_entry=entry
+    )
+    # Left behind by an earlier reconfigure that did not migrate sensors
+    stale_sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "58.2898, 14.6304-thunder", config_entry=entry
+    )
+    other_sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-wind_gust", config_entry=entry
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_LOCATION: {
+                CONF_LATITUDE: 58.2898,
+                CONF_LONGITUDE: 14.6304,
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    sensor = entity_registry.async_get(sensor.entity_id)
+    assert sensor
+    assert sensor.unique_id == "57.2898, 13.6304-thunder"
+    stale_sensor = entity_registry.async_get(stale_sensor.entity_id)
+    assert stale_sensor
+    assert stale_sensor.unique_id == "58.2898, 14.6304-thunder"
+    other_sensor = entity_registry.async_get(other_sensor.entity_id)
+    assert other_sensor
+    assert other_sensor.unique_id == "58.2898, 14.6304-wind_gust"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_fire_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfigure aborts when the new location belongs to another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="57.2898-13.6304",
+        data={"location": {"latitude": 57.2898, "longitude": 13.6304}},
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Away",
+        unique_id="58.2898-14.6304",
+        data={"location": {"latitude": 58.2898, "longitude": 14.6304}},
+        version=3,
+    ).add_to_hass(hass)
+
+    sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-thunder", config_entry=entry
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_LOCATION: {
+                CONF_LATITUDE: 58.2898,
+                CONF_LONGITUDE: 14.6304,
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "57.2898-13.6304"
+    assert entry.data == {"location": {"latitude": 57.2898, "longitude": 13.6304}}
+    sensor = entity_registry.async_get(sensor.entity_id)
+    assert sensor
+    assert sensor.unique_id == "57.2898, 13.6304-thunder"

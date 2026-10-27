@@ -8,6 +8,7 @@ import datetime as dt
 import itertools
 import logging
 import math
+import re
 from typing import Any
 
 from sqlalchemy.orm.session import Session
@@ -101,6 +102,34 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 STATE_CLASS_REMOVED_ISSUE = "state_class_removed"
 UNITS_CHANGED_ISSUE = "units_changed"
 MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
+STATISTICS_ISSUE_ID_PATTERN = re.compile(
+    f"({STATE_CLASS_REMOVED_ISSUE}|{UNITS_CHANGED_ISSUE}|{MEAN_TYPE_CHANGED_ISSUE})_"
+)
+
+
+def _is_hashable(value: Any) -> bool:
+    """Return True if the value can be used as a dict key or a set member.
+
+    State attributes are not validated, so an integration can set them to a value of
+    any type. The state class, unit of measurement and device class are all used as
+    dict keys or set members when compiling statistics, which raises TypeError for a
+    value which is not hashable.
+    """
+    try:
+        hash(value)
+    except TypeError:
+        return False
+    return True
+
+
+def _parse_state_class(state_class: Any) -> SensorStateClass | None:
+    """Parse the state class attribute of a sensor, None if it is not valid."""
+    if type(state_class) is SensorStateClass:
+        return state_class
+    if not _is_hashable(state_class):
+        # try_parse_enum is cached, so it raises TypeError for an unhashable value
+        return None
+    return try_parse_enum(SensorStateClass, state_class)
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -118,10 +147,12 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
                 SensorEntityCapabilityAttribute.STATE_CLASS
             )
         )
-        and (
-            type(state_class) is SensorStateClass
-            or try_parse_enum(SensorStateClass, state_class)
-        )
+        and _parse_state_class(state_class)
+        # A sensor whose unit or device class is not hashable can't have statistics
+        # compiled for it, and must be excluded here so it does not break the whole
+        # compilation run
+        and _is_hashable(state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT))
+        and _is_hashable(state.attributes.get(EntityStateAttribute.DEVICE_CLASS))
         and (not entity_filter or entity_filter(state.entity_id))
     ]
 
@@ -226,14 +257,23 @@ def _equivalent_units(
 def _entity_history_to_float_and_state(
     entity_history: Iterable[State],
 ) -> list[tuple[float, State]]:
-    """Return a list of (float, state) tuples for the given entity."""
+    """Return a list of (float, state) tuples for the given entity.
+
+    States which can't be used to compile statistics are left out.
+    """
     float_states: list[tuple[float, State]] = []
     append = float_states.append
     isfinite = math.isfinite
     for state in entity_history:
         try:
-            if (float_state := float(state.state)) is not None and isfinite(
-                float_state
+            if (
+                (float_state := float(state.state)) is not None
+                and isfinite(float_state)
+                # Only the current state is checked when picking the sensors to
+                # compile, so an earlier state may still have a malformed unit
+                and _is_hashable(
+                    state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+                )
             ):
                 append((float_state, state))
         except ValueError, TypeError:
@@ -258,6 +298,9 @@ def _get_unit_class(
     The unit class is determined from the device class and unit if possible,
     otherwise from the unit.
     """
+    if not _is_hashable(device_class) or not _is_hashable(unit):
+        # This is reached from paths which pass unvalidated state attributes
+        return None
     if (
         device_class
         and (conv := UNIT_CONVERTERS.get(device_class))
@@ -896,9 +939,8 @@ def _update_issues(
     for state in sensor_states:
         entity_id = state.entity_id
         numeric = _is_numeric(state)
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
         state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         state_unit_class = _get_unit_class(
@@ -922,8 +964,12 @@ def _update_issues(
                     custom_units_for_entities.get(entity_id)
                 )
 
-                if numeric and not _equivalent_units(
-                    {state_unit, metadata_unit}, equivalent_units_for_entity
+                if numeric and (
+                    # An unhashable unit can't match the unit of the statistics
+                    not _is_hashable(state_unit)
+                    or not _equivalent_units(
+                        {state_unit, metadata_unit}, equivalent_units_for_entity
+                    )
                 ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
@@ -938,7 +984,9 @@ def _update_issues(
                             "supported_unit": metadata_unit,
                         },
                     )
-            elif numeric and state_unit not in converter.VALID_UNITS:
+            elif numeric and (
+                not _is_hashable(state_unit) or state_unit not in converter.VALID_UNITS
+            ):
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
@@ -985,55 +1033,38 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
-    @callback
-    def get_sensor_statistics_issues(hass: HomeAssistant) -> set[str]:
-        """Return a list of statistics issues."""
-        issues = set()
-        issue_registry = ir.async_get(hass)
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type")
-                not in (
-                    STATE_CLASS_REMOVED_ISSUE,
-                    UNITS_CHANGED_ISSUE,
-                    MEAN_TYPE_CHANGED_ISSUE,
-                )
-            ):
-                continue
-            issues.add(issue.issue_id)
-        return issues
+    issues: dict[str, tuple[str, dict[str, Any]]] = {}
 
-    issues = run_callback_threadsafe(
-        hass.loop, get_sensor_statistics_issues, hass
-    ).result()
-
-    def create_issue_registry_issue(
-        issue_type: str, statistic_id: str, data: dict[str, Any]
-    ) -> None:
-        """Create an issue registry issue."""
-        issue_id = f"{issue_type}_{statistic_id}"
-        issues.discard(issue_id)
-        ir.create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            data=data | {"issue_type": issue_type},
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=issue_type,
-            translation_placeholders=data,
-        )
+    def collect_issue(issue_type: str, statistic_id: str, data: dict[str, Any]) -> None:
+        """Collect an issue registry issue."""
+        issues[f"{issue_type}_{statistic_id}"] = (issue_type, data)
 
     _update_issues(
-        create_issue_registry_issue,
+        collect_issue,
         sensor_states,
         metadatas,
         custom_units_for_entities,
     )
-    for issue_id in issues:
-        hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
+
+    @callback
+    def refresh_issues() -> None:
+        """Create the collected issues and delete stale ones."""
+        with ir.async_refresh_issues(
+            hass, DOMAIN, issue_id_pattern=STATISTICS_ISSUE_ID_PATTERN
+        ):
+            for issue_id, (issue_type, data) in issues.items():
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    data=data | {"issue_type": issue_type},
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=issue_type,
+                    translation_placeholders=data,
+                )
+
+    run_callback_threadsafe(hass.loop, refresh_issues).result()
 
 
 def validate_statistics(
@@ -1067,9 +1098,8 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class = try_parse_enum(
-            SensorStateClass,
-            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS),
+        state_class = _parse_state_class(
+            state.attributes.get(SensorEntityCapabilityAttribute.STATE_CLASS)
         )
 
         if entity_id in metadatas:

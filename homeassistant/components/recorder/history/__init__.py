@@ -23,7 +23,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.helpers.recorder import get_instance
+from homeassistant.helpers.recorder import get_instance, session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 
@@ -41,7 +41,7 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import execute_stmt_lambda_element, session_scope
+from ..util import execute_stmt_lambda_element
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
@@ -123,7 +123,7 @@ def _stmt_and_join_attributes_for_start_state(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect,
+    subquery: Subquery,
     no_attributes: bool,
     include_last_changed: bool,
     include_last_reported: bool,
@@ -422,9 +422,11 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    descending: bool,
 ) -> Select | CompoundSelect:
     stmt = (
         _stmt_and_join_attributes(no_attributes, False, True)
+        .add_columns(States.state_id)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -442,37 +444,37 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+    if descending and limit:
+        # Select the newest samples before restoring the converter's ascending order.
+        subquery = stmt.order_by(
+            States.last_updated_ts.desc(), States.state_id.desc()
+        ).subquery()
+        stmt = select(subquery).order_by(
+            subquery.c.last_updated_ts, subquery.c.state_id
+        )
+    else:
+        stmt = stmt.order_by(
+            States.metadata_id, States.last_updated_ts, States.state_id
+        )
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
         # we can return the statement as is as there will
         # never be a start time state.
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                    True,
-                ).subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-            _select_from_subquery(
-                stmt.subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-        ).subquery(),
-        no_attributes,
-        False,
-        True,
+    start_state = (
+        _get_single_entity_start_time_stmt(
+            start_time_ts, single_metadata_id, no_attributes, False, True
+        )
+        .add_columns(States.state_id)
+        .order_by(States.state_id.desc())
+        .subquery()
+    )
+    unioned_subquery = union_all(
+        select(start_state), select(stmt.subquery())
+    ).subquery()
+    return _select_from_subquery(unioned_subquery, no_attributes, False, True).order_by(
+        unioned_subquery.c.last_updated_ts, unioned_subquery.c.state_id
     )
 
 
@@ -519,11 +521,13 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 oldest_ts,
+                descending,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
+                descending,
                 include_start_time_state,
             ],
         )

@@ -8,8 +8,7 @@ from aiohttp.web import Request, Response, StreamResponse
 
 from homeassistant.auth.models import User
 from homeassistant.exceptions import Unauthorized
-
-from .view import HomeAssistantView
+from homeassistant.helpers.http import HomeAssistantView
 
 type _ResponseType = Response | StreamResponse
 type _FuncType[_T, **_P, _R] = Callable[

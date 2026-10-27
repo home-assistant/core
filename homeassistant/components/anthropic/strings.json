@@ -47,6 +47,7 @@
       "entry_type": "AI task",
       "error": {
         "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]",
+        "effort_requires_thinking": "[%key:component::anthropic::config_subentries::conversation::error::effort_requires_thinking%]",
         "model_not_found": "[%key:component::anthropic::config_subentries::conversation::error::model_not_found%]",
         "model_retired": "[%key:component::anthropic::config_subentries::conversation::error::model_retired%]",
         "thinking_budget_too_large": "[%key:component::anthropic::config_subentries::conversation::error::thinking_budget_too_large%]"
@@ -56,34 +57,27 @@
         "user": "Add AI task"
       },
       "step": {
-        "additional": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data::prompt_caching%]"
-          },
-          "data_description": {
-            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::chat_model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::prompt_caching%]"
-          },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::additional::title%]"
-        },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "name": "[%key:common::config_flow::data::name%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::init::data::prompt_caching%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data::recommended%]"
           },
           "data_description": {
+            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::chat_model%]",
             "name": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::name%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::prompt_caching%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::recommended%]"
-          },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
+          }
         },
         "model": {
           "data": {
             "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data::code_execution%]",
+            "effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::effort%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::model::data::max_tokens%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
-            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
+            "thinking_type": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_type%]",
             "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
             "web_fetch": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_fetch%]",
@@ -93,9 +87,10 @@
           },
           "data_description": {
             "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::code_execution%]",
+            "effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::effort%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::max_tokens%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
-            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
+            "thinking_type": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_type%]",
             "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_fetch": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_fetch%]",
@@ -114,6 +109,7 @@
       "entry_type": "Conversation agent",
       "error": {
         "api_error": "Unable to get model info: {message}",
+        "effort_requires_thinking": "This effort level is not supported for the selected thinking type.",
         "model_not_found": "Model not found",
         "model_retired": "This model is retired. Select another model.",
         "thinking_budget_too_large": "Thinking budget must be less than the Maximum tokens."
@@ -123,38 +119,31 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "additional": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "Caching strategy"
-          },
-          "data_description": {
-            "chat_model": "The model to serve the responses.",
-            "prompt_caching": "Optimize your API cost and response times based on your usage."
-          },
-          "title": "Additional settings"
-        },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "[%key:common::config_flow::data::prompt%]",
+            "prompt_caching": "Caching strategy",
             "recommended": "Recommended model settings"
           },
           "data_description": {
+            "chat_model": "The model to serve the responses.",
             "llm_hass_api": "Allow the LLM to control Home Assistant.",
             "name": "The name of this configuration",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "prompt_caching": "Optimize your API cost and response times based on your usage.",
             "recommended": "Use default configuration"
-          },
-          "title": "Basic settings"
+          }
         },
         "model": {
           "data": {
             "code_execution": "Code execution",
+            "effort": "Effort",
             "max_tokens": "Maximum tokens to return in response",
             "thinking_budget": "Thinking budget",
-            "thinking_effort": "Thinking effort",
+            "thinking_type": "Thinking type",
             "tool_search": "Enable tool search tool",
             "user_location": "Include home location",
             "web_fetch": "Enable web fetch",
@@ -164,9 +153,10 @@
           },
           "data_description": {
             "code_execution": "Allow the model to execute code in a secure sandbox environment, enabling it to analyze data and perform complex calculations.",
+            "effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
             "max_tokens": "Limit the number of response tokens.",
-            "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
-            "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
+            "thinking_budget": "Tokens available for extended thinking when the thinking type is enabled. Must be less than the maximum response tokens.",
+            "thinking_type": "Controls when Claude spends additional tokens reasoning through requests or tool results.",
             "tool_search": "Enable dynamic tool discovery instead of preloading all tools into the context",
             "user_location": "Localize search results based on home location",
             "web_fetch": "The web fetch tool allows Claude to retrieve full content from specified web pages and PDF documents to augment Claude's context with live web content",
@@ -269,6 +259,15 @@
     }
   },
   "selector": {
+    "effort": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "max": "Max",
+        "medium": "[%key:common::state::medium%]",
+        "xhigh": "X-High"
+      }
+    },
     "prompt_caching": {
       "options": {
         "automatic": "Full",
@@ -276,14 +275,12 @@
         "prompt": "System prompt"
       }
     },
-    "thinking_effort": {
+    "thinking_type": {
       "options": {
-        "high": "[%key:common::state::high%]",
-        "low": "[%key:common::state::low%]",
-        "max": "Max",
-        "medium": "[%key:common::state::medium%]",
-        "none": "None",
-        "xhigh": "X-High"
+        "adaptive": "Adaptive",
+        "between_tools": "Between tool calls",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
       }
     }
   }

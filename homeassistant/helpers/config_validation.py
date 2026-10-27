@@ -1,6 +1,6 @@
 """Helpers for config validation using probatio."""
 
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_FOR_EACH,
     CONF_ID,
@@ -349,6 +350,8 @@ def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
         raise probatio.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
+    elif not isinstance(value, Iterable):
+        raise probatio.Invalid("Entity IDs must be a string or a list")
 
     validator = entity_id_or_uuid if allow_uuid else entity_id
     return [validator(ent_id) for ent_id in value]
@@ -455,7 +458,7 @@ def icon(value: Any) -> str:
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
 
 
-_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}\Z", re.IGNORECASE)
 
 
 def color_hex(value: Any) -> str:
@@ -470,6 +473,15 @@ def color_hex(value: Any) -> str:
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
+
+def _timedelta(**kwargs: float) -> timedelta:
+    """Create a timedelta, raising Invalid if it is out of range."""
+    try:
+        return timedelta(**kwargs)
+    except OverflowError as err:
+        raise probatio.Invalid("Time period is out of range") from err
+
+
 time_period_dict = probatio.All(
     dict,
     probatio.Schema(
@@ -482,7 +494,7 @@ time_period_dict = probatio.All(
         }
     ),
     probatio.AtLeastOne(*_TIME_PERIOD_DICT_KEYS),
-    lambda value: timedelta(**value),
+    lambda value: _timedelta(**value),
 )
 
 
@@ -545,7 +557,7 @@ def time_period_str(value: str) -> timedelta:
     except ValueError as err:
         raise probatio.Invalid(TIME_PERIOD_ERROR.format(value)) from err
 
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+    offset = _timedelta(hours=hour, minutes=minute, seconds=second)
 
     if negative_offset:
         offset *= -1
@@ -556,7 +568,7 @@ def time_period_str(value: str) -> timedelta:
 def time_period_seconds(value: float | str) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=float(value))
+        return _timedelta(seconds=float(value))
     except (ValueError, TypeError) as err:
         raise probatio.Invalid(f"Expected seconds, got {value}") from err
 
@@ -807,15 +819,25 @@ def socket_timeout(value: Any | None) -> object:
     raise probatio.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
+_URL_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_URL_WHITESPACE = re.compile(r"\s")
+
+
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
     """Validate a URL."""
-    url_in = str(value)
+    url_in = str(value).strip()
+    # urlparse silently drops tabs/newlines, so check the raw string
+    if _URL_CONTROL_CHARS.search(url_in):
+        raise probatio.Invalid("invalid url")
     parsed = urlparse(url_in)
 
-    if parsed.scheme not in _schema_list:
+    # HTTP clients encode spaces in the userinfo, path and query, but not the host
+    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(
+        parsed.hostname or ""
+    ):
         raise probatio.Invalid("invalid url")
 
     try:
@@ -1263,13 +1285,49 @@ PLATFORM_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 
 
-TARGET_FIELDS: VolDictType = {
+# The keys which select what a target refers to. A target may additionally
+# contain an exclude block, which uses the same keys.
+TARGET_ID_KEYS = (
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_AREA_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
+
+TARGET_ID_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): probatio.All(ensure_list, [strict_entity_id]),
     probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
 }
+
+TARGET_FIELDS: VolDictType = {
+    **TARGET_ID_FIELDS,
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
+}
+
+
+def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
+    """Reject a target which only has an exclude block.
+
+    Not part of TARGET_FIELDS, which also validates partial targets while editing.
+    """
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+        raise probatio.Invalid("an exclude block requires a target to exclude from")
+    return value
+
+
+ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): entity_ids,
+        probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+    }
+)
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
@@ -1289,6 +1347,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
+    probatio.Optional(CONF_EXCLUDE): ENTITY_SERVICE_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1296,6 +1355,15 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
+        {
+            probatio.Optional(ATTR_ENTITY_ID): entity_ids_or_uuids,
+            probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
+            probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+        }
+    ),
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1331,9 +1399,25 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
+        {
+            probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
+                entity_ids_or_uuids,
+                dynamic_template,
+                probatio.All(list, template_complex),
+            ),
+            **{
+                probatio.Optional(key): probatio.Any(
+                    dynamic_template,
+                    probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
+                )
+                for key in (ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+            },
+        }
+    ),
 }
 
-_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*ENTITY_SERVICE_FIELDS)
+_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*TARGET_ID_KEYS)
 
 
 def is_entity_service_schema(validator: VolSchemaType) -> bool:
@@ -1471,7 +1555,8 @@ SERVICE_SCHEMA = probatio.All(
             ),
             probatio.Optional(CONF_ENTITY_ID): comp_entity_ids,
             probatio.Optional(CONF_TARGET): probatio.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                probatio.All(_TARGET_SERVICE_FIELDS_TEMPLATED, exclude_requires_target),
+                dynamic_template,
             ),
             probatio.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.

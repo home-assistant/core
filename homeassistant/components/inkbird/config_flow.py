@@ -56,7 +56,6 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_DEVICE_TYPE: str(self._discovered_device.device_type)},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

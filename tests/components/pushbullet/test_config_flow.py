@@ -21,7 +21,7 @@ USER_INPUT = {CONF_API_KEY: "MYAPIKEY"}
 def pushbullet_setup_fixture():
     """Patch pushbullet setup entry."""
     with patch(
-        "homeassistant.components.pushbullet.async_setup_entry", return_value=True
+        "homeassistant.components.pushbullet.async_setup_entry", return_value=None
     ):
         yield
 

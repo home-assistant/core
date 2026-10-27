@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import override
 
+from pyprobeplus import ProbePlusDevice
 from pyprobeplus.parsers.base import ProbeReading
 
 from homeassistant.components.sensor import (
@@ -23,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ProbePlusConfigEntry, ProbePlusDevice
+from .coordinator import ProbePlusConfigEntry
 from .entity import ProbePlusEntity, ProbePlusProbeEntity
 
 # Coordinator is used to centralize the data updates

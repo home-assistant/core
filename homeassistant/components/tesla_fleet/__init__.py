@@ -1,7 +1,7 @@
 """Tesla Fleet integration."""
 
 import asyncio
-from typing import Final
+from typing import Any, Final, cast
 
 from aiohttp import ClientError
 import jwt
@@ -73,10 +73,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
+async def _async_get_products(tesla: TeslaFleetApi) -> list[dict[str, Any]]:
     """Get products from Tesla Fleet API with region fallback handling."""
     try:
-        return (await tesla.products())["response"]
+        return cast(list[dict[str, Any]], (await tesla.products())["response"])
     except InvalidRegion:
         LOGGER.warning("Region is invalid, trying to find the correct region")
     except (
@@ -113,7 +113,7 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
         raise ConfigEntryNotReady from e
 
     try:
-        return (await tesla.products())["response"]
+        return cast(list[dict[str, Any]], (await tesla.products())["response"])
     except (
         InvalidToken,
         OAuthExpired,
@@ -274,8 +274,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             # Create the energy site device regardless of it having entities
             # This is so users with a Wall Connector but
             # without a Powerwall can still make service calls
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id, **device
+            device_registry.async_get_or_create_from_info(
+                config_entry_id=entry.entry_id, device_info=device
             )
 
             energysites.append(

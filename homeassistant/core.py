@@ -4,6 +4,7 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from annotationlib import Format
 import asyncio
 from collections import UserDict, defaultdict, deque
 from collections.abc import (
@@ -22,6 +23,7 @@ import enum
 import functools
 import inspect
 import logging
+import operator
 import re
 import threading
 import time
@@ -179,8 +181,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
@@ -212,6 +214,58 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
+    """Return the HomeAssistant instance passed in."""
+    return obj
+
+
+_get_hass_public = operator.attrgetter("hass")
+_get_hass_private = operator.attrgetter("_hass")
+
+
+def verify_event_loop_thread[**_P, _R](
+    what: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Report and raise if the decorated function is not called from the event loop.
+
+    The first argument of the decorated function must be either the
+    HomeAssistant instance or an object with a hass or _hass attribute.
+    It may be passed by keyword. Where hass is found is resolved on the
+    first call and then reused.
+    """
+
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        first_parameter = next(
+            iter(
+                inspect.signature(func, annotation_format=Format.FORWARDREF).parameters
+            )
+        )
+        get_hass: Callable[[Any], HomeAssistant]
+
+        def resolve_get_hass(obj: Any) -> HomeAssistant:
+            nonlocal get_hass
+            if isinstance(obj, HomeAssistant):
+                get_hass = _get_hass_identity
+            elif hasattr(obj, "hass"):
+                get_hass = _get_hass_public
+            else:
+                get_hass = _get_hass_private
+            return get_hass(obj)
+
+        get_hass = resolve_get_hass
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(
+                args[0] if args else kwargs[first_parameter]
+            ).verify_event_loop_thread(what)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @callback
@@ -2121,7 +2175,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],
@@ -2720,6 +2778,7 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_register")
     def async_register(
         self,
         domain: str,
@@ -2743,7 +2802,6 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain,
             service,
@@ -2805,12 +2863,12 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_remove")
     def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback

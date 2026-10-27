@@ -85,3 +85,20 @@ class HumidifierDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = probatio.All(
     probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
 )
+
+
+class HumidifierService(StrEnum):
+    """Store keys for humidifier services."""
+
+    SET_HUMIDITY = "set_humidity"
+    SET_MODE = "set_mode"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class HumidifierServiceArgument(StrEnum):
+    """Store keys for humidifier service arguments."""
+
+    HUMIDITY = "humidity"
+    MODE = "mode"
