@@ -647,6 +647,15 @@ async def test_config_flow_firmware_index_download_fails_but_not_required(
             user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "install_zigbee_firmware"
+
+        result = await consume_progress_flow(
+            hass,
+            flow_id=result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
+        )
+
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -681,6 +690,15 @@ async def test_config_flow_firmware_download_fails_but_not_required(
         result = await hass.config_entries.flow.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "install_zigbee_firmware"
+
+        result = await consume_progress_flow(
+            hass,
+            flow_id=result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -719,6 +737,15 @@ async def test_config_flow_doesnt_downgrade(
         result = await hass.config_entries.flow.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "install_zigbee_firmware"
+
+        result = await consume_progress_flow(
+            hass,
+            flow_id=result["flow_id"],
+            valid_step_ids=("install_zigbee_firmware",),
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -814,8 +841,9 @@ async def test_config_flow_thread(
         assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "install_thread_firmware"
+        # The firmware has not been probed yet
         assert pick_result["description_placeholders"] == {
-            "firmware_type": "ezsp",
+            "firmware_type": "unknown",
             "model": TEST_HARDWARE_NAME,
             "firmware_name": "Thread",
         }
@@ -1284,6 +1312,9 @@ async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "install_firmware"
         assert result["step_id"] == "install_thread_firmware"
+
+        # Let the install task finish while the firmware mocks are active
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
