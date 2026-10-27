@@ -21,14 +21,10 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    DEVICE_NAMES,
     DOMAIN,
     SilverCrestIrDeviceType,
 )
-
-DEVICE_NAMES = {
-    SilverCrestIrDeviceType.FAN: "Fan",
-    SilverCrestIrDeviceType.MISTING_FAN: "Misting fan",
-}
 
 
 class SilverCrestIfConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -78,6 +74,7 @@ class SilverCrestIfConfigFlow(ConfigFlow, domain=DOMAIN):
                             ],
                             translation_key=CONF_DEVICE_TYPE,
                             mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
                         )
                     ),
                     probatio.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(

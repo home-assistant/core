@@ -36,7 +36,7 @@ def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
             CONF_DEVICE_TYPE: (
                 request.param
                 if hasattr(request, "param")
-                else SilverCrestIrDeviceType.MISTING_FAN
+                else SilverCrestIrDeviceType.SSVS85A1
             ),
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
         },

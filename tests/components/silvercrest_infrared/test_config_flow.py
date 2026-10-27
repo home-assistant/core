@@ -20,8 +20,8 @@ from homeassistant.data_entry_flow import FlowResultType
 @pytest.mark.parametrize(
     ("device_type", "device_name"),
     [
-        (SilverCrestIrDeviceType.FAN, "Fan"),
-        (SilverCrestIrDeviceType.MISTING_FAN, "Misting fan"),
+        (SilverCrestIrDeviceType.STVD45A1, "Tower fan STVD 45 A1"),
+        (SilverCrestIrDeviceType.SSVS85A1, "Misting pedestal fan SSVS 85 A1"),
     ],
 )
 @pytest.mark.usefixtures(
@@ -84,7 +84,7 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_DEVICE_TYPE: SilverCrestIrDeviceType.FAN,
+            CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
         },
     )

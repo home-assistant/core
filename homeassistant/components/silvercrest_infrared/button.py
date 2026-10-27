@@ -16,8 +16,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    DEVICE_NAMES,
     DOMAIN,
-    SilverCrestIrDeviceType,
+    MISTING_FANS,
 )
 
 PARALLEL_UPDATES = 1
@@ -91,7 +92,7 @@ async def async_setup_entry(
             for description in (
                 *BUTTON_DESCRIPTIONS,
                 MIST_BUTTON_DESCRIPTION
-                if entry.data[CONF_DEVICE_TYPE] == SilverCrestIrDeviceType.MISTING_FAN
+                if entry.data[CONF_DEVICE_TYPE] in MISTING_FANS
                 else MODE_BUTTON_DESCRIPTION,
             )
         ]
@@ -115,8 +116,9 @@ class SilverCrestIrButtonEntity(InfraredEmitterConsumerEntity, ButtonEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer="SilverCrest",
+            translation_key=entry.data[CONF_DEVICE_TYPE],
+            model=DEVICE_NAMES[entry.data[CONF_DEVICE_TYPE]],
         )
 
         self.entity_description = description

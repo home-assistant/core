@@ -24,8 +24,8 @@ from homeassistant.helpers import entity_registry as er
 @pytest.mark.parametrize(
     "config_entry",
     [
-        SilverCrestIrDeviceType.FAN,
-        SilverCrestIrDeviceType.MISTING_FAN,
+        SilverCrestIrDeviceType.STVD45A1,
+        SilverCrestIrDeviceType.SSVS85A1,
     ],
     indirect=True,
 )
@@ -50,14 +50,14 @@ async def test_setup(
 _BUTTON_PRESSES: dict[
     SilverCrestIrDeviceType, list[tuple[SilverCrestIrbutton, int]]
 ] = {
-    SilverCrestIrDeviceType.FAN: [
+    SilverCrestIrDeviceType.STVD45A1: [
         (SilverCrestIrbutton.POWER, SilverCrestFanCode.POWER),
         (SilverCrestIrbutton.SPEED, SilverCrestFanCode.SPEED),
         (SilverCrestIrbutton.TIMER, SilverCrestFanCode.TIMER),
         (SilverCrestIrbutton.OSC, SilverCrestFanCode.OSC),
         (SilverCrestIrbutton.MODE, SilverCrestFanCode.MODE),
     ],
-    SilverCrestIrDeviceType.MISTING_FAN: [
+    SilverCrestIrDeviceType.SSVS85A1: [
         (SilverCrestIrbutton.POWER, SilverCrestFanCode.POWER),
         (SilverCrestIrbutton.SPEED, SilverCrestFanCode.SPEED),
         (SilverCrestIrbutton.TIMER, SilverCrestFanCode.TIMER),

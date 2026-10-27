@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_mode-entry]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_mist-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,257 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Mode',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mode',
-    'platform': 'silvercrest_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <SilverCrestIrbutton.MODE: 'mode'>,
-    'unique_id': '1234567890_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Mode',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_oscillation-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_oscillation',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Oscillation',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Oscillation',
-    'platform': 'silvercrest_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <SilverCrestIrbutton.OSC: 'osc'>,
-    'unique_id': '1234567890_osc',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_oscillation-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Oscillation',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_oscillation',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'silvercrest_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <SilverCrestIrbutton.POWER: 'power'>,
-    'unique_id': '1234567890_power',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Speed',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Speed',
-    'platform': 'silvercrest_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <SilverCrestIrbutton.SPEED: 'speed'>,
-    'unique_id': '1234567890_speed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Speed',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_timer-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_timer',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Timer',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Timer',
-    'platform': 'silvercrest_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <SilverCrestIrbutton.TIMER: 'timer'>,
-    'unique_id': '1234567890_timer',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[fan][button.misting_fan_via_test_ir_emitter_timer-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Timer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_timer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_mist-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_mist',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_mist',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -286,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_mist-state]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_mist-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Mist',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting pedestal fan SSVS 85 A1 Mist',
     }),
     'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_mist',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_mist',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_oscillation-entry]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_oscillation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_oscillation',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_oscillation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_oscillation-state]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_oscillation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Oscillation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting pedestal fan SSVS 85 A1 Oscillation',
     }),
     'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_oscillation',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_oscillation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_power-entry]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_power',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -386,20 +136,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_power-state]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting pedestal fan SSVS 85 A1 Power',
     }),
     'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_power',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_speed-entry]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -413,7 +163,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_speed',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -436,20 +186,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_speed-state]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting pedestal fan SSVS 85 A1 Speed',
     }),
     'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_speed',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_timer-entry]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -463,7 +213,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_timer',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -486,13 +236,263 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[misting_fan][button.misting_fan_via_test_ir_emitter_timer-state]
+# name: test_setup[ssvs85a1][button.misting_pedestal_fan_ssvs_85_a1_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting fan via Test IR emitter Timer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Misting pedestal fan SSVS 85 A1 Timer',
     }),
     'context': <ANY>,
-    'entity_id': 'button.misting_fan_via_test_ir_emitter_timer',
+    'entity_id': 'button.misting_pedestal_fan_ssvs_85_a1_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.tower_fan_stvd_45_a1_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'silvercrest_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SilverCrestIrbutton.MODE: 'mode'>,
+    'unique_id': '1234567890_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tower fan STVD 45 A1 Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tower_fan_stvd_45_a1_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_oscillation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.tower_fan_stvd_45_a1_oscillation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Oscillation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Oscillation',
+    'platform': 'silvercrest_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SilverCrestIrbutton.OSC: 'osc'>,
+    'unique_id': '1234567890_osc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_oscillation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tower fan STVD 45 A1 Oscillation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tower_fan_stvd_45_a1_oscillation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.tower_fan_stvd_45_a1_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'silvercrest_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SilverCrestIrbutton.POWER: 'power'>,
+    'unique_id': '1234567890_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tower fan STVD 45 A1 Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tower_fan_stvd_45_a1_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.tower_fan_stvd_45_a1_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speed',
+    'platform': 'silvercrest_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SilverCrestIrbutton.SPEED: 'speed'>,
+    'unique_id': '1234567890_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tower fan STVD 45 A1 Speed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tower_fan_stvd_45_a1_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('silvercrest_infrared', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.tower_fan_stvd_45_a1_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer',
+    'platform': 'silvercrest_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SilverCrestIrbutton.TIMER: 'timer'>,
+    'unique_id': '1234567890_timer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[stvd45a1][button.tower_fan_stvd_45_a1_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tower fan STVD 45 A1 Timer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tower_fan_stvd_45_a1_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
