@@ -23,7 +23,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('niko_home_control', '01JFN93M7KRA38V5AMPCJ2JYYV-5')]>,
     'disabled_by': None,

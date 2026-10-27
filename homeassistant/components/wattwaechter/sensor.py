@@ -1,12 +1,21 @@
-"""Sensor platform for the WattWächter Plus integration."""
+"""Sensor platform for the WattWächter integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
-from aio_wattwaechter.models import ObisValue
+from aio_wattwaechter.models import (
+    OBIS_GAS_FLOW,
+    OBIS_GAS_VOLUME,
+    OBIS_WATER_FLOW,
+    OBIS_WATER_VOLUME,
+    Medium,
+    ObisValue,
+)
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -23,11 +32,15 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import OBIS_GAS_POWER
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
@@ -335,6 +348,57 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
+    # Gas and water meters (WattWächter Gas / Wasser) report full OBIS codes
+    # with the medium in value group A (7 gas, 8 cold water). The volume is a
+    # total with last_reset: a correction of the reading on the device counts
+    # as consumption (also downwards), a meter exchange starts a new cycle.
+    OBIS_GAS_VOLUME: SensorEntityDescription(
+        key=OBIS_GAS_VOLUME,
+        translation_key="gas_consumption",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=3,
+    ),
+    OBIS_GAS_FLOW: SensorEntityDescription(
+        key=OBIS_GAS_FLOW,
+        translation_key="gas_flow_rate",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    ),
+    OBIS_GAS_POWER: SensorEntityDescription(
+        key=OBIS_GAS_POWER,
+        translation_key="gas_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    ),
+    OBIS_WATER_VOLUME: SensorEntityDescription(
+        key=OBIS_WATER_VOLUME,
+        translation_key="water_consumption",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=3,
+    ),
+    OBIS_WATER_FLOW: SensorEntityDescription(
+        key=OBIS_WATER_FLOW,
+        translation_key="water_flow_rate",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    ),
+}
+
+# OBIS media (value group A) of a gas/water device per medium. The medium can
+# be switched on the device at runtime, which switches the reported codes.
+GW_OBIS_MEDIA: dict[Medium, frozenset[str]] = {
+    Medium.GAS: frozenset({"7"}),
+    Medium.WATER: frozenset({"8", "9"}),
 }
 
 OBIS_PHASE: dict[str, str] = {
@@ -365,6 +429,10 @@ UNIT_MAP: dict[str, tuple[SensorDeviceClass, SensorStateClass]] = {
         SensorStateClass.MEASUREMENT,
     ),
     UnitOfFrequency.HERTZ: (SensorDeviceClass.FREQUENCY, SensorStateClass.MEASUREMENT),
+    UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: (
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        SensorStateClass.MEASUREMENT,
+    ),
 }
 
 # Units that mark an x.8.y register as a cumulative energy total.
@@ -383,10 +451,34 @@ CUMULATIVE_ENERGY_UNITS: dict[str, SensorDeviceClass] = {
 METADATA_OBIS_CODES = {"0.0.0", "0.2.0", "96.1.0"}
 
 
+# Device class of cumulative volume registers (m³) by OBIS medium (value
+# group A): gas, cold water, hot water.
+VOLUME_MEDIUM_DEVICE_CLASS: dict[str, SensorDeviceClass] = {
+    "7": SensorDeviceClass.GAS,
+    "8": SensorDeviceClass.WATER,
+    "9": SensorDeviceClass.WATER,
+}
+
+ELECTRICITY_MEDIUM = "1"
+
+
+def _split_obis(obis_code: str) -> tuple[str, list[str]]:
+    """Split an OBIS code into its medium (value group A) and C.D.E parts.
+
+    Electricity registers are reported in the short C.D.E form, other media
+    in the full A-B:C.D.E form.
+    """
+    medium = ELECTRICITY_MEDIUM
+    if ":" in obis_code:
+        prefix, obis_code = obis_code.split(":", 1)
+        medium = prefix.partition("-")[0]
+    return medium, obis_code.split(".")
+
+
 def _is_cumulative_register(obis_code: str) -> bool:
-    """Return True for x.8.y registers, the OBIS cumulative energy totals."""
-    parts = obis_code.split(".")
-    return len(parts) == 3 and parts[1] == "8"
+    """Return True for electricity x.8.y registers, the cumulative energy totals."""
+    medium, parts = _split_obis(obis_code)
+    return medium == ELECTRICITY_MEDIUM and len(parts) == 3 and parts[1] == "8"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -428,26 +520,78 @@ async def async_setup_entry(
 ) -> None:
     """Set up WattWächter sensors from a config entry."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
+    known_obis_codes: set[str] = set()
 
-    entities: list[SensorEntity] = []
-    for obis_code, obis_value in coordinator.data.meter.values.items():
-        if obis_code in KNOWN_OBIS_CODES:
-            entities.append(
-                WattwaechterObisSensor(
-                    coordinator=coordinator,
-                    description=KNOWN_OBIS_CODES[obis_code],
-                    obis_code=obis_code,
+    @callback
+    def _async_remove_other_medium_entities() -> set[str]:
+        """Remove the entities of the medium a gas/water device no longer meters.
+
+        Returns the OBIS media of the other medium; their codes are not added.
+        """
+        meter = coordinator.data.meter
+        # Only a gas/water device (``gw`` block) switches its medium. A meter
+        # that reports several media keeps the entities of all of them.
+        if meter.gw is None or meter.medium not in GW_OBIS_MEDIA:
+            return set()
+        other_media = {
+            obis_medium
+            for gw_medium, obis_media in GW_OBIS_MEDIA.items()
+            if gw_medium is not meter.medium
+            for obis_medium in obis_media
+        }
+        prefix = f"{coordinator.device_id}_"
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            obis_code = entity_entry.unique_id.removeprefix(prefix)
+            if (
+                entity_entry.domain == SENSOR_DOMAIN
+                and entity_entry.unique_id.startswith(prefix)
+                and ":" in obis_code
+                and _split_obis(obis_code)[0] in other_media
+            ):
+                known_obis_codes.discard(obis_code)
+                entity_registry.async_remove(entity_entry.entity_id)
+        return other_media
+
+    @callback
+    def _async_add_obis_entities() -> None:
+        """Add entities for OBIS codes not seen before.
+
+        Registers that stop reporting keep their entity (e.g. a short telegram
+        of an electricity meter); only a medium change of a gas/water device
+        removes the entities of the previous medium.
+        """
+        other_media = _async_remove_other_medium_entities()
+        entities: list[SensorEntity] = []
+        for obis_code, obis_value in coordinator.data.meter.values.items():
+            if obis_code in known_obis_codes or obis_code in METADATA_OBIS_CODES:
+                continue
+            if ":" in obis_code and _split_obis(obis_code)[0] in other_media:
+                continue
+            known_obis_codes.add(obis_code)
+            if obis_code in KNOWN_OBIS_CODES:
+                entities.append(
+                    WattwaechterObisSensor(
+                        coordinator=coordinator,
+                        description=KNOWN_OBIS_CODES[obis_code],
+                        obis_code=obis_code,
+                    )
                 )
-            )
-        elif obis_code not in METADATA_OBIS_CODES:
-            entities.append(
-                WattwaechterGenericObisSensor(coordinator, obis_code, obis_value)
-            )
-    entities.extend(
+            else:
+                entities.append(
+                    WattwaechterGenericObisSensor(coordinator, obis_code, obis_value)
+                )
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_obis_entities()
+    async_add_entities(
         WattwaechterDiagnosticSensor(coordinator, description)
         for description in DIAGNOSTIC_SENSORS
     )
-    async_add_entities(entities)
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_obis_entities))
 
 
 class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
@@ -478,6 +622,20 @@ class WattwaechterObisSensor(WattwaechterEntity, SensorEntity):
             return None
         return obis.value
 
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return when the current meter reading started (gas/water volume).
+
+        A meter exchange on the device sets it; the first reading entry and
+        a correction of the reading keep it.
+        """
+        if self.entity_description.state_class is not SensorStateClass.TOTAL:
+            return None
+        if (gw := self.coordinator.data.meter.gw) is None:
+            return None
+        return gw.meter_since
+
 
 class WattwaechterGenericObisSensor(WattwaechterEntity, SensorEntity):
     """Sensor for an OBIS code without a dedicated description."""
@@ -502,6 +660,11 @@ class WattwaechterGenericObisSensor(WattwaechterEntity, SensorEntity):
             device_class := CUMULATIVE_ENERGY_UNITS.get(obis_value.unit)
         ) and _is_cumulative_register(obis_code):
             # total_increasing also absorbs resets from a meter exchange.
+            self._attr_device_class = device_class
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif obis_value.unit == UnitOfVolume.CUBIC_METERS and (
+            device_class := VOLUME_MEDIUM_DEVICE_CLASS.get(_split_obis(obis_code)[0])
+        ):
             self._attr_device_class = device_class
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif mapping := UNIT_MAP.get(obis_value.unit):

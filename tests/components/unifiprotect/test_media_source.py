@@ -1025,7 +1025,8 @@ async def test_browse_media_browse_whole_month_december(
     ufp.api.get_events_raw = AsyncMock(
         return_value=[
             event1.unifi_dict(),
-            event2.unifi_dict(),
+            # Raw API field, not on the model.
+            event2.unifi_dict() | {"smartDetectEvents": ["test_event_id"]},
             event3.unifi_dict(),
             event4.unifi_dict(),
         ]
