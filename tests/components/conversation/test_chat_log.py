@@ -334,10 +334,10 @@ async def test_turn_without_reply(
     assert chat_log.content[-1].agent_id == "mock-agent-id"
 
 
-async def test_streamed_first_reply_sent_to_subscribers(
+async def test_streamed_reply_sent_to_subscribers(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
-    """Test subscribers get the streamed reply of the first turn."""
+    """Test subscribers get a streamed reply."""
     events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
     async_subscribe_chat_logs(
         hass, lambda _conversation_id, event, data: events.append((event, data))
@@ -357,8 +357,8 @@ async def test_streamed_first_reply_sent_to_subscribers(
             pass
 
     event, data = events[-1]
-    assert event == ChatLogEventType.UPDATED
-    assert data["chat_log"]["content"][-1]["content"] == "Hi"
+    assert event == ChatLogEventType.CONTENT_ADDED
+    assert data["content"]["content"] == "Hi"
 
 
 async def test_trace_keeps_messages_of_its_turn(
@@ -1578,9 +1578,8 @@ async def test_chat_log_subscription(
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
     # Verify we received the expected events
-    # Should have: 1 CREATED event + 6 CONTENT_ADDED events + 1 UPDATED event
-    assert len(received_events) == 8
-    assert received_events[-1][1] == ChatLogEventType.UPDATED
+    # Should have: 1 CREATED event + 6 CONTENT_ADDED events
+    assert len(received_events) == 7
 
     # Check the first event is CREATED, with the message of the first turn
     assert received_events[0][1] == ChatLogEventType.CREATED

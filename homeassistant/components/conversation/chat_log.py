@@ -77,6 +77,8 @@ def async_get_chat_log(
     chat_log_delta_listener: Callable[[ChatLog, dict], None] | None = None,
 ) -> Generator[ChatLog]:
     """Return chat log for a specific chat session."""
+    agent_id = (user_input.agent_id if user_input else None) or DOMAIN
+
     # If a chat log is already active and it's the requested conversation ID,
     # return that. We won't update the last updated time in this case.
     if (
@@ -96,9 +98,7 @@ def async_get_chat_log(
             yield chat_log
         except (Exception, asyncio.CancelledError) as err:
             # The caller may handle the error before the outer turn ends.
-            chat_log.async_add_error(
-                (user_input.agent_id if user_input else None) or DOMAIN, err
-            )
+            chat_log.async_add_error(agent_id, err)
             raise
         return
 
@@ -136,25 +136,27 @@ def async_get_chat_log(
     try:
         yield chat_log
     except (Exception, asyncio.CancelledError) as err:
-        chat_log.async_add_error(
-            (user_input.agent_id if user_input else None) or DOMAIN, err
-        )
+        chat_log.async_add_error(agent_id, err)
         raise
     finally:
         chat_log.turn_active = False
+        chat_log.last_error = None
         current_chat_log.reset(token)
         chat_log.delta_listener = None
 
-        no_reply = chat_log.content[-1] is last_message
-        if no_reply and user_input is not None:
+        if chat_log.content[-1] is last_message and user_input is not None:
             chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(
-                    agent_id=user_input.agent_id or DOMAIN, content="(no response)"
-                )
+                AssistantContent(agent_id=agent_id, content="(no response)")
             )
-            no_reply = False
 
-        if is_new_log and no_reply:
+        if not is_new_log:
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.UPDATED,
+                {"chat_log": chat_log.as_dict()},
+            )
+        elif chat_log.content[-1] is last_message:
             all_chat_logs.pop(session.conversation_id)
             _async_notify_subscribers(
                 hass,
@@ -163,27 +165,27 @@ def async_get_chat_log(
                 {},
             )
         else:
-            # Subscribers get no CONTENT_ADDED event for streamed content.
-            _async_notify_subscribers(
-                hass,
-                session.conversation_id,
-                ChatLogEventType.UPDATED,
-                {"chat_log": chat_log.as_dict()},
-            )
-            if is_new_log:
 
-                @callback
-                def do_cleanup() -> None:
-                    """Handle cleanup."""
-                    all_chat_logs.pop(session.conversation_id)
-                    _async_notify_subscribers(
-                        hass,
-                        session.conversation_id,
-                        ChatLogEventType.DELETED,
-                        {},
-                    )
+            @callback
+            def do_cleanup() -> None:
+                """Handle cleanup."""
+                all_chat_logs.pop(session.conversation_id)
+                _async_notify_subscribers(
+                    hass,
+                    session.conversation_id,
+                    ChatLogEventType.DELETED,
+                    {},
+                )
 
-                session.async_on_cleanup(do_cleanup)
+            session.async_on_cleanup(do_cleanup)
+
+
+def _tool_error_result(error: BaseException) -> llm.ToolResult:
+    """Return the result of a tool call that failed."""
+    error_data: JsonObjectType = {"error": type(error).__name__}
+    if str(error):
+        error_data["error_text"] = str(error)
+    return llm.ToolResult(data=error_data, error=True)
 
 
 class ConverseError(HomeAssistantError):
@@ -387,7 +389,7 @@ class ChatLog:
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
     turn_active: bool = field(default=False, init=False, repr=False)
-    _last_error: BaseException | None = field(default=None, repr=False)
+    last_error: BaseException | None = field(default=None, init=False, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -439,44 +441,39 @@ class ChatLog:
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
         # A nested chat log and the outer turn may both see the error.
-        if self._last_error is not None and (
-            error is self._last_error or error.__cause__ is self._last_error
+        if self.last_error is not None and (
+            error is self.last_error or error.__cause__ is self.last_error
         ):
             return
-        self._last_error = error
-        error_text = str(error) or type(error).__name__
+        self.last_error = error
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
-        for content in reversed(self.content):
-            if isinstance(content, ToolResultContent):
-                answered.add(content.tool_call_id)
-                continue
-            if isinstance(content, AssistantContent) and content.tool_calls:
-                for tool_call in content.tool_calls:
-                    if tool_call.id in answered or (
-                        # The provider handles its own tools, but sentence
-                        # triggers are sent to it as a regular tool call.
-                        tool_call.external and tool_call.tool_name != "trigger_sentence"
-                    ):
-                        continue
-                    self.async_add_assistant_content_without_tools(
-                        ToolResultContent(
-                            agent_id=content.agent_id,
-                            tool_call_id=tool_call.id,
-                            tool_name=tool_call.tool_name,
-                            result=llm.ToolResult(
-                                data={
-                                    "error": type(error).__name__,
-                                    "error_text": error_text,
-                                },
-                                error=True,
-                            ),
-                        )
+        index = len(self.content) - 1
+        while isinstance(content := self.content[index], ToolResultContent):
+            answered.add(content.tool_call_id)
+            index -= 1
+        if isinstance(content, AssistantContent) and content.tool_calls:
+            for tool_call in content.tool_calls:
+                if tool_call.id in answered or (
+                    # The provider handles its own tools, but sentence
+                    # triggers are sent to it as a regular tool call.
+                    tool_call.external and tool_call.tool_name != "trigger_sentence"
+                ):
+                    continue
+                self.async_add_assistant_content_without_tools(
+                    ToolResultContent(
+                        agent_id=content.agent_id,
+                        tool_call_id=tool_call.id,
+                        tool_name=tool_call.tool_name,
+                        result=_tool_error_result(error),
                     )
-            break
+                )
 
         self.async_add_assistant_content_without_tools(
-            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
+            AssistantContent(
+                agent_id=agent_id,
+                content=f"Error: {str(error) or type(error).__name__}",
+            )
         )
 
     @callback
@@ -519,6 +516,12 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
 
         if (
             not isinstance(content, AssistantContent)
@@ -550,10 +553,7 @@ class ChatLog:
             try:
                 tool_result = await tool_call_tasks[tool_input.id]
             except (HomeAssistantError, probatio.Invalid) as e:
-                error_data: JsonObjectType = {"error": type(e).__name__}
-                if str(e):
-                    error_data["error_text"] = str(e)
-                tool_result = llm.ToolResult(data=error_data, error=True)
+                tool_result = _tool_error_result(e)
             LOGGER.debug("Tool response: %s", tool_result)
 
             response_content = ToolResultContent(

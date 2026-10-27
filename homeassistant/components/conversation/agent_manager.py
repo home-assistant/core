@@ -22,7 +22,6 @@ from homeassistant.helpers import (
     singleton,
 )
 
-from .chat_log import AssistantContent, current_chat_log
 from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
 from .entity import ConversationEntity
 from .models import (
@@ -148,17 +147,6 @@ async def async_converse(
             result = ConversationResult(
                 response=intent_response,
                 conversation_id=conversation_input.conversation_id,
-            )
-
-        if (
-            (chat_log := current_chat_log.get())
-            and chat_log.conversation_id == conversation_input.conversation_id
-            and chat_log.content[-1].role == "user"
-            and (speech := result.response.speech.get("plain", {}).get("speech"))
-        ):
-            # Agents that do not use the chat log only answer in their result.
-            chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(agent_id=agent_id, content=speech)
             )
 
         trace.set_result(**result.as_dict())

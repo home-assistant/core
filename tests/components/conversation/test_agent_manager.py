@@ -2,19 +2,11 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.conversation import (
-    ConversationInput,
-    ConversationResult,
-    async_converse,
-    async_get_chat_log,
-)
+from homeassistant.components.conversation import ConversationResult, async_converse
 from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session
 from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
-
-from . import MockAgent
 
 
 async def test_async_converse(hass: HomeAssistant, init_components) -> None:
@@ -64,29 +56,3 @@ async def test_async_converse_failed_first_turn(
         ("user", "test command"),
         ("assistant", "Error: Provider is down"),
     ]
-
-
-async def test_async_converse_records_result_of_agent_without_chat_log(
-    hass: HomeAssistant,
-    init_components: None,
-    mock_agent_support_all: MockAgent,
-    mock_conversation_input: ConversationInput,
-) -> None:
-    """Test the result of an agent without chat log becomes the reply in the log."""
-    with (
-        chat_session.async_get_chat_session(hass, context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-    ):
-        await async_converse(
-            hass,
-            text="Hello",
-            conversation_id=session.conversation_id,
-            context=Context(),
-            agent_id=mock_agent_support_all.agent_id,
-        )
-
-    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
-        ("user", "Hello"),
-        ("assistant", "Test response"),
-    ]
-    assert chat_log.content[-1].agent_id == mock_agent_support_all.agent_id

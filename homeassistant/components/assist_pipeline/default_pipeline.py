@@ -831,6 +831,14 @@ class _DefaultPipelineProcessor:
                     speech = conversation_result.response.speech.get("plain", {}).get(
                         "speech", ""
                     )
+                    # Agents that do not use the chat log only answer in their result.
+                    if chat_log.content[-1].role == "user" and speech:
+                        chat_log.async_add_assistant_content_without_tools(
+                            conversation.AssistantContent(
+                                agent_id=agent_id,
+                                content=speech,
+                            )
+                        )
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
