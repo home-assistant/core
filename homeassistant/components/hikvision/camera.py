@@ -63,6 +63,10 @@ class HikvisionCamera(HikvisionEntity, Camera):
         # Build unique ID (unique per platform per integration)
         self._attr_unique_id = f"{self._data.device_id}_{channel.id}"
 
+        # No pyhik event is routed here; the registration exists so the
+        # camera is told when the event stream connects or drops.
+        self._callback_id = f"{self._data.device_id}.camera.{channel.id}"
+
     @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

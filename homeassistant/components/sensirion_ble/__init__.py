@@ -21,7 +21,7 @@ type SensirionBluetoothConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordi
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SensirionBluetoothConfigEntry
-) -> bool:
+) -> None:
     """Set up Sensirion BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -37,11 +37,10 @@ async def async_setup_entry(
     entry.async_on_unload(
         coordinator.async_start()
     )  # only start after all platforms have had a chance to subscribe
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SensirionBluetoothConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

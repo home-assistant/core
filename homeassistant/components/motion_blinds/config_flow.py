@@ -200,7 +200,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._config_settings = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): probatio.All(
+                probatio.Required(probatio.Secret(CONF_API_KEY)): probatio.All(
                     str, probatio.Length(min=16, max=16)
                 ),
             }

@@ -6,6 +6,9 @@ from urllib.parse import parse_qs, urlparse
 
 import jwt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yoto_api import AuthenticationError
 
 from homeassistant.components.yoto.const import DOMAIN, YOTO_AUDIENCE, YOTO_SCOPES
@@ -21,10 +24,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import ACCESS_TOKEN, USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT_URI = "https://example.com/auth/external/callback"
 TOKEN_URL = "https://login.yotoplay.com/oauth/token"

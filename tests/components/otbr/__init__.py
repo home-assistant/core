@@ -1,4 +1,4 @@
-"""Tests for the Open Thread Border Router integration."""
+"""Tests for the OpenThread Border Router integration."""
 
 BASE_URL = "http://core-silabs-multiprotocol:8081"
 CONFIG_ENTRY_DATA_MULTIPAN = {"url": "http://core-silabs-multiprotocol:8081"}

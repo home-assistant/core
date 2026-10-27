@@ -1,6 +1,7 @@
 {
   "domain": "airq",
   "name": "air-Q",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@Sibgatulin", "@dl2080"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airq",

@@ -25,6 +25,21 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+    "MDNS_TARGET_IP",
+    "Adapter",
+    "async_get_adapters",
+    "async_get_announce_addresses",
+    "async_get_enabled_source_ips",
+    "async_get_enabled_source_ips_from_adapters",
+    "async_get_ipv4_broadcast_addresses",
+    "async_get_loaded_adapters",
+    "async_get_source_ip",
+    "async_only_default_interface_enabled",
+    "async_reload_adapters",
+]
+
 
 def _check_docker_without_host_networking() -> bool:
     """Check if we are not using host networking in Docker."""
@@ -49,6 +64,12 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     return async_get_loaded_network(hass).adapters
+
+
+async def async_reload_adapters(hass: HomeAssistant) -> None:
+    """Reload the network adapters."""
+    network = await async_get_network(hass)
+    await network.async_reload_adapters()
 
 
 async def async_get_source_ip(

@@ -9,6 +9,7 @@ from pyoverkiz.action_queue import ActionQueueSettings
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
+    SomfyTokenCredentials,
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import OverkizClient, OverkizClientSettings
@@ -20,6 +21,7 @@ from pyoverkiz.exceptions import (
     NoSuchTokenError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -33,6 +35,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -58,6 +61,8 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_REFRESH_TOKEN,
+    CONF_SITE_OID,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -97,7 +102,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> None:
     """Set up Overkiz from a config entry."""
     client: OverkizClient | None = None
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
@@ -114,6 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     # Rexel Cloud API (OAuth2)
     elif entry.data.get(CONF_HUB) == Server.REXEL:
         client = await create_rexel_client(hass, entry)
+
+    # Somfy multi-account Cloud API (resumable token)
+    elif entry.data.get(CONF_HUB) == Server.SOMFY:
+        client = await create_somfy_client(hass, entry)
 
     # Overkiz Cloud API
     else:
@@ -151,6 +160,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
+    except SomfyServiceError as exception:
+        raise ConfigEntryNotReady("Somfy service error") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -226,26 +237,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 2:
         await _async_migrate_strenum_unique_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 async def _async_migrate_strenum_unique_ids(
@@ -369,6 +376,34 @@ async def create_rexel_client(
         credentials=RexelTokenCredentials(
             access_token_callback=async_get_token,
             gateway_id=entry.data[CONF_GATEWAY_ID],
+        ),
+        session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
+    )
+
+
+async def create_somfy_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create an Overkiz client for a Somfy multi-account, resumed from a token."""
+
+    async def on_token_refresh(refresh_token: str) -> None:
+        """Persist the rotated Somfy refresh token back to the config entry."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_REFRESH_TOKEN: refresh_token},
+        )
+
+    return OverkizClient(
+        server=Server.SOMFY,
+        credentials=SomfyTokenCredentials(
+            refresh_token=entry.data[CONF_REFRESH_TOKEN],
+            site_oid=entry.data[CONF_SITE_OID],
+            region=entry.data[CONF_REGION],
+            gateway_id=entry.data[CONF_GATEWAY_ID],
+            on_token_refresh=on_token_refresh,
         ),
         session=async_create_clientsession(hass),
         settings=OverkizClientSettings(

@@ -3,7 +3,6 @@
 from functools import partial
 from typing import Any, Required, TypedDict, cast, override
 
-import probatio
 from pynws import SimpleNWS
 
 from homeassistant.components.weather import (
@@ -25,20 +24,14 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.json import JsonValueType
@@ -100,19 +93,10 @@ async def async_setup_entry(
         entity_id := entity_registry.async_get_entity_id(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])}_{HOURLY}",
+            f"{base_unique_id(**entry.data[CONF_LOCATION])}_{HOURLY}",
         )
     ):
         entity_registry.async_remove(entity_id)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "get_forecasts_extra",
-        {probatio.Required("type"): probatio.In(("hourly", "twice_daily"))},
-        "async_get_forecasts_extra_service",
-        supports_response=SupportsResponse.ONLY,
-    )
 
     async_add_entities([NWSWeather(entry, nws_data)], False)
 

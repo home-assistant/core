@@ -45,7 +45,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.FAN_ONLY
     _attr_hvac_modes = [HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
@@ -65,7 +65,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(
@@ -95,8 +95,11 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
             return PRESET_MANUAL
 
         ventilation_mode = cast(
-            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
+            dict | None, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
+        if ventilation_mode is None:
+            return None
+
         prog = ventilation_mode.get(OverkizCommandParam.PROG)
 
         if prog == OverkizCommandParam.ON:
@@ -140,9 +143,13 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         ventilation_mode = cast(
-            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
+            dict | None, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
-        cooling = ventilation_mode.get(OverkizCommandParam.COOLING)
+        cooling = (
+            ventilation_mode.get(OverkizCommandParam.COOLING)
+            if ventilation_mode is not None
+            else None
+        )
 
         if cooling == OverkizCommandParam.ON:
             return FAN_BYPASS
@@ -176,8 +183,11 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     ) -> None:
         """Execute ventilation mode command with all parameters."""
         ventilation_mode = cast(
-            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
+            dict | None, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
+        # The Local API can omit this state, and the command needs all its parameters
+        if ventilation_mode is None:
+            return
 
         if cooling:
             ventilation_mode[OverkizCommandParam.COOLING] = cooling

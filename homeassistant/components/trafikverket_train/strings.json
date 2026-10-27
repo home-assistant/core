@@ -137,6 +137,17 @@
       }
     }
   },
+  "exceptions": {
+    "migration_multiple_stations": {
+      "message": "Could not migrate the configuration as more than one train station was found for {from_station} or {to_station}"
+    },
+    "migration_station_not_found": {
+      "message": "Could not migrate the configuration as no train station was found for {from_station} or {to_station}"
+    },
+    "migration_unknown_error": {
+      "message": "Could not migrate the configuration due to an unknown error"
+    }
+  },
   "options": {
     "step": {
       "init": {

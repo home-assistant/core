@@ -26,12 +26,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 AUTH_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 
 async def async_get_nam(
-    hass: HomeAssistant, host: str, data: dict[str, Any]
+    hass: HomeAssistant, host: str, data: Mapping[str, Any]
 ) -> NettigoAirMonitor:
     """Get NAM client."""
     websession = async_get_clientsession(hass)
@@ -207,7 +210,11 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                nam = await async_get_nam(self.hass, user_input[CONF_HOST], {})
+                nam = await async_get_nam(
+                    self.hass, user_input[CONF_HOST], reconfigure_entry.data
+                )
+            except AuthFailedError:
+                errors["base"] = "invalid_auth"
             except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:

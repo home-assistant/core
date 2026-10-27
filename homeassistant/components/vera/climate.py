@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
@@ -95,7 +96,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         vera_temp_units = self.vera_device.vera_controller.temperature_units
 
@@ -106,7 +107,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.vera_device.get_current_temperature()
 
@@ -117,7 +118,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.vera_device.get_current_goal_temperature()
 
@@ -128,6 +129,25 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
             self.vera_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
         self.schedule_update_ha_state()
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        mode = self.vera_device.get_hvac_state()
+        if mode == "Heating":
+            result = HVACAction.HEATING
+        elif mode == "Cooling":
+            result = HVACAction.COOLING
+        elif mode in {"Idle", "PendingCool", "PendingHeat", "PendingIdle"}:
+            result = HVACAction.IDLE
+        elif mode in {"FanOnly", "Vent"}:
+            result = HVACAction.FAN
+        elif mode == "Off":
+            result = HVACAction.OFF
+        else:
+            result = None
+
+        return result
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:

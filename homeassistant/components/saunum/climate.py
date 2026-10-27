@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
+from . import LeilSaunaConfigEntry
 from .const import (
     DEFAULT_PRESET_NAME_TYPE_1,
     DEFAULT_PRESET_NAME_TYPE_2,
@@ -39,6 +39,7 @@ from .const import (
     OPT_PRESET_NAME_TYPE_2,
     OPT_PRESET_NAME_TYPE_3,
 )
+from .coordinator import LeilSaunaCoordinator
 from .entity import LeilSaunaEntity
 
 PARALLEL_UPDATES = 1
@@ -74,7 +75,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 1.0
     _attr_min_temp = MIN_TEMPERATURE
@@ -116,13 +117,13 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature in Celsius."""
         return self.coordinator.data.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature in Celsius."""
         return self.coordinator.data.target_temperature
 

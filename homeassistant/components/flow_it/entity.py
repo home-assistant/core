@@ -1,4 +1,4 @@
-"""Base entity for Flow-it."""
+"""Base entity for AriaQ."""
 
 from flow_it_api.client import FlowItVMCMachine
 
@@ -7,17 +7,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FlowItCoordinator
+from .coordinator import AriaQCoordinator
 
 
-class FlowItVmcEntity(CoordinatorEntity[FlowItCoordinator]):
-    """Base entity for Flow-it."""
+class AriaQVmcEntity(CoordinatorEntity[AriaQCoordinator]):
+    """Base entity for AriaQ."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: FlowItCoordinator,
+        coordinator: AriaQCoordinator,
         vmc: FlowItVMCMachine,
         entity_description: EntityDescription,
     ) -> None:
@@ -29,7 +29,7 @@ class FlowItVmcEntity(CoordinatorEntity[FlowItCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.state.name)},
             name=coordinator.data.state.name,
-            manufacturer="FLOW-IT",
+            manufacturer="AriaQ",
             model="VMC",
             sw_version=coordinator.data.state.data.alert.version,
         )

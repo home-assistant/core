@@ -25,7 +25,7 @@ CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
+    {probatio.Required(probatio.Secret(CONF_PAGE_ACCESS_TOKEN)): cv.string}
 )
 
 

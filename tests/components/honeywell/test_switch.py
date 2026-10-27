@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from aiosomecomfort.exceptions import SomeComfortError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_emheat_switch(
