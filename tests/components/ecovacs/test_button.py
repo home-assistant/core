@@ -193,6 +193,10 @@ def platforms() -> Platform | list[Platform]:
                     "button.t90_pro_omni_empty_dustbin",
                     station_action.StationAction(StationAction.EMPTY_DUSTBIN),
                 ),
+                (
+                    "button.t90_pro_omni_wash_mop",
+                    station_action.StationAction(StationAction.WASH_MOP),
+                ),
             ],
         ),
     ],

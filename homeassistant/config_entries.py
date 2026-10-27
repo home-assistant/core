@@ -317,7 +317,6 @@ class ConfigFlowContext(FlowContext, total=False):
 
     alternative_domain: str
     configuration_url: str
-    confirm_only: bool
     discovery_key: DiscoveryKey
     dismiss_protected: bool
     entry_id: str
@@ -3147,7 +3146,7 @@ class ConfigEntries:
     @callback
     def async_update_issues(self) -> None:
         """Update unique id collision issues."""
-        with ir.async_begin_issues_refresh(
+        with ir.async_refresh_issues(
             self.hass,
             HOMEASSISTANT_DOMAIN,
             issue_id_pattern=f"{ISSUE_UNIQUE_ID_COLLISION}_",
@@ -3438,8 +3437,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _set_confirm_only(
         self,
     ) -> None:
-        """Mark the config flow as only needing user confirmation to finish flow."""
-        self.context["confirm_only"] = True
+        """Deprecated no-op; the confirm only flag it used to set was never read."""
+        report_usage(
+            "calls _set_confirm_only, which is deprecated and has no effect",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
+            integration_domain=self.handler,
+        )
 
     @callback
     def _async_current_entries(

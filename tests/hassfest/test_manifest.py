@@ -19,6 +19,8 @@ KNOWN_CATEGORIES = {
     "plugs_switches",
 }
 
+KNOWN_CONNECTIVITY = {"cloud", "matter", "network", "zigbee"}
+
 
 def _validate(config: Config, manifest_extra: dict[str, Any]) -> list[str]:
     """Validate a core integration manifest and return the errors."""
@@ -34,7 +36,9 @@ def _validate(config: Config, manifest_extra: dict[str, Any]) -> list[str]:
             **manifest_extra,
         },
     )
-    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
     return [error.error for error in integration.errors]
 
 
@@ -89,7 +93,9 @@ def test_categories_not_needed_virtual(config: Config) -> None:
         },
     )
 
-    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
 
     assert not [error for error in integration.errors if "categories" in error.error]
 
@@ -196,7 +202,9 @@ def test_categories_not_allowed_virtual(config: Config) -> None:
         },
     )
 
-    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
 
     assert integration.errors[0].error.startswith("Invalid manifest")
     assert "categories" in integration.errors[0].error
@@ -277,7 +285,7 @@ def test_categories_skipped_without_known_categories(config: Config) -> None:
         },
     )
 
-    manifest.validate_manifest(integration, Path("components"), None)
+    manifest.validate_manifest(integration, Path("components"), None, None)
 
     assert integration.errors == []
 
@@ -297,7 +305,9 @@ def _validate_custom(config: Config, categories: Any) -> Integration:
             "categories": categories,
         },
     )
-    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
     return integration
 
 
@@ -323,6 +333,228 @@ def test_custom_integration_unknown_category(config: Config) -> None:
 def test_custom_integration_invalid_categories(config: Config) -> None:
     """Test badly formed categories are still errors for custom integrations."""
     integration = _validate_custom(config, ["energy", "energy"])
+
+    assert len(integration.errors) == 1
+    assert integration.errors[0].error.startswith("Invalid manifest")
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize(
+    "connectivity",
+    [
+        pytest.param(["zigbee"], id="one"),
+        pytest.param(["matter", "network", "cloud"], id="several"),
+    ],
+)
+def test_connectivity(config: Config, connectivity: list[str]) -> None:
+    """Test valid connectivity passes."""
+    errors = _validate(config, {"categories": ["energy"], "connectivity": connectivity})
+
+    assert errors == []
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize(
+    "integration_type", ["device", "hardware", "helper", "hub", "service"]
+)
+def test_connectivity_not_required(config: Config, integration_type: str) -> None:
+    """Test connectivity is optional for now."""
+    errors = _validate(
+        config, {"integration_type": integration_type, "categories": ["energy"]}
+    )
+
+    assert errors == []
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize(
+    "connectivity",
+    [
+        pytest.param([], id="empty"),
+        pytest.param(["zigbee", "zigbee"], id="duplicate"),
+        pytest.param("zigbee", id="not_a_list"),
+        pytest.param(["Zigbee"], id="not_a_slug"),
+        pytest.param(["z-wave"], id="dash"),
+    ],
+)
+def test_invalid_connectivity(config: Config, connectivity: Any) -> None:
+    """Test badly formed connectivity fails the schema."""
+    errors = _validate(config, {"categories": ["energy"], "connectivity": connectivity})
+
+    assert len(errors) == 1
+    assert errors[0].startswith("Invalid manifest")
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_unknown_connectivity(config: Config) -> None:
+    """Test an unknown connectivity is an error for core integrations."""
+    errors = _validate(
+        config, {"categories": ["energy"], "connectivity": ["zigbee", "thread"]}
+    )
+
+    assert errors == [
+        "Unknown connectivity `thread`, see "
+        "homeassistant/components/homeassistant/strings.json for the known values"
+    ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize("integration_type", ["entity", "system"])
+def test_connectivity_not_allowed(config: Config, integration_type: str) -> None:
+    """Test entity platforms and system integrations can't have connectivity."""
+    errors = _validate(
+        config, {"integration_type": integration_type, "connectivity": ["cloud"]}
+    )
+
+    assert errors == [
+        f"Integrations of type {integration_type} can't have connectivity"
+    ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_connectivity_not_allowed_virtual(config: Config) -> None:
+    """Test virtual integrations can't have connectivity."""
+    integration = Integration(
+        Path("test"),
+        _config=config,
+        _manifest={
+            "domain": "test",
+            "name": "Test",
+            "integration_type": "virtual",
+            "supported_by": "other",
+            "connectivity": ["zigbee"],
+        },
+    )
+
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
+
+    assert integration.errors[0].error.startswith("Invalid manifest")
+    assert "connectivity" in integration.errors[0].error
+
+
+def test_load_known_connectivity(config: Config) -> None:
+    """Test the known connectivity comes from the homeassistant strings."""
+    known_connectivity = manifest.load_known_connectivity(config)
+
+    assert known_connectivity is not None
+    assert "zigbee" in known_connectivity
+    assert "cloud" in known_connectivity
+    assert "thread" not in known_connectivity
+
+
+def test_load_known_connectivity_before_generating(
+    config: Config, tmp_path: Path
+) -> None:
+    """Test a new value is known before integration_connectivity.json exists."""
+    strings_path = tmp_path / manifest.HOMEASSISTANT_STRINGS_PATH
+    strings_path.parent.mkdir(parents=True)
+    strings_path.write_text(
+        json.dumps(
+            {
+                "integration_connectivity": {
+                    "x10": {"name": "X10", "description": "X10 devices."}
+                }
+            }
+        )
+    )
+
+    known_connectivity = manifest.load_known_connectivity(
+        replace(config, root=tmp_path)
+    )
+
+    assert known_connectivity == {"x10"}
+
+
+@pytest.mark.parametrize(
+    "strings",
+    [
+        pytest.param("{", id="invalid_json"),
+        pytest.param("[]", id="not_an_object"),
+    ],
+)
+def test_load_known_connectivity_invalid_strings(
+    config: Config, tmp_path: Path, strings: str
+) -> None:
+    """Test invalid strings skip the connectivity check, other plugins report them."""
+    strings_path = tmp_path / manifest.HOMEASSISTANT_STRINGS_PATH
+    strings_path.parent.mkdir(parents=True)
+    strings_path.write_text(strings)
+
+    assert manifest.load_known_connectivity(replace(config, root=tmp_path)) is None
+
+
+def test_load_known_connectivity_outside_core(config: Config, tmp_path: Path) -> None:
+    """Test validating outside a core checkout skips the connectivity check."""
+    assert manifest.load_known_connectivity(replace(config, root=tmp_path)) is None
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_connectivity_skipped_without_known_connectivity(config: Config) -> None:
+    """Test connectivity isn't checked when the known values can't be loaded."""
+    integration = Integration(
+        Path("test"),
+        _config=config,
+        _manifest={
+            "domain": "test",
+            "name": "Test",
+            "documentation": "https://www.home-assistant.io/integrations/test",
+            "codeowners": ["@awesome"],
+            "iot_class": "local_polling",
+            "categories": ["energy"],
+            "connectivity": ["x10"],
+        },
+    )
+
+    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES, None)
+
+    assert integration.errors == []
+
+
+def _validate_custom_connectivity(config: Config, connectivity: Any) -> Integration:
+    """Validate a custom integration manifest with connectivity."""
+    integration = Integration(
+        Path("custom"),
+        _config=config,
+        _manifest={
+            "domain": "custom",
+            "name": "Custom",
+            "documentation": "https://example.com",
+            "codeowners": ["@awesome"],
+            "iot_class": "local_polling",
+            "version": "1.0.0",
+            "connectivity": connectivity,
+        },
+    )
+    manifest.validate_manifest(
+        integration, Path("components"), KNOWN_CATEGORIES, KNOWN_CONNECTIVITY
+    )
+    return integration
+
+
+def test_custom_integration_connectivity(config: Config) -> None:
+    """Test a custom integration with valid connectivity passes."""
+    integration = _validate_custom_connectivity(config, ["zigbee", "cloud"])
+
+    assert integration.errors == []
+    assert integration.warnings == []
+
+
+def test_custom_integration_unknown_connectivity(config: Config) -> None:
+    """Test an unknown connectivity is only a warning for custom integrations."""
+    integration = _validate_custom_connectivity(config, ["zigbee", "thread"])
+
+    assert integration.errors == []
+    assert [warning.error for warning in integration.warnings] == [
+        "Unknown connectivity `thread`, see "
+        "homeassistant/components/homeassistant/strings.json for the known values"
+    ]
+
+
+def test_custom_integration_invalid_connectivity(config: Config) -> None:
+    """Test badly formed connectivity is still an error for custom integrations."""
+    integration = _validate_custom_connectivity(config, ["zigbee", "zigbee"])
 
     assert len(integration.errors) == 1
     assert integration.errors[0].error.startswith("Invalid manifest")

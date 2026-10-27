@@ -165,7 +165,6 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         placeholders = {
             "id": async_format_id(self.unique_id),
             "model": async_format_model(self._discovered_model),

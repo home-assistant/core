@@ -8,7 +8,7 @@ from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN, LOGGER
 from .helpers import async_load_platforms
-from .utils import async_begin_shell_template_issues_refresh
+from .utils import async_refresh_shell_template_issues
 
 
 async def _async_reload_config(call: ServiceCall) -> None:
@@ -16,7 +16,7 @@ async def _async_reload_config(call: ServiceCall) -> None:
     hass = call.hass
     reload_config = await async_integration_yaml_config(hass, DOMAIN)
     # Set up entities keep their deprecation issue, issues of others are deleted
-    with async_begin_shell_template_issues_refresh(hass):
+    with async_refresh_shell_template_issues(hass):
         reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)

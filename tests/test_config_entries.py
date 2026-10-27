@@ -11552,6 +11552,52 @@ async def test_create_entry_existing_unique_id(
     assert (log_text in caplog.text) == expected_log
 
 
+class _ConfirmOnlyFlow(config_entries.ConfigFlow):
+    """Test flow calling the deprecated _set_confirm_only."""
+
+    VERSION = 1
+
+    async def async_step_user(self, user_input=None):
+        """Test user step."""
+        self._set_confirm_only()
+        return self.async_show_form(step_id="user")
+
+
+async def test_set_confirm_only_core_integration(hass: HomeAssistant) -> None:
+    """Test _set_confirm_only raises for core integrations."""
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    with (
+        mock_config_flow("comp", _ConfirmOnlyFlow),
+        pytest.raises(
+            RuntimeError,
+            match="calls _set_confirm_only, which is deprecated and has no effect",
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+
+async def test_set_confirm_only_custom_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _set_confirm_only is a silent no-op for custom integrations."""
+    mock_integration(hass, MockModule("comp"), built_in=False)
+    mock_platform(hass, "comp.config_flow", None)
+
+    with mock_config_flow("comp", _ConfirmOnlyFlow):
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert "confirm_only" not in flow["context"]
+    assert "_set_confirm_only" not in caplog.text
+
+
 async def test_async_update_title_placeholders(hass: HomeAssistant) -> None:
     """Test async_update_title_placeholders updates context and notifies listeners."""
 
