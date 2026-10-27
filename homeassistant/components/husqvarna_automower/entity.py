@@ -160,7 +160,8 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
-        assert self.work_area_attributes is not None
+        work_area_attributes = self.work_area_attributes
+        assert work_area_attributes is not None
         device_info = self._attr_device_info
         assert device_info is not None
 
@@ -177,7 +178,7 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         else:
             self._attr_device_info = ChildDeviceInfo(
                 identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
-                name=self.work_area_attributes.name,
+                name=work_area_attributes.name,
                 parent_device_id=parent_device.id,
             )
 
