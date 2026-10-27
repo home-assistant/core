@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -44,8 +45,6 @@ from . import (
     _create_mocked_device,
     _patch_media_player_device,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SUPPORT_SONGPAL = (
     MediaPlayerEntityFeature.VOLUME_SET

@@ -2,6 +2,7 @@
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywaze.route_calculator import WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
@@ -24,8 +25,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "sensor.waze_travel_time"
 

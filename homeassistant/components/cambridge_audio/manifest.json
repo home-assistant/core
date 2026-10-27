@@ -1,6 +1,7 @@
 {
   "domain": "cambridge_audio",
   "name": "Cambridge Audio",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@noahhusby"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cambridge_audio",

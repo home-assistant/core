@@ -2,14 +2,19 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -91,7 +96,7 @@ async def test_websocket_callback_updates_entities(
     assert state
     assert state.state == "charging"
 
-    mock_charger.status = "Sleeping"
+    mock_charger.state = "Sleeping"
     await mock_charger.callback()
     await hass.async_block_till_done()
 
@@ -102,6 +107,7 @@ async def test_websocket_callback_updates_entities(
 
 async def test_sensor_unavailable_on_coordinator_timeout(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
@@ -115,8 +121,9 @@ async def test_sensor_unavailable_on_coordinator_timeout(
     assert state.state != STATE_UNAVAILABLE
 
     mock_charger.update.side_effect = TimeoutError("Connection timed out")
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
@@ -124,7 +131,7 @@ async def test_sensor_unavailable_on_coordinator_timeout(
 
 
 @pytest.mark.parametrize(
-    ("raw_status", "expected_state"),
+    ("raw_state", "expected_state"),
     [
         pytest.param("not connected", "not_connected", id="not_connected"),
         pytest.param("connected", "connected", id="connected"),
@@ -153,11 +160,11 @@ async def test_status_sensor_mapping(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
-    raw_status: str | None,
+    raw_state: str | None,
     expected_state: str,
 ) -> None:
     """Test status sensor mapping to enum options."""
-    mock_charger.status = raw_status
+    mock_charger.state = raw_state
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 

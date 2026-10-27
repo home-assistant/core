@@ -3,17 +3,17 @@
 import asyncio
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, frame
 from homeassistant.util.decorator import Registry
-
-from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):
@@ -590,6 +590,7 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
             if uncompleted_task:
                 assert progress_action
                 return self.async_show_progress(
+                    step_id="init",
                     progress_action=progress_action,
                     progress_task=uncompleted_task,
                 )
@@ -687,7 +688,7 @@ async def test_show_progress_error(
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(
-                progress_action="task", progress_task=self.progress_task
+                step_id="init", progress_action="task", progress_task=self.progress_task
             )
 
         async def async_step_error(self, user_input=None):
@@ -1389,4 +1390,417 @@ async def test_show_advanced_options(
         "The deprecated function show_advanced_options was called. It will be "
         "removed in HA Core 2027.6. Use a user friendly way to present additional "
         "options in the UI, for example a section instead"
+    ) in caplog.text
+
+
+async def test_hidden_required_field_skips_validation(
+    manager: MockFlowManager,
+) -> None:
+    """Test a required field is only enforced while it is not hidden."""
+    schema = probatio.Schema(
+        {
+            probatio.Required("use_tls", default=True): bool,
+            data_entry_flow.Required(
+                "cert_path",
+                visible={"field": "use_tls", "value": True},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # cert_path is hidden (use_tls is False), so a missing value validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": False})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"use_tls": False}
+
+    # cert_path is visible (use_tls is True) and missing, so validation fails
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {"use_tls": True})
+    assert "cert_path" in err.value.schema_errors
+
+    # cert_path is visible and provided, so validation passes
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"use_tls": True, "cert_path": "cert.pem"}
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"use_tls": True, "cert_path": "cert.pem"}
+
+
+async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> None:
+    """Test a hidden field injects no default and drops a stale value."""
+    schema = probatio.Schema(
+        {
+            probatio.Required("use_tls", default=True): bool,
+            data_entry_flow.Optional(
+                "cert_path",
+                default="default.pem",
+                visible={"field": "use_tls", "value": True},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # cert_path is hidden, so its default is not injected into the data
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": False})
+    assert result["data"] == {"use_tls": False}
+
+    # a stale value for a hidden field is dropped
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"use_tls": False, "cert_path": "stale.pem"}
+    )
+    assert result["data"] == {"use_tls": False}
+
+    # while visible, the default is applied as usual
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"use_tls": True})
+    assert result["data"] == {"use_tls": True, "cert_path": "default.pem"}
+
+
+async def test_hidden_required_field_in_section(manager: MockFlowManager) -> None:
+    """Test conditional required validation inside a section."""
+    schema = probatio.Schema(
+        {
+            probatio.Required("advanced"): data_entry_flow.section(
+                probatio.Schema(
+                    {
+                        probatio.Required("mode", default="simple"): str,
+                        data_entry_flow.Required(
+                            "token",
+                            visible={"field": "mode", "value": "advanced"},
+                        ): str,
+                    }
+                ),
+            )
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # token is hidden (mode is "simple"), missing value validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"advanced": {"mode": "simple"}}
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+
+    # token is visible (mode is "advanced") and missing, validation fails
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData):
+        await manager.async_configure(
+            form["flow_id"], {"advanced": {"mode": "advanced"}}
+        )
+
+
+async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
+    """Test conditions see schema defaults for fields the client omitted."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("mode", default="simple"): str,
+            data_entry_flow.Required(
+                "token",
+                visible={"field": "mode", "value": "advanced"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "mode" is omitted but defaults to "simple", so "token" is hidden
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+
+async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
+    """Test a hidden section is removed entirely, not kept as an empty dict."""
+    schema = probatio.Schema(
+        {
+            probatio.Required("enable_advanced", default=False): bool,
+            data_entry_flow.Required(
+                "advanced",
+                visible={"field": "enable_advanced", "value": True},
+            ): data_entry_flow.section(
+                probatio.Schema({probatio.Required("token"): str}),
+            ),
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is hidden, so a missing section validates
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"enable_advanced": False})
+    assert result["data"] == {"enable_advanced": False}
+
+    # stale nested data for the hidden section is dropped
+    form = await manager.async_init("test")
+    result = await manager.async_configure(
+        form["flow_id"], {"enable_advanced": False, "advanced": {"token": "stale"}}
+    )
+    assert result["data"] == {"enable_advanced": False}
+
+
+async def test_hidden_field_reads_as_absent_to_other_conditions(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field holds no value for the conditions of other fields."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("mode", default="simple"): str,
+            # visible only while "advanced", so its default must not leak to "extra"
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                visible={"field": "mode", "value": "advanced"},
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                visible={"field": "token", "operator": "exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden, so it reads as absent and hides the required "extra"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {"mode": "simple"})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"mode": "simple"}
+
+    # "token" is visible, so "extra" stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {"mode": "advanced"})
+    assert "extra" in err.value.schema_errors
+
+
+async def test_hidden_fields_resolved_in_schema_order(
+    manager: MockFlowManager,
+) -> None:
+    """Test a hidden field drops before a later field's condition is evaluated."""
+    schema = probatio.Schema(
+        {
+            # Always hidden but defaulted; must read as absent to "extra" below it.
+            data_entry_flow.Optional(
+                "token",
+                default="from_default",
+                visible=False,
+            ): str,
+            data_entry_flow.Required(
+                "extra",
+                visible={"field": "token", "operator": "not_exists"},
+            ): str,
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # "token" is hidden and drops out, so "extra" sees it as absent and stays required
+    form = await manager.async_init("test")
+    with pytest.raises(data_entry_flow.InvalidData) as err:
+        await manager.async_configure(form["flow_id"], {})
+    assert "extra" in err.value.schema_errors
+
+
+async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:
+    """Test nested hidden fields are stripped for an omitted defaulted section."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("advanced", default={"mode": "simple"}): (
+                data_entry_flow.section(
+                    probatio.Schema(
+                        {
+                            probatio.Required("mode", default="simple"): str,
+                            data_entry_flow.Required(
+                                "token",
+                                visible={"field": "mode", "value": "advanced"},
+                            ): str,
+                        }
+                    ),
+                )
+            )
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(title="Test", data=user_input)
+            return self.async_show_form(step_id="init", data_schema=schema)
+
+    # the section is omitted; its default hides the nested required "token"
+    form = await manager.async_init("test")
+    result = await manager.async_configure(form["flow_id"], {})
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"advanced": {"mode": "simple"}}
+
+
+def test_add_visible_conditions_to_serialized_schema() -> None:
+    """Test visible conditions are injected into the serialized schema."""
+    condition = {"field": "use_tls", "value": True}
+    schema = probatio.Schema(
+        {
+            probatio.Required("use_tls", default=True): bool,
+            data_entry_flow.Required("cert_path", visible=condition): str,
+        }
+    )
+    serialized = probatio.to_field_list(schema, custom_serializer=cv.custom_serializer)
+    data_entry_flow.add_visible_conditions_to_serialized_schema(schema, serialized)
+
+    fields = {field["name"]: field for field in serialized}
+    assert "visible" not in fields["use_tls"]
+    assert fields["cert_path"]["visible"] == condition
+
+
+@pytest.mark.parametrize(
+    "visible",
+    [
+        "yes",
+        {"value": 1},
+        {"field": "a", "operator": "gt", "value": 1},
+        {"field": "a", "unknown": 1},
+        [{"field": "a"}, {"value": 1}],
+        {"condition": "or", "conditions": [{"field": "a"}]},
+    ],
+)
+def test_invalid_visible(visible: Any) -> None:
+    """Test invalid visible conditions are rejected."""
+    with pytest.raises(probatio.Invalid):
+        data_entry_flow.Required("a", visible=visible)
+    with pytest.raises(probatio.Invalid):
+        data_entry_flow.Optional("a", visible=visible)
+
+
+MISSING_STEP_ID_PARAMS = pytest.mark.parametrize(
+    ("method", "kwargs", "result_type"),
+    [
+        pytest.param(
+            "async_show_form", {}, data_entry_flow.FlowResultType.FORM, id="form"
+        ),
+        pytest.param(
+            "async_external_step",
+            {"url": "https://example.com"},
+            data_entry_flow.FlowResultType.EXTERNAL_STEP,
+            id="external_step",
+        ),
+        pytest.param(
+            "async_show_progress",
+            {"progress_action": "task"},
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            id="show_progress",
+        ),
+        pytest.param(
+            "async_show_menu",
+            {"menu_options": ["init"]},
+            data_entry_flow.FlowResultType.MENU,
+            id="menu",
+        ),
+    ],
+)
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param("homeassistant/components/hue", id="core_integration"),
+        pytest.param("homeassistant.core", id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_core(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    method: str,
+    kwargs: dict[str, str | list[str]],
+    result_type: data_entry_flow.FlowResultType,
+) -> None:
+    """Test a missing step_id raises for core and core integrations."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return getattr(self, method)(**kwargs)
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(RuntimeError, match=f"calls {method} without passing a step_id"),
+    ):
+        await manager.async_init("test")
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_custom_integration(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    kwargs: dict[str, str | list[str]],
+    result_type: data_entry_flow.FlowResultType,
+) -> None:
+    """Test a missing step_id is logged and defaults to the step for custom integrations."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return getattr(self, method)(**kwargs)
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await manager.async_init("test")
+
+    assert result["type"] is result_type
+    assert result["step_id"] == "init"
+    assert (
+        f"Detected that custom integration 'my_integration' calls {method} without "
+        "passing a step_id at custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2027.5.0"
     ) in caplog.text

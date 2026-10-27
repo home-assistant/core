@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "switch.garage_charge"
 
@@ -178,7 +177,7 @@ async def test_switch_command_failure(
         )
     await hass.async_block_till_done()
 
-    mock_command.assert_awaited_once_with()
+    mock_command.assert_awaited_once()
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "command_failed"
     assert err.value.__cause__ is failure

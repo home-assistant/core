@@ -15,6 +15,7 @@
       "local_name": "CC-RT-BLE-EQ"
     }
   ],
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@eulemitkeule", "@dbuezas"],
   "config_flow": true,
   "dependencies": ["bluetooth", "bluetooth_adapters"],

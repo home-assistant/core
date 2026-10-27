@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import SirenEntity
+    from .entity import SirenEntity
 
 DOMAIN: Final = "siren"
 
@@ -35,3 +35,19 @@ class SirenEntityFeature(IntFlag):
     TONES = 4
     VOLUME_SET = 8
     DURATION = 16
+
+
+class SirenService(StrEnum):
+    """Store keys for siren services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class SirenServiceArgument(StrEnum):
+    """Store keys for siren service arguments."""
+
+    DURATION = "duration"
+    TONE = "tone"
+    VOLUME_LEVEL = "volume_level"

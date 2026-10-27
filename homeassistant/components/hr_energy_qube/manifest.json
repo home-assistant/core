@@ -1,6 +1,11 @@
 {
   "domain": "hr_energy_qube",
   "name": "Qube heat pump",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "climate.thermostats_heating",
+    "climate.water_heaters"
+  ],
   "codeowners": ["@MattieGit"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
@@ -8,8 +13,8 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["python_qube_heatpump"],
-  "quality_scale": "silver",
-  "requirements": ["python-qube-heatpump==1.16.0"],
+  "quality_scale": "platinum",
+  "requirements": ["python-qube-heatpump==1.17.0"],
   "zeroconf": [
     {
       "properties": { "ProjectName": "deqsihpb*", "Vendor": "000a5c" },

@@ -568,6 +568,9 @@
       "breath_sensitivity": {
         "name": "Breath sensitivity"
       },
+      "brightness_level": {
+        "name": "[%key:component::zha::entity::sensor::brightness_level::name%]"
+      },
       "button_delay": {
         "name": "Button delay"
       },
@@ -2397,7 +2400,7 @@
         "data": {
           "path": "[%key:component::zha::config::step::choose_serial_port::data::path%]"
         },
-        "description": "[%key:component::zha::config::step::choose_serial_port::description%]",
+        "description": "Select the serial port of the Zigbee adapter Home Assistant should use. When migrating, this is your new adapter.",
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]"
       },
       "confirm_ezsp_ieee_overwrite": {

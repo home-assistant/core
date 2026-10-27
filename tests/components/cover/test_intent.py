@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -16,8 +17,6 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(

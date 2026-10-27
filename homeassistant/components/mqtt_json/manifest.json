@@ -1,6 +1,7 @@
 {
   "domain": "mqtt_json",
   "name": "MQTT JSON",
+  "categories": ["presence_location.trackers", "diy_makers"],
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt_json",

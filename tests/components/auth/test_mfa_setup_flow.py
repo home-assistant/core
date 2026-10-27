@@ -2,20 +2,20 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockUser,
+    async_mock_service,
+    ensure_auth_manager_loaded,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.components.auth import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    CLIENT_ID,
-    MockUser,
-    async_mock_service,
-    ensure_auth_manager_loaded,
-)
-from tests.typing import WebSocketGenerator
 
 
 async def test_ws_setup_depose_mfa(

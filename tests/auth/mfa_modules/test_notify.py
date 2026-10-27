@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockUser, async_mock_service
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
@@ -15,8 +16,6 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-
-from tests.common import MockUser, async_mock_service
 
 MOCK_CODE = "123456"
 MOCK_CODE_2 = "654321"

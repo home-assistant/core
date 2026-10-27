@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.vistapool.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
-
-from tests.common import MockConfigEntry
 
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"

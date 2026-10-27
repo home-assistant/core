@@ -162,13 +162,16 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_FILTERS): probatio.All(
             probatio.EnsureList(),
             [
-                probatio.Any(
-                    FILTER_OUTLIER_SCHEMA,
-                    FILTER_LOWPASS_SCHEMA,
-                    FILTER_TIME_SMA_SCHEMA,
-                    FILTER_THROTTLE_SCHEMA,
-                    FILTER_TIME_THROTTLE_SCHEMA,
-                    FILTER_RANGE_SCHEMA,
+                probatio.TaggedUnion(
+                    CONF_FILTER_NAME,
+                    [
+                        FILTER_OUTLIER_SCHEMA,
+                        FILTER_LOWPASS_SCHEMA,
+                        FILTER_TIME_SMA_SCHEMA,
+                        FILTER_THROTTLE_SCHEMA,
+                        FILTER_TIME_THROTTLE_SCHEMA,
+                        FILTER_RANGE_SCHEMA,
+                    ],
                 )
             ],
         ),
@@ -284,6 +287,16 @@ class SensorFilter(SensorEntity):
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
+        # Reset before filtering so the new unit's first reading is kept
+        if self._attr_native_unit_of_measurement != new_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        ):
+            for filt in self._filters:
+                filt.reset()
+            self._attr_native_unit_of_measurement = new_state.attributes.get(
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            )
+
         try:
             for filt in self._filters:
                 filtered_state = filt.filter_state(copy(temp_state))
@@ -315,21 +328,13 @@ class SensorFilter(SensorEntity):
             SensorEntityCapabilityAttribute.STATE_CLASS
         )
 
-        if self._attr_native_unit_of_measurement != new_state.attributes.get(
-            EntityStateAttribute.UNIT_OF_MEASUREMENT
-        ):
-            for filt in self._filters:
-                filt.reset()
-            self._attr_native_unit_of_measurement = new_state.attributes.get(
-                EntityStateAttribute.UNIT_OF_MEASUREMENT
-            )
-
         if update_ha:
             self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        last_replayed: datetime | None = None
 
         if "recorder" in self.hass.config.components:
             history_list = []
@@ -391,6 +396,8 @@ class SensorFilter(SensorEntity):
             for state in history_list:
                 if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
                     self._update_filter_sensor_state(state, False)
+            if history_list:
+                last_replayed = history_list[-1].last_updated
 
         @callback
         def _async_hass_started(hass: HomeAssistant) -> None:
@@ -400,6 +407,13 @@ class SensorFilter(SensorEntity):
                     self.hass, [self._entity], self._update_filter_sensor_state_event
                 )
             )
+            # Changes made while starting were not tracked
+            if (
+                (state := hass.states.get(self._entity)) is not None
+                and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and (last_replayed is None or state.last_updated > last_replayed)
+            ):
+                self._update_filter_sensor_state(state)
 
         self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
