@@ -117,7 +117,6 @@ def async_get_chat_log(
         else:
             chat_log.async_add_user_content(user_content)
 
-    # Fire CREATED event for new chat logs with the message of the first turn
     if is_new_log:
         _async_notify_subscribers(
             hass,
