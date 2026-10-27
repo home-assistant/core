@@ -4,6 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
 
 from homeassistant.components.silvercrest_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -11,9 +13,6 @@ from homeassistant.components.silvercrest_infrared.const import (
     DOMAIN,
     SilverCrestIrDeviceType,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
 
 
 @pytest.fixture
@@ -42,3 +41,18 @@ def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
         },
     )
+
+
+@pytest.fixture(name="infrared_codes")
+def mock_infrared_code_to_command() -> Generator[None]:
+    """Patch to_command to return the code directly.
+
+    This allows tests to assert on the high-level code enum value
+    rather than the raw Symphony timings.
+    """
+    with patch(
+        "infrared_protocols.codes.silvercrest.fan.SilverCrestFanCode.to_command",
+        autospec=True,
+        side_effect=lambda self, **kwargs: self,
+    ):
+        yield

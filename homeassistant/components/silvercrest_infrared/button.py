@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import override
 
-from infrared_protocols.commands.symphony import SymphonyCommand
+from infrared_protocols.codes.silvercrest.fan import SilverCrestFanCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 1
 class SilverCrestIrButtonEntityDescription(ButtonEntityDescription):
     """SilverCrest Infrared Button Description."""
 
-    code: int
+    code: SilverCrestFanCode
 
 
 class SilverCrestIrbutton(StrEnum):
@@ -45,34 +45,34 @@ BUTTON_DESCRIPTIONS: tuple[SilverCrestIrButtonEntityDescription, ...] = (
     SilverCrestIrButtonEntityDescription(
         key=SilverCrestIrbutton.POWER,
         translation_key=SilverCrestIrbutton.POWER,
-        code=0x581,
+        code=SilverCrestFanCode.POWER,
     ),
     SilverCrestIrButtonEntityDescription(
         key=SilverCrestIrbutton.SPEED,
         translation_key=SilverCrestIrbutton.SPEED,
-        code=0x582,
+        code=SilverCrestFanCode.SPEED,
     ),
     SilverCrestIrButtonEntityDescription(
         key=SilverCrestIrbutton.TIMER,
         translation_key=SilverCrestIrbutton.TIMER,
-        code=0x588,
+        code=SilverCrestFanCode.TIMER,
     ),
     SilverCrestIrButtonEntityDescription(
         key=SilverCrestIrbutton.OSC,
         translation_key=SilverCrestIrbutton.OSC,
-        code=0x590,
+        code=SilverCrestFanCode.OSC,
     ),
 )
 
 MIST_BUTTON_DESCRIPTION = SilverCrestIrButtonEntityDescription(
     key=SilverCrestIrbutton.MIST,
     translation_key=SilverCrestIrbutton.MIST,
-    code=0x584,
+    code=SilverCrestFanCode.MODE,
 )
 MODE_BUTTON_DESCRIPTION = SilverCrestIrButtonEntityDescription(
     key=SilverCrestIrbutton.MODE,
     translation_key=SilverCrestIrbutton.MODE,
-    code=0x584,
+    code=SilverCrestFanCode.MODE,
 )
 
 
@@ -124,7 +124,4 @@ class SilverCrestIrButtonEntity(InfraredEmitterConsumerEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-
-        await self._send_command(
-            SymphonyCommand.from_code(self.entity_description.code)
-        )
+        await self._send_command(self.entity_description.code.to_command())

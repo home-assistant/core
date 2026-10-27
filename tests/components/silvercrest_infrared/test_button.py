@@ -1,7 +1,10 @@
 """Test the SilverCrest Infrared button platform."""
 
-from infrared_protocols.commands.symphony import SymphonyCommand
+from infrared_protocols.codes.silvercrest.fan import SilverCrestFanCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -16,10 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.mark.parametrize(
@@ -52,23 +51,24 @@ _BUTTON_PRESSES: dict[
     SilverCrestIrDeviceType, list[tuple[SilverCrestIrbutton, int]]
 ] = {
     SilverCrestIrDeviceType.FAN: [
-        (SilverCrestIrbutton.POWER, 0x581),
-        (SilverCrestIrbutton.SPEED, 0x582),
-        (SilverCrestIrbutton.TIMER, 0x588),
-        (SilverCrestIrbutton.OSC, 0x590),
-        (SilverCrestIrbutton.MODE, 0x584),
+        (SilverCrestIrbutton.POWER, SilverCrestFanCode.POWER),
+        (SilverCrestIrbutton.SPEED, SilverCrestFanCode.SPEED),
+        (SilverCrestIrbutton.TIMER, SilverCrestFanCode.TIMER),
+        (SilverCrestIrbutton.OSC, SilverCrestFanCode.OSC),
+        (SilverCrestIrbutton.MODE, SilverCrestFanCode.MODE),
     ],
     SilverCrestIrDeviceType.MISTING_FAN: [
-        (SilverCrestIrbutton.POWER, 0x581),
-        (SilverCrestIrbutton.SPEED, 0x582),
-        (SilverCrestIrbutton.TIMER, 0x588),
-        (SilverCrestIrbutton.OSC, 0x590),
-        (SilverCrestIrbutton.MIST, 0x584),
+        (SilverCrestIrbutton.POWER, SilverCrestFanCode.POWER),
+        (SilverCrestIrbutton.SPEED, SilverCrestFanCode.SPEED),
+        (SilverCrestIrbutton.TIMER, SilverCrestFanCode.TIMER),
+        (SilverCrestIrbutton.OSC, SilverCrestFanCode.OSC),
+        (SilverCrestIrbutton.MIST, SilverCrestFanCode.MODE),
     ],
 }
 
 
 @pytest.mark.parametrize("device_type", list(_BUTTON_PRESSES))
+@pytest.mark.usefixtures("infrared_codes")
 async def test_button_press(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -105,7 +105,5 @@ async def test_button_press(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        assert isinstance(
-            mock_infrared_emitter_entity.send_command_calls[0], SymphonyCommand
-        )
-        assert mock_infrared_emitter_entity.send_command_calls[0].code == expected_codes
+
+        assert mock_infrared_emitter_entity.send_command_calls[0] == expected_codes

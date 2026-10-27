@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
 
 from homeassistant.components.silvercrest_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -13,9 +15,6 @@ from homeassistant.components.silvercrest_infrared.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
 
 
 @pytest.mark.parametrize(
