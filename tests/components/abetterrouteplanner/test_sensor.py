@@ -1,7 +1,6 @@
 """Tests for the A Better Routeplanner sensor platform."""
 
 import logging
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aioabrp import (
@@ -9,7 +8,6 @@ from aioabrp import (
     ChargingState,
     ConnectionEvent,
     ConnectionState,
-    Metric,
     Telemetry,
     VehicleModelDisplay,
 )
@@ -18,10 +16,6 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
-from homeassistant.components.abetterrouteplanner.sensor import (
-    CHARGING_STATE_OPTIONS,
-    SENSORS,
-)
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -54,11 +48,6 @@ _ABSENT_VEHICLE_ID = 999999999999
 # Two makes: a single-make setup can't tell per-vehicle binding from a
 # hard-coded first make.
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
-
-
-def _description_for(metric: Metric) -> Any:
-    """Return the sensor description bound to a metric."""
-    return next(description for description in SENSORS if description.metric is metric)
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -212,6 +201,10 @@ async def test_per_vehicle_device_anchored_at_setup(
     ("charging_state", "expected_option"),
     [
         pytest.param(ChargingState.CHARGING_AC, "charging_ac", id="charging_ac"),
+        pytest.param(ChargingState.CHARGING_DC, "charging_dc", id="charging_dc"),
+        pytest.param(
+            ChargingState.CHARGING_UNKNOWN, "charging_unknown", id="charging_unknown"
+        ),
         pytest.param(ChargingState.NOT_CHARGING, "not_charging", id="not_charging"),
         pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
     ],
@@ -239,15 +232,6 @@ async def test_charging_state_lazy_create_on_first_frame(
     state = hass.states.get(CHARGING_STATE_ENTITY_ID)
     assert state is not None
     assert state.state == expected_option
-
-
-def test_charging_state_options_cross_pinned() -> None:
-    """Option map matches ChargingState and the description options."""
-    assert set(CHARGING_STATE_OPTIONS) == set(ChargingState)
-
-    description = _description_for(Metric.CHARGING_STATE)
-    assert description.options is not None
-    assert set(CHARGING_STATE_OPTIONS.values()) == set(description.options)
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
