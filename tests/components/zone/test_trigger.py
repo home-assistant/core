@@ -550,8 +550,8 @@ async def test_zone_trigger_legacy_device_tracker_leave(
 ) -> None:
     """Test leaving is detected when attached while a legacy tracker is inside.
 
-    Legacy device trackers report no in_zones attribute, and resolve an
-    overlapping accuracy circle themselves.
+    Legacy device trackers report no in_zones attribute, and always use the
+    default overlap test.
     """
     hass.states.async_set("device_tracker.phone", "test", LOCATION_OVERLAPPING)
     await hass.async_block_till_done()

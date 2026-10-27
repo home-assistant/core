@@ -956,7 +956,11 @@ class Device(RestoreEntity):
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SourceType.GPS:
             zone_state = zone.async_active_zone(
-                self.hass, self.gps[0], self.gps[1], self.gps_accuracy
+                self.hass,
+                self.gps[0],
+                self.gps[1],
+                self.gps_accuracy,
+                force_overlap=True,
             )
             if zone_state is None:
                 self._state = STATE_NOT_HOME
