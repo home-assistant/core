@@ -15,9 +15,12 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.indi_allsky.coordinator import IndiAllSkyData
+from homeassistant.components.indi_allsky.sensor import _parse_timestamp
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -572,3 +575,85 @@ async def test_periodic_sensor_polling_disabled(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_indi_allsky_client.fetch_sensors.assert_not_called()
+
+
+async def test_dynamic_sensor_edge_cases(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_exposure_data: ExposureData,
+) -> None:
+    """Test dynamic sensor edge cases for native_value, metadata, and timestamps."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    dynamic_data = SensorData.from_dict(
+        {
+            "sensors": {
+                "custom_wind_direction": {
+                    "name": "Custom Wind Direction",
+                    "value": 180.0,
+                    "unit": "°",
+                    "device_class": "wind_direction",
+                },
+                "corrupted_temp": {
+                    "name": "Corrupted Temp",
+                    "value": "invalid_number",
+                    "unit": "°C",
+                    "device_class": "temperature",
+                },
+            }
+        }
+    )
+
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(dynamic_data)
+    await hass.async_block_till_done()
+
+    # Verify wind_direction state_class measurement_angle
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == "180.0"
+    assert state.attributes.get("state_class") == "measurement_angle"
+
+    # Verify corrupted temp with state_class returns None (state unknown)
+    state = hass.states.get("sensor.indi_allsky_corrupted_temp")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor missing from sensors dict
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data = replace(
+        coordinator.data, sensor=SensorData.from_dict({"sensors": {}})
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor = None
+    coordinator.data = replace(coordinator.data, sensor=None)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor with sensors not a dict
+    coordinator.data = replace(
+        coordinator.data, sensor=replace(dynamic_data, sensors=None)
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now test _parse_timestamp with timezone-aware datetime string
+    ts_data = IndiAllSkyData(
+        exposure=replace(mock_exposure_data, create_date="2026-10-22T01:00:00+02:00")
+    )
+    ts = _parse_timestamp(ts_data)
+    assert ts is not None
+    assert ts.tzinfo == dt_util.UTC

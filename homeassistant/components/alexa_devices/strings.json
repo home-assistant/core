@@ -110,6 +110,9 @@
       "announcements": {
         "name": "Announcements"
       },
+      "aqm_led": {
+        "name": "LED indicator"
+      },
       "communications": {
         "name": "Communications"
       },
@@ -132,6 +135,9 @@
     },
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
+    },
+    "cannot_set_feature": {
+      "message": "Error setting device feature: {error}"
     },
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"

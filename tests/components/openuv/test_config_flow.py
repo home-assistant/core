@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant
@@ -53,8 +54,10 @@ async def test_create_entry(hass: HomeAssistant, client, config, mock_pyopenuv) 
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY,
         CONF_ELEVATION: TEST_ELEVATION,
-        CONF_LATITUDE: TEST_LATITUDE,
-        CONF_LONGITUDE: TEST_LONGITUDE,
+        CONF_LOCATION: {
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+        },
     }
 
 
