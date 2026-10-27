@@ -1,8 +1,7 @@
 
 """The tests for the Netatmo sensor platform."""
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
