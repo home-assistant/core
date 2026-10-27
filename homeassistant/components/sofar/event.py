@@ -7,6 +7,7 @@ from itertools import takewhile
 from typing import override
 
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.fault_log import FaultLog
 from sofar_modbus.modern.faults import FAULTS, FaultLogEntry
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
@@ -33,7 +34,7 @@ type EntryKey = tuple[int, datetime]
 class SofarEventEntityDescription(EventEntityDescription, SofarEntityDescription):
     """Describe a Sofar event entity."""
 
-    entries_fn: Callable[[SofarInverter], tuple[FaultLogEntry, ...]]
+    fault_log_fn: Callable[[SofarInverter], FaultLog]
 
 
 EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
@@ -43,7 +44,7 @@ EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
         translation_key="fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[fault.key for fault in FAULTS],
-        entries_fn=lambda device: device.fault_log.entries,
+        fault_log_fn=lambda device: device.fault_log,
     ),
 )
 
@@ -128,7 +129,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
 
     def _entries(self) -> tuple[FaultLogEntry, ...]:
         """Return the log entries, newest first."""
-        return self.entity_description.entries_fn(self.coordinator.device)
+        return self.entity_description.fault_log_fn(self.coordinator.device).entries
 
     def _newest(self) -> set[EntryKey]:
         """Return the newest entry the log holds now, if any."""
