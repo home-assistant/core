@@ -147,11 +147,11 @@ def _fetch_and_process_data(
 
     # Keep track of contexts that we processed so that we will only process
     # the first service call in a context, and not subsequent calls.
-    context_processed: set[bytes] = set()
+    context_processed: set[bytes | None] = set()
     local_time_zone = dt_util.get_default_time_zone()
 
-    context_id: bytes
-    time_fired_ts: float
+    context_id: bytes | None
+    time_fired_ts: float | None
     shared_data: str | None
     with session_scope(hass=hass, read_only=True) as session:
         rows = session.connection().execute(query).yield_per(QUERY_YIELD_PER)
