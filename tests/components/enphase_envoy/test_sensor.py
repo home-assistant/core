@@ -2189,3 +2189,33 @@ async def test_sensor_lifetime_zero_with_existing_state(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert _state(hass, entity_id) == expected_state
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_lifetime_zero_ignored_after_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the positive lifetime marker survives a config entry reload."""
+    _set_lifetime_values(mock_envoy.data, 32_000_000)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+        entity_base = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+        _set_lifetime_values(mock_envoy.data, 0)
+        await _poll(hass, freezer)
+        for name in LIFETIME_ENTITIES:
+            assert _state(hass, f"{entity_base}_{name}") == STATE_UNKNOWN
+
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        for name in LIFETIME_ENTITIES:
+            assert _state(hass, f"{entity_base}_{name}") == STATE_UNKNOWN
+
+        _set_lifetime_values(mock_envoy.data, 32_000_000)
+        await _poll(hass, freezer)
+        for name in LIFETIME_ENTITIES:
+            assert _state(hass, f"{entity_base}_{name}") == "32.0"

@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 import datetime as dt
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyenphase import (
     EnvoyACB,
@@ -33,9 +33,11 @@ from pyenphase.models.meters import (
 )
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -1209,7 +1211,19 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
     """Defines a base envoy entity."""
 
 
-class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
+@dataclass
+class EnvoyLifetimeExtraStoredData(SensorExtraStoredData):
+    """Sensor data plus the lifetime marker, kept while the state is unknown."""
+
+    had_lifetime_value: bool = False
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return super().as_dict() | {"had_lifetime_value": self.had_lifetime_value}
+
+
+class EnvoySystemSensorEntity(EnvoySensorBaseEntity, RestoreSensor):
     """Envoy system base entity."""
 
     def __init__(
@@ -1230,6 +1244,23 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
             serial_number=self.envoy_serial_num,
         )
         self._had_lifetime_value = False
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> EnvoyLifetimeExtraStoredData:
+        """Return the lifetime marker to restore."""
+        return EnvoyLifetimeExtraStoredData(
+            self.native_value, self.native_unit_of_measurement, self._had_lifetime_value
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the lifetime marker."""
+        await super().async_added_to_hass()
+        if extra_data := await self.async_get_last_extra_data():
+            self._had_lifetime_value = bool(
+                extra_data.as_dict().get("had_lifetime_value")
+            )
 
     def _apply_upper_limit(self, value: int, upper_limit: int | None) -> int | None:
         """Return None for values above the upper limit."""
