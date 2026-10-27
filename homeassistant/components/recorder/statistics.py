@@ -1,5 +1,6 @@
 """Statistics helper."""
 
+from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 import dataclasses
@@ -2202,16 +2203,17 @@ def _synthesize_open_hours_from_short_term(
     return result
 
 
-def _append_open_hours(
+def _insert_open_hours(
     statistic_id: str,
     stat_list: list[StatisticsRow],
     open_hours: dict[str, list[StatisticsRow]],
     reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None,
 ) -> list[StatisticsRow]:
-    """Append synthesized hours not yet compiled to long-term, then reduce."""
-    if rows := open_hours.get(statistic_id):
-        last_start = stat_list[-1]["start"]
-        stat_list.extend(row for row in rows if row["start"] > last_start)
+    """Insert synthesized hours missing from long-term statistics, then reduce."""
+    for row in open_hours.get(statistic_id, ()):
+        index = bisect_left(stat_list, row["start"], key=itemgetter("start"))
+        if index == len(stat_list) or stat_list[index]["start"] != row["start"]:
+            stat_list.insert(index, row)
     return reducer(statistic_id, stat_list) if reducer else stat_list
 
 
@@ -2330,7 +2332,7 @@ def _statistics_during_period_with_session(
         )
     if open_hours:
         reducer = partial(
-            _append_open_hours, open_hours=open_hours, reducer=reduce_period
+            _insert_open_hours, open_hours=open_hours, reducer=reduce_period
         )
     to_dict = partial(
         _sorted_statistics_to_dict,

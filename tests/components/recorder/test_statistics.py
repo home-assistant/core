@@ -5145,6 +5145,37 @@ async def test_statistics_during_period_previous_hour_not_compiled_yet(
         ]
     }
 
+    # An imported row for a later hour must not hide the uncompiled hour.
+    hour_15 = hour_14 + timedelta(hours=1)
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": hour_15, "last_reset": None, "state": 50.0, "sum": 50.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    hour_stats = statistics_during_period(
+        hass,
+        hour_14,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert hour_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_14).timestamp(),
+                "end": process_timestamp(hour_15).timestamp(),
+                "sum": pytest.approx(40.0),
+            },
+            {
+                "start": process_timestamp(hour_15).timestamp(),
+                "end": process_timestamp(hour_15 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(50.0),
+            },
+        ]
+    }
+
     # Once compiled, the long-term row wins over the short-term rows.
     async_import_statistics(
         hass,
@@ -5164,8 +5195,13 @@ async def test_statistics_during_period_previous_hour_not_compiled_yet(
         statistic_id: [
             {
                 "start": process_timestamp(hour_14).timestamp(),
-                "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+                "end": process_timestamp(hour_15).timestamp(),
                 "sum": pytest.approx(42.0),
+            },
+            {
+                "start": process_timestamp(hour_15).timestamp(),
+                "end": process_timestamp(hour_15 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(50.0),
             },
         ]
     }
