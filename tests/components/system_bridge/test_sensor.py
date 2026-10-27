@@ -8,9 +8,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
+from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
 from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.disks import Disk, DiskIOCounters, Disks
 from systembridgeconnector.models.modules.networks import (
     Network,
     NetworkIO,
@@ -266,3 +268,92 @@ async def test_sensor_network_interface_wifi_added(
 
     assert (state := hass.states.get("sensor.hostname_wlan1_ssid"))
     assert state.state == "Home"
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "disks",
+    [
+        pytest.param(None, id="no_disk_data"),
+        pytest.param(
+            replace(
+                FIXTURE_DISKS,
+                io_counters=None,
+                devices=[Disk(name="name", partitions=[])],
+            ),
+            id="no_io_data",
+        ),
+    ],
+)
+async def test_sensor_disk_data_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    disks: Disks | None,
+) -> None:
+    """Test disk sensors are unknown when their data goes missing."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await mock_config_entry.runtime_data.async_handle_module(Module.DISKS, disks)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.hostname_disk_read_rate",
+        "sensor.hostname_disk_write_rate",
+        "sensor.hostname_name_read_rate",
+        "sensor.hostname_name_write_rate",
+    ):
+        assert (state := hass.states.get(entity_id)), entity_id
+        assert state.state == STATE_UNKNOWN, entity_id
+
+
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
+async def test_sensor_disk_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test sensors are added for disks that appear after setup."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_dev_sdb1_read_rate") is None
+
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.DISKS,
+        replace(
+            FIXTURE_DISKS,
+            devices=[
+                *FIXTURE_DISKS.devices,
+                Disk(name="/dev/sdc1", partitions=[]),
+                Disk(
+                    name="/dev/sdb1",
+                    partitions=[],
+                    io_counters=DiskIOCounters(
+                        read_count=1,
+                        write_count=1,
+                        read_bytes=1,
+                        write_bytes=1,
+                        read_time=1,
+                        write_time=1,
+                        read_bytes_rate=2_000_000.0,
+                    ),
+                ),
+            ],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_dev_sdb1_read_rate"))
+    assert state.state == "2.0"
+    assert hass.states.get("sensor.hostname_dev_sdc1_read_rate") is None
