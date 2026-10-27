@@ -3,6 +3,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
+from datetime import timedelta
 import functools
 from itertools import chain
 from typing import Any, cast
@@ -272,7 +273,11 @@ async def ws_get_fossil_energy_consumption(
     # One clock snapshot for both synthesis and the open-hour CO₂ skip so an
     # hour rollover during the executor job cannot desync them.
     now = dt_util.utcnow()
-    current_hour_start_ts = now.replace(minute=0, second=0, microsecond=0).timestamp()
+    current_hour_start = now.replace(minute=0, second=0, microsecond=0)
+    open_hour_starts = {
+        current_hour_start.timestamp(),
+        (current_hour_start - timedelta(hours=1)).timestamp(),
+    }
 
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(
@@ -316,7 +321,10 @@ async def ws_get_fossil_energy_consumption(
         if not stat_list:
             return result
         prev_stat: dict[str, Any] = stat_list[0]
-        fake_stat = {"start": period_start_end(stat_list[-1]["start"])[1]}
+        # The end of the last period is the start of the next one, so the fake
+        # entry always closes it, even across a DST change
+        _, end = period_start_end(stat_list[-1]["start"])
+        fake_stat = {"start": end}
 
         # Loop over the hourly deltas + a fake entry to end the period
         for statistic in chain(stat_list, (fake_stat,)):
@@ -348,14 +356,14 @@ async def ws_get_fossil_energy_consumption(
         },
     )
 
-    # Calculate amount of fossil based energy. Historical hours missing CO₂ still
-    # assume 100% fossil, but skip the unfinished current hour when energy change
-    # has no matching mean (partial-hour synthesis does not invent CO₂ means).
+    # Calculate amount of fossil based energy. Compiled hours missing CO₂ assume
+    # 100% fossil, but hours synthesized from short-term statistics have no CO₂
+    # mean yet, so skip them.
     fossil_energy: list[dict[str, Any]] = []
     for start, delta in merged_energy_statistics.items():
         co2_percentage = indexed_co2_statistics.get(start)
         if co2_percentage is None:
-            if start == current_hour_start_ts:
+            if start in open_hour_starts:
                 continue
             co2_percentage = 100
         fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})

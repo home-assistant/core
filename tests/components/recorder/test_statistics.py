@@ -23,11 +23,12 @@ from pytest_homeassistant.typing import (
     WebSocketGenerator,
 )
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
 from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
-from homeassistant.components.recorder.db_schema import StatisticsShortTerm
+from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
     datetime_to_timestamp_or_none,
@@ -1227,6 +1228,53 @@ async def test_external_statistics_errors(
     assert get_metadata(hass, statistic_ids={"test:total_energy_import"}) == {}
 
 
+@pytest.mark.parametrize(
+    ("imported", "expected"),
+    [
+        pytest.param([], [], id="empty"),
+        pytest.param(
+            [
+                {"mean": 1.0, "min": 0.0, "max": 2.0, "mean_weight": 3.0},
+                {"mean": 5.0, "min": 4.0, "max": 6.0, "mean_weight": 7.0},
+            ],
+            # mean_weight is only set when the row is inserted
+            [(5.0, 4.0, 6.0, 3.0)],
+            id="same_start_twice",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_import_statistics_batch(
+    hass: HomeAssistant,
+    imported: list[dict[str, float]],
+    expected: list[tuple[float, float, float, float]],
+) -> None:
+    """Test importing an empty batch and a batch with the same start twice."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    async_add_external_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "Outdoor temperature",
+            "source": "test",
+            "statistic_id": "test:outdoor_temperature",
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        [{"start": start} | stat for stat in imported],
+    )
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        rows = session.execute(
+            select(
+                Statistics.mean, Statistics.min, Statistics.max, Statistics.mean_weight
+            )
+        ).all()
+    assert [tuple(row) for row in rows] == expected
+
+
 async def test_import_statistics_errors(
     hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1577,6 +1625,57 @@ async def test_statistics_during_period_display_inverse_unit(
             }
         ],
     }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_stream_error_falls_back(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test statistics are read again without streaming when reading rows fails."""
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=POWER_SENSOR_KW_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    sorted_statistics_to_dict = statistics._sorted_statistics_to_dict
+
+    def _fail_streamed(
+        hass: HomeAssistant, stats: Any, **kwargs: Any
+    ) -> dict[str, list[Any]]:
+        # Only the streamed result is not a list
+        if not isinstance(stats, list):
+            raise OperationalError("SELECT", {}, Exception())
+        return sorted_statistics_to_dict(hass, stats, **kwargs)
+
+    with patch.object(
+        statistics, "_sorted_statistics_to_dict", side_effect=_fail_streamed
+    ):
+        assert statistics_during_period(
+            hass, now, period="5minute", statistic_ids={"sensor.test"}
+        ) == {
+            "sensor.test": [
+                {
+                    "end": (now + timedelta(minutes=5)).timestamp(),
+                    "last_reset": None,
+                    "max": 10.0,
+                    "mean": 10.0,
+                    "min": 10.0,
+                    "start": now.timestamp(),
+                }
+            ],
+        }
+    assert "Error reading statistics, retrying" in caplog.text
 
 
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -4833,6 +4932,25 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
         ]
     }
 
+    # A mid-hour end_time keeps the whole hour, like a compiled hourly row would.
+    mid_hour_end_stats = statistics_during_period(
+        hass,
+        hour_14,
+        end_time=hour_14 + timedelta(minutes=5),
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert mid_hour_end_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_14).timestamp(),
+                "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(35.0),
+            },
+        ]
+    }
+
     # Mid-hour start must not synthesize a bucket that starts before start_time.
     mid_hour_start = hour_14 + timedelta(minutes=30)
     mid_hour_stats = statistics_during_period(
@@ -4905,6 +5023,117 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
         process_timestamp(hour_12).timestamp(),
         process_timestamp(hour_13).timestamp(),
     ]
+
+
+@pytest.mark.freeze_time("2024-03-15 15:00:05+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_previous_hour_not_compiled_yet(
+    hass: HomeAssistant,
+) -> None:
+    """Fill the previous hour from short-term stats until it is compiled."""
+    await hass.config.async_set_time_zone("UTC")
+    statistic_id = "sensor.total_energy_import"
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    hour_13 = dt_util.parse_datetime("2024-03-15 13:00:00+00:00")
+    hour_14 = dt_util.parse_datetime("2024-03-15 14:00:00+00:00")
+    day_start = dt_util.parse_datetime("2024-03-15 00:00:00+00:00")
+    day_end = dt_util.parse_datetime("2024-03-16 00:00:00+00:00")
+    assert hour_13 and hour_14 and day_start and day_end
+
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": hour_13, "last_reset": None, "state": 20.0, "sum": 20.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata_id = get_metadata(hass, statistic_ids={statistic_id})[statistic_id][0]
+    with session_scope(hass=hass) as session:
+        for minutes, sum_ in ((0, 25.0), (50, 40.0)):
+            session.add(
+                StatisticsShortTerm.from_stats(
+                    metadata_id,
+                    {
+                        "start": hour_14 + timedelta(minutes=minutes),
+                        "last_reset": None,
+                        "state": sum_,
+                        "sum": sum_,
+                    },
+                )
+            )
+    await async_wait_recording_done(hass)
+
+    hour_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert hour_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_13).timestamp(),
+                "end": process_timestamp(hour_14).timestamp(),
+                "sum": pytest.approx(20.0),
+            },
+            {
+                "start": process_timestamp(hour_14).timestamp(),
+                "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(40.0),
+            },
+        ]
+    }
+
+    day_stats = statistics_during_period(
+        hass,
+        day_start,
+        period="day",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert day_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(day_start).timestamp(),
+                "end": process_timestamp(day_end).timestamp(),
+                "sum": pytest.approx(40.0),
+            }
+        ]
+    }
+
+    # Once compiled, the long-term row wins over the short-term rows.
+    async_import_statistics(
+        hass,
+        metadata,
+        ({"start": hour_14, "last_reset": None, "state": 42.0, "sum": 42.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    hour_stats = statistics_during_period(
+        hass,
+        hour_14,
+        period="hour",
+        statistic_ids={statistic_id},
+        types={"sum"},
+    )
+    assert hour_stats == {
+        statistic_id: [
+            {
+                "start": process_timestamp(hour_14).timestamp(),
+                "end": process_timestamp(hour_14 + timedelta(hours=1)).timestamp(),
+                "sum": pytest.approx(42.0),
+            },
+        ]
+    }
 
 
 @pytest.mark.freeze_time("2024-03-15 00:12:00+00:00")

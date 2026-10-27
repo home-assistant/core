@@ -1332,9 +1332,23 @@ async def test_fossil_energy_consumption_check_missing_hour(
     ]
 
 
-@pytest.mark.freeze_time("2024-03-15 14:17:00+00:00")
+@pytest.mark.parametrize(
+    "now",
+    [
+        pytest.param(
+            "2024-03-15 14:17:00+00:00",
+            id="current_hour",
+            marks=pytest.mark.freeze_time("2024-03-15 14:17:00+00:00"),
+        ),
+        pytest.param(
+            "2024-03-15 15:00:05+00:00",
+            id="previous_hour_not_compiled",
+            marks=pytest.mark.freeze_time("2024-03-15 15:00:05+00:00"),
+        ),
+    ],
+)
 async def test_fossil_energy_consumption_skips_open_hour_without_co2(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, now: str
 ) -> None:
     """Open-hour energy without a CO₂ mean must not default to 100% fossil."""
     await hass.config.async_set_time_zone("UTC")
