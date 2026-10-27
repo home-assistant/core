@@ -277,7 +277,7 @@ async def ws_get_fossil_energy_consumption(
 
     def _get_statistics() -> tuple[datetime | None, dict[str, list[StatisticsRow]]]:
         # Read the compile progress first, so an hour compiled in between is
-        # never mistaken for a synthesized one
+        # never mistaken for an uncompiled one
         first_uncompiled_hour = recorder.statistics.get_first_uncompiled_hour(hass)
         return first_uncompiled_hour, recorder.statistics.statistics_during_period(
             hass,
@@ -357,18 +357,17 @@ async def ws_get_fossil_energy_consumption(
         },
     )
 
-    # Calculate amount of fossil based energy. Compiled hours missing CO₂ assume
-    # 100% fossil, but hours synthesized from short-term statistics have no CO₂
-    # mean yet, so skip them.
-    synthesized_hours_start = (
+    # Calculate amount of fossil based energy, assume 100% fossil if missing.
+    # Hours not compiled yet have no CO₂ mean yet, so skip them instead.
+    uncompiled_hours_start = (
         first_uncompiled_hour.timestamp() if first_uncompiled_hour else math.inf
     )
-    synthesized_hours_end = now.replace(minute=0, second=0, microsecond=0).timestamp()
+    uncompiled_hours_end = now.replace(minute=0, second=0, microsecond=0).timestamp()
     fossil_energy: list[dict[str, Any]] = []
     for start, delta in merged_energy_statistics.items():
         co2_percentage = indexed_co2_statistics.get(start)
         if co2_percentage is None:
-            if synthesized_hours_start <= start <= synthesized_hours_end:
+            if uncompiled_hours_start <= start <= uncompiled_hours_end:
                 continue
             co2_percentage = 100
         fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})
