@@ -47,7 +47,7 @@ def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
                 "subentry_id_humidity": {
                     "id": 1,
                     "type": "humidity",
-                    "friendly_name": "Test",
+                    "name": "Test",
                 }
             },
         },
@@ -63,26 +63,26 @@ def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
     ("config", "device_name", "object_id"),
     [
         pytest.param(
-            {"id": 1, "friendly_name": "Outdoor Patio"},
+            {"id": 1, "name": "Outdoor Patio"},
             "Outdoor Patio",
             "outdoor_patio",
             id="friendly-name",
         ),
         pytest.param(
-            {"id": 1, "friendly_name": "  Outdoor-PATIO  "},
+            {"id": 1, "name": "  Outdoor-PATIO  "},
             "  Outdoor-PATIO  ",
             "outdoor_patio",
             id="formatted-name",
         ),
         pytest.param({"id": 2}, "LaCrosse sensor 2", "2", id="sensor-id-fallback"),
         pytest.param(
-            {"id": 2, "friendly_name": ""},
+            {"id": 2, "name": ""},
             "LaCrosse sensor 2",
             "2",
             id="empty-name-fallback",
         ),
         pytest.param(
-            {"id": 2, "friendly_name": "   "},
+            {"id": 2, "name": "   "},
             "LaCrosse sensor 2",
             "2",
             id="blank-name-fallback",
@@ -90,7 +90,7 @@ def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize("sensor_type", ["temperature", "humidity", "battery"])
-def test_device_uses_friendly_name(
+def test_device_uses_name(
     hass: HomeAssistant,
     config: dict[str, str | int],
     device_name: str,

@@ -17,14 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_FRIENDLY_NAME,
-    CONF_ID,
-    CONF_NAME,
-    CONF_SENSORS,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -87,7 +80,8 @@ STEP_SENSOR_DATA_SCHEMA = probatio.Schema(
                 translation_key="sensor_type",
             )
         ),
-        probatio.Optional(CONF_FRIENDLY_NAME): cv.string,
+        # pylint: disable=home-assistant-config-flow-name-field
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -160,7 +154,7 @@ def sensor_subentries(
         ConfigSubentryData(
             data={CONF_SENSORS: sensor_data, CONF_YAML_IMPORTED: True},
             subentry_type="sensor",
-            title=next(iter(sensor_data.values())).get(CONF_FRIENDLY_NAME)
+            title=next(iter(sensor_data.values())).get(CONF_NAME)
             or f"LaCrosse sensor {sensor_id}",
             unique_id=str(sensor_id),
         )
@@ -259,7 +253,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         sensors: dict[str, dict[str, Any]] = {}
         for slug, sensor_config in import_config.get(CONF_SENSORS, {}).items():
             sensor_input = dict(sensor_config)
-            sensor_input[CONF_FRIENDLY_NAME] = sensor_input.pop(CONF_NAME, slug)
+            sensor_input[CONF_NAME] = sensor_input.pop(CONF_NAME, slug)
             sensors[slug] = sensor_input
 
         async_create_issue(
@@ -341,8 +335,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                         CONF_TYPE: sensor_type.key,
                     }
                 return self.async_create_entry(
-                    title=user_input.get(CONF_FRIENDLY_NAME)
-                    or f"LaCrosse sensor {sensor_id}",
+                    title=user_input.get(CONF_NAME) or f"LaCrosse sensor {sensor_id}",
                     unique_id=str(sensor_id),
                     data={CONF_SENSORS: sensors},
                 )
@@ -422,7 +415,7 @@ class LaCrosseSensorSubentryFlow(ConfigSubentryFlow):
                     used_keys.add(key)
                 receiver = entry.data[CONF_DEVICE]
                 device_registry = dr.async_get(self.hass)
-                name = user_input.get(CONF_FRIENDLY_NAME)
+                name = user_input.get(CONF_NAME)
                 if device := device_registry.async_get_device_by_identifier(
                     (DOMAIN, f"{receiver}_{sensor[CONF_ID]}"), entry.entry_id
                 ):
