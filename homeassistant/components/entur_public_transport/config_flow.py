@@ -610,12 +610,14 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                     )
                 except EnturApiError:
                     self._routes = ()
+                self._quay_discovery_failed = False
                 try:
                     self._quays = await async_get_stop_quays(
                         self.hass, self._selected_place.stop_id
                     )
                 except EnturApiError:
                     self._quays = ()
+                    self._quay_discovery_failed = True
                 return await self.async_step_select_routes()
 
         return self.async_show_form(
@@ -721,10 +723,17 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                 CONF_STOP_PLACE_METADATA_VERSION: STOP_PLACE_METADATA_VERSION,
             }
             if self.source == SOURCE_RECONFIGURE:
+                subentry = self._get_reconfigure_subentry()
+                title = format_stop_place_title(
+                    self._selected_place.name,
+                    self._selected_place.type_icons,
+                    line_whitelist,
+                    self._selected_route_labels,
+                )
                 _async_reconcile_subentry_entities(
                     self.hass,
                     entry,
-                    self._get_reconfigure_subentry(),
+                    subentry,
                     self._selected_place.stop_id,
                     self._selected_platform_mode,
                     (
@@ -737,15 +746,16 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                         )
                     ),
                 )
+                if (
+                    subentry.data == data
+                    and subentry.title == title
+                    and subentry.unique_id == self._selected_place.stop_id
+                ):
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_update_and_abort(
                     entry,
-                    self._get_reconfigure_subentry(),
-                    title=format_stop_place_title(
-                        self._selected_place.name,
-                        self._selected_place.type_icons,
-                        line_whitelist,
-                        self._selected_route_labels,
-                    ),
+                    subentry,
+                    title=title,
                     data=data,
                     unique_id=self._selected_place.stop_id,
                 )
@@ -888,4 +898,3 @@ def _stop_is_configured(
         and subentry.data.get(CONF_STOP_ID) == stop_id
         for subentry in entry.subentries.values()
     )
-
