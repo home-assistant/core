@@ -546,6 +546,8 @@ def _gen_strings_schema(
             ),
             probatio.Optional("device"): cv.schema_with_slug_keys(
                 {
+                    probatio.Optional("manufacturer"): translation_value_validator,
+                    probatio.Optional("model"): translation_value_validator,
                     probatio.Optional("name"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,

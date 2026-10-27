@@ -2625,6 +2625,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         name = self._resolve_device_info_name(config_entry, device_info)
+        validated_fields["manufacturer"] = self._resolve_translated_field(
+            config_entry, device_info, "manufacturer", validated_fields["manufacturer"]
+        )
+        validated_fields["model"] = self._resolve_translated_field(
+            config_entry, device_info, "model", validated_fields["model"]
+        )
         entry_type = device_info.entry_type
         suggested_area = device_info.suggested_area
 
@@ -2872,36 +2878,43 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self, config_entry: ConfigEntry, device_info: DeviceInfo | ChildDeviceInfo
     ) -> str | UndefinedType | None:
         """Return the name of a device info, translated if it has a translation key."""
-        if isinstance(translation_key := device_info.translation_key, str) and (
-            translation_key
-        ):
-            translation_placeholders = device_info.translation_placeholders
-            return self._resolve_translated_name(
-                config_entry,
-                translation_key,
-                None
-                if translation_placeholders is UNDEFINED
-                else translation_placeholders,
-            )
-        return device_info.name
+        return self._resolve_translated_field(
+            config_entry, device_info, "name", device_info.name
+        )
 
     @callback
-    def _resolve_translated_name(
+    def _resolve_translated_field(
         self,
         config_entry: ConfigEntry,
-        translation_key: str,
-        translation_placeholders: Mapping[str, str] | None,
-    ) -> str:
-        """Resolve a device's translated name from its translation key."""
-        full_translation_key = (
-            f"component.{config_entry.domain}.device.{translation_key}.name"
-        )
+        device_info: DeviceInfo | ChildDeviceInfo,
+        field: Literal["manufacturer", "model", "name"],
+        value: str | UndefinedType | None,
+    ) -> str | UndefinedType | None:
+        """Return a device info field, translated if its translation key has it.
+
+        Without a translation of the field, the value is kept. A name without a
+        translation and without a value falls back to the translation key.
+        """
+        translation_key = device_info.translation_key
+        if not isinstance(translation_key, str) or not translation_key:
+            return value
         translations = translation.async_get_cached_translations(
             self.hass, self.hass.config.language, "device", config_entry.domain
         )
-        translated_name = translations.get(full_translation_key, translation_key)
+        translated_value = translations.get(
+            f"component.{config_entry.domain}.device.{translation_key}.{field}"
+        )
+        if translated_value is None:
+            if field == "name" and not isinstance(value, str):
+                return translation_key
+            return value
+        translation_placeholders = device_info.translation_placeholders
         return self._substitute_name_placeholders(
-            config_entry.domain, translated_name, translation_placeholders or {}
+            config_entry.domain,
+            translated_value,
+            {}
+            if translation_placeholders is UNDEFINED or translation_placeholders is None
+            else translation_placeholders,
         )
 
     @callback
