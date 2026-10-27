@@ -91,9 +91,14 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         current_mode = self.coordinator.data.current_mode
+        supports_effects = bool(LightEntityFeature.EFFECT & self.supported_features)
+        effect = kwargs.get(ATTR_EFFECT) if supports_effects else None
+        # A scene stores the light's color next to the movie it plays, so a
+        # movie wins over a color sent in the same call.
+        movie = None if effect in NO_EFFECT_OPTIONS else effect
 
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
+            brightness = round(kwargs[ATTR_BRIGHTNESS] / 2.55)
 
             # If brightness is 0, the twinkly will only "disable" the brightness,
             # which means that it will be 100%.
@@ -103,72 +108,51 @@ class TwinklyLight(TwinklyEntity, LightEntity):
 
             await self.client.set_brightness(brightness)
 
-        if (
-            ATTR_RGBW_COLOR in kwargs
-            and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
-        ):
-            await self.client.interview()
-            if LightEntityFeature.EFFECT & self.supported_features:
-                await self.client.set_static_colour(
-                    (
-                        kwargs[ATTR_RGBW_COLOR][3],
-                        kwargs[ATTR_RGBW_COLOR][0],
-                        kwargs[ATTR_RGBW_COLOR][1],
-                        kwargs[ATTR_RGBW_COLOR][2],
-                    )
-                )
-                await self.client.set_mode("color")
-                self.client.default_mode = "color"
-                current_mode = "color"
-            else:
-                await self.client.set_cycle_colours(
-                    (
-                        kwargs[ATTR_RGBW_COLOR][3],
-                        kwargs[ATTR_RGBW_COLOR][0],
-                        kwargs[ATTR_RGBW_COLOR][1],
-                        kwargs[ATTR_RGBW_COLOR][2],
-                    )
-                )
-                await self.client.set_mode("movie")
-                self.client.default_mode = "movie"
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+        color: tuple[int, ...] | None
+        if ATTR_RGBW_COLOR in kwargs:
+            red, green, blue, white = kwargs[ATTR_RGBW_COLOR]
+            color = (white, red, green, blue)
+            same_color = kwargs[ATTR_RGBW_COLOR] == self._attr_rgbw_color
+        else:
+            color = kwargs.get(ATTR_RGB_COLOR)
+            same_color = color == self._attr_rgb_color
 
-        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
-            await self.client.interview()
-            if LightEntityFeature.EFFECT & self.supported_features:
-                await self.client.set_static_colour(kwargs[ATTR_RGB_COLOR])
-                await self.client.set_mode("color")
-                self.client.default_mode = "color"
-                current_mode = "color"
-            else:
-                await self.client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
-                await self.client.set_mode("movie")
-                self.client.default_mode = "movie"
-
-            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
-
-        if (
-            ATTR_EFFECT in kwargs
-            and LightEntityFeature.EFFECT & self.supported_features
-        ):
-            effect = kwargs[ATTR_EFFECT]
-            if effect in NO_EFFECT_OPTIONS:
-                await self.client.interview()
-                await self.client.set_mode("color")
-                self.client.default_mode = "color"
-            else:
-                # Skip only when this movie is already playing. A solid color
-                # keeps the last movie id, so the same effect is sent again.
-                movie_id = int(effect.split(" ")[0])
-                if (
-                    current_mode != "movie"
-                    or self.coordinator.data.current_movie is None
-                    or movie_id != self.coordinator.data.current_movie
-                ):
+        if color is not None and movie is None:
+            if supports_effects:
+                # A movie can play over the stored color, so the mode is checked too.
+                if not same_color or current_mode != "color":
                     await self.client.interview()
-                    await self.client.set_current_movie(movie_id)
-                    await self.client.set_mode("movie")
-                    self.client.default_mode = "movie"
+                    await self.client.set_static_colour(color)
+                    await self.client.set_mode("color")
+                    self.client.default_mode = "color"
+                    current_mode = "color"
+            elif not same_color:
+                await self.client.interview()
+                await self.client.set_cycle_colours(color)
+                await self.client.set_mode("movie")
+                self.client.default_mode = "movie"
+            if ATTR_RGBW_COLOR in kwargs:
+                self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            else:
+                self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+
+        if movie is not None:
+            # Skip only when this movie is already playing. A solid color
+            # keeps the last movie id, so the same effect is sent again.
+            movie_id = int(movie.split(" ")[0])
+            if (
+                current_mode != "movie"
+                or self.coordinator.data.current_movie is None
+                or movie_id != self.coordinator.data.current_movie
+            ):
+                await self.client.interview()
+                await self.client.set_current_movie(movie_id)
+                await self.client.set_mode("movie")
+                self.client.default_mode = "movie"
+        elif effect is not None and current_mode != "color":
+            await self.client.interview()
+            await self.client.set_mode("color")
+            self.client.default_mode = "color"
         if not self._attr_is_on:
             await self.client.turn_on()
         await self.coordinator.async_refresh()
@@ -183,6 +167,12 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         """Update the entity attributes."""
         self._attr_is_on = self.coordinator.data.is_on
         self._attr_brightness = self.coordinator.data.brightness
+        if (color := self.coordinator.data.color) is None:
+            return
+        if self._attr_color_mode == ColorMode.RGB:
+            self._attr_rgb_color = (color.red, color.green, color.blue)
+        elif self._attr_color_mode == ColorMode.RGBW and color.white is not None:
+            self._attr_rgbw_color = (color.red, color.green, color.blue, color.white)
 
     @override
     def _handle_coordinator_update(self) -> None:

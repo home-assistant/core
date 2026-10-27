@@ -9,6 +9,7 @@ from typing import Any, override
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
 from ttls.client import Twinkly, TwinklyError
+from ttls.colours import TwinklyColour
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ class TwinklyData:
     movies: dict[int, str]
     current_movie: int | None
     current_mode: str | None
+    color: TwinklyColour | None
 
 
 class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
@@ -85,7 +87,10 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
     async def _async_update_data(self) -> TwinklyData:
         """Fetch data from Twinkly."""
         movies: list[dict[str, Any]] = []
-        current_movie: dict[str, Any] = {}
+        # Keep the last known values when a read fails, so a scene saved then
+        # still records the movie and color that are playing.
+        current_movie = self.data.current_movie if self.data else None
+        color = self.data.color if self.data else None
         try:
             device_info = await self._request(self.client.get_details)
             brightness = await self._request(self.client.get_brightness)
@@ -98,9 +103,22 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             raise UpdateFailed from exception
         if self.supports_effects:
             try:
-                current_movie = await self._request(self.client.get_current_movie)
+                movie_data = await self._request(self.client.get_current_movie)
             except (TwinklyError, TimeoutError, ClientError) as exception:
                 _LOGGER.debug("Error fetching current movie: %s", exception)
+            else:
+                current_movie = movie_data.get("id")
+            try:
+                color_data = await self._request(self.client.get_current_colour)
+            except (TwinklyError, TimeoutError, ClientError) as exception:
+                _LOGGER.debug("Error fetching current color: %s", exception)
+            else:
+                color = TwinklyColour(
+                    red=color_data["red"],
+                    green=color_data["green"],
+                    blue=color_data["blue"],
+                    white=color_data.get("white"),
+                )
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
@@ -112,8 +130,9 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             brightness,
             is_on,
             {movie["id"]: movie["name"] for movie in movies},
-            current_movie.get("id"),
+            current_movie,
             current_mode,
+            color,
         )
 
     def _async_update_device_info(self, name: str) -> None:

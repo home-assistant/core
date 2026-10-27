@@ -77,10 +77,20 @@ async def test_turn_on_off(
     mock_twinkly_client.turn_on.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    ("brightness", "percent"),
+    [
+        pytest.param(255, 100, id="full"),
+        pytest.param(84, 33, id="rounded"),
+        pytest.param(5, 2, id="low"),
+    ],
+)
 async def test_turn_on_with_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
+    brightness: int,
+    percent: int,
 ) -> None:
     """Test support of the light.turn_on service with a brightness parameter."""
     mock_twinkly_client.is_on.return_value = False
@@ -90,11 +100,11 @@ async def test_turn_on_with_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 255},
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: brightness},
         blocking=True,
     )
 
-    mock_twinkly_client.set_brightness.assert_called_once_with(100)
+    mock_twinkly_client.set_brightness.assert_called_once_with(percent)
     mock_twinkly_client.turn_on.assert_called_once_with()
 
 
@@ -290,15 +300,25 @@ async def test_turn_on_with_current_movie_in_movie_mode(
         ("RGB", {ATTR_RGB_COLOR: (128, 64, 32)}),
     ],
 )
-async def test_turn_on_with_color_and_current_movie(
+@pytest.mark.parametrize(
+    ("mode", "expected_mode_calls", "expected_movie_calls"),
+    [
+        pytest.param("movie", [], [], id="movie_playing"),
+        pytest.param("color", [call("movie")], [call(1)], id="from_color"),
+    ],
+)
+async def test_turn_on_with_color_and_movie(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
     led_profile: str,
     data: dict[str, Any],
+    mode: str,
+    expected_mode_calls: list[Any],
+    expected_movie_calls: list[Any],
 ) -> None:
-    """Test the current movie is applied after a color set in the same call."""
-    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+    """Test a movie wins over a color sent in the same call, as scenes do."""
+    mock_twinkly_client.get_mode.return_value = {"mode": mode}
     mock_twinkly_client.get_details.return_value["led_profile"] = led_profile
 
     await setup_integration(hass, mock_config_entry)
@@ -310,9 +330,64 @@ async def test_turn_on_with_color_and_current_movie(
         blocking=True,
     )
 
-    assert mock_twinkly_client.set_mode.call_args_list == [call("color"), call("movie")]
-    mock_twinkly_client.set_current_movie.assert_called_once_with(1)
-    assert mock_twinkly_client.default_mode == "movie"
+    mock_twinkly_client.set_static_colour.assert_not_called()
+    assert mock_twinkly_client.set_mode.call_args_list == expected_mode_calls
+    assert mock_twinkly_client.set_current_movie.call_args_list == expected_movie_calls
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_mode_calls"),
+    [
+        pytest.param("movie", [call("color")], id="from_movie"),
+        pytest.param("color", [], id="already_shown"),
+    ],
+)
+async def test_turn_on_with_current_color(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    mode: str,
+    expected_mode_calls: list[Any],
+) -> None:
+    """Test the color the device holds is only sent when it is not shown."""
+    mock_twinkly_client.get_mode.return_value = {"mode": mode}
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_RGB_COLOR: (255, 255, 255)},
+        blocking=True,
+    )
+
+    assert mock_twinkly_client.set_mode.call_args_list == expected_mode_calls
+
+
+async def test_turn_on_with_color_and_no_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test a color with effect off switches to color mode once."""
+    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: "light.tree_1",
+            ATTR_RGB_COLOR: (128, 64, 32),
+            ATTR_EFFECT: EFFECT_OFF,
+        },
+        blocking=True,
+    )
+
+    mock_twinkly_client.set_static_colour.assert_called_once_with((128, 64, 32))
+    mock_twinkly_client.set_mode.assert_called_once_with("color")
+    mock_twinkly_client.set_current_movie.assert_not_called()
 
 
 @pytest.mark.parametrize("effect", [EFFECT_OFF, "None", "none"])
@@ -425,7 +500,7 @@ async def test_no_current_movie(
     mock_twinkly_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test handling of missing current movie data."""
+    """Test the last known movie is kept when it cannot be read."""
     mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
 
     await setup_integration(hass, mock_config_entry)
@@ -439,7 +514,76 @@ async def test_no_current_movie(
     await hass.async_block_till_done()
 
     assert hass.states.get("light.tree_1").state != STATE_UNAVAILABLE
-    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] is None
+    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] == "1 Rainbow"
+
+
+@pytest.mark.parametrize(
+    ("led_profile", "color", "attribute", "expected"),
+    [
+        pytest.param(
+            "RGB",
+            {"red": 255, "green": 98, "blue": 13},
+            ATTR_RGB_COLOR,
+            (255, 98, 13),
+            id="rgb",
+        ),
+        pytest.param(
+            "RGBW",
+            {"red": 255, "green": 98, "blue": 13, "white": 40},
+            ATTR_RGBW_COLOR,
+            (255, 98, 13, 40),
+            id="rgbw",
+        ),
+        pytest.param(
+            "RGBW",
+            {"red": 255, "green": 98, "blue": 13},
+            ATTR_RGBW_COLOR,
+            (255, 255, 255, 0),
+            id="rgbw_without_white",
+        ),
+    ],
+)
+async def test_color_read_from_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    led_profile: str,
+    color: dict[str, int],
+    attribute: str,
+    expected: tuple[int, ...],
+) -> None:
+    """Test the color shown is the one stored on the device."""
+    mock_twinkly_client.get_details.return_value["led_profile"] = led_profile
+    mock_twinkly_client.get_current_colour.return_value = color | {"code": 1000}
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.tree_1").attributes[attribute] == expected
+
+
+async def test_color_read_failure_keeps_last_color(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the last known color is kept when it cannot be read."""
+    mock_twinkly_client.get_current_colour.return_value = {
+        "red": 255,
+        "green": 98,
+        "blue": 13,
+        "code": 1000,
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_twinkly_client.get_current_colour.side_effect = TwinklyError
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.tree_1").attributes[ATTR_RGB_COLOR] == (255, 98, 13)
 
 
 async def test_update_name(
