@@ -61,6 +61,39 @@
           "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
           "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
         }
+      },
+      "radon_month_avg": {
+        "name": "Radon 30-day average"
+      },
+      "radon_month_level": {
+        "name": "Radon 30-day level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
+      },
+      "radon_week_avg": {
+        "name": "Radon 7-day average"
+      },
+      "radon_week_level": {
+        "name": "Radon 7-day level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
+      },
+      "radon_year_avg": {
+        "name": "Radon 1-year average"
+      },
+      "radon_year_level": {
+        "name": "Radon 1-year level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
       }
     }
   },
@@ -70,6 +103,16 @@
     },
     "incomplete_read": {
       "message": "The Airthings device did not return complete data, retrying"
+    }
+  },
+  "issues": {
+    "connectivity_not_configured": {
+      "description": "{device_name} ({serial_number}) has no connectivity set up. Until it is set up, the device only turns on Bluetooth for a short time after its button is pressed, so the Airthings BLE integration cannot read its measurements regularly.\n\nIf the device is not in the Airthings app:\n1. Add the device.\n2. If the app asks how to connect, select **I prefer to connect with Bluetooth**.\n\nIf the device is already in the app:\n1. Open its settings and select **Reset connectivity**.\n\nThis issue is resolved automatically when Home Assistant reads the device and it reports Bluetooth connectivity. Home Assistant tries every {update_interval} minutes.",
+      "title": "{device_name} ({serial_number}) connectivity is not set up"
+    },
+    "connectivity_smartlink": {
+      "description": "{device_name} ({serial_number}) uses SmartLink connectivity, which the Airthings BLE integration does not support. In this mode, the device only turns on Bluetooth for a short time after its button is pressed, so the integration cannot read its measurements regularly.\n\nIf you want to keep using SmartLink:\n1. Set up the [Airthings integration]({airthings_url}) and sign in to your Airthings account.\n2. In Home Assistant, delete the Airthings BLE entry for {device_name} ({serial_number}).\n\nIf you want to use Bluetooth instead:\n1. In the Airthings app, open the settings of {device_name}.\n2. Select **Connectivity**, then **Switch to Bluetooth**.\n3. Press the button on the device when the app asks you to.\n\nThis issue is resolved automatically when Home Assistant reads the device and it reports Bluetooth connectivity. Home Assistant tries every {update_interval} minutes.",
+      "title": "{device_name} ({serial_number}) uses SmartLink connectivity"
     }
   }
 }

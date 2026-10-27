@@ -6,6 +6,14 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockPlatform,
+    async_fire_time_changed,
+    get_fixture_path,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config as hass_config, config_entries
 from homeassistant.components.calendar import (
@@ -21,15 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockPlatform,
-    async_fire_time_changed,
-    get_fixture_path,
-    mock_platform,
-)
-from tests.typing import WebSocketGenerator
 
 GROUP_ENTITY_ID = "calendar.family"
 NOW = dt.datetime(2026, 10, 17, 12, 0, tzinfo=dt.UTC)

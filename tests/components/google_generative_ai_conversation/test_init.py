@@ -135,7 +135,7 @@ async def test_migration_from_v1(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -394,7 +394,7 @@ async def test_migration_from_v1_disabled(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -538,7 +538,7 @@ async def test_migration_from_v1_with_multiple_keys(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -644,7 +644,7 @@ async def test_migration_from_v1_with_same_keys(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -844,7 +844,7 @@ async def test_migration_from_v2_1(
     # Run migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -982,7 +982,7 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is True
@@ -1209,7 +1209,7 @@ async def test_migrate_entry_from_v2_3(
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is setup_result

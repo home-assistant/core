@@ -6,9 +6,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
-from homeassistant.components.input_number import ATTR_MAX, ATTR_MIN, ATTR_STEP, DOMAIN
+from homeassistant.components.input_number import DOMAIN
+from homeassistant.components.input_number.const import InputNumberEntityStateAttribute
+from homeassistant.components.number import NumberEntityCapabilityAttribute
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_EDITABLE, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -24,11 +25,11 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("input_number.test")
     assert state
-    assert state.attributes[ATTR_EDITABLE] is False
-    assert state.attributes[ATTR_MIN] == 0
-    assert state.attributes[ATTR_MAX] == 100
-    assert state.attributes[ATTR_STEP] == 1
-    assert state.attributes[ATTR_MODE] == "slider"
+    assert state.attributes[InputNumberEntityStateAttribute.EDITABLE] is False
+    assert state.attributes[NumberEntityCapabilityAttribute.MIN] == 0
+    assert state.attributes[NumberEntityCapabilityAttribute.MAX] == 100
+    assert state.attributes[NumberEntityCapabilityAttribute.STEP] == 1
+    assert state.attributes[NumberEntityCapabilityAttribute.MODE] == "slider"
 
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
@@ -41,8 +42,8 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_EDITABLE not in state.attributes
-            assert ATTR_MIN not in state.attributes
-            assert ATTR_MAX not in state.attributes
-            assert ATTR_STEP not in state.attributes
-            assert ATTR_MODE not in state.attributes
+            assert InputNumberEntityStateAttribute.EDITABLE not in state.attributes
+            assert NumberEntityCapabilityAttribute.MIN not in state.attributes
+            assert NumberEntityCapabilityAttribute.MAX not in state.attributes
+            assert NumberEntityCapabilityAttribute.STEP not in state.attributes
+            assert NumberEntityCapabilityAttribute.MODE not in state.attributes

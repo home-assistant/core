@@ -37,12 +37,12 @@ gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==7.1.2
-hass-nabucasa==2.7.0
+hass-nabucasa==2.8.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260930.4
-home-assistant-intents==2026.10.6
-httpx2==2.13.1
+home-assistant-frontend==20260930.5
+home-assistant-intents==2026.10.27
+httpx2==2.14.0
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
@@ -51,7 +51,7 @@ openai==3.26.0
 orjson==3.13.0
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==12.3.0
+Pillow==13.0.0
 probatio==0.13.0
 propcache==0.5.4
 psutil-home-assistant==0.0.1
@@ -66,7 +66,7 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.10.0
-serialx==1.14.0
+serialx==1.15.1
 SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
@@ -74,7 +74,7 @@ truststore==0.10.4
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.13.0
+uv==0.13.6
 webrtc-models==0.3.0
 yarl==1.25.1
 zeroconf==0.151.5
@@ -137,8 +137,8 @@ pandas==2.3.3
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
-Brotli>=1.2.0
+# Brotli 1.2.1 fixes CVE
+Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.14.1

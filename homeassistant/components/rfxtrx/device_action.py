@@ -11,7 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, RfxtrxConfigEntry
+from . import RfxtrxConfigEntry
+from .const import DOMAIN
 from .helpers import async_get_device_object
 
 CONF_DATA = "data"

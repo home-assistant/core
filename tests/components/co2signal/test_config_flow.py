@@ -14,7 +14,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.co2signal import config_flow
 from homeassistant.components.co2signal.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -31,7 +36,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,13 +76,15 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "latitude": 12.3,
-                "longitude": 45.6,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 12.3,
+                    CONF_LONGITUDE: 45.6,
+                }
             },
         )
         await hass.async_block_till_done()
@@ -113,7 +120,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -203,7 +210,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],

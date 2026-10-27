@@ -3,9 +3,12 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HeatPumpInfo
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import WeheatDataUpdateCoordinator, WeheatEnergyUpdateCoordinator
+from .coordinator import (
+    HeatPumpInfo,
+    WeheatDataUpdateCoordinator,
+    WeheatEnergyUpdateCoordinator,
+)
 
 
 class WeheatEntity[

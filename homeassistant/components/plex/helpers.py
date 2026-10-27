@@ -14,7 +14,7 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import PlexServer
+    from .server import PlexServer
 
 
 @dataclass

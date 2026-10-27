@@ -10,13 +10,15 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+import typing
+from typing import Any, Generic, TypedDict, TypeVar, cast
 
 import probatio
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.deprecation import deprecated_function
+from .helpers.field_visibility import VISIBLE_SCHEMA, FieldCondition, get_hidden_fields
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
@@ -57,6 +59,44 @@ STEP_ID_OPTIONAL_STEPS = {
     FlowResultType.MENU,
     FlowResultType.SHOW_PROGRESS,
 }
+
+
+class Required(probatio.Required):
+    """Required schema marker that can be conditionally shown.
+
+    Unless the ``visible`` condition matches the other fields, the field is not
+    rendered, is treated as optional, and its value is omitted from the
+    submitted data. A list of conditions is combined with AND.
+    """
+
+    def __init__(
+        self,
+        *args: Any,
+        visible: bool | FieldCondition | list[FieldCondition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a required marker."""
+        super().__init__(*args, **kwargs)
+        self.visible = None if visible is None else VISIBLE_SCHEMA(visible)
+
+
+class Optional(probatio.Optional):
+    """Optional schema marker that can be conditionally shown.
+
+    Unless the ``visible`` condition matches the other fields, the field is not
+    rendered and its value is omitted from the submitted data. A list of
+    conditions is combined with AND.
+    """
+
+    def __init__(
+        self,
+        *args: Any,
+        visible: bool | FieldCondition | list[FieldCondition] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize an optional marker."""
+        super().__init__(*args, **kwargs)
+        self.visible = None if visible is None else VISIBLE_SCHEMA(visible)
 
 
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
@@ -136,8 +176,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: Required[str]
-    handler: Required[_HandlerT]
+    flow_id: typing.Required[str]
+    handler: typing.Required[_HandlerT]
     last_step: bool | None
     menu_options: Container[str]
     preview: str | None
@@ -356,8 +396,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
             data_schema = cast(probatio.Schema, data_schema)
+            validation_schema, validation_input = _strip_hidden_fields(
+                data_schema, user_input
+            )
             try:
-                user_input = data_schema(user_input)
+                user_input = validation_schema(validation_input)
             except probatio.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, probatio.MultipleInvalid):
@@ -617,6 +660,15 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
+def _report_missing_step_id(method: str) -> None:
+    """Report a flow result built without a step id."""
+    report_usage(
+        f"calls {method} without passing a step_id",
+        core_integration_behavior=ReportBehavior.ERROR,
+        breaks_in_ha_version="2027.5.0",
+    )
+
+
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
@@ -726,6 +778,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_form")
         return flow_result
 
     @callback
@@ -793,6 +847,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_external_step")
         return flow_result
 
     @callback
@@ -843,6 +899,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_progress")
         return flow_result
 
     @callback
@@ -899,6 +957,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_menu")
         return flow_result
 
     @callback
@@ -955,3 +1015,112 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+def _schema_has_visible(data_schema: probatio.Schema) -> bool:
+    """Return True if the schema (or a nested section) has a visible marker."""
+    if not isinstance(data_schema.schema, dict):
+        return False
+    for key, val in data_schema.schema.items():
+        if getattr(key, "visible", None) is not None:
+            return True
+        if isinstance(val, section) and _schema_has_visible(val.schema):
+            return True
+    return False
+
+
+def _strip_hidden_fields[_T: Mapping[str, Any]](
+    data_schema: probatio.Schema, user_input: _T
+) -> tuple[probatio.Schema, _T]:
+    """Remove currently hidden fields from the schema and the submitted input.
+
+    A field whose ``visible`` condition does not match is treated as optional and
+    its value is omitted, so a hidden required field must not fail validation and
+    a hidden field must not inject a default or keep a stale value. Conditions are
+    evaluated against the input with schema defaults applied, so a field omitted
+    by the client resolves the same as one that was submitted. Because a hidden
+    field holds no value, visibility is resolved until stable: once hidden, a
+    field reads as absent to the conditions of the other fields. Returns the
+    schema and input unchanged when every field is visible, leaving schemas
+    without visibility conditions untouched.
+    """
+    if not _schema_has_visible(data_schema):
+        return data_schema, user_input
+
+    eval_data = dict(user_input)
+    conditions: dict[Any, Any] = {}
+    for key in data_schema.schema:
+        name = key.schema if isinstance(key, probatio.Marker) else key
+        if (
+            isinstance(key, (probatio.Optional, probatio.Required))
+            and name not in eval_data
+            and not isinstance(key.default, probatio.Undefined)
+        ):
+            eval_data[name] = key.default()
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            conditions[name] = visible_condition
+
+    hidden_names = get_hidden_fields(conditions, eval_data)
+
+    new_schema: dict[Any, Any] = {}
+    new_input: dict[str, Any] | None = None
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, probatio.Marker) else key
+
+        if name in hidden_names:
+            if name in user_input:
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input.pop(name, None)
+            continue
+
+        if isinstance(val, section) and isinstance(
+            section_input := eval_data.get(name), Mapping
+        ):
+            inner_schema, inner_input = _strip_hidden_fields(val.schema, section_input)
+            if inner_schema is not val.schema:
+                new_val = copy.copy(val)
+                new_val.schema = inner_schema
+                new_schema[key] = new_val
+                if new_input is None:
+                    new_input = dict(user_input)
+                new_input[name] = inner_input
+                continue
+
+        new_schema[key] = val
+
+    if new_input is None and len(new_schema) == len(data_schema.schema):
+        return data_schema, user_input
+    return (
+        probatio.Schema(
+            new_schema, extra=data_schema.extra, required=data_schema.required
+        ),
+        cast(_T, new_input if new_input is not None else user_input),
+    )
+
+
+def add_visible_conditions_to_serialized_schema(
+    data_schema: probatio.Schema, serialized: list[dict[str, Any]]
+) -> None:
+    """Add `visible` conditions from schema markers to the serialized fields.
+
+    `probatio.to_field_list` does not emit marker metadata beyond `description`, so
+    a marker's `visible` argument is injected here after conversion.
+    Recurses into serialized sections.
+    """
+    if not isinstance(data_schema.schema, dict):
+        return
+
+    fields_by_name: dict[Any, tuple[Any, Any]] = {}
+    for key, val in data_schema.schema.items():
+        name = key.schema if isinstance(key, probatio.Marker) else key
+        fields_by_name[name] = (key, val)
+
+    for field in serialized:
+        if (entry := fields_by_name.get(field.get("name"))) is None:
+            continue
+        key, val = entry
+        if (visible_condition := getattr(key, "visible", None)) is not None:
+            field["visible"] = visible_condition
+        if isinstance(val, section) and isinstance(field.get("schema"), list):
+            add_visible_conditions_to_serialized_schema(val.schema, field["schema"])
