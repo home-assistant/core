@@ -2089,7 +2089,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[False],
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> DeviceEntry | None: ...
 
     @overload
@@ -2099,7 +2099,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[True] = True,
         include_main_devices: Literal[False],
-        include_composite_devices: Literal[False],
+        include_composite_devices: Literal[False] | None = None,
     ) -> ChildDeviceEntry | None: ...
 
     @overload
@@ -2107,19 +2107,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[False],
-        include_composite_devices: Literal[True] = True,
-    ) -> AnyDeviceEntry | None: ...
-
-    @overload
-    def async_get(
-        self,
-        device_id: str,
-        *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[True] = True,
-        include_composite_devices: bool = True,
+        include_child_devices: bool = True,
+        include_main_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None: ...
 
     @callback
@@ -2129,7 +2119,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: bool = True,
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
@@ -2145,8 +2135,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         With include_child_devices=False a child-device id resolves to None (the child
         is treated as absent) and the return type excludes children. With
         include_main_devices=False a main-device id resolves to None. With
-        include_composite_devices=False a composite-device id resolves to None.
+        include_composite_devices=False a composite-device id resolves to None;
+        it defaults to include_main_devices, as a composite stands in for a main
+        device, so excluding main devices alone guarantees a child device.
         """
+        if include_composite_devices is None:
+            include_composite_devices = include_main_devices
         if (
             include_main_devices
             and (device := self._device_data.get(device_id)) is not None
@@ -4932,8 +4926,8 @@ def async_get_device_and_config_entry_for_domain(
     device_id: str,
     *,
     domain: str,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
 
 

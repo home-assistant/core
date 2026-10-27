@@ -1,5 +1,7 @@
 """Constants for the HomematicIP Cloud integration."""
 
+from homematicip.base.enums import DeviceType, FunctionalChannelType
+
 from homeassistant.const import Platform
 
 DOMAIN = "homematicip_cloud"
@@ -29,3 +31,15 @@ HMIPC_HAPID = "hapid"
 HMIPC_AUTHTOKEN = "authtoken"
 HMIPC_PIN = "pin"
 HMIPC_CLIENT_ID = "client_id"
+
+SWITCH_CHANNEL_TYPES = (
+    FunctionalChannelType.SWITCH_CHANNEL,
+    FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
+    FunctionalChannelType.MULTI_MODE_INPUT_SWITCH_CHANNEL,
+)
+
+# these carry a switch channel, but their entity is a light
+LIGHT_OWNED_DEVICE_TYPES = (
+    DeviceType.BRAND_SWITCH_NOTIFICATION_LIGHT,
+    DeviceType.BRAND_SWITCH_MEASURING,
+)
