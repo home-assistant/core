@@ -731,10 +731,12 @@ async def test_set_temperature_writes_permanent_level(
     [
         (1, None, []),
         (3, HVACMode.AUTO, [call(hvac_mode=1, circuit=1)]),
+        # Selecting auto again ends a preset override
+        (1, HVACMode.AUTO, [call(temporary_mode=0, circuit=1)]),
         (0, None, []),
         (3, HVACMode.OFF, [call(hvac_mode=0, circuit=1)]),
     ],
-    ids=["in_auto", "switching_to_auto", "off", "switching_to_off"],
+    ids=["in_auto", "switching_to_auto", "auto_again", "off", "switching_to_off"],
 )
 async def test_set_temperature_ignored_in_auto_or_off(
     hass: HomeAssistant,
