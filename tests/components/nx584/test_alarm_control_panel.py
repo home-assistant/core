@@ -1,15 +1,16 @@
 """Tests for the NX584 alarm control panel."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import TEST_HOST, TEST_PORT
 
@@ -74,6 +75,7 @@ async def test_update_partitions_unavailable(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     side_effect: type[Exception] | None,
     return_value: list[dict[str, object]] | None,
 ) -> None:
@@ -86,12 +88,16 @@ async def test_update_partitions_unavailable(
     working_partitions = partitions.return_value
     partitions.side_effect = side_effect
     partitions.return_value = return_value
-    await async_update_entity(hass, ENTITY_ID)
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     partitions.side_effect = None
     partitions.return_value = working_partitions
-    await async_update_entity(hass, ENTITY_ID)
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == "disarmed"
