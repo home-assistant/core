@@ -47,6 +47,15 @@ def _update_communication_state(
     )
 
 
+def _has_feature_sensor(device: AmazonDevice, sensor_key: str) -> bool:
+    """Return if a supported feature of the device provides the sensor."""
+    return any(
+        sensor_key in feature.sensor_keys.values()
+        for instances in device.features.values()
+        for feature in instances.values()
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
@@ -105,6 +114,33 @@ COMMUNICATION_SWITCHES: Final = (
         update_state_fn=_update_communication_state,
     ),
 )
+FEATURE_SWITCHES: Final = (
+    AmazonSwitchEntityDescription(
+        key="aqm_led",
+        translation_key="aqm_led",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda coordinator, serial_num, key: (
+            coordinator.sensors[serial_num][key].value == "ON"
+        ),
+        is_available_fn=lambda coordinator, serial_num, key: (
+            (sensor := coordinator.device_sensor(serial_num, key)) is not None
+            and sensor.error is False
+        ),
+        method=lambda coordinator, device, key, state: (
+            coordinator.api.call_feature_operation(
+                device,
+                (sensor := coordinator.sensors[device.serial_number][key]).feature_name,
+                "turnOn" if state else "turnOff",
+                command_payload=None,
+                instance=sensor.instance or None,
+            )
+        ),
+        # Optimistic until Amazon pushes the new state
+        update_state_fn=lambda coordinator, serial_num, key, state: setattr(
+            coordinator.sensors[serial_num][key], "value", "ON" if state else "OFF"
+        ),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -158,6 +194,12 @@ async def async_setup_entry(
                 for serial_num in new_devices
                 if switch_desc.key
                 in coordinator.data[serial_num].communication_settings
+            ]
+            + [
+                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
+                for switch_desc in FEATURE_SWITCHES
+                for serial_num in new_devices
+                if _has_feature_sensor(coordinator.data[serial_num], switch_desc.key)
             ]
         )
         known_dnd_devices.update(new_dnd_devices)

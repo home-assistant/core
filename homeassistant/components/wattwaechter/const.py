@@ -1,4 +1,4 @@
-"""Constants for the WattWächter Plus integration."""
+"""Constants for the WattWächter integration."""
 
 DOMAIN = "wattwaechter"
 

@@ -3499,11 +3499,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
@@ -10664,6 +10664,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
@@ -12569,7 +12579,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
