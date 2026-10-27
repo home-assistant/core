@@ -1296,24 +1296,24 @@ async def test_tilt_position_none_value(
     [
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [0, OverkizCommandParam.LOWSPEED],
-            id="open-low",
+            id="open-slow",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [100, OverkizCommandParam.LOWSPEED],
-            id="close-low",
+            id="close-slow",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [65, OverkizCommandParam.LOWSPEED],
-            id="set-position-low",
+            id="set-position-slow",
         ),
         pytest.param(
             SERVICE_OPEN_COVER,
@@ -1389,7 +1389,7 @@ async def test_cover_speed_supported(
 
     state = hass.states.get(LOW_SPEED.entity_id)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
-    assert state.attributes["supported_speeds"] == ["default", "low"]
+    assert state.attributes["supported_speeds"] == ["default", "slow"]
 
     state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED

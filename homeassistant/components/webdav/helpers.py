@@ -34,8 +34,11 @@ def async_create_client(
 
 
 async def async_ensure_path_exists(client: Client, path: str) -> bool:
-    """Ensure that a path exists recursively on the WebDAV server."""
-    parts = path.strip("/").split("/")
+    """Ensure the WebDAV server is reachable and a path exists recursively on it."""
+    if not await client.check():
+        return False
+
+    parts = [part for part in path.split("/") if part]
     for i in range(1, len(parts) + 1):
         sub_path = "/".join(parts[:i])
         if not await client.check(sub_path) and not await client.mkdir(sub_path):

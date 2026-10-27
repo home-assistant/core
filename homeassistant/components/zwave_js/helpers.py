@@ -1,10 +1,11 @@
 """Helper functions for Z-Wave JS integration."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections import defaultdict
+from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import astuple, dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import aiohttp
 import probatio
@@ -20,8 +21,9 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
-from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node import EndpointGroup, Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
     Value as ZwaveValue,
@@ -43,7 +45,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
@@ -58,7 +60,7 @@ from .const import (
     NOTIFICATION_ACCESS_CONTROL_PROPERTY,
     OPENING_STATE_PROPERTY_KEY,
 )
-from .models import ZwaveJSConfigEntry
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 DRIVER_READY_EVENT_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
@@ -243,6 +245,110 @@ def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
+def get_endpoint_device_id(
+    driver: Driver, node: ZwaveNode, endpoint_device: Endpoint | EndpointGroup
+) -> tuple[str, str]:
+    """Get the device registry identifier for an endpoint child device.
+
+    A child device is identified either by a single endpoint index or, when the
+    device config groups several endpoints together, by ``g`` plus the group id.
+    """
+    domain, dev_id = get_device_id(driver, node)
+    if isinstance(endpoint_device, EndpointGroup):
+        return (domain, f"{dev_id}-g{endpoint_device.id}")
+    return (domain, f"{dev_id}-{endpoint_device.index}")
+
+
+def endpoint_devices(
+    node: ZwaveNode,
+    disc_infos: Sequence[PlatformZwaveDiscoveryInfo],
+) -> dict[str, Endpoint | EndpointGroup]:
+    """Map primary value IDs to the endpoint child device their entity belongs on.
+
+    Values that belong on the main node device are absent from the result. Only
+    endpoints that the device config explicitly describes produce child devices:
+
+    - If the node defines endpoint groups, every value on an endpoint that belongs
+      to a non-main group is placed on a single child device for that group (so, for
+      example, the import and export endpoints of one meter clamp share one device).
+      Values on endpoints in a main-device group, or in no group, stay on the node.
+    - Otherwise, values on a labeled non-root endpoint are placed on a per-endpoint
+      child device, but only when that endpoint has a value whose signature (command
+      class, property, property key) also appears on another endpoint. The collision
+      is determined from discovered (non-suppressed) values, so a suppressed endpoint
+      value does not trigger a split.
+    """
+    result: dict[str, Endpoint | EndpointGroup] = {}
+
+    if node.endpoint_groups:
+        for info in disc_infos:
+            endpoint_index = info.primary_value.endpoint
+            if not endpoint_index:
+                continue
+            group = node.get_endpoint_group(endpoint_index)
+            if group is not None and not group.is_main_device:
+                result[info.primary_value.value_id] = group
+        return result
+
+    endpoints_by_signature: dict[tuple, set[int]] = defaultdict(set)
+    for info in disc_infos:
+        pv = info.primary_value
+        # Root (endpoint 0) values always stay on the main device, so they are excluded
+        # from the collision signatures: a non-root endpoint that merely duplicates a
+        # root value is not a collision we split onto a child device.
+        if pv.endpoint:
+            sig = (pv.command_class, pv.property_, pv.property_key)
+            endpoints_by_signature[sig].add(pv.endpoint)
+    colliding_endpoints = {
+        endpoint
+        for endpoints in endpoints_by_signature.values()
+        if len(endpoints) > 1
+        for endpoint in endpoints
+    }
+    for info in disc_infos:
+        endpoint_index = info.primary_value.endpoint
+        if (
+            endpoint_index
+            and endpoint_index in colliding_endpoints
+            and (endpoint := node.endpoints[endpoint_index]).endpoint_label
+        ):
+            result[info.primary_value.value_id] = endpoint
+    return result
+
+
+def endpoint_device_for_late_value(
+    node: ZwaveNode,
+    existing_placements: dict[str, Endpoint | EndpointGroup],
+    primary_value: ZwaveValue,
+) -> Endpoint | EndpointGroup | None:
+    """Resolve the child device for a value discovered after node ready.
+
+    Endpoints cannot be added after the node is ready, so placement is derived from the
+    node's static endpoint structure and the placements already computed at node ready
+    (``existing_placements``). A value on an endpoint group, or on an endpoint that is
+    already a child endpoint, is placed on that child device. A value that would newly
+    make a previously non-colliding endpoint collide is not handled here and stays on
+    the main device.
+    """
+    endpoint_index = primary_value.endpoint
+    if not endpoint_index:
+        return None
+    if node.endpoint_groups:
+        group = node.get_endpoint_group(endpoint_index)
+        if group is not None and not group.is_main_device:
+            return group
+        return None
+    return next(
+        (
+            endpoint_device
+            for endpoint_device in existing_placements.values()
+            if isinstance(endpoint_device, Endpoint)
+            and endpoint_device.index == endpoint_index
+        ),
+        None,
+    )
+
+
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
@@ -273,7 +379,40 @@ def get_home_and_node_id_from_device_entry(
     if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
+    # A third segment, if present, identifies a child device (an endpoint index, or
+    # ``g`` plus a group id) and is intentionally ignored here so that child devices
+    # resolve to their node.
     return (id_[0], int(id_[1]))
+
+
+def get_endpoint_indices_from_child_device(
+    device_entry: dr.ChildDeviceEntry, node: ZwaveNode
+) -> list[int]:
+    """Return the endpoint indices an endpoint child device covers.
+
+    A child device identifier is ``{home_id}-{node_id}-{endpoint}`` for a single
+    endpoint or ``{home_id}-{node_id}-g{group_id}`` for an endpoint group.
+    """
+    device_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if device_id is None:
+        return []
+    suffix = device_id.split("-")[-1]
+    if suffix.startswith("g"):
+        group = node.endpoint_groups.get(int(suffix[1:]))
+        # group.endpoints filters to endpoints that actually exist on the node, unlike
+        # the raw endpoint_indices which are taken as-is from the device config.
+        return [endpoint.index for endpoint in group.endpoints] if group else []
+    # A stale child device can outlive its endpoint (e.g. before a re-interview prunes
+    # it), so only report the endpoint when it still exists on the node.
+    endpoint = int(suffix)
+    return [endpoint] if endpoint in node.endpoints else []
 
 
 class DriverNotReadyError(ValueError):
@@ -417,15 +556,12 @@ def async_get_nodes_from_area_id(
             if entity.platform == DOMAIN and entity.device_id is not None
         }
     )
-    # Add devices in an area that are Z-Wave JS devices. Child devices are skipped
-    # since a child device is not a Z-Wave JS node.
+    # Add devices in an area that are Z-Wave JS devices, including endpoint child devices
+    # (async_get_node_from_device_id resolves a child device to its node).
     nodes.update(
         async_get_node_from_device_id(hass, device.id)
         for device in dr.async_entries_for_area(dev_reg, area_id)
-        if not isinstance(device, dr.ChildDeviceEntry)
-        and (
-            config_entry := hass.config_entries.async_get_entry(device.config_entry_id)
-        )
+        if (config_entry := hass.config_entries.async_get_entry(device.config_entry_id))
         is not None
         and config_entry.domain == DOMAIN
     )
@@ -604,15 +740,52 @@ def get_value_state_schema(
     )
 
 
-def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
-    """Get DeviceInfo for node."""
-    return DeviceInfo(
-        identifiers={get_device_id(driver, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location or None,
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+) -> DeviceInfo: ...
+
+
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint_device: Endpoint | EndpointGroup,
+    parent_device_id: str,
+) -> ChildDeviceInfo: ...
+
+
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint_device: Endpoint | EndpointGroup | None = None,
+    parent_device_id: str | None = None,
+) -> DeviceInfo | ChildDeviceInfo:
+    """Get DeviceInfo for a node or one of its endpoint child devices."""
+    node_name = node.name or node.device_config.description or f"Node {node.node_id}"
+    if endpoint_device is None:
+        return DeviceInfo(
+            identifiers={get_device_id(driver, node)},
+            sw_version=node.firmware_version,
+            name=node_name,
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location or None,
+        )
+
+    assert parent_device_id is not None
+    name: str | None
+    if isinstance(endpoint_device, EndpointGroup):
+        name = endpoint_device.label
+    else:
+        # A value is only placed on a per-endpoint child device when the endpoint has a
+        # label (see endpoint_devices), so endpoint_label is always set here.
+        name = endpoint_device.endpoint_label
+    return ChildDeviceInfo(
+        identifiers={get_endpoint_device_id(driver, node, endpoint_device)},
+        name=name,
+        parent_device_id=parent_device_id,
     )
 
 
@@ -715,6 +888,12 @@ def async_bypass_dynamic_config_validation(
             or any(
                 device.id in devices
                 for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+            )
+            or any(
+                device.id in devices
+                for device in dr.async_child_entries_for_config_entry(
+                    dev_reg, entry.entry_id
+                )
             )
             or any(
                 entity.entity_id in entities

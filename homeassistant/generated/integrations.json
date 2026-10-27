@@ -10071,7 +10071,7 @@
       "iot_class": "cloud_polling"
     },
     "serial": {
-      "name": "Serial",
+      "name": "Raw Serial",
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"

@@ -116,3 +116,87 @@ def test_brand_integrations_categories(config: Config) -> None:
     brand_integrations = generated["blinds_brand"]["integrations"]
     assert brand_integrations["motion_blinds"]["categories"] == ["blinds_curtains"]
     assert brand_integrations["acomax"]["categories"] == ["blinds_curtains"]
+
+
+def test_connectivity(config: Config) -> None:
+    """Test connectivity is added, and left out when there is none."""
+    generated = _generate(
+        config,
+        [
+            _integration(
+                config,
+                "zha",
+                integration_type="hub",
+                connectivity=["zigbee"],
+            ),
+            _integration(config, "no_connectivity", integration_type="device"),
+        ],
+    )
+
+    assert generated["zha"]["connectivity"] == ["zigbee"]
+    assert "connectivity" not in generated["no_connectivity"]
+
+
+def test_virtual_integration_inherits_connectivity(config: Config) -> None:
+    """Test virtual integrations get the connectivity of their supported_by."""
+    generated = _generate(
+        config,
+        [
+            _integration(
+                config,
+                "motion_blinds",
+                integration_type="hub",
+                connectivity=["network"],
+            ),
+            _integration(
+                config,
+                "acomax",
+                integration_type="virtual",
+                supported_by="motion_blinds",
+            ),
+            _integration(
+                config,
+                "missing_target",
+                integration_type="virtual",
+                supported_by="does_not_exist",
+            ),
+        ],
+    )
+
+    assert generated["acomax"]["connectivity"] == ["network"]
+    assert "connectivity" not in generated["missing_target"]
+
+
+def test_brand_integrations_connectivity(config: Config) -> None:
+    """Test integrations under a brand get connectivity, virtual ones inherited."""
+    generated = _generate(
+        config,
+        [
+            _integration(
+                config,
+                "motion_blinds",
+                integration_type="hub",
+                connectivity=["network"],
+            ),
+            _integration(
+                config,
+                "acomax",
+                integration_type="virtual",
+                supported_by="motion_blinds",
+            ),
+        ],
+        [
+            Brand(
+                Path("blinds_brand"),
+                _brand={
+                    "domain": "blinds_brand",
+                    "name": "Blinds brand",
+                    "integrations": ["motion_blinds", "acomax"],
+                },
+            )
+        ],
+    )
+
+    brand_integrations = generated["blinds_brand"]["integrations"]
+    assert brand_integrations["motion_blinds"]["connectivity"] == ["network"]
+    assert brand_integrations["acomax"]["connectivity"] == ["network"]

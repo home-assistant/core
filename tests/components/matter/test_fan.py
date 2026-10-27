@@ -36,6 +36,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.FAN
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_fans(
     hass: HomeAssistant,
