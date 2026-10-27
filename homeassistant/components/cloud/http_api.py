@@ -354,7 +354,6 @@ class CloudLogoutView(HomeAssistantView):
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
-        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 

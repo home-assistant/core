@@ -31,7 +31,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-DOMAIN = "manual"
+from .const import DOMAIN
 
 CONF_ARMING_STATES = "arming_states"
 CONF_CODE_TEMPLATE = "code_template"

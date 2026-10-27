@@ -12,9 +12,14 @@ from airly.exceptions import AirlyError
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     CONF_USE_NEAREST,
@@ -44,21 +49,22 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         use_nearest = False
 
         if user_input is not None:
+            location: dict[str, Any] = user_input[CONF_LOCATION]
             await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}-{user_input[CONF_LONGITUDE]}"
+                f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 
             location_valid, errors = await self.async_check_location(
                 user_input[CONF_API_KEY],
-                user_input[CONF_LATITUDE],
-                user_input[CONF_LONGITUDE],
+                location[CONF_LATITUDE],
+                location[CONF_LONGITUDE],
             )
             if not location_valid and not errors:
                 location_valid, errors = await self.async_check_location(
                     user_input[CONF_API_KEY],
-                    user_input[CONF_LATITUDE],
-                    user_input[CONF_LONGITUDE],
+                    location[CONF_LATITUDE],
+                    location[CONF_LONGITUDE],
                     use_nearest=True,
                 )
                 use_nearest = location_valid
@@ -68,21 +74,32 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="wrong_location")
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data={**user_input, CONF_USE_NEAREST: use_nearest},
+                    data={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_LATITUDE: location[CONF_LATITUDE],
+                        CONF_LONGITUDE: location[CONF_LONGITUDE],
+                        CONF_USE_NEAREST: use_nearest,
+                    },
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                    probatio.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    probatio.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
+                    }
+                ),
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
+                },
             ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
