@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
         ): cv.boolean,
         probatio.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -107,6 +107,7 @@ class ZMSensorMonitors(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
+        self._monitor.update_monitor()
         if not (state := self._monitor.function):
             self._attr_native_value = None
         else:

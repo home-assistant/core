@@ -62,4 +62,3 @@ def format_stop_place_title(
         else "all routes"
     )
     return f"{type_icons} {name} · {route_summary}"
-

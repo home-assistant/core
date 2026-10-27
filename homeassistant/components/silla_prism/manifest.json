@@ -1,6 +1,7 @@
 {
   "domain": "silla_prism",
   "name": "Silla Prism",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@ebaschiera"],
   "config_flow": true,
   "dependencies": ["mqtt"],
@@ -10,5 +11,5 @@
   "loggers": ["pysillaprism"],
   "mqtt": ["prism/hello"],
   "quality_scale": "bronze",
-  "requirements": ["pysillaprism==0.2.0"]
+  "requirements": ["pysillaprism==0.2.1"]
 }

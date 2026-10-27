@@ -27,8 +27,8 @@ DEFAULT_PORT = 3000
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         probatio.Inclusive(CONF_HOST, "remote"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "remote"): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "remote"): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )

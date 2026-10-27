@@ -30,7 +30,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.data_schema = {
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
         self.mfa_data_schema = {
             probatio.Required(CONF_MFA): str,
@@ -160,7 +160,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=probatio.Schema(
                     {
                         probatio.Required(CONF_USERNAME, default=self._username): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
             )

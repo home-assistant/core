@@ -474,4 +474,3 @@ async def test_sensor_update_sets_departure_attributes() -> None:
         "departure_#3": "ca. 12:30 2 Airport",
     }
     api.async_update.assert_awaited_once()
-

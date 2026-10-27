@@ -1,74 +1,51 @@
-"""Migrate lifx devices to their own config entry."""
+"""Migrate the stored form of a LIFX serial."""
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import LIFXConfigEntry
-from .discovery import async_init_discovery_flow
+from .util import normalize_serial
+
+
+def _raw_serial(value: str) -> str:
+    """Return a serial in raw form, leaving an unrecognized value alone."""
+    try:
+        return normalize_serial(value)
+    except ValueError:
+        return value
 
 
 @callback
-def async_migrate_legacy_entries(
-    hass: HomeAssistant,
-    discovered_hosts_by_serial: dict[str, str],
-    existing_serials: set[str],
-    legacy_entry: LIFXConfigEntry,
-) -> int:
-    """Migrate the legacy config entries to have an entry per device."""
-    LOGGER.debug(
-        "Migrating legacy entries: discovered_hosts_by_serial=%s, existing_serials=%s",
-        discovered_hosts_by_serial,
-        existing_serials,
-    )
-
-    device_registry = dr.async_get(hass)
-    for dev_entry in dr.async_entries_for_config_entry(
-        device_registry, legacy_entry.entry_id
-    ):
-        for domain, serial in dev_entry.identifiers:
-            if (
-                domain == DOMAIN
-                and serial not in existing_serials
-                and (host := discovered_hosts_by_serial.get(serial))
-            ):
-                async_init_discovery_flow(hass, host, serial)
-
-    remaining_devices = dr.async_entries_for_config_entry(
-        dr.async_get(hass), legacy_entry.entry_id
-    )
-    LOGGER.debug("The following devices remain: %s", remaining_devices)
-    return len(remaining_devices)
+def _raw_identifiers(identifiers: set[tuple[str, str]]) -> set[tuple[str, str]]:
+    """Return the identifiers of a device with its serial in raw form."""
+    return {
+        (domain, _raw_serial(value) if domain == DOMAIN else value)
+        for domain, value in identifiers
+    }
 
 
 @callback
-def async_migrate_entities_devices(
-    hass: HomeAssistant, legacy_entry_id: str, new_entry: LIFXConfigEntry
-) -> None:
-    """Move entities and devices to the new config entry."""
-    migrated_devices = []
-    device_registry = dr.async_get(hass)
-    for dev_entry in dr.async_entries_for_config_entry(
-        device_registry, legacy_entry_id
-    ):
-        for domain, value in dev_entry.identifiers:
-            if domain == DOMAIN and value == new_entry.unique_id:
-                LOGGER.debug(
-                    "Migrating device with %s to %s",
-                    dev_entry.identifiers,
-                    new_entry.unique_id,
-                )
-                migrated_devices.append(dev_entry.id)
-                device_registry.async_update_device(
-                    dev_entry.id,
-                    new_config_entry_id=new_entry.entry_id,
-                )
+def _raw_unique_id(reg_entity: er.RegistryEntry) -> dict[str, str] | None:
+    """Return the update that puts the serial of a unique ID in raw form."""
+    serial, separator, key = reg_entity.unique_id.partition("_")
+    if (raw_serial := _raw_serial(serial)) == serial:
+        return None
+    return {"new_unique_id": f"{raw_serial}{separator}{key}"}
 
-    entity_registry = er.async_get(hass)
-    for reg_entity in er.async_entries_for_config_entry(
-        entity_registry, legacy_entry_id
-    ):
-        if reg_entity.device_id in migrated_devices:
-            entity_registry.async_update_entity(
-                reg_entity.entity_id, config_entry_id=new_entry.entry_id
+
+async def async_migrate_serials(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
+    """Replace the MAC-formatted serials an entry registered with the actual serial.
+
+    A LIFX serial is not a MAC address and earlier releases stored it colon
+    separated, which the device registry then treated as a second identity.
+    """
+    device_registry = dr.async_get(hass)
+    for dev_entry in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if (
+            identifiers := _raw_identifiers(dev_entry.identifiers)
+        ) != dev_entry.identifiers:
+            device_registry.async_update_device(
+                dev_entry.id, new_identifiers=identifiers
             )
+    await er.async_migrate_entries(hass, entry.entry_id, _raw_unique_id)

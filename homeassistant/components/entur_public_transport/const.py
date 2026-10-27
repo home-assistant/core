@@ -62,4 +62,3 @@ ATTR_NEXT_UP_DELAY = "next_delay"
 ATTR_NEXT_UP_REALTIME = "next_real_time"
 
 ATTR_TRANSPORT_MODE = "transport_mode"
-

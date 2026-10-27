@@ -1,6 +1,7 @@
 {
   "domain": "streamlabswater",
   "name": "StreamLabs",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/streamlabswater",

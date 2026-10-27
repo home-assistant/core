@@ -19,7 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
+from .data import AugustData
 from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)

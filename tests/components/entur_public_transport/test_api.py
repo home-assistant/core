@@ -295,4 +295,3 @@ def test_route_and_stop_place_labels_cover_fallbacks() -> None:
     assert place.type_icons == "🚉"
     assert line_id_label("unknown") == "unknown"
     assert format_stop_place_title("Stop", "🚏", [], {}) == "🚏 Stop · all routes"
-

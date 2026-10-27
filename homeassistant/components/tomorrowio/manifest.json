@@ -1,6 +1,10 @@
 {
   "domain": "tomorrowio",
   "name": "Tomorrow.io",
+  "categories": [
+    "weather_alerts.forecasts",
+    "weather_alerts.air_quality_pollen"
+  ],
   "codeowners": ["@raman325", "@lymanepp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tomorrowio",

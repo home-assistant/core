@@ -16,6 +16,7 @@ from hegel_ip_client import (
 from hegel_ip_client.exceptions import HegelConnectionError
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -69,6 +70,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
     _attr_should_poll = False
     _attr_name = None
     _attr_has_entity_name = True
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -183,7 +185,6 @@ class HegelMediaPlayer(MediaPlayerEntity):
     async def _connected_watcher(self) -> None:
         """Watch the client's connection events and update state accordingly."""
         conn_event = self._client.connected_event
-        disconn_event = self._client.disconnected_event
         _LOGGER.debug("Connected watcher started")
 
         try:
@@ -199,9 +200,11 @@ class HegelMediaPlayer(MediaPlayerEntity):
                 # Schedule a state refresh through HA
                 self.async_schedule_update_ha_state(force_refresh=True)
 
-                # Wait for disconnection using event (no polling!)
+                # The library has no disconnected event; derive it from the
+                # connected event being cleared.
                 _LOGGER.debug("Watcher: waiting for disconnection")
-                await disconn_event.wait()
+                while conn_event.is_set():
+                    await asyncio.sleep(1)
                 _LOGGER.debug("Watcher: disconnected")
 
                 # Notify HA that we're unavailable

@@ -28,7 +28,7 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
         probatio.Required(ATTR_MESSAGE): cv.string,
         probatio.Optional(ATTR_HTML): cv.string,
         probatio.Optional(ATTR_ATTACHMENTS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

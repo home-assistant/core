@@ -85,11 +85,13 @@ class EnturStopConfiguration:
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_STOP_IDS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_STOP_IDS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-        probatio.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_WHITELIST_LINES, default=[]): probatio.EnsureList(),
         probatio.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
         probatio.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): probatio.All(
             cv.positive_int, probatio.Range(min=2, max=10)
@@ -403,4 +405,3 @@ class EnturPublicTransportSensor(SensorEntity):
                 f"{'' if bool(call.is_realtime) else 'ca. '}"
                 f"{call.expected_departure_time.strftime('%H:%M')} {call.front_display}"
             )
-

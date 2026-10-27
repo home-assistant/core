@@ -1,6 +1,7 @@
 {
   "domain": "vivotek",
   "name": "VIVOTEK",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@HarlemSquirrel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vivotek",
