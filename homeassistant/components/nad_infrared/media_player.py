@@ -3,6 +3,10 @@
 from dataclasses import dataclass
 from typing import Any, override
 
+from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
+from infrared_protocols.codes.nad.cd import NADCDCode
+from infrared_protocols.codes.nad.tape import NADTapeCode
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -15,7 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from .codes import NADAmplifierCode, NADCassetteCode, NADCDCode
 from .const import CONF_DEVICE_TYPE, DOMAIN, NADDeviceType
 from .entity import NadIrEntity
 
@@ -279,20 +282,20 @@ class NadIrCassetteDeckMediaPlayer(NadIrEntity, MediaPlayerEntity):
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._send_nad_command(NADCassetteCode.DECK_B_PLAY)
+        await self._send_nad_command(NADTapeCode.DECK_B_PLAY)
         self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._send_nad_command(NADCassetteCode.DECK_B_PAUSE)
+        await self._send_nad_command(NADTapeCode.DECK_B_PAUSE)
         self._attr_state = MediaPlayerState.PAUSED
         self.async_write_ha_state()
 
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._send_nad_command(NADCassetteCode.DECK_B_STOP)
+        await self._send_nad_command(NADTapeCode.DECK_B_STOP)
         self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()

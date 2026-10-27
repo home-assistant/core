@@ -3,6 +3,9 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
+from infrared_protocols.codes.nad.cd import NADCDCode
+from infrared_protocols.codes.nad.tape import NADTapeCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
@@ -11,11 +14,6 @@ from pytest_homeassistant.components.infrared import (
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.nad_infrared import PLATFORMS
-from homeassistant.components.nad_infrared.codes import (
-    NADAmplifierCode,
-    NADCassetteCode,
-    NADCDCode,
-)
 from homeassistant.components.nad_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
@@ -70,7 +68,7 @@ def mock_nad_to_command() -> Generator[MagicMock]:
             NADCDCode, "to_command", autospec=True, side_effect=lambda self: self
         ),
         patch.object(
-            NADCassetteCode, "to_command", autospec=True, side_effect=lambda self: self
+            NADTapeCode, "to_command", autospec=True, side_effect=lambda self: self
         ),
     ):
         yield mock

@@ -1,10 +1,13 @@
 """Common entity for NAD Infrared integration."""
 
+from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
+from infrared_protocols.codes.nad.cd import NADCDCode
+from infrared_protocols.codes.nad.tape import NADTapeCode
+
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .codes import NADAmplifierCode, NADCassetteCode, NADCDCode
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DEVICE_NAMES, DOMAIN
 
 
@@ -24,7 +27,7 @@ class NadIrEntity(InfraredEmitterConsumerEntity):
         )
 
     async def _send_nad_command(
-        self, code: NADAmplifierCode | NADCDCode | NADCassetteCode
+        self, code: NADAmplifierCode | NADCDCode | NADTapeCode
     ) -> None:
         """Send an IR command to the NAD device."""
         await self._send_command(code.to_command())

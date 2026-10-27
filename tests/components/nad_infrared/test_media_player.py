@@ -1,5 +1,8 @@
 """Tests for the NAD Infrared media player platform."""
 
+from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
+from infrared_protocols.codes.nad.cd import NADCDCode
+from infrared_protocols.codes.nad.tape import NADTapeCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 from pytest_homeassistant.common import (
@@ -32,11 +35,6 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     MediaPlayerState,
-)
-from homeassistant.components.nad_infrared.codes import (
-    NADAmplifierCode,
-    NADCassetteCode,
-    NADCDCode,
 )
 from homeassistant.components.nad_infrared.const import NADDeviceType
 from homeassistant.const import (
@@ -447,9 +445,9 @@ async def test_cd_player_action_sends_correct_code(
 @pytest.mark.parametrize(
     ("service", "expected_code", "expected_state"),
     [
-        (SERVICE_MEDIA_PLAY, NADCassetteCode.DECK_B_PLAY, MediaPlayerState.PLAYING),
-        (SERVICE_MEDIA_PAUSE, NADCassetteCode.DECK_B_PAUSE, MediaPlayerState.PAUSED),
-        (SERVICE_MEDIA_STOP, NADCassetteCode.DECK_B_STOP, MediaPlayerState.IDLE),
+        (SERVICE_MEDIA_PLAY, NADTapeCode.DECK_B_PLAY, MediaPlayerState.PLAYING),
+        (SERVICE_MEDIA_PAUSE, NADTapeCode.DECK_B_PAUSE, MediaPlayerState.PAUSED),
+        (SERVICE_MEDIA_STOP, NADTapeCode.DECK_B_STOP, MediaPlayerState.IDLE),
     ],
 )
 @pytest.mark.parametrize("device_type", [NADDeviceType.CASSETTE_DECK], indirect=True)
@@ -458,7 +456,7 @@ async def test_cassette_deck_action_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
-    expected_code: NADCassetteCode,
+    expected_code: NADTapeCode,
     expected_state: str,
 ) -> None:
     """Test each cassette deck action sends the correct IR code and sets the state."""
