@@ -16,12 +16,6 @@
       "lost": {
         "default": "mdi:map-marker-remove-variant"
       },
-      "remaining_program_time_set": {
-        "default": "mdi:timer-sand",
-        "state": {
-          "off": "mdi:timer-off-outline"
-        }
-      },
       "remote_control": {
         "default": "mdi:remote",
         "state": {

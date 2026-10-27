@@ -31,7 +31,7 @@ from .const import (
     UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
-from .entity import HomeConnectEntity, constraint_fetcher, is_program_running
+from .entity import HomeConnectEntity, constraint_fetcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -727,7 +727,13 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @property
     def program_running(self) -> bool:
         """Return whether a program is running, paused or finished."""
-        return is_program_running(self.appliance)
+        status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        return status is not None and status.value in [
+            BSH_OPERATION_STATE_DELAYED_START,
+            BSH_OPERATION_STATE_RUN,
+            BSH_OPERATION_STATE_PAUSE,
+            BSH_OPERATION_STATE_FINISHED,
+        ]
 
     @property
     @override

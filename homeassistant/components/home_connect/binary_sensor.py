@@ -15,13 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import (
-    APPLIANCES_WITH_PROGRAM_TIMES,
-    REFRIGERATION_STATUS_DOOR_CLOSED,
-    REFRIGERATION_STATUS_DOOR_OPEN,
-)
+from .const import REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_OPEN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
-from .entity import HomeConnectEntity, is_program_running
+from .entity import HomeConnectEntity
 
 PARALLEL_UPDATES = 0
 
@@ -147,11 +143,6 @@ CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
-REMAINING_PROGRAM_TIME_SET_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
-    key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
-    translation_key="remaining_program_time_set",
-)
-
 
 def _get_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
@@ -167,12 +158,6 @@ def _get_entities_for_appliance(
         for description in BINARY_SENSORS
         if description.key in appliance_coordinator.data.status
     )
-    if appliance_coordinator.data.info.type in APPLIANCES_WITH_PROGRAM_TIMES:
-        entities.append(
-            HomeConnectRemainingProgramTimeSetBinarySensor(
-                appliance_coordinator, REMAINING_PROGRAM_TIME_SET_ENTITY_DESCRIPTION
-            )
-        )
     return entities
 
 
@@ -205,41 +190,6 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._attr_is_on = self.entity_description.boolean_map.get(status)
         else:
             self._attr_is_on = None
-
-
-class HomeConnectRemainingProgramTimeSetBinarySensor(
-    HomeConnectEntity, BinarySensorEntity
-):
-    """Binary sensor for whether the current program reports a remaining time."""
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register listener."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(
-                self._handle_coordinator_update,
-                EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
-            )
-        )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return true if a program is running, paused or finished."""
-        return super().available and is_program_running(self.appliance)
-
-    @override
-    def update_native_value(self) -> None:
-        """Set the native value of the binary sensor."""
-        event = self.appliance.events.get(
-            EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME
-        )
-        self._attr_is_on = (
-            event is not None
-            and isinstance(event.value, int | float)
-            and event.value > 0
-        )
 
 
 class HomeConnectConnectivityBinarySensor(HomeConnectEntity, BinarySensorEntity):
