@@ -34,6 +34,8 @@ async def test_set_temperature(
     mock_pytouchline: MagicMock,
 ) -> None:
     """Test setting the temperature."""
+    mock_pytouchline.set_target_temperature.return_value = True
+
     await hass.services.async_call(
         "climate",
         SERVICE_SET_TEMPERATURE,
@@ -44,16 +46,27 @@ async def test_set_temperature(
     mock_pytouchline.set_target_temperature.assert_called_once_with(22.0)
 
 
+@pytest.mark.parametrize(
+    ("return_value", "side_effect"),
+    [
+        pytest.param(False, None, id="returns-false"),
+        pytest.param(
+            None,
+            ConnectionError("Unexpected backend explosion"),
+            id="connection-error",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_error(
     hass: HomeAssistant,
     mock_pytouchline: MagicMock,
+    return_value: bool | None,
+    side_effect: Exception | None,
 ) -> None:
     """Test error handling when setting the temperature."""
-    # Simulate an error when setting the temperature
-    mock_pytouchline.set_target_temperature.side_effect = ConnectionError(
-        "Unexpected backend explosion"
-    )
+    mock_pytouchline.set_target_temperature.return_value = return_value
+    mock_pytouchline.set_target_temperature.side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError, match="An error occurred while setting the temperature"
@@ -83,15 +96,31 @@ async def test_set_preset_mode(
     mock_pytouchline.set_week_program.assert_called_once_with(0)
 
 
+@pytest.mark.parametrize(
+    ("operation_mode_result", "week_program_result", "side_effect"),
+    [
+        pytest.param(False, True, None, id="operation-mode-returns-false"),
+        pytest.param(True, False, None, id="week-program-returns-false"),
+        pytest.param(
+            None,
+            None,
+            ConnectionError("Unexpected backend explosion"),
+            id="connection-error",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_preset_mode_error(
     hass: HomeAssistant,
     mock_pytouchline: MagicMock,
+    operation_mode_result: bool | None,
+    week_program_result: bool | None,
+    side_effect: Exception | None,
 ) -> None:
     """Test error handling when setting the preset mode."""
-    mock_pytouchline.set_operation_mode.side_effect = ConnectionError(
-        "Unexpected backend explosion"
-    )
+    mock_pytouchline.set_operation_mode.return_value = operation_mode_result
+    mock_pytouchline.set_week_program.return_value = week_program_result
+    mock_pytouchline.set_operation_mode.side_effect = side_effect
 
     with pytest.raises(
         HomeAssistantError, match="An error occurred while setting the preset mode"
