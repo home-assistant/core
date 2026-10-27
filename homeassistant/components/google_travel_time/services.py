@@ -62,9 +62,14 @@ def _build_routes_response(
         return []
     return [
         {
-            "duration": _seconds(route.duration),
+            "duration": (duration := _seconds(route.duration)),
             "duration_text": get_localized_text(
                 route.localized_values.duration if route.localized_values else None
+            ),
+            "static_duration": (
+                _seconds(route.static_duration)
+                if route.static_duration is not None
+                else duration
             ),
             "static_duration_text": get_localized_text(
                 route.localized_values.static_duration

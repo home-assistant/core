@@ -121,24 +121,26 @@ class WyomingConversationEntity(
             context["satellite_id"] = user_input.satellite_id
 
         try:
-            async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                await client.write_event(
-                    Transcript(
-                        user_input.text,
-                        context=context,
-                        language=user_input.language,
-                    ).event()
-                )
-                with (
-                    chat_session.async_get_chat_session(
-                        self.hass,
-                        user_input.conversation_id,
-                        context=user_input.context,
-                    ) as session,
-                    conversation.async_get_chat_log(
-                        self.hass, session, user_input
-                    ) as chat_log,
-                ):
+            # Open the session and chat log first, so their checks run before
+            # the text leaves Home Assistant.
+            with (
+                chat_session.async_get_chat_session(
+                    self.hass, user_input.conversation_id, context=user_input.context
+                ) as session,
+                conversation.async_get_chat_log(
+                    self.hass, session, user_input
+                ) as chat_log,
+            ):
+                async with AsyncTcpClient(
+                    self.service.host, self.service.port
+                ) as client:
+                    await client.write_event(
+                        Transcript(
+                            user_input.text,
+                            context=context,
+                            language=user_input.language,
+                        ).event()
+                    )
                     intent_response = await self._async_process(
                         user_input, client, chat_log, intent_response
                     )

@@ -184,6 +184,11 @@ class MockAppleDevice:
         """Return whether the device supports lost mode."""
         return bool(self._status.get("lostModeCapable", False))
 
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._feature("SND")
+
 
 class MockDevicesContainer:
     """Mock the Find My devices container."""
