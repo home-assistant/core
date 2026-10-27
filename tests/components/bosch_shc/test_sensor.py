@@ -254,3 +254,26 @@ async def test_motion_detector2_temperature(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+
+_MD2_PUSH_DEVICE = motion_detector2_device(temperature=21.5)
+
+
+@pytest.mark.parametrize(
+    "device_buckets", [{"motion_detectors2": [_MD2_PUSH_DEVICE]}], indirect=True
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature_push_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pushed device update refreshes the Motion Detector II temperature."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+    callback = _MD2_PUSH_DEVICE.subscribe_callback.call_args.args[1]
+    _MD2_PUSH_DEVICE.temperature = 19.0
+    await hass.async_add_executor_job(callback)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
