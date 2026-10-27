@@ -271,6 +271,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bosch_alarm/ @mag1024 @sanjay900
 /homeassistant/components/bosch_shc/ @tschamm @mosandlt
 /tests/components/bosch_shc/ @tschamm @mosandlt
+/homeassistant/components/bosch_smart_camera/ @mosandlt
+/tests/components/bosch_smart_camera/ @mosandlt
 /homeassistant/components/brands/ @home-assistant/core
 /tests/components/brands/ @home-assistant/core
 /homeassistant/components/braviatv/ @bieniu @Drafteed
@@ -1764,6 +1766,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/signal_messenger/ @bbernhard
 /homeassistant/components/silla_prism/ @ebaschiera
 /tests/components/silla_prism/ @ebaschiera
+/homeassistant/components/silvercrest_infrared/ @tr4nt0r
+/tests/components/silvercrest_infrared/ @tr4nt0r
 /homeassistant/components/simplefin/ @scottg489 @jeeftor
 /tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87

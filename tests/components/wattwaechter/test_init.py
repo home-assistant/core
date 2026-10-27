@@ -28,6 +28,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_HOST,
+    MOCK_METER_DATA_GAS,
     MOCK_METER_DATA_WATER,
     MOCK_SYSTEM_INFO_GAS,
     MOCK_SYSTEM_INFO_WATER,
@@ -256,7 +257,7 @@ async def test_migrate_gw_entry_to_bare_device_id(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == MOCK_DEVICE_ID
     assert entry.data[CONF_DEVICE_ID] == MOCK_DEVICE_ID
     assert device_registry.async_get(device.id).identifiers == {
@@ -286,7 +287,7 @@ async def test_migrate_plus_entry_unchanged(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == MOCK_DEVICE_ID
     assert entry.data == MOCK_CONFIG_DATA
 
@@ -309,6 +310,58 @@ async def test_migrate_keeps_id_when_device_configured_twice(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == LEGACY_GW_ID
     assert entry.data[CONF_DEVICE_ID] == LEGACY_GW_ID
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "pref_disable_new_entities", "expected"),
+    [
+        pytest.param(er.RegistryEntryDisabler.INTEGRATION, False, None, id="enabled"),
+        pytest.param(
+            er.RegistryEntryDisabler.INTEGRATION,
+            True,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="new_entities_disabled",
+        ),
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            False,
+            er.RegistryEntryDisabler.USER,
+            id="disabled_by_user",
+        ),
+    ],
+)
+async def test_migrate_enables_generic_gas_power(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler,
+    pref_disable_new_entities: bool,
+    expected: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the gas power set up as a disabled generic sensor gets enabled."""
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+    mock_client.meter_data.return_value = MOCK_METER_DATA_GAS
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
+        pref_disable_new_entities=pref_disable_new_entities,
+    )
+    entry.add_to_hass(hass)
+    gas_power = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_DEVICE_ID}_7-0:16.7.0",
+        config_entry=entry,
+        disabled_by=disabled_by,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 3
+    assert entity_registry.async_get(gas_power.entity_id).disabled_by is expected
