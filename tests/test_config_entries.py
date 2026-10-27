@@ -9880,8 +9880,8 @@ async def test_non_awaited_async_forward_entry_setups(
     await hass.async_block_till_done()
 
     message = (
-        "Detected code that calls async_forward_entry_setups for integration "
-        "test with title: Mock Title and entry_id: test2, during setup without "
+        "Detected code that calls async_forward_entry_setups during setup for "
+        "integration test with title: Mock Title and entry_id: test2, without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done"
     )

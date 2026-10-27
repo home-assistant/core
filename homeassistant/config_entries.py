@@ -3003,14 +3003,15 @@ class ConfigEntries:
                 await self._async_forward_entry_setups_locked(entry, platforms)
         else:
             await self._async_forward_entry_setups_locked(entry, platforms)
-            # If the lock was held when we stated, and it was released during
-            # the platform setup, it means they did not await the setup call.
+            # If the lock was held when the forward started, and it was released
+            # during the platform setup, it means they did not await the setup call.
             if not entry.setup_lock.locked():
                 raise HomeAssistantError(
-                    f"Detected code that calls async_forward_entry_setups for integration "
-                    f"{entry.domain} with title: {entry.title} and entry_id: {entry.entry_id}, "
-                    f"during setup without awaiting async_forward_entry_setups, which can cause "
-                    "the setup lock to be released before the setup is done",
+                    "Detected code that calls async_forward_entry_setups during setup "
+                    f"for integration {entry.domain} with title: {entry.title} and "
+                    f"entry_id: {entry.entry_id}, without awaiting "
+                    "async_forward_entry_setups, which can cause the setup lock to be "
+                    "released before the setup is done"
                 )
 
     async def _async_forward_entry_setups_locked(
