@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.coolbot.const import MAINTENANCE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,8 +15,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 from .conftest import make_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:

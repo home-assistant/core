@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from pycoolbot import CoolbotAuthError, CoolbotError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.coolbot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_EMAIL, TEST_PASSWORD, make_device
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD}
 

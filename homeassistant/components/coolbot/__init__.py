@@ -11,7 +11,7 @@ from .coordinator import CoolbotConfigEntry, CoolbotCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> None:
     """Set up CoolBot Pro from a config entry."""
     coordinator = CoolbotCoordinator(hass, entry)
     try:
@@ -27,12 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CoolbotConfigEntry) -> None:
     """Unload a config entry and close its socket."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        await entry.runtime_data.async_shutdown()
-    return unloaded
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_shutdown()

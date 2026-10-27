@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from pycoolbot import CoolbotAuthError, CoolbotError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.coolbot.const import DOMAIN, MAINTENANCE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import make_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _tick(hass: HomeAssistant) -> None:

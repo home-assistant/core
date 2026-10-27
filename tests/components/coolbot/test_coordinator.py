@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pycoolbot import CoolbotAuthError, CoolbotError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.coolbot.const import (
     DOMAIN,
@@ -24,8 +25,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import push, setup_integration
 from .conftest import make_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _tick(hass: HomeAssistant) -> None:

@@ -8,12 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pycoolbot import CoolbotDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.coolbot.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TEST_EMAIL = "user@example.com"
 TEST_PASSWORD = "hunter2"
