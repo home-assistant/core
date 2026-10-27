@@ -1041,6 +1041,13 @@ async def test_smart_sensitivity_levels_not_reported(
 
     assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
     assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
 async def test_orientation_light_select_option(
     hass: HomeAssistant,
     mock_session: MagicMock,
