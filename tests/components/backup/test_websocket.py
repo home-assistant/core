@@ -2100,6 +2100,9 @@ async def test_config_schedule_logic_dst_change(
     The last completed backup is stored with the UTC offset in effect when it
     was made, and must not pin later backups to that offset.
     """
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
     client = await hass_ws_client(hass)
     storage_data = {
         "backups": [],
