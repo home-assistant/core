@@ -317,7 +317,6 @@ class ConfigFlowContext(FlowContext, total=False):
 
     alternative_domain: str
     configuration_url: str
-    confirm_only: bool
     discovery_key: DiscoveryKey
     dismiss_protected: bool
     entry_id: str
@@ -3438,8 +3437,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _set_confirm_only(
         self,
     ) -> None:
-        """Mark the config flow as only needing user confirmation to finish flow."""
-        self.context["confirm_only"] = True
+        """Deprecated no-op; the confirm only flag it used to set was never read."""
+        report_usage(
+            "calls _set_confirm_only, which is deprecated and has no effect",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
+            integration_domain=self.handler,
+        )
 
     @callback
     def _async_current_entries(
