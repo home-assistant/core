@@ -1,5 +1,6 @@
 """Tests for the Overkiz data update coordinator."""
 
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError
@@ -40,6 +41,7 @@ from .helpers import (
     device_created_event,
     device_removed_event,
     device_state_changed_event,
+    execution_registered_event,
     execution_state_changed_event,
     gateway_alive_event,
     gateway_down_event,
@@ -248,6 +250,170 @@ async def test_commands_share_the_execution_poll(
     await hass.async_block_till_done()
 
     assert mock_client.fetch_events.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "final_state",
+    [ExecutionState.COMPLETED, ExecutionState.FAILED],
+    ids=["completed", "failed"],
+)
+async def test_execution_polls_fast_until_it_finishes(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    final_state: ExecutionState,
+) -> None:
+    """Events are fetched every execution interval until the execution finishes."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    mock_client.fetch_events.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: SHUTTER.entity_id},
+        blocking=True,
+    )
+
+    assert mock_client.fetch_events.await_count == 0
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+
+    # The registered event for our own execution must not drop its commands.
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [execution_registered_event("exec-1", SHUTTER.device_url, "open")],
+        update_interval=UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 1
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+
+    await async_deliver_events(
+        hass, freezer, mock_client, update_interval=UPDATE_INTERVAL_EXECUTION
+    )
+
+    assert mock_client.fetch_events.await_count == 2
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                "exec-1", final_state, ExecutionState.IN_PROGRESS
+            )
+        ],
+        update_interval=UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 3
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+    await async_deliver_events(
+        hass, freezer, mock_client, update_interval=UPDATE_INTERVAL_EXECUTION
+    )
+
+    assert mock_client.fetch_events.await_count == 3
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        update_interval=UPDATE_INTERVAL - UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 4
+
+
+async def test_command_during_execution_poll_keeps_its_schedule(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A command sent while the execution poll is scheduled doesn't postpone it."""
+    # Refreshes are scheduled up to a second off, so the default 2 second
+    # interval is too short to tell a postponed poll apart.
+    execution_interval = timedelta(seconds=10)
+    with patch(
+        "homeassistant.components.overkiz.coordinator.UPDATE_INTERVAL_EXECUTION",
+        execution_interval,
+    ):
+        await setup_overkiz_integration(fixture=SHUTTER.fixture)
+        mock_client.fetch_events.reset_mock()
+
+        for cover in (SHUTTER, GARAGE):
+            await hass.services.async_call(
+                COVER_DOMAIN,
+                SERVICE_OPEN_COVER,
+                {ATTR_ENTITY_ID: cover.entity_id},
+                blocking=True,
+            )
+            await async_deliver_events(
+                hass, freezer, mock_client, update_interval=execution_interval / 2
+            )
+
+    assert mock_client.fetch_events.await_count == 1
+
+
+async def test_external_execution_polls_fast_until_it_finishes(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An execution started outside Home Assistant also speeds up polling."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    mock_client.fetch_events.reset_mock()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_registered_event(
+                "app-exec",
+                SHUTTER.device_url,
+                "open",
+                label="Shutter - TaHoma PC",
+                source="mobile:pc",
+            )
+        ],
+    )
+
+    assert mock_client.fetch_events.await_count == 1
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                "app-exec", ExecutionState.COMPLETED, ExecutionState.IN_PROGRESS
+            )
+        ],
+        update_interval=UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 2
+
+    await async_deliver_events(
+        hass, freezer, mock_client, update_interval=UPDATE_INTERVAL_EXECUTION
+    )
+
+    assert mock_client.fetch_events.await_count == 2
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        update_interval=UPDATE_INTERVAL - UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 3
 
 
 async def test_stateless_hub_skips_the_execution_poll(

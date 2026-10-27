@@ -6,6 +6,8 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
+    Action,
+    Command,
     DeviceAvailableEvent,
     DeviceCreatedEvent,
     DeviceRemovedEvent,
@@ -13,6 +15,7 @@ from pyoverkiz.models import (
     DeviceUnavailableEvent,
     Event,
     EventState,
+    ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
     GatewayAliveEvent,
     GatewayDownEvent,
@@ -102,6 +105,24 @@ def device_removed_event(device_url: str) -> DeviceRemovedEvent:
 def device_created_event(device_url: str) -> DeviceCreatedEvent:
     """Build a DEVICE_CREATED event for the given device."""
     return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
+
+
+def execution_registered_event(
+    exec_id: str,
+    device_url: str,
+    command_name: str,
+    *,
+    label: str = "Home Assistant",
+    source: str | None = None,
+) -> ExecutionRegisteredEvent:
+    """Build an EXECUTION_REGISTERED event for a single device command."""
+    return ExecutionRegisteredEvent(
+        name=EventName.EXECUTION_REGISTERED,
+        exec_id=exec_id,
+        label=label,
+        source=source,
+        actions=[Action(device_url=device_url, commands=[Command(name=command_name)])],
+    )
 
 
 def execution_state_changed_event(

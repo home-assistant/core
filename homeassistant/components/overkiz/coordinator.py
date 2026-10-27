@@ -193,6 +193,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     @callback
     def async_execution_started(self, exec_id: str, actions: list[Action]) -> None:
         """Track a new execution, show its in-progress state and poll fast."""
+        # ExecutionRegisteredEvent only arrives with the next event poll, so
+        # track the execution now for entities to reflect it straight away.
         self.register_execution(exec_id, actions)
         self.async_update_listeners()
         if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
