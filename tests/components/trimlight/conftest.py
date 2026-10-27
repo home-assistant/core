@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiotrimlight import TrimlightDeviceInfo, TrimlightICType, TrimlightLightState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.trimlight.const import CONF_DID, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 HOST = "192.0.2.10"
 DID = "544c0003a1b2c3d4e5f6"
@@ -96,7 +95,7 @@ def zeroconf_info() -> ZeroconfServiceInfo:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config flow tests from loading the integration."""
     with patch(
-        "homeassistant.components.trimlight.async_setup_entry", return_value=True
+        "homeassistant.components.trimlight.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

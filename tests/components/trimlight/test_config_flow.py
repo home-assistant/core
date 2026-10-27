@@ -11,6 +11,7 @@ from aiotrimlight import (
     TrimlightProtocolError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.trimlight.const import CONF_DID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import DID, HOST, MAC, NAME
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_trimlight")
 

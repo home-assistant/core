@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from aiotrimlight import TrimlightConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.trimlight.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import DID, ENTITY_ID, NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")

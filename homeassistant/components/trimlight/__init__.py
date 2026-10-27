@@ -11,7 +11,7 @@ from .coordinator import TrimlightConfigEntry, TrimlightCoordinator
 PLATFORMS = (Platform.LIGHT,)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TrimlightConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TrimlightConfigEntry) -> None:
     """Set up Trimlight from a config entry."""
     client = TrimlightClient(
         entry.data[CONF_HOST],
@@ -23,9 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TrimlightConfigEntry) ->
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TrimlightConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TrimlightConfigEntry) -> None:
     """Unload a Trimlight config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

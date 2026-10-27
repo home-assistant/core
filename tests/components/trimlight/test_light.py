@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 from aiotrimlight import TrimlightConnectionError, TrimlightICType, TrimlightLightState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -31,8 +36,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ENTITY_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
