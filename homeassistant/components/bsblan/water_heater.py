@@ -13,11 +13,12 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import DEFAULT_HOT_WATER_MIN_TEMP
+from .const import DEFAULT_HOT_WATER_MIN_TEMP, DOMAIN
 from .entity import BSBLanWaterHeaterDeviceEntity
 from .helpers import first_temperature, setpoint_to_change
 
@@ -124,6 +125,21 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the setpoint currently in effect."""
         temperature = kwargs[ATTR_TEMPERATURE]
+        if self.current_operation == STATE_OFF:
+            # Scenes replay the saved target, rounded to the display unit
+            if any(
+                setpoint is not None and abs(temperature - setpoint) < 0.3
+                for setpoint in (
+                    self.native_target_temperature,
+                    self._nominal_setpoint,
+                    self._reduced_setpoint,
+                )
+            ):
+                return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_hot_water_temperature_when_off",
+            )
         setpoint = setpoint_to_change(
             temperature,
             current=self._current_setpoint,
