@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000WSS')]>,
     'disabled_by': None,
