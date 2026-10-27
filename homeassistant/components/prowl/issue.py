@@ -25,7 +25,7 @@ def async_deprecated_notify_action_call(hass: HomeAssistant, service_name: str) 
 ```yaml
 action: notify.send_message
 target:
-  entity_id: notify.prowl
+  entity_id: notify.my_prowl
 data:
   message: Hello World
   title: Hello
@@ -35,7 +35,7 @@ data:
 ```yaml
 action: prowl.send_message
 target:
-  entity_id: notify.prowl
+  entity_id: notify.my_prowl
 data:
   title: Hello
   message: Hello World

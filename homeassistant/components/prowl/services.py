@@ -30,10 +30,13 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
         probatio.Optional(ProwlServiceArgument.TITLE): cv.string,
         probatio.Required(ProwlServiceArgument.MESSAGE): cv.string,
-        probatio.Optional(ProwlServiceArgument.PRIORITY): probatio.In(
+        probatio.Optional(ProwlServiceArgument.PRIORITY, default="normal"): probatio.In(
             list(PRIORITY_MAP)
         ),
-        probatio.Optional(ProwlServiceArgument.URL): cv.url,
+        # Any URL Prowl accepts, including app schemes, like the legacy action
+        probatio.Optional(ProwlServiceArgument.URL): probatio.All(
+            cv.string, probatio.Length(max=512)
+        ),
     }
 )
 

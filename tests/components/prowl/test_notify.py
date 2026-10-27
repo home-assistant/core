@@ -12,7 +12,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.components.prowl.services import ProwlService, ProwlServiceArgument
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_API_KEY, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -268,6 +269,20 @@ async def test_other_exception_send_notification(
             },
             id="very_low_priority",
         ),
+        pytest.param(
+            {
+                notify.ATTR_MESSAGE: "Test Notification",
+                "url": "shortcuts://run-shortcut?name=Lights",
+            },
+            {
+                "application": "Home-Assistant",
+                "event": notify.ATTR_TITLE_DEFAULT,
+                "description": "Test Notification",
+                "priority": 0,
+                "url": "shortcuts://run-shortcut?name=Lights",
+            },
+            id="app_url_scheme",
+        ),
     ],
 )
 @pytest.mark.usefixtures("prowl_notification_entity")
@@ -299,7 +314,7 @@ async def test_prowl_send_message_action(
     "service_data",
     [
         pytest.param({"priority": "invalid"}, id="invalid_priority"),
-        pytest.param({"url": "not a url"}, id="invalid_url"),
+        pytest.param({"url": f"https://{'a' * 512}.com"}, id="url_too_long"),
     ],
 )
 @pytest.mark.usefixtures("prowl_notification_entity")
@@ -365,3 +380,28 @@ async def test_deprecated_legacy_notify_action(
     assert issue
     assert issue.breaks_in_ha_version == "2027.5.0"
     assert issue.translation_placeholders["action"] == f"notify.{DOMAIN}"
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_deprecated_legacy_notify_action_from_imported_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the legacy action set up from an imported entry creates the issue."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="phone",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    # The legacy action is set up in a background task of the entry
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.services.has_service(notify.DOMAIN, "phone")
+
+    await hass.services.async_call(notify.DOMAIN, "phone", SERVICE_DATA, blocking=True)
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_notify_action_phone")
+    assert issue
+    assert issue.translation_placeholders["action"] == "notify.phone"

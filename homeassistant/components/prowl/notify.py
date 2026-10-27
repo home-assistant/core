@@ -200,23 +200,28 @@ class ProwlNotificationEntity(NotifyEntity):
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message via the notify.send_message action."""
-        _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
-        await _async_post(self._prowl, title or ATTR_TITLE_DEFAULT, message)
+        await self._async_send(message, title)
 
     async def prowl_send_message(
         self,
         message: str,
+        priority: str,
         title: str | None = None,
-        priority: str | None = None,
         url: str | None = None,
     ) -> None:
         """Send the message via the prowl.send_message action."""
+        await self._async_send(message, title, PRIORITY_MAP[priority], url)
+        self._async_record_notification()
+
+    async def _async_send(
+        self,
+        message: str,
+        title: str | None,
+        priority: int = 0,
+        url: str | None = None,
+    ) -> None:
+        """Post a notification from this entity."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
         await _async_post(
-            self._prowl,
-            title or ATTR_TITLE_DEFAULT,
-            message,
-            PRIORITY_MAP[priority] if priority else 0,
-            url,
+            self._prowl, title or ATTR_TITLE_DEFAULT, message, priority, url
         )
-        self._async_record_notification()
