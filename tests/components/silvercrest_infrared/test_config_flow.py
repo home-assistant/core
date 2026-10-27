@@ -92,3 +92,14 @@ async def test_form_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("init_infrared")
+async def test_user_flow_no_emitters_receivers(hass: HomeAssistant) -> None:
+    """Test user flow aborts when no infrared emitters or receivers exist."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_infrared_entities"
