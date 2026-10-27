@@ -8,11 +8,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import smarttub
 
-from homeassistant.components.smarttub.const import ATTR_STATUS, MAX_STALE_POLLS
-from homeassistant.components.smarttub.controller import SmartTubConfigEntry
+from homeassistant.components.climate import ATTR_TEMPERATURE
+from homeassistant.components.smarttub.const import MAX_STALE_POLLS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 from . import trigger_update
 
@@ -22,11 +22,23 @@ FAILURES = [
 ]
 
 
-def _thermostat_state(hass: HomeAssistant, spa: smarttub.Spa) -> str:
-    """Return the state of the spa's thermostat."""
+def _thermostat(hass: HomeAssistant, spa: smarttub.Spa) -> State:
+    """Return the state object of the spa's thermostat."""
     state = hass.states.get(f"climate.{spa.brand}_{spa.model}_thermostat")
     assert state is not None
-    return state.state
+    return state
+
+
+def _thermostat_state(hass: HomeAssistant, spa: smarttub.Spa) -> str:
+    """Return the state of the spa's thermostat."""
+    return _thermostat(hass, spa).state
+
+
+def _set_target_temperature(spa: smarttub.Spa, temperature: float) -> None:
+    """Make the next poll of the spa report a new target temperature."""
+    status = copy.copy(spa.get_status_full.return_value)
+    status.set_temperature = temperature
+    spa.get_status_full.return_value = status
 
 
 @pytest.mark.usefixtures("setup_entry")
@@ -115,7 +127,7 @@ async def test_entities_unavailable_when_first_poll_fails(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert not config_entry.runtime_data.coordinator.last_update_success
+    assert _thermostat_state(hass, spa) == STATE_UNAVAILABLE
 
 
 @pytest.fixture(name="second_spa")
@@ -172,7 +184,8 @@ async def test_spas_are_polled_concurrently(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.runtime_data.coordinator.last_update_success
+    assert _thermostat_state(hass, spa) != STATE_UNAVAILABLE
+    assert _thermostat_state(hass, second_spa) != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("two_spa_account")
@@ -186,20 +199,16 @@ async def test_failed_spa_does_not_discard_other_spas(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    entry: SmartTubConfigEntry = config_entry
-    previous_second_status = entry.runtime_data.coordinator.data[second_spa.id][
-        ATTR_STATUS
-    ]
 
-    refreshed_status = copy.copy(spa.get_status_full.return_value)
-    spa.get_status_full.return_value = refreshed_status
+    _set_target_temperature(spa, 40)
+    _set_target_temperature(second_spa, 40)
     second_spa.get_status_full.side_effect = TimeoutError
     await trigger_update(hass)
 
-    data = entry.runtime_data.coordinator.data
-    assert data[spa.id][ATTR_STATUS] is refreshed_status
-    assert data[second_spa.id][ATTR_STATUS] is previous_second_status
-    assert entry.runtime_data.coordinator.last_update_success
+    assert _thermostat(hass, spa).attributes[ATTR_TEMPERATURE] == 40
+    second_thermostat = _thermostat(hass, second_spa)
+    assert second_thermostat.state != STATE_UNAVAILABLE
+    assert second_thermostat.attributes[ATTR_TEMPERATURE] == 39
 
 
 @pytest.mark.usefixtures("two_spa_account")
@@ -213,22 +222,17 @@ async def test_last_data_is_kept_for_each_spa_through_an_aggregate_failure(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    initial_second_status = config_entry.runtime_data.coordinator.data[second_spa.id][
-        ATTR_STATUS
-    ]
 
     spa.get_status_full.side_effect = TimeoutError
-    for _ in range(MAX_STALE_POLLS + 1):
-        latest_second_status = copy.copy(initial_second_status)
-        second_spa.get_status_full.return_value = latest_second_status
+    for temperature in range(30, 30 + MAX_STALE_POLLS + 1):
+        _set_target_temperature(second_spa, temperature)
         await trigger_update(hass)
-    assert not config_entry.runtime_data.coordinator.last_update_success
+    assert _thermostat_state(hass, second_spa) == STATE_UNAVAILABLE
 
     spa.get_status_full.side_effect = None
     second_spa.get_status_full.side_effect = TimeoutError
     await trigger_update(hass)
 
-    data = config_entry.runtime_data.coordinator.data
-    assert config_entry.runtime_data.coordinator.last_update_success
-    assert data[second_spa.id][ATTR_STATUS] is latest_second_status
-    assert data[second_spa.id][ATTR_STATUS] is not initial_second_status
+    second_thermostat = _thermostat(hass, second_spa)
+    assert second_thermostat.state != STATE_UNAVAILABLE
+    assert second_thermostat.attributes[ATTR_TEMPERATURE] == temperature
