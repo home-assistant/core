@@ -6,48 +6,38 @@ keba-kecontact 1.3.0, including behaviour that looks wrong. Tests named
 """
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.keba import KebaHandler
 from homeassistant.components.keba.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     HOST,
-    UDP_PORT,
-    FakeKebaStation,
     async_advance,
     async_seconds_until_poll,
     async_settle,
     stop_polling,
 )
 
-REPORTS = ["report 1", "report 2", "report 3", "report 100"]
 
-
-async def test_setup_connects_and_requests_all_reports(
-    hass: HomeAssistant, setup_keba: FakeKebaStation
-) -> None:
-    """Test setup binds UDP 7090, probes report 1, then requests every report."""
-    station = setup_keba
-
-    assert station.local_addr == ("0.0.0.0", UDP_PORT)
-    assert station.remote_addr == (HOST, UDP_PORT)
-    # Library probe, then the integration's own initial request.
-    assert station.sent[:5] == ["report 1", *REPORTS]
+async def test_setup(hass: HomeAssistant, setup_keba: MagicMock) -> None:
+    """Test setup connects, requests the station's data, then starts polling."""
+    setup_keba.setup.assert_awaited_once_with(None)
+    # The initial request during setup, then the first poll.
+    assert setup_keba.request_data.await_count == 2
     assert hass.services.has_service(DOMAIN, "request_data")
     assert hass.states.get("sensor.keba_p30_charging_power") is not None
 
 
 async def test_setup_disables_failsafe_by_default(
-    hass: HomeAssistant, setup_keba: FakeKebaStation
+    hass: HomeAssistant, setup_keba: MagicMock
 ) -> None:
     """Test setup switches failsafe off when it is not configured."""
-    assert setup_keba.commands == ["failsafe 0 0 0"]
+    setup_keba.set_failsafe.assert_awaited_once_with(0, 0, 0)
 
 
 @pytest.mark.parametrize(
@@ -65,93 +55,80 @@ async def test_setup_disables_failsafe_by_default(
     ],
 )
 async def test_setup_applies_configured_failsafe(
-    hass: HomeAssistant, setup_keba: FakeKebaStation
+    hass: HomeAssistant, setup_keba: MagicMock
 ) -> None:
-    """Test setup sends the configured failsafe values."""
-    assert setup_keba.commands == ["failsafe 60 10000 1"]
+    """Test setup applies the configured failsafe values."""
+    setup_keba.set_failsafe.assert_awaited_once_with(60, 10, 1)
 
 
+@pytest.mark.parametrize(
+    "keba_config",
+    [{DOMAIN: {"host": HOST, "failsafe": True, "failsafe_timeout": 5}}],
+)
 async def test_setup_failsafe_out_of_range_currently_unchecked(
-    hass: HomeAssistant, station: FakeKebaStation
+    hass: HomeAssistant, setup_keba: MagicMock
 ) -> None:
-    """Test an out-of-range failsafe timeout is passed on unchecked.
+    """Test an out-of-range failsafe timeout is passed to the library unchecked.
 
     The integration starts set_failsafe in a task and does not validate the
-    timeout itself. The library rejects 5 with ValueError, but inside that
-    task, so the try/except around starting it never sees the error, and no
-    failsafe command is sent.
+    timeout itself. keba-kecontact 1.3.0 rejects 5 with ValueError, inside
+    that task, where the try/except around starting it cannot see it.
     """
-    with patch.object(KebaHandler, "set_failsafe") as set_failsafe:
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {"host": HOST, "failsafe": True, "failsafe_timeout": 5}},
-        )
-        await async_settle(hass)
-
-    set_failsafe.assert_awaited_once_with(5, 6, 0)
-
-    await stop_polling(hass)
+    setup_keba.set_failsafe.assert_awaited_once_with(5, 6, 0)
 
 
-async def test_setup_silent_station_currently_raises(
+async def test_setup_unreachable_station_currently_raises(
     hass: HomeAssistant,
-    station: FakeKebaStation,
+    mock_keba: MagicMock,
     freezer: FrozenDateTimeFactory,
     keba_config: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a station that never answers fails setup with an unhandled error.
+    """Test a station that cannot be reached fails setup with an unhandled error.
 
-    The library raises ConnectionError when report 1 brings no Product. The
-    integration does not catch it, so its own "Could not find a charging
-    station" message is not logged.
+    keba-kecontact 1.3.0 raises ConnectionError when the station does not
+    answer. The integration does not catch it, so its own "Could not find a
+    charging station" message is not logged.
     """
-    station.silent = True
+    mock_keba.setup.side_effect = ConnectionError("no reply")
 
     assert not await async_setup_component(hass, DOMAIN, keba_config)
     await hass.async_block_till_done()
 
-    assert station.sent == ["report 1"]
     assert "Error during setup of component keba" in caplog.text
-    assert "Could not connect to Keba charging station" in caplog.text
     assert "Could not find a charging station" not in caplog.text
+    mock_keba.request_data.assert_not_awaited()
     await async_advance(hass, freezer, 60)
-    assert station.sent == ["report 1"]
+    mock_keba.request_data.assert_not_awaited()
 
 
 async def test_setup_without_serial(
     hass: HomeAssistant,
-    station: FakeKebaStation,
+    mock_keba: MagicMock,
+    keba_data: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     keba_config: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a station that reports a product but no serial number."""
-    for report in station.reports.values():
-        report.pop("Serial", None)
+    del keba_data["Serial"]
 
     assert not await async_setup_component(hass, DOMAIN, keba_config)
     await hass.async_block_till_done()
 
     assert f"Could not find a charging station at {HOST}" in caplog.text
-    assert station.commands == []
+    mock_keba.set_failsafe.assert_not_awaited()
     assert not hass.services.has_service(DOMAIN, "request_data")
-    sent = list(station.sent)
     await async_advance(hass, freezer, 60)
-    assert station.sent == sent
+    assert mock_keba.request_data.await_count == 1
 
 
 async def test_polls_every_refresh_interval(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, setup_keba: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the polling loop requests every report, every 5 seconds."""
-    station = setup_keba
-    sent_before = len(station.sent)
-
-    assert await async_seconds_until_poll(hass, freezer, station) == 5
-    assert station.sent[sent_before:] == REPORTS
-    assert await async_seconds_until_poll(hass, freezer, station) == 5
+    """Test the polling loop requests the station's data every 5 seconds."""
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == 5
+    assert await async_seconds_until_poll(hass, freezer, setup_keba) == 5
 
 
 @pytest.mark.parametrize(
@@ -160,7 +137,7 @@ async def test_polls_every_refresh_interval(
 )
 async def test_refresh_interval_has_a_floor(
     hass: HomeAssistant,
-    station: FakeKebaStation,
+    mock_keba: MagicMock,
     freezer: FrozenDateTimeFactory,
     refresh_interval: int,
     expected_delay: int,
@@ -171,22 +148,22 @@ async def test_refresh_interval_has_a_floor(
     )
     await async_settle(hass)
 
-    assert await async_seconds_until_poll(hass, freezer, station) == expected_delay
+    assert await async_seconds_until_poll(hass, freezer, mock_keba) == expected_delay
 
     await stop_polling(hass)
 
 
 async def test_command_switches_to_fast_polling(
-    hass: HomeAssistant, setup_keba: FakeKebaStation, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, setup_keba: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test a command polls at once, then four times 2 seconds apart, then every 5."""
-    station = setup_keba
-    sent_before = len(station.sent)
+    polls_before = setup_keba.request_data.await_count
 
     await hass.services.async_call(DOMAIN, "enable", blocking=True)
     await async_settle(hass)
 
-    assert station.sent[sent_before:] == ["ena 1", *REPORTS]
+    assert setup_keba.enable.await_args_list == [call(True)]
+    assert setup_keba.request_data.await_count == polls_before + 1
     assert [
-        await async_seconds_until_poll(hass, freezer, station) for _ in range(5)
+        await async_seconds_until_poll(hass, freezer, setup_keba) for _ in range(5)
     ] == [2, 2, 2, 2, 5]
