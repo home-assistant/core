@@ -5,7 +5,7 @@ from ipaddress import IPv4Network
 import logging
 import os
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from govee_local_api import GoveeDevice
@@ -882,6 +882,48 @@ async def test_full_bind_is_never_retried(
     await hass.async_block_till_done()
 
     mock_govee_api.rebind_failed.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "bind_failures",
+    [
+        pytest.param(
+            [("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))],
+            id="after_partial_bind",
+        ),
+        pytest.param([], id="after_full_bind"),
+    ],
+)
+async def test_reload_when_all_endpoints_lost(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    bind_failures: list[tuple[str, OSError]],
+) -> None:
+    """Test the entry is reloaded once the controller has no live endpoint left."""
+
+    mock_govee_api.bind_failures = bind_failures
+    entry, _ = await setup_light(hass, mock_govee_api)
+    assert mock_govee_api.start.await_count == 1
+
+    async def start(**kwargs: Any) -> None:
+        # The reloaded controller binds again.
+        mock_govee_api.protocols = [MagicMock()]
+
+    mock_govee_api.start.side_effect = start
+    mock_govee_api.protocols = []
+
+    # Past REBIND_INTERVAL so a partial bind would otherwise retry.
+    freezer.tick(REBIND_INTERVAL + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert "Lost every network listener, reloading" in caplog.text
+    mock_govee_api.rebind_failed.assert_not_awaited()
+    assert mock_govee_api.start.await_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.last_update_success
 
 
 async def test_light_setup_retry_without_listening_addresses(

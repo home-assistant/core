@@ -10,7 +10,7 @@ from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -18,6 +18,7 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    DOMAIN,
     REBIND_INTERVAL,
     SCAN_INTERVAL,
 )
@@ -48,6 +49,8 @@ def log_bound_addresses(controller: GoveeController) -> None:
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
+
+    config_entry: GoveeLocalConfigEntry
 
     def __init__(
         self,
@@ -144,6 +147,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:
+        # A controller that lost every endpoint stays inoperative until restarted.
+        if not self._controller.protocols:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="no_live_endpoints"
+            )
         await self._async_rebind_failed_addresses()
         self._controller.send_update_message()
         return self.devices
