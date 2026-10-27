@@ -1361,7 +1361,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.19.0
+homematicip==2.20.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -2458,6 +2458,9 @@ pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
 pylitterbot==2025.7.0
+
+# homeassistant.components.london_air
+pylondonair==0.1.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.30.1
