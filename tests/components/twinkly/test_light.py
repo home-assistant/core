@@ -290,15 +290,25 @@ async def test_turn_on_with_current_movie_in_movie_mode(
         ("RGB", {ATTR_RGB_COLOR: (128, 64, 32)}),
     ],
 )
-async def test_turn_on_with_color_and_current_movie(
+@pytest.mark.parametrize(
+    ("mode", "expected_mode_calls", "expected_movie_calls"),
+    [
+        pytest.param("movie", [], [], id="movie_playing"),
+        pytest.param("color", [call("movie")], [call(1)], id="from_color"),
+    ],
+)
+async def test_turn_on_with_color_and_movie(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
     led_profile: str,
     data: dict[str, Any],
+    mode: str,
+    expected_mode_calls: list[Any],
+    expected_movie_calls: list[Any],
 ) -> None:
-    """Test the current movie is applied after a color set in the same call."""
-    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+    """Test a movie wins over a color sent in the same call, as scenes do."""
+    mock_twinkly_client.get_mode.return_value = {"mode": mode}
     mock_twinkly_client.get_details.return_value["led_profile"] = led_profile
 
     await setup_integration(hass, mock_config_entry)
@@ -310,9 +320,9 @@ async def test_turn_on_with_color_and_current_movie(
         blocking=True,
     )
 
-    assert mock_twinkly_client.set_mode.call_args_list == [call("color"), call("movie")]
-    mock_twinkly_client.set_current_movie.assert_called_once_with(1)
-    assert mock_twinkly_client.default_mode == "movie"
+    mock_twinkly_client.set_static_colour.assert_not_called()
+    assert mock_twinkly_client.set_mode.call_args_list == expected_mode_calls
+    assert mock_twinkly_client.set_current_movie.call_args_list == expected_movie_calls
 
 
 @pytest.mark.parametrize("effect", [EFFECT_OFF, "None", "none"])

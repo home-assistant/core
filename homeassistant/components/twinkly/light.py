@@ -91,6 +91,14 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         current_mode = self.coordinator.data.current_mode
+        effect = kwargs.get(ATTR_EFFECT)
+        # A scene stores the light's color next to the movie it plays. The
+        # device shows one or the other, so the movie wins.
+        plays_movie = (
+            bool(LightEntityFeature.EFFECT & self.supported_features)
+            and effect is not None
+            and effect not in NO_EFFECT_OPTIONS
+        )
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
@@ -106,6 +114,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         if (
             ATTR_RGBW_COLOR in kwargs
             and kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color
+            and not plays_movie
         ):
             await self.client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
@@ -133,7 +142,11 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 self.client.default_mode = "movie"
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
-        if ATTR_RGB_COLOR in kwargs and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
+        if (
+            ATTR_RGB_COLOR in kwargs
+            and kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color
+            and not plays_movie
+        ):
             await self.client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.client.set_static_colour(kwargs[ATTR_RGB_COLOR])
