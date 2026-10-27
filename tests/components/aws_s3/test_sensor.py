@@ -106,6 +106,7 @@ async def test_calculate_backups_size(
     metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
+    mock_client.get_object.side_effect = None
     mock_client.get_object.return_value = {"Body": mock_body}
 
     paginate = mock_client.get_paginator.return_value.paginate

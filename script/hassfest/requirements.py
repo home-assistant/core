@@ -180,7 +180,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
@@ -229,7 +228,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
-    "slimproto": {"aioslimproto": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
@@ -300,11 +298,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "google_maps": {
         # Coloredlogs, unmaintained - coloredlogs.pth
         "locationsharinglib": {"coloredlogs"},
-    },
-    # https://github.com/NabuCasa/universal-silabs-flasher
-    "homeassistant_hardware": {
-        # Coloredlogs, unmaintained - coloredlogs.pth
-        "universal-silabs-flasher": {"coloredlogs"},
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},

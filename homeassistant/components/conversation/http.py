@@ -323,7 +323,7 @@ def websocket_subscribe_chat_log(
     connection.send_result(msg_id)
 
     with (
-        async_get_chat_session(hass, subscribed_conversation) as session,
+        async_get_chat_session(hass, subscribed_conversation, context=None) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         connection.send_event(
