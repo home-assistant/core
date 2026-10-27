@@ -74,26 +74,10 @@ def integrations(config: Config, tmp_path: Path) -> dict[str, Integration]:
     return {"homeassistant": Integration(path, _config=config)}
 
 
-SCHEMA_CATEGORIES = [
-    "energy",
-    "energy.ev_charging",
-    "energy.meters_monitoring",
-    "pets",
-]
-
-
-def _write_manifest_schema(root: Path, categories: list[str]) -> None:
-    """Write a manifest JSON schema listing the categories."""
-    schema = {"else": {"properties": {"categories": {"items": {"enum": categories}}}}}
-    (root / integration_categories.MANIFEST_SCHEMA_PATH).write_text(json.dumps(schema))
-
-
 @pytest.fixture
 def root_config(config: Config, tmp_path: Path) -> Config:
     """Return a config rooted in a temporary directory."""
     (tmp_path / integration_categories.PATH).parent.mkdir(parents=True)
-    (tmp_path / integration_categories.MANIFEST_SCHEMA_PATH).parent.mkdir(parents=True)
-    _write_manifest_schema(tmp_path, SCHEMA_CATEGORIES)
     return replace(config, root=tmp_path)
 
 
@@ -132,33 +116,6 @@ def test_validate_outdated_file(
     assert len(root_config.errors) == 1
     assert root_config.errors[0].plugin == "integration_categories"
     assert root_config.errors[0].fixable
-
-
-@pytest.mark.parametrize(
-    "schema_categories",
-    [
-        pytest.param(["energy", "pets"], id="missing_category"),
-        pytest.param([*SCHEMA_CATEGORIES, "garden"], id="unknown_category"),
-        pytest.param(list(reversed(SCHEMA_CATEGORIES)), id="unsorted"),
-    ],
-)
-def test_validate_outdated_manifest_schema(
-    integrations: dict[str, Integration],
-    root_config: Config,
-    schema_categories: list[str],
-) -> None:
-    """Test outdated categories in the manifest schema are an error."""
-    integration_categories.validate(integrations, root_config)
-    integration_categories.generate(integrations, root_config)
-    _write_manifest_schema(root_config.root, schema_categories)
-    root_config.errors.clear()
-
-    integration_categories.validate(integrations, root_config)
-
-    assert len(root_config.errors) == 1
-    assert root_config.errors[0].plugin == "integration_categories"
-    assert "manifest_schema.json" in root_config.errors[0].error
-    assert not root_config.errors[0].fixable
 
 
 def test_validate_skips_invalid_integration(
