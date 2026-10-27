@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus integration setup."""
+"""Tests for the WattWächter integration setup."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_HOST,
+    MOCK_METER_DATA_WATER,
     MOCK_SYSTEM_INFO_GAS,
     MOCK_SYSTEM_INFO_WATER,
 )
@@ -221,6 +222,7 @@ async def test_migrate_gw_entry_to_bare_device_id(
 ) -> None:
     """Test a gas/water entry stored with the WWGW- prefix gets the bare ID."""
     mock_client.system_info.return_value = MOCK_SYSTEM_INFO_WATER
+    mock_client.meter_data.return_value = MOCK_METER_DATA_WATER
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={**MOCK_CONFIG_DATA, CONF_DEVICE_ID: LEGACY_GW_ID},

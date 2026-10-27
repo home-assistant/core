@@ -531,3 +531,76 @@ async def test_zeroconf_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The entry is pointed at the address the same device moved to."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(host=NEW_HOST)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {**bluetti_data(), CONF_HOST: NEW_HOST}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A device that can't be read surfaces cannot_connect, then the flow recovers."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(host=NEW_HOST)
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_modbus_unit.fail_requests(None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(host=NEW_HOST)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == NEW_HOST
+
+
+async def test_reconfigure_flow_rejects_another_device(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A different serial at the new address aborts and leaves the entry as it was."""
+    await setup_integration(hass, mock_config_entry)
+    other = mock_modbus_connection.for_unit(2)
+    seed_unit(other)
+    other.holding[SERIAL_ADDRESS] = 5678
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(unit_id=2)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == bluetti_data()

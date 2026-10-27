@@ -108,7 +108,6 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
-        self._set_confirm_only()
         placeholders = {
             "name": device.name,
             "ipaddress": device.ipaddress,

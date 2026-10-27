@@ -122,6 +122,9 @@
       "rf_strength": {
         "name": "RF strength"
       },
+      "setpoint_end_time": {
+        "name": "Setpoint end time"
+      },
       "sum_rain_1": {
         "name": "Precipitation last hour"
       },

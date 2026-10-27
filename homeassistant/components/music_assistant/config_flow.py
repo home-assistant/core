@@ -499,7 +499,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=data,
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
     @override
@@ -562,7 +561,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_URL: self.url},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"url": self.url},
