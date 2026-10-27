@@ -96,10 +96,6 @@ def async_get_chat_log(
 
         try:
             yield chat_log
-        except (Exception, asyncio.CancelledError) as err:
-            # The caller may handle the error before the outer turn ends.
-            chat_log.async_add_error(agent_id, err)
-            raise
         finally:
             chat_log.async_trace_turn()
         return
@@ -142,7 +138,6 @@ def async_get_chat_log(
         raise
     finally:
         chat_log.turn_active = False
-        chat_log.last_error = None
         current_chat_log.reset(token)
         chat_log.delta_listener = None
 
@@ -393,7 +388,6 @@ class ChatLog:
     created: datetime = field(init=False, default_factory=utcnow)
     turn_active: bool = field(default=False, init=False, repr=False)
     turn_start: int = field(default=0, init=False, repr=False)
-    last_error: BaseException | None = field(default=None, init=False, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -444,12 +438,9 @@ class ChatLog:
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
-        # A nested chat log and the outer turn may both see the error.
-        if self.last_error is not None and (
-            error is self.last_error or error.__cause__ is self.last_error
-        ):
+        # The chat log adds the cause before it raises ConverseError.
+        if isinstance(error, ConverseError):
             return
-        self.last_error = error
         # LLM providers refuse a tool call without a result.
         answered: set[str] = set()
         index = len(self.content) - 1

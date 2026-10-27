@@ -378,9 +378,6 @@ async def test_trace_keeps_messages_of_its_turn(
     [
         pytest.param(["raises", "chat_log"], id="turn"),
         pytest.param(["raises", "chat_log", "chat_log"], id="nested_turn"),
-        # Like an agent in an Assist pipeline, which handles its error before
-        # the outer turn ends.
-        pytest.param(["chat_log", "raises", "chat_log"], id="nested_turn_handled"),
     ],
 )
 async def test_failed_turn_stored(
