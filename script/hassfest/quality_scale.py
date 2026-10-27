@@ -1082,7 +1082,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
