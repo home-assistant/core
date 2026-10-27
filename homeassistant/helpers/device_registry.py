@@ -92,7 +92,6 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
-# suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
 RUNTIME_ONLY_ATTRS = {"pending_move"}
@@ -838,7 +837,6 @@ _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
         "model",
         "model_id",
         "serial_number",
-        # "suggested_area",  # Excluded, to be removed in 2026.9
         "sw_version",
         "via_device_id",
     }
@@ -2844,7 +2842,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name=name,
             has_composite_identifiers=has_composite_identifiers,
             new_config_subentry_id=config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **identifiers_connections,
             **validated_fields,
@@ -3306,8 +3303,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # Can be removed when suggested_area is removed from DeviceEntry
-        suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -3720,7 +3715,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values and not is_new:
             return old
 
-        # This condition can be removed when suggested_area is removed from DeviceEntry
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
@@ -3748,13 +3742,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ):
             del self._deleted_devices[deleted_device_id]
 
-        # If its only run time attributes (suggested_area)
+        # If its only run time attributes (pending_move)
         # that do not get saved we do not want to write
         # to disk or fire an event as we would end up
         # firing events for data we have nothing to compare
         # against since its never saved on disk
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
-            # This can be removed when suggested_area is removed from DeviceEntry
             return new
 
         self.async_schedule_save()
@@ -3979,8 +3972,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # suggested_area should no longer be used as it will raise
-        suggested_area: UndefinedType = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -4082,13 +4073,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version="2027.8.0",
-            )
-        if suggested_area is not UNDEFINED:
-            report_usage(  # type: ignore[unreachable]
-                "passes a suggested_area to device_registry.async_update device",
-                core_behavior=ReportBehavior.ERROR,
-                core_integration_behavior=ReportBehavior.ERROR,
-                custom_integration_behavior=ReportBehavior.ERROR,
             )
         if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
             report_usage(

@@ -5305,15 +5305,9 @@ async def test_loading_saving_data(
         assert old.disabled_by is new.disabled_by
         assert old.entry_type is new.entry_type
 
-    # Ensure a save/load cycle does not keep suggested area
     new_kitchen_light = registry2.async_get_device(identifiers={("hue", "999")})
     assert orig_kitchen_light.area_id == "kitchen"
-
-    orig_kitchen_light_without_suggested_area = device_registry.async_update_device(
-        orig_kitchen_light.id, suggested_area=None
-    )
-    assert orig_kitchen_light_without_suggested_area.area_id == "kitchen"
-    assert orig_kitchen_light_without_suggested_area == new_kitchen_light
+    assert orig_kitchen_light == new_kitchen_light
 
 
 async def test_no_unnecessary_changes(
@@ -8588,16 +8582,11 @@ async def test_connections_validator() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "integration_frame_path", ["custom_components/test_integration"]
-)
-@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.usefixtures("hass")
 async def test_suggested_area_fails(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Make sure passing suggested_area fails."""
     entry = device_registry.async_get_or_create(
@@ -8619,15 +8608,7 @@ async def test_suggested_area_fails(
     assert entry.area_id == game_room_area.id
     assert not hasattr(entry, "suggested_area")
 
-    with pytest.raises(
-        RuntimeError,
-        match=(
-            "Detected that custom integration 'test_integration' passes a suggested_area to"
-            " device_registry.async_update device at custom_components/test_integration/light.py,"
-            " line 23: self.light.is_on. Please report it to the author of the"
-            " 'test_integration' custom integration"
-        ),
-    ):
+    with pytest.raises(TypeError, match="suggested_area"):
         device_registry.async_update_device(entry.id, suggested_area="TV Room")
 
 
