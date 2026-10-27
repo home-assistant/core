@@ -48,17 +48,28 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
         """Use entity contexts once startup discovery has completed."""
         self._startup_zones = None
 
-    def _read_zones(self, zones: tuple[int, ...]) -> dict[int, ZoneStatus | None]:
-        """Read selected zones sequentially in a single executor job."""
-        result: dict[int, ZoneStatus | None] = {}
-        for zone in zones:
-            try:
-                result[zone] = self.client.zone_status(zone)
-            except SerialException, TimeoutError:
-                result[zone] = None
-            if result[zone] is None and self.data and self.data.get(zone) is not None:
-                _LOGGER.warning("Could not update zone %d", zone)
-        return result
+    def _read_zone(self, zone: int) -> ZoneStatus | None:
+        """Read one zone, returning None when it does not answer."""
+        try:
+            status = self.client.zone_status(zone)
+        except SerialException, TimeoutError:
+            status = None
+        if status is None and self.data and self.data.get(zone) is not None:
+            _LOGGER.warning("Could not update zone %d", zone)
+        return status
+
+    async def _async_read_zones(
+        self, zones: tuple[int, ...]
+    ) -> dict[int, ZoneStatus | None]:
+        """Read zones one executor job each, while the caller holds the lock.
+
+        Cancelling a poll on unload then stops after the read in flight. That
+        read still completes, since a running serial call cannot be interrupted.
+        """
+        return {
+            zone: await self.hass.async_add_executor_job(self._read_zone, zone)
+            for zone in zones
+        }
 
     @override
     async def _async_update_data(self) -> dict[int, ZoneStatus | None]:
@@ -66,7 +77,7 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
             zones = self._startup_zones
             if zones is None:
                 zones = tuple(sorted(set(self.async_contexts())))
-            return await self.hass.async_add_executor_job(self._read_zones, zones)
+            return await self._async_read_zones(zones)
 
     async def async_command(
         self, zone: int, command: Callable[..., Any], *args: Any
@@ -75,7 +86,7 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
 
         def send_and_read() -> dict[int, ZoneStatus | None]:
             command(*args)
-            return self._read_zones((zone,))
+            return {zone: self._read_zone(zone)}
 
         async with self._operation_lock:
             result = await self.hass.async_add_executor_job(send_and_read)

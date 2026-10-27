@@ -3,7 +3,8 @@
 import asyncio
 from datetime import timedelta
 from threading import Event
-from unittest.mock import MagicMock, call
+from typing import Any
+from unittest.mock import DEFAULT, MagicMock, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -261,3 +262,83 @@ async def test_first_discovery_with_silent_optional_zones(
         is er.RegistryEntryDisabler.INTEGRATION
     )
     assert len(hass.states.async_entity_ids("media_player")) == 6
+
+
+def _hold_first_read(client: MagicMock, entered: asyncio.Event, release: Event) -> None:
+    """Make the next read of zone 11 block until released, then answer normally."""
+    loop = asyncio.get_running_loop()
+
+    def zone_status(zone: int) -> Any:
+        if zone == 11 and not release.is_set():
+            loop.call_soon_threadsafe(entered.set)
+            assert release.wait(5)
+        return DEFAULT
+
+    client.zone_status.side_effect = zone_status
+
+
+async def test_unload_stops_poll_after_current_zone(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading during a poll reads no further zones once the read in flight returns."""
+    coordinator = entry.runtime_data.coordinator
+    remove = coordinator.async_add_listener(lambda: None, context=13)
+    entered = asyncio.Event()
+    release = Event()
+    _hold_first_read(client, entered, release)
+    client.zone_status.reset_mock()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    try:
+        await asyncio.wait_for(entered.wait(), 5)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    finally:
+        release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    remove()
+    assert client.zone_status.call_args_list == [call(11)]
+
+
+async def test_command_waits_for_whole_poll(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A command issued during a poll runs after the poll's last zone, not between zones."""
+    coordinator = entry.runtime_data.coordinator
+    remove = coordinator.async_add_listener(lambda: None, context=13)
+    entered = asyncio.Event()
+    release = Event()
+    _hold_first_read(client, entered, release)
+    client.reset_mock()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    try:
+        await asyncio.wait_for(entered.wait(), 5)
+        task = asyncio.create_task(
+            hass.services.async_call(
+                "media_player",
+                "turn_off",
+                {"entity_id": "media_player.zone_12"},
+                blocking=True,
+            )
+        )
+        for _ in range(10):
+            await asyncio.sleep(0)
+        client.set_power.assert_not_called()
+    finally:
+        release.set()
+    await task
+    await hass.async_block_till_done(wait_background_tasks=True)
+    remove()
+    assert client.mock_calls == [
+        call.zone_status(11),
+        call.zone_status(12),
+        call.zone_status(13),
+        call.set_power(12, False),
+        call.zone_status(12),
+    ]
