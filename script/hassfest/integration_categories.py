@@ -3,9 +3,11 @@
 import json
 from pathlib import Path
 
+from .icons import integration_category_keys
 from .model import Config, Integration
 
 PATH = "homeassistant/generated/integration_categories.json"
+MANIFEST_SCHEMA_PATH = "script/json_schemas/manifest_schema.json"
 
 
 def _generate(integration_path: Path) -> str:
@@ -43,6 +45,23 @@ def _generate(integration_path: Path) -> str:
     return json.dumps(categories, indent=2)
 
 
+def _validate_manifest_schema(integration_path: Path, config: Config) -> None:
+    """Validate the manifest JSON schema lists every category."""
+    strings = json.loads((integration_path / "strings.json").read_text())
+    categories = sorted(
+        integration_category_keys(strings.get("integration_category", {}))
+    )
+    schema = json.loads((config.root / MANIFEST_SCHEMA_PATH).read_text())
+    schema_categories = schema["else"]["properties"]["categories"]["items"]["enum"]
+
+    if schema_categories != categories:
+        config.add_error(
+            "integration_categories",
+            f"The categories in {MANIFEST_SCHEMA_PATH} are not up to date, "
+            f"expected: {categories}",
+        )
+
+
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate integration_categories.json."""
     path = config.root / PATH
@@ -54,6 +73,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         return
 
     config.cache["integration_categories"] = content = _generate(integration.path)
+    _validate_manifest_schema(integration.path, config)
 
     if not path.is_file() or path.read_text() != content + "\n":
         config.add_error(
