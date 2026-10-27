@@ -2446,3 +2446,30 @@ async def test_purge_keeps_current_state_of_recorded_entities(
         assert on_state.state == "on"
         # The logbook only shows state changes that link to the previous state
         assert on_state.old_state_id == off_state.state_id
+
+
+async def test_purge_after_state_that_cannot_be_serialized(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test a state that was never saved does not stop the purge."""
+
+    class CannotSerializeMe:
+        """Make the attributes fail to serialize."""
+
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.old", "1")
+        hass.states.async_set("sensor.old", "2")
+        await async_wait_recording_done(hass)
+    # This state is not saved, so it is committed without a state_id
+    hass.states.async_set("sensor.bad", "on", {"fail": CannotSerializeMe()})
+    hass.states.async_set("sensor.new", "1")
+    await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States).order_by(States.state_id)
+        assert [state.state for state in states] == ["2", "1"]

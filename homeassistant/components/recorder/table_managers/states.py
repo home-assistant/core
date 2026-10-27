@@ -53,7 +53,13 @@ class StatesManager:
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        return set(self._last_committed_id.values())
+        # A state that failed to save is committed without a state_id, and a
+        # NULL in the NOT IN of the purge query would match no rows at all
+        return {
+            state_id
+            for state_id in self._last_committed_id.values()
+            if state_id is not None
+        }
 
     def add_pending(self, entity_id: str, state: States) -> None:
         """Add a pending state.
