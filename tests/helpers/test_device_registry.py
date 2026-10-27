@@ -8322,12 +8322,12 @@ async def test_device_manufacturer_model_translation_follows_language(
         """Return all backend translations."""
         return {
             "en": {
-                "component.test.device.test_device.manufacturer": "Unknown",
-                "component.test.device.test_device.model": "Unknown model",
+                "component.test.device.test_device.manufacturer": "English maker",
+                "component.test.device.test_device.model": "English model",
             },
             "de": {
-                "component.test.device.test_device.manufacturer": "Unbekannt",
-                "component.test.device.test_device.model": "Unbekanntes Modell",
+                "component.test.device.test_device.manufacturer": "German maker",
+                "component.test.device.test_device.model": "German model",
             },
         }[language]
 
@@ -8340,26 +8340,26 @@ async def test_device_manufacturer_model_translation_follows_language(
         entry1 = device_registry.async_get_or_create(
             config_entry_id=config_entry_1.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-            manufacturer="Unknown",
-            model="Unknown model",
+            manufacturer="English maker",
+            model="English model",
             name="Device Bla",
             translation_key="test_device",
         )
-        assert entry1.manufacturer == "Unknown"
-        assert entry1.model == "Unknown model"
+        assert entry1.manufacturer == "English maker"
+        assert entry1.model == "English model"
 
         hass.config.language = "de"
         entry2 = device_registry.async_get_or_create(
             config_entry_id=config_entry_1.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-            manufacturer="Unknown",
-            model="Unknown model",
+            manufacturer="English maker",
+            model="English model",
             name="Device Bla",
             translation_key="test_device",
         )
     assert entry2.id == entry1.id
-    assert entry2.manufacturer == "Unbekannt"
-    assert entry2.model == "Unbekanntes Modell"
+    assert entry2.manufacturer == "German maker"
+    assert entry2.model == "German model"
     assert entry2.name == "Device Bla"
 
 
