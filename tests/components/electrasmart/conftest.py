@@ -16,6 +16,16 @@ from homeassistant.components.electrasmart.const import (
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
+MEASUREMENTS = {
+    "WI_FI_RSSI": "-53",
+    "I_ICT": "21",
+    "O_OCT": "25",
+    "I_BAD_ICT": "NORM",
+    "I_BAD_RAT": "NORM",
+}
+
+MEASUREMENT_TEMPERATURES = {"I_ICT": 21, "O_OCT": 25}
+
 
 def _mock_device(mac: str, name: str) -> Mock:
     """Return a mocked Electra AC device."""
@@ -26,12 +36,14 @@ def _mock_device(mac: str, name: str) -> Mock:
         serial_number="J4B60300391",
         fm_version="611V4-C20",
         hw_version="1.0",
+        measurements=dict(MEASUREMENTS),
         features=[Feature.V_SWING, Feature.H_SWING],
         is_disconnected=Mock(return_value=False),
         is_on=Mock(return_value=False),
         is_horizontal_swing=Mock(return_value=False),
         is_vertical_swing=Mock(return_value=False),
         get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
+        get_measurement_temperature=Mock(side_effect=MEASUREMENT_TEMPERATURES.get),
         get_mode=Mock(return_value=OperationMode.MODE_COOL),
         get_sensor_temperature=Mock(return_value=24),
         get_temperature=Mock(return_value=22),
