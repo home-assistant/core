@@ -122,16 +122,15 @@ class TargetSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                # Canonicalize so leading zeros or whitespace don't create duplicates.
-                target_id = str(int(user_input[CONF_TARGET_ID]))
-            except ValueError:
+            target_id = user_input[CONF_TARGET_ID]
+            if not target_id.isdigit():
                 errors["base"] = "invalid_target"
+            elif any(
+                subentry.unique_id == target_id
+                for subentry in entry.subentries.values()
+            ):
+                return self.async_abort(reason="already_configured")
             else:
-                for subentry in entry.subentries.values():
-                    if subentry.unique_id == target_id:
-                        return self.async_abort(reason="already_configured")
-
                 error, name = await _async_try_target(
                     entry.data[CONF_API_TOKEN], int(target_id)
                 )
@@ -178,6 +177,7 @@ async def _async_try_target(token: str, target: int) -> tuple[str | None, str]:
             return None, (await discord_bot.fetch_user(target)).name
         if not isinstance(channel, Messageable):
             return "unsupported_target", ""
+        # DM channels have no name and group channel names are optional.
         name = getattr(channel, "name", None)
     except nextcord.LoginFailure:
         return "invalid_auth", ""

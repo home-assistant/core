@@ -59,7 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscordConfigEntry) -> N
     # Create the shared bot device before the platforms are set up, so per-target
     # devices can resolve it as their via_device.
     dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **bot_device_info(entry)
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        entry_type=dr.DeviceEntryType.SERVICE,
+        manufacturer="Discord",
+        name=entry.title,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -77,13 +81,3 @@ async def _async_update_listener(
 async def async_unload_entry(hass: HomeAssistant, entry: DiscordConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def bot_device_info(entry: DiscordConfigEntry) -> dr.DeviceInfo:
-    """Return device info for the shared bot device."""
-    return dr.DeviceInfo(
-        identifiers={(DOMAIN, entry.entry_id)},
-        entry_type=dr.DeviceEntryType.SERVICE,
-        manufacturer="Discord",
-        name=entry.title,
-    )
