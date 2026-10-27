@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from openwebif.api import OpenWebIfDevice, OpenWebIfServiceEvent, OpenWebIfStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.enigma2.const import (
     CONF_DEEP_STANDBY,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDRESS = "12:34:56:78:90:ab"
 
@@ -89,7 +88,11 @@ def openwebif_device_mock() -> Generator[AsyncMock]:
         device.get_all_bouquets.return_value = {
             "bouquets": [
                 [
-                    '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet',
+                    (
+                        "1:7:1:0:0:0:0:0:0:0:FROM BOUQUET"
+                        ' "userbouquet.favourites.tv"'
+                        " ORDER BY bouquet"
+                    ),
                     "Favourites (TV)",
                 ]
             ]

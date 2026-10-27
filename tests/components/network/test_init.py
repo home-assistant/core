@@ -1,12 +1,12 @@
 """Test the Network Configuration."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+import ifaddr
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import network
@@ -24,8 +24,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
-
-from tests.typing import WebSocketGenerator
 
 
 def _mock_cond_socket(sockname):
@@ -54,7 +52,7 @@ def _mock_socket_exception(exc):
 async def test_async_detect_interfaces_setting_non_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test without default interface config and the route returns a non-loopback address."""
+    """Test without default interface config, route is non-loopback."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -112,7 +110,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
 async def test_async_detect_interfaces_setting_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test without default interface config and the route returns a loopback address."""
+    """Test without default interface config, route is loopback."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -532,7 +530,7 @@ async def test_async_get_source_ip_cannot_determine_target(
 async def test_async_get_ipv4_broadcast_addresses_default(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test getting ipv4 broadcast addresses when only the default address is enabled."""
+    """Test getting ipv4 broadcast addresses with default only."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,
@@ -599,7 +597,7 @@ async def test_async_get_source_ip_no_enabled_addresses(
 async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test getting the source ip address when all adapters are disabled and getting it fails."""
+    """Test getting source ip when all adapters disabled and it fails."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,
@@ -610,7 +608,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[],
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
@@ -619,7 +617,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
 async def test_async_get_source_ip_no_ip_loopback(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test getting the source ip address when all adapters are disabled no target is specified."""
+    """Test getting source ip when all adapters disabled, no target."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
         "key": STORAGE_KEY,
@@ -772,9 +770,13 @@ async def test_websocket_network_url(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the network/url websocket command."""
-    assert await async_setup_component(hass, "network", {})
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
     with (
         patch(
@@ -814,7 +816,7 @@ async def test_repair_docker_host_network_not_docker(
 ) -> None:
     """Test repair is not created when not in Docker."""
     with patch("homeassistant.util.package.is_docker_env", return_value=False):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -829,7 +831,7 @@ async def test_repair_docker_host_network_with_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=True),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
 
@@ -846,7 +848,39 @@ async def test_repair_docker_host_network_without_host_networking(
         patch("homeassistant.util.package.is_docker_env", return_value=True),
         patch("homeassistant.components.network.Path.exists", return_value=False),
     ):
-        assert await async_setup_component(hass, "network", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
+
+
+@pytest.mark.usefixtures("mock_socket_no_loopback")
+async def test_async_reload_adapters(hass: HomeAssistant) -> None:
+    """Test reloading the adapters."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert len(await network.async_get_adapters(hass)) == 4
+
+    mock_eth1 = Mock(spec=ifaddr.Adapter)
+    mock_eth1.nice_name = "eth1"
+    mock_eth1.ips = [ifaddr.IP(NO_LOOPBACK_IPADDR, 23, "eth1")]
+    mock_eth1.index = 2
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[mock_eth1],
+    ):
+        await network.async_reload_adapters(hass)
+
+    assert await network.async_get_adapters(hass) == [
+        {
+            "index": 2,
+            "auto": True,
+            "default": True,
+            "enabled": True,
+            "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+            "ipv6": [],
+            "name": "eth1",
+        }
+    ]

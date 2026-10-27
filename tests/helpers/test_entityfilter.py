@@ -1,5 +1,7 @@
 """The tests for the EntityFilter component."""
 
+import pytest
+
 from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,
@@ -110,7 +112,7 @@ def test_with_include_domain_case4() -> None:
 
 
 def test_with_include_domain_exclude_glob_case4() -> None:
-    """Test case 4 - include and exclude specified, with included domain but excluded by glob."""
+    """Test case 4 - include and exclude, with included domain but excluded glob."""
     incl_dom = {"light", "sensor"}
     incl_ent = {"binary_sensor.working"}
     incl_glob = {}
@@ -175,7 +177,7 @@ def test_with_include_domain_glob_filtering_case4() -> None:
 
 
 def test_with_include_domain_glob_filtering_case4a_include_strong() -> None:
-    """Test case 4 - include and exclude specified, both have domains and globs, and a specifically included entity."""
+    """Test case 4 - include and exclude, domains, globs, and a specific entity."""
     incl_dom = {"light"}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -198,7 +200,7 @@ def test_with_include_domain_glob_filtering_case4a_include_strong() -> None:
 
 
 def test_with_include_glob_filtering_case4a_include_strong() -> None:
-    """Test case 4 - include and exclude specified, both have globs, and a specifically included entity."""
+    """Test case 4 - include and exclude, globs, and a specific entity."""
     incl_dom = {}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -260,7 +262,7 @@ def test_exclude_glob_case5() -> None:
 
 
 def test_exclude_glob_case5_include_strong() -> None:
-    """Test case 5 - include and exclude specified, with excluded glob, and a specifically included entity."""
+    """Test case 5 - include and exclude, excluded glob, specific entity."""
     incl_dom = {}
     incl_glob = {}
     incl_ent = {"binary_sensor.working"}
@@ -278,6 +280,33 @@ def test_exclude_glob_case5_include_strong() -> None:
     assert testfilter("binary_sensor.working")
     assert testfilter("binary_sensor.another") is False
     assert testfilter("sun.sun") is True
+
+
+@pytest.mark.parametrize(
+    ("exclude_domains", "exclude_entity_globs"),
+    [
+        pytest.param(["binary_sensor"], [], id="exclude_domain"),
+        pytest.param([], ["binary_sensor.*"], id="exclude_glob"),
+    ],
+)
+def test_case5_entity_in_include_and_exclude_entities(
+    exclude_domains: list[str], exclude_entity_globs: list[str]
+) -> None:
+    """Test case 5 - an entity in both entity lists is included."""
+    testfilter = generate_filter(
+        [],
+        ["sensor.both", "binary_sensor.both"],
+        exclude_domains,
+        ["sensor.both", "binary_sensor.both", "sensor.excluded"],
+        [],
+        exclude_entity_globs,
+    )
+
+    assert testfilter("sensor.both")
+    assert testfilter("binary_sensor.both")
+    assert testfilter("sensor.excluded") is False
+    assert testfilter("sensor.other")
+    assert testfilter("binary_sensor.other") is False
 
 
 def test_no_domain_case6() -> None:

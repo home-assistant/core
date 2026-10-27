@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from glances_api import Glances, exceptions
 
@@ -39,6 +39,7 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Glances REST API."""
         try:
@@ -46,7 +47,7 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiAuthorizationError as err:
             raise ConfigEntryAuthFailed from err
         except exceptions.GlancesApiError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(str(err)) from err
         # Update computed values
         uptime: datetime | None = None
         up_duration: timedelta | None = None

@@ -1,10 +1,8 @@
 """Entity classes for the QNAP QSW integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from aioqsw.const import (
     QSD_FIRMWARE,
@@ -103,6 +101,7 @@ class QswSensorEntity(QswDataEntity):
     entity_description: QswEntityDescription
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

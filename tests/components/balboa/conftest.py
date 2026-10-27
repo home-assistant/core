@@ -1,19 +1,16 @@
 """Provide common fixtures."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybalboa.enums import HeatMode, LowHighRange
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="integration")

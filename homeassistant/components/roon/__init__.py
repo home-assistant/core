@@ -3,12 +3,15 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ROON_NAME, DOMAIN
 from .server import RoonServer
 from .services import async_setup_services
+
+type RoonConfigEntry = ConfigEntry[RoonServer]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
@@ -20,19 +23,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> None:
     """Set up a roonserver from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # fallback to using host for compatibility with older configs
     name = entry.data.get(CONF_ROON_NAME, entry.data[CONF_HOST])
 
     roonserver = RoonServer(hass, entry)
 
     if not await roonserver.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": name},
+        )
 
-    hass.data[DOMAIN][entry.entry_id] = roonserver
+    entry.runtime_data = roonserver
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -44,13 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # initialize media_player platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> None:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    roonserver = hass.data[DOMAIN].pop(entry.entry_id)
-    return await roonserver.async_reset()
+    await entry.runtime_data.async_reset()

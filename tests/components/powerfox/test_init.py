@@ -1,18 +1,15 @@
 """Test the Powerfox init module."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

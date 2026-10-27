@@ -1,10 +1,8 @@
 """Config flow for proximity."""
 
-from __future__ import annotations
+from typing import Any, cast, override
 
-from typing import Any, cast
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
@@ -40,19 +38,19 @@ RESULT_SUCCESS = "success"
 
 def _base_schema(user_input: dict[str, Any]) -> VolDictType:
     return {
-        vol.Required(
+        probatio.Required(
             CONF_TRACKED_ENTITIES, default=user_input.get(CONF_TRACKED_ENTITIES, [])
         ): EntitySelector(
             EntitySelectorConfig(
                 domain=[DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN], multiple=True
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_IGNORED_ZONES, default=user_input.get(CONF_IGNORED_ZONES, [])
         ): EntitySelector(
             EntitySelectorConfig(domain=ZONE_DOMAIN, multiple=True),
         ),
-        vol.Required(
+        probatio.Required(
             CONF_TOLERANCE,
             default=user_input.get(CONF_TOLERANCE, DEFAULT_TOLERANCE),
         ): NumberSelector(
@@ -68,12 +66,14 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _user_form_schema(self, user_input: dict[str, Any] | None = None) -> vol.Schema:
+    def _user_form_schema(
+        self, user_input: dict[str, Any] | None = None
+    ) -> probatio.Schema:
         if user_input is None:
             user_input = {}
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_ZONE,
                     default=user_input.get(
                         CONF_ZONE, f"{ZONE_DOMAIN}.{DEFAULT_PROXIMITY_ZONE}"
@@ -87,10 +87,12 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> ProximityOptionsFlow:
         """Get the options flow for this handler."""
         return ProximityOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -121,8 +123,8 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 class ProximityOptionsFlow(OptionsFlowWithReload):
     """Handle a option flow."""
 
-    def _user_form_schema(self, user_input: dict[str, Any]) -> vol.Schema:
-        return vol.Schema(_base_schema(user_input))
+    def _user_form_schema(self, user_input: dict[str, Any]) -> probatio.Schema:
+        return probatio.Schema(_base_schema(user_input))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

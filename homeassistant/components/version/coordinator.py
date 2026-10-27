@@ -1,8 +1,6 @@
 """Data update coordinator for Version entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 from pyhaversion import HaVersion, HaVersionSource
@@ -52,6 +50,7 @@ class VersionDataUpdateCoordinator(DataUpdateCoordinator[None]):
             return None
         return self._version_data or {}
 
+    @override
     async def _async_update_data(self) -> None:
         """Update version data."""
         try:

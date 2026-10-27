@@ -1,7 +1,5 @@
 """Shared constants for script and automation tracing and debugging."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -12,6 +10,8 @@ if TYPE_CHECKING:
     from .models import TraceData
 
 
+ATTR_ITEM_ID = "item_id"
+ATTR_RUN_ID = "run_id"
 CONF_STORED_TRACES = "stored_traces"
 DATA_TRACE: HassKey[TraceData] = HassKey("trace")
 DATA_TRACE_STORE: HassKey[Store[dict[str, list]]] = HassKey("trace_store")

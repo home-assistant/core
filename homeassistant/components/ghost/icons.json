@@ -13,6 +13,9 @@
       "free_members": {
         "default": "mdi:account-outline"
       },
+      "gift_members": {
+        "default": "mdi:gift-outline"
+      },
       "latest_email": {
         "default": "mdi:email-newsletter"
       },

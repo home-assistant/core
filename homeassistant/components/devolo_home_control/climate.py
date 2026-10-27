@@ -1,8 +1,6 @@
 """Platform for climate integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -15,9 +13,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
@@ -52,7 +52,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
@@ -71,13 +71,16 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         self._attr_max_temp = self._multi_level_switch_property.max
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if hasattr(self._device_instance, "multi_level_sensor_property"):
             return next(
                 (
                     multi_level_sensor.value
-                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
+                    for multi_level_sensor in (
+                        self._device_instance.multi_level_sensor_property.values()
+                    )
                     if multi_level_sensor.sensor_type == "temperature"
                 ),
                 None,
@@ -86,13 +89,20 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return None
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._value
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])
+        if not self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE]):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+            )

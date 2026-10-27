@@ -1,15 +1,15 @@
 """Test UPnP/IGD setup process."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import copy
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.exceptions import UpnpCommunicationError
 from async_upnp_client.profiles.igd import IgdDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
@@ -21,6 +21,7 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_UDN,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 
@@ -32,8 +33,6 @@ from .conftest import (
     TEST_UDN,
     TEST_USN,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("ssdp_instant_discovery", "mock_mac_address_from_host")
@@ -61,6 +60,23 @@ async def test_async_setup_entry_default(
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 
     mock_igd_device.async_subscribe_services.assert_called()
+    assert entry.update_listeners == []
+
+
+async def test_unload_stops_notify_server(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_igd_device: IgdDevice,
+    mock_notify_server: AiohttpNotifyServer,
+) -> None:
+    """Test unloading stops the notify server started during setup."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_notify_server.async_start_server.assert_awaited_once()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    mock_igd_device.async_unsubscribe_services.assert_awaited_once()
+    mock_notify_server.async_stop_server.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("ssdp_instant_discovery", "mock_no_mac_address_from_host")
@@ -124,7 +140,7 @@ async def test_async_setup_entry_multi_location(
 async def test_async_setup_udn_mismatch(
     hass: HomeAssistant, mock_async_create_device: AsyncMock
 ) -> None:
-    """Test async_setup_entry for a device which reports a different UDN from SSDP-discovery and device description."""
+    """Test async_setup_entry for a device with different UDN from SSDP."""
     test_discovery = copy.deepcopy(TEST_DISCOVERY)
     test_discovery.upnp[ATTR_UPNP_UDN] = "uuid:another_udn"
 
@@ -238,7 +254,8 @@ async def test_async_setup_entry_force_poll_subscribe_error(
     mock_igd_device.async_subscribe_services.side_effect = UpnpCommunicationError
     mock_igd_device.async_unsubscribe_services.side_effect = UpnpCommunicationError
 
-    # Load config_entry, should still be able to load, falling back to polling/the old functionality.
+    # Load config_entry, should still be able to load,
+    # falling back to polling/the old functionality.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 

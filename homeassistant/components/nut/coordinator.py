@@ -1,11 +1,9 @@
 """The NUT coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aionut import NUTError, NUTLoginError
 
@@ -57,6 +55,7 @@ class NutCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
         self._data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch data from NUT."""
         try:

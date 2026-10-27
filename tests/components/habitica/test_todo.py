@@ -14,6 +14,13 @@ from habiticalib import (
     TaskType,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_persistent_notifications,
+    async_load_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
@@ -33,14 +40,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ERROR_NOT_FOUND, ERROR_TOO_MANY_REQUESTS
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_persistent_notifications,
-    async_load_fixture,
-    snapshot_platform,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -194,7 +193,8 @@ async def test_uncomplete_todo_item(
     [
         (
             ERROR_NOT_FOUND,
-            r"Unable to update the score for your Habitica to-do `.+`, please try again",
+            r"Unable to update the score for your Habitica"
+            r" to-do `.+`, please try again",
             ServiceValidationError,
         ),
         (
@@ -451,7 +451,8 @@ async def test_add_todo_item_exception(
     habitica.create_task.side_effect = exception
     with pytest.raises(
         expected_exception=expected_exception,
-        # match="Unable to create new to-do `test-summary` for Habitica, please try again",
+        # match="Unable to create new to-do `test-summary`
+        # for Habitica, please try again",
         match=exc_msg,
     ):
         await hass.services.async_call(
@@ -567,7 +568,8 @@ async def test_delete_completed_todo_items(
     [
         (
             ERROR_NOT_FOUND,
-            "Unable to delete completed to-do items from Habitica to-do list, please try again",
+            "Unable to delete completed to-do items from"
+            " Habitica to-do list, please try again",
             ServiceValidationError,
         ),
         (

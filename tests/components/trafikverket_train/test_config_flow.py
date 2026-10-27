@@ -1,10 +1,9 @@
 """Test the Trafikverket Train config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import (
     InvalidAuthentication,
     NoTrainStationFound,
@@ -27,8 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import ENTRY_CONFIG, OPTIONS_CONFIG
 
-from tests.common import MockConfigEntry
-
 
 async def test_form(
     hass: HomeAssistant, get_train_stations: list[StationInfoModel]
@@ -49,7 +46,7 @@ async def test_form(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -114,7 +111,7 @@ async def test_form_multiple_stations(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -176,7 +173,7 @@ async def test_form_entry_already_exist(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -213,7 +210,10 @@ async def test_form_entry_already_exist(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, side_effect: Exception, p_error: dict[str, str]
+    hass: HomeAssistant,
+    get_train_stations: list[list[StationInfoModel]],
+    side_effect: Exception,
+    p_error: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     result = await hass.config_entries.flow.async_init(
@@ -239,6 +239,28 @@ async def test_flow_fails(
         )
 
     assert result["errors"] == p_error
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_stations",
+            side_effect=get_train_stations,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -255,7 +277,10 @@ async def test_flow_fails(
     ],
 )
 async def test_flow_fails_departures(
-    hass: HomeAssistant, side_effect: Exception, p_error: dict[str, str]
+    hass: HomeAssistant,
+    get_train_stations: list[list[StationInfoModel]],
+    side_effect: Exception,
+    p_error: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     result = await hass.config_entries.flow.async_init(
@@ -281,6 +306,28 @@ async def test_flow_fails_departures(
         )
 
     assert result["errors"] == p_error
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_stations",
+            side_effect=get_train_stations,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(
@@ -314,7 +361,7 @@ async def test_reauth_flow(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -403,7 +450,7 @@ async def test_reauth_flow_error(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -487,7 +534,7 @@ async def test_reauth_flow_error_departures(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -606,7 +653,7 @@ async def test_reconfigure_flow(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -670,7 +717,7 @@ async def test_reconfigure_multiple_stations(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -731,7 +778,7 @@ async def test_reconfigure_entry_already_exist(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -812,7 +859,7 @@ async def test_reconfigure_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -887,7 +934,7 @@ async def test_reconfigure_flow_fails_departures(
         ),
         patch(
             "homeassistant.components.trafikverket_train.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

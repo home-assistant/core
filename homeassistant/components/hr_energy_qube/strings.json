@@ -1,13 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_qube_device": "The discovered device is not a Qube heat pump.",
+      "unique_id_mismatch": "The device at this address is a different Qube heat pump. Enter the address of the heat pump that was set up before."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_qube_device": "Could not verify this is a Qube heat pump. Check the host address."
     },
+    "flow_title": "Qube heat pump ({host})",
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::hr_energy_qube::config::step::user::data_description::host%]"
+        },
+        "description": "Enter the new IP address or hostname of your Qube heat pump."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -16,10 +28,134 @@
           "host": "The IP address or hostname of your Qube heat pump."
         },
         "description": "Enter the IP address or hostname of your Qube heat pump."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Qube heat pump at {host}?"
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm_antilegionella_timeout": {
+        "name": "Anti-legionella timeout alarm"
+      },
+      "alarm_central_heating": {
+        "name": "Central heating alarm"
+      },
+      "alarm_compressor": {
+        "name": "Compressor alarm"
+      },
+      "alarm_cooling": {
+        "name": "Cooling alarm"
+      },
+      "alarm_dewpoint": {
+        "name": "Dewpoint alarm"
+      },
+      "alarm_dhw_timeout": {
+        "name": "DHW timeout alarm"
+      },
+      "alarm_flow": {
+        "name": "Flow alarm"
+      },
+      "alarm_global": {
+        "name": "Global alarm"
+      },
+      "alarm_heating": {
+        "name": "Heating alarm"
+      },
+      "alarm_source": {
+        "name": "Source alarm"
+      },
+      "alarm_supply_too_hot": {
+        "name": "Supply too hot alarm"
+      },
+      "alarm_working_hours": {
+        "name": "Working hours alarm"
+      },
+      "anti_legionella": {
+        "name": "Anti-legionella"
+      },
+      "booster_security": {
+        "name": "Booster security"
+      },
+      "buffer_pump": {
+        "name": "Buffer pump"
+      },
+      "buffer_sensor_enabled": {
+        "name": "Buffer sensor enabled"
+      },
+      "cooling_output": {
+        "name": "Cooling output"
+      },
+      "day_mode": {
+        "name": "Day mode"
+      },
+      "dewpoint": {
+        "name": "Dewpoint"
+      },
+      "dhw_controller_enabled": {
+        "name": "DHW controller enabled"
+      },
+      "external_demand": {
+        "name": "External demand"
+      },
+      "four_way_valve": {
+        "name": "Four-way valve"
+      },
+      "heater_step_1": {
+        "name": "Heater step 1"
+      },
+      "heater_step_2": {
+        "name": "Heater step 2"
+      },
+      "heater_step_3": {
+        "name": "Heater step 3"
+      },
+      "keypad": {
+        "name": "Keypad"
+      },
+      "plant_demand": {
+        "name": "Plant demand"
+      },
+      "plant_sensor_enabled": {
+        "name": "Plant sensor enabled"
+      },
+      "pv_surplus": {
+        "name": "PV surplus"
+      },
+      "room_sensor_enabled": {
+        "name": "Room sensor enabled"
+      },
+      "source_flow": {
+        "name": "Source flow"
+      },
+      "source_pump": {
+        "name": "Source pump"
+      },
+      "summer_mode": {
+        "name": "Summer mode"
+      },
+      "thermostat_demand": {
+        "name": "Thermostat demand"
+      },
+      "three_way_valve": {
+        "name": "Three-way valve"
+      },
+      "user_pump": {
+        "name": "User pump"
+      }
+    },
+    "select": {
+      "sg_ready_mode": {
+        "name": "Smart grid ready mode",
+        "state": {
+          "block": "Block",
+          "max": "Max",
+          "off": "[%key:common::state::off%]",
+          "plus": "Plus"
+        }
+      }
+    },
     "sensor": {
       "compressor_speed": {
         "name": "Compressor speed"
@@ -58,6 +194,7 @@
         "name": "Heat pump status",
         "state": {
           "alarm": "Alarm",
+          "anti_legionella": "[%key:component::hr_energy_qube::entity::binary_sensor::anti_legionella::name%]",
           "compressor_shutdown": "Compressor stopping",
           "compressor_startup": "Compressor startup",
           "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
@@ -89,6 +226,42 @@
       "temp_supply": {
         "name": "Supply temperature CH"
       }
+    },
+    "switch": {
+      "anti_legionella_cycle": {
+        "name": "Anti-legionella cycle"
+      },
+      "heating_curve": {
+        "name": "Heating curve"
+      },
+      "heating_demand": {
+        "name": "Heating demand"
+      },
+      "summer_mode": {
+        "name": "Summer mode"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "Domestic hot water"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the Qube heat pump at {host}."
+    },
+    "communication_error": {
+      "message": "Error communicating with the Qube heat pump: {error}"
+    },
+    "no_data": {
+      "message": "No data received from the Qube heat pump."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set the target temperature."
+    },
+    "switch_command_failed": {
+      "message": "Failed to send command to the heat pump."
     }
   }
 }

@@ -1,22 +1,28 @@
 """Test the Scrape config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.local_file.const import DEFAULT_NAME, DOMAIN
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
 
-
-async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form for sensor."""
+@pytest.mark.parametrize(
+    ("file_path", "name"),
+    [
+        pytest.param("/media/front_door.jpg", "front_door", id="file_name"),
+        pytest.param("/", DEFAULT_NAME, id="no_file_name"),
+    ],
+)
+async def test_form_sensor(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, file_path: str, name: str
+) -> None:
+    """Test we get the form and name the entry after the file."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -34,19 +40,14 @@ async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_NAME: DEFAULT_NAME,
-                CONF_FILE_PATH: "mock.file",
-            },
+            {CONF_FILE_PATH: file_path},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
-    assert result["options"] == {
-        CONF_NAME: DEFAULT_NAME,
-        CONF_FILE_PATH: "mock.file",
-    }
+    assert result["title"] == name
+    assert result["options"] == {CONF_FILE_PATH: file_path}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -74,7 +75,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_NAME: DEFAULT_NAME, CONF_FILE_PATH: "mock.new.file"}
+    assert result["data"] == {CONF_FILE_PATH: "mock.new.file"}
 
     await hass.async_block_till_done()
 
@@ -106,10 +107,7 @@ async def test_validation_options(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_NAME: DEFAULT_NAME,
-                CONF_FILE_PATH: "mock.file",
-            },
+            {CONF_FILE_PATH: "mock.file"},
         )
         await hass.async_block_till_done()
 
@@ -127,19 +125,14 @@ async def test_validation_options(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_NAME: DEFAULT_NAME,
-                CONF_FILE_PATH: "mock.new.file",
-            },
+            {CONF_FILE_PATH: "mock.new.file"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
-    assert result["options"] == {
-        CONF_NAME: DEFAULT_NAME,
-        CONF_FILE_PATH: "mock.new.file",
-    }
+    assert result["title"] == "mock.new"
+    assert result["options"] == {CONF_FILE_PATH: "mock.new.file"}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -166,10 +159,7 @@ async def test_entry_already_exist(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_NAME: DEFAULT_NAME,
-                CONF_FILE_PATH: "mock.file",
-            },
+            {CONF_FILE_PATH: "mock.file"},
         )
         await hass.async_block_till_done()
 

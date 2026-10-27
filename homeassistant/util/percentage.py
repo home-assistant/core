@@ -1,7 +1,5 @@
 """Percentage util functions."""
 
-from __future__ import annotations
-
 from .scaling import (  # noqa: F401
     int_states_in_range,
     scale_ranged_value_to_int_range,
@@ -70,8 +68,8 @@ def ranged_value_to_percentage(
     will return:
 
     (1,255), 255: 100
-    (1,255), 127: 50
-    (1,255), 10: 4
+    (1,255), 127: 49
+    (1,255), 10: 3
     """
     return scale_ranged_value_to_int_range(low_high_range, (1, 100), value)
 

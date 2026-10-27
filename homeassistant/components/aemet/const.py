@@ -1,7 +1,5 @@
 """Constant values for the AEMET OpenData component."""
 
-from __future__ import annotations
-
 from aemet_opendata.const import (
     AOD_COND_CLEAR_NIGHT,
     AOD_COND_CLOUDY,

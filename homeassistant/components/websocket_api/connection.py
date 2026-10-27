@@ -1,18 +1,20 @@
 """Connection session."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Hashable
+import asyncio
+from collections.abc import Callable, Generator, Hashable
+from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.http import current_request
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -32,6 +34,20 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
+AUTH_CLOSE_DELAY = 2
+
+REDACT_KEYS = {
+    "access_token",
+    "password",
+    "api_password",
+    "current_password",
+    "new_password",
+    "client_secret",
+    "refresh_token",
+    "token",
+    "auth_token",
+}
+
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
@@ -40,6 +56,10 @@ class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
+        "_cancel_ws",
+        "_deferred_auth_close",
+        "_revoked_senders",
+        "_send_message",
         "binary_handlers",
         "can_coalesce",
         "handlers",
@@ -47,7 +67,7 @@ class ActiveConnection:
         "last_id",
         "logger",
         "refresh_token_id",
-        "send_message",
+        "remote",
         "subscriptions",
         "supported_features",
         "user",
@@ -60,23 +80,31 @@ class ActiveConnection:
         send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken | None,
+        remote: str | None,
+        cancel_ws: Callable[[], None] | None = None,
     ) -> None:
         """Initialize an active connection."""
+        self._cancel_ws = cancel_ws
+        self._deferred_auth_close: dict[asyncio.Task[Any], bool] = {}
+        # Set once the token is revoked, to the tasks that may still reply.
+        self._revoked_senders: set[asyncio.Task[Any]] | None = None
+        self._send_message = send_message
         self.logger = logger
         self.hass = hass
-        self.send_message = send_message
         self.user = user
         self.refresh_token_id = refresh_token.id if refresh_token else None
+        self.remote = remote
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
-            self.hass.data[const.DOMAIN]
-        )
+        self.handlers: dict[
+            str, tuple[MessageHandler, probatio.Schema | Literal[False]]
+        ] = self.hass.data[const.DOMAIN]
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
@@ -96,6 +124,50 @@ class ActiveConnection:
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
         return Context(user_id=self.user.id)
+
+    @contextmanager
+    def async_defer_auth_close(self) -> Generator[None]:
+        """Let a command reply before its own token revocation closes the socket.
+
+        Only a revocation from the task running the command is deferred, not one
+        from a task it starts.
+        """
+        task = asyncio.current_task()
+        assert task is not None
+        self._deferred_auth_close[task] = False
+        try:
+            yield
+        finally:
+            if self._deferred_auth_close.pop(task):
+                self.hass.async_create_task(
+                    self._async_close_after_response(),
+                    "Close self-revoked websocket connection",
+                )
+
+    @callback
+    def async_auth_revoked(self) -> None:
+        """Close a revoked connection, allowing an opted-in command to reply."""
+        if self._revoked_senders is None:
+            self._revoked_senders = set()
+        if (task := asyncio.current_task()) in self._deferred_auth_close:
+            assert task is not None
+            self._deferred_auth_close[task] = True
+            # Its reply may still reach the client, also an error reply sent
+            # after it left async_defer_auth_close.
+            self._revoked_senders.add(task)
+            # The auth subscription is being called right now and goes on close.
+            self._async_unsubscribe_all(keep="auth")
+            return
+        assert self._cancel_ws is not None
+        self._cancel_ws()
+
+    async def _async_close_after_response(self) -> None:
+        """Close after the reply has had time to be sent, including at shutdown."""
+        try:
+            await asyncio.sleep(AUTH_CLOSE_DELAY)
+        finally:
+            assert self._cancel_ws is not None
+            self._cancel_ws()
 
     @callback
     def async_register_binary_handler(
@@ -128,6 +200,17 @@ class ActiveConnection:
             self.binary_handlers[index] = None
 
         return index + 1, unsub
+
+    @callback
+    def send_message(self, msg: bytes | str | dict[str, Any]) -> None:
+        """Send a message to the client."""
+        # Checked here, as callers may keep this method to send after an await.
+        if (
+            self._revoked_senders is not None
+            and asyncio.current_task() not in self._revoked_senders
+        ):
+            return
+        self._send_message(msg)
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
@@ -166,6 +249,8 @@ class ActiveConnection:
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
         """Handle a single incoming binary message."""
+        if self._revoked_senders is not None:
+            return
         index = handler_id - 1
         if (
             index < 0
@@ -186,6 +271,8 @@ class ActiveConnection:
     @callback
     def async_handle(self, msg: JsonValueType) -> None:
         """Handle a single incoming message."""
+        if self._revoked_senders is not None:
+            return
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
@@ -198,6 +285,7 @@ class ActiveConnection:
                 or type(type_) is not str
             )
         ):
+            msg = async_redact_data(msg, REDACT_KEYS)
             self.logger.error("Received invalid command: %s", msg)
             id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
@@ -231,7 +319,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
+                    raise probatio.Invalid("extra keys not allowed")  # noqa: TRY301
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))
@@ -243,7 +331,17 @@ class ActiveConnection:
     @callback
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
-        for unsub in self.subscriptions.values():
+        self._async_unsubscribe_all()
+        self._send_message = self._connect_closed_error
+        current_request.set(None)
+        current_connection.set(None)
+
+    @callback
+    def _async_unsubscribe_all(self, *, keep: Hashable | None = None) -> None:
+        """Unsubscribe from all subscriptions of the connection but one to keep."""
+        for key, unsub in list(self.subscriptions.items()):
+            if key == keep:
+                continue
             try:
                 unsub()
             except Exception:
@@ -251,16 +349,14 @@ class ActiveConnection:
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub
                 )
-        self.subscriptions.clear()
-        self.send_message = self._connect_closed_error
-        current_request.set(None)
-        current_connection.set(None)
+            del self.subscriptions[key]
 
     @callback
     def _connect_closed_error(
         self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
+        msg = async_redact_data(msg, REDACT_KEYS)
         self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
@@ -274,12 +370,14 @@ class ActiveConnection:
         translation_key: str | None = None
         translation_placeholders: dict[str, Any] | None = None
 
+        msg = async_redact_data(msg, REDACT_KEYS)
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
-        elif isinstance(err, vol.Invalid):
+        elif isinstance(err, probatio.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = vol.humanize.humanize_error(msg, err)
+            err_message = humanize_error(msg, err)
         elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"

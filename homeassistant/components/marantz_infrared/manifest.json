@@ -1,0 +1,12 @@
+{
+  "domain": "marantz_infrared",
+  "name": "Marantz Infrared",
+  "categories": ["media_entertainment.speakers_audio"],
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/marantz_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "silver"
+}

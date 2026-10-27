@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from mcstatus import JavaServer
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.minecraft_server.const import DOMAIN
@@ -20,8 +21,6 @@ from .const import (
     TEST_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 DEFAULT_NAME = "Minecraft Server"
 
@@ -208,7 +207,7 @@ async def test_entry_migration(
     entity_registry: er.EntityRegistry,
     v1_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test entry migration from version 1 to 3, where host and port is required for the connection to the server."""
+    """Test entry migration v1 to v3, where host and port are required."""
     v1_mock_config_entry.add_to_hass(hass)
 
     device_entry_id = create_v1_mock_device_entry(hass, v1_mock_config_entry.entry_id)
@@ -264,16 +263,16 @@ async def test_entry_migration(
     entity_entry = entity_registry.async_get(
         binary_sensor_entity_id_key_mapping["entity_id"]
     )
-    assert (
-        entity_entry.unique_id
-        == f"{migrated_config_entry.entry_id}-{binary_sensor_entity_id_key_mapping['key']}"
+    expected_uid = (
+        f"{migrated_config_entry.entry_id}-{binary_sensor_entity_id_key_mapping['key']}"
     )
+    assert entity_entry.unique_id == expected_uid
 
 
 async def test_entry_migration_host_only(
     hass: HomeAssistant, v1_mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test entry migration from version 1 to 3, where host alone is sufficient for the connection to the server."""
+    """Test entry migration v1 to v3, where host alone is sufficient."""
     v1_mock_config_entry.add_to_hass(hass)
 
     device_entry_id = create_v1_mock_device_entry(hass, v1_mock_config_entry.entry_id)
@@ -336,3 +335,36 @@ async def test_entry_migration_v3_failure(
     # Test config entry.
     assert v1_mock_config_entry.version == 2
     assert v1_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert v1_mock_config_entry.error_reason_translation_key == "address_lookup_failed"
+    assert v1_mock_config_entry.error_reason_translation_placeholders == {
+        "address": f"{TEST_HOST}:{TEST_PORT}"
+    }
+
+
+async def test_device_entry_type(
+    hass: HomeAssistant,
+    java_mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device entry type."""
+    java_mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(java_mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, java_mock_config_entry.entry_id),
+        java_mock_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.entry_type is dr.DeviceEntryType.SERVICE

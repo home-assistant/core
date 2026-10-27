@@ -1,1 +1,1 @@
-"""Tests for the MyPermobil integration."""
+"""Tests for the Permobil integration."""

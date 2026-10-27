@@ -1,31 +1,45 @@
 """The Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    async_create_multi_pan_migration_issue,
+    async_delete_multi_pan_migration_issue,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
+    multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     guess_firmware_info,
 )
+from homeassistant.components.usb import (
+    SerialDevice,
+    USBDevice,
+    async_register_serial_port_scanner,
+)
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import (
+    DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
+    MANUFACTURER,
     NABU_CASA_FIRMWARE_RELEASES_URL,
     RADIO_DEVICE,
     ZHA_HW_DISCOVERY_DATA,
@@ -34,6 +48,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 type HomeAssistantYellowConfigEntry = ConfigEntry[HomeAssistantYellowData]
+
+__all__ = [
+    "DOMAIN",
+    "RADIO_DEVICE",
+]
 
 
 @dataclass
@@ -47,21 +66,29 @@ class HomeAssistantYellowData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant Yellow config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_hassio",
+        )
 
-    if (os_info := get_os_info(hass)) is None:
-        # The hassio integration has not yet fetched data from the supervisor
-        raise ConfigEntryNotReady
+    try:
+        os_info = get_os_info(hass)
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady from err
 
     if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_board",
+            translation_placeholders={"board": str(os_info.get("board"))},
+        )
 
     firmware = ApplicationType(entry.data[FIRMWARE])
 
@@ -72,6 +99,16 @@ async def async_setup_entry(
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
 
+    try:
+        multipan_using_device = await multi_pan_addon_using_device(hass, RADIO_DEVICE)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+
+    if multipan_using_device:
+        async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
+    else:
+        async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)
+
     if firmware is ApplicationType.EZSP:
         discovery_flow.async_create_flow(
             hass,
@@ -79,6 +116,20 @@ async def async_setup_entry(
             context={"source": SOURCE_HARDWARE},
             data=ZHA_HW_DISCOVERY_DATA,
         )
+
+    @callback
+    def _scan_serial_ports(hass: HomeAssistant) -> list[USBDevice | SerialDevice]:
+        """Contribute the Yellow's built-in Zigbee radio port."""
+        return [
+            SerialDevice(
+                device=RADIO_DEVICE,
+                serial_number=None,
+                manufacturer=MANUFACTURER,
+                description="Yellow Zigbee Radio",
+            )
+        ]
+
+    entry.async_on_unload(async_register_serial_port_scanner(hass, _scan_serial_ports))
 
     # Create and store the firmware update coordinator in runtime_data
     session = async_get_clientsession(hass)
@@ -92,19 +143,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -113,9 +164,11 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
-            # Add-on startup with type service get started before Core, always (e.g. the
-            # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
-            # so we can't safely probe here. Instead, we must make an educated guess!
+            # Add-on startup with type service get started before
+            # Core, always (e.g. the Multi-Protocol add-on).
+            # Probing the firmware would interfere with the
+            # add-on, so we can't safely probe here. Instead,
+            # we must make an educated guess!
             firmware_guess = await guess_firmware_info(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}
@@ -141,13 +194,8 @@ async def async_migrate_entry(
                 minor_version=4,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
-
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )

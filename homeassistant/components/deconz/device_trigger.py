@@ -1,14 +1,13 @@
 """Provides device automations for deconz events."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -22,10 +21,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, DeconzConfigEntry
+from . import DeconzConfigEntry
+from .const import CONF_GESTURE, DOMAIN
 from .deconz_event import (
     CONF_DECONZ_EVENT,
-    CONF_GESTURE,
     DeconzAlarmEvent,
     DeconzEvent,
     DeconzPresenceEvent,
@@ -676,7 +675,7 @@ REMOTES = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 
@@ -704,7 +703,9 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
@@ -733,7 +734,14 @@ async def async_attach_trigger(
     event_data: dict[str, int | str] = {}
 
     device_registry = dr.async_get(hass)
-    device = device_registry.devices[config[CONF_DEVICE_ID]]
+    device = device_registry.async_get(
+        config[CONF_DEVICE_ID], include_child_devices=False
+    )
+
+    if not device:
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger device with ID {config[CONF_DEVICE_ID]} not found"
+        )
 
     deconz_event = _get_deconz_event_from_device(hass, device)
     if event_id := deconz_event.serial:
@@ -744,9 +752,9 @@ async def async_attach_trigger(
         event_data |= REMOTES[device_model][config_trigger]
 
     raw_event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event_trigger.CONF_EVENT_DATA: event_data,
+        EventTriggerArgument.PLATFORM: "event",
+        EventTriggerArgument.EVENT_TYPE: CONF_DECONZ_EVENT,
+        EventTriggerArgument.EVENT_DATA: event_data,
     }
 
     event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
@@ -766,9 +774,9 @@ async def async_get_triggers(
     Generate device trigger list.
     """
     device_registry = dr.async_get(hass)
-    device = device_registry.devices[device_id]
+    device = device_registry.async_get(device_id, include_child_devices=False)
 
-    if device.model not in REMOTES:
+    if device is None or device.model not in REMOTES:
         return []
 
     triggers = []

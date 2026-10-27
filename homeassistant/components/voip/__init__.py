@@ -1,7 +1,5 @@
 """The Voice over IP integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -22,7 +20,6 @@ from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
     Platform.ASSIST_SATELLITE,
-    Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,
 )
@@ -36,8 +33,6 @@ __all__ = [
     "async_unload_entry",
 ]
 
-type VoipConfigEntry = ConfigEntry[VoipStore]
-
 
 @dataclass
 class DomainData:
@@ -48,7 +43,18 @@ class DomainData:
     devices: VoIPDevices
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
+@dataclass
+class VoipData:
+    """Voip Runtime Data."""
+
+    store: VoipStore
+    domain_data: DomainData
+
+
+type VoipConfigEntry = ConfigEntry[VoipData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None:
     """Set up VoIP integration from a config entry."""
     # Make sure there is a valid user ID for VoIP in the config entry
     if (
@@ -62,9 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool
             entry, data={**entry.data, "user": voip_user.id}
         )
 
-    entry.runtime_data = VoipStore(hass, entry.entry_id)
     sip_port = entry.options.get(CONF_SIP_PORT, SIP_PORT)
-    devices = VoIPDevices(hass, entry)
+    store = VoipStore(hass, entry.entry_id)
+    devices = VoIPDevices(hass, entry, store)
     await devices.async_setup()
     transport, protocol = await _create_sip_server(
         hass,
@@ -72,14 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool
         sip_port,
     )
     _LOGGER.debug("Listening for VoIP calls on port %s", sip_port)
-
-    hass.data[DOMAIN] = DomainData(transport, protocol, devices)
+    entry.runtime_data = VoipData(store, DomainData(transport, protocol, devices))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    return True
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
@@ -106,20 +109,17 @@ async def _create_sip_server(
     return transport, protocol
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None:
     """Unload VoIP."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        _LOGGER.debug("Shutting down VoIP server")
-        data = hass.data.pop(DOMAIN)
-        data.transport.close()
-        await data.protocol.wait_closed()
-        _LOGGER.debug("VoIP server shut down successfully")
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    _LOGGER.debug("Shutting down VoIP server")
+    entry.runtime_data.domain_data.transport.close()
+    await entry.runtime_data.domain_data.protocol.wait_closed()
+    _LOGGER.debug("VoIP server shut down successfully")
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
     return True
@@ -132,4 +132,4 @@ async def async_remove_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> Non
     ):
         await hass.auth.async_remove_user(user)
 
-    await entry.runtime_data.async_remove()
+    await entry.runtime_data.store.async_remove()

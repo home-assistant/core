@@ -1,7 +1,5 @@
 """The tests for Evohome."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from unittest.mock import Mock, patch
@@ -12,10 +10,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_post_request
+from .conftest import mock_post_request, setup_evohome
+from .const import USERNAME
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -180,3 +181,75 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("install", "config"),
+    [
+        pytest.param(
+            install,
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", "location_idx": i},
+            id=f"{install}-location_idx_{i}",
+        )
+        for install, i in (("sys_004", 1), ("sys_004", 2), ("sys_006", 1))
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_setup_non_default_location(
+    hass: HomeAssistant,
+    ctl_id: str,
+    zone_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of a location other than the first of a multi-location account."""
+
+    assert hass.states.get(ctl_id) is not None
+    assert hass.states.get(zone_id) is not None
+
+    assert sorted(hass.states.async_entity_ids()) == snapshot
+
+
+_STALE_ISSUES = {  # issue_id: translation_key
+    "deprecated_clear_zone_override_service": "deprecated_clear_zone_override_service",
+    "deprecated_preset_reset": "deprecated_preset_reset",
+    "deprecated_reset_system_service": "deprecated_reset_system_service",
+    "deprecated_set_system_mode_service": "deprecated_controller_service",
+}
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            f"component.evohome.issues.{translation_key}.{key}"
+            for translation_key in _STALE_ISSUES.values()
+            for key in ("title", "description")
+        ]
+    ],
+)
+async def test_stale_deprecation_issues_removed(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test persistent repair issues of completed deprecations are removed."""
+
+    for issue_id, translation_key in _STALE_ISSUES.items():
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+        )
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    for issue_id in _STALE_ISSUES:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

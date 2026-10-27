@@ -1,44 +1,42 @@
 """Tests for the Input slider component."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockUser, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_datetime import (
-    ATTR_DATE,
-    ATTR_DATETIME,
-    ATTR_EDITABLE,
-    ATTR_TIME,
-    ATTR_TIMESTAMP,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
     CONF_ID,
-    CONF_INITIAL,
     CONF_NAME,
     CONFIG_SCHEMA,
-    DEFAULT_TIME,
     DOMAIN,
-    SERVICE_RELOAD,
+)
+from homeassistant.components.input_datetime.const import (
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    DEFAULT_TIME,
+    InputDatetimeEntityStateAttribute,
+    InputDatetimeService,
+    InputDatetimeServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_NAME,
     FORMAT_DATE,
     FORMAT_DATETIME,
     FORMAT_TIME,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 INITIAL_DATE = "2020-01-10"
 INITIAL_TIME = "23:45:56"
@@ -80,29 +78,29 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
 
 
 async def async_set_date_and_time(
-    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+    hass: HomeAssistant, entity_id: str, dt_value: dt.datetime
 ) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
-        "set_datetime",
+        InputDatetimeService.SET,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_DATE: dt_value.date(),
-            ATTR_TIME: dt_value.time(),
+            InputDatetimeServiceArgument.DATE: dt_value.date(),
+            InputDatetimeServiceArgument.TIME: dt_value.time(),
         },
         blocking=True,
     )
 
 
 async def async_set_datetime(
-    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+    hass: HomeAssistant, entity_id: str, dt_value: dt.datetime
 ) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
-        "set_datetime",
-        {ATTR_ENTITY_ID: entity_id, ATTR_DATETIME: dt_value},
+        InputDatetimeService.SET,
+        {ATTR_ENTITY_ID: entity_id, InputDatetimeServiceArgument.DATETIME: dt_value},
         blocking=True,
     )
 
@@ -113,8 +111,8 @@ async def async_set_timestamp(
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
-        "set_datetime",
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIMESTAMP: timestamp},
+        InputDatetimeService.SET,
+        {ATTR_ENTITY_ID: entity_id, InputDatetimeServiceArgument.TIMESTAMP: timestamp},
         blocking=True,
     )
 
@@ -129,7 +127,7 @@ async def async_set_timestamp(
 )
 def test_invalid_configs(config) -> None:
     """Test config."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CONFIG_SCHEMA({DOMAIN: config})
 
 
@@ -141,7 +139,7 @@ async def test_set_datetime(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -169,7 +167,7 @@ async def test_set_datetime_2(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -197,7 +195,7 @@ async def test_set_datetime_3(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         2017, 9, 7, 19, 46, 30, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -225,7 +223,7 @@ async def test_set_datetime_4(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(
+    dt_obj = dt.datetime(
         1969, 12, 31, 16, 00, 00, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
     )
 
@@ -253,7 +251,7 @@ async def test_set_datetime_time(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_time"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46, 30)
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
@@ -280,13 +278,13 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
-            "input_datetime",
-            "set_datetime",
+            DOMAIN,
+            InputDatetimeService.SET,
             {"entity_id": entity_id, "time": time_portion},
             blocking=True,
         )
@@ -310,13 +308,13 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     time_portion = dt_obj.time()
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
-            "input_datetime",
-            "set_datetime",
+            DOMAIN,
+            InputDatetimeService.SET,
             {"entity_id": entity_id, "time": time_portion, "datetime": dt_obj},
             blocking=True,
         )
@@ -333,7 +331,7 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
 
     entity_id = "input_datetime.test_date"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     date_portion = dt_obj.date()
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
@@ -343,11 +341,15 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert not state.attributes["has_time"]
     assert state.attributes["has_date"]
 
-    date_dt_obj = datetime.datetime(2017, 9, 7)
+    date_dt_obj = dt.datetime(
+        2017, 9, 7, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
-async def test_restore_state(hass: HomeAssistant) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -363,8 +365,8 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
     hass.set_state(CoreState.starting)
 
-    initial = datetime.datetime(2017, 1, 1, 23, 42)
-    default = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)
+    initial = dt.datetime(2017, 1, 1, 23, 42)
+    default = dt.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
 
     await async_setup_component(
         hass,
@@ -385,7 +387,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         },
     )
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
+    dt_obj = dt.datetime(2017, 9, 7, 19, 46)
     state_time = hass.states.get("input_datetime.test_time")
     assert state_time.state == dt_obj.strftime(FORMAT_TIME)
 
@@ -405,7 +407,9 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state_was_date.state == default.strftime(FORMAT_TIME)
 
 
-async def test_default_value(hass: HomeAssistant) -> None:
+async def test_default_value(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test default value if none has been set via initial or restore state."""
     await async_setup_component(
         hass,
@@ -419,7 +423,7 @@ async def test_default_value(hass: HomeAssistant) -> None:
         },
     )
 
-    dt_obj = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)
+    dt_obj = dt.datetime.combine(dt_util.now().date(), DEFAULT_TIME)
     state_time = hass.states.get("input_datetime.test_time")
     assert state_time.state == dt_obj.strftime(FORMAT_TIME)
     assert state_time.attributes.get("timestamp") is not None
@@ -438,15 +442,15 @@ async def test_input_datetime_context(
 ) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
-        hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
+        hass, DOMAIN, {"input_datetime": {"only_date": {"has_date": True}}}
     )
 
     state = hass.states.get("input_datetime.only_date")
     assert state is not None
 
     await hass.services.async_call(
-        "input_datetime",
-        "set_datetime",
+        DOMAIN,
+        InputDatetimeService.SET,
         {"entity_id": state.entity_id, "date": "2018-01-02"},
         blocking=True,
         context=Context(user_id=hass_admin_user.id),
@@ -463,6 +467,7 @@ async def test_reload(
     entity_registry: er.EntityRegistry,
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
@@ -484,7 +489,7 @@ async def test_reload(
     state_2 = hass.states.get("input_datetime.dt2")
     state_3 = hass.states.get("input_datetime.dt3")
 
-    dt_obj = datetime.datetime(2019, 1, 1, 0, 0)
+    dt_obj = dt.datetime(2019, 1, 1, 0, 0)
     assert state_1 is not None
     assert state_2 is None
     assert state_3 is not None
@@ -506,13 +511,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                InputDatetimeService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputDatetimeService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -527,8 +532,8 @@ async def test_reload(
     assert state_2 is not None
     assert state_3 is None
     assert state_1.state == DEFAULT_TIME.strftime(FORMAT_TIME)
-    assert state_2.state == datetime.datetime.combine(
-        datetime.date.today(), DEFAULT_TIME
+    assert state_2.state == dt.datetime.combine(
+        dt_util.now().date(), DEFAULT_TIME
     ).strftime(FORMAT_DATETIME)
 
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
@@ -541,7 +546,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
     assert state.state == INITIAL_DATETIME
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(InputDatetimeEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -561,11 +566,11 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
     assert state.state == INITIAL_DATETIME
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(InputDatetimeEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state.state == "2001-01-02 12:34:56"
-    assert not state.attributes[ATTR_EDITABLE]
+    assert not state.attributes[InputDatetimeEntityStateAttribute.EDITABLE]
 
 
 async def test_ws_list(
@@ -587,7 +592,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "datetime from storage"
+    assert result[storage_ent][CONF_NAME] == "datetime from storage"
 
 
 async def test_ws_delete(
@@ -635,7 +640,9 @@ async def test_update(
     input_entity_id = f"{DOMAIN}.datetime_from_storage"
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "datetime from storage"
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "datetime from storage"
+    )
     assert state.state == INITIAL_DATETIME
     assert (
         entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
@@ -663,7 +670,7 @@ async def test_update(
 
     state = hass.states.get(input_entity_id)
     assert state.state == INITIAL_TIME
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "even newer name"
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "even newer name"
 
 
 async def test_ws_create(
@@ -699,8 +706,8 @@ async def test_ws_create(
 
     state = hass.states.get(input_entity_id)
     assert state.state == "1991-01-02 01:02:03"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "New DateTime"
-    assert state.attributes[ATTR_EDITABLE]
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "New DateTime"
+    assert state.attributes[InputDatetimeEntityStateAttribute.EDITABLE]
 
 
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
@@ -713,7 +720,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputDatetimeService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -752,11 +759,14 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     # initial has been converted to the set timezone
     state_with_tz = hass.states.get("input_datetime.test_datetime_initial_with_tz")
     assert state_with_tz is not None
-    # Timezone LA is UTC-8 => timestamp carries +01:00 => delta is -9 => 10:00 - 09:00 => 01:00
+    # Timezone LA is UTC-8 => timestamp carries +01:00
+    # => delta is -9 => 10:00 - 09:00 => 01:00
     assert state_with_tz.state == "2020-12-13 01:00:00"
     assert (
         dt_util.as_local(
-            dt_util.utc_from_timestamp(state_with_tz.attributes[ATTR_TIMESTAMP])
+            dt_util.utc_from_timestamp(
+                state_with_tz.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
+            )
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 01:00:00"
     )
@@ -767,24 +777,30 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     )
     assert state_without_tz is not None
     assert state_without_tz.state == "2020-12-13 10:00:00"
-    # Timezone LA is UTC-8 => timestamp has no zone (= assumed local) => delta to UTC is +8 => 10:00 + 08:00 => 18:00
+    # Timezone LA is UTC-8 => timestamp has no zone (= assumed local)
+    # => delta to UTC is +8 => 10:00 + 08:00 => 18:00
     assert (
         dt_util.utc_from_timestamp(
-            state_without_tz.attributes[ATTR_TIMESTAMP]
+            state_without_tz.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 18:00:00"
     )
     assert (
         dt_util.as_local(
-            dt_util.utc_from_timestamp(state_without_tz.attributes[ATTR_TIMESTAMP])
+            dt_util.utc_from_timestamp(
+                state_without_tz.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
+            )
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"
     )
     # Use datetime.datetime.fromtimestamp
     assert (
         dt_util.as_local(
-            datetime.datetime.fromtimestamp(
-                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.UTC
+            dt.datetime.fromtimestamp(
+                state_without_tz.attributes[
+                    InputDatetimeEntityStateAttribute.TIMESTAMP
+                ],
+                dt.UTC,
             )
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"
@@ -794,15 +810,20 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     state_time = hass.states.get("input_datetime.test_time_initial")
     assert state_time is not None
     assert state_time.state == "10:00:00"
-    assert state_time.attributes[ATTR_TIMESTAMP] == 10 * 60 * 60
+    assert (
+        state_time.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
+        == 10 * 60 * 60
+    )
 
     # Test that setting the timestamp of an entity works.
     await hass.services.async_call(
         DOMAIN,
-        "set_datetime",
+        InputDatetimeService.SET,
         {
             ATTR_ENTITY_ID: "input_datetime.test_datetime_initial_with_tz",
-            ATTR_TIMESTAMP: state_without_tz.attributes[ATTR_TIMESTAMP],
+            InputDatetimeServiceArgument.TIMESTAMP: state_without_tz.attributes[
+                InputDatetimeEntityStateAttribute.TIMESTAMP
+            ],
         },
         blocking=True,
     )
@@ -811,8 +832,8 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     )
     assert state_with_tz_updated.state == "2020-12-13 10:00:00"
     assert (
-        state_with_tz_updated.attributes[ATTR_TIMESTAMP]
-        == state_without_tz.attributes[ATTR_TIMESTAMP]
+        state_with_tz_updated.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
+        == state_without_tz.attributes[InputDatetimeEntityStateAttribute.TIMESTAMP]
     )
 
 

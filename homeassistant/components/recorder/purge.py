@@ -1,7 +1,5 @@
 """Purge old data helper."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging
@@ -10,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util.collection import chunked_or_all
 
 from .db_schema import Events, States, StatesMeta
@@ -41,7 +40,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import retryable_database_job, session_scope
+from .util import retryable_database_job
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -92,11 +91,13 @@ def purge_old_data(
                 instance, session, events_batch_size, purge_before
             )
 
-        statistics_runs = _select_statistics_runs_to_purge(
+        statistics_runs, statistics_runs_has_more = _select_statistics_runs_to_purge(
             session, purge_before, instance.max_bind_vars
         )
-        short_term_statistics = _select_short_term_statistics_to_purge(
-            session, purge_before, instance.max_bind_vars
+        short_term_statistics, short_term_statistics_has_more = (
+            _select_short_term_statistics_to_purge(
+                session, purge_before, instance.max_bind_vars
+            )
         )
         if statistics_runs:
             _purge_statistics_runs(session, statistics_runs)
@@ -104,7 +105,11 @@ def purge_old_data(
         if short_term_statistics:
             _purge_short_term_statistics(session, short_term_statistics)
 
-        if has_more_to_purge or statistics_runs or short_term_statistics:
+        if (
+            has_more_to_purge
+            or statistics_runs_has_more
+            or short_term_statistics_has_more
+        ):
             # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
@@ -367,14 +372,16 @@ def _purge_unused_data_ids(
 
 def _select_statistics_runs_to_purge(
     session: Session, purge_before: datetime, max_bind_vars: int
-) -> list[int]:
-    """Return a list of statistic runs to purge.
+) -> tuple[list[int], bool]:
+    """Return a list of statistic runs to purge and if there may be more.
 
     Takes care to keep the newest run.
     """
     statistic_runs = session.execute(
         find_statistics_runs_to_purge(purge_before, max_bind_vars)
     ).all()
+    # Only a full batch can have more rows to purge
+    has_more = len(statistic_runs) == max_bind_vars
     statistic_runs_list = [run_id for (run_id,) in statistic_runs]
     # Exclude the newest statistics run
     if (
@@ -383,18 +390,20 @@ def _select_statistics_runs_to_purge(
         statistic_runs_list.remove(last_run)
 
     _LOGGER.debug("Selected %s statistic runs to remove", len(statistic_runs))
-    return statistic_runs_list
+    return statistic_runs_list, has_more
 
 
 def _select_short_term_statistics_to_purge(
     session: Session, purge_before: datetime, max_bind_vars: int
-) -> list[int]:
-    """Return a list of short term statistics to purge."""
+) -> tuple[list[int], bool]:
+    """Return a list of short term statistics to purge and if there may be more."""
     statistics = session.execute(
         find_short_term_statistics_to_purge(purge_before, max_bind_vars)
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
-    return [statistic_id for (statistic_id,) in statistics]
+    # Only a full batch can have more rows to purge
+    has_more = len(statistics) == max_bind_vars
+    return [statistic_id for (statistic_id,) in statistics], has_more
 
 
 def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
@@ -586,12 +595,12 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     # Check if excluded entity_ids are in database
     entity_filter = instance.entity_filter
     has_more_to_purge = False
-    excluded_metadata_ids: list[str] = [
+    excluded_metadata_ids: list[int] = [
         metadata_id
         for (metadata_id, entity_id) in session.query(
             StatesMeta.metadata_id, StatesMeta.entity_id
         ).all()
-        if entity_filter and not entity_filter(entity_id)
+        if entity_id is not None and entity_filter and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
         has_more_to_purge |= not _purge_filtered_states(
@@ -621,7 +630,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
 def _purge_filtered_states(
     instance: Recorder,
     session: Session,
-    metadata_ids_to_purge: list[str],
+    metadata_ids_to_purge: list[int],
     database_engine: DatabaseEngine,
     purge_before_timestamp: float,
 ) -> bool:
@@ -719,12 +728,12 @@ def purge_entity_data(
     assert database_engine is not None
     purge_before_timestamp = purge_before.timestamp()
     with session_scope(session=instance.get_session()) as session:
-        selected_metadata_ids: list[str] = [
+        selected_metadata_ids: list[int] = [
             metadata_id
             for (metadata_id, entity_id) in session.query(
                 StatesMeta.metadata_id, StatesMeta.entity_id
             ).all()
-            if entity_filter and entity_filter(entity_id)
+            if entity_id is not None and entity_filter and entity_filter(entity_id)
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:

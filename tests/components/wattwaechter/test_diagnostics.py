@@ -1,0 +1,48 @@
+"""Tests for the WattWächter Plus diagnostics."""
+
+from unittest.mock import AsyncMock
+
+from aio_wattwaechter import WattwaechterConnectionError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.core import HomeAssistant
+
+
+async def test_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
+
+
+async def test_diagnostics_system_info_unavailable(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+) -> None:
+    """Test diagnostics still return config and meter data without system info."""
+    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert result["system"] is None
+    assert result["meter"] is not None

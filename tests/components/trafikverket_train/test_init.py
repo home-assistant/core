@@ -1,10 +1,9 @@
 """Test for Trafikverket Train component Init."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import (
     InvalidAuthentication,
     NoTrainStationFound,
@@ -20,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import ENTRY_CONFIG, OPTIONS_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(
@@ -235,15 +232,32 @@ async def test_migrate_entry_from_future_version_fails(
 
 
 @pytest.mark.parametrize(
-    ("side_effect"),
+    ("side_effect", "reason"),
     [
-        (InvalidAuthentication),
-        (NoTrainStationFound),
-        (UnknownError),
-        (Exception),
+        pytest.param(
+            InvalidAuthentication, "could not authenticate", id="invalid_auth"
+        ),
+        pytest.param(
+            NoTrainStationFound,
+            "Could not migrate the configuration as no train station was found for"
+            " Stockholm C or Uppsala C",
+            id="no_station",
+        ),
+        pytest.param(
+            UnknownError,
+            "Could not migrate the configuration due to an unknown error",
+            id="unknown_error",
+        ),
+        pytest.param(
+            Exception,
+            "Could not migrate the configuration due to an unknown error",
+            id="exception",
+        ),
     ],
 )
-async def test_migrate_entry_fails(hass: HomeAssistant, side_effect: Exception) -> None:
+async def test_migrate_entry_fails(
+    hass: HomeAssistant, side_effect: type[Exception], reason: str
+) -> None:
     """Test migrate entry fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -266,6 +280,7 @@ async def test_migrate_entry_fails(hass: HomeAssistant, side_effect: Exception) 
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == reason
 
 
 async def test_migrate_entry_fails_multiple_stations(
@@ -295,3 +310,7 @@ async def test_migrate_entry_fails_multiple_stations(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "Could not migrate the configuration as more than one train station was"
+        " found for Stockholm C or Uppsala C"
+    )

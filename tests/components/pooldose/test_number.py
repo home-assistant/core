@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pooldose.request_status import RequestStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
@@ -14,8 +19,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -122,7 +125,7 @@ async def test_actions_cannot_connect_number(
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """When the client write method raises, ServiceValidationError('cannot_connect') is raised."""
+    """Test ServiceValidationError on client write failure."""
     client = mock_pooldose_client
     entity_id = "number.pool_device_ph_target"
     before = hass.states.get(entity_id)
@@ -150,7 +153,7 @@ async def test_actions_write_rejected_number(
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """When the client write method returns False, ServiceValidationError('write_rejected') is raised."""
+    """Test ServiceValidationError when write is rejected."""
     client = mock_pooldose_client
     entity_id = "number.pool_device_ph_target"
     before = hass.states.get(entity_id)

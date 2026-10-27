@@ -1,9 +1,7 @@
 """Support for Fibaro lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -21,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 PARALLEL_UPDATES = 2
@@ -56,7 +54,10 @@ async def async_setup_entry(
     """Perform the setup for Fibaro controller devices."""
     controller = entry.runtime_data
     async_add_entities(
-        [FibaroLight(device) for device in controller.fibaro_devices[Platform.LIGHT]],
+        [
+            FibaroLight(device, controller)
+            for device in controller.fibaro_devices[Platform.LIGHT]
+        ],
         True,
     )
 
@@ -64,27 +65,32 @@ async def async_setup_entry(
 class FibaroLight(FibaroEntity, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the light."""
         supports_color = (
             "color" in fibaro_device.properties
             or "colorComponents" in fibaro_device.properties
-            or "RGB" in fibaro_device.type
-            or "rgb" in fibaro_device.type
-            or "color" in fibaro_device.base_type
+            or "RGB" in (fibaro_device.type or "")
+            or "rgb" in (fibaro_device.type or "")
+            or "color" in (fibaro_device.base_type or "")
         ) and (
             "setColor" in fibaro_device.actions
             or "setColorComponents" in fibaro_device.actions
         )
         supports_white_v = (
             "setW" in fibaro_device.actions
-            or "RGBW" in fibaro_device.type
-            or "rgbw" in fibaro_device.type
+            or "RGBW" in (fibaro_device.type or "")
+            or "rgbw" in (fibaro_device.type or "")
         )
-        supports_dimming = (
-            fibaro_device.has_interface("levelChange")
-            or fibaro_device.type == "com.fibaro.multilevelSwitch"
-        ) and "setValue" in fibaro_device.actions
+        supports_dimming = fibaro_device.has_interface("levelChange") or (
+            (
+                fibaro_device.base_type == "com.fibaro.multilevelSwitch"
+                or fibaro_device.type == "com.fibaro.multilevelSwitch"
+            )
+            and "setValue" in fibaro_device.actions
+        )
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -99,9 +105,10 @@ class FibaroLight(FibaroEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
 
-        super().__init__(fibaro_device)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -126,10 +133,12 @@ class FibaroLight(FibaroEntity, LightEntity):
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self.call_turn_off()
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()

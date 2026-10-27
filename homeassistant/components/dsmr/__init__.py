@@ -1,7 +1,5 @@
 """The dsmr component."""
 
-from __future__ import annotations
-
 from asyncio import CancelledError, Task
 from contextlib import suppress
 from dataclasses import dataclass
@@ -27,7 +25,7 @@ class DsmrState:
 type DsmrConfigEntry = ConfigEntry[DsmrState]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> None:
     """Set up DSMR from a config entry."""
 
     @callback
@@ -43,10 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> None:
     """Unload a config entry."""
 
     # Cancel the reconnect task
@@ -55,7 +51,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: DsmrConfigEntry) -> boo
         with suppress(CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(hass: HomeAssistant, entry: DsmrConfigEntry) -> None:

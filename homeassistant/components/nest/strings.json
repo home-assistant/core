@@ -5,19 +5,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "pubsub_api_error": "[%key:component::nest::config::error::pubsub_api_error%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]"
     },
     "create_entry": {
@@ -88,7 +79,7 @@
         "title": "Configure Cloud Pub/Sub topic"
       },
       "pubsub_topic_confirm": {
-        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`\n4. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
+        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. If *Events* are already enabled with a different topic, disable them first.\n4. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`.\n5. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "submit": "Confirm",
         "title": "Enable events"
       },
@@ -113,13 +104,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "doorbell_chime": "[%key:component::nest::entity::event::chime::name%]"
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
             }
           }
         }
       },
       "motion": {
-        "name": "[%key:component::event::entity_component::motion::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -130,26 +120,44 @@
           }
         }
       }
+    },
+    "sensor": {
+      "fan_timer_timeout": {
+        "name": "Fan timer timeout"
+      }
     }
   },
   "exceptions": {
-    "auth_client_error": {
-      "message": "Client error during authentication, please check your network connection."
-    },
-    "auth_server_error": {
-      "message": "Error response from authentication server, please see logs for details."
-    },
     "device_api_error": {
       "message": "Error communicating with the Device Access API, please see logs for details."
     },
+    "legacy_entry": {
+      "message": "This config entry uses the legacy Nest API and will be removed"
+    },
     "reauth_required": {
       "message": "Reauthentication is required, please follow the instructions in the UI to reauthenticate your account."
+    },
+    "subscriber_configuration_error": {
+      "message": "Configuration error in the Nest subscriber"
+    },
+    "subscriber_create_failed": {
+      "message": "Failed to create the Nest subscriber"
     },
     "subscriber_error": {
       "message": "Subscriber failed to connect to Google, please see logs for details."
     },
     "subscriber_timeout": {
       "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and IPv6 configuration if applicable."
+    }
+  },
+  "issues": {
+    "legacy_pubsub_topic": {
+      "description": "The Nest integration entry **{entry_title}** receives device events from a Google-hosted Pub/Sub topic. Google stops publishing events to Google-hosted topics on November 30, 2026. After that date, Home Assistant no longer receives realtime updates, camera events, or doorbell presses for this entry.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure**. Home Assistant will create a Pub/Sub topic in your Google Cloud project and guide you through updating the Device Access Console.",
+      "title": "Nest Pub/Sub topic must be migrated"
+    },
+    "pubsub_subscription_not_found": {
+      "description": "The Nest integration entry **{entry_title}** could not connect to its Pub/Sub subscription. The subscription or its topic may have been deleted or misconfigured.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure** to select or create a Pub/Sub topic and subscription.",
+      "title": "Nest Pub/Sub subscription not found"
     }
   },
   "selector": {
@@ -162,6 +170,18 @@
       "options": {
         "create_new_topic": "Create new topic"
       }
+    }
+  },
+  "services": {
+    "set_fan_timer": {
+      "description": "Sets the fan to run for a specific duration.",
+      "fields": {
+        "duration": {
+          "description": "The duration the fan should run for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Set fan timer"
     }
   }
 }

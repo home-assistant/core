@@ -12,25 +12,13 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components import mqtt, sensor
-from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfElectricPotential,
-    UnitOfReactiveEnergy,
-    UnitOfReactivePower,
-    UnitOfTemperature,
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -73,18 +61,32 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
+from homeassistant.components import sensor
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfElectricPotential,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
+    UnitOfTemperature,
 )
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
+    DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
 
 
@@ -92,7 +94,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -122,7 +124,39 @@ async def test_setting_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unique_id": "very_unique",
+                    "value_template": "{{ this.entity_id }} {{ value }}",
+                }
+            }
+        }
+    ],
+)
+async def test_value_template_this_after_entity_id_change(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test this in a value template refers to the entity after a rename."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "1")
+    assert hass.states.get("sensor.test").state == "sensor.test 1"
+
+    entity_registry.async_update_entity("sensor.test", new_entity_id="sensor.renamed")
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic", "2")
+
+    assert hass.states.get("sensor.renamed").state == "sensor.renamed 2"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -164,7 +198,7 @@ async def test_setting_enum_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -200,7 +234,7 @@ async def test_handling_undecoded_sensor_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -363,7 +397,7 @@ async def test_setting_sensor_native_value_handling_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -409,7 +443,8 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
     state = hass.states.get("sensor.test")
     assert state.state == "21"
 
-    # omitting value, causing it to be ignored, native sensor value should not change (template warning will be logged though)
+    # omitting value, causing it to be ignored, native sensor value
+    # should not change (template warning will be logged though)
     async_fire_mqtt_message(hass, "test-topic", '{ "current": 5.34 }')
     state = hass.states.get("sensor.test")
     assert state.state == "21"
@@ -419,7 +454,7 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -453,7 +488,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -549,7 +584,7 @@ async def expires_helper(hass: HomeAssistant) -> None:
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -581,11 +616,13 @@ async def test_setting_sensor_value_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
+                    "value_template": (
+                        "{{ value_json.val | is_defined }}-{{ value_json.par }}"
+                    ),
                 }
             }
         }
@@ -614,7 +651,7 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_class": "total",
@@ -664,14 +701,18 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_class": "total",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",
-                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
+                    "last_reset_value_template": (
+                        "{{ utcnow().fromtimestamp("
+                        "value_json.time / 1000,"
+                        " tz=utcnow().tzinfo) }}"
+                    ),
                 },
             }
         },
@@ -698,7 +739,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -735,7 +776,7 @@ async def test_force_update_disabled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -858,7 +899,7 @@ async def test_discovery_update_availability(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -880,7 +921,7 @@ async def test_invalid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -905,7 +946,7 @@ async def test_invalid_unit_of_measurement(
     )
     # A repair issue was logged for the failing YAML config
     assert len(events) == 1
-    assert events[0].data["domain"] == mqtt.DOMAIN
+    assert events[0].data["domain"] == DOMAIN
     # Assert the sensor is not created
     state = hass.states.get("sensor.test")
     assert state is None
@@ -916,7 +957,7 @@ async def test_invalid_unit_of_measurement(
     [
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -932,7 +973,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -948,7 +989,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -964,7 +1005,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -980,7 +1021,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -996,7 +1037,7 @@ async def test_invalid_unit_of_measurement(
         ),
         pytest.param(
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1054,7 +1095,7 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1108,7 +1149,7 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1154,7 +1195,7 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
 async def test_valid_device_class_and_uom(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test device_class option with valid values and test with an empty unit of measurement."""
+    """Test device_class with valid values and empty unit."""
     await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test_1")
@@ -1184,7 +1225,7 @@ async def test_valid_device_class_and_uom(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1206,7 +1247,7 @@ async def test_invalid_state_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1223,8 +1264,8 @@ async def test_invalid_state_class_with_unit_of_measurement(
     """Test state_class option with invalid unit of measurement."""
     assert await mqtt_mock_entry()
     assert (
-        "The unit of measurement 'deg' is not valid together with state class 'measurement_angle'"
-        in caplog.text
+        "The unit of measurement 'deg' is not valid together"
+        " with state class 'measurement_angle'" in caplog.text
     )
 
 
@@ -1233,7 +1274,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1247,7 +1288,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1261,7 +1302,7 @@ async def test_invalid_state_class_with_unit_of_measurement(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     sensor.DOMAIN: {
                         "name": "test",
                         "state_topic": "test-topic",
@@ -1287,7 +1328,7 @@ async def test_invalid_options_config(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1395,7 +1436,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1534,6 +1575,44 @@ async def test_entity_device_info_with_identifier(
     )
 
 
+async def test_discovery_with_removed_via_hub_option(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test discovery of a sensor with the removed via_hub device option."""
+    await mqtt_mock_entry()
+    data = json.dumps(
+        {
+            "name": "test",
+            "state_topic": "test-topic",
+            "unique_id": "veryunique",
+            "device": {
+                "identifiers": ["helloworld"],
+                "name": "Hello World",
+                "via_hub": "hub-id",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique")
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "helloworld"), entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "hub-id"), entry_id)
+        is None
+    )
+    assert "The 'via_hub' option has been removed" in caplog.text
+
+
 async def test_entity_device_info_update(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -1577,10 +1656,9 @@ async def test_entity_device_info_with_hub(
 ) -> None:
     """Test MQTT sensor device registry integration."""
     await mqtt_mock_entry()
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     hub = device_registry.async_get_or_create(
-        config_entry_id=other_config_entry.entry_id,
+        config_entry_id=mqtt_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",
@@ -1598,7 +1676,9 @@ async def test_entity_device_info_with_hub(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), mqtt_config_entry.entry_id
+    )
     assert device is not None
     assert device.via_device_id == hub.id
 
@@ -1671,7 +1751,7 @@ async def test_entity_category(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -1708,7 +1788,6 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -1832,7 +1911,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         sensor.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][sensor.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][sensor.DOMAIN],
         topic,
         value,
         attribute,
@@ -1964,8 +2043,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 
@@ -2009,20 +2088,94 @@ async def test_value_incorrect_state_class_config(
     caplog: pytest.LogCaptureFixture,
     hass_config: ConfigType,
 ) -> None:
-    """Test a sensor config with incorrect state_class config fails from yaml or discovery."""
+    """Test incorrect state_class config fails from yaml or discovery."""
     await mqtt_mock_entry()
     assert (
-        "The option `last_reset_value_template` cannot be used together with state class"
-        in caplog.text
+        "The option `last_reset_value_template` cannot be used"
+        " together with state class" in caplog.text
     )
     caplog.clear()
 
-    config_payload = hass_config[mqtt.DOMAIN][sensor.DOMAIN][0]
+    config_payload = hass_config[DOMAIN][sensor.DOMAIN][0]
     async_fire_mqtt_message(
         hass, "homeassistant/sensor/bla/config", json.dumps(config_payload)
     )
     await hass.async_block_till_done()
     assert (
-        "The option `last_reset_value_template` cannot be used together with state class"
-        in caplog.text
+        "The option `last_reset_value_template` cannot be used"
+        " together with state class" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        }
+    ],
+)
+async def test_unsupported_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test `config` entity category is rejected for this read-only platform."""
+    assert await mqtt_mock_entry()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert hass.states.get("sensor.test") is None
+
+
+async def test_unsupported_entity_category_discovery(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a discovered `config` entity category is rejected."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert (
+        entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique") is None
+    )
+
+
+async def test_unsupported_entity_category_discovery_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unsupported entity category is rejected on a discovery update."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic", "unique_id": "veryunique"}',
+    )
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique")
+    assert entity_id is not None
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert entity_registry.async_get(entity_id).entity_category is None

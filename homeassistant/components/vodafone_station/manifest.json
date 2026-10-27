@@ -1,6 +1,7 @@
 {
   "domain": "vodafone_station",
   "name": "Vodafone Station",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@paoloantinori", "@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vodafone_station",
@@ -8,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["aiovodafone"],
   "quality_scale": "platinum",
-  "requirements": ["aiovodafone==3.1.3"]
+  "requirements": ["aiovodafone==3.3.5"]
 }

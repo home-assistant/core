@@ -1,7 +1,5 @@
 """Helper methods for various modules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
@@ -64,7 +62,7 @@ def convert[_T, _U](
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
-    except ValueError, TypeError:
+    except ValueError, TypeError, OverflowError:
         # If value could not be converted
         return default
 
@@ -102,7 +100,8 @@ def snakecase(text: str) -> str:
     """Convert a string to snake_case."""
     text = re.sub(r"[\s.-]", "_", text)
     if not text.isupper():
-        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        # Underscore before last uppercase of groups of 2+
+        # uppercase ("HTTPResponse", "IPAddress")
         text = re.sub(
             r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
         )
@@ -149,9 +148,6 @@ class Throttle:
             def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
 
-        if self.limit_no_throttle is not None:
-            method = Throttle(self.limit_no_throttle)(method)
-
         # Different methods that can be passed in:
         #  - a function
         #  - an unbound function on a class
@@ -190,11 +186,17 @@ class Throttle:
             if not throttle[0].acquire(False):
                 return throttled_value()
 
-            # Check if method is never called or no_throttle is given
-            force = kwargs.pop("no_throttle", False) or not throttle[1]
+            no_throttle = kwargs.pop("no_throttle", False)
 
             try:
-                if force or utcnow() - throttle[1] > self.min_time:
+                # limit_no_throttle always applies, min_time only without no_throttle
+                if not throttle[1] or (
+                    (no_throttle or utcnow() - throttle[1] > self.min_time)
+                    and (
+                        self.limit_no_throttle is None
+                        or utcnow() - throttle[1] > self.limit_no_throttle
+                    )
+                ):
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
                     return result  # type: ignore[no-any-return]

@@ -1,9 +1,10 @@
 """Test the Roku config flow."""
 
 import dataclasses
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rokuecp import Device as RokuDevice, RokuConnectionError
 
 from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
@@ -24,9 +25,8 @@ from . import (
     MOCK_SSDP_DISCOVERY_INFO,
     NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
+    UPNP_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 RECONFIGURE_HOST = "192.168.1.190"
 
@@ -64,11 +64,8 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_form(
-    hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form(hass: HomeAssistant, mock_roku_config_flow: MagicMock) -> None:
     """Test the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -92,6 +89,7 @@ async def test_form(
     assert result["result"].unique_id == "1GU48T017973"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
@@ -108,6 +106,13 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_roku_config_flow.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(
@@ -164,10 +169,9 @@ async def test_homekit_unknown_error(
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_homekit_discovery(
-    hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test the homekit discovery flow."""
     discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
@@ -190,6 +194,7 @@ async def test_homekit_discovery(
     assert "data" in result
     assert result["data"][CONF_HOST] == HOMEKIT_HOST
     assert result["data"][CONF_NAME] == NAME_ROKUTV
+    assert result["result"].unique_id == "YN00H5555555"
 
     # test abort on existing host
     discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
@@ -235,10 +240,9 @@ async def test_ssdp_unknown_error(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery(
-    hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
     """Test the SSDP discovery flow."""
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
@@ -261,12 +265,12 @@ async def test_ssdp_discovery(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
+    assert result["result"].unique_id == UPNP_SERIAL
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options config flow."""
     mock_config_entry.add_to_hass(hass)
@@ -305,9 +309,9 @@ async def _start_reconfigure_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_roku_config_flow: MagicMock,
 ) -> None:
@@ -324,10 +328,10 @@ async def test_reconfigure_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unique_id_mismatch(
     hass: HomeAssistant,
     mock_device: RokuDevice,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_roku_config_flow: MagicMock,
 ) -> None:

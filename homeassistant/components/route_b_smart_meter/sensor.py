@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BRouteConfigEntry
 from .const import (
     ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
     ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
@@ -25,7 +24,7 @@ from .const import (
     ATTR_API_TOTAL_CONSUMPTION,
     DOMAIN,
 )
-from .coordinator import BRouteData, BRouteUpdateCoordinator
+from .coordinator import BRouteConfigEntry, BRouteData, BRouteUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,15 +69,6 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
-_DEVICE_INFO_MAPPING: dict[
-    Literal["manufacturer", "serial_number", "sw_version"],
-    Callable[[BRouteUpdateCoordinator], str | None],
-] = {
-    "manufacturer": lambda coordinator: coordinator.device_info_data.manufacturer_code,
-    "serial_number": lambda coordinator: coordinator.device_info_data.serial_number,
-    "sw_version": lambda coordinator: coordinator.device_info_data.echonet_version,
-}
-
 
 def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
     """Build device information from coordinator data."""
@@ -86,9 +76,13 @@ def _build_device_info(coordinator: BRouteUpdateCoordinator) -> DeviceInfo:
         identifiers={(DOMAIN, coordinator.bid)},
         name=f"Route B Smart Meter {coordinator.bid}",
     )
-    for key, fn in _DEVICE_INFO_MAPPING.items():
-        if (value := fn(coordinator)) is not None:
-            device[key] = value
+    data = coordinator.device_info_data
+    if data.manufacturer_code is not None:
+        device.manufacturer = data.manufacturer_code
+    if data.serial_number is not None:
+        device.serial_number = data.serial_number
+    if data.echonet_version is not None:
+        device.sw_version = data.echonet_version
     return device
 
 
@@ -123,6 +117,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
         self._attr_device_info = _build_device_info(coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_accessor(self.coordinator.data)

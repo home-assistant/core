@@ -2,6 +2,7 @@
   "domain": "knx",
   "name": "KNX",
   "after_dependencies": ["panel_custom"],
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "config_flow": true,
   "dependencies": ["file_upload", "http", "websocket_api"],
@@ -11,9 +12,10 @@
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==3.15.0",
-    "xknxproject==3.8.2",
-    "knx-frontend==2026.3.28.223133"
+    "xknx==4.0.0",
+    "xknxproject==3.10.0",
+    "knx-frontend==2026.10.5.160528",
+    "knx-telegram-store[sqlite,postgres]==0.15.2"
   ],
   "single_config_entry": true
 }

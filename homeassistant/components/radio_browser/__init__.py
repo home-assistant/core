@@ -1,8 +1,5 @@
 """The Radio Browser integration."""
 
-from __future__ import annotations
-
-from aiodns.error import DNSError
 from radios import RadioBrowser, RadioBrowserError
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,12 +8,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
+
 type RadioBrowserConfigEntry = ConfigEntry[RadioBrowser]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RadioBrowserConfigEntry
-) -> bool:
+) -> None:
     """Set up Radio Browser from a config entry.
 
     This integration doesn't set up any entities, as it provides a media source
@@ -27,13 +26,16 @@ async def async_setup_entry(
 
     try:
         await radios.stats()
-    except (DNSError, RadioBrowserError) as err:
-        raise ConfigEntryNotReady("Could not connect to Radio Browser API") from err
+    except RadioBrowserError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     entry.runtime_data = radios
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RadioBrowserConfigEntry
+) -> None:
     """Unload a config entry."""
-    return True

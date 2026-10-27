@@ -1,10 +1,14 @@
 {
   "domain": "rflink",
   "name": "RFLink",
+  "categories": [
+    "hubs_protocols.wireless_protocols",
+    "diy_makers.boards_hardware"
+  ],
   "codeowners": ["@javicalle"],
   "documentation": "https://www.home-assistant.io/integrations/rflink",
   "iot_class": "assumed_state",
   "loggers": ["rflink"],
   "quality_scale": "legacy",
-  "requirements": ["rflink==0.0.67"]
+  "requirements": ["rflink==0.0.68"]
 }

@@ -1,10 +1,8 @@
 """Component providing support for Reolink light entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import Host
 from reolink_aio.const import MAX_COLOR_TEMP, MIN_COLOR_TEMP
@@ -77,6 +75,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="status_led",
         cmd_key="GetPowerLed",
+        cmd_id=208,
         translation_key="status_led",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "power_led"),
@@ -152,11 +151,13 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self.entity_description.is_on_fn(self._host.api, self._channel)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1.255."""
         assert self.entity_description.get_brightness_fn is not None
@@ -170,6 +171,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         return color_util.value_to_brightness((1, 100), bright_pct)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of this light in kelvin."""
         assert self.entity_description.get_color_temp_fn is not None
@@ -177,6 +179,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         return self.entity_description.get_color_temp_fn(self._host.api, self._channel)
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.entity_description.turn_on_off_fn(
@@ -185,6 +188,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
@@ -225,17 +229,20 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
         super().__init__(reolink_data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self.entity_description.is_on_fn(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.entity_description.turn_on_off_fn(self._host.api, False)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         await self.entity_description.turn_on_off_fn(self._host.api, True)

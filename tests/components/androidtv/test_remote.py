@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 
 from androidtv.constants import KEYS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv.const import (
     CONF_TURN_OFF_COMMAND,
@@ -32,8 +33,6 @@ from .common import (
     SHELL_RESPONSE_STANDBY,
     setup_mock_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _setup(config: dict[str, Any]) -> tuple[str, str, MockConfigEntry]:
@@ -138,7 +137,7 @@ async def test_services_remote_custom(hass: HomeAssistant, config) -> None:
 
 
 async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
-    """Test sending a command via the send_command remote service that raises a UnicodeDecodeError exception."""
+    """Test send_command remote service raising UnicodeDecodeError."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     response = b"test response"

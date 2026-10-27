@@ -1,10 +1,8 @@
 """YoLink Valve."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import (
@@ -22,13 +20,12 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -65,6 +62,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
             device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
             and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007)
         ),
+        should_update_entity=lambda value: value is not None,
     ),
     YoLinkValveEntityDescription(
         key="valve_1_state",
@@ -74,6 +72,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        should_update_entity=lambda value: value is not None,
         channel_index=0,
     ),
     YoLinkValveEntityDescription(
@@ -84,6 +83,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        should_update_entity=lambda value: value is not None,
         channel_index=1,
     ),
     YoLinkValveEntityDescription(
@@ -109,11 +109,11 @@ DEVICE_TYPE = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink valve from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     valve_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -134,7 +134,7 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkValveEntityDescription,
     ) -> None:
@@ -149,6 +149,7 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
         if (
@@ -197,15 +198,18 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         self._attr_is_closed = state == "close"
         self.async_write_ha_state()
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._async_invoke_device("open")
 
+    @override
     async def async_close_valve(self) -> None:
         """Close valve."""
         await self._async_invoke_device("close")
 
     @property
+    @override
     def available(self) -> bool:
         """Return true is device is available."""
         return self._attr_available and super().available

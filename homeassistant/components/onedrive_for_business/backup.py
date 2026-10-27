@@ -1,12 +1,10 @@
 """Support for OneDrive backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
@@ -18,6 +16,7 @@ from onedrive_personal_sdk.exceptions import (
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
@@ -28,16 +27,18 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import json_loads_object
 
-from . import OneDriveConfigEntry
 from .const import CONF_FOLDER_ID, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 10
 
 
 async def async_get_backup_agents(
@@ -83,7 +84,10 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
             self._entry.async_start_reauth(self._hass)
-            raise BackupAgentError("Authentication error") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_authentication_failed",
+            ) from err
         except OneDriveException as err:
             _LOGGER.error(
                 "Error during backup in %s:, message %s",
@@ -91,13 +95,19 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
-            raise BackupAgentError("Backup operation failed") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
+            ) from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
             )
-            raise BackupAgentError("Backup operation timed out") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_timed_out",
+            ) from err
 
     return wrapper
 
@@ -128,6 +138,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
@@ -141,6 +152,7 @@ class OneDriveBackupAgent(BackupAgent):
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -180,12 +192,14 @@ class OneDriveBackupAgent(BackupAgent):
             )
         except HashMismatchError as err:
             raise BackupAgentError(
-                "Hash validation failed, backup file might be corrupt"
+                translation_domain=DOMAIN,
+                translation_key="hash_mismatch",
             ) from err
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
 
-        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        # Store metadata in separate metadata file
+        # (just backup.as_dict(), no extra fields)
         metadata_content = json_dumps(backup.as_dict())
         try:
             await self._client.upload_file(
@@ -207,6 +221,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -223,11 +238,13 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
         return await self._find_backup_by_id(backup_id)
@@ -256,7 +273,7 @@ class OneDriveBackupAgent(BackupAgent):
             item.name for item in items if item.name and item.name.endswith(".tar")
         }
 
-        metadata_files: dict[str, AgentBackup] = {}
+        metadata_item_ids: list[str] = []
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
@@ -268,10 +285,15 @@ class OneDriveBackupAgent(BackupAgent):
                         item.name,
                     )
                     continue
-                if metadata := await _download_metadata(item.id):
-                    metadata_files[metadata.backup_id] = metadata
+                metadata_item_ids.append(item.id)
 
-        self._cache_backup_metadata = metadata_files
+        metadata_contents = await gather_with_limited_concurrency(
+            METADATA_DOWNLOAD_CONCURRENCY,
+            *(_download_metadata(item_id) for item_id in metadata_item_ids),
+        )
+        self._cache_backup_metadata = {
+            metadata.backup_id: metadata for metadata in metadata_contents if metadata
+        }
         self._cache_expiration = time() + CACHE_TTL
         return self._cache_backup_metadata
 
@@ -281,4 +303,8 @@ class OneDriveBackupAgent(BackupAgent):
         if backup := metadata_files.get(backup_id):
             return backup
 
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )

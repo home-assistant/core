@@ -1,9 +1,7 @@
 """Support for TPLink button entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from kasa import Feature
 
@@ -17,7 +15,7 @@ from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry
 from .deprecate import DeprecatedInfo
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
@@ -128,10 +126,12 @@ class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
 
     entity_description: TPLinkButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Execute action."""
         await self._feature.set_value(True)
 
+    @override
     def _async_update_attrs(self) -> bool:
         """No need to update anything."""
         return self.entity_description.available_fn(self._device)

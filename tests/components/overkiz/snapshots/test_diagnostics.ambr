@@ -1,6 +1,8 @@
 # serializer version: 1
 # name: test_device_diagnostics
   dict({
+    'action_groups': list([
+    ]),
     'api_type': 'cloud',
     'device': dict({
       'controllable_name': 'rts:RollerShutterRTSComponent',
@@ -970,6 +972,8 @@
 # ---
 # name: test_diagnostics
   dict({
+    'action_groups': list([
+    ]),
     'api_type': 'cloud',
     'execution_history': list([
     ]),

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '78d1126fc4c743db81b61c20e88342a7')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.cv_pomp_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'CV Pomp Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CV Pomp Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cv_pomp_relay',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'a28f588dc4a049a483fd03a30361ad3a')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -90,7 +90,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.fibaro_hc2_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fibaro HC2 Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fibaro HC2 Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fibaro_hc2_lock',
@@ -108,9 +108,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'a28f588dc4a049a483fd03a30361ad3a')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -140,8 +140,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.fibaro_hc2_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Fibaro HC2 Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fibaro HC2 Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fibaro_hc2_relay',
@@ -159,9 +159,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'cd0ddb54ef694e11ac18ed1cbce5dbbd')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -191,7 +191,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.nas_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NAS Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NAS Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nas_lock',
@@ -209,9 +209,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'cd0ddb54ef694e11ac18ed1cbce5dbbd')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -241,8 +241,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.nas_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'NAS Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NAS Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nas_relay',
@@ -260,9 +260,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '02cf28bfec924855854c544690a609ef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -292,7 +292,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.nvr_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NVR Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NVR Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nvr_lock',
@@ -310,9 +310,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '02cf28bfec924855854c544690a609ef')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -342,8 +342,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.nvr_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'NVR Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NVR Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.nvr_relay',
@@ -361,9 +361,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '21f2b542c49845e6bb416884c55778d6')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -393,7 +393,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.playstation_smart_plug_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Playstation Smart Plug Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Playstation Smart Plug Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.playstation_smart_plug_lock',
@@ -411,9 +411,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '21f2b542c49845e6bb416884c55778d6')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -443,8 +443,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.playstation_smart_plug_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Playstation Smart Plug Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Playstation Smart Plug Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.playstation_smart_plug_relay',
@@ -462,9 +462,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'e8ef2a01ed3b4139a53bf749204fe6b4')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -494,8 +494,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.test_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_relay',
@@ -513,9 +513,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '4a810418d5394b3f82727340b91ba740')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -545,7 +545,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.usg_smart_plug_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'USG Smart Plug Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'USG Smart Plug Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.usg_smart_plug_lock',
@@ -563,9 +563,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '4a810418d5394b3f82727340b91ba740')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -595,8 +595,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.usg_smart_plug_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'USG Smart Plug Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'USG Smart Plug Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.usg_smart_plug_relay',
@@ -614,9 +614,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '675416a629f343c495449970e2ca37b5')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -646,7 +646,7 @@
 # name: test_adam_switch_snapshot[platforms0][switch.ziggo_modem_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ziggo Modem Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ziggo Modem Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ziggo_modem_lock',
@@ -664,9 +664,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '675416a629f343c495449970e2ca37b5')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -696,8 +696,8 @@
 # name: test_adam_switch_snapshot[platforms0][switch.ziggo_modem_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Ziggo Modem Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ziggo Modem Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ziggo_modem_relay',
@@ -715,9 +715,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '5871317346d045bc9f6b987ef25ee638')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -747,7 +747,7 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.boiler_1eb31_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Boiler (1EB31) Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler (1EB31) Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.boiler_1eb31_lock',
@@ -765,9 +765,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '5871317346d045bc9f6b987ef25ee638')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -797,8 +797,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.boiler_1eb31_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Boiler (1EB31) Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Boiler (1EB31) Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.boiler_1eb31_relay',
@@ -816,9 +816,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'cfe95cf3de1948c0b8955125bf754614')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -848,7 +848,7 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.droger_52559_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Droger (52559) Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Droger (52559) Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.droger_52559_lock',
@@ -866,9 +866,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'cfe95cf3de1948c0b8955125bf754614')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -898,8 +898,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.droger_52559_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Droger (52559) Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Droger (52559) Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.droger_52559_relay',
@@ -917,9 +917,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'e1c884e7dede431dadee09506ec4f859')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -949,7 +949,7 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.koelkast_92c4a_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Koelkast (92C4A) Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koelkast (92C4A) Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.koelkast_92c4a_lock',
@@ -967,9 +967,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'e1c884e7dede431dadee09506ec4f859')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -999,8 +999,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.koelkast_92c4a_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Koelkast (92C4A) Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koelkast (92C4A) Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.koelkast_92c4a_relay',
@@ -1018,9 +1018,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'd03738edfcc947f7b8f4573571d90d2d')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -1050,8 +1050,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.schakel_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Schakel Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Schakel Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.schakel_relay',
@@ -1069,9 +1069,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'd950b314e9d8499f968e6db8d82ef78c')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -1101,8 +1101,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.stroomvreters_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Stroomvreters Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stroomvreters Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.stroomvreters_relay',
@@ -1120,9 +1120,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'aac7b735042c4832ac9ff33aae4f453b')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1152,7 +1152,7 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.vaatwasser_2a1ab_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vaatwasser (2a1ab) Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vaatwasser (2a1ab) Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vaatwasser_2a1ab_lock',
@@ -1170,9 +1170,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', 'aac7b735042c4832ac9ff33aae4f453b')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -1202,8 +1202,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.vaatwasser_2a1ab_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Vaatwasser (2a1ab) Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vaatwasser (2a1ab) Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vaatwasser_2a1ab_relay',
@@ -1221,9 +1221,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '059e4d03c7a34d278add5c7a4a781d19')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1253,7 +1253,7 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.wasmachine_52ac1_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wasmachine (52AC1) Lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasmachine (52AC1) Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wasmachine_52ac1_lock',
@@ -1271,9 +1271,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('plugwise', '059e4d03c7a34d278add5c7a4a781d19')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -1303,8 +1303,8 @@
 # name: test_stretch_switch_snapshot[platforms0][switch.wasmachine_52ac1_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Wasmachine (52AC1) Relay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasmachine (52AC1) Relay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wasmachine_52ac1_relay',

@@ -1,11 +1,17 @@
 {
   "domain": "icloud",
   "name": "Apple iCloud",
-  "codeowners": ["@Quentame", "@nzapponi"],
+  "categories": [
+    "presence_location.phones_companion_apps",
+    "productivity_information.calendars_todos",
+    "productivity_information.documents_photos"
+  ],
+  "codeowners": ["@Quentame", "@nzapponi", "@timlaing"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/icloud",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["keyrings.alt", "pyicloud"],
-  "requirements": ["pyicloud==2.4.1"]
+  "requirements": ["pyicloud==2026.10.1"]
 }

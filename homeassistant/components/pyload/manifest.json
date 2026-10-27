@@ -1,6 +1,7 @@
 {
   "domain": "pyload",
   "name": "pyLoad",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pyload",
@@ -8,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyloadapi"],
   "quality_scale": "platinum",
-  "requirements": ["PyLoadAPI==2.0.0"]
+  "requirements": ["PyLoadAPI==2.1.0"]
 }

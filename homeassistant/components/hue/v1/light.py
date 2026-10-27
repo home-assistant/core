@@ -1,13 +1,11 @@
 """Support for the Philips Hue lights."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 import random
-from typing import Any
+from typing import Any, override
 
 import aiohue
 
@@ -31,6 +29,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -315,7 +314,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
@@ -379,6 +378,7 @@ class HueLight(CoordinatorEntity, LightEntity):
                 self.gamut = None
 
     @property
+    @override
     def unique_id(self):
         """Return the unique ID of this Hue light."""
         unique_id = self.light.uniqueid
@@ -393,11 +393,13 @@ class HueLight(CoordinatorEntity, LightEntity):
         return self.unique_id
 
     @property
+    @override
     def name(self):
         """Return the name of the Hue light."""
         return self.light.name
 
     @property
+    @override
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self.is_group:
@@ -411,6 +413,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return hue_brightness_to_hass(bri)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
@@ -431,6 +434,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return self.light.state.get("colormode")
 
     @property
+    @override
     def hs_color(self):
         """Return the hs color value."""
         mode = self._color_mode
@@ -442,6 +446,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         # Don't return color temperature unless in color temperature mode
@@ -454,6 +459,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(ct) if ct else None
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         if self.is_group:
@@ -468,6 +474,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(min_mireds)
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         if self.is_group:
@@ -483,6 +490,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(max_mireds)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if self.is_group:
@@ -490,6 +498,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return self.light.state["on"]
 
     @property
+    @override
     def available(self):
         """Return if light is available."""
         return self.coordinator.last_update_success and (
@@ -497,11 +506,13 @@ class HueLight(CoordinatorEntity, LightEntity):
         )
 
     @property
+    @override
     def effect(self):
         """Return the current effect."""
         return self.light.state.get("effect", None)
 
     @property
+    @override
     def effect_list(self):
         """Return the list of supported effects."""
         if self.is_osram:
@@ -509,6 +520,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
         if self.light.type in (
@@ -534,9 +546,14 @@ class HueLight(CoordinatorEntity, LightEntity):
             name=self.name,
             sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.bridge.hass,
+                (DOMAIN, self.bridge.api.config.bridgeid),
+                config_entry_id=self.bridge.config_entry.entry_id,
+            ),
         )
 
+    @override
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {"on": True}
@@ -597,6 +614,7 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         command = {"on": False}
@@ -623,6 +641,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self.is_group:

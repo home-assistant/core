@@ -11,6 +11,12 @@ core: &core
   - requirements.txt
   - setup.cfg
 
+# Performance benchmark suite (CodSpeed). Only gates the benchmark job; kept out
+# of the `any` aggregate below so it does not pull in the full test suite.
+benchmarks: &benchmarks
+  - benchmarks/**
+  - requirements_test.txt
+
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
   - homeassistant/components/ai_task/**
@@ -36,6 +42,7 @@ base_platforms: &base_platforms
   - homeassistant/components/image_processing/**
   - homeassistant/components/infrared/**
   - homeassistant/components/lawn_mower/**
+  - homeassistant/components/radio_frequency/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
   - homeassistant/components/media_player/**
@@ -94,6 +101,7 @@ components: &components
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
   - homeassistant/components/labs/**
+  - homeassistant/components/llm/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**
@@ -128,7 +136,8 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
-  - pylint/**
+  - packages/pylint-home-assistant/**
+  - packages/pytest-home-assistant/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/*.py

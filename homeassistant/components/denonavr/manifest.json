@@ -1,13 +1,14 @@
 {
   "domain": "denonavr",
   "name": "Denon AVR Network Receivers",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@ol-iver", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["denonavr"],
-  "requirements": ["denonavr==1.3.2"],
+  "requirements": ["denonavr==1.3.3"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",

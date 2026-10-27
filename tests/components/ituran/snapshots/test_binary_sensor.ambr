@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ituran', '12345678')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_ev_binary_sensor[True][binary_sensor.mock_model_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'mock model Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_model_charging',

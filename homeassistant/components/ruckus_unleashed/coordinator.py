@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioruckus import AjaxSession
 from aioruckus.exceptions import AuthenticationError, SchemaError
@@ -13,16 +14,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import API_CLIENT_MAC, DOMAIN, KEY_SYS_CLIENTS, SCAN_INTERVAL
 
+type RuckusUnleashedConfigEntry = ConfigEntry[RuckusDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__package__)
 
 
 class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator to manage data from Ruckus client."""
 
-    config_entry: ConfigEntry
+    config_entry: RuckusUnleashedConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, ruckus: AjaxSession
+        self,
+        hass: HomeAssistant,
+        config_entry: RuckusUnleashedConfigEntry,
+        ruckus: AjaxSession,
     ) -> None:
         """Initialize global Ruckus data updater."""
         self.ruckus = ruckus
@@ -41,6 +47,13 @@ class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("fetched %d active clients", len(clients))
         return {client[API_CLIENT_MAC]: client for client in clients}
 
+    @override
+    async def async_shutdown(self) -> None:
+        """Close the Ruckus session on shutdown."""
+        await super().async_shutdown()
+        await self.ruckus.close()
+
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch Ruckus data."""
         try:

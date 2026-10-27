@@ -1,11 +1,9 @@
 """Sensor support for Melnor Bluetooth water timer."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -23,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
@@ -110,16 +109,16 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Device-level sensors
-    async_add_entities(
+    entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = [
         MelnorSensorEntity(
             coordinator,
             description,
         )
         for description in DEVICE_ENTITY_DESCRIPTIONS
-    )
+    ]
 
     # Valve/Zone-level sensors
-    async_add_entities(
+    entities.extend(
         get_entities_for_valves(
             coordinator,
             ZONE_ENTITY_DESCRIPTIONS,
@@ -128,6 +127,8 @@ async def async_setup_entry(
             ),
         )
     )
+
+    async_add_entities(entities)
 
 
 class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
@@ -148,6 +149,7 @@ class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._device)
@@ -168,6 +170,7 @@ class MelnorZoneSensorEntity(MelnorZoneEntity, SensorEntity):
         super().__init__(coordinator, entity_description, valve)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._valve)

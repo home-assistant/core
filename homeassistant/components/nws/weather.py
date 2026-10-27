@@ -1,12 +1,9 @@
 """Support for NWS weather service."""
 
-from __future__ import annotations
-
-from collections.abc import Mapping
 from functools import partial
-from typing import Any, Required, TypedDict, cast
+from typing import Any, Required, TypedDict, cast, override
 
-import voluptuous as vol
+from pynws import SimpleNWS
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -25,32 +22,28 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import NWSConfigEntry, NWSData, base_unique_id, device_info
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info, get_base_unique_id
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTR_FORECAST_SHORT_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
+    CONF_LOCATION_ENTITY,
     DAYNIGHT,
     DOMAIN,
     FORECAST_VALID_TIME,
@@ -95,24 +88,17 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     nws_data = entry.runtime_data
 
-    # Remove hourly entity from legacy config entries
-    if entity_id := entity_registry.async_get_entity_id(
-        WEATHER_DOMAIN,
-        DOMAIN,
-        _calculate_unique_id(entry.data, HOURLY),
+    # Remove hourly entity from legacy config entries (location-based only)
+    if not entry.data.get(CONF_LOCATION_ENTITY) and (
+        entity_id := entity_registry.async_get_entity_id(
+            WEATHER_DOMAIN,
+            DOMAIN,
+            f"{base_unique_id(**entry.data[CONF_LOCATION])}_{HOURLY}",
+        )
     ):
         entity_registry.async_remove(entity_id)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "get_forecasts_extra",
-        {vol.Required("type"): vol.In(("hourly", "twice_daily"))},
-        "async_get_forecasts_extra_service",
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    async_add_entities([NWSWeather(entry.data, nws_data)], False)
+    async_add_entities([NWSWeather(entry, nws_data)], False)
 
 
 class ExtraForecast(TypedDict, total=False):
@@ -124,13 +110,6 @@ class ExtraForecast(TypedDict, total=False):
     # extra attributes
     detailed_description: str | None
     short_description: str | None
-
-
-def _calculate_unique_id(entry_data: Mapping[str, Any], mode: str) -> str:
-    """Calculate unique ID."""
-    latitude = entry_data[CONF_LATITUDE]
-    longitude = entry_data[CONF_LONGITUDE]
-    return f"{base_unique_id(latitude, longitude)}_{mode}"
 
 
 class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
@@ -148,7 +127,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
     def __init__(
         self,
-        entry_data: Mapping[str, Any],
+        entry: ConfigEntry,
         nws_data: NWSData,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
@@ -159,16 +138,12 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             hourly_forecast_valid=FORECAST_VALID_TIME,
             twice_daily_forecast_valid=FORECAST_VALID_TIME,
         )
-        self.nws = nws_data.api
-        latitude = entry_data[CONF_LATITUDE]
-        longitude = entry_data[CONF_LONGITUDE]
+        self._nws_data = nws_data
 
-        self.station = self.nws.station
+        self._attr_unique_id = f"{get_base_unique_id(entry)}_{DAYNIGHT}"
+        self._attr_device_info = device_info(entry, nws_data)
 
-        self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
-        self._attr_device_info = device_info(latitude, longitude)
-        self._attr_name = self.station
-
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -184,6 +159,18 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             )
 
     @property
+    def nws(self) -> SimpleNWS:
+        """Return the current SimpleNWS API instance."""
+        return self._nws_data.api
+
+    @property
+    @override
+    def name(self) -> str:
+        """Return the station name."""
+        return self.nws.station
+
+    @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if observation := self.nws.observation:
@@ -191,6 +178,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_pressure(self) -> int | None:
         """Return the current pressure."""
         if observation := self.nws.observation:
@@ -198,6 +186,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if observation := self.nws.observation:
@@ -205,6 +194,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if observation := self.nws.observation:
@@ -212,6 +202,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return the current wind bearing (degrees)."""
         if observation := self.nws.observation:
@@ -219,6 +210,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return current condition."""
         weather = None
@@ -231,6 +223,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_visibility(self) -> int | None:
         """Return visibility."""
         if observation := self.nws.observation:
@@ -318,15 +311,18 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return forecast
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(self.nws.forecast_hourly, HOURLY)
 
     @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return self._forecast(self.nws.forecast, DAYNIGHT)
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 

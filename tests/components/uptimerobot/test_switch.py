@@ -3,11 +3,9 @@
 from unittest.mock import patch
 
 import pytest
-from pyuptimerobot import (
-    API_PATH_MONITOR_DETAIL,
-    UptimeRobotAuthenticationException,
-    UptimeRobotException,
-)
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
+from pyuptimerobot.const import API_PATH_MONITOR_DETAIL
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
@@ -31,8 +29,6 @@ from .common import (
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
@@ -58,7 +54,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
             ),
         ),
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_pause_monitor",
             return_value=mock_uptimerobot_api_response(
                 api_path=API_PATH_MONITOR_DETAIL, data=MOCK_UPTIMEROBOT_MONITOR_PAUSED
             ),
@@ -90,7 +86,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
             return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
         ),
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_start_monitor",
             return_value=mock_uptimerobot_api_response(
                 api_path=API_PATH_MONITOR_DETAIL,
                 data=MOCK_UPTIMEROBOT_MONITOR,
@@ -122,7 +118,7 @@ async def test_authentication_error(
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_start_monitor",
             side_effect=UptimeRobotAuthenticationException,
         ),
         patch(
@@ -148,7 +144,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_start_monitor",
             side_effect=UptimeRobotException,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
@@ -161,7 +157,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
         )
 
     assert exc_info.value.translation_domain == "uptimerobot"
-    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_key == "api_switch_exception"
     assert exc_info.value.translation_placeholders == {
         "error": "Generic UptimeRobot exception"
     }
@@ -176,7 +172,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            "pyuptimerobot.UptimeRobot.async_pause_monitor",
             side_effect=UptimeRobotException,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
@@ -189,7 +185,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
         )
 
     assert exc_info.value.translation_domain == "uptimerobot"
-    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_key == "api_switch_exception"
     assert exc_info.value.translation_placeholders == {
         "error": "Generic UptimeRobot exception"
     }

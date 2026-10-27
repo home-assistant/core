@@ -1,8 +1,6 @@
 """Support for interacting with Snapcast clients."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -41,6 +39,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_LATENCY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_LATENCY): cv.positive_int},
+        schema={probatio.Required(ATTR_LATENCY): cv.positive_int},
         func="async_set_latency",
     )

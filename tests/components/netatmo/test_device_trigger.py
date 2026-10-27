@@ -1,6 +1,11 @@
 """The tests for Netatmo device triggers."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -17,12 +22,6 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
 
 
 @pytest.mark.parametrize(
@@ -146,7 +145,9 @@ async def test_if_fires_on_event(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -155,7 +156,9 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -229,7 +232,9 @@ async def test_if_fires_on_event_legacy(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -238,7 +243,9 @@ async def test_if_fires_on_event_legacy(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -310,8 +317,10 @@ async def test_if_fires_on_event_with_subtype(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.event.data.data.mode}} - "
-                                "{{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.event.data.data.mode}}"
+                                " - {{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },
@@ -320,7 +329,9 @@ async def test_if_fires_on_event_with_subtype(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
 
     # Fake that the entity is turning on.
@@ -387,7 +398,9 @@ async def test_if_invalid_device(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                                "{{trigger.event.data.type}} - "
+                                "{{trigger.platform}} - "
+                                "{{trigger.event.data.device_id}}"
                             )
                         },
                     },

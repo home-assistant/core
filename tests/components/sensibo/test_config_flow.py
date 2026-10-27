@@ -1,20 +1,17 @@
 """Test the Sensibo config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from pysensibo import AuthenticationError, SensiboData, SensiboError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

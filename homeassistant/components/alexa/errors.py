@@ -1,7 +1,5 @@
 """Alexa related errors."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 from homeassistant.core import HomeAssistant
@@ -124,6 +122,13 @@ class AlexaBridgeUnreachableError(AlexaError):
 
     namespace = "Alexa"
     error_type = "BRIDGE_UNREACHABLE"
+
+
+class AlexaEndpointUnreachableError(AlexaError):
+    """Class to represent EndpointUnreachable errors."""
+
+    namespace = "Alexa"
+    error_type = "ENDPOINT_UNREACHABLE"
 
 
 class AlexaSecurityPanelUnauthorizedError(AlexaError):

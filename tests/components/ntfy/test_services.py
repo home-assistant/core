@@ -8,11 +8,12 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
 from yarl import URL
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
 from homeassistant.components.ntfy.services import (
@@ -24,7 +25,6 @@ from homeassistant.components.ntfy.services import (
     ATTR_DELAY,
     ATTR_EMAIL,
     ATTR_FILENAME,
-    ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
     ATTR_SEQUENCE_ID,
@@ -34,14 +34,13 @@ from homeassistant.components.ntfy.services import (
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, MockConfigEntry, patch
 
-
+@pytest.mark.freeze_time("2026-01-01T23:59:59+00:00")
 async def test_ntfy_publish(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -135,6 +134,10 @@ async def test_ntfy_publish(
         None,
     )
 
+    state = hass.states.get("notify.mytopic")
+    assert state
+    assert state.state == "2026-01-01T23:59:59+00:00"
+
 
 @pytest.mark.parametrize(
     ("exception", "error_msg"),
@@ -201,25 +204,27 @@ async def test_send_message_exception(
             "Delayed email notifications are not supported",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
                 ATTR_ATTACH_FILE: {
-                    "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                    "media_content_id": (
+                        "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                    ),
                     "media_content_type": "video/mp4",
                 },
             },
             "Only one attachment source is allowed: URL or local file",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_FILENAME: "Epic Sax Guy 10 Hours.mp4",
             },
             "Filename only allowed when attachment is provided",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_ACTIONS: [
                     {"action": "broadcast", "label": "1"},
@@ -229,6 +234,11 @@ async def test_send_message_exception(
                 ],
             },
             "Too many actions defined. A maximum of 3 is supported",
+        ),
+        (
+            probatio.MultipleInvalid,
+            {ATTR_ACTIONS: [{"action": "copy", "label": "Copy"}]},
+            r"required key not provided at 'actions\[0\]\.value'",
         ),
     ],
 )
@@ -323,7 +333,9 @@ async def test_ntfy_publish_attachment_upload(
         {
             ATTR_ENTITY_ID: "notify.mytopic",
             ATTR_ATTACH_FILE: {
-                "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                "media_content_id": (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
                 "media_content_type": "video/mp4",
             },
         },
@@ -341,7 +353,7 @@ async def test_ntfy_publish_upload_camera_snapshot(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with camera snapshot upload."""
+    """Test ntfy.publish action with camera snapshot upload."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -350,8 +362,8 @@ async def test_ntfy_publish_upload_camera_snapshot(
     assert config_entry.state is ConfigEntryState.LOADED
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+            "homeassistant.components.ntfy.notify.async_get_media_image",
+            return_value=media_source.MediaImage(b"I play the sax\n", "image/jpeg"),
         ) as mock_get_image,
     ):
         await hass.services.async_call(
@@ -367,7 +379,9 @@ async def test_ntfy_publish_upload_camera_snapshot(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    mock_get_image.assert_called_once_with(
+        hass, "media-source://camera/camera.demo_camera"
+    )
     mock_aiontfy.publish.assert_called_once_with(
         Message(topic="mytopic", filename="Epic Sax Guy 10 Hours.jpg"),
         b"I play the sax\n",
@@ -379,7 +393,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test publishing ntfy message via ntfy.publish action with unsupported media source."""
+    """Test ntfy.publish action with unsupported media source."""
 
     assert await async_setup_component(hass, "tts", {})
     config_entry.add_to_hass(hass)
@@ -391,7 +405,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
         patch(
             "homeassistant.components.ntfy.notify.async_resolve_media",
             return_value=media_source.PlayMedia(
-                url="/api/tts_proxy/WDyphPCh3sAoO3koDY87ew.mp3",
+                url="https://gameclipscontent-d2009.media.xboxlive.com/123456789",
                 mime_type="audio/mpeg",
                 path=None,
             ),
@@ -407,8 +421,8 @@ async def test_ntfy_publish_upload_media_source_not_supported(
             {
                 ATTR_ENTITY_ID: "notify.mytopic",
                 ATTR_ATTACH_FILE: {
-                    "media_content_id": "media-source://tts/demo?message=Hello+world%21&language=en",
-                    "media_content_type": "audio/mp3",
+                    "media_content_id": "media-source://xbox/123456789/",
+                    "media_content_type": "video/mp4",
                 },
             },
             blocking=True,
@@ -428,8 +442,8 @@ async def test_ntfy_publish_upload_media_image_source(
 
     assert config_entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+        "homeassistant.components.ntfy.notify.async_get_media_image",
+        return_value=media_source.MediaImage(b"\x89PNG", "image/jpeg"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
@@ -443,8 +457,42 @@ async def test_ntfy_publish_upload_media_image_source(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_once_with(hass, "media-source://image/image.test")
     mock_aiontfy.publish.assert_called_once_with(Message(topic="mytopic"), b"\x89PNG")
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_ntfy_publish_upload_tts_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test publishing ntfy message with tts source."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.components.tts.async_get_media_source_audio",
+        return_value=("mp3", b"Test"),
+    ) as mock_get_media_source_audio:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PUBLISH,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_ATTACH_FILE: {
+                    "media_content_id": "media-source://tts/demo?message=Test&language=en",
+                    "media_content_type": "audio/mp3",
+                },
+            },
+            blocking=True,
+        )
+    mock_get_media_source_audio.assert_called_once_with(
+        hass, "media-source://tts/demo?message=Test&language=en"
+    )
+    mock_aiontfy.publish.assert_called_once_with(Message(topic="mytopic"), b"Test")
 
 
 async def test_ntfy_clear(

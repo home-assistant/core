@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError, ClientError
+import pytest
 from tesla_fleet_api.exceptions import (
     InvalidRequest,
     InvalidToken,
@@ -9,8 +11,11 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 
@@ -23,13 +28,6 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_runtime_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
-    """Test the runtime vehicle API handle remains optional during migration."""
-
-    entry = await setup_platform(hass)
-    assert all(vehicle.api is None for vehicle in entry.runtime_data.vehicles)
 
 
 async def test_auth_failure(
@@ -83,11 +81,96 @@ async def test_scopes_error(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_vehicle_api_handle_is_optional(hass: HomeAssistant) -> None:
-    """Test runtime vehicle API handle defaults to None during scaffold stage."""
+@pytest.mark.parametrize(
+    ("patch_target", "exception"),
+    [
+        pytest.param(
+            None,
+            ClientConnectionError(),
+            id="list_vehicles-connection_error",
+        ),
+        pytest.param(
+            None,
+            ClientError(),
+            id="list_vehicles-client_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.scopes",
+            ClientConnectionError(),
+            id="scopes-connection_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.scopes",
+            ClientError(),
+            id="scopes-client_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.products",
+            ClientConnectionError(),
+            id="products-connection_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.products",
+            ClientError(),
+            id="products-client_error",
+        ),
+    ],
+)
+async def test_aiohttp_client_error_retries(
+    hass: HomeAssistant,
+    mock_get_state_of_all_vehicles: AsyncMock,
+    patch_target: str | None,
+    exception: ClientError,
+) -> None:
+    """Test that aiohttp.ClientError on any setup call triggers SETUP_RETRY.
 
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-    vehicles = entry.runtime_data.vehicles
-    assert vehicles
-    assert all(vehicle.api is None for vehicle in vehicles)
+    Covers list_vehicles(), scopes(), and products() — all network calls that
+    tesla_fleet_api does not wrap in TeslaFleetError.
+    """
+    if patch_target is None:
+        mock_get_state_of_all_vehicles.side_effect = exception
+        entry = await setup_platform(hass)
+    else:
+        with patch(patch_target, side_effect=exception):
+            entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ClientConnectionError(), id="connection_error"),
+        pytest.param(ClientError(), id="client_error"),
+    ],
+)
+async def test_aiohttp_client_error_on_live_status_retries(
+    hass: HomeAssistant,
+    exception: ClientError,
+) -> None:
+    """Test that aiohttp.ClientError during live_status() triggers SETUP_RETRY."""
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.live_status",
+        side_effect=exception,
+    ):
+        entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wall_connector_via_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that a wall connector device links to its energy site via via_device_id."""
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    energy_site_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), entry.entry_id
+    )
+    assert energy_site_device is not None
+
+    wall_connector_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abd-123"), entry.entry_id
+    )
+    assert wall_connector_device is not None
+    assert wall_connector_device.via_device_id == energy_site_device.id

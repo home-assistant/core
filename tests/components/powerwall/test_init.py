@@ -1,11 +1,13 @@
 """Tests for the PowerwallDataManager."""
 
-import datetime
+import datetime as dt
 from http.cookies import Morsel
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import CookieJar
-from tesla_powerwall import AccessDeniedError, LoginResponse
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from tesla_powerwall import AccessDeniedError, ApiError, LoginResponse
+from tesla_powerwall.error import MissingAttributeError
 
 from homeassistant.components.powerwall.const import (
     AUTH_COOKIE_KEY,
@@ -17,13 +19,15 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .mocks import (
+    MOCK_GATEWAY_DIN,
+    _mock_powerwall_restricted,
+    _mock_powerwall_with_fixtures,
+)
 
 
 async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) -> None:
-    """Test if _update_data of PowerwallDataManager reauthenticates on AccessDeniedError."""
+    """Test PowerwallDataManager reauths on AccessDeniedError."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
     # login responses for the different tests:
@@ -65,7 +69,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
         mock_powerwall.login.reset_mock(return_value=True)
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
         flows = hass.config_entries.flow.async_progress(DOMAIN)
         assert len(flows) == 0
@@ -74,7 +78,7 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
         mock_powerwall.login.side_effect = AccessDeniedError("test")
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
@@ -87,7 +91,8 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) 
 async def test_init_uses_cookie_if_present(hass: HomeAssistant) -> None:
     """Tests if the init will use the auth cookie if present.
 
-    If the cookie is present, the login step will be skipped and info will be fetched directly (see _login_and_fetch_base_info).
+    If the cookie is present, the login step will be skipped and info
+    will be fetched directly (see _login_and_fetch_base_info).
     """
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 
@@ -211,7 +216,7 @@ async def test_retry_ignores_cookie(hass: HomeAssistant) -> None:
 
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
 
         mock_powerwall.login.assert_called_with("somepassword")
@@ -251,7 +256,7 @@ async def test_reauth_ignores_and_clears_cookie(hass: HomeAssistant) -> None:
             AccessDeniedError("test"),
         ]
 
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=1))
         await hass.async_block_till_done()
 
         mock_powerwall.login.assert_called_with("somepassword")
@@ -305,3 +310,92 @@ async def test_init_retries_with_password(hass: HomeAssistant) -> None:
 
         mock_powerwall.login.assert_called_with("somepassword")
         assert mock_powerwall.get_gateway_din.call_count == 2
+
+
+async def test_setup_pw3_restricted(hass: HomeAssistant) -> None:
+    """Test setup completes for a PW3-style restricted gateway."""
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_PASSWORD: "00FFA",
+        },
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    base_info = config_entry.runtime_data["base_info"]
+    assert base_info.restricted is True
+    assert base_info.site_name == "Powerwall 1.2.3.4"
+    assert base_info.gateway_din == "aa:bb:cc:dd:ee:ff"
+    assert base_info.site_info is None
+    assert base_info.status is None
+    assert base_info.serial_numbers == []
+    assert base_info.batteries == {}
+
+    coordinator = config_entry.runtime_data["coordinator"]
+    assert coordinator is not None
+    assert coordinator.data.site_master is None
+    assert coordinator.data.batteries == {}
+    assert coordinator.data.backup_reserve is None
+    # Restricted devices must not call the dead endpoints during updates.
+    mock_powerwall.get_sitemaster.assert_not_called()
+    mock_powerwall.get_backup_reserve_percentage.assert_not_called()
+
+
+async def test_setup_non_404_api_error_propagates(hass: HomeAssistant) -> None:
+    """Non-404 ApiError from get_gateway_din should surface as ConfigEntryNotReady."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    mock_powerwall.get_gateway_din.side_effect = ApiError(
+        "GET request to /api/gateway returned error 500"
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "somepassword"},
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_api_changed(hass: HomeAssistant) -> None:
+    """Test setup fails when the Powerwall API has changed."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+        patch(
+            "homeassistant.components.powerwall._login_and_fetch_base_info",
+            side_effect=MissingAttributeError(Mock(), "din", "operation"),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "The Powerwall API has changed"

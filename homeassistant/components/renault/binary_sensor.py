@@ -1,9 +1,8 @@
 """Support for Renault binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -18,11 +17,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
+from .renault_vehicle import RenaultVehicleProxy
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -54,13 +54,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultBinarySensor] = [
-        RenaultBinarySensor(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in BINARY_SENSOR_TYPES
-        if description.coordinator in vehicle.coordinators
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultBinarySensor(vehicle, description)
+            for description in BINARY_SENSOR_TYPES
+            if description.coordinator in vehicle.coordinators
+        )
+
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultBinarySensor[T: KamereonVehicleDataAttributes](
@@ -71,6 +76,7 @@ class RenaultBinarySensor[T: KamereonVehicleDataAttributes](
     entity_description: RenaultBinarySensorEntityDescription[T]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_lambda(self)
@@ -81,7 +87,7 @@ def _plugged_in_value_lambda(
 ) -> bool | None:
     """Return true if the vehicle is plugged in."""
     if (plug_status := self.coordinator.data.get_plug_status()) is not None:
-        return plug_status == PlugState.PLUGGED
+        return plug_status is PlugState.PLUGGED
 
     if (
         charging_status := self.coordinator.data.get_charging_status()

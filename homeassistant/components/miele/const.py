@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
@@ -174,6 +175,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     disinfecting = 285
     flex_load_active = 11047
     automatic_start = 11044
+    paused = 11052
+    cancelled = 11053
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -372,9 +375,11 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     energy_save = 3084
     pre_heating = 3099
 
-    steam_reduction = 3863
+    steam_reduction = 3863, 7959
     waiting_for_start = 7939
     heating_up_phase = 7940
+    drying = 7961
+    rinse = 7962
 
 
 class ProgramPhaseSteamOvenMicro(MieleEnum, missing_to_none=True):
@@ -461,12 +466,15 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     table_linen = 33
     outerwear = 37
     pillows = 39
+    towels = 44
     cool_air = 45  # washer-dryer
     warm_air = 46  # washer-dryer
     rinse_out_lint = 48  # washer-dryer
+    express = 49
     dark_garments = 50
     separate_rinse_starch = 52
     first_wash = 53, 10053
+    whites = 56
     cottons_hygiene = 69
     steam_care = 75  # washer-dryer
     freshen_up = 76  # washer-dryer
@@ -474,9 +482,12 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     clean_machine = 91, 10067
     down_duvets = 95, 10050
     express_20 = 122, 10029
+    baby_clothes = 127
     down_filled_items = 129
     cottons_eco = 133
     quick_power_wash = 146, 10031
+    quick_intense = 177
+    hand_wash = 178
     eco_40_60 = 190, 10007
     bed_linen = 10047
     easy_care = 10016
@@ -502,17 +513,20 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     solar_save = 9, 34
     gentle = 10, 35, 210
     extra_quiet = 11, 36, 207
-    hygiene = 12, 37
-    quick_power_wash = 13, 38
+    hygiene = 12, 37, 206
+    quick_power_wash = 13, 38, 216
     pasta_paela = 14
     tall_items = 17, 42
     glasses_warm = 19
-    quick_intense = 21
-    normal = 30
+    quick_intense = 21, 46
+    normal = 23, 30, 48, 217
+    pre_wash = 24
+    pot_rests_and_filters = 25
     power_wash = 44, 204
     comfort_wash = 203
     comfort_wash_plus = 209
     rinse_salt = 215
+    rinse_and_hold = 219
 
 
 class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
@@ -540,6 +554,7 @@ class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
     cottons_hygiene = 11, 23
     smoothing = 24, 240, 10073
     bed_linen = 31, 99002, 10047
+    table_linen = 42
     eco = 66, 10079
     gentle_smoothing = 10, 100
     gentle_denim = 131
@@ -629,7 +644,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     rinse = 333
     shabbat_program = 335
     yom_tov = 336
-    hydroclean = 341
+    hydroclean = 341, 2434
     drying = 357, 2028
     heat_crockery = 358
     prove_dough = 359, 2023
@@ -1194,6 +1209,8 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
     espresso_macchiato = 24007, 24039, 24071, 24135
     cafe_au_lait = 24008, 24040, 24072, 24104, 24136
     caffe_latte = 24009, 24041, 24073, 24105, 24137
+    caffe_americano = 24010
+    long_black = 24011
     flat_white = 24012, 24044, 24076, 24108, 24140
     very_hot_water = 24013, 24045, 24077, 24109, 24141
     hot_water = 24014, 24046, 24078, 24110, 24142
@@ -1205,6 +1222,7 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
     green_tea = 24020, 24052, 24084, 24116, 24148
     white_tea = 24021, 24053, 24085, 24117, 24149
     japanese_tea = 24022, 29054, 24086, 24118, 24150
+    chai_latte = 24023
     # special programs
     coffee_pot = 24400
     barista_assistant = 24407

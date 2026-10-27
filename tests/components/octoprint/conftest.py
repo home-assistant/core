@@ -1,7 +1,5 @@
 """Tests for the OctoPrint integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch
@@ -14,6 +12,7 @@ from pyoctoprintapi import (
     WebcamSettings,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.octoprint import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +20,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import DEFAULT_JOB, DEFAULT_PRINTER
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

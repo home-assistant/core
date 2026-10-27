@@ -4,6 +4,12 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from satel_integra.satel_integra import AlarmState
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,19 +24,20 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    snapshot_platform,
+from . import (
+    MOCK_CODE,
+    MOCK_ENTRY_ID,
+    get_alarm_status_callback,
+    setup_integration,
+    trigger_connection_status_update,
 )
 
 
@@ -57,8 +64,9 @@ async def test_alarm_control_panel(
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_alarm_panel_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_alarm_panel_1"),
+        mock_config_entry_with_subentries.entry_id,
     )
 
     assert device_entry == snapshot(name="device")
@@ -70,7 +78,7 @@ async def test_alarm_control_panel_initial_state(
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test alarm control panel has a correct initial state after initialization."""
-    mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE0: [1]}
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -101,7 +109,7 @@ async def test_alarm_status_callback(
     source_state: AlarmState,
     resulting_state: AlarmControlPanelState,
 ) -> None:
-    """Test alarm control panel correctly changes state after a callback from the panel."""
+    """Test alarm panel state changes after a panel callback."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     assert (
@@ -109,9 +117,9 @@ async def test_alarm_status_callback(
         == AlarmControlPanelState.DISARMED
     )
 
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
 
-    mock_satel.partition_states = {source_state: [1]}
+    mock_satel.state.partition_states = {source_state: [1]}
 
     alarm_panel_update_method()
 
@@ -134,19 +142,19 @@ async def test_alarm_status_callback_debounce(
         == AlarmControlPanelState.DISARMED
     )
 
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
 
     # Simulate rapid state changes from the alarm panel
-    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_OVER_10: [1]}
+    mock_satel.state.partition_states = {AlarmState.EXIT_COUNTDOWN_OVER_10: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_UNDER_10: [1]}
+    mock_satel.state.partition_states = {AlarmState.EXIT_COUNTDOWN_UNDER_10: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE0: [1]}
     alarm_panel_update_method()
 
-    mock_satel.partition_states = {AlarmState.ARMED_MODE1: [1]}
+    mock_satel.state.partition_states = {AlarmState.ARMED_MODE1: [1]}
     alarm_panel_update_method()
 
     # State should still be DISARMED because updates are debounced
@@ -201,7 +209,7 @@ async def test_alarm_control_panel_disarming(
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test alarm panel correctly disarms and dismisses alarm."""
-    mock_satel.partition_states = {AlarmState.TRIGGERED: [1]}
+    mock_satel.state.partition_states = {AlarmState.TRIGGERED: [1]}
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -215,6 +223,28 @@ async def test_alarm_control_panel_disarming(
     mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
 
     mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
+
+
+async def test_alarm_control_panel_disarming_requires_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test disarming fails when the access code is missing."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: "alarm_control_panel.home"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "missing_alarm_access_code"
+    mock_satel.disarm.assert_not_awaited()
+    mock_satel.clear_alarm.assert_not_awaited()
 
 
 async def test_alarm_panel_last_reported(
@@ -232,7 +262,7 @@ async def test_alarm_panel_last_reported(
     assert len(events) == 1
 
     # Run callbacks with same payload
-    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method = get_alarm_status_callback(mock_satel)
     alarm_panel_update_method()
 
     # Trigger coordinator debounce
@@ -240,3 +270,24 @@ async def test_alarm_panel_last_reported(
 
     assert first_reported != hass.states.get("alarm_control_panel.home").last_reported
     assert len(events) == 1  # last_reported shall not fire state_changed
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    entity_id = "alarm_control_panel.home"
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+    await trigger_connection_status_update(hass, mock_satel, False)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    await trigger_connection_status_update(hass, mock_satel, True)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED

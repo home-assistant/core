@@ -1,6 +1,7 @@
 """Support for Axis camera streaming."""
 
-from urllib.parse import urlencode
+from typing import override
+from urllib.parse import quote, urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
@@ -60,6 +61,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
             unique_id=f"{hub.unique_id}-camera",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
         self.async_on_remove(
@@ -90,8 +92,10 @@ class AxisCamera(AxisEntity, MjpegCamera):
         )
 
         stream_options = self.generate_options(add_video_codec_h264=True)
+        username = quote(self.hub.config.username, safe="")
+        password = quote(self.hub.config.password, safe="")
         self._stream_source = (
-            f"rtsp://{self.hub.config.username}:{self.hub.config.password}"
+            f"rtsp://{username}:{password}"
             f"@{self.hub.config.host}/axis-media/media.amp{stream_options}"
         )
 
@@ -111,6 +115,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
         """Return mjpeg URL for device."""
         return self._mjpeg_url
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         return self._stream_source

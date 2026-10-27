@@ -9,12 +9,22 @@
       "local_name": "MINI_*"
     },
     {
+      "local_name": "LINEA_*"
+    },
+    {
+      "local_name": "LINEAR_*"
+    },
+    {
       "local_name": "GS3_*"
     },
     {
       "local_name": "GS3AV_*"
+    },
+    {
+      "local_name": "GS3MP_*"
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
@@ -37,5 +47,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylamarzocco"],
   "quality_scale": "platinum",
-  "requirements": ["pylamarzocco==2.2.4"]
+  "requirements": ["pylamarzocco==2.5.2"]
 }

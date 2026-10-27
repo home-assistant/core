@@ -1,11 +1,10 @@
 """Tests for the UniFi Access button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiError
 
@@ -16,8 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_ENTITY = "button.front_door_unlock"
 BACK_DOOR_ENTITY = "button.back_door_unlock"

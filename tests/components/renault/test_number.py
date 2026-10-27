@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture, snapshot_platform
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,12 +16,10 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -139,6 +138,13 @@ async def test_number_action(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    min_charge_level = hass.states.get("number.reg_zoe_40_minimum_charge_level")
+    target_charge_level = hass.states.get("number.reg_zoe_40_target_charge_level")
+    assert min_charge_level.state == "15"
+    assert target_charge_level.state == "80"
+    assert not min_charge_level.attributes.get(ATTR_ASSUMED_STATE)
+    assert not target_charge_level.attributes.get(ATTR_ASSUMED_STATE)
+
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_battery_soc",
         return_value=(
@@ -157,12 +163,12 @@ async def test_number_action(
     mock_action.assert_awaited_once_with(min=expected_min, target=expected_target)
 
     # Verify optimistic update of coordinator data
-    assert hass.states.get("number.reg_zoe_40_minimum_charge_level").state == str(
-        expected_min
-    )
-    assert hass.states.get("number.reg_zoe_40_target_charge_level").state == str(
-        expected_target
-    )
+    min_charge_level = hass.states.get("number.reg_zoe_40_minimum_charge_level")
+    target_charge_level = hass.states.get("number.reg_zoe_40_target_charge_level")
+    assert min_charge_level.state == str(expected_min)
+    assert target_charge_level.state == str(expected_target)
+    assert min_charge_level.attributes.get(ATTR_ASSUMED_STATE)
+    assert target_charge_level.attributes.get(ATTR_ASSUMED_STATE)
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")

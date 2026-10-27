@@ -1,7 +1,5 @@
 """The tests for the Recorder component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
@@ -13,6 +11,30 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    convert_pending_states_to_meta,
+    corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    run_information_with_session,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -82,29 +104,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from .common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    convert_pending_states_to_meta,
-    corrupt_db_file,
-    db_event_data_to_native,
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    run_information_with_session,
-)
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-    mock_platform,
-)
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -190,7 +189,7 @@ async def test_canceled_before_startup_finishes(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test recorder shuts down when its startup future is canceled out from under it."""
+    """Test recorder shuts down when startup future is canceled."""
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
@@ -262,6 +261,118 @@ async def test_state_gets_saved_when_set_before_start_event(
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
+
+
+async def test_commit_future_covers_startup_batch(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test a commit future is returned while the startup batch is processed.
+
+    Once Home Assistant has started, the recorder drains its whole queue into a
+    startup batch before processing it. The queue is then empty although the
+    batch is not committed yet.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+    hass.states.async_set("test.recorder", "on")
+
+    batch_drained = threading.Event()
+    release_batch = threading.Event()
+    real_pre_process = instance._pre_process_startup_events
+
+    def _pre_process_startup_events(
+        startup_task_or_events: list[recorder.tasks.RecorderTask | Event],
+    ) -> None:
+        batch_drained.set()
+        release_batch.wait()
+        real_pre_process(startup_task_or_events)
+
+    with (
+        patch.object(
+            instance, "_pre_process_startup_events", _pre_process_startup_events
+        ),
+        # Periodic tasks run on the wall clock and could queue a task
+        patch.object(instance, "_async_setup_periodic_tasks"),
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        try:
+            assert await hass.async_add_executor_job(batch_drained.wait, 10)
+            assert instance.backlog == 0
+            commit_future = instance.async_get_commit_future()
+        finally:
+            release_batch.set()
+
+    assert commit_future is not None
+    await commit_future
+    with session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(States))) == 1
+
+
+async def test_queued_states_until_ready(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test state changes queued before the recorder is ready are indexed."""
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(
+        async_setup_recorder_instance(hass, {"exclude": {"entities": "test.excluded"}})
+    )
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    hass.states.async_set("test.excluded", "on")
+    hass.states.async_remove("test.recorder")
+    hass.states.async_set("test.recorder", "off")
+    hass.states.async_set("test.other", "on")
+
+    queued = instance.async_get_queued_states(
+        ["test.recorder", "test.excluded", "test.unknown"]
+    )
+    assert queued is not None
+    assert list(queued) == ["test.recorder"]
+    assert [state and state.state for state in queued["test.recorder"]] == [
+        "on",
+        None,
+        "off",
+    ]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await async_wait_recording_done(hass)
+    assert instance.async_recorder_ready.is_set()
+    assert instance.async_get_queued_states(["test.recorder"]) is None
+
+    # The index is not kept up to date once the recorder is ready
+    hass.states.async_set("test.recorder", "on")
+    await async_wait_recording_done(hass)
+    assert instance._queued_states is None
+
+
+async def test_queued_states_frozen_when_recording_stops(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test the queued states are kept when recording stops.
+
+    That happens when the queue grows too large; later changes are not queued,
+    so they are missing from the index too.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    with patch.object(instance, "_reached_max_backlog", return_value=True):
+        instance._async_check_queue()
+    hass.states.async_set("test.recorder", "off")
+
+    queued = instance.async_get_queued_states(["test.recorder"])
+    assert queued is not None
+    assert [state and state.state for state in queued["test.recorder"]] == ["on"]
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -1144,7 +1255,7 @@ async def test_auto_purge_auto_repack_disabled_on_second_sunday(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
+    """Test periodic purge scheduling skips repack when disabled."""
     timezone = "Europe/Copenhagen"
     await hass.config.async_set_time_zone(timezone)
     await async_setup_recorder_instance(hass, {CONF_AUTO_REPACK: False})
@@ -1600,7 +1711,7 @@ async def test_service_disable_states_not_recording(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test that state changes are not recorded when recorder is disabled using service."""
+    """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_DISABLE,
@@ -1874,7 +1985,7 @@ async def test_database_lock_and_overflow(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+    """Test queue overflow during lock causes database to unlock.
 
     This test is specific for SQLite: Locking is not implemented for other engines.
 
@@ -1939,7 +2050,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test writing events during lock leading to overflow the queue causes the database to unlock.
+    """Test queue overflow with memory check causes database to unlock.
 
     This test is specific for SQLite: Locking is not implemented for other engines.
 
@@ -1994,7 +2105,8 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
-        # Record up to the extended limit (which takes into account the available memory)
+        # Record up to the extended limit (which takes into account
+        # the available memory)
         for _ in range(2):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
             hass.bus.async_fire(event_type, event_data)
@@ -2011,7 +2123,8 @@ async def test_database_lock_and_overflow_checks_available_memory(
         assert "Database queue backlog reached more than" not in caplog.text
 
         out_of_ram = True
-        # Record beyond the extended limit (which takes into account the available memory)
+        # Record beyond the extended limit (which takes into account
+        # the available memory)
         for _ in range(20):
             event_data = {"test_attr": 5, "test_attr_10": "nice"}
             hass.bus.async_fire(event_type, event_data)
@@ -2446,7 +2559,7 @@ async def test_excluding_all_attributes_by_integration(
     entity_registry: er.EntityRegistry,
     setup_recorder: None,
 ) -> None:
-    """Test that an entity can exclude all attributes from being recorded using MATCH_ALL."""
+    """Test an entity can exclude all attributes using MATCH_ALL."""
     state = "restoring_from_db"
     attributes = {
         "test_attr": 5,
@@ -2525,7 +2638,7 @@ async def test_lru_increases_with_many_entities(
 async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
     hass: HomeAssistant,
 ) -> None:
-    """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
+    """Test clean shutdown when recorder raises during initialize_database."""
     with (
         patch.object(migration, "initialize_database", side_effect=Exception),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
@@ -2553,7 +2666,7 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
 async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
+    """Test clean shutdown when recorder raises during validate_db_schema."""
     with (
         patch.object(migration, "validate_db_schema", side_effect=Exception),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
@@ -2727,10 +2840,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()
@@ -2821,3 +2931,27 @@ async def test_setting_up_recorder_fails_entity_registry_listener(
         "The recorder entity registry listener must be installed before "
         "async_track_entity_registry_updated_event is called" in caplog.text
     )
+
+
+async def test_setup_connection_after_connection_closed(
+    hass: HomeAssistant, setup_recorder: None
+) -> None:
+    """Test the connect listener does not raise once the engine is gone.
+
+    _close_connection disposes the engine and drops our reference to it, but dispose()
+    only empties the pool: the engine stays usable, so anything still holding a
+    reference to it can check out a fresh DBAPI connection. That fires the connect
+    listener, which is still registered, with self.engine already set to None.
+    """
+    instance = recorder.get_instance(hass)
+    assert instance.engine is not None
+
+    def _setup_connection_without_an_engine() -> None:
+        with instance.engine.connect() as connection:
+            dbapi_connection = connection._dbapi_connection
+            with patch.object(instance, "engine", None):
+                # There is no engine of ours left to configure the connection for,
+                # which is not a reason to raise into whatever caused the checkout
+                instance._setup_recorder_connection(dbapi_connection, Mock())
+
+    await instance.async_add_executor_job(_setup_connection_without_an_engine)

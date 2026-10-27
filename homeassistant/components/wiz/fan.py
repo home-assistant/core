@@ -1,9 +1,7 @@
 """WiZ integration fan platform."""
 
-from __future__ import annotations
-
 import math
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 
 from pywizlight.bulblibrary import BulbType, Features
 
@@ -22,7 +20,7 @@ from homeassistant.util.percentage import (
 )
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizEntity
+from .entity import WizEntity, wiz_exception_handler
 
 PRESET_MODE_BREEZE = "breeze"
 
@@ -69,6 +67,7 @@ class WizFanEntity(WizEntity, FanEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         state = self._device.state
@@ -88,12 +87,16 @@ class WizFanEntity(WizEntity, FanEntity):
             elif fan_reverse == 1:
                 self._attr_current_direction = DIRECTION_REVERSE
 
+    @override
+    @wiz_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         # preset_mode == PRESET_MODE_BREEZE
         await self._device.fan_set_state(mode=2)
         await self.coordinator.async_request_refresh()
 
+    @override
+    @wiz_exception_handler
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -104,6 +107,8 @@ class WizFanEntity(WizEntity, FanEntity):
         await self._device.fan_set_state(mode=1, speed=speed)
         await self.coordinator.async_request_refresh()
 
+    @override
+    @wiz_exception_handler
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -126,11 +131,15 @@ class WizFanEntity(WizEntity, FanEntity):
         await self._device.fan_turn_on(mode=mode, speed=speed)
         await self.coordinator.async_request_refresh()
 
+    @override
+    @wiz_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._device.fan_turn_off(**kwargs)
         await self.coordinator.async_request_refresh()
 
+    @override
+    @wiz_exception_handler
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         reverse = 1 if direction == DIRECTION_REVERSE else 0

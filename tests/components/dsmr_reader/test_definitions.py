@@ -1,6 +1,7 @@
 """Test the DSMR Reader definitions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.dsmr_reader.definitions import (
@@ -9,8 +10,6 @@ from homeassistant.components.dsmr_reader.definitions import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 
 @pytest.mark.parametrize(
@@ -39,7 +38,7 @@ async def test_tariff_transform(input, expected) -> None:
 
 @pytest.mark.usefixtures("mqtt_mock")
 async def test_entity_tariff(hass: HomeAssistant) -> None:
-    """Test the state attribute of DSMRReaderSensorEntityDescription when a tariff transform is needed."""
+    """Test DSMRReaderSensorEntityDescription with a tariff transform."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,
@@ -71,7 +70,7 @@ async def test_entity_tariff(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mqtt_mock")
 async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
-    """Test the state attribute of DSMRReaderSensorEntityDescription when a dsmr transform is needed."""
+    """Test DSMRReaderSensorEntityDescription state when a dsmr transform is needed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DOMAIN,

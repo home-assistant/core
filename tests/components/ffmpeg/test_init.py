@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
+from pytest_homeassistant.common import assert_setup_component
+
 from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import DOMAIN, get_ffmpeg_manager
 from homeassistant.components.ffmpeg.services import (
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 
 @callback
@@ -217,7 +217,7 @@ async def test_async_get_image_with_width_height(hass: HomeAssistant) -> None:
 async def test_async_get_image_with_extra_cmd_overlapping_width_height(
     hass: HomeAssistant,
 ) -> None:
-    """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
+    """Test fetching an image with extra_cmd with width/height."""
     with assert_setup_component(1):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

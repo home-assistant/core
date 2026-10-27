@@ -1,12 +1,10 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 import os
 import shutil
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -88,27 +86,29 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entry: VelbusConfigEntry = service.async_get_config_entry(
             call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
         )
+
+        address = call.data.get(CONF_ADDRESS)
+        cache_path = hass.config.path(
+            STORAGE_DIR,
+            f"velbuscache-{entry.entry_id}/{address}.p"
+            if address
+            else f"velbuscache-{entry.entry_id}/",
+        )
+
+        def _clear_cache() -> None:
+            if address:
+                if os.path.exists(cache_path):
+                    os.unlink(cache_path)
+            elif os.path.isdir(cache_path):
+                shutil.rmtree(cache_path)
+
         try:
-            if call.data.get(CONF_ADDRESS):
-                await hass.async_add_executor_job(
-                    os.unlink,
-                    hass.config.path(
-                        STORAGE_DIR,
-                        f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
-                    ),
-                )
-            else:
-                await hass.async_add_executor_job(
-                    shutil.rmtree,
-                    hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
-                )
-        except FileNotFoundError:
-            pass  # It's okay if the file doesn't exist
+            await hass.async_add_executor_job(_clear_cache)
         except OSError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="clear_cache_failed",
-                translation_placeholders={"error": str(exc)},
+                translation_placeholders={"path": cache_path},
             ) from exc
         # call a scan to repopulate
         await scan(call)
@@ -117,9 +117,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SCAN,
         scan,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                probatio.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
@@ -132,9 +132,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SYNC,
         syn_clock,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                probatio.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
@@ -147,17 +147,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_MEMO_TEXT,
         set_memo_text,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                probatio.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
+                probatio.Required(CONF_ADDRESS): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=255)
                 ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
+                probatio.Optional(CONF_MEMO_TEXT, default=""): cv.string,
             }
         ),
     )
@@ -166,15 +166,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_CLEAR_CACHE,
         clear_cache,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                probatio.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
                     {
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Optional(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
+                probatio.Optional(CONF_ADDRESS): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=255)
                 ),
             }
         ),

@@ -1,16 +1,17 @@
 """The Things Network's integration sensors."""
 
 import logging
+from typing import override
 
 from ttn_client import TTNSensorValue
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_APP_ID, DOMAIN
+from .const import CONF_APP_ID
+from .coordinator import TTNConfigEntry
 from .entity import TTNEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TTNConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for TTN."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors: set[tuple[str, str]] = set()
 
@@ -54,6 +55,7 @@ class TtnDataSensor(TTNEntity, SensorEntity):
     _ttn_value: TTNSensorValue
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._ttn_value.value

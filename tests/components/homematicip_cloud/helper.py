@@ -14,6 +14,7 @@ from homematicip.class_maps import (
 from homematicip.device import Device
 from homematicip.group import Group
 from homematicip.home import Home
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -23,8 +24,6 @@ from homeassistant.components.homematicip_cloud.entity import (
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
@@ -44,7 +43,9 @@ def get_and_check_entity_basics(
     assert ha_state is not None
     if device_model:
         assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
-    assert ha_state.name == entity_name
+    assert ha_state.name == entity_name, (
+        f"Expected '{entity_name}', got '{ha_state.name}'"
+    )
 
     hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 
@@ -77,7 +78,9 @@ async def async_manipulate_test_data(
                 None,
             )
             assert functional_channel is not None, (
-                f"No functional channel with index {channel_real_index} found in hmip_device.functionalChannels"
+                f"No functional channel with index"
+                f" {channel_real_index} found in"
+                " hmip_device.functionalChannels"
             )
         else:
             functional_channel = channels[channel]

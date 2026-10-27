@@ -1,7 +1,5 @@
 """The Airthings integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -20,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=6)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> None:
     """Set up Airthings from a config entry."""
     airthings = Airthings(
         entry.data[CONF_ID],
@@ -36,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

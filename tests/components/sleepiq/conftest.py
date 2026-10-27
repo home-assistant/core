@@ -1,7 +1,5 @@
 """Common methods for SleepIQ."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
@@ -21,13 +19,12 @@ from asyncsleepiq import (
     SleepIQSleeper,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sleepiq import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BED_ID = "123456"
 BED_NAME = "Test Bed"
@@ -53,7 +50,7 @@ SLEEPIQ_CONFIG = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sleepiq.async_setup_entry", return_value=True
+        "homeassistant.components.sleepiq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

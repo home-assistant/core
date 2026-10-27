@@ -1,10 +1,17 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
 from datetime import timedelta
+from typing import Any
+
+import probatio
 
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "yeelight"
+DATA_CUSTOM_EFFECTS_KEY: HassKey[list[dict[str, Any]]] = HassKey(DOMAIN)
 
 
 STATE_CHANGE_TIME = 0.40  # seconds
@@ -42,12 +49,6 @@ CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
 CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-
-DATA_CONFIG_ENTRIES = "config_entries"
-DATA_CUSTOM_EFFECTS = "custom_effects"
-DATA_DEVICE = "device"
-DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
-DATA_PLATFORMS_LOADED = "platforms_loaded"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -102,3 +103,26 @@ UPDATE_REQUEST_PROPERTIES = [
 
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT]
+
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
+    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
+        ACTION_RECOVER, ACTION_OFF, ACTION_STAY
+    ),
+    probatio.Required(ATTR_TRANSITIONS): [
+        {
+            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(
+                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+            probatio.Exclusive(
+                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+        }
+    ],
+}

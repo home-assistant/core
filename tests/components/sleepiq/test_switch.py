@@ -1,5 +1,7 @@
 """The tests for SleepIQ switch platform."""
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
@@ -8,8 +10,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup(
@@ -36,7 +36,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         SWITCH_DOMAIN,
         "turn_off",
         {
-            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            ATTR_ENTITY_ID: (
+                f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            )
         },
         blocking=True,
     )
@@ -47,7 +49,9 @@ async def test_switch_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
         SWITCH_DOMAIN,
         "turn_on",
         {
-            ATTR_ENTITY_ID: f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            ATTR_ENTITY_ID: (
+                f"switch.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_pause_mode"
+            )
         },
         blocking=True,
     )

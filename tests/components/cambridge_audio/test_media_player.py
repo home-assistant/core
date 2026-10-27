@@ -9,6 +9,7 @@ from aiostreammagic import (
     TransportControl,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ARTIST,
@@ -52,8 +53,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID
 
-from tests.common import MockConfigEntry
-
 
 async def test_entity_supported_features(
     hass: HomeAssistant,
@@ -62,6 +61,7 @@ async def test_entity_supported_features(
 ) -> None:
     """Test entity attributes."""
     await setup_integration(hass, mock_config_entry)
+    mock_stream_magic_client.state.pre_amp_mode = False
     await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
@@ -501,7 +501,10 @@ async def test_play_media_unknown_type(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unsupported media type for Cambridge Audio device: unsupported_content_type",
+        match=(
+            "Unsupported media type for Cambridge Audio"
+            " device: unsupported_content_type"
+        ),
     ):
         await hass.services.async_call(
             MP_DOMAIN,

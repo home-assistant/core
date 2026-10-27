@@ -1,146 +1,31 @@
-[
-  {
-    "Timestamp": "2023-01-19T05:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T06:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T07:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T08:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T09:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T10:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T11:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T12:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T13:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T14:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T15:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T16:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T17:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T18:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T19:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T20:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T21:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T22:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-19T23:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-20T00:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-20T01:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-20T02:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-20T03:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  },
-  {
-    "Timestamp": "2023-01-20T04:00:00+00:00",
-    "SupplierId": 0,
-    "TariffUsage": 0.7252982,
-    "TariffReturn": 0.7252982
-  }
-]
+{
+  "providedAt": "2026-04-19T22:16:43.4740091Z",
+  "prices": [
+    {
+      "from": "2026-04-19T00:00:00.0000000",
+      "until": "2026-04-20T00:00:00.0000000",
+      "price": 0.50983,
+      "unit": "m3",
+      "priceIncVat": 0.6169,
+      "energyTax": 0.7268,
+      "purchasePrice": 0.079,
+      "invoicePrice": 1.4227,
+      "average": 0.49402,
+      "averageInc": 0.59776,
+      "granularity": "day"
+    },
+    {
+      "from": "2026-04-20T00:00:00.0000000",
+      "until": "2026-04-21T00:00:00.0000000",
+      "price": 0.4782,
+      "unit": "m3",
+      "priceIncVat": 0.57862,
+      "energyTax": 0.7268,
+      "purchasePrice": 0.079,
+      "invoicePrice": 1.38442,
+      "average": 0.49402,
+      "averageInc": 0.59776,
+      "granularity": "day"
+    }
+  ]
+}

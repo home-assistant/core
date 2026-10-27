@@ -1,7 +1,5 @@
 """Test the Litter-Robot vacuum entity."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -9,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import Robot
 from pylitterbot.exceptions import LitterRobotException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.litterrobot.services import SERVICE_SET_SLEEP_MODE
@@ -25,8 +24,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
-
-from tests.common import async_fire_time_changed
 
 VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
 

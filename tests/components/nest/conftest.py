@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil
@@ -15,6 +13,11 @@ from google_nest_sdm import diagnostics
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from google_nest_sdm.streaming_manager import StreamingManager
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
@@ -40,9 +43,6 @@ from .common import (
     PlatformSetup,
     YieldFixture,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
@@ -257,7 +257,7 @@ def platforms() -> list[str]:
 
 @pytest.fixture
 def subscriber_id() -> str:
-    """Fixture to let tests override subscriber id regardless of configuration type used."""
+    """Fixture to override subscriber id regardless of config type."""
     return SUBSCRIBER_ID
 
 
@@ -356,3 +356,13 @@ def reset_diagnostics() -> Generator[None]:
     """Fixture to reset client library diagnostic counters."""
     yield
     diagnostics.reset()
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiter_delays() -> Generator[None]:
+    """Disable SDM command rate limiter delays in tests."""
+    with patch(
+        "google_nest_sdm.rate_limiter.RateLimiter._get_wait_time",
+        return_value=0.0,
+    ):
+        yield

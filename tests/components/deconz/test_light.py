@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
@@ -38,9 +40,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -562,7 +561,7 @@ async def test_ikea_default_transition_time(
     hass: HomeAssistant,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
 ) -> None:
-    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
+    """Verify IKEA light calls always extend with transition time 0 if absent."""
     aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
@@ -1302,3 +1301,57 @@ async def test_verify_group_color_mode_fallback(
     group_state = hass.states.get("light.opbergruimte")
     assert group_state.state == STATE_ON
     assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.BRIGHTNESS
+
+
+@pytest.mark.parametrize(
+    "group_payload",
+    [
+        {
+            "1": {
+                "id": "Group1",
+                "name": "Group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": True},
+                "action": {},
+                "scenes": [],
+                "lights": ["1", "2"],
+            },
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "1": {
+                "ctmax": 454,
+                "ctmin": 155,
+                "name": "Tunable light",
+                "state": {
+                    "on": True,
+                    "bri": 100,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": False,
+                },
+                "type": "Color temperature light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "2": {
+                "name": "Dimmable light",
+                "state": {"on": True, "bri": 255, "reachable": True},
+                "type": "Dimmable light",
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_group_color_modes_include_unreachable_lights(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a light unreachable during setup still contributes its color modes."""
+    group_state = hass.states.get("light.group")
+    assert group_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert group_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert group_state.attributes[ATTR_BRIGHTNESS] == 255

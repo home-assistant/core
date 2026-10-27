@@ -4,8 +4,6 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
@@ -71,6 +69,8 @@ class LockUserData(TypedDict):
     user_type: str
     credential_rule: str
     credentials: list[LockUserCredentialData]
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_user_index: int | None
 
 
@@ -115,6 +115,8 @@ class GetLockCredentialStatusResult(TypedDict):
 
     credential_exists: bool
     user_index: int | None
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_credential_index: int | None
 
 
@@ -214,6 +216,8 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             _get_attr(user_data, "credentialRule"), "unknown"
         ),
         credentials=credentials,
+        creator_fabric_index=_get_attr(user_data, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(user_data, "lastModifiedFabricIndex"),
         next_user_index=_get_attr(user_data, "nextUserIndex"),
     )
 
@@ -488,9 +492,13 @@ async def get_lock_users(
 
     users: list[LockUserData] = []
     current_index = 1
+    # nextUserIndex skips over unoccupied slots, but some locks always report it
+    # as null. A null only ends the walk once the lock has reported a forward
+    # index, which is what shows it implements the field at all; otherwise the
+    # whole table is walked.
+    reports_next_index = False
 
-    # Iterate through users using next_user_index for efficiency
-    while current_index is not None and current_index <= max_users:
+    while current_index <= max_users:
         get_user_response = await matter_client.send_device_command(
             node_id=node.node_id,
             endpoint_id=lock_endpoint.endpoint_id,
@@ -503,11 +511,16 @@ async def get_lock_users(
         if user_data is not None:
             users.append(user_data)
 
-        # Move to next user index
         next_index = _get_attr(get_user_response, "nextUserIndex")
-        if next_index is None or next_index <= current_index:
+        if next_index is not None and next_index > current_index:
+            reports_next_index = True
+            current_index = next_index
+        elif next_index is None and reports_next_index:
             break
-        current_index = next_index
+        else:
+            # A null from a lock that has never reported a forward index, or an
+            # index that would not advance the walk.
+            current_index += 1
 
     return GetLockUsersResult(
         max_users=max_users,
@@ -817,7 +830,8 @@ async def get_lock_credential_status(
 ) -> GetLockCredentialStatusResult:
     """Get the status of a credential slot on the lock.
 
-    Returns typed dict with credential_exists, user_index, next_credential_index.
+    Returns typed dict with credential_exists, user_index, creator_fabric_index,
+    last_modified_fabric_index, and next_credential_index.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -839,5 +853,7 @@ async def get_lock_credential_status(
     return GetLockCredentialStatusResult(
         credential_exists=bool(_get_attr(response, "credentialExists")),
         user_index=_get_attr(response, "userIndex"),
+        creator_fabric_index=_get_attr(response, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(response, "lastModifiedFabricIndex"),
         next_credential_index=_get_attr(response, "nextCredentialIndex"),
     )

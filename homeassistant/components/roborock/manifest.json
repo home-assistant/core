@@ -1,6 +1,7 @@
 {
   "domain": "roborock",
   "name": "Roborock",
+  "categories": ["appliances_cleaning.cleaning", "appliances_cleaning.laundry"],
   "codeowners": ["@Lash-L", "@allenporter"],
   "config_flow": true,
   "dhcp": [
@@ -20,7 +21,7 @@
   "loggers": ["roborock"],
   "quality_scale": "silver",
   "requirements": [
-    "python-roborock==5.5.1",
-    "vacuum-map-parser-roborock==0.1.4"
+    "python-roborock==7.12.0",
+    "vacuum-map-parser-roborock==0.1.5"
   ]
 }

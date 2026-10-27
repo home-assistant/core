@@ -1,24 +1,27 @@
 """Module that groups code required to handle state restore for component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import ATTR_HUMIDITY, DOMAIN, SERVICE_SET_HUMIDITY, SERVICE_SET_MODE
+from .const import (
+    DOMAIN,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Maps a state attribute to the service call argument used to restore it.
+_STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[HumidifierEntityStateAttribute, str] = {
+    HumidifierEntityStateAttribute.MODE: HumidifierServiceArgument.MODE,
+    HumidifierEntityStateAttribute.HUMIDITY: HumidifierServiceArgument.HUMIDITY,
+}
 
 
 async def _async_reproduce_states(
@@ -33,12 +36,16 @@ async def _async_reproduce_states(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    async def call_service(service: str, keys: Iterable[str]) -> None:
-        """Call service with set of attributes given."""
+    async def call_service(
+        service: str, attributes: Iterable[HumidifierEntityStateAttribute]
+    ) -> None:
+        """Call service with the given state attributes."""
         data = {"entity_id": state.entity_id}
-        for key in keys:
-            if key in state.attributes:
-                data[key] = state.attributes[key]
+        for attribute in attributes:
+            if attribute in state.attributes:
+                data[_STATE_ATTRIBUTE_TO_SERVICE_ARG[attribute]] = state.attributes[
+                    attribute
+                ]
 
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
@@ -47,7 +54,7 @@ async def _async_reproduce_states(
     if state.state == STATE_OFF:
         # Ensure the device is off if it needs to be and exit
         if cur_state.state != STATE_OFF:
-            await call_service(SERVICE_TURN_OFF, [])
+            await call_service(HumidifierService.TURN_OFF, [])
         return
 
     if state.state != STATE_ON:
@@ -60,7 +67,7 @@ async def _async_reproduce_states(
     # First of all, turn on if needed, because the device might not
     # be able to set mode and humidity while being off
     if cur_state.state != STATE_ON:
-        await call_service(SERVICE_TURN_ON, [])
+        await call_service(HumidifierService.TURN_ON, [])
         # refetch the state as turning on might allow us to see some more values
         if (cur_state := hass.states.get(state.entity_id)) is None:
             _LOGGER.warning("Unable to find entity %s", state.entity_id)
@@ -68,16 +75,20 @@ async def _async_reproduce_states(
 
     # Then set the mode before target humidity, because switching modes
     # may invalidate target humidity
-    if ATTR_MODE in state.attributes and state.attributes[
-        ATTR_MODE
-    ] != cur_state.attributes.get(ATTR_MODE):
-        await call_service(SERVICE_SET_MODE, [ATTR_MODE])
+    if HumidifierEntityStateAttribute.MODE in state.attributes and state.attributes[
+        HumidifierEntityStateAttribute.MODE
+    ] != cur_state.attributes.get(HumidifierEntityStateAttribute.MODE):
+        await call_service(
+            HumidifierService.SET_MODE, [HumidifierEntityStateAttribute.MODE]
+        )
 
     # Next, restore target humidity for the current mode
-    if ATTR_HUMIDITY in state.attributes and state.attributes[
-        ATTR_HUMIDITY
-    ] != cur_state.attributes.get(ATTR_HUMIDITY):
-        await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
+    if HumidifierEntityStateAttribute.HUMIDITY in state.attributes and state.attributes[
+        HumidifierEntityStateAttribute.HUMIDITY
+    ] != cur_state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY):
+        await call_service(
+            HumidifierService.SET_HUMIDITY, [HumidifierEntityStateAttribute.HUMIDITY]
+        )
 
 
 async def async_reproduce_states(

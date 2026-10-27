@@ -1,7 +1,5 @@
 """The Nintendo Switch parental controls integration."""
 
-from __future__ import annotations
-
 from pynintendoauth.exceptions import (
     InvalidOAuthConfigurationException,
     InvalidSessionTokenException,
@@ -38,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: NintendoParentalControlsConfigEntry
-) -> bool:
+) -> None:
     """Set up Nintendo Switch parental controls from a config entry."""
     nintendo_auth = Authenticator(
         session_token=entry.data[CONF_SESSION_TOKEN],
@@ -57,11 +55,9 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NintendoParentalControlsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

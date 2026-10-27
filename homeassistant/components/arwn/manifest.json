@@ -1,9 +1,11 @@
 {
   "domain": "arwn",
   "name": "Ambient Radio Weather Network",
+  "categories": ["weather_alerts", "diy_makers"],
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/arwn",
-  "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "iot_class": "local_push",
+  "quality_scale": "legacy",
+  "requirements": ["arwn-client==0.2.1"]
 }

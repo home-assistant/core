@@ -13,6 +13,8 @@ from aiohomeconnect.model.error import (
 )
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.home_connect.const import DOMAIN
@@ -37,9 +39,6 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_entry_setup(
@@ -178,7 +177,7 @@ async def test_token_refresh_error(
         assert not await integration_setup(client)
         await hass.async_block_till_done()
 
-    assert config_entry.state == expected_config_entry_state
+    assert config_entry.state is expected_config_entry_state
 
 
 @pytest.mark.parametrize(
@@ -199,7 +198,7 @@ async def test_client_error(
     client_with_exception.get_home_appliances.return_value = None
     client_with_exception.get_home_appliances.side_effect = exception
     assert not await integration_setup(client_with_exception)
-    assert config_entry.state == expected_state
+    assert config_entry.state is expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
 
 
@@ -252,7 +251,7 @@ async def test_required_program_or_at_least_an_option(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    "Test that the set_program_and_options does raise an exception if no program nor options are set."
+    """Test set_program_and_options raises if no program nor options."""
 
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -340,7 +339,7 @@ async def test_entity_migration(
         patch("homeassistant.components.home_connect.PLATFORMS", platforms),
         patch(
             "homeassistant.components.home_connect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
@@ -354,7 +353,7 @@ async def test_entity_migration(
 
 
 async def test_bsh_key_transformations() -> None:
-    """Test that the key transformations are compatible valid translations keys and can be reversed."""
+    """Test key transformations produce valid translation keys."""
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
     assert RE_TRANSLATION_KEY.match(translation_key)
@@ -372,7 +371,7 @@ async def test_config_entry_unique_id_migration(
 
     with patch(
         "homeassistant.components.home_connect.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
         await hass.async_block_till_done()

@@ -1,7 +1,5 @@
 """The Samsung TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine, Mapping
 from functools import partial
 from typing import Any
@@ -114,7 +112,7 @@ async def _async_update_ssdp_locations(
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
     """Set up the Samsung TV platform."""
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
@@ -163,8 +161,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _async_create_bridge_with_updated_data(
@@ -229,14 +225,14 @@ async def _async_create_bridge_with_updated_data(
     return bridge
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SamsungTVConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     version = config_entry.version
     minor_version = config_entry.minor_version
@@ -246,7 +242,7 @@ async def async_migrate_entry(
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
         dev_reg = dr.async_get(hass)
-        dev_reg.async_clear_config_entry(config_entry.entry_id)
+        dev_reg.async_clear_config_entry(config_entry.entry_id, config_entry.domain)
 
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)
@@ -263,5 +259,3 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
     LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
-
-    return True

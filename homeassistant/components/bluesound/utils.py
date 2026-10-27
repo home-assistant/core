@@ -4,15 +4,12 @@ from pyblu import PairedPlayer
 
 from homeassistant.helpers.device_registry import format_mac
 
+DISPATCHER_ENTITY_ID_CHANGED_SIGNAL = "bluesound_entity_id_changed"
+
 
 def format_unique_id(mac: str, port: int) -> str:
     """Generate a unique ID based on the MAC address and port number."""
     return f"{format_mac(mac)}-{port}"
-
-
-def dispatcher_join_signal(entity_id: str) -> str:
-    """Join an entity ID with a signal."""
-    return f"bluesound_join_{entity_id}"
 
 
 def dispatcher_unjoin_signal(leader_id: str) -> str:
@@ -24,7 +21,10 @@ def dispatcher_unjoin_signal(leader_id: str) -> str:
 
 
 def id_to_paired_player(id: str) -> PairedPlayer | None:
-    """Try to convert id in format 'ip:port' to PairedPlayer. Returns None if unable to do so."""
+    """Try to convert id in format 'ip:port' to PairedPlayer.
+
+    Returns None if unable to do so.
+    """
     match id.rsplit(":", 1):
         case [str() as ip, str() as port] if port.isdigit():
             return PairedPlayer(ip, int(port))

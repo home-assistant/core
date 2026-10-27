@@ -7,6 +7,7 @@ from unittest.mock import patch
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
@@ -15,13 +16,12 @@ from homeassistant.components import (
     light,
     media_player,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
+from homeassistant.components.google_assistant import DOMAIN
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
-
-from tests.typing import ClientSessionGenerator
 
 API_PASSWORD = "test1234"
 
@@ -44,7 +44,7 @@ async def assistant_client(
     """Create web client for the Google Assistant API."""
     await setup.async_setup_component(
         hass,
-        "google_assistant",
+        DOMAIN,
         {
             "google_assistant": {
                 "project_id": PROJECT_ID,
@@ -146,9 +146,6 @@ async def test_sync_request(
         dev["id"] for dev in DEMO_DEVICES
     )
 
-    for dev in devices:
-        assert dev["id"] not in CLOUD_NEVER_EXPOSED_ENTITIES
-
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),
         sorted(DEMO_DEVICES, key=lambda d: d["id"]),
@@ -231,6 +228,7 @@ async def test_query_climate_request(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 20.0,
@@ -247,6 +245,7 @@ async def test_query_climate_request(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 21,
@@ -295,6 +294,7 @@ async def test_query_climate_request_f(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.7,
@@ -311,6 +311,7 @@ async def test_query_climate_request_f(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.1,

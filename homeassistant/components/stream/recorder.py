@@ -1,13 +1,11 @@
 """Provide functionality to record stream."""
 
-from __future__ import annotations
-
 from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import math
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import av
 import av.container
@@ -49,6 +47,7 @@ class RecorderOutput(StreamOutput):
         self.video_path: str
 
     @property
+    @override
     def name(self) -> str:
         """Return provider name."""
         return RECORDER_PROVIDER
@@ -57,6 +56,7 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
+    @override
     def cleanup(self) -> None:
         """Handle cleanup."""
         self.idle_timer.idle = True
@@ -73,8 +73,9 @@ class RecorderOutput(StreamOutput):
         output_a = None
 
         last_stream_id = -1
-        # The running duration of processed segments. Note that this is in av.time_base
-        # units which seem to be defined inversely to how stream time_bases are defined
+        # The end of the recording's presentation so far. Note that this is in
+        # av.time_base units which seem to be defined inversely to how stream
+        # time_bases are defined
         running_duration = 0
 
         last_sequence = -math.inf
@@ -82,10 +83,12 @@ class RecorderOutput(StreamOutput):
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""
             # fmt: off
-            nonlocal output, output_v, output_a, last_stream_id, running_duration, last_sequence
+            nonlocal output, output_v, output_a
+            nonlocal last_stream_id, running_duration, last_sequence
             # fmt: on
-            # Because the stream_worker is in a different thread from the record service,
-            # the lookback segments may still have some overlap with the recorder segments
+            # Because the stream_worker is in a different
+            # thread from the record service, the lookback
+            # segments may still overlap with recorder ones
             if segment.sequence <= last_sequence:
                 return
             last_sequence = segment.sequence
@@ -108,7 +111,7 @@ class RecorderOutput(StreamOutput):
             # Create output on first segment
             if not output:
                 container_options: dict[str, str] = {
-                    "video_track_timescale": str(int(1 / source_v.time_base)),  # type: ignore[operator]
+                    "video_track_timescale": str(int(1 / source_v.time_base)),
                     "movflags": "frag_keyframe+empty_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
@@ -122,6 +125,8 @@ class RecorderOutput(StreamOutput):
             # Add output streams if necessary
             if not output_v:
                 output_v = output.add_stream_from_template(source_v)
+                if source_v.name == "hevc":
+                    output_v.codec_context.codec_tag = "hvc1"
             if source_a and not output_a:
                 output_a = output.add_stream_from_template(source_a)
 
@@ -131,12 +136,12 @@ class RecorderOutput(StreamOutput):
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
                     (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)  # type: ignore[operator]
+                    / (av.time_base * source_v.time_base)
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
                         (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)  # type: ignore[operator]
+                        / (av.time_base * source_a.time_base)
                     )
 
             # Remux video
@@ -145,12 +150,19 @@ class RecorderOutput(StreamOutput):
                     continue
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                # With B-frames the last frame in decode order does not end last
+                running_duration = max(
+                    running_duration,
+                    math.ceil(
+                        av.time_base
+                        * (packet.pts + (packet.duration or 0))
+                        * packet.time_base
+                    ),
+                )
                 stream = output_v if packet.stream.type == "video" else output_a
                 assert stream
                 packet.stream = stream
                 output.mux(packet)
-
-            running_duration += source.duration - source.start_time
 
             source.close()
 
@@ -169,11 +181,7 @@ class RecorderOutput(StreamOutput):
                     out_file.write(chunk)
             os.remove(video_path + ".tmp")
 
-        def finish_writing(
-            segments: deque[Segment],
-            output: av.container.OutputContainer | None,
-            video_path: str,
-        ) -> None:
+        def finish_writing(segments: deque[Segment]) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
             while segments:
@@ -183,14 +191,14 @@ class RecorderOutput(StreamOutput):
                 return
             output.close()
             try:
-                write_transform_matrix_and_rename(video_path)
+                write_transform_matrix_and_rename(self.video_path)
             except FileNotFoundError:
                 _LOGGER.error(
                     (
                         "Error writing to '%s'. There are likely multiple recordings"
                         " writing to the same file"
                     ),
-                    video_path,
+                    self.video_path,
                 )
 
         # Write lookback segments
@@ -208,6 +216,4 @@ class RecorderOutput(StreamOutput):
                 write_segment, self._segments.popleft()
             )
         # Write remaining segments and close output
-        await self._hass.async_add_executor_job(
-            finish_writing, self._segments, output, self.video_path
-        )
+        await self._hass.async_add_executor_job(finish_writing, self._segments)

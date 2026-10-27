@@ -4,6 +4,9 @@ from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
@@ -14,12 +17,8 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
-
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -33,7 +32,7 @@ async def test_diagnostics(
     )
 
 
-@pytest.mark.freeze_time("2023-01-19 15:00:00")
+@pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_diagnostics_no_gas_today(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

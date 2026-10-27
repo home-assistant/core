@@ -1,7 +1,8 @@
 """Test the Remote Calendar config flow."""
 
-from httpx import HTTPError, InvalidURL, Response, TimeoutException
+from httpx2 import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 import respx
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL
-
-from tests.common import MockConfigEntry
 
 
 @respx.mock
@@ -77,6 +76,61 @@ async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None
     }
 
 
+@respx.mock
+async def test_form_import_webcal_error(hass: HomeAssistant, ics_content: str) -> None:
+    """Test webcal URL error re-displays form with suggested values."""
+    respx.get(CALENDER_URL).mock(side_effect=HTTPError("Connection failed"))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: "webcal://some.calendar.com/calendar.ics",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_VERIFY_SSL)
+        is False
+    )
+
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+        CONF_VERIFY_SSL: False,
+    }
+
+
 @pytest.mark.parametrize(
     ("side_effect", "base_error"),
     [
@@ -108,6 +162,14 @@ async def test_form_invalid_url(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": base_error}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == "invalid-url.com"
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -135,21 +197,25 @@ async def test_form_invalid_url(
     ("url", "log_message"),
     [
         (
-            "unsupported://protocol.com",  # Test for httpx.UnsupportedProtocol
+            "unsupported://protocol.com",  # Test for httpx2.UnsupportedProtocol
             "Request URL has an unsupported protocol 'unsupported://'",
         ),
         (
-            "invalid-url",  # Test for httpx.ProtocolError
+            "invalid-url",  # Test for httpx2.ProtocolError
             "Request URL is missing an 'http://' or 'https://' protocol",
         ),
         (
-            "https://example.com:abc/",  # Test for httpx.InvalidURL
+            "https://example.com:abc/",  # Test for httpx2.InvalidURL
             "Invalid port: 'abc'",
         ),
     ],
 )
 async def test_unsupported_inputs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, url: str, log_message: str
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ics_content: str,
+    url: str,
+    log_message: str,
 ) -> None:
     """Test that an unsupported inputs results in a form error."""
     result = await hass.config_entries.flow.async_init(
@@ -167,9 +233,30 @@ async def test_unsupported_inputs(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert get_schema_suggested_value(result2["data_schema"].schema, CONF_URL) == url
     assert log_message in caplog.text
-    ## It's not possible to test a successful config flow because, we need to mock httpx.get here
-    ## and then the exception isn't raised anymore.
+
+    with respx.mock:
+        respx.get(CALENDER_URL).mock(
+            return_value=Response(
+                status_code=200,
+                text=ics_content,
+            )
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CALENDAR_NAME: CALENDAR_NAME,
+                CONF_URL: CALENDER_URL,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -203,6 +290,14 @@ async def test_form_http_status_error(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -251,6 +346,18 @@ async def test_no_valid_calendar(hass: HomeAssistant, ics_content: str) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_ics_file"}
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)
+        == CALENDAR_NAME
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_URL)
+        == CALENDER_URL
+    )
+    assert (
+        get_schema_suggested_value(result2["data_schema"].schema, CONF_VERIFY_SSL)
+        is True
+    )
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -572,3 +679,214 @@ async def test_form_auth_connection_errors(
         },
     )
     assert result4["type"] is FlowResultType.CREATE_ENTRY
+
+
+NEW_CALENDAR_URL = "https://other.calendar.com/calendar.ics"
+
+
+@respx.mock
+async def test_reconfigure(hass: HomeAssistant, ics_content: str) -> None:
+    """Test reconfigure updates the URL and drops credentials it no longer needs."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CALENDAR_NAME,
+        data={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    respx.get(NEW_CALENDAR_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == (
+        CALENDER_URL
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "webcal://other.calendar.com/calendar.ics",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: NEW_CALENDAR_URL,
+        CONF_VERIFY_SSL: False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(TimeoutException("timeout"), "timeout_connect", id="timeout"),
+        pytest.param(HTTPError("error"), "cannot_connect", id="http_error"),
+        pytest.param(Response(status_code=403), "forbidden", id="forbidden"),
+        pytest.param(
+            Response(status_code=200, text="not a calendar"),
+            "invalid_ics_file",
+            id="invalid_ics",
+        ),
+    ],
+)
+@respx.mock
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ics_content: str,
+    side_effect: Exception | Response,
+    error: str,
+) -> None:
+    """Test reconfigure shows errors and recovers."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    respx.get(NEW_CALENDAR_URL).mock(side_effect=[side_effect])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: NEW_CALENDAR_URL, CONF_VERIFY_SSL: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == (
+        NEW_CALENDAR_URL
+    )
+
+    respx.get(NEW_CALENDAR_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: NEW_CALENDAR_URL, CONF_VERIFY_SSL: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data[CONF_URL] == NEW_CALENDAR_URL
+
+
+@respx.mock
+async def test_reconfigure_duplicate_url(
+    hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
+) -> None:
+    """Test reconfigure cannot point at a URL used by another entry."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CALENDAR_NAME: "Other",
+            CONF_URL: NEW_CALENDAR_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    ).add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: NEW_CALENDAR_URL, CONF_VERIFY_SSL: True}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_URL] == CALENDER_URL
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+@respx.mock
+async def test_reconfigure_same_url(
+    hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
+) -> None:
+    """Test reconfigure can keep the URL and change only SSL verification."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: CALENDER_URL, CONF_VERIFY_SSL: False}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data[CONF_URL] == CALENDER_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is False
+
+
+@respx.mock
+async def test_reconfigure_basic_auth(hass: HomeAssistant, ics_content: str) -> None:
+    """Test reconfigure asks for credentials the new URL needs, retrying rejected ones."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CALENDAR_NAME,
+        data={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    await setup_integration(hass, config_entry)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    respx.get(NEW_CALENDAR_URL).mock(
+        return_value=Response(
+            status_code=401, headers={"www-authenticate": 'Basic realm="test"'}
+        )
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: NEW_CALENDAR_URL, CONF_VERIFY_SSL: True}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME) == (
+        "user"
+    )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_PASSWORD) is None
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "user2", CONF_PASSWORD: "wrong"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    respx.get(NEW_CALENDAR_URL).mock(
+        return_value=Response(status_code=200, text=ics_content)
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "user2", CONF_PASSWORD: "pass2"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: NEW_CALENDAR_URL,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: "user2",
+        CONF_PASSWORD: "pass2",
+    }

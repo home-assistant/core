@@ -1,11 +1,13 @@
 """The PlayStation Network integration."""
 
-from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 
-from .const import CONF_NPSSO
+from .const import CONF_NPSSO, DOMAIN
 from .coordinator import (
     PlaystationNetworkConfigEntry,
     PlaystationNetworkFriendDataCoordinator,
@@ -28,7 +30,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
-) -> bool:
+) -> None:
     """Set up Playstation Network from a config entry."""
 
     psn = PlaystationNetwork(hass, entry.data[CONF_NPSSO])
@@ -56,11 +58,21 @@ async def async_setup_entry(
         coordinator, trophy_titles, groups, friends, friends_list
     )
 
+    # Register the account device up front so entities on concurrently set up
+    # platforms (media players, friends) can resolve it as their via_device.
+    if TYPE_CHECKING:
+        assert entry.unique_id
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=coordinator.data.username,
+        entry_type=DeviceEntryType.SERVICE,
+        manufacturer="Sony Interactive Entertainment",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    return True
 
 
 async def _async_update_listener(
@@ -72,6 +84,6 @@ async def _async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: PlaystationNetworkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

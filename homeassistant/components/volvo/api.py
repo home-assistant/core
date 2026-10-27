@@ -1,7 +1,7 @@
 """API for Volvo bound to Home Assistant OAuth."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from volvocarsapi.auth import AccessTokenManager
@@ -21,6 +21,7 @@ class VolvoAuth(AccessTokenManager):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         current_access_token = self._oauth_session.token["access_token"]
@@ -51,6 +52,7 @@ class ConfigFlowVolvoAuth(AccessTokenManager):
         super().__init__(websession)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the token for the Volvo API."""
         return self._token

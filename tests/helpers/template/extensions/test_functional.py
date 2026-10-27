@@ -1,7 +1,5 @@
 """Test functional utility functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import random
 from unittest.mock import MagicMock, patch
 
@@ -402,6 +400,20 @@ async def test_merge_response_with_empty_response(
     assert render(hass, _template) == snapshot(name="b_rendered")
 
 
+async def test_merge_response_dict_after_single_list(hass: HomeAssistant) -> None:
+    """Test a dict response following a single list response is merged."""
+
+    service_response = {
+        "calendar.sports": {"events": [{"summary": "Match"}]},
+        "weather.home": {"temperature": 20, "condition": "sunny"},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    assert render(hass, _template) == [
+        {"summary": "Match", "entity_id": "calendar.sports", "value_key": "events"},
+        {"temperature": 20, "condition": "sunny", "entity_id": "weather.home"},
+    ]
+
+
 async def test_response_empty_dict(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -497,13 +509,15 @@ def test_combine(hass: HomeAssistant) -> None:
 
     assert render(
         hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        "{{ combine({'a': 1, 'b': {'x': 1}},"
+        " {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
     ) == {"a": 1, "b": {"x": 1, "y": 2}, "c": 4}
 
     # Test that recursive=False does not merge nested dictionaries
     assert render(
         hass,
-        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
+        "{{ combine({'a': 1, 'b': {'x': 1}},"
+        " {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
     ) == {"a": 1, "b": {"y": 2}, "c": 4}
 
     # Test that None values are handled correctly in recursive merge

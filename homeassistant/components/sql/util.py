@@ -1,12 +1,12 @@
 """Utils for sql."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import date
 from decimal import Decimal
 import logging
 from typing import Any
 
+import probatio
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
-import voluptuous as vol
 
 from homeassistant.components.recorder import SupportedDialect, get_instance
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -52,7 +51,7 @@ def validate_sql_select(value: Template) -> Template:
         assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
-        raise vol.Invalid(str(err)) from err
+        raise probatio.Invalid(str(err)) from err
     return value
 
 
@@ -116,14 +115,17 @@ def validate_query(
     query_template: str | Template,
     uses_recorder_db: bool,
     unique_id: str | None = None,
+    config_entry_id: str | None = None,
 ) -> None:
     """Validate the query against common performance issues.
 
     Args:
         hass: The Home Assistant instance.
         query_template: The SQL query string to be validated.
-        uses_recorder_db: A boolean indicating if the query is against the recorder database.
+        uses_recorder_db: A boolean indicating if the query is
+            against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
+        config_entry_id: The config entry the issue belongs to, if any.
 
     Raises:
         ValueError: If the query uses `entity_id` without referencing `states_meta`.
@@ -157,6 +159,7 @@ def validate_query(
             hass,
             DOMAIN,
             f"entity_id_query_does_full_table_scan_{issue_key}",
+            config_entry_id=config_entry_id,
             translation_key="entity_id_query_does_full_table_scan",
             translation_placeholders={"query": redacted_query},
             is_fixable=False,

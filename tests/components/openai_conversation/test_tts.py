@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 from openai import RateLimitError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
@@ -20,9 +22,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -118,6 +118,79 @@ async def test_tts(
     )
 
 
+@pytest.mark.parametrize(
+    ("preferred_format", "expected_response_format"),
+    [
+        ("ogg", "opus"),
+        ("oga", "opus"),
+        ("mp3", "mp3"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_preferred_format(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_create_speech: MagicMock,
+    calls: list[ServiceCall],
+    preferred_format: str,
+    expected_response_format: str,
+) -> None:
+    """Test text to speech preferred format handling."""
+    mock_create_speech.return_value = [b"mock audio data"]
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: "tts.openai_tts",
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            tts.ATTR_OPTIONS: {tts.ATTR_PREFERRED_FORMAT: preferred_format},
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+    mock_create_speech.assert_called_once_with(
+        model="gpt-4o-mini-tts",
+        voice="marin",
+        input="There is a person at the front door.",
+        instructions="",
+        speed=1.0,
+        response_format=expected_response_format,
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_raw_preferred_format_returns_pcm(
+    hass: HomeAssistant,
+    mock_create_speech: MagicMock,
+) -> None:
+    """Test raw preferred format is returned as pcm."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.openai_tts")
+    mock_create_speech.return_value = [b"mock audio data"]
+
+    result = await tts_entity.async_get_tts_audio(
+        "There is a person at the front door.",
+        "en-US",
+        {tts.ATTR_PREFERRED_FORMAT: "raw", tts.ATTR_VOICE: "marin"},
+    )
+
+    assert result == ("pcm", b"mock audio data")
+    mock_create_speech.assert_called_once_with(
+        model="gpt-4o-mini-tts",
+        voice="marin",
+        input="There is a person at the front door.",
+        instructions="",
+        speed=1.0,
+        response_format="pcm",
+    )
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_tts_error(
     hass: HomeAssistant,
@@ -130,7 +203,7 @@ async def test_tts_error(
     """Test exception handling during text to speech generation."""
     # Mock the OpenAI response stream
     mock_create_speech.side_effect = RateLimitError(
-        response=httpx.Response(status_code=429, request=""),
+        response=httpx2.Response(status_code=429, request=""),
         body=None,
         message=None,
     )

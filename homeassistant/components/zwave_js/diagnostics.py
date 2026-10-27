@@ -1,7 +1,5 @@
 """Provides diagnostics for Z-Wave JS."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
@@ -76,14 +74,23 @@ def get_device_entities(
     hass: HomeAssistant,
     node: Node,
     config_entry: ZwaveJSConfigEntry,
-    device: dr.DeviceEntry,
+    device: dr.AnyDeviceEntry,
 ) -> list[dict[str, Any]]:
     """Get entities for a device."""
-    entity_entries = er.async_entries_for_device(
-        er.async_get(hass), device.id, include_disabled_entities=True
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    # Include entities on endpoint child devices in addition to the node device itself.
+    all_entries = list(
+        er.async_entries_for_device(ent_reg, device.id, include_disabled_entities=True)
     )
+    for child_device in dr.async_entries_for_parent_device(dev_reg, device.id):
+        all_entries.extend(
+            er.async_entries_for_device(
+                ent_reg, child_device.id, include_disabled_entities=True
+            )
+        )
     entities = []
-    for entry in sorted(entity_entries):
+    for entry in sorted(all_entries):
         # Skip entities that are not part of this integration
         if entry.config_entry_id != config_entry.entry_id:
             continue
@@ -147,7 +154,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, device: dr.AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     client: Client = config_entry.runtime_data.client

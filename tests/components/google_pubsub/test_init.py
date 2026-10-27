@@ -45,11 +45,7 @@ async def test_nested() -> None:
 def mock_client_fixture() -> Generator[MagicMock]:
     """Mock the pubsub client."""
     with patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
-        setattr(
-            client,
-            "from_service_account_json",
-            MagicMock(return_value=MagicMock()),
-        )
+        client.from_service_account_json = MagicMock(return_value=MagicMock())
         yield client
 
 

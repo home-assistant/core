@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -42,7 +41,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "switch.backyard_loudness",
+            ATTR_ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )
@@ -55,7 +54,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            ATTR_ENTITY_ID: "switch.backyard_loudness",
+            ATTR_ENTITY_ID: "switch.backyard_backyard_loudness",
         },
         blocking=True,
     )

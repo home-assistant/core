@@ -1,27 +1,20 @@
 """Support for WiLight switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 from pywilight.wilight_device import PyWiLightDevice
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import ATTR_PAUSE_TIME, ATTR_WATERING_TIME
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
-from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
+from .parent_device import WiLightConfigEntry
+from .support import wilight_to_hass_trigger
 
 # Attr of features supported by the valve switch entities
-ATTR_WATERING_TIME = "watering_time"
-ATTR_PAUSE_TIME = "pause_time"
 ATTR_TRIGGER_1 = "trigger_1"
 ATTR_TRIGGER_2 = "trigger_2"
 ATTR_TRIGGER_3 = "trigger_3"
@@ -30,29 +23,6 @@ ATTR_TRIGGER_1_DESC = "trigger_1_description"
 ATTR_TRIGGER_2_DESC = "trigger_2_description"
 ATTR_TRIGGER_3_DESC = "trigger_3_description"
 ATTR_TRIGGER_4_DESC = "trigger_4_description"
-
-# Attr of services data supported by the valve switch entities
-ATTR_TRIGGER = "trigger"
-ATTR_TRIGGER_INDEX = "trigger_index"
-
-# Service of features supported by the valve switch entities
-SERVICE_SET_WATERING_TIME = "set_watering_time"
-SERVICE_SET_PAUSE_TIME = "set_pause_time"
-SERVICE_SET_TRIGGER = "set_trigger"
-
-# Range of features supported by the valve switch entities
-RANGE_WATERING_TIME = 1800
-RANGE_PAUSE_TIME = 24
-RANGE_TRIGGER_INDEX = 4
-
-# Service call validation schemas
-VALID_WATERING_TIME = vol.All(
-    vol.Coerce(int), vol.Range(min=1, max=RANGE_WATERING_TIME)
-)
-VALID_PAUSE_TIME = vol.All(vol.Coerce(int), vol.Range(min=1, max=RANGE_PAUSE_TIME))
-VALID_TRIGGER_INDEX = vol.All(
-    vol.Coerce(int), vol.Range(min=1, max=RANGE_TRIGGER_INDEX)
-)
 
 # Descriptions of the valve switch entities
 DESC_WATERING = "watering"
@@ -76,63 +46,16 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight switches from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     assert parent.api
     entities = entities_from_discovered_wilight(parent.api)
     async_add_entities(entities)
-
-    # Handle services for a discovered WiLight device.
-    async def set_watering_time(entity, service: Any) -> None:
-        if not isinstance(entity, WiLightValveSwitch):
-            raise TypeError("Entity is not a WiLight valve switch")
-        watering_time = service.data[ATTR_WATERING_TIME]
-        await entity.async_set_watering_time(watering_time=watering_time)
-
-    async def set_trigger(entity, service: Any) -> None:
-        if not isinstance(entity, WiLightValveSwitch):
-            raise TypeError("Entity is not a WiLight valve switch")
-        trigger_index = service.data[ATTR_TRIGGER_INDEX]
-        trigger = service.data[ATTR_TRIGGER]
-        await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
-
-    async def set_pause_time(entity, service: Any) -> None:
-        if not isinstance(entity, WiLightValvePauseSwitch):
-            raise TypeError("Entity is not a WiLight valve pause switch")
-        pause_time = service.data[ATTR_PAUSE_TIME]
-        await entity.async_set_pause_time(pause_time=pause_time)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_WATERING_TIME,
-        {
-            vol.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
-        },
-        set_watering_time,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_TRIGGER,
-        {
-            vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
-            vol.Required(ATTR_TRIGGER): wl_trigger,
-        },
-        set_trigger,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PAUSE_TIME,
-        {
-            vol.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
-        },
-        set_pause_time,
-    )
 
 
 def wilight_to_hass_pause_time(value: int) -> int:
@@ -151,6 +74,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "watering"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -204,6 +128,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
         return wilight_to_hass_trigger(self._status.get("trigger_4"))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -237,10 +162,12 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)
@@ -267,6 +194,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     _attr_translation_key = "pause"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("on", False)
@@ -283,6 +211,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
         return pause_time
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -292,10 +221,12 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
 
         return attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._client.turn_on(self._index)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._client.turn_off(self._index)

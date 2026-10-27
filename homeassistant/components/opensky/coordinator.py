@@ -1,8 +1,7 @@
 """DataUpdateCoordinator for the OpenSky integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from python_opensky import OpenSky, OpenSkyError, StateVector
 
@@ -61,11 +60,15 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
         )
         self._altitude = config_entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE)
 
+    @override
     async def _async_update_data(self) -> int:
         try:
             response = await self._opensky.get_states(bounding_box=self._bounding_box)
         except OpenSkyError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from exc
         currently_tracked = set()
         flight_metadata: dict[str, StateVector] = {}
         for flight in response.states:

@@ -1,6 +1,7 @@
 {
   "domain": "blink",
   "name": "Blink",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@fronzbot"],
   "config_flow": true,
   "dhcp": [
@@ -21,5 +22,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["blinkpy"],
-  "requirements": ["blinkpy==0.25.2"]
+  "requirements": ["blinkpy==0.25.9"]
 }

@@ -4,6 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 from math import isfinite
+import mimetypes
 from pathlib import Path
 from typing import Any
 
@@ -11,15 +12,21 @@ from mastodon import Mastodon
 from mastodon.Mastodon import (
     Account,
     MastodonAPIError,
+    MastodonIllegalArgumentError,
     MastodonNotFoundError,
     MastodonUnauthorizedError,
     MediaAttachment,
+    ScheduledStatus,
+    Status,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.components import camera, image
-from homeassistant.components.media_source import async_resolve_media
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
+from homeassistant.components import tts
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -35,30 +42,41 @@ from .const import (
     ATTR_ACCOUNT_NAME,
     ATTR_ATTRIBUTION_DOMAINS,
     ATTR_AVATAR,
+    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DELETE_AVATAR,
+    ATTR_DELETE_HEADER,
     ATTR_DISCOVERABLE,
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
     ATTR_FIELDS,
+    ATTR_FOCUS_X,
+    ATTR_FOCUS_Y,
     ATTR_HEADER,
+    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
-    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
+    ATTR_MEDIA_SOURCE,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
+    ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
+    ATTR_THUMBNAIL,
     ATTR_VALUE,
     ATTR_VISIBILITY,
     DOMAIN,
     LOGGER,
 )
 from .coordinator import MastodonConfigEntry
+from .issue import async_deprecated_media_path
 from .utils import get_media_type
 
 MAX_DURATION_SECONDS = 315360000  # 10 years
@@ -73,64 +91,111 @@ class StatusVisibility(StrEnum):
     DIRECT = "direct"
 
 
+class QuoteApprovalPolicy(StrEnum):
+    """QuoteApprovalPolicy model."""
+
+    PUBLIC = "public"
+    FOLLOWERS = "followers"
+    NOBODY = "nobody"
+
+
 SERVICE_GET_ACCOUNT = "get_account"
-SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_GET_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_MUTE_ACCOUNT = "mute_account"
-SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_MUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
-        vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period,
-            vol.Range(
-                min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
-            ),
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Optional(ATTR_DURATION): probatio.All(
+            cv.positive_time_period,
+            probatio.Range(max=timedelta(seconds=MAX_DURATION_SECONDS)),
         ),
-        vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
+        probatio.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
 )
 SERVICE_UNMUTE_ACCOUNT = "unmute_account"
-SERVICE_UNMUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_UNMUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_POST = "post"
-SERVICE_POST_SCHEMA = vol.Schema(
+SCHEMA_MEDIA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_STATUS): str,
-        vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
-        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
-        vol.Optional(ATTR_CONTENT_WARNING): str,
-        vol.Optional(ATTR_LANGUAGE): str,
-        vol.Optional(ATTR_MEDIA): str,
-        vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
-        vol.Optional(ATTR_MEDIA_WARNING): bool,
+        probatio.Required(ATTR_MEDIA_SOURCE): MediaSelector(
+            {"accept": ["image/*", "video/*", "audio/*", "application/*"]}
+        ),
+        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
+        probatio.Optional(ATTR_FOCUS_X): probatio.All(
+            float, probatio.Range(min=-1, max=1)
+        ),
+        probatio.Optional(ATTR_FOCUS_Y): probatio.All(
+            float, probatio.Range(min=-1, max=1)
+        ),
+        probatio.Optional(ATTR_THUMBNAIL): MediaSelector(
+            {"accept": ["image/*", "video/*", "application/*"]}
+        ),
+    }
+)
+SERVICE_POST_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_STATUS): str,
+        probatio.Optional(ATTR_VISIBILITY): probatio.All(
+            probatio.In([x.lower() for x in StatusVisibility]),
+            probatio.Coerce(StatusVisibility),
+        ),
+        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.All(
+            probatio.In([x.lower() for x in QuoteApprovalPolicy]),
+            probatio.Coerce(QuoteApprovalPolicy),
+        ),
+        probatio.Optional(ATTR_IDEMPOTENCY_KEY): probatio.All(
+            str, probatio.Length(min=4)
+        ),
+        probatio.Optional(ATTR_CONTENT_WARNING): str,
+        probatio.Optional(ATTR_LANGUAGE): str,
+        probatio.Optional(ATTR_MEDIA): probatio.Any(
+            probatio.All(probatio.EnsureList(), probatio.Length(max=4), [SCHEMA_MEDIA]),
+            str,
+        ),
+        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
+        probatio.Optional(ATTR_MEDIA_WARNING): bool,
+        probatio.Optional(ATTR_IN_REPLY_TO): str,
+        probatio.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
 SERVICE_UPDATE_PROFILE = "update_profile"
-SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
+SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_DISPLAY_NAME): str,
-        vol.Optional(ATTR_NOTE): str,
-        vol.Optional(ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional(ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
-        vol.Optional(ATTR_LOCKED): bool,
-        vol.Optional(ATTR_BOT): bool,
-        vol.Optional(ATTR_DISCOVERABLE): bool,
-        vol.Optional(ATTR_FIELDS): vol.All(
-            cv.ensure_list, vol.Length(max=4), [dict[str, str]]
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_DISPLAY_NAME): str,
+        probatio.Optional(ATTR_NOTE): str,
+        probatio.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector(
+            {"accept": ["image/*"]}
         ),
-        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [str]),
+        probatio.Optional(ATTR_AVATAR_DESCRIPTION): str,
+        probatio.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
+        probatio.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector(
+            {"accept": ["image/*"]}
+        ),
+        probatio.Optional(ATTR_HEADER_DESCRIPTION): str,
+        probatio.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
+        probatio.Optional(ATTR_LOCKED): bool,
+        probatio.Optional(ATTR_BOT): bool,
+        probatio.Optional(ATTR_DISCOVERABLE): bool,
+        probatio.Optional(ATTR_FIELDS): probatio.All(
+            probatio.EnsureList(), probatio.Length(max=4), [dict[str, str]]
+        ),
+        probatio.Optional(ATTR_ATTRIBUTION_DOMAINS): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
     }
 )
 
@@ -158,14 +223,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
+        DOMAIN,
+        SERVICE_POST,
+        _async_post,
+        schema=SERVICE_POST_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_UPDATE_PROFILE,
         _async_update_profile,
         schema=SERVICE_UPDATE_PROFILE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 
@@ -275,6 +344,7 @@ async def _async_unmute_account(call: ServiceCall) -> ServiceResponse:
 
 async def _async_post(call: ServiceCall) -> ServiceResponse:
     """Post a status."""
+
     entry: MastodonConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
@@ -282,47 +352,105 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
 
     status: str = call.data[ATTR_STATUS]
 
-    visibility: str | None = (
-        StatusVisibility(call.data[ATTR_VISIBILITY])
-        if ATTR_VISIBILITY in call.data
-        else None
-    )
+    visibility: str | None = call.data.get(ATTR_VISIBILITY)
+    quote_approval_policy: str | None = call.data.get(ATTR_QUOTE_APPROVAL_POLICY)
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
-    media_path: str | None = call.data.get(ATTR_MEDIA)
-    media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
-    media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
 
-    if idempotency_key and len(idempotency_key) < 4:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="idempotency_key_too_short",
+    media_path: str | None = None
+    media: list[dict[str, Any]] | str = call.data.get(ATTR_MEDIA, [])
+    if isinstance(media, str):
+        async_deprecated_media_path(call.hass)
+        media_path, media = media, []
+
+    resolved: list[dict[str, Any]] = []
+    for media_item in media:
+        content, mime_type = await _resolve_media(
+            call.hass, media_item[ATTR_MEDIA_SOURCE]
+        )
+        if mime_type is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_type_unknown",
+            )
+        if not mime_type.startswith(("audio/", "video/", "image/")):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_type_not_supported",
+            )
+        audio_or_video = mime_type.startswith(("audio/", "video/"))
+        if audio_or_video and len(media) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_not_allowed_with_other_media",
+            )
+        if not audio_or_video and media_item.get(ATTR_THUMBNAIL):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_thumbnail_not_allowed",
+            )
+        thumbnail_content, thumbnail_mime_type = (
+            (None, None)
+            if not media_item.get(ATTR_THUMBNAIL)
+            else await _resolve_media(call.hass, media_item[ATTR_THUMBNAIL])
+        )
+        if thumbnail_mime_type and not thumbnail_mime_type.startswith("image/"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_thumbnail_not_an_image",
+                translation_placeholders={"mime_type": thumbnail_mime_type},
+            )
+        resolved.append(
+            {
+                "media_file": content,
+                "mime_type": mime_type,
+                "description": media_item.get(ATTR_MEDIA_DESCRIPTION),
+                "focus": (
+                    (media_item.get(ATTR_FOCUS_X, 0), media_item.get(ATTR_FOCUS_Y, 0))
+                    if ATTR_FOCUS_X in media_item or ATTR_FOCUS_Y in media_item
+                    else None
+                ),
+                "thumbnail": thumbnail_content,
+                "thumbnail_mime_type": thumbnail_mime_type,
+            }
         )
 
-    await call.hass.async_add_executor_job(
+    media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
+    media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
+
+    response = await call.hass.async_add_executor_job(
         partial(
             _post,
             hass=call.hass,
             client=client,
             status=status,
             visibility=visibility,
+            quote_approval_policy=quote_approval_policy,
             idempotency_key=idempotency_key,
             spoiler_text=spoiler_text,
             language=language,
             media_path=media_path,
             media_description=media_description,
             sensitive=media_warning,
+            in_reply_to_id=in_reply_to,
+            quoted_status_id=quoted_status,
+            media=resolved,
         )
     )
-
+    if call.return_response:
+        return response
     return None
 
 
-def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
+def _post(
+    hass: HomeAssistant, client: Mastodon, **kwargs: Any
+) -> Status | ScheduledStatus:
     """Post to Mastodon."""
 
-    media_data: MediaAttachment | None = None
+    media_data: list[MediaAttachment] = []
 
     media_path = kwargs.get("media_path")
     if media_path:
@@ -336,10 +464,12 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
         media_type = get_media_type(media_path)
         media_description = kwargs.get("media_description")
         try:
-            media_data = client.media_post(
-                media_file=media_path,
-                mime_type=media_type,
-                description=media_description,
+            media_data.append(
+                client.media_post(
+                    media_file=media_path,
+                    mime_type=media_type,
+                    description=media_description,
+                )
             )
 
         except MastodonAPIError as err:
@@ -349,22 +479,34 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
                 translation_placeholders={"media_path": media_path},
             ) from err
 
+    for media in kwargs.get("media", []):
+        try:
+            media_data.append(client.media_post(**media, synchronous=True))
+        except (MastodonAPIError, MastodonIllegalArgumentError) as err:
+            LOGGER.debug("Full exception:", exc_info=err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_upload_media",
+            ) from err
+
     kwargs.pop("media_path", None)
     kwargs.pop("media_description", None)
+    kwargs.pop("media", None)
 
-    media_ids: str | None = None
-    if media_data:
-        media_ids = media_data.id
     try:
-        client.status_post(media_ids=media_ids, **kwargs)
+        response: Status | ScheduledStatus = client.status_post(
+            media_ids=media_data, **kwargs
+        )
     except MastodonAPIError as err:
+        LOGGER.debug("Full exception:", exc_info=err)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_send_message",
         ) from err
+    return response
 
 
-async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
+async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
     """Update profile information."""
     params = dict(call.data.copy())
 
@@ -387,9 +529,21 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             for field in fields
             if field[ATTR_NAME].strip()
         ]
+    delete_avatar = params.pop("delete_avatar", False)
+    delete_header = params.pop("delete_header", False)
     try:
-        return await call.hass.async_add_executor_job(
-            lambda: client.account_update_credentials(**params)
+
+        def _update_profile() -> Any:
+            if delete_avatar:
+                client.account_delete_avatar()
+            if delete_header:
+                client.account_delete_header()
+            if call.return_response or params:
+                return client.account_update_credentials(**params)
+            return None
+
+        response: Account | None = await call.hass.async_add_executor_job(
+            _update_profile
         )
     except MastodonUnauthorizedError as error:
         entry.async_start_reauth(call.hass)
@@ -403,6 +557,9 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse:
             translation_domain=DOMAIN,
             translation_key="unable_to_update_profile",
         ) from err
+    if call.return_response:
+        return response
+    return None
 
 
 async def _resolve_media(
@@ -410,15 +567,12 @@ async def _resolve_media(
 ) -> tuple[bytes | Path, str | None]:
     """Resolve media from a media source."""
     media_content_id: str = media_source["media_content_id"]
-    if media_content_id.startswith("media-source://camera/"):
-        entity_id = media_content_id.removeprefix("media-source://camera/")
-        snapshot = await camera.async_get_image(hass, entity_id)
-        return snapshot.content, snapshot.content_type
+    if media_content_id.startswith("media-source://tts/"):
+        ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
+        return audio, mimetypes.types_map.get(f".{ext}")
 
-    if media_content_id.startswith("media-source://image/"):
-        entity_id = media_content_id.removeprefix("media-source://image/")
-        img = await image.async_get_image(hass, entity_id)
-        return img.content, img.content_type
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
+        return media_image.content, media_image.mime_type
 
     media = await async_resolve_media(hass, media_source["media_content_id"], None)
 

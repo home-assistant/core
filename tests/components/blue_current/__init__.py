@@ -1,20 +1,17 @@
 """Tests for the Blue Current integration."""
 
-from __future__ import annotations
-
 from asyncio import Event, Future
 from dataclasses import dataclass
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blue_current import EVSE_ID, PLUG_AND_CHARGE
 from homeassistant.components.blue_current.const import PUBLIC_CHARGING, UID
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_CHARGE_POINT_OPTIONS = {
     PLUG_AND_CHARGE: {"value": False, "permission": "write"},

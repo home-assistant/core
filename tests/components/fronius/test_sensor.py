@@ -1,22 +1,25 @@
 """Tests for the Fronius sensor platform."""
 
+from unittest.mock import patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import mock_responses, setup_fronius_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -188,6 +191,95 @@ async def test_symo_meter_forged(
     )
 
 
+@pytest.mark.parametrize(
+    ("fixture_set", "is_logger", "fixture", "keys", "details", "entity_id"),
+    [
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_details",
+        ),
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            {"Manufacturer": "Fronius", "Model": "Smart Meter 63A"},
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_serial",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetOhmPilotRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.ohmpilot_power",
+            id="ohmpilot_without_details",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetStorageRealtimeData.json",
+            ["Body", "Data", "0", "Controller", "Details"],
+            None,
+            "sensor.byd_battery_box_premium_hv_state_of_charge",
+            id="storage_without_details",
+        ),
+    ],
+)
+async def test_device_without_serial(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    fixture_set: str,
+    is_logger: bool,
+    fixture: str,
+    keys: list[str],
+    details: dict[str, str] | None,
+    entity_id: str,
+) -> None:
+    """Test entities are only added once a device reports its serial number."""
+    mock_responses(
+        aioclient_mock,
+        fixture_set=fixture_set,
+        override_data={fixture: [(keys, details)]},
+    )
+    await setup_fronius_integration(hass, is_logger=is_logger)
+    # without a serial number the unique IDs would collide between devices
+    assert hass.states.get(entity_id) is None
+
+    mock_responses(aioclient_mock, fixture_set=fixture_set)
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_symo_meter_gone(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test meter entities when the meter is no longer reported."""
+    mock_responses(aioclient_mock)
+    await setup_fronius_integration(hass)
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == "5592.57"
+
+    mock_responses(
+        aioclient_mock,
+        override_data={"symo/GetMeterRealtimeData.json": [(["Body", "Data"], {})]},
+    )
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == STATE_UNKNOWN
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_power_flow(
     hass: HomeAssistant,
@@ -269,7 +361,8 @@ async def test_gen24(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock, fixture_set="gen24")
-    config_entry = await setup_fronius_integration(hass, is_logger=False)
+    with patch("homeassistant.components.fronius.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await setup_fronius_integration(hass, is_logger=False)
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
@@ -309,39 +402,46 @@ async def test_gen24_storage(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
-    config_entry = await setup_fronius_integration(
-        hass, is_logger=False, unique_id="12345678"
-    )
+    with patch("homeassistant.components.fronius.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678"
+        )
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 73
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    solar_net = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_12345678")}
+    solar_net = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_12345678"), config_entry.entry_id
     )
     assert solar_net.configuration_url == "http://fronius"
     assert solar_net.manufacturer == "Fronius"
     assert solar_net.name == "SolarNet"
 
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345678"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
-    assert inverter_1.model == "Gen24"
+    assert inverter_1.model == "GEN24/Tauro/Verto"
     assert inverter_1.name == "Gen24 Storage"
 
-    meter = device_registry.async_get_device(identifiers={(DOMAIN, "1234567890")})
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890"), config_entry.entry_id
+    )
     assert meter.manufacturer == "Fronius"
     assert meter.model == "Smart Meter TS 65A-3"
     assert meter.name == "Smart Meter TS 65A-3"
 
-    ohmpilot = device_registry.async_get_device(identifiers={(DOMAIN, "23456789")})
+    ohmpilot = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "23456789"), config_entry.entry_id
+    )
     assert ohmpilot.manufacturer == "Fronius"
     assert ohmpilot.model == "Ohmpilot 6"
     assert ohmpilot.name == "Ohmpilot"
     assert ohmpilot.sw_version == "1.0.25-3"
 
-    storage = device_registry.async_get_device(
-        identifiers={(DOMAIN, "P030T020Z2001234567     ")}
+    storage = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "P030T020Z2001234567     "), config_entry.entry_id
     )
     assert storage.manufacturer == "BYD"
     assert storage.model == "BYD Battery-Box Premium HV"
@@ -371,8 +471,8 @@ async def test_primo_s0(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
-    solar_net = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_123.4567890")}
+    solar_net = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_123.4567890"), config_entry.entry_id
     )
     assert solar_net.configuration_url == "http://fronius"
     assert solar_net.manufacturer == "Fronius"
@@ -380,18 +480,22 @@ async def test_primo_s0(
     assert solar_net.name == "SolarNet"
     assert solar_net.sw_version == "3.18.7-1"
 
-    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "123456")})
+    inverter_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), config_entry.entry_id
+    )
     assert inverter_1.manufacturer == "Fronius"
     assert inverter_1.model == "Primo 5.0-1"
     assert inverter_1.name == "Primo 5.0-1"
 
-    inverter_2 = device_registry.async_get_device(identifiers={(DOMAIN, "234567")})
+    inverter_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "234567"), config_entry.entry_id
+    )
     assert inverter_2.manufacturer == "Fronius"
     assert inverter_2.model == "Primo 3.0-1"
     assert inverter_2.name == "Primo 3.0-1"
 
-    meter = device_registry.async_get_device(
-        identifiers={(DOMAIN, "solar_net_123.4567890:S0 Meter at inverter 1")}
+    meter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "solar_net_123.4567890:S0 Meter at inverter 1"), config_entry.entry_id
     )
     assert meter.manufacturer == "Fronius"
     assert meter.model == "S0 Meter at inverter 1"

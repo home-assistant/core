@@ -1,8 +1,6 @@
 """Provides device automations for Vacuum."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
@@ -16,14 +14,15 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, SERVICE_RETURN_TO_BASE, SERVICE_START
+from . import DOMAIN
+from .const import VacuumService
 
 ACTION_TYPES = {"clean", "dock"}
 
 _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
@@ -69,9 +68,9 @@ async def async_call_action_from_config(
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "clean":
-        service = SERVICE_START
+        service = VacuumService.START
     elif config[CONF_TYPE] == "dock":
-        service = SERVICE_RETURN_TO_BASE
+        service = VacuumService.RETURN_TO_BASE
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

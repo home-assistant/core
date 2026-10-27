@@ -10,6 +10,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The new password for your Autoskope account."
+        },
+        "description": "Please re-enter your password for your Autoskope account."
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -21,14 +30,14 @@
         },
         "description": "Enter your Autoskope credentials.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "host": "API endpoint"
             },
             "data_description": {
               "host": "The URL of your Autoskope API endpoint. Only change this if you use a white-label portal."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         },
         "title": "Connect to Autoskope"

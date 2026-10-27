@@ -2,9 +2,10 @@
 
 import re
 from unittest.mock import patch
+from xml.etree.ElementTree import ParseError
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import core
 from homeassistant.components.device_tracker import (
@@ -15,14 +16,13 @@ from homeassistant.components.fritz.const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
-    SCAN_INTERVAL,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -114,14 +114,42 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state.recoverable is True
+    assert entry.error_reason_translation_key == "error_connecting"
 
 
+async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> None:
+    """Test setup failure due to parse error while fetching device data."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus.get_device_info"
+        ) as fs_mock,
+    ):
+        fs_mock.side_effect = ParseError("boom")
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "error_parse_device_info"
+
+
+@pytest.mark.parametrize(
+    "upnp_config",
+    [
+        pytest.param({"NewEnable": False}, id="disabled"),
+        pytest.param({}, id="missing_key"),
+    ],
+)
 async def test_upnp_missing(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    upnp_config: dict[str, bool],
 ) -> None:
     """Test UPNP configuration is missing."""
 
@@ -131,23 +159,19 @@ async def test_upnp_missing(
     with (
         patch(
             "homeassistant.components.fritz.coordinator.AvmWrapper.async_get_upnp_configuration",
-            return_value={"NewEnable": False},
+            return_value=upnp_config,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.state.recoverable is True
-    assert (
-        "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
-        in caplog.text
-    )
+    assert entry.error_reason_translation_key == "error_upnp_disabled"
 
 
 async def test_execute_action_while_shutdown(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
@@ -163,9 +187,12 @@ async def test_execute_action_while_shutdown(
     assert entry.state is ConfigEntryState.LOADED
 
     hass.set_state(core.CoreState.stopping)
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.mock_title_wi_fi_guest"},
+        blocking=True,
+    )
 
     assert re.search(
         r"Cannot execute (.+): HomeAssistant is shutting down", caplog.text

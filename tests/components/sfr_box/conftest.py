@@ -4,21 +4,20 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sfr_box.async_setup_entry", return_value=True
+        "homeassistant.components.sfr_box.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -91,6 +90,19 @@ async def system_get_info(hass: HomeAssistant) -> AsyncGenerator[SystemInfo]:
     )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
+        return_value=info,
+    ):
+        yield info
+
+
+@pytest.fixture
+async def voip_get_info(hass: HomeAssistant) -> AsyncGenerator[VoipInfo]:
+    """Fixture for SFRBox.voip_get_info."""
+    info = VoipInfo(
+        **(await async_load_json_object_fixture(hass, "voip_getInfo.json", DOMAIN))
+    )
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.voip_get_info",
         return_value=info,
     ):
         yield info

@@ -2,6 +2,7 @@
 
 from tesla_powerwall import BatteryResponse
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,12 +30,17 @@ class PowerWallEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):
         super().__init__(coordinator)
         self.power_wall = powerwall_data[POWERWALL_API]
         self.base_unique_id = base_info.gateway_din
+        model = (
+            f"{MODEL} ({base_info.device_type.name})"
+            if base_info.device_type is not None
+            else MODEL
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"{MODEL} ({base_info.device_type.name})",
-            name=base_info.site_info.site_name,
-            sw_version=base_info.status.version,
+            model=model,
+            name=base_info.site_name,
+            sw_version=base_info.status.version if base_info.status else None,
             configuration_url=base_info.url,
         )
 
@@ -60,15 +66,18 @@ class BatteryEntity(CoordinatorEntity[PowerwallUpdateCoordinator]):
         self.serial_number = battery.serial_number
         self.power_wall = powerwall_data[POWERWALL_API]
         self.base_unique_id = f"{base_info.gateway_din}_{battery.serial_number}"
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.base_unique_id)},
             manufacturer=MANUFACTURER,
             model=f"{MODEL} ({battery.part_number})",
-            name=f"{base_info.site_info.site_name} {battery.serial_number}",
-            sw_version=base_info.status.version,
+            name=f"{base_info.site_name} {battery.serial_number}",
+            sw_version=base_info.status.version if base_info.status else None,
             configuration_url=base_info.url,
-            via_device=(DOMAIN, base_info.gateway_din),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, base_info.gateway_din),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )
 
     @property

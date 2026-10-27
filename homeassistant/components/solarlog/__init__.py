@@ -8,10 +8,10 @@ from solarlog_cli.solarlog_connector import SolarLogConnector
 
 from homeassistant.const import CONF_HOST, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HAS_PWD
+from .const import CONF_HAS_PWD, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import (
     SolarLogBasicDataCoordinator,
     SolarlogConfigEntry,
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Set up a config entry for solarlog."""
 
     host_entry = entry.data[CONF_HOST]
@@ -47,54 +47,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
     basic_coordinator = SolarLogBasicDataCoordinator(hass, entry, solarlog)
 
-    solarLogData = SolarlogIntegrationData(
+    solar_log_data = SolarlogIntegrationData(
         api=solarlog,
         basic_data_coordinator=basic_coordinator,
     )
 
     await basic_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = solarLogData
+    entry.runtime_data = solar_log_data
 
-    if basic_coordinator.solarlog.extended_data:
-        timeout = entry.data.get(CONF_TIMEOUT, 0)
-        if timeout <= 150:
-            # Increase timeout for next try, skip setup of LongtimeDataCoordinator,
-            # if timeout was not the issue (assumed when timeout > 150)
-            timeout = timeout + 30
-            new = {**entry.data}
-            new[CONF_TIMEOUT] = timeout
-            hass.config_entries.async_update_entry(entry, data=new)
+    _LOGGER.debug(
+        "Basic coordinator setup successful, extended data available: %s",
+        solar_log_data.api.extended_data,
+    )
 
-            entry.runtime_data.longtime_data_coordinator = (
-                SolarLogLongtimeDataCoordinator(hass, entry, solarlog, timeout)
-            )
-            await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+    if solar_log_data.api.extended_data:
+        timeout = entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
-        entry.runtime_data.device_data_coordinator = SolarLogDeviceDataCoordinator(
-            hass, entry, solarlog
+        _LOGGER.debug("Setup of LongtimeDataCoordinator, saved timeout is %s", timeout)
+
+        entry.runtime_data.longtime_data_coordinator = SolarLogLongtimeDataCoordinator(
+            hass, entry, solarlog, timeout
         )
-        await entry.runtime_data.device_data_coordinator.async_config_entry_first_refresh()
+        await entry.runtime_data.longtime_data_coordinator.async_config_entry_first_refresh()
+
+        _LOGGER.debug("Setup of DeviceDataCoordinator")
+
+        device_coordinator = SolarLogDeviceDataCoordinator(hass, entry, solarlog)
+        entry.runtime_data.device_data_coordinator = device_coordinator
+        await device_coordinator.async_config_entry_first_refresh()
+
+    # Register the controller device so inverter entities can resolve it as
+    # their via_device parent when they are added.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Solar-Log",
+        model="Controller",
+        name="SolarLog",
+        configuration_url=solarlog.host,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SolarlogConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
@@ -128,5 +135,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

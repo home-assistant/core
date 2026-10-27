@@ -1,7 +1,5 @@
 """The ukraine_alarm component."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -11,38 +9,38 @@ from uasiren.client import Client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import UkraineAlarmDataUpdateCoordinator
+from .coordinator import UkraineAlarmConfigEntry, UkraineAlarmDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: UkraineAlarmConfigEntry
+) -> None:
     """Set up Ukraine Alarm as config entry."""
     websession = async_get_clientsession(hass)
 
     coordinator = UkraineAlarmDataUpdateCoordinator(hass, entry, websession)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: UkraineAlarmConfigEntry
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -55,12 +53,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         try:
             regions_data = await Client(websession).get_regions()
         except (aiohttp.ClientError, TimeoutError) as err:
-            _LOGGER.warning(
-                "Could not migrate config entry %s: failed to fetch current regions: %s",
-                config_entry.entry_id,
-                err,
-            )
-            return False
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         if TYPE_CHECKING:
             assert isinstance(regions_data, dict)
@@ -76,6 +72,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 hass,
                 DOMAIN,
                 f"deprecated_state_region_{config_entry.entry_id}",
+                config_entry_id=config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
@@ -85,11 +82,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 },
             )
 
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="deprecated_state_region",
+                translation_placeholders={
+                    "region_name": config_entry.data.get(CONF_NAME, region_id),
+                },
+            )
 
         hass.config_entries.async_update_entry(config_entry, version=2)
         _LOGGER.info("Migration to version %s successful", 2)
-        return True
-
-    _LOGGER.error("Unknown version %s", config_entry.version)
-    return False

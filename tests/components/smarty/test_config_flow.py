@@ -2,13 +2,14 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.smarty.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -34,9 +35,8 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_cannot_connect(
-    hass: HomeAssistant, mock_smarty: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_cannot_connect(hass: HomeAssistant, mock_smarty: AsyncMock) -> None:
     """Test we handle cannot connect error."""
 
     mock_smarty.update.return_value = False
@@ -65,9 +65,8 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_unknown_error(
-    hass: HomeAssistant, mock_smarty: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_unknown_error(hass: HomeAssistant, mock_smarty: AsyncMock) -> None:
     """Test we handle unknown error."""
 
     mock_smarty.update.side_effect = Exception

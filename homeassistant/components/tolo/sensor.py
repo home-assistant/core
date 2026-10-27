@@ -1,9 +1,8 @@
 """TOLO Sauna (non-binary, general) sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tololib import ToloSettings, ToloStatus
 
@@ -116,6 +115,7 @@ class ToloSensorEntity(ToloSaunaCoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the TOLO sensor."""
         if self.entity_description.availability_checker is None:
@@ -125,6 +125,7 @@ class ToloSensorEntity(ToloSaunaCoordinatorEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return native value of the TOLO sensor."""
         return self.entity_description.getter(self.coordinator.data.status)

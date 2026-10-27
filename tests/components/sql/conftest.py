@@ -1,7 +1,5 @@
 """Fixtures for the SQL integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -12,6 +10,6 @@ import pytest
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sql.async_setup_entry", return_value=True
+        "homeassistant.components.sql.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

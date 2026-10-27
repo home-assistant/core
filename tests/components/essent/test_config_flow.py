@@ -8,13 +8,12 @@ from essent_dynamic_pricing import (
     EssentResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.essent.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -63,12 +62,9 @@ async def test_already_configured(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_essent_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_essent_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test flow errors."""
     mock_essent_client.async_get_prices.side_effect = exception

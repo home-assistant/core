@@ -1,7 +1,5 @@
 """Demo platform for the Device tracker component."""
 
-from __future__ import annotations
-
 import random
 
 from homeassistant.components.device_tracker import SeeCallback
@@ -48,6 +46,8 @@ def setup_scanner(
         battery=53,
     )
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA, observe)
 
     return True

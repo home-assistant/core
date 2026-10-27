@@ -5,34 +5,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import mqtt, number
-from homeassistant.components.mqtt.number import (
-    CONF_MAX,
-    CONF_MIN,
-    MQTT_NUMBER_ATTRIBUTES_BLOCKED,
+from pytest_homeassistant.common import (
+    async_fire_mqtt_message,
+    mock_restore_cache_with_extra_data,
 )
-from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEP,
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfElectricPotential,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant, State
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -64,12 +41,37 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message, mock_restore_cache_with_extra_data
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import number
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.number import (
+    CONF_MAX,
+    CONF_MIN,
+    MQTT_NUMBER_ATTRIBUTES_BLOCKED,
+)
+from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, State
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {number.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -78,7 +80,7 @@ DEFAULT_CONFIG = {
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -95,7 +97,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -112,7 +114,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -163,7 +165,7 @@ async def test_run_number_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -250,7 +252,9 @@ async def test_native_value_validation(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("test/cmd_number", "20", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/cmd_number", "20", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
 
@@ -258,7 +262,7 @@ async def test_native_value_validation(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "name": "test",
                     "command_topic": "test-topic-cmd",
@@ -314,7 +318,7 @@ async def test_equivalent_unit_of_measurement(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -366,7 +370,7 @@ async def test_value_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "device_class": "temperature",
@@ -404,7 +408,7 @@ async def test_restore_native_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "name": "Test Number",
@@ -445,7 +449,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "30", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "30", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "30"
@@ -458,7 +464,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "42", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "42", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42"
@@ -471,7 +479,9 @@ async def test_run_number_service_optimistic(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, "42.1", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, "42.1", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42.1"
@@ -481,7 +491,7 @@ async def test_run_number_service_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number",
                     "name": "Test Number",
@@ -494,7 +504,7 @@ async def test_run_number_service_optimistic(
 async def test_run_number_service_optimistic_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in optimistic mode and with a command_template."""
+    """Test set_value in optimistic mode with a command_template."""
     topic = "test/number"
 
     RESTORE_DATA = {
@@ -522,7 +532,9 @@ async def test_run_number_service_optimistic_with_command_template(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 30 }', 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"number": 30 }', 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "30"
@@ -535,7 +547,9 @@ async def test_run_number_service_optimistic_with_command_template(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(topic, '{"number": 42 }', 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"number": 42 }', 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
     assert state.state == "42"
@@ -549,7 +563,7 @@ async def test_run_number_service_optimistic_with_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        topic, '{"number": 42.1 }', 0, False
+        topic, '{"number": 42.1 }', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("number.test_number")
@@ -560,7 +574,7 @@ async def test_run_number_service_optimistic_with_command_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number/set",
                     "state_topic": "test/number",
@@ -589,7 +603,9 @@ async def test_run_number_service(
         {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
         blocking=True,
     )
-    mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "30", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, "30", 0, False, message_expiry_interval=None
+    )
     state = hass.states.get("number.test_number")
     assert state.state == "32"
 
@@ -598,7 +614,7 @@ async def test_run_number_service(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "command_topic": "test/number/set",
                     "state_topic": "test/number",
@@ -612,7 +628,7 @@ async def test_run_number_service(
 async def test_run_number_service_with_command_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test that set_value service works in non optimistic mode and with a command_template."""
+    """Test set_value service with a command_template."""
     cmd_topic = "test/number/set"
     state_topic = "test/number"
 
@@ -629,7 +645,7 @@ async def test_run_number_service_with_command_template(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
-        cmd_topic, '{"number": 30 }', 0, False
+        cmd_topic, '{"number": 30 }', 0, False, message_expiry_interval=None
     )
     state = hass.states.get("number.test_number")
     assert state.state == "32"
@@ -739,7 +755,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -769,7 +785,7 @@ async def test_discovery_removal_number(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered number."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][number.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, number.DOMAIN, data)
 
 
@@ -896,7 +912,7 @@ async def test_entity_debug_info_message(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -913,7 +929,7 @@ async def test_entity_debug_info_message(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -949,7 +965,7 @@ async def test_min_max_step_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -974,7 +990,7 @@ async def test_invalid_min_max_attributes(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -999,7 +1015,7 @@ async def test_default_mode(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1012,7 +1028,7 @@ async def test_default_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1025,7 +1041,7 @@ async def test_default_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1055,7 +1071,7 @@ async def test_mode(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1068,7 +1084,7 @@ async def test_mode(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     number.DOMAIN: {
                         "state_topic": "test/state_number",
                         "command_topic": "test/cmd_number",
@@ -1096,7 +1112,7 @@ async def test_invalid_mode(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -1127,7 +1143,7 @@ async def test_mqtt_payload_not_a_number_warning(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 number.DOMAIN: {
                     "state_topic": "test/state_number",
                     "command_topic": "test/cmd_number",
@@ -1228,7 +1244,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         number.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][number.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][number.DOMAIN],
         topic,
         value,
         attribute,
@@ -1351,6 +1367,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

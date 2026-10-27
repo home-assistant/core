@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pylutron import Led
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +63,7 @@ async def test_switch_turn_on_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "switch.test_switch"
+    entity_id = "switch.test_area_test_switch"
 
     # Turn on
     await hass.services.async_call(

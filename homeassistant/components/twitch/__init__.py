@@ -1,49 +1,29 @@
 """The Twitch component."""
 
-from __future__ import annotations
-
 from typing import cast
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
 from twitchAPI.twitch import Twitch
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     LocalOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .const import OAUTH_SCOPES, PLATFORMS
 from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Set up Twitch from a config entry."""
-    try:
-        implementation = cast(
-            LocalOAuth2Implementation,
-            await async_get_config_entry_implementation(hass, entry),
-        )
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = cast(
+        LocalOAuth2Implementation,
+        await async_get_config_entry_implementation(hass, entry),
+    )
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     client = Twitch(
@@ -60,10 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
     """Unload Twitch config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

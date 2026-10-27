@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.fan import (
@@ -22,7 +23,7 @@ from homeassistant.components.fan import (
     SERVICE_TURN_ON,
     FanEntityFeature,
 )
-from homeassistant.components.group import SERVICE_RELOAD
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.components.group.fan import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -39,8 +40,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, get_fixture_path
 
 FAN_GROUP = "fan.fan_group"
 
@@ -415,7 +414,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     yaml_path = get_fixture_path("fan_configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "group",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -625,7 +624,8 @@ async def test_assumed_state(hass: HomeAssistant) -> None:
     state = hass.states.get(FAN_GROUP)
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    # All members without assumed_state -> group doesn't have
+    # assumed_state in attributes
     hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {})
     await hass.async_block_till_done()
 

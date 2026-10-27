@@ -7,12 +7,11 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_capture_events, flush_store
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import category_registry as cr
 from homeassistant.util.dt import UTC
-
-from tests.common import async_capture_events, flush_store
 
 
 async def test_list_categories_for_scope(
@@ -246,7 +245,7 @@ async def test_update_category_with_same_data(
 async def test_update_category_with_same_name_change_case(
     category_registry: cr.CategoryRegistry,
 ) -> None:
-    """Make sure that we can reapply the same name with a different case to a category."""
+    """Make sure that we can reapply the same name with a different case."""
     category = category_registry.async_create(
         scope="automation",
         name="Energy saving",

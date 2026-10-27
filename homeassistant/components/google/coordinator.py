@@ -1,11 +1,10 @@
 """Support for Google Calendar Search binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import itertools
 import logging
+from typing import override
 
 from gcal_sync.api import GoogleCalendarService, ListEventsRequest
 from gcal_sync.exceptions import ApiException
@@ -68,6 +67,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         self.sync = sync
         self._upcoming_timeline: Timeline | None = None
 
+    @override
     async def _async_update_data(self) -> Timeline:
         """Fetch data from API endpoint."""
         try:
@@ -152,6 +152,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
             raise HomeAssistantError(str(err)) from err
         return result_items
 
+    @override
     async def _async_update_data(self) -> list[Event]:
         """Fetch data from API endpoint."""
         request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)

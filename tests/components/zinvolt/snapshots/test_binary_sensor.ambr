@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.battery_2_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Charge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_charge',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -90,8 +90,8 @@
 # name: test_all_entities[binary_sensor.battery_2_communication-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Communication',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Communication',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_communication',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -141,8 +141,8 @@
 # name: test_all_entities[binary_sensor.battery_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Current',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_current',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -192,8 +192,8 @@
 # name: test_all_entities[binary_sensor.battery_2_discharge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Discharge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Discharge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_discharge',
@@ -211,9 +211,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -243,8 +243,8 @@
 # name: test_all_entities[binary_sensor.battery_2_heat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Battery - 2 Heat',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Heat',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_heat',
@@ -262,9 +262,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -294,8 +294,8 @@
 # name: test_all_entities[binary_sensor.battery_2_other_problems-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Other problems',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Other problems',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_other_problems',
@@ -313,9 +313,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'BAT002')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -345,8 +345,8 @@
 # name: test_all_entities[binary_sensor.battery_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Battery - 2 Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery - 2 Voltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.battery_2_voltage',
@@ -364,9 +364,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -396,8 +396,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Charge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_charge',
@@ -415,9 +415,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -447,8 +447,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_communication-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Communication',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Communication',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_communication',
@@ -466,9 +466,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -498,8 +498,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Current',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_current',
@@ -517,9 +517,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -549,8 +549,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_discharge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Discharge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Discharge',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_discharge',
@@ -568,9 +568,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -600,8 +600,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_grid_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Zinvolt Batterij Grid connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Grid connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_grid_connection',
@@ -619,9 +619,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -651,8 +651,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_heat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Zinvolt Batterij Heat',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Heat',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_heat',
@@ -670,9 +670,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -702,8 +702,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_other_problems-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Other problems',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Other problems',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_other_problems',
@@ -721,9 +721,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -753,8 +753,8 @@
 # name: test_all_entities[binary_sensor.zinvolt_batterij_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zinvolt Batterij Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Voltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zinvolt_batterij_voltage',

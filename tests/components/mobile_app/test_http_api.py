@@ -8,6 +8,8 @@ from unittest.mock import patch
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
@@ -20,9 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator
 
 
 async def test_registration(
@@ -167,7 +166,7 @@ async def test_registration_with_cloud_local_only_user(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test that cloudhook_url and remote_ui_url are not returned for local_only users."""
+    """Test cloudhook_url and remote_ui_url not returned for local users."""
     hass_admin_user.local_only = True
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

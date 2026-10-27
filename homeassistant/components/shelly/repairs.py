@@ -1,18 +1,25 @@
 """Repairs flow for Shelly."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
+from aioshelly.const import (
+    FIRMWARE_PATTERN,
+    MODEL_OUT_PLUG_S_G3,
+    MODEL_PLUG_S_G3,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -23,17 +30,69 @@ from .const import (
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    IR_RAW_RECEIVE_DISABLED_ISSUE_ID,
+    IR_RAW_RECEIVE_MIN_FIRMWARE,
     OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    RTSP_DISABLED_ISSUE_ID,
     BLEScannerMode,
 )
-from .coordinator import ShellyConfigEntry
 from .utils import (
     get_coiot_address,
     get_coiot_port,
     get_device_entry_gen,
+    get_rpc_key_id,
+    get_rpc_key_instances,
     get_rpc_ws_url,
 )
+
+if TYPE_CHECKING:
+    from .coordinator import ShellyConfigEntry
+
+
+@callback
+def _async_create_firmware_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+    issue_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+    *,
+    is_fixable: bool = True,
+    is_persistent: bool = True,
+    severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
+) -> None:
+    """Create an issue resolved by updating the device firmware."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=is_fixable,
+        is_persistent=is_persistent,
+        severity=severity,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+        data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
+    )
+
+
+@callback
+def async_create_issue_unsupported_firmware(
+    hass: HomeAssistant, entry: ShellyConfigEntry, is_fixable: bool = False
+) -> None:
+    """Create a repair issue if the device runs an unsupported firmware."""
+    _async_create_firmware_issue(
+        hass,
+        entry,
+        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
+        "unsupported_firmware_fixable" if is_fixable else "unsupported_firmware",
+        {"device_name": entry.title, "ip_address": entry.data[CONF_HOST]},
+        is_fixable=is_fixable,
+        is_persistent=False,
+        severity=ir.IssueSeverity.ERROR,
+    )
 
 
 @callback
@@ -52,24 +111,19 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
 
     if supports_scripts and device.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3):
         firmware = AwesomeVersion(device.shelly["ver"])
-        if (
-            firmware < BLE_SCANNER_MIN_FIRMWARE
-            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
-        ):
-            ir.async_create_issue(
+        if firmware < BLE_SCANNER_MIN_FIRMWARE and entry.options.get(
+            CONF_BLE_SCANNER_MODE
+        ) in (BLEScannerMode.ACTIVE, BLEScannerMode.AUTO):
+            _async_create_firmware_issue(
                 hass,
-                DOMAIN,
+                entry,
                 issue_id,
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="ble_scanner_firmware_unsupported",
-                translation_placeholders={
+                "ble_scanner_firmware_unsupported",
+                {
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
                 },
-                data={"entry_id": entry.entry_id},
             )
             return
 
@@ -96,21 +150,17 @@ def async_manage_deprecated_firmware_issue(
 
         firmware = AwesomeVersion(device.shelly["ver"])
         if firmware < min_firmware:
-            ir.async_create_issue(
+            _async_create_firmware_issue(
                 hass,
-                DOMAIN,
+                entry,
                 issue_id,
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_firmware",
-                translation_placeholders={
+                "deprecated_firmware",
+                {
                     "device_name": device.name,
                     "ip_address": device.ip_address,
                     "firmware": firmware,
                     "ha_version": ha_version,
                 },
-                data={"entry_id": entry.entry_id},
             )
             return
 
@@ -132,6 +182,9 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
@@ -150,6 +203,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -169,6 +223,9 @@ def async_manage_open_wifi_ap_issue(
 
     device = entry.runtime_data.rpc.device
 
+    if not device.initialized:
+        return
+
     # Check if WiFi AP is enabled and is open (no password)
     if (
         (wifi_config := device.config.get("wifi"))
@@ -184,6 +241,99 @@ def async_manage_open_wifi_ap_issue(
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="open_wifi_ap",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_rtsp_disabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the RTSP disabled issue."""
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
+
+    camera_keys = get_rpc_key_instances(device.status, "camera")
+    if not camera_keys:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
+    disabled = [
+        key
+        for key in camera_keys
+        if key in device.config and not device.config[key]["rtsp"]["enable"]
+    ]
+
+    if disabled:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="rtsp_disabled",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def async_manage_ir_raw_receive_disabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the infrared RAW receive disabled issue."""
+    issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if not device.initialized:
+        return
+
+    firmware = FIRMWARE_PATTERN.search(device.firmware_version)
+
+    if (
+        firmware is not None
+        and int(firmware[0]) >= IR_RAW_RECEIVE_MIN_FIRMWARE
+        and "ir" in device.status
+        and (ir_config := device.config.get("ir")) is not None
+        and not ir_config.get("raw_receive")
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="ir_raw_receive_disabled",
             translation_placeholders={
                 "device_name": device.name,
                 "ip_address": device.ip_address,
@@ -208,7 +358,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -216,13 +366,14 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         coiot_addr = await get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
@@ -238,28 +389,24 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="issue_ignored")
 
 
-class ShellyRpcRepairsFlow(RepairsFlow):
-    """Handler for an issue fixing flow."""
-
-    def __init__(self, device: RpcDevice) -> None:
-        """Initialize."""
-        self._device = device
+class ShellyConfirmRepairsFlow(RepairsFlow):
+    """Handler for an issue fixing flow with a confirm step."""
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return await self._async_step_confirm()
@@ -271,27 +418,40 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=description_placeholders,
         )
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         raise NotImplementedError
 
 
-class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
+class ShellyRpcRepairsFlow(ShellyConfirmRepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    def __init__(self, device: RpcDevice) -> None:
+        """Initialize."""
+        self._device = device
+
+
+class FirmwareUpdateFlow(ShellyConfirmRepairsFlow):
     """Handler for Firmware Update flow."""
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    def __init__(self, device: BlockDevice | RpcDevice) -> None:
+        """Initialize."""
+        self._device = device
+
+    @override
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_update_firmware()
 
     async def async_step_update_firmware(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
-        if not self._device.status["sys"]["available_updates"]:
+        if not self._update_available():
             return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
@@ -300,17 +460,31 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
 
         return self.async_create_entry(title="", data={})
 
+    def _update_available(self) -> bool:
+        """Return if the device offers a firmware update."""
+        return bool(self._device.status["sys"]["available_updates"])
+
+
+class BlockFirmwareUpdateFlow(FirmwareUpdateFlow):
+    """Handler for block device Firmware Update flow."""
+
+    @override
+    def _update_available(self) -> bool:
+        """Return if the device offers a firmware update."""
+        return bool(self._device.status["update"]["has_update"])
+
 
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
     """Handler for Disable Outbound WebSocket flow."""
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    @override
+    async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_disable_outbound_websocket()
 
     async def async_step_disable_outbound_websocket(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         try:
             result = await self._device.ws_setconfig(
@@ -324,8 +498,8 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
         return self.async_create_entry(title="", data={})
 
 
-class DisableOpenWiFiApFlow(RepairsFlow):
-    """Handler for Disable Open WiFi AP flow."""
+class ShellyRpcMenuRepairsFlow(RepairsFlow):
+    """Handler for an issue fixing flow with confirm and ignore menu."""
 
     def __init__(self, device: RpcDevice, issue_id: str) -> None:
         """Initialize."""
@@ -334,7 +508,7 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -342,18 +516,17 @@ class DisableOpenWiFiApFlow(RepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         try:
-            result = await self._device.wifi_setconfig(ap_enable=False)
-            if result.get("restart_required"):
-                await self._device.trigger_reboot()
+            await self._async_apply()
         except DeviceConnectionError, RpcCallError:
             return self.async_abort(reason="cannot_connect")
 
@@ -361,10 +534,48 @@ class DisableOpenWiFiApFlow(RepairsFlow):
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
         return self.async_abort(reason="issue_ignored")
+
+    async def _async_apply(self) -> None:
+        """Apply the fix on the device."""
+        raise NotImplementedError
+
+
+class DisableOpenWiFiApFlow(ShellyRpcMenuRepairsFlow):
+    """Handler for Disable Open WiFi AP flow."""
+
+    @override
+    async def _async_apply(self) -> None:
+        """Apply the fix on the device."""
+        result = await self._device.wifi_setconfig(ap_enable=False)
+        if result.get("restart_required"):
+            await self._device.trigger_reboot()
+
+
+class EnableRtspFlow(ShellyRpcMenuRepairsFlow):
+    """Handler for Enable RTSP flow."""
+
+    @override
+    async def _async_apply(self) -> None:
+        """Apply the fix on the device."""
+        for key in get_rpc_key_instances(self._device.status, "camera"):
+            if (
+                key in self._device.config
+                and not self._device.config[key]["rtsp"]["enable"]
+            ):
+                await self._device.set_camera_rtsp(get_rpc_key_id(key), True)
+
+
+class EnableIrRawReceiveFlow(ShellyRpcMenuRepairsFlow):
+    """Handler for Enable infrared RAW receive flow."""
+
+    @override
+    async def _async_apply(self) -> None:
+        """Apply the fix on the device."""
+        await self._device.ir_set_raw_receive(True)
 
 
 async def async_create_fix_flow(
@@ -388,10 +599,10 @@ async def async_create_fix_flow(
     if "coiot_unconfigured" in issue_id:
         return CoiotConfigureFlow(device)
 
-    if (
-        "ble_scanner_firmware_unsupported" in issue_id
-        or "deprecated_firmware" in issue_id
-    ):
+    # Also matches ble_scanner_firmware_unsupported
+    if "firmware_unsupported" in issue_id or "deprecated_firmware" in issue_id:
+        if isinstance(device, BlockDevice):
+            return BlockFirmwareUpdateFlow(device)
         return FirmwareUpdateFlow(device)
 
     if "outbound_websocket_incorrectly_enabled" in issue_id:
@@ -399,5 +610,11 @@ async def async_create_fix_flow(
 
     if "open_wifi_ap" in issue_id:
         return DisableOpenWiFiApFlow(device, issue_id)
+
+    if "rtsp_disabled" in issue_id:
+        return EnableRtspFlow(device, issue_id)
+
+    if "ir_raw_receive_disabled" in issue_id:
+        return EnableIrRawReceiveFlow(device, issue_id)
 
     return ConfirmRepairFlow()

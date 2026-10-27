@@ -1,9 +1,8 @@
 """Test OpenSky component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from python_opensky import OpenSkyError
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
 
@@ -11,8 +10,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -43,6 +40,7 @@ async def test_load_entry_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "update_error"
 
 
 async def test_load_entry_authentication_failure(
@@ -59,3 +57,7 @@ async def test_load_entry_authentication_failure(
     await hass.async_block_till_done()
 
     assert config_entry_authenticated.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry_authenticated.error_reason_translation_key
+        == "authentication_error"
+    )

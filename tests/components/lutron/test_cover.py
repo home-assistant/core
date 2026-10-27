@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -61,7 +60,7 @@ async def test_cover_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
 
     # Open cover
     await hass.services.async_call(
@@ -104,7 +103,7 @@ async def test_cover_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # Simulate update

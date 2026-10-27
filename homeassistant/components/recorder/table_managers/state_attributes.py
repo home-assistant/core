@@ -1,7 +1,5 @@
 """Support managing StateAttributes."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable
 import logging
 from typing import TYPE_CHECKING, cast
@@ -99,7 +97,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     def _load_from_hashes(
         self, hashes: Collection[int], session: Session
     ) -> dict[str, int | None]:
-        """Load the shared_attrs to attributes_ids mapping into memory from a list of hashes.
+        """Load shared_attrs to attributes_ids mapping from hashes.
 
         This call is not thread-safe and must be called from the
         recorder thread.
@@ -127,7 +125,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         self._pending[shared_attrs] = db_state_attributes
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the attributes_ids of the new StateAttributes into the LRU.
+        """Call after commit to load new StateAttributes into the LRU.
 
         This call is not thread-safe and must be called from the
         recorder thread.

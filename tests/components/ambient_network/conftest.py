@@ -6,22 +6,21 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
 import pytest
-
-from homeassistant.components.ambient_network.const import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.ambient_network.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ambient_network.async_setup_entry", return_value=True
+        "homeassistant.components.ambient_network.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -80,7 +79,10 @@ async def setup_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Load the Ambient Network integration with the provided OpenAPI and config entry."""
+    """Load the Ambient Network integration.
+
+    Uses the provided OpenAPI and config entry.
+    """
 
     config_entry.add_to_hass(hass)
     assert (

@@ -1,11 +1,12 @@
 {
   "domain": "ituran",
   "name": "Ituran",
+  "categories": ["vehicles_transport.cars_evs", "presence_location.trackers"],
   "codeowners": ["@shmuelzon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ituran",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["pyituran==0.1.5"]
+  "requirements": ["pyituran==0.1.6"]
 }

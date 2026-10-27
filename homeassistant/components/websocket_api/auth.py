@@ -1,14 +1,13 @@
 """Handle the auth of a connection."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp.web import Request
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.const import __version__
@@ -28,11 +27,11 @@ TYPE_AUTH_INVALID: Final = "auth_invalid"
 TYPE_AUTH_OK: Final = "auth_ok"
 TYPE_AUTH_REQUIRED: Final = "auth_required"
 
-AUTH_MESSAGE_SCHEMA: Final = vol.Schema(
+AUTH_MESSAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required("type"): TYPE_AUTH,
-        vol.Exclusive("api_password", "auth"): str,
-        vol.Exclusive("access_token", "auth"): str,
+        probatio.Required("type"): TYPE_AUTH,
+        probatio.Exclusive("api_password", "auth"): str,
+        probatio.Exclusive("access_token", "auth"): str,
     }
 )
 
@@ -77,6 +76,7 @@ class AuthPhase:
             self._send_message,
             self._request[KEY_HASS_USER],
             refresh_token=None,
+            remote=self._request.remote,
         )
         await self._send_bytes_text(AUTH_OK_MESSAGE)
         self._logger.debug("Auth OK (unix socket)")
@@ -86,7 +86,7 @@ class AuthPhase:
         """Handle authentication."""
         try:
             valid_msg = AUTH_MESSAGE_SCHEMA(msg)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             error_msg = (
                 f"Auth message incorrectly formatted: {humanize_error(msg, err)}"
             )
@@ -97,16 +97,25 @@ class AuthPhase:
         if (access_token := valid_msg.get("access_token")) and (
             refresh_token := self._hass.auth.async_validate_access_token(access_token)
         ):
+            if user_access_error := async_user_not_allowed_do_auth(
+                self._hass, refresh_token.user, self._request
+            ):
+                await self._send_bytes_text(auth_invalid_message(user_access_error))
+                await process_wrong_login(self._request)
+                raise Disconnect
+
             conn = ActiveConnection(
                 self._logger,
                 self._hass,
                 self._send_message,
                 refresh_token.user,
                 refresh_token,
+                remote=self._request.remote,
+                cancel_ws=self._cancel_ws,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(
-                    refresh_token.id, self._cancel_ws
+                    refresh_token.id, conn.async_auth_revoked
                 )
             )
             await self._send_bytes_text(AUTH_OK_MESSAGE)

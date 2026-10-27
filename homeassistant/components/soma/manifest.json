@@ -1,6 +1,7 @@
 {
   "domain": "soma",
   "name": "Soma Connect",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@ratsept"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/soma",

@@ -1,10 +1,11 @@
 """Test fixtures for the Wallbox integration."""
 
-from datetime import datetime, timedelta
 from http import HTTPStatus
+import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.wallbox.const import (
@@ -25,8 +26,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import WALLBOX_AUTHORISATION_RESPONSE, WALLBOX_STATUS_RESPONSE
-
-from tests.common import MockConfigEntry
 
 http_403_error = requests.exceptions.HTTPError()
 http_403_error.response = requests.Response()
@@ -50,12 +49,8 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_STATION: "12345",
             CHARGER_JWT_TOKEN: "test_token",
             CHARGER_JWT_REFRESH_TOKEN: "test_refresh_token",
-            CHARGER_JWT_TTL: (
-                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
-            ),
-            CHARGER_JWT_REFRESH_TTL: (
-                datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
-            ),
+            CHARGER_JWT_TTL: (time.time() + 3600) * 1000,
+            CHARGER_JWT_REFRESH_TTL: (time.time() + 3600) * 1000,
         },
         entry_id="testEntry",
     )
@@ -94,15 +89,12 @@ def mock_wallbox():
             }
         )
         wallbox.setIcpMaxCurrent = Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 25})
+        wallbox.resumeSchedule = Mock(return_value={})
         wallbox.getChargerStatus = Mock(return_value=WALLBOX_STATUS_RESPONSE)
         wallbox.jwtToken = "test_token"
         wallbox.jwtRefreshToken = "test_refresh_token"
-        wallbox.jwtTokenTtl = (
-            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
-        )
-        wallbox.jwtRefreshTokenTtl = (
-            datetime.timestamp(datetime.now() + timedelta(hours=1)) * 1000
-        )
+        wallbox.jwtTokenTtl = (time.time() + 3600) * 1000
+        wallbox.jwtRefreshTokenTtl = (time.time() + 3600) * 1000
         mock.return_value = wallbox
         yield wallbox
 

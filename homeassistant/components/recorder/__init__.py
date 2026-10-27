@@ -1,18 +1,11 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import (
-    CONF_EXCLUDE,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
-    EVENT_STATE_CHANGED,
-)
+from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -23,9 +16,8 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.recorder import DATA_INSTANCE
+from homeassistant.helpers.recorder import DATA_INSTANCE, get_instance
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
 # Pre-import backup to avoid it being imported
@@ -33,21 +25,21 @@ from homeassistant.util.event_type import EventType
 # startup
 from . import (
     backup,  # noqa: F401
+    entity_options,
     entity_registry,
     websocket_api,
 )
-from .const import (  # noqa: F401
+from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,
-    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .core import Recorder
+from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
-from .util import get_instance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,15 +63,30 @@ CONF_COMMIT_INTERVAL = "commit_interval"
 
 
 EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
-    {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
+    {
+        probatio.Optional(CONF_EVENT_TYPES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        )
+    }
 )
 
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-    {vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
+    {probatio.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA}
 )
 
 
 ALLOW_IN_MEMORY_DB = False
+
+__all__ = [
+    "CONF_DB_URL",
+    "DEFAULT_DB_FILE",
+    "DEFAULT_URL",
+    "DOMAIN",
+    "Recorder",
+    "SupportedDialect",
+    "get_instance",
+    "is_entity_recorded",
+]
 
 
 def validate_db_url(db_url: str) -> Any:
@@ -89,53 +96,45 @@ def validate_db_url(db_url: str) -> Any:
         db_url == SQLITE_URL_PREFIX
         or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
     ) and not ALLOW_IN_MEMORY_DB:
-        raise vol.Invalid("In-memory SQLite database is not supported")
+        raise probatio.Invalid("In-memory SQLite database is not supported")
 
     return db_url
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=dict): vol.All(
+        probatio.Optional(DOMAIN, default=dict): probatio.All(
             cv.deprecated(CONF_PURGE_INTERVAL),
             cv.deprecated(CONF_DB_INTEGRITY_CHECK),
             FILTER_SCHEMA.extend(
                 {
-                    vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
-                    vol.Optional(CONF_AUTO_REPACK, default=True): cv.boolean,
-                    vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
+                    probatio.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
+                    probatio.Optional(CONF_AUTO_REPACK, default=True): cv.boolean,
+                    probatio.Optional(CONF_PURGE_KEEP_DAYS, default=10): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
-                    vol.Optional(CONF_DB_URL): vol.All(cv.string, validate_db_url),
-                    vol.Optional(
+                    probatio.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
+                    probatio.Optional(CONF_DB_URL): probatio.All(
+                        cv.string, validate_db_url
+                    ),
+                    probatio.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_INTEGRITY_CHECK, default=DEFAULT_DB_INTEGRITY_CHECK
                     ): cv.boolean,
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-
-
-@bind_hass
-def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
-    """Check if an entity is being recorded.
-
-    Async friendly.
-    """
-    instance = get_instance(hass)
-    return instance.entity_filter is None or instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -171,6 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
+    entity_options.async_setup(hass)
     instance.async_initialize()
     instance.async_register()
     instance.start()

@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BUTTON1
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -24,8 +25,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-
-from tests.common import async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -400,8 +399,10 @@ async def test_rpc_no_runtime_data(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test the device trigger for the RPC device when there is no runtime_data in the entry."""
+    """Test RPC device trigger when entry has no runtime_data."""
     entry = await init_integration(hass, 2)
+    # Cache initial runtime_data
+    runtime_data = entry.runtime_data
     monkeypatch.delattr(entry, "runtime_data")
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -437,6 +438,9 @@ async def test_rpc_no_runtime_data(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_single_push"
 
+    # Restore runtime_data to avoid issues on cleanup
+    entry.runtime_data = runtime_data
+
 
 async def test_block_no_runtime_data(
     hass: HomeAssistant,
@@ -445,8 +449,10 @@ async def test_block_no_runtime_data(
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test the device trigger for the block device when there is no runtime_data in the entry."""
+    """Test block device trigger when entry has no runtime_data."""
     entry = await init_integration(hass, 1)
+    # Cache initial runtime_data
+    runtime_data = entry.runtime_data
     monkeypatch.delattr(entry, "runtime_data")
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -481,3 +487,6 @@ async def test_block_no_runtime_data(
 
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_single"
+
+    # Restore runtime_data to avoid issues on cleanup
+    entry.runtime_data = runtime_data

@@ -7,6 +7,12 @@ from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -17,13 +23,6 @@ from homeassistant.helpers.device_registry import format_mac
 import homeassistant.util.dt as dt_util
 
 from . import CASPER_GLOW_DISCOVERY_INFO, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
-)
 
 
 async def test_async_setup_entry_success(
@@ -43,8 +42,12 @@ async def test_async_setup_entry_device_not_found(
     """Test setup raises ConfigEntryNotReady when BLE device is not found."""
     mock_config_entry.add_to_hass(hass)
 
-    # Do not inject BLE info — device is not in the cache
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.bluetooth.async_address_reachability_diagnostics",
+        return_value="no_reason",
+    ):
+        # Do not inject BLE info — device is not in the cache
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -56,7 +59,7 @@ async def test_async_unload_entry(
     result = await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert result is True
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_info(
@@ -66,10 +69,9 @@ async def test_device_info(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device info is correctly populated."""
-    device = device_registry.async_get_device(
-        connections={
-            (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address))
-        }
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address)),
+        config_entry.entry_id,
     )
     assert device is not None
     assert device == snapshot

@@ -2,34 +2,45 @@
 
 import logging
 
-from aiorussound import RussoundClient, RussoundTcpConnectionHandler
-from aiorussound.models import CallbackType
+from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.connection import (
+    RussoundConnectionHandler,
+    RussoundSerialConnectionHandler,
+)
+from aiorussound.rio import RussoundRIOClient
+from aiorussound.rio.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+from .const import CONF_BAUDRATE, DOMAIN, RUSSOUND_RIO_EXCEPTIONS, TYPE_TCP
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
-type RussoundConfigEntry = ConfigEntry[RussoundClient]
+type RussoundConfigEntry = ConfigEntry[RussoundRIOClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Set up a config entry."""
-
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    client = RussoundClient(RussoundTcpConnectionHandler(host, port))
+    handler: RussoundConnectionHandler
+    if entry.data[CONF_TYPE] == TYPE_TCP:
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        handler = RussoundTcpConnectionHandler(host, port)
+    else:
+        device = entry.data[CONF_DEVICE]
+        baudrate = entry.data[CONF_BAUDRATE]
+        handler = RussoundSerialConnectionHandler(device, baudrate)
+    client = RussoundRIOClient(handler)
 
     async def _connection_update_callback(
-        _client: RussoundClient, _callback_type: CallbackType
+        _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
         if _callback_type == CallbackType.CONNECTION:
@@ -48,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="entry_cannot_connect",
             translation_placeholders={
-                "host": host,
-                "port": port,
+                "host": host or device,
+                "port": port or baudrate,
             },
         ) from err
     entry.runtime_data = client
@@ -61,40 +72,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             controller.mac_address
             or f"{client.controllers[1].mac_address}-{controller_id}"
         )
-        connections = None
-        via_device = None
+        via_device_id: str | None = None
         configuration_url = None
         if controller_id != 1:
             assert client.controllers[1].mac_address
-            via_device = (
-                DOMAIN,
-                client.controllers[1].mac_address,
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, client.controllers[1].mac_address),
+                config_entry_id=entry.entry_id,
             )
-        else:
-            assert controller.mac_address
-            connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
         if isinstance(client.connection_handler, RussoundTcpConnectionHandler):
             configuration_url = f"http://{client.connection_handler.host}"
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, _device_identifier)},
             manufacturer="Russound",
             name=controller.controller_type,
             model=controller.controller_type,
             sw_version=controller.firmware_version,
-            connections=connections,
-            via_device=via_device,
+            via_device_id=via_device_id,
             configuration_url=configuration_url,
+        )
+        if controller_id == 1:
+            assert controller.mac_address
+            device_info.connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=device_info
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()
 
-    return unload_ok
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: RussoundConfigEntry
+) -> None:
+    """Migrate old entry."""
+
+    if config_entry.version == 1:
+        (
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={
+                    CONF_TYPE: TYPE_TCP,
+                    **config_entry.data,
+                },
+                version=2,
+            ),
+        )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s successful", config_entry.version
+    )

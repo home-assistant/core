@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.todo import (
     ATTR_ITEM,
@@ -15,8 +16,6 @@ from homeassistant.components.todo import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.typing import WebSocketGenerator
 
 TEST_ENTITY = "todo.shopping_list"
 
@@ -70,7 +69,7 @@ async def test_get_items(
     sl_setup: None,
     ws_get_items: WsGetItemsType,
 ) -> None:
-    """Test creating a shopping list item with the WS API and verifying with To-do API."""
+    """Test creating a shopping list item via WS API."""
     client = await hass_ws_client(hass)
 
     state = hass.states.get(TEST_ENTITY)

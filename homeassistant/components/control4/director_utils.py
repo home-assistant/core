@@ -23,7 +23,7 @@ async def _update_variables_for_config_entry(
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
     director = entry.runtime_data.director
-    data = await director.getAllItemVariableValue(variable_names)
+    data = await director.get_all_item_variable_value(variable_names)
     result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
         result_dict[item["id"]][item["varName"]] = item["value"]
@@ -48,10 +48,10 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry):
     account_session = aiohttp_client.async_get_clientsession(hass)
 
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
-    await account.getAccountBearerToken()
+    await account.get_account_bearer_token()
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
-    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
+    director_token_dict = await account.get_director_bearer_token(controller_unique_id)
     director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
 
     director = C4Director(

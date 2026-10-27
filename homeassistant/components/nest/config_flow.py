@@ -8,23 +8,24 @@ NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
 some overrides to custom steps inserted in the middle of the flow.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from google_nest_sdm.admin_client import (
-    DEFAULT_TOPIC_IAM_POLICY,
-    AdminClient,
-    EligibleSubscriptions,
-    EligibleTopics,
-)
+from google_nest_sdm.admin_client import DEFAULT_TOPIC_IAM_POLICY, AdminClient
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
+from homeassistant.exceptions import (
+    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -37,6 +38,7 @@ from . import api
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
     CONF_SUBSCRIPTION_NAME,
     CONF_TOPIC_NAME,
@@ -111,15 +113,15 @@ class NestFlowHandler(
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
         self._admin_client: AdminClient | None = None
-        self._eligible_topics: EligibleTopics | None = None
-        self._eligible_subscriptions: EligibleSubscriptions | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -129,6 +131,7 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    @override
     async def async_generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize based on user input."""
         project_id = self._data.get(CONF_PROJECT_ID)
@@ -136,6 +139,7 @@ class NestFlowHandler(
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
         _LOGGER.debug("Finishing post-oauth configuration")
@@ -163,6 +167,37 @@ class NestFlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the Pub/Sub topic and subscription."""
+        entry = self._get_reconfigure_entry()
+        self._data = {**entry.data}
+        try:
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    self.hass, entry
+                )
+            )
+        except config_entry_oauth2_flow.ImplementationUnavailableError:
+            return self.async_abort(reason="oauth_implementation_unavailable")
+        session = config_entry_oauth2_flow.OAuth2Session(
+            self.hass, entry, implementation
+        )
+        try:
+            await session.async_ensure_token_valid()
+        except OAuth2TokenRequestReauthError:
+            # Authenticate again here, then continue with the Pub/Sub steps
+            return await self.async_step_pick_implementation(
+                {"implementation": entry.data["auth_implementation"]}
+            )
+        except OAuth2TokenRequestBaseError as err:
+            _LOGGER.debug("Error refreshing token: %s", err)
+            return self.async_abort(reason="cannot_connect")
+        self._data["token"] = session.token
+        return await self.async_step_pubsub_topic()
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -209,12 +244,14 @@ class NestFlowHandler(
             self._data[CONF_CLOUD_PROJECT_ID] = user_input[
                 CONF_CLOUD_PROJECT_ID
             ].strip()
+            if self.source == SOURCE_RECONFIGURE:
+                return await self.async_step_pubsub_topic()
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID): str,
+                    probatio.Required(CONF_CLOUD_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -244,9 +281,9 @@ class NestFlowHandler(
 
         return self.async_show_form(
             step_id="device_project",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROJECT_ID): str,
+                    probatio.Required(CONF_PROJECT_ID): str,
                 }
             ),
             description_placeholders={
@@ -260,6 +297,18 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure and create Pub/Sub topic."""
+        if CONF_CLOUD_PROJECT_ID not in self._data:
+            # Oldest entries did not store the cloud project
+            subscription_name = self._data.get(
+                CONF_SUBSCRIPTION_NAME, self._data.get(CONF_SUBSCRIBER_ID, "")
+            )
+            if not (
+                cloud_project_id := api.cloud_project_from_subscription(
+                    subscription_name
+                )
+            ):
+                return await self.async_step_cloud_project()
+            self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
         cloud_project_id = self._data[CONF_CLOUD_PROJECT_ID]
         if self._admin_client is None:
             access_token = self._data["token"]["access_token"]
@@ -286,24 +335,27 @@ class NestFlowHandler(
                 self._data[CONF_TOPIC_NAME] = topic_name
                 return await self.async_step_pubsub_topic_confirm()
 
-        device_access_project_id = self._data[CONF_PROJECT_ID]
         try:
-            eligible_topics = await self._admin_client.list_eligible_topics(
-                device_access_project_id=device_access_project_id
+            topic_names = await self._admin_client.list_topics(
+                f"projects/{cloud_project_id}"
             )
         except ApiException as err:
             _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
             return self.async_abort(reason="pubsub_api_error")
         topics = [
-            *eligible_topics.topic_names,  # Untranslated topic paths
+            *topic_names,  # Untranslated topic paths
             CREATE_NEW_TOPIC_KEY,
         ]
+        # A previously configured Nest-created topic may no longer be available
+        default_topic = self._data.get(CONF_TOPIC_NAME)
+        if default_topic not in topics:
+            default_topic = next(iter(topics))
         return self.async_show_form(
             step_id="pubsub_topic",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
-                        CONF_TOPIC_NAME, default=next(iter(topics))
+                    probatio.Required(
+                        CONF_TOPIC_NAME, default=default_topic
                     ): SelectSelector(
                         SelectSelectorConfig(
                             translation_key="topic_name",
@@ -323,7 +375,7 @@ class NestFlowHandler(
     async def async_step_pubsub_topic_confirm(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Have the user confirm the Pub/Sub topic is set correctly in Device Access Console."""
+        """Confirm the Pub/Sub topic is set correctly in Device Access Console."""
         if user_input is not None:
             return await self.async_step_pubsub_subscription()
         return self.async_show_form(
@@ -366,12 +418,16 @@ class NestFlowHandler(
                     errors["base"] = "pubsub_api_error"
                 else:
                     user_input[CONF_SUBSCRIPTION_NAME] = subscription_name
-            else:
-                # The user created this subscription themselves so do not delete when removing the integration.
+                    self._data.pop(CONF_SUBSCRIBER_ID_IMPORTED, None)
+            elif not self._is_current_subscription(subscription_name):
+                # The user created this subscription themselves so
+                # do not delete when removing the integration.
                 user_input[CONF_SUBSCRIBER_ID_IMPORTED] = True
 
             if not errors:
                 self._data.update(user_input)
+                if self.source == SOURCE_RECONFIGURE:
+                    return await self._async_finish()
                 subscriber = api.new_subscriber_with_token(
                     self.hass,
                     self._data["token"]["access_token"],
@@ -404,13 +460,17 @@ class NestFlowHandler(
         else:
             subscriptions.extend(eligible_subscriptions.subscription_names)
         subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
+        # A previously used subscription may have pointed to a topic that is no longer eligible
+        default_subscription = self._data.get(CONF_SUBSCRIPTION_NAME)
+        if default_subscription not in subscriptions:
+            default_subscription = next(iter(subscriptions))
         return self.async_show_form(
             step_id="pubsub_subscription",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SUBSCRIPTION_NAME,
-                        default=next(iter(subscriptions)),
+                        default=default_subscription,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             translation_key="subscription_name",
@@ -436,7 +496,39 @@ class NestFlowHandler(
                 self._get_reauth_entry(),
                 data=self._data,
             )
+        if self.source == SOURCE_RECONFIGURE:
+            return await self._async_finish_reconfigure()
         title = self.flow_impl.name
         if self._structure_config_title:
             title = self._structure_config_title
         return self.async_create_entry(title=title, data=self._data)
+
+    def _is_current_subscription(self, subscription_name: str) -> bool:
+        """Return True if reconfigure selected the entry's current subscription."""
+        if self.source != SOURCE_RECONFIGURE:
+            return False
+        current_subscription: str | None = self._get_reconfigure_entry().data.get(
+            CONF_SUBSCRIPTION_NAME
+        )
+        return subscription_name == current_subscription
+
+    async def _async_finish_reconfigure(self) -> ConfigFlowResult:
+        """Update the entry and remove the old subscription if it was ours."""
+        if TYPE_CHECKING:
+            assert self._admin_client
+        entry = self._get_reconfigure_entry()
+        old_subscription_name = entry.data.get(
+            CONF_SUBSCRIPTION_NAME, entry.data.get(CONF_SUBSCRIBER_ID)
+        )
+        old_subscription_imported = CONF_SUBSCRIBER_ID_IMPORTED in entry.data
+        self._data.pop(CONF_SUBSCRIBER_ID, None)
+        result = self.async_update_reload_and_abort(entry, data=self._data)
+        if (
+            old_subscription_name
+            and old_subscription_name != self._data[CONF_SUBSCRIPTION_NAME]
+            and not old_subscription_imported
+        ):
+            await api.async_delete_subscription(
+                self._admin_client, old_subscription_name
+            )
+        return result

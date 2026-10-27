@@ -1,22 +1,23 @@
 """Ecovacs number module."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from deebot_client.capabilities import CapabilityNumber, CapabilitySet
 from deebot_client.device import Device
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
 from deebot_client.events.base import Event
+from deebot_client.events.mop_auto_wash_frequency import MopAutoWashFrequencyEvent
 from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import DEGREE, EntityCategory
+from homeassistant.const import DEGREE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -90,6 +91,18 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_step=1.0,
         mode=NumberMode.BOX,
     ),
+    EcovacsNumberEntityDescription[MopAutoWashFrequencyEvent](
+        capability_fn=lambda caps: caps.settings.mop_auto_wash_frequency,
+        value_fn=lambda e: e.value,
+        key="mop_wash_interval",
+        translation_key="mop_wash_interval",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+    ),
 )
 
 
@@ -127,6 +140,7 @@ class EcovacsNumberEntity[EventT: Event](
             self._attr_native_min_value = capability.min
             self._attr_native_max_value = capability.max
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -139,6 +153,7 @@ class EcovacsNumberEntity[EventT: Event](
 
         self._subscribe(self._capability.event, on_event)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._device.execute_command(self._capability.set(int(value)))

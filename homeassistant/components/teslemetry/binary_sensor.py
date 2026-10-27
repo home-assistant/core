@@ -1,20 +1,21 @@
 """Binary Sensor platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast, override
 
+from tesla_fleet_api import firmware_at_least
+from tesla_fleet_api.const import Scope
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
+from homeassistant.components import bluetooth
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -24,9 +25,12 @@ from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
+    TeslemetryEnergyLocalStatusEntity,
+    TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
+from .helpers import async_remove_stale_vehicle_entities
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -52,6 +56,7 @@ class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):
         | None
     ) = None
     streaming_firmware: str = "2024.26"
+    requires_location_scope: bool = False
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
@@ -136,6 +141,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     TeslemetryBinarySensorEntityDescription(
         key="climate_state_cabin_overheat_protection_actively_cooling",
         polling=True,
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryBinarySensorEntityDescription(
+        key="climate_state_is_rear_defroster_on",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_RearDefrostEnabled(
+            callback
+        ),
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -323,18 +338,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DriverSeatBelt(
             callback
         ),
+        device_class=BinarySensorDeviceClass.SAFETY,
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
         key="driver_seat_occupied",
         streaming_listener=lambda vehicle, callback: vehicle.listen_DriverSeatOccupied(
-            callback
-        ),
-        entity_registry_enabled_default=False,
-    ),
-    TeslemetryBinarySensorEntityDescription(
-        key="passenger_seat_belt",
-        streaming_listener=lambda vehicle, callback: vehicle.listen_PassengerSeatBelt(
             callback
         ),
         entity_registry_enabled_default=False,
@@ -348,6 +357,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="gps_state",
+        requires_location_scope=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_GpsState(callback),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -545,6 +555,97 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = 
     ),
 )
 
+BLUETOOTH_PRESENCE_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth",
+    translation_key="bluetooth",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
+BLUETOOTH_SESSION_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
+    key="bluetooth_session",
+    translation_key="bluetooth_session",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+)
+
+
+def _status_bool(*path: str) -> Callable[[dict[str, Any]], bool | None]:
+    """Return a function reading a boolean at a path in the gateway status."""
+
+    def value_fn(data: dict[str, Any]) -> bool | None:
+        value: Any = data
+        for key in path:
+            if not isinstance(value, dict):
+                return None
+            value = value.get(key)
+        return value if isinstance(value, bool) else None
+
+    return value_fn
+
+
+@dataclass(frozen=True, kw_only=True)
+class TeslemetryLocalBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Teslemetry binary sensor read from the local gateway."""
+
+    value_fn: Callable[[dict[str, Any]], bool | None]
+
+
+_site_shut_down = _status_bool("control", "siteShutdown", "isShutDown")
+
+
+def _site_running(data: dict[str, Any]) -> bool | None:
+    """Return if the site is running, which the gateway reports as shut down."""
+    shut_down = _site_shut_down(data)
+    return None if shut_down is None else not shut_down
+
+
+ENERGY_LOCAL_STATUS_DESCRIPTIONS: tuple[
+    TeslemetryLocalBinarySensorEntityDescription, ...
+] = (
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="grid_ok",
+        value_fn=_status_bool("control", "islanding", "gridOK"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="microgrid_ok",
+        value_fn=_status_bool("control", "islanding", "microGridOK"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="contactor_closed",
+        value_fn=_status_bool("control", "islanding", "contactorClosed"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="site_running",
+        value_fn=_site_running,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="site_manager_running",
+        value_fn=_status_bool("system", "sitemanagerStatus", "isRunning"),
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="escan_firmware_updating",
+        value_fn=_status_bool("esCan", "firmwareUpdate", "isUpdating"),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="pw3can_firmware_updating",
+        value_fn=_status_bool("pw3Can", "firmwareUpdate", "isUpdating"),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -553,21 +654,36 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 
+    location_scope = Scope.VEHICLE_LOCATION in entry.runtime_data.scopes
     entities: list[BinarySensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
+            if description.requires_location_scope and not location_scope:
+                continue
             if (
                 not vehicle.poll
                 and description.streaming_listener
-                and vehicle.firmware >= description.streaming_firmware
+                and firmware_at_least(vehicle.firmware, description.streaming_firmware)
             ):
                 entities.append(
                     TeslemetryVehicleStreamingBinarySensorEntity(vehicle, description)
                 )
-            elif description.polling:
+            elif description.polling and vehicle.poll is not False:
+                # poll may be None (unknown); only an explicit False is stream-only
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
+        if vehicle.ble_address:
+            entities.append(
+                TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
+                    vehicle, BLUETOOTH_PRESENCE_DESCRIPTION, vehicle.ble_address
+                )
+            )
+            entities.append(
+                TeslemetryVehicleBluetoothSessionBinarySensorEntity(
+                    vehicle, BLUETOOTH_SESSION_DESCRIPTION
+                )
+            )
 
     entities.extend(
         TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
@@ -582,7 +698,23 @@ async def async_setup_entry(
         for description in ENERGY_INFO_DESCRIPTIONS
         if description.key in energysite.info_coordinator.data
     )
+    entities.extend(
+        TeslemetryEnergyLocalBinarySensorEntity(energysite, description)
+        for energysite in entry.runtime_data.energysites
+        if (coordinator := energysite.local_status_coordinator)
+        for description in ENERGY_LOCAL_STATUS_DESCRIPTIONS
+        # Without a first status, add every sensor so they recover with the gateway.
+        if coordinator.data is None
+        or description.value_fn(coordinator.data) is not None
+    )
 
+    async_remove_stale_vehicle_entities(
+        hass,
+        entry.entry_id,
+        Platform.BINARY_SENSOR,
+        {vehicle.vin for vehicle in entry.runtime_data.vehicles},
+        {entity.unique_id for entity in entities if entity.unique_id},
+    )
     async_add_entities(entities)
 
 
@@ -602,6 +734,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
@@ -627,11 +760,15 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_is_on = state.state == STATE_ON
+            if state.state == STATE_ON:
+                self._attr_is_on = True
+            elif state.state == STATE_OFF:
+                self._attr_is_on = False
 
         assert self.entity_description.streaming_listener
         self.async_on_remove(
@@ -663,6 +800,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
@@ -684,6 +822,140 @@ class TeslemetryEnergyInfoBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
+
+
+class TeslemetryVehicleBluetoothBinarySensorEntity(
+    TeslemetryRootEntity, BinarySensorEntity
+):
+    """Base class for Teslemetry vehicle Bluetooth binary sensors."""
+
+    entity_description: TeslemetryBinarySensorEntityDescription
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Bluetooth binary sensor."""
+        self.entity_description = description
+        self._attr_unique_id = f"{data.vin}-{description.key}"
+        self._attr_device_info = data.device
+
+
+class TeslemetryVehicleBluetoothPresenceBinarySensorEntity(
+    TeslemetryVehicleBluetoothBinarySensorEntity
+):
+    """Binary sensor for a vehicle being visible to the Bluetooth stack."""
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+        address: str,
+    ) -> None:
+        """Initialize the Bluetooth presence binary sensor."""
+        self._address = address
+        super().__init__(data, description)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Follow the Bluetooth stack's own presence history for the address."""
+        await super().async_added_to_hass()
+        self._attr_is_on = bluetooth.async_address_present(self.hass, self._address)
+        self.async_on_remove(
+            bluetooth.async_register_callback(
+                self.hass,
+                self._async_advertisement,
+                bluetooth.BluetoothCallbackMatcher(address=self._address),
+                # Any other mode would ask scanners to actively probe the vehicle.
+                bluetooth.BluetoothScanningMode.PASSIVE,
+            )
+        )
+        self.async_on_remove(
+            bluetooth.async_track_unavailable(
+                self.hass, self._async_unavailable, self._address
+            )
+        )
+
+    @callback
+    def _async_advertisement(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Handle an advertisement broadcast by the vehicle."""
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    @callback
+    def _async_unavailable(
+        self, service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle the vehicle falling out of the stack's presence history."""
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+class TeslemetryVehicleBluetoothSessionBinarySensorEntity(
+    TeslemetryVehicleBluetoothBinarySensorEntity
+):
+    """Binary sensor for Home Assistant's own Bluetooth link to a vehicle."""
+
+    # Links are opened per command and never kept alive, so there is no session
+    # until the library reports one.
+    _attr_is_on = False
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Bluetooth session binary sensor."""
+        # A vehicle whose key failed to load can never hold a link to report on,
+        # but the entity must still exist so its registry entry survives.
+        self._ble_api = data.ble_api
+        self._attr_available = data.ble_api is not None
+        super().__init__(data, description)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the library's connect and disconnect events."""
+        await super().async_added_to_hass()
+        if self._ble_api is not None:
+            self.async_on_remove(
+                self._ble_api.listen_connection_status(self._async_connection_status)
+            )
+
+    @callback
+    def _async_connection_status(self, connected: bool) -> None:
+        """Handle the Bluetooth session being established or lost."""
+        self._attr_is_on = connected
+        self.async_write_ha_state()
+
+
+class TeslemetryEnergyLocalBinarySensorEntity(
+    TeslemetryEnergyLocalStatusEntity, BinarySensorEntity
+):
+    """Teslemetry energy binary sensor read from the local gateway."""
+
+    entity_description: TeslemetryLocalBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        description: TeslemetryLocalBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the binary sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the state of the binary sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

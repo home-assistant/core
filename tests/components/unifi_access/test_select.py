@@ -1,11 +1,10 @@
 """Tests for the UniFi Access select platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import (
     ApiConnectionError,
@@ -16,6 +15,7 @@ from unifi_access_api import (
     UnifiAccessError,
 )
 
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -23,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_LOCK_RULE_SELECT_ENTITY = "select.front_door_lock_rule"
 BACK_DOOR_LOCK_RULE_SELECT_ENTITY = "select.back_door_lock_rule"
@@ -95,7 +93,7 @@ async def test_select_option_calls_api(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         "select_option",
         {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "keep_lock"},
         blocking=True,
@@ -118,7 +116,7 @@ async def test_select_schedule_option_does_not_call_api(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        Platform.SELECT,
+        SELECT_DOMAIN,
         "select_option",
         {"entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY, "option": "schedule"},
         blocking=True,
@@ -231,7 +229,7 @@ async def test_select_option_raises_on_api_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            Platform.SELECT,
+            SELECT_DOMAIN,
             "select_option",
             {
                 "entity_id": FRONT_DOOR_LOCK_RULE_SELECT_ENTITY,

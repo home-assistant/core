@@ -2,12 +2,12 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any, override
 
 from deebot_client.capabilities import CapabilityMap, CapabilitySet, CapabilitySetTypes
 from deebot_client.command import CommandWithMessageHandling
 from deebot_client.device import Device
-from deebot_client.events import WorkModeEvent, auto_empty
+from deebot_client.events import EfficiencyModeEvent, WorkModeEvent, auto_empty
 from deebot_client.events.base import Event
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent
 from deebot_client.events.water_info import WaterAmountEvent
@@ -70,6 +70,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         key="auto_empty",
         translation_key="auto_empty",
     ),
+    EcovacsSelectEntityDescription[EfficiencyModeEvent](
+        capability_fn=lambda caps: caps.settings.efficiency_mode,
+        current_option_fn=lambda e: get_name_key(e.efficiency),
+        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
+        key="efficiency_mode",
+        translation_key="efficiency_mode",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 
@@ -84,10 +93,10 @@ async def async_setup_entry(
         controller, EcovacsSelectEntity, ENTITY_DESCRIPTIONS
     )
     entities.extend(
-        EcovacsActiveMapSelectEntity(device, device.capabilities.map)
+        EcovacsActiveMapSelectEntity(device, map_cap, major)
         for device in controller.devices
         if (map_cap := device.capabilities.map)
-        and isinstance(map_cap.major, CapabilitySet)
+        and isinstance(major := map_cap.major, CapabilitySet)
     )
     if entities:
         async_add_entities(entities)
@@ -113,6 +122,7 @@ class EcovacsSelectEntity[EventT: Event](
         super().__init__(device, capability, entity_description, **kwargs)
         self._attr_options = entity_description.options_fn(capability)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -124,6 +134,7 @@ class EcovacsSelectEntity[EventT: Event](
 
         self._subscribe(self._capability.event, on_event)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._device.execute_command(
@@ -147,10 +158,12 @@ class EcovacsActiveMapSelectEntity(
         self,
         device: Device,
         capability: CapabilityMap,
+        major: CapabilitySet[MajorMapEvent, [str]],
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
         super().__init__(device, capability, **kwargs)
+        self._major = major
         self._option_to_id: dict[str, str] = {}
         self._id_to_option: dict[str, str] = {}
 
@@ -174,11 +187,13 @@ class EcovacsActiveMapSelectEntity(
         if self._attr_current_option not in self._option_to_id:
             self._attr_current_option = None
 
-        # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
+        # Sort named maps first, then numeric IDs
+        # (unnamed maps during building) in ascending order.
         self._attr_options = sorted(
             self._option_to_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -193,12 +208,9 @@ class EcovacsActiveMapSelectEntity(
             self._attr_current_option = self._id_to_option.get(event.map_id)
             self.async_write_ha_state()
 
-        self._subscribe(self._capability.major.event, on_major_map)
+        self._subscribe(self._major.event, on_major_map)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if TYPE_CHECKING:
-            assert isinstance(self._capability.major, CapabilitySet)
-        await self._device.execute_command(
-            self._capability.major.set(self._option_to_id[option])
-        )
+        await self._device.execute_command(self._major.set(self._option_to_id[option]))

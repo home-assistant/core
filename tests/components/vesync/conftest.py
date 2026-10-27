@@ -1,7 +1,5 @@
 """Configuration for VeSync tests."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from contextlib import ExitStack
 from itertools import chain
@@ -9,6 +7,8 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pyvesync import VeSync
 from pyvesync.auth import VeSyncAuth
 from pyvesync.base_devices.bulb_base import VeSyncBulb
@@ -26,9 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .common import DEVICE_CATEGORIES, mock_multiple_device_responses
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -333,11 +330,34 @@ async def fan_config_entry(
     return entry
 
 
+@pytest.fixture(name="pedestal_fan_config_entry")
+async def pedestal_fan_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `CoreBreeze 432S`."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+
+    device_name = "CoreBreeze 432S"
+    mock_multiple_device_responses(aioclient_mock, [device_name])
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
 @pytest.fixture(name="switch_old_id_config_entry")
 async def switch_old_id_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
 ) -> MockConfigEntry:
-    """Create a mock VeSync config entry for `switch` with the old unique ID approach."""
+    """Create a mock VeSync config entry for switch with old unique ID."""
     entry = MockConfigEntry(
         title="VeSync",
         domain=DOMAIN,

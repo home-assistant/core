@@ -8,16 +8,33 @@ import math
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import DOMAIN, const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -34,7 +51,11 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EXTERNAL_URL, SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import (
+    CONF_EXTERNAL_URL,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    EntityCategory,
+)
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -42,30 +63,18 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
+    system_state,
+    trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    async_mock_service,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -90,7 +99,7 @@ def fake_integration(hass: HomeAssistant):
         f"{DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): DOMAIN}
+                {probatio.Required("domain"): DOMAIN}
             ),
             spec=["ACTION_SCHEMA"],
         ),
@@ -115,18 +124,41 @@ async def target_entities(
     kitchen_area = area_registry.async_create("Kitchen")
     living_room_area = area_registry.async_create("Living Room")
     label_area = area_registry.async_create("Bathroom")
+    garage_area = area_registry.async_create("Garage")
     label1 = label_registry.async_create("Label 1")
     label2 = label_registry.async_create("Label 2")
+    label3 = label_registry.async_create("Label 3")
 
     area_registry.async_update(label_area.id, labels={label1.label_id})
 
-    device1 = dr.DeviceEntry(id="device1", identifiers={("test", "device1")})
-    device2 = dr.DeviceEntry(id="device2", identifiers={("test", "device2")})
+    device1 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device1",
+        identifiers={("test", "device1")},
+    )
+    device2 = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="device2",
+        identifiers={("test", "device2")},
+    )
     area_device = dr.DeviceEntry(
-        id="area_device", identifiers={("test", "device3")}, area_id=kitchen_area.id
+        config_entry_id=config_entry.entry_id,
+        id="area_device",
+        identifiers={("test", "device3")},
+        area_id=kitchen_area.id,
     )
     label2_device = dr.DeviceEntry(
-        id="label_device", identifiers={("test", "device4")}, labels={label2.label_id}
+        config_entry_id=config_entry.entry_id,
+        id="label_device",
+        identifiers={("test", "device4")},
+        labels={label2.label_id},
+    )
+    diag_only_device = dr.DeviceEntry(
+        config_entry_id=config_entry.entry_id,
+        id="diag_only_device",
+        identifiers={("test", "device5")},
+        area_id=garage_area.id,
+        labels={label3.label_id},
     )
     mock_device_registry(
         hass,
@@ -135,6 +167,7 @@ async def target_entities(
             device2.id: device2,
             area_device.id: area_device,
             label2_device.id: label2_device,
+            diag_only_device.id: diag_only_device,
         },
     )
 
@@ -172,6 +205,34 @@ async def target_entities(
     switch_platform = MockEntityPlatform(hass, domain="switch", platform_name="test")
     switch_platform.config_entry = config_entry
     await switch_platform.async_add_entities([device1_switch, area_device_switch])
+
+    area_device_diagnostic_sensor = MockEntity(
+        entity_id="sensor.test7",
+        unique_id="test7",
+        device_info=dr.DeviceInfo(identifiers=area_device.identifiers),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    label2_device_config_sensor = MockEntity(
+        entity_id="sensor.test8",
+        unique_id="test8",
+        device_info=dr.DeviceInfo(identifiers=label2_device.identifiers),
+        entity_category=EntityCategory.CONFIG,
+    )
+    diag_only_device_sensor = MockEntity(
+        entity_id="sensor.test9",
+        unique_id="test9",
+        device_info=dr.DeviceInfo(identifiers=diag_only_device.identifiers),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    sensor_platform = MockEntityPlatform(hass, domain="sensor", platform_name="test")
+    sensor_platform.config_entry = config_entry
+    await sensor_platform.async_add_entities(
+        [
+            area_device_diagnostic_sensor,
+            label2_device_config_sensor,
+            diag_only_device_sensor,
+        ]
+    )
 
     component1_light = MockEntity(
         entity_id="light.component1_light", unique_id="component1_light"
@@ -242,6 +303,9 @@ async def target_entities(
         "light.test6",
         "switch.test2",
         "switch.test5",
+        "sensor.test7",
+        "sensor.test8",
+        "sensor.test9",
         "light.component1_light",
         "light.component1_flash_light",
         "light.component1_effect_flash_light",
@@ -249,13 +313,15 @@ async def target_entities(
         "switch.component1_switch",
         "sensor.component1_sensor",
     }
-    assert set(label_registry.labels) == {"label_1", "label_2"}
-    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom"}
-    assert set(dr.async_get(hass).devices) == {
+    assert set(label_registry.labels) == {"label_1", "label_2", "label_3"}
+    assert set(area_registry.areas) == {"kitchen", "living_room", "bathroom", "garage"}
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    assert {device.id for device in dr.async_get(hass).devices} == {
         "device1",
         "device2",
         "area_device",
         "label_device",
+        "diag_only_device",
     }
 
 
@@ -660,9 +726,9 @@ async def test_call_service_schema_validation_error(
     """Test call service command with invalid service data."""
 
     calls = []
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
-            vol.Required("message"): str,
+            probatio.Required("message"): str,
         }
     )
 
@@ -1186,13 +1252,24 @@ async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
     assert msg["type"] == "pong"
 
 
+async def test_slugify(websocket_client: MockHAClientWebSocket) -> None:
+    """Test slugify command."""
+    await websocket_client.send_json_auto_id(
+        {"type": "slugify", "text": "Living room Thermostat Temperature"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"] == {"slug": "living_room_thermostat_temperature"}
+
+
 async def test_call_service_context_with_user(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
     """Test that the user is set in the service call context."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
     client = await hass_client_no_auth()
@@ -2223,7 +2300,9 @@ async def test_render_template_strict_with_timeout_and_error_2(
                 {
                     "type": "event",
                     "event": {
-                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "error": (
+                            "TypeError: object of type 'datetime.datetime' has no len()"
+                        ),
                         "level": "ERROR",
                     },
                 },
@@ -2231,7 +2310,9 @@ async def test_render_template_strict_with_timeout_and_error_2(
                 {
                     "type": "event",
                     "event": {
-                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "error": (
+                            "TypeError: object of type 'datetime.datetime' has no len()"
+                        ),
                         "level": "ERROR",
                     },
                 },
@@ -2695,10 +2776,127 @@ async def test_subscribe_trigger(
     assert sum(hass.bus.async_listeners().values()) == init_count
 
 
+@pytest.mark.parametrize(
+    ("trigger", "expected_error"),
+    [
+        # Unknown trigger platform
+        (
+            {"platform": "nonexistent"},
+            {
+                "code": "invalid_format",
+                "message": "Invalid trigger 'nonexistent' specified",
+            },
+        ),
+        # Missing mandatory config for the trigger platform
+        (
+            {"platform": "numeric_state"},
+            {
+                "code": "invalid_format",
+                "message": "required key not provided at 'entity_id'",
+            },
+        ),
+        # Unknown device, raised as a HomeAssistantError by the platform validator
+        (
+            {"platform": "device", "domain": "light", "device_id": "nonexistent"},
+            {
+                "code": "home_assistant_error",
+                "message": "Unknown device 'nonexistent'",
+            },
+        ),
+    ],
+)
+async def test_subscribe_trigger_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    trigger: dict,
+    expected_error: dict,
+) -> None:
+    """Test trigger config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_trigger", "trigger": trigger}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
+
+
+async def test_subscribe_trigger_template_error_spams_log(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a failing trigger template spams the log.
+
+    This documents unwanted behavior. Unlike subscribe_condition and
+    test_condition, subscribe_trigger does not suppress repeated template
+    variable errors: a trigger is evaluated event-driven by its platform (here
+    via async_track_template_result), outside any trace context, so the
+    trace-based suppression used for conditions does not apply. This should be
+    fixed in the future so the error is suppressed/forwarded instead of being
+    logged on every re-render.
+    """
+    caplog.set_level(logging.WARNING)
+    hass.states.async_set("sensor.test", "1")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_trigger",
+            "trigger": {
+                "platform": "template",
+                "value_template": "{{ states('sensor.test') }}{{ undefined_variable }}",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    # Each re-render of the template logs the undefined variable error again
+    for state in ("2", "3", "4"):
+        hass.states.async_set("sensor.test", state)
+        await hass.async_block_till_done()
+
+    assert (
+        caplog.text.count(
+            "Template variable warning: 'undefined_variable' is undefined"
+        )
+        > 1
+    )
+
+
 async def test_test_condition(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test testing a condition."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "variables": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
     hass.states.async_set("hello.world", "paulus")
 
     await websocket_client.send_json_auto_id(
@@ -2749,6 +2947,551 @@ async def test_test_condition(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["result"] is False
+
+
+async def test_test_condition_requires_admin(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test testing a condition requires admin."""
+    hass_admin_user.groups = []
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    ("value_template", "expected_template_errors"),
+    [
+        ("{{ no_such_variable }}", ["'no_such_variable' is undefined"]),
+        # A single render emitting multiple errors forwards all of them
+        ("{{ foo }}{{ bar }}", ["'foo' is undefined", "'bar' is undefined"]),
+    ],
+)
+async def test_test_condition_template_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expected_template_errors: list[str],
+) -> None:
+    """Test template errors are forwarded in the result without being logged."""
+    caplog.set_level(logging.WARNING)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {"condition": "template", "value_template": value_template},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "result": False,
+        "template_errors": expected_template_errors,
+    }
+
+    assert "Template variable" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Missing mandatory config, raised by async_validate_condition_config
+        (
+            {"condition": "sun"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
+            },
+        ),
+        # Failing enabled template, raised by async_condition_from_config
+        (
+            {
+                "condition": "template",
+                "value_template": "{{ true }}",
+                "enabled": "{{ 1 / 0 }}",
+            },
+            {
+                "code": "home_assistant_error",
+                "message": (
+                    "Error rendering condition enabled template: "
+                    "ZeroDivisionError: division by zero"
+                ),
+            },
+        ),
+    ],
+)
+async def test_test_condition_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test condition config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "test_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
+
+
+async def test_test_condition_check_error_not_logged(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test errors raised while checking the condition are not logged.
+
+    The condition is valid and instantiates fine, but checking it raises (here
+    the entity does not exist). The error is reported to the client without
+    being logged by the default websocket error handler.
+    """
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
+    assert "Error handling message" not in caplog.text
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_subscribe_condition(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test subscribing to a condition."""
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    caller_trace = trace.trace_get()
+    hass.states.async_set("hello.world", "frenck")
+    # The evaluation must not replace the trace of whoever changed the state
+    assert trace.trace_get(clear=False) is caller_trace
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+    hass.states.async_remove("hello.world")
+
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": subscription_id,
+        "type": "event",
+        "event": {
+            "error": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+        },
+    }
+
+
+async def test_subscribe_condition_untracked_entity(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test changes to entities used only in a template are polled."""
+    hass.states.async_set("hello.world", "paulus")
+    hass.states.async_set("hello.other", "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "and",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {
+                        "condition": "template",
+                        "value_template": "{{ is_state('hello.other', 'on') }}",
+                    },
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set("hello.other", "off")
+
+    # A pong as the next message shows the change did not send an event
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    freezer.tick(1.1)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+
+@pytest.mark.parametrize(
+    ("condition", "needs_polling"),
+    [
+        pytest.param(
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+            False,
+            id="state",
+        ),
+        pytest.param(
+            {
+                "condition": "template",
+                "value_template": "{{ is_state('hello.world', 'paulus') }}",
+            },
+            True,
+            id="template",
+        ),
+    ],
+)
+async def test_subscribe_condition_polling(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    condition: dict[str, Any],
+    needs_polling: bool,
+) -> None:
+    """Test a condition is only polled when it can change without a state change."""
+    hass.states.async_set("hello.world", "paulus")
+
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_track_time_interval",
+        wraps=async_track_time_interval,
+    ) as mock_track_time_interval:
+        await websocket_client.send_json_auto_id(
+            {"type": "subscribe_condition", "condition": condition}
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert mock_track_time_interval.called is needs_polling
+
+
+async def test_unsubscribe_condition(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test unsubscribing from a condition removes its listeners."""
+    area = area_registry.async_create("Kitchen")
+    light = entity_registry.async_get_or_create("light", "test", "kitchen")
+    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
+    hass.states.async_set(light.entity_id, "on")
+    hass.states.async_set("hello.world", "paulus")
+    init_count = sum(hass.bus.async_listeners().values())
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "or",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {"condition": "light.is_on", "target": {"area_id": area.id}},
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+    assert sum(hass.bus.async_listeners().values()) > init_count
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": subscription_id}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+async def test_subscribe_condition_non_admin(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribing to a condition does not require admin."""
+    hass_admin_user.groups = []
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+
+@pytest.mark.parametrize(
+    ("value_template", "expected_event"),
+    [
+        # Undefined variable used in a way that raises: forwarded as an error,
+        # with the underlying template error included.
+        (
+            "{{ trigger.to_state.attributes.event_type == 'double_press' }}",
+            {
+                "error": "In 'template' condition: UndefinedError: 'trigger' is undefined",
+                "template_errors": ["'trigger' is undefined"],
+            },
+        ),
+        # Undefined variable used in a way that only warns: the condition still
+        # evaluates to a result, but the template error is forwarded alongside it.
+        (
+            "{{ no_such_variable }}",
+            {"result": False, "template_errors": ["'no_such_variable' is undefined"]},
+        ),
+        # A single render emitting multiple errors forwards all of them.
+        (
+            "{{ foo }}{{ bar }}",
+            {
+                "result": False,
+                "template_errors": ["'foo' is undefined", "'bar' is undefined"],
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_template_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    value_template: str,
+    expected_event: dict[str, Any],
+) -> None:
+    """Test template errors are forwarded as events and don't spam the log."""
+    caplog.set_level(logging.WARNING)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "template",
+                "value_template": value_template,
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": subscription_id,
+        "type": "event",
+        "event": expected_event,
+    }
+
+    # Let the condition be evaluated a few more times
+    for _ in range(5):
+        freezer.tick(1.1)
+        await hass.async_block_till_done()
+
+    # The unchanged result/error is not re-sent; a ping is the next message
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    # The template error is forwarded, not logged
+    assert "Template variable warning" not in caplog.text
+    assert "Template variable error" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Validated by the websocket command's schema
+        (
+            {"blaba": "invalid"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unexpected value for condition: 'None'. Expected a condition, "
+                    "a list of conditions or a valid template at 'condition'. Got "
+                    "{'blaba': 'invalid'}"
+                ),
+            },
+        ),
+        (
+            {"condition": "state", "entity_id": "hello.world"},
+            {
+                "code": "invalid_format",
+                "message": ("required key not provided at 'condition.state'. Got None"),
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test subscribing to a condition."""
+    hass.states.async_set("hello.world", "paulus")
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+
+@pytest.mark.parametrize(
+    ("condition", "expected_error"),
+    [
+        # Missing mandatory config, raised by async_validate_condition_config
+        (
+            {"condition": "sun"},
+            {
+                "code": "invalid_format",
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
+            },
+        ),
+        # Failing enabled template, raised by async_condition_from_config
+        (
+            {
+                "condition": "template",
+                "value_template": "{{ true }}",
+                "enabled": "{{ 1 / 0 }}",
+            },
+            {
+                "code": "home_assistant_error",
+                "message": (
+                    "Error rendering condition enabled template: "
+                    "ZeroDivisionError: division by zero"
+                ),
+            },
+        ),
+    ],
+)
+async def test_subscribe_condition_config_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    condition: dict,
+    expected_error: dict,
+) -> None:
+    """Test condition config errors are reported to the client without logging."""
+    caplog.set_level(logging.ERROR)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "subscribe_condition", "condition": condition}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+    # The expected error is not logged by the default websocket error handler
+    assert "Error handling message" not in caplog.text
 
 
 async def test_execute_script(
@@ -2981,6 +3724,86 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["event"] == message
 
 
+async def test_subscribe_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test subscribing to the system state."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
+    }
+
+    system_state.async_set_home_assistant_restart_required(hass, "demo")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["demo", "hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
+    }
+
+
+async def test_dismiss_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test dismissing the pending restart reaches every subscriber."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+    subscription = (await websocket_client.receive_json())["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["home_assistant_restart_dismissed"] is False
+
+    await websocket_client.send_json_auto_id({"type": "dismiss_system_state"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": True,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+@pytest.mark.parametrize("command", ["subscribe_system_state", "dismiss_system_state"])
+async def test_system_state_requires_admin(
+    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser, command: str
+) -> None:
+    """Test the system state commands are for admins only."""
+    hass_admin_user.groups = []
+    await websocket_client.send_json_auto_id({"type": command})
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
+
+
 async def test_integration_setup_info(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -3039,13 +3862,13 @@ async def test_validate_config_works(
 @pytest.mark.parametrize(
     ("key", "config", "error"),
     [
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
             "Invalid trigger 'non_existing' specified",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "conditions",
             {
@@ -3068,11 +3891,11 @@ async def test_validate_config_works(
             },
             "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
-            "Unable to determine action @ data[0]",
+            "Unable to determine action at '[0]'",
         ),
     ],
 )
@@ -3415,7 +4238,8 @@ async def test_wait_integration_startup(
     # Allow setup to proceed
     setup_stall.set()
 
-    # The component is scheduled to load, this will block until the config entry is loaded
+    # The component is scheduled to load, this will block until
+    # the config entry is loaded
     await ws_client.send_json_auto_id({"type": "integration/wait", "domain": "test"})
     response = await ws_client.receive_json()
     assert response == {
@@ -3437,7 +4261,7 @@ async def test_extract_from_target(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
+    """Test extract_from_target command with mixed target types."""
 
     async def call_command(target: dict[str, list[str]]) -> Any:
         await websocket_client.send_json_auto_id(
@@ -3558,6 +4382,34 @@ async def test_extract_from_target(
         areas={kitchen_area.id, label_area.id},
     )
 
+    # Test excluding from mixed targets
+    msg = await call_command(
+        {
+            "entity_id": ["light.direct"],
+            "device_id": [device1.id],
+            "area_id": [kitchen_area.id],
+            "label_id": [label1.label_id],
+            "exclude": {
+                "entity_id": [device1_entity2.entity_id],
+                "area_id": [kitchen_area.id],
+            },
+        },
+    )
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            "light.direct",
+            device1_entity1.entity_id,
+            label_entity.entity_id,
+        },
+        devices={device1.id},
+        areas={label_area.id},
+    )
+
+    # A target which only has an exclude block is accepted while editing
+    msg = await call_command({"exclude": {"entity_id": ["light.direct"]}})
+    _assert_extract_from_target_command_result(msg)
+
 
 async def test_extract_from_target_expand_group(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
@@ -3601,6 +4453,88 @@ async def test_extract_from_target_expand_group(
     _assert_extract_from_target_command_result(
         msg,
         entities={"light.kitchen", "light.living_room"},
+    )
+
+
+async def test_extract_from_target_primary_entities_only(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test extract_from_target command with primary_entities_only parameter."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device1")},
+    )
+
+    primary_entity = entity_registry.async_get_or_create(
+        "light", "test", "unique1", device_id=device.id
+    )
+    diagnostic_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique2",
+        device_id=device.id,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    config_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique3",
+        device_id=device.id,
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    # Default (primary_entities_only=True): config/diagnostic entities excluded
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={primary_entity.entity_id},
+        devices={device.id},
+    )
+
+    # Explicit primary_entities_only=True
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+            "primary_entities_only": True,
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={primary_entity.entity_id},
+        devices={device.id},
+    )
+
+    # primary_entities_only=False: config/diagnostic entities included
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "extract_from_target",
+            "target": {"device_id": [device.id]},
+            "primary_entities_only": False,
+        }
+    )
+    msg = await websocket_client.receive_json()
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            primary_entity.entity_id,
+            diagnostic_entity.entity_id,
+            config_entity.entity_id,
+        },
+        devices={device.id},
     )
 
 
@@ -3662,7 +4596,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(
@@ -3672,7 +4606,7 @@ async def test_get_triggers_conditions_for_target(
     automation_component: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
+    """Test get triggers/conditions for target with mixed types."""
 
     async def async_get_triggers_conditions(hass: HomeAssistant) -> dict[str, type]:
         return {
@@ -3709,7 +4643,11 @@ async def test_get_triggers_conditions_for_target(
         Mock(
             **{
                 f"async_get_{automation_component}s": AsyncMock(
-                    return_value={"match_all": Mock, "other_integration_lights": Mock}
+                    return_value={
+                        "match_all": Mock,
+                        "other_integration_lights": Mock,
+                        "non_primary_sensor": Mock,
+                    }
                 )
             }
         ),
@@ -3787,6 +4725,12 @@ async def test_get_triggers_conditions_for_target(
                   - light.LightEntityFeature.EFFECT
               - integration: test
                 domain: light
+
+        non_primary_sensor:
+          target:
+            entity:
+              domain: sensor
+            primary_entities_only: false
     """
 
     def _load_yaml(fname, secrets=None):
@@ -3892,6 +4836,7 @@ async def test_get_triggers_conditions_for_target(
                 "component1",
                 "component1.light_message",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "sensor.turned_on",
@@ -3904,6 +4849,7 @@ async def test_get_triggers_conditions_for_target(
             {"area_id": ["kitchen", "living_room"]},
             [
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "switch.turned_on",
@@ -3917,10 +4863,53 @@ async def test_get_triggers_conditions_for_target(
                 "light.turned_on",
                 "component1",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "switch.turned_on",
             ],
         )
+
+        # Test direct targeting of a non-primary entity - even
+        # primary_entities_only=True components match
+        await assert_command(
+            {"entity_id": ["sensor.test7"]},
+            [
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "sensor.turned_on",
+            ],
+        )
+
+        # Test indirect targeting (device/area/label) with a target that only
+        # contains non-primary entities. Components with no entity filter and
+        # the default primary_entities_only=True (e.g. component2.match_all)
+        # must NOT match.
+        await assert_command(
+            {"device_id": ["diag_only_device"]},
+            ["component2.non_primary_sensor"],
+        )
+        await assert_command(
+            {"area_id": ["garage"]},
+            ["component2.non_primary_sensor"],
+        )
+        await assert_command(
+            {"label_id": ["label_3"]},
+            ["component2.non_primary_sensor"],
+        )
+
+        # Test directly targeting a non-primary entity combined
+        # with an indirect device that ONLY contains non-primary entities.
+        # The direct entity must still produce sensor.turned_on and match
+        # primary_entities_only=True components (e.g. component2.match_all).
+        await assert_command(
+            {"entity_id": ["sensor.test7"], "device_id": ["diag_only_device"]},
+            [
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "sensor.turned_on",
+            ],
+        )
+
         # Test mixed target types
         await assert_command(
             {
@@ -3933,6 +4922,7 @@ async def test_get_triggers_conditions_for_target(
                 "component1",
                 "component1.light_message",
                 "component2.match_all",
+                "component2.non_primary_sensor",
                 "component2.other_integration_lights",
                 "light.turned_on",
                 "sensor.turned_on",
@@ -4021,6 +5011,12 @@ async def test_get_services_for_target(
                   - light.LightEntityFeature.EFFECT
               - integration: test
                 domain: light
+
+        non_primary_sensor:
+          target:
+            entity:
+              domain: sensor
+            primary_entities_only: false
     """
 
     def _load_yaml(fname, secrets=None):
@@ -4059,6 +5055,7 @@ async def test_get_services_for_target(
     hass.services.async_register(
         "component2", "other_integration_lights", lambda call: None
     )
+    hass.services.async_register("component2", "non_primary_sensor", lambda call: None)
     await hass.async_block_till_done()
 
     async def assert_services(
@@ -4140,6 +5137,7 @@ async def test_get_services_for_target(
         [
             "component1.light_message",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "sensor.turn_on",
@@ -4152,6 +5150,7 @@ async def test_get_services_for_target(
         {"area_id": ["kitchen", "living_room"]},
         [
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "switch.turn_on",
@@ -4164,10 +5163,53 @@ async def test_get_services_for_target(
         [
             "light.turn_on",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "switch.turn_on",
         ],
     )
+
+    # Test direct targeting of a non-primary entity - even
+    # primary_entities_only=True components match
+    await assert_services(
+        {"entity_id": ["sensor.test7"]},
+        [
+            "component2.match_all",
+            "component2.non_primary_sensor",
+            "sensor.turn_on",
+        ],
+    )
+
+    # Test indirect targeting (device/area/label) with a target that only
+    # contains non-primary entities. Services with no entity filter and
+    # the default primary_entities_only=True (e.g. component2.match_all)
+    # must NOT match.
+    await assert_services(
+        {"device_id": ["diag_only_device"]},
+        ["component2.non_primary_sensor"],
+    )
+    await assert_services(
+        {"area_id": ["garage"]},
+        ["component2.non_primary_sensor"],
+    )
+    await assert_services(
+        {"label_id": ["label_3"]},
+        ["component2.non_primary_sensor"],
+    )
+
+    # Test directly targeting a non-primary entity combined
+    # with an indirect device that ONLY contains non-primary entities.
+    # The direct entity must still produce sensor.turned_on and match
+    # primary_entities_only=True services (e.g. component2.match_all).
+    await assert_services(
+        {"entity_id": ["sensor.test7"], "device_id": ["diag_only_device"]},
+        [
+            "component2.match_all",
+            "component2.non_primary_sensor",
+            "sensor.turn_on",
+        ],
+    )
+
     # Test mixed target types
     await assert_services(
         {
@@ -4179,6 +5221,7 @@ async def test_get_services_for_target(
         [
             "component1.light_message",
             "component2.match_all",
+            "component2.non_primary_sensor",
             "component2.other_integration_lights",
             "light.turn_on",
             "sensor.turn_on",
@@ -4346,3 +5389,29 @@ async def test_get_automation_component_lookup_table_cache(
         _get_automation_component_lookup_table(hass, "services", services)
         is service_result1
     )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expect_success"),
+    [(Exception("error"), False), (None, True)],
+)
+async def test_execute_script_unloads_script(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    side_effect: Exception | None,
+    expect_success: bool,
+) -> None:
+    """Test that execute_script unloads the script after execution."""
+    with patch("homeassistant.helpers.script.Script", autospec=True) as script_mock:
+        script_mock.return_value.async_run.return_value = None
+        script_mock.return_value.async_run.side_effect = side_effect
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "execute_script",
+                "sequence": [{"service": "domain_test.test_service"}],
+            }
+        )
+        msg = await websocket_client.receive_json()
+        assert msg["success"] == expect_success
+
+    script_mock.return_value.async_unload.assert_called_once()

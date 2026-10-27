@@ -1,14 +1,12 @@
 """Backup functionality for supervised installations."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 from contextlib import suppress
 import logging
 import os
 from pathlib import Path, PurePath
-from typing import Any, cast
+from typing import Any, cast, override
 from uuid import UUID
 
 from aiohasupervisor import SupervisorClient
@@ -25,7 +23,6 @@ from aiohasupervisor.models import (
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     AddonErrorData,
     AddonInfo,
     AgentBackup,
@@ -50,17 +47,18 @@ from homeassistant.components.backup import (
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
-    suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.async_iterator import async_close_iterator
 from homeassistant.util.enum import try_parse_enum
 
-from .const import DATA_CONFIG_STORE, DOMAIN, EVENT_SUPERVISOR_EVENT
+from .config_entry import async_get_update_options
+from .const import DOMAIN, EVENT_SUPERVISOR_EVENT, OPTION_ADD_ON_BACKUP_RETAIN_COPIES
 from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
@@ -68,6 +66,16 @@ RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 # Set on backups automatically created when updating an addon
 TAG_ADDON_UPDATE = "supervisor.addon_update"
 _LOGGER = logging.getLogger(__name__)
+
+
+def _suggested_backup_filename(name: str, date: str) -> str:
+    """Suggest a filename for a Supervisor backup.
+
+    Slugify the name so a display name with path separators (e.g. an add-on
+    named "Nabu Casa / Webhook Proxy") can't produce a filename Supervisor
+    rejects. The unsanitized name is still stored as the backup's display name.
+    """
+    return suggested_filename_from_name_date(slugify(name), date)
 
 
 async def async_get_backup_agents(
@@ -163,6 +171,7 @@ class SupervisorBackupAgent(BackupAgent):
         self.name = self.unique_id = name
         self.location = location
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -179,6 +188,7 @@ class SupervisorBackupAgent(BackupAgent):
         except SupervisorNotFoundError as err:
             raise BackupNotFound(f"Backup {backup_id} not found") from err
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -202,7 +212,7 @@ class SupervisorBackupAgent(BackupAgent):
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
             location={self.location},
-            filename=PurePath(suggested_backup_filename(backup)),
+            filename=PurePath(_suggested_backup_filename(backup.name, backup.date)),
         )
 
         async def stream_with_progress() -> AsyncIterator[bytes]:
@@ -218,6 +228,7 @@ class SupervisorBackupAgent(BackupAgent):
             upload_options,
         )
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backup_list = await self._client.backups.list()
@@ -229,6 +240,7 @@ class SupervisorBackupAgent(BackupAgent):
             result.append(_backup_details_to_agent_backup(details, self.location))
         return result
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -243,6 +255,7 @@ class SupervisorBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
         return _backup_details_to_agent_backup(details, self.location)
 
+    @override
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
         try:
@@ -264,6 +277,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self._client = get_supervisor_client(hass)
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -283,7 +297,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise HomeAssistantError(
                 "Cannot create a backup with database but without Home Assistant"
             )
-        manager = self._hass.data[DATA_MANAGER]
+        manager = async_get_backup_manager(self._hass)
 
         include_addons_set: supervisor_backups.AddonSet | set[str] | None = None
         if include_all_addons:
@@ -357,7 +371,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         date = dt_util.now().isoformat()
         extra_metadata = extra_metadata | {"supervisor.backup_request_date": date}
-        filename = suggested_filename_from_name_date(backup_name, date)
+        filename = _suggested_backup_filename(backup_name, date)
         try:
             backup = await self._client.backups.partial_backup(
                 supervisor_backups.PartialBackupOptions(
@@ -495,6 +509,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -503,7 +518,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         suggested_filename: str,
     ) -> WrittenBackup:
         """Receive a backup."""
-        manager = self._hass.data[DATA_MANAGER]
+        manager = async_get_backup_manager(self._hass)
 
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
@@ -541,6 +556,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -555,7 +571,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
-        manager = self._hass.data[DATA_MANAGER]
+        manager = async_get_backup_manager(self._hass)
         # The backup manager has already checked that the backup exists so we don't
         # need to catch BackupNotFound here.
         backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
@@ -580,11 +596,15 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
-            await self.async_receive_backup(
-                agent_ids=[],
-                stream=await open_stream(),
-                suggested_filename=f"{backup_id}.tar",
-            )
+            stream = await open_stream()
+            try:
+                await self.async_receive_backup(
+                    agent_ids=[],
+                    stream=stream,
+                    suggested_filename=f"{backup_id}.tar",
+                )
+            finally:
+                await async_close_iterator(stream)
             restore_location = LOCATION_CLOUD_BACKUP
         else:
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
@@ -639,6 +659,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         finally:
             unsub()
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -701,6 +722,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 
@@ -793,7 +815,7 @@ async def backup_addon_before_update(
     installed_version: str | None,
 ) -> None:
     """Prepare for updating an add-on."""
-    backup_manager = hass.data[DATA_MANAGER]
+    backup_manager = async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     # Use the password from automatic settings if available
@@ -816,12 +838,14 @@ async def backup_addon_before_update(
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
-        update_config = hass.data[DATA_CONFIG_STORE].data.update_config
+        retain_copies = async_get_update_options(hass)[
+            OPTION_ADD_ON_BACKUP_RETAIN_COPIES
+        ]
         return dict(
             sorted(
                 backups.items(),
                 key=lambda backup_item: backup_item[1].date,
-            )[: max(len(backups) - update_config.add_on_backup_retain_copies, 0)]
+            )[: max(len(backups) - retain_copies, 0)]
         )
 
     try:

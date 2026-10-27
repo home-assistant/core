@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import ClientResponseError
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
 from homeassistant.components.weheat import UnauthorizedException
@@ -15,11 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import ClientResponseError
 
-
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
@@ -39,7 +37,6 @@ async def test_setup(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
     ("setup_exception", "expected_setup_state"),
     [
@@ -72,7 +69,6 @@ async def test_setup_fail(
     assert mock_config_entry.state is expected_setup_state
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_fail_discover(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
@@ -88,7 +84,6 @@ async def test_setup_fail_discover(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

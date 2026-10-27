@@ -1,14 +1,12 @@
 """Config flow for EHEIM Digital."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -23,8 +21,12 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(
+            CONF_HOST, default="eheimdigital.local"
+        ): selector.TextSelector()
+    }
 )
 
 
@@ -37,6 +39,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.main_device_added_event = asyncio.Event()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -86,6 +89,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -11,6 +11,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant import config_entries
 from homeassistant.components.paperless_ngx.const import DOMAIN
@@ -21,14 +22,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT_ONE, USER_INPUT_REAUTH, USER_INPUT_TWO
 
-from tests.common import MockConfigEntry, patch
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=True
+        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -55,10 +54,9 @@ async def test_full_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.data == USER_INPUT_ONE
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_reauth_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth an integration and finishing flow works."""
 
@@ -77,10 +75,9 @@ async def test_full_reauth_flow(
     assert mock_config_entry.data[CONF_API_KEY] == USER_INPUT_REAUTH[CONF_API_KEY]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure an integration and finishing flow works."""
 
@@ -123,7 +120,14 @@ async def test_config_flow_error_handling(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_INPUT_ONE,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -178,6 +182,15 @@ async def test_reauth_flow_error_handling(
     assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == expected_error
 
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"], USER_INPUT_REAUTH
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
@@ -216,6 +229,16 @@ async def test_reconfigure_flow_error_handling(
     assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == expected_error
 
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_TWO,
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reconfigure_successful"
+
 
 async def test_config_already_exists(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -225,17 +248,24 @@ async def test_config_already_exists(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=USER_INPUT_ONE,
         context={"source": config_entries.SOURCE_USER},
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_already_exists_reconfigure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we only allow a single config if reconfiguring an entry."""
     mock_config_entry.add_to_hass(hass)

@@ -1,6 +1,6 @@
 """Base classes for Crownstone devices."""
 
-from __future__ import annotations
+from typing import override
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
@@ -29,6 +29,7 @@ class CrownstoneEntity(Entity):
         return str(self.device.cloud_id)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(

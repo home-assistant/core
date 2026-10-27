@@ -1,21 +1,19 @@
 """Provides device triggers for YoLink."""
 
-from __future__ import annotations
-
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, YOLINK_EVENT
 from .const import (
     DEV_MODEL_FLEX_FOB_YS3604_EC,
     DEV_MODEL_FLEX_FOB_YS3604_UC,
@@ -25,6 +23,8 @@ from .const import (
     DEV_MODEL_SWITCH_YS5708_UC,
     DEV_MODEL_SWITCH_YS5709_EC,
     DEV_MODEL_SWITCH_YS5709_UC,
+    DOMAIN,
+    YOLINK_EVENT,
 )
 
 CONF_BUTTON_1 = "button_1"
@@ -53,7 +53,7 @@ FLEX_BUTTONS_2 = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(FLEX_BUTTONS_4)}
+    {probatio.Required(CONF_TYPE): probatio.In(FLEX_BUTTONS_4)}
 )
 
 # YoLink Remotes YS3604/YS3614, Switch YS5708/YS5709
@@ -74,7 +74,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for YoLink devices."""
     device_registry = dr.async_get(hass)
-    registry_device = device_registry.async_get(device_id)
+    registry_device = device_registry.async_get(device_id, include_child_devices=False)
     if not registry_device or registry_device.model not in [
         ATTR_DEVICE_SMART_REMOTER,
         ATTR_DEVICE_SWITCH,
@@ -101,9 +101,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: YOLINK_EVENT,
-        event_trigger.CONF_EVENT_DATA: {
+        EventTriggerArgument.PLATFORM: "event",
+        EventTriggerArgument.EVENT_TYPE: YOLINK_EVENT,
+        EventTriggerArgument.EVENT_DATA: {
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],
             CONF_TYPE: config[CONF_TYPE],
         },

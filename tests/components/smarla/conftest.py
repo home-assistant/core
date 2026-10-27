@@ -1,7 +1,5 @@
 """Configuration for smarla tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,13 +7,12 @@ from pysmarlaapi import AuthToken
 from pysmarlaapi.federwiege.services.classes import Property, Service
 from pysmarlaapi.federwiege.services.types import SpringStatus, UpdateStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
 from .const import MOCK_ACCESS_TOKEN_JSON, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -32,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator:
     """Override async_setup_entry."""
-    with patch("homeassistant.components.smarla.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.smarla.async_setup_entry", return_value=None):
         yield
 
 

@@ -5,6 +5,9 @@ from unittest.mock import ANY
 
 from aioesphomeapi import APIClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -13,10 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from .common import MockDashboardRefresh
 from .conftest import MockESPHomeDevice, MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -81,11 +80,16 @@ async def test_diagnostics_with_bluetooth(
             "connections_free": 0,
             "connections_limit": 0,
             "scanner": {
+                "connect_completed_total": 0,
+                "connect_failed_total": 0,
+                "connect_failures": {},
+                "connect_in_progress": {},
                 "connectable": True,
                 "current_mode": None,
                 "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
+                "last_connect_completed_time": 0.0,
                 "last_detection": ANY,
                 "monotonic_time": ANY,
                 "name": "test (AA:BB:CC:DD:EE:FC)",
@@ -123,8 +127,18 @@ async def test_diagnostics_with_bluetooth(
         },
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
+            "device_capabilities": {
+                "bluetooth_proxy": {"feature_flags": 0, "mac_address": ""},
+                "sendspin": {"client_id": "", "feature_flags": 0},
+                "serial_proxies": [],
+                "voice_assistant": {"feature_flags": 0},
+                "wizard": {"configured": False},
+                "zwave_proxy": {"feature_flags": 0, "home_id": 0},
+            },
             "device_info": {
+                "api_encryption_provisionable": False,
                 "api_encryption_supported": False,
+                "api_outgoing_connection_supported": False,
                 "area": {"area_id": 0, "name": ""},
                 "areas": [],
                 "bluetooth_mac_address": "**REDACTED**",

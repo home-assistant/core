@@ -1,16 +1,42 @@
 """Fixtures for Verisure integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.verisure.const import CONF_GIID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry
+OVERVIEW = [
+    {
+        "data": {
+            "installation": {
+                "armState": {"status": "DISARMED", "statusType": "DISARMED"},
+                "broadband": [{"status": "ONLINE"}],
+                "cameras": [
+                    {"device": {"deviceLabel": "cam-1"}, "status": "AVAILABLE"}
+                ],
+                "climates": [
+                    {"device": {"deviceLabel": "climate-1"}, "temperature": 21}
+                ],
+                "doorWindows": [
+                    {"device": {"deviceLabel": "door-1"}, "status": "CLOSED"}
+                ],
+                "smartLocks": [
+                    {"device": {"deviceLabel": "lock-1"}, "status": "LOCKED"}
+                ],
+                "smartplugs": [
+                    {
+                        "device": {"deviceLabel": "plug-1", "area": "Living room"},
+                        "currentState": "ON",
+                    }
+                ],
+            }
+        }
+    }
+]
 
 
 @pytest.fixture
@@ -29,10 +55,21 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_verisure() -> Generator[MagicMock]:
+    """Return a mocked Verisure session."""
+    with patch(
+        "homeassistant.components.verisure.coordinator.Verisure", autospec=True
+    ) as mock_cls:
+        session = mock_cls.return_value
+        session.request.return_value = OVERVIEW
+        yield session
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.verisure.async_setup_entry", return_value=True
+        "homeassistant.components.verisure.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

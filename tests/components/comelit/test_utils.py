@@ -2,10 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.comelit.const import DOMAIN
@@ -17,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID_0 = "switch.switch0"
 ENTITY_ID_1 = "climate.climate0"
@@ -48,7 +52,7 @@ async def test_device_remove_stale(
     assert state.attributes[ATTR_HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -77,17 +81,18 @@ async def test_device_remove_stale(
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
-        (CannotConnect, "cannot_connect", "CannotConnect()"),
-        (CannotRetrieveData, "cannot_retrieve_data", "CannotRetrieveData()"),
+        (CannotConnect, "cannot_connect", {"error": "CannotConnect()"}),
+        (CannotRetrieveData, "cannot_retrieve_data", {"error": "CannotRetrieveData()"}),
+        (DeviceStorageFailureError, "device_storage_failure", None),
     ],
 )
 async def test_bridge_api_call_exceptions(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
-    error: str,
+    error: dict[str, str] | None,
 ) -> None:
     """Test bridge_api_call decorator for exceptions."""
 
@@ -109,7 +114,7 @@ async def test_bridge_api_call_exceptions(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == key
-    assert exc_info.value.translation_placeholders == {"error": error}
+    assert exc_info.value.translation_placeholders == error
 
 
 async def test_bridge_api_call_reauth(

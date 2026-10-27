@@ -1,28 +1,31 @@
 """View to accept incoming websocket connection."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine
 import datetime as dt
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.http.const import is_supervisor_unix_socket_request
+from homeassistant.components.http.const import (
+    MAX_UNAUTHENTICATED_BODY_SIZE,
+    is_supervisor_unix_socket_request,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
+from .connection import REDACT_KEYS
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
@@ -62,6 +65,7 @@ class WebsocketAPIView(HomeAssistantView):
 class WebSocketAdapter(logging.LoggerAdapter):
     """Add connection id to websocket messages."""
 
+    @override
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
         assert self.extra is not None
@@ -94,7 +98,9 @@ class WebSocketHandler:
         self._hass = hass
         self._loop = hass.loop
         self._request: web.Request = request
-        self._wsock = web.WebSocketResponse(heartbeat=55)
+        # decode_text=False so orjson decodes the raw TEXT bytes directly
+        # instead of decoding to str first and re-scanning.
+        self._wsock = web.WebSocketResponse(heartbeat=55, decode_text=False)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -117,6 +123,7 @@ class WebSocketHandler:
         """Handle logging change."""
         self._debug = self._logger.isEnabledFor(logging.DEBUG)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return (
@@ -216,7 +223,8 @@ class WebSocketHandler:
         if (queue_size_after_add := len(message_queue)) >= MAX_PENDING_MSG:
             self._logger.error(
                 (
-                    "%s: Client unable to keep up with pending messages. Reached %s pending"
+                    "%s: Client unable to keep up with"
+                    " pending messages. Reached %s pending"
                     " messages. The system's load is too high or an integration is"
                     " misbehaving; Last message was: %s"
                 ),
@@ -280,7 +288,8 @@ class WebSocketHandler:
 
         self._logger.error(
             (
-                "%s: Client unable to keep up with pending messages. Stayed over %s for %s"
+                "%s: Client unable to keep up with"
+                " pending messages. Stayed over %s for %s"
                 " seconds. The system's load is too high or an integration is"
                 " misbehaving; Last message was: %s"
             ),
@@ -401,7 +410,8 @@ class WebSocketHandler:
                 msg = await self._wsock.receive(AUTH_MESSAGE_TIMEOUT)
             except TimeoutError as err:
                 raise Disconnect(
-                    f"Did not receive auth message within {AUTH_MESSAGE_TIMEOUT} seconds"
+                    "Did not receive auth message within"
+                    f" {AUTH_MESSAGE_TIMEOUT} seconds"
                 ) from err
 
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
@@ -417,13 +427,19 @@ class WebSocketHandler:
                     f"Received non-Text message of type {msg.type} during auth phase"
                 )
 
+            if len(msg.data) > MAX_UNAUTHENTICATED_BODY_SIZE:
+                raise Disconnect("Received too large message during auth phase")
             try:
                 auth_msg_data = json_loads(msg.data)
             except ValueError as err:
                 raise Disconnect("Received invalid JSON during auth phase") from err
 
             if self._debug:
-                self._logger.debug("%s: Received %s", self.description, auth_msg_data)
+                self._logger.debug(
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(auth_msg_data, REDACT_KEYS),
+                )
             connection = await auth.async_handle(auth_msg_data)
 
         # As the webserver is now started before the start
@@ -519,7 +535,9 @@ class WebSocketHandler:
 
             if self._debug:
                 self._logger.debug(
-                    "%s: Received %s", self.description, command_msg_data
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(command_msg_data, REDACT_KEYS),
                 )
 
             # command_msg_data is always deserialized from JSON as a list
@@ -551,8 +569,10 @@ class WebSocketHandler:
                 if disconnect_warn is None:
                     logger.debug("%s: Disconnected", self.description)
                 elif connection is None:
-                    # Auth phase disconnects (connection is None) should be logged at debug level
-                    # as they can be from random port scanners or non-legitimate connections
+                    # Auth phase disconnects (connection is
+                    # None) should be logged at debug level
+                    # as they can be from random port scanners
+                    # or non-legitimate connections
                     logger.debug(
                         "%s: Disconnected during auth phase: %s",
                         self.description,

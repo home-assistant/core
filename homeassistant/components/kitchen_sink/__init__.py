@@ -4,13 +4,9 @@ This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 from functools import partial
 from random import random
-
-import voluptuous as vol
 
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
@@ -36,9 +32,9 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -53,30 +49,25 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .services import async_setup_services
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
     Platform.FAN,
+    Platform.EVENT,
     Platform.IMAGE,
     Platform.INFRARED,
     Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.RADIO_FREQUENCY,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
-    {
-        vol.Required("field_1"): vol.Coerce(int),
-        vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
-        vol.Optional("field_3"): vol.Coerce(int),
-        vol.Optional("field_4"): vol.In(["forwards", "reverse"]),
-    }
-)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -87,29 +78,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
 
-    @callback
-    def service_handler(call: ServiceCall | None = None) -> ServiceResponse:
-        """Do nothing."""
-        return None
-
-    hass.services.async_register(
-        DOMAIN,
-        "test_service_1",
-        service_handler,
-        SCHEMA_SERVICE_TEST_SERVICE_1,
-        description_placeholders={
-            "meep_1": "foo",
-            "meep_2": "bar",
-            "meep_3": "beer",
-            "meep_4": "milk",
-            "meep_5": "https://example.com",
-        },
-    )
+    async_setup_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set the config entry up."""
     if "recorder" in hass.config.components:
         # Insert stats for mean_type_changed issue
@@ -149,26 +123,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Check if lab feature is currently enabled and create repair if so
     await _async_update_special_repair(hass)
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry on update (e.g. subentry added/removed)."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload config entry."""
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
 
@@ -269,7 +241,7 @@ def _create_issues(hass: HomeAssistant) -> None:
 
 
 def _generate_mean_statistics(
-    start: datetime.datetime, end: datetime.datetime, init_value: float, max_diff: float
+    start: dt.datetime, end: dt.datetime, init_value: float, max_diff: float
 ) -> list[StatisticData]:
     statistics: list[StatisticData] = []
     mean = init_value
@@ -284,7 +256,7 @@ def _generate_mean_statistics(
                 "max": mean + random() * max_diff,
             }
         )
-        now = now + datetime.timedelta(hours=1)
+        now = now + dt.timedelta(hours=1)
 
     return statistics
 
@@ -292,8 +264,8 @@ def _generate_mean_statistics(
 async def _insert_sum_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
-    start: datetime.datetime,
-    end: datetime.datetime,
+    start: dt.datetime,
+    end: dt.datetime,
     max_diff: float,
 ) -> None:
     statistics: list[StatisticData] = []
@@ -314,7 +286,7 @@ async def _insert_sum_statistics(
                 "sum": sum_,
             }
         )
-        now = now + datetime.timedelta(hours=1)
+        now = now + dt.timedelta(hours=1)
 
     async_add_external_statistics(hass, metadata, statistics)
 
@@ -322,9 +294,9 @@ async def _insert_sum_statistics(
 async def _insert_statistics(hass: HomeAssistant) -> None:
     """Insert some fake statistics."""
     now = dt_util.now()
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_midnight = yesterday_midnight + datetime.timedelta(days=1)
+    today_midnight = yesterday_midnight + dt.timedelta(days=1)
 
     # Fake yesterday's temperatures
     metadata: StatisticMetaData = {
@@ -452,9 +424,9 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 async def _insert_wrong_wind_direction_statistics(hass: HomeAssistant) -> None:
     """Insert some fake wind direction statistics."""
     now = dt_util.now()
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_midnight = yesterday_midnight + datetime.timedelta(days=1)
+    today_midnight = yesterday_midnight + dt.timedelta(days=1)
 
     # Add some statistics required to raise the mean_type_changed issue later
     metadata: StatisticMetaData = {

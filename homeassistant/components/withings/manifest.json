@@ -2,12 +2,16 @@
   "domain": "withings",
   "name": "Withings",
   "after_dependencies": ["cloud"],
+  "categories": ["health_wellbeing"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],
   "dhcp": [
     {
       "macaddress": "0024E4*"
+    },
+    {
+      "macaddress": "A47EFA*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/withings",

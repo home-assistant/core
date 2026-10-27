@@ -1,6 +1,7 @@
 """Binary sensor platform for Compit integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from compit_inext_api.consts import CompitParameter
 
@@ -20,7 +21,7 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 NO_SENSOR = "no_sensor"
-ON_STATES = ["on", "yes", "charging", "alert", "exceeded"]
+ON_STATES = ["on", "yes", "charging", "alert", "exceeded", "open", "dirty"]
 
 DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     CompitParameter.AIRING: BinarySensorEntityDescription(
@@ -52,6 +53,18 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    CompitParameter.GWC: BinarySensorEntityDescription(
+        key=CompitParameter.GWC.value,
+        translation_key="ground_heat_exchanger_attached",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.MIXER_PUMP_STATUS: BinarySensorEntityDescription(
+        key=CompitParameter.MIXER_PUMP_STATUS.value,
+        translation_key="mixer_pump_status",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     CompitParameter.PUMP_STATUS: BinarySensorEntityDescription(
         key=CompitParameter.PUMP_STATUS.value,
         translation_key="pump_status",
@@ -61,6 +74,12 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     CompitParameter.TEMPERATURE_ALERT: BinarySensorEntityDescription(
         key=CompitParameter.TEMPERATURE_ALERT.value,
         translation_key="temperature_alert",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.VENTILATION_FILTER: BinarySensorEntityDescription(
+        key=CompitParameter.VENTILATION_FILTER.value,
+        translation_key="ventilation_filter_dirty",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -76,10 +95,23 @@ class CompitDeviceDescription:
 
 
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
+    3: CompitDeviceDescription(
+        name="R810",
+        parameters={
+            CompitParameter.MIXER_PUMP_STATUS: DESCRIPTIONS[
+                CompitParameter.MIXER_PUMP_STATUS
+            ],
+        },
+    ),
     12: CompitDeviceDescription(
         name="Nano Color",
         parameters={
+            CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
+            CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
+            CompitParameter.VENTILATION_FILTER: DESCRIPTIONS[
+                CompitParameter.VENTILATION_FILTER
+            ],
         },
     ),
     78: CompitDeviceDescription(
@@ -97,6 +129,10 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
         parameters={
             CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
+            CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
+            CompitParameter.VENTILATION_FILTER: DESCRIPTIONS[
+                CompitParameter.VENTILATION_FILTER
+            ],
         },
     ),
     225: CompitDeviceDescription(
@@ -169,6 +205,7 @@ class CompitBinarySensor(
         self.parameter_code = parameter_code
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -177,6 +214,7 @@ class CompitBinarySensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         value = self.coordinator.connector.get_current_value(

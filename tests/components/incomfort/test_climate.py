@@ -3,18 +3,16 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import climate
-from homeassistant.components.incomfort.coordinator import InComfortData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HEATER_STATUS, MOCK_HEATER_STATUS_HEATING
-
-from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.CLIMATE])
@@ -77,7 +75,7 @@ async def test_target_temp(
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
 
-    incomfort_data: InComfortData = mock_config_entry.runtime_data.incomfort_data
+    incomfort_data = mock_config_entry.runtime_data.data
 
     with patch.object(
         incomfort_data.heaters[0].rooms[0], "set_override", AsyncMock()

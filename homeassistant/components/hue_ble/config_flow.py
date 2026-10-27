@@ -1,14 +1,12 @@
 """Config flow for Hue BLE integration."""
 
-from __future__ import annotations
-
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.backends.scanner import AdvertisementData
 from HueBLE import ConnectionError, HueBleError, HueBleLight, PairingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.api import (
@@ -85,6 +83,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
         self._discovery_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,9 +113,9 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_MAC): vol.In(
+                probatio.Required(CONF_MAC): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"
@@ -132,6 +131,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -166,7 +166,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             errors=errors,
             description_placeholders={
                 CONF_NAME: self._discovery_info.name,

@@ -5,13 +5,15 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from requests.exceptions import ReadTimeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -23,9 +25,6 @@ from .const import (
     MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 GUEST_WIFI_CHANGED: dict[str, dict] = {
     "WLANConfiguration1": {},
@@ -108,7 +107,9 @@ async def test_image_entity(
     access_token = state.attributes["access_token"]
     assert state.attributes == {
         "access_token": access_token,
-        "entity_picture": f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}",
+        "entity_picture": (
+            f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}"
+        ),
         "friendly_name": "Mock Title GuestWifi",
     }
 
@@ -168,6 +169,7 @@ async def test_image_update(
 @pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
 async def test_image_update_unavailable(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
@@ -198,7 +200,11 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     # fritzbox is available again
     fc_class_mock().call_action_side_effect(None)
@@ -208,7 +214,7 @@ async def test_image_update_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state != STATE_UNKNOWN
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_migrate_to_new_unique_id(
@@ -235,7 +241,7 @@ async def test_migrate_to_new_unique_id(
     entity_registry.async_get_or_create(
         suggested_object_id="mock_title_mywifi",
         disabled_by=None,
-        domain=IMAGE_DOMAIN,
+        domain=Platform.IMAGE,
         platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,

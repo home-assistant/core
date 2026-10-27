@@ -1,21 +1,24 @@
 """DataUpdateCoordinator for the Smart Meter Texas integration."""
 
 import logging
+from typing import override
 
 from smart_meter_texas import Account, Client, Meter
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
+    SmartMeterTexasTimeoutError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import get_default_context
 
-from .const import DEBOUNCE_COOLDOWN, SCAN_INTERVAL
+from .const import DEBOUNCE_COOLDOWN, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,20 +50,28 @@ class SmartMeterTexasData:
         for meter in self.meters:
             try:
                 await meter.read_meter(self.client)
-            except (SmartMeterTexasAPIError, SmartMeterTexasAuthError) as error:
+            except SmartMeterTexasAuthError as error:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from error
+            except (SmartMeterTexasAPIError, SmartMeterTexasTimeoutError) as error:
                 raise UpdateFailed(error) from error
         return self.meters
 
 
-class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
+type SmartMeterTexasConfigEntry = ConfigEntry[SmartMeterTexasCoordinator]
+
+
+class SmartMeterTexasCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Smart Meter Texas data."""
 
-    config_entry: ConfigEntry
+    config_entry: SmartMeterTexasConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SmartMeterTexasConfigEntry,
         smart_meter_texas_data: SmartMeterTexasData,
     ) -> None:
         """Initialize the coordinator."""
@@ -74,10 +85,10 @@ class SmartMeterTexasCoordinator(DataUpdateCoordinator[SmartMeterTexasData]):
                 hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=True
             ),
         )
-        self._smart_meter_texas_data = smart_meter_texas_data
+        self.smart_meter_texas_data = smart_meter_texas_data
 
-    async def _async_update_data(self) -> SmartMeterTexasData:
+    @override
+    async def _async_update_data(self) -> None:
         """Fetch latest data."""
         _LOGGER.debug("Fetching latest data")
-        await self._smart_meter_texas_data.read_meters()
-        return self._smart_meter_texas_data
+        await self.smart_meter_texas_data.read_meters()

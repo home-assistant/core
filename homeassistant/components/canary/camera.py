@@ -1,16 +1,14 @@
 """Support for Canary camera."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp.web import Request, StreamResponse
 from canary.live_stream_api import LiveStreamSession
 from canary.model import Device, Location
 from haffmpeg.camera import CameraMjpeg
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
@@ -31,11 +29,11 @@ from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
-PLATFORM_SCHEMA: Final = vol.All(
+PLATFORM_SCHEMA: Final = probatio.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
     CAMERA_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
             ): cv.string
         }
@@ -111,15 +109,18 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         return self.coordinator.data["locations"][self._location_id]
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self.location.is_recording  # type: ignore[no-any-return]
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -152,6 +153,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         return self._image
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: Request
     ) -> StreamResponse | None:

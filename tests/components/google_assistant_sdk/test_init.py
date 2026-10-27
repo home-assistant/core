@@ -1,5 +1,6 @@
 """Tests for Google Assistant SDK."""
 
+import asyncio
 from datetime import timedelta
 import http
 import time
@@ -9,6 +10,13 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from grpc import RpcError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
@@ -22,10 +30,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import ComponentSetup, ExpectedCredentials
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def fetch_api_url(hass_client, url):
@@ -164,7 +168,7 @@ async def test_send_text_command(
     expected_language_code: str,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call send_text_command calls TextAssistant."""
+    """Test service call send_text_command calls TextAssistantAsync."""
     await setup_integration()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -174,7 +178,7 @@ async def test_send_text_command(
 
     command = "turn on home assistant unsupported device"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync"
     ) as mock_text_assistant:
         await hass.services.async_call(
             DOMAIN,
@@ -186,7 +190,7 @@ async def test_send_text_command(
         ExpectedCredentials(), expected_language_code, audio_out=False
     )
     # pylint:disable-next=unnecessary-dunder-call
-    mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
+    mock_text_assistant.assert_has_calls([call().__aenter__().assist(command)])
 
 
 async def test_send_text_commands(
@@ -194,7 +198,7 @@ async def test_send_text_commands(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call send_text_command calls TextAssistant."""
+    """Test service call send_text_command calls TextAssistantAsync."""
     await setup_integration()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -204,7 +208,7 @@ async def test_send_text_commands(
     command1_response = "what's the PIN?"
     command2_response = "opened the garage door"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         side_effect=[
             (command1_response, None, None),
             (command2_response, None, None),
@@ -278,7 +282,7 @@ async def test_send_text_command_grpc_error(
     command = "turn on home assistant unsupported device"
     with (
         patch(
-            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
             side_effect=RpcError(),
         ) as mock_assist_call,
         pytest.raises(HomeAssistantError),
@@ -308,7 +312,7 @@ async def test_send_text_command_media_player(
     audio_response1 = b"joke1 audio response bytes"
     audio_response2 = b"joke2 audio response bytes"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistantAsync.assist",
         side_effect=[
             ("joke1 text", None, audio_response1),
             ("joke2 text", None, audio_response2),
@@ -360,7 +364,8 @@ async def test_send_text_command_media_player(
     )
     assert status == http.HTTPStatus.NOT_FOUND
 
-    # Assert that both audio responses can still be served before the 5 minutes expiration
+    # Assert that both audio responses can still be served before
+    # the 5 minutes expiration
     freezer.tick(timedelta(minutes=4, seconds=59))
     async_fire_time_changed(hass)
     status, response = await fetch_api_url(hass_client, audio_url1)
@@ -398,7 +403,8 @@ async def test_conversation_agent(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
@@ -431,7 +437,8 @@ async def test_conversation_agent_refresh_token(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
@@ -462,6 +469,8 @@ async def test_conversation_agent_refresh_token(
     )
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+    # The replaced assistant is closed rather than left holding its gRPC channel
+    mock_text_assistant.return_value.close.assert_awaited_once()
 
 
 async def test_conversation_agent_language_changed(
@@ -480,7 +489,8 @@ async def test_conversation_agent_language_changed(
     text1 = "tell me a joke"
     text2 = "cuéntame un chiste"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistant"
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
             hass, text1, None, Context(), "en-US", config_entry.entry_id
@@ -495,6 +505,92 @@ async def test_conversation_agent_language_changed(
     mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "es-ES")])
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+    # The replaced assistant is closed rather than left holding its gRPC channel
+    mock_text_assistant.return_value.close.assert_awaited_once()
+
+
+async def test_conversation_agent_serializes_requests(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test concurrent conversations do not overlap on the shared assistant.
+
+    The assistant holds the state of a single conversation, and it is closed
+    when it is replaced, so a request must not start while another one is still
+    waiting for its response.
+    """
+    await setup_integration()
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    events: list[str] = []
+
+    async def assist(text: str) -> tuple[str, None, None]:
+        events.append(f"start {text}")
+        await asyncio.sleep(0)
+        events.append(f"end {text}")
+        return (text, None, None)
+
+    async def close() -> None:
+        events.append("close")
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
+    ) as mock_text_assistant:
+        mock_text_assistant.return_value.assist.side_effect = assist
+        mock_text_assistant.return_value.close.side_effect = close
+        # Different languages, so the second request replaces the assistant
+        await asyncio.gather(
+            conversation.async_converse(
+                hass, "one", None, Context(), "en-US", config_entry.entry_id
+            ),
+            conversation.async_converse(
+                hass, "two", None, Context(), "es-ES", config_entry.entry_id
+            ),
+        )
+
+    # Whichever request runs first creates the assistant, and the other one
+    # changes the language, so it replaces and closes that one. Either order is
+    # valid, but a request has to finish before the next one starts, and the
+    # close has to land between them rather than during a request.
+    assert events in (
+        ["start one", "end one", "close", "start two", "end two"],
+        ["start two", "end two", "close", "start one", "end one"],
+    )
+
+
+async def test_conversation_agent_closed_on_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test unloading the entry closes the assistant the agent was holding."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        autospec=True,
+    ) as mock_text_assistant:
+        await conversation.async_converse(
+            hass, "tell me a joke", None, Context(), "en-US", config_entry.entry_id
+        )
+        mock_text_assistant.return_value.close.assert_not_awaited()
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_text_assistant.return_value.close.assert_awaited_once()
 
 
 async def test_oauth_implementation_not_available(

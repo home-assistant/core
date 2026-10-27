@@ -1,0 +1,15 @@
+{
+  "domain": "yoto",
+  "name": "Yoto",
+  "categories": ["media_entertainment.speakers_audio"],
+  "codeowners": ["@cdnninja", "@piitaya"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "dhcp": [{ "hostname": "yoto-*" }],
+  "documentation": "https://www.home-assistant.io/integrations/yoto",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["yoto_api"],
+  "quality_scale": "platinum",
+  "requirements": ["yoto-api==4.5.1"]
+}

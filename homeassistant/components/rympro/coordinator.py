@@ -1,9 +1,8 @@
 """The Read Your Meter Pro integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyrympro import CannotConnectError, OperationError, RymPro, UnauthorizedError
 
@@ -13,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type RymProConfigEntry = ConfigEntry[RymProDataUpdateCoordinator]
+
 SCAN_INTERVAL = 60 * 60
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,10 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
     """Class to manage fetching RYM Pro data."""
 
-    config_entry: ConfigEntry
+    config_entry: RymProConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, rympro: RymPro
+        self, hass: HomeAssistant, config_entry: RymProConfigEntry, rympro: RymPro
     ) -> None:
         """Initialize global RymPro data updater."""
         self.rympro = rympro
@@ -37,6 +38,7 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
             update_interval=interval,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, dict]:
         """Fetch data from Rym Pro."""
         try:

@@ -1,10 +1,7 @@
 """Authentication for HTTP component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from ipaddress import ip_address
 import logging
 import secrets
 import time
@@ -24,18 +21,15 @@ from yarl import URL
 
 from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
-from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
-from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.http import current_request
+from homeassistant.helpers.http import KEY_AUTHENTICATED, current_request
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
-from homeassistant.util.network import is_local
 
+from .auth_util import async_user_not_allowed_do_auth
 from .const import (
-    KEY_AUTHENTICATED,
+    DATA_SUPERVISOR_USER,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     is_supervisor_unix_socket_request,
@@ -99,39 +93,7 @@ def async_sign_path(
     return f"{url.path}?{url.query_string}"
 
 
-@callback
-def async_user_not_allowed_do_auth(
-    hass: HomeAssistant, user: User, request: Request | None = None
-) -> str | None:
-    """Validate that user is not allowed to do auth things."""
-    if not user.is_active:
-        return "User is not active"
-
-    if not user.local_only:
-        return None
-
-    # User is marked as local only, check if they are allowed to do auth
-    if request is None:
-        request = current_request.get()
-
-    if not request:
-        return "No request available to validate local access"
-
-    if is_cloud_connection(hass):
-        return "User is local only"
-
-    try:
-        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
-    except ValueError:
-        return "Invalid remote IP"
-
-    if is_local(remote_address):
-        return None
-
-    return "User cannot authenticate remotely"
-
-
-async def async_setup_auth(  # noqa: C901
+async def async_setup_auth(
     hass: HomeAssistant,
     app: Application,
 ) -> None:
@@ -217,11 +179,12 @@ async def async_setup_auth(  # noqa: C901
         if refresh_token is None:
             return False
 
+        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
+            return False
+
         request[KEY_HASS_USER] = refresh_token.user
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
-
-    supervisor_user_id: str | None = None
 
     async def async_authenticate_supervisor_unix_socket(request: Request) -> bool:
         """Authenticate a request from a Unix socket as the Supervisor user.
@@ -229,32 +192,24 @@ async def async_setup_auth(  # noqa: C901
         The Unix Socket is dedicated and only available to Supervisor. To
         avoid the extra overhead and round trips for the authentication and
         refresh tokens, we directly authenticate requests from the socket as
-        the Supervisor user.
+        the Supervisor user provided by the hassio integration. The user is
+        looked up in the auth store so a user removed at runtime is not
+        authenticated any longer.
         """
-        nonlocal supervisor_user_id
+        if (supervisor_user := hass.data.get(DATA_SUPERVISOR_USER)) is None or (
+            user := await hass.auth.async_get_user(supervisor_user.id)
+        ) is None:
+            # The Unix socket should not be serving before the hassio integration
+            # has provided the Supervisor user. If we get here, something is wrong.
+            _LOGGER.error(
+                "Supervisor user not found; cannot authenticate Unix socket request"
+            )
+            raise HTTPInternalServerError
 
-        # Fast path: use cached user ID
-        if supervisor_user_id is not None:
-            if user := await hass.auth.async_get_user(supervisor_user_id):
-                request[KEY_HASS_USER] = user
-                return True
-            supervisor_user_id = None
-
-        # Slow path: find the Supervisor user by name
-        for user in await hass.auth.async_get_users():
-            if user.system_generated and user.name == HASSIO_USER_NAME:
-                supervisor_user_id = user.id
-                # Not setting KEY_HASS_REFRESH_TOKEN_ID since Supervisor user
-                # doesn't use refresh tokens.
-                request[KEY_HASS_USER] = user
-                return True
-
-        # The Unix socket should not be serving before the hassio integration
-        # has created the Supervisor user. If we get here, something is wrong.
-        _LOGGER.error(
-            "Supervisor user not found; cannot authenticate Unix socket request"
-        )
-        raise HTTPInternalServerError
+        # Not setting KEY_HASS_REFRESH_TOKEN_ID since Supervisor user
+        # doesn't use refresh tokens.
+        request[KEY_HASS_USER] = user
+        return True
 
     @middleware
     async def auth_middleware(

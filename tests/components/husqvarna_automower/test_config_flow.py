@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock, patch
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerEndpoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.husqvarna_automower.const import (
@@ -19,10 +22,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .const import CLIENT_ID, USER_ID
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
@@ -47,7 +46,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "husqvarna_automower", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -90,7 +89,7 @@ async def test_full_flow(
     with (
         patch(
             "homeassistant.components.husqvarna_automower.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
     ):
         await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -218,7 +217,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.husqvarna_automower.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -252,7 +251,7 @@ async def test_reauth_wrong_account(
     reason: str,
     scope: str,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
+    """Test reauth aborts when user tries a different account."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -298,7 +297,7 @@ async def test_reauth_wrong_account(
 
     with patch(
         "homeassistant.components.husqvarna_automower.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

@@ -1,19 +1,18 @@
 """Component to control TOLO Sauna/Steam Bath."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from tololib import ToloClient, ToloSettings, ToloStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT
+from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, REQUEST_REFRESH_COOLDOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +44,12 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
             config_entry=entry,
             name=f"{entry.title} ({entry.data[CONF_HOST]}) Data Update Coordinator",
             update_interval=timedelta(seconds=5),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_COOLDOWN, immediate=True
+            ),
         )
 
+    @override
     async def _async_update_data(self) -> ToloSaunaData:
         return await self.hass.async_add_executor_job(self._get_tolo_sauna_data)
 

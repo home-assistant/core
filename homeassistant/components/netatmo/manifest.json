@@ -2,6 +2,11 @@
   "domain": "netatmo",
   "name": "Netatmo",
   "after_dependencies": ["cloud", "media_source"],
+  "categories": [
+    "climate.thermostats_heating",
+    "security_safety.cameras",
+    "weather_alerts"
+  ],
   "codeowners": ["@cgtobi"],
   "config_flow": true,
   "dependencies": ["application_credentials", "webhook"],
@@ -12,5 +17,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyatmo"],
-  "requirements": ["pyatmo==9.2.3"]
+  "quality_scale": "bronze",
+  "requirements": ["pyatmo==9.9.0"],
+  "single_config_entry": true
 }

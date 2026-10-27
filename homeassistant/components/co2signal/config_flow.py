@@ -1,28 +1,29 @@
 """Config flow for Co2signal integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioelectricitymaps import (
     ElectricityMaps,
     ElectricityMapsInvalidTokenError,
     ElectricityMapsNoDataError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY_CODE,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -39,7 +40,7 @@ TYPE_SPECIFY_COUNTRY = "specify_country_code"
 _LOGGER = logging.getLogger(__name__)
 
 DESCRIPTION_PLACEHOLDER = {
-    "register_link": "https://electricitymaps.com/free-tier",
+    "register_link": "https://app.electricitymaps.com/home-assistant",
 }
 
 
@@ -49,13 +50,14 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _data: dict | None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("location"): SelectSelector(
+                probatio.Required("location"): SelectSelector(
                     SelectSelectorConfig(
                         translation_key="location",
                         mode=SelectSelectorMode.LIST,
@@ -66,7 +68,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                         ],
                     )
                 ),
-                vol.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
 
@@ -93,15 +95,21 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate coordinates."""
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_LATITUDE,
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE,
-                ): cv.longitude,
-            }
+        data_schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
+                {
+                    probatio.Required(CONF_LOCATION): LocationSelector(
+                        LocationSelectorConfig(radius=False)
+                    ),
+                }
+            ),
+            user_input
+            or {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
+            },
         )
         if user_input is None:
             return self.async_show_form(step_id="coordinates", data_schema=data_schema)
@@ -109,16 +117,16 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._data is not None
 
         return await self._validate_and_create(
-            "coordinates", data_schema, {**self._data, **user_input}
+            "coordinates", data_schema, {**self._data, **user_input[CONF_LOCATION]}
         )
 
     async def async_step_country(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate country."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_COUNTRY_CODE): cv.string,
+                probatio.Required(CONF_COUNTRY_CODE): cv.string,
             }
         )
         if user_input is None:
@@ -140,9 +148,9 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reauth step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
         return await self._validate_and_create(
@@ -150,7 +158,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_and_create(
-        self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any] | None
+        self, step_id: str, data_schema: probatio.Schema, data: Mapping[str, Any] | None
     ) -> ConfigFlowResult:
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}

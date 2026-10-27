@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from chess_com_api import PlayerStats
 
@@ -15,8 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ChessConfigEntry
-from .coordinator import ChessCoordinator, ChessData
+from .coordinator import ChessConfigEntry, ChessCoordinator, ChessData
 from .entity import ChessEntity
 
 
@@ -122,6 +121,7 @@ class ChessPlayerSensor(ChessEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}.{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -149,6 +149,7 @@ class ChessGameModeSensor(ChessEntity, SensorEntity):
         self._attr_translation_key = f"{game_mode}_{description.translation_key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         mode_data = self._stats_fn(self.coordinator.data.stats)

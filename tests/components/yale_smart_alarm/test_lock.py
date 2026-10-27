@@ -1,11 +1,10 @@
 """The test for the Yale Smart ALarm lock platform."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import UnknownError, YaleDoorManAPI, YaleSmartAlarmData
 
@@ -20,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(

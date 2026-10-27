@@ -1,6 +1,7 @@
 {
   "domain": "fyta",
   "name": "FYTA",
+  "categories": ["garden_plants"],
   "codeowners": ["@dontinelli"],
   "config_flow": true,
   "dhcp": [{ "hostname": "fyta*" }],
@@ -9,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["fyta_cli"],
   "quality_scale": "platinum",
-  "requirements": ["fyta_cli==0.7.2"]
+  "requirements": ["fyta_cli==0.7.3"]
 }

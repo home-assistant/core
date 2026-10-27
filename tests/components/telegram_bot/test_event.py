@@ -1,5 +1,6 @@
 """Test the telegram bot event platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -10,8 +11,6 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_send_message(

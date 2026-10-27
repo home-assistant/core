@@ -1,8 +1,8 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -14,14 +14,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_TRIGGER_VARIABLES, DOMAIN, PLATFORMS
+from .validators import check_conditions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,13 +38,16 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
         )
         self.config = config
-        self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
+        self._cond_func: condition.ConditionsChecker | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
         self._run_variables: ScriptVariables | None = None
+        self._trigger_variables: ScriptVariables | None = None
+        self._rendered_trigger_variables: dict[str, Any] = {}
         self._blueprint_inputs: dict | None = None
         if config is not None:
+            self._trigger_variables = config.get(CONF_TRIGGER_VARIABLES)
             self._run_variables = config.get(CONF_VARIABLES)
             self._blueprint_inputs = getattr(config, "raw_blueprint_inputs", None)
 
@@ -55,17 +59,29 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @property
+    def trigger_variables(self) -> dict[str, Any]:
+        """Return the rendered trigger variables."""
+        return self._rendered_trigger_variables
+
+    @property
     def unique_id(self) -> str | None:
         """Return unique ID for the entity."""
         return self.config.get("unique_id")
 
-    @callback
-    def async_remove(self) -> None:
-        """Signal that the entities need to remove themselves."""
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator and clean up resources."""
+        await super().async_shutdown()
         if self._unsub_start:
             self._unsub_start()
+            self._unsub_start = None
         if self._unsub_trigger:
             self._unsub_trigger()
+            self._unsub_trigger = None
+        if self._script is not None:
+            await self._script.async_unload()
+        if self._cond_func is not None:
+            self._cond_func.async_unload()
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
@@ -112,6 +128,15 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         else:
             action = self._handle_triggered
 
+        if self._trigger_variables:
+            try:
+                self._rendered_trigger_variables = self._trigger_variables.async_render(
+                    self.hass, None, limited=True
+                )
+            except TemplateError as err:
+                self.logger.error("Error rendering trigger variables: %s", err)
+                return
+
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
             self.config[CONF_TRIGGERS],
@@ -119,17 +144,36 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             DOMAIN,
             self.name,
             self.logger.log,
-            start_event is not None,
+            variables=self._rendered_trigger_variables,
         )
+
+    @callback
+    def _render_run_variables(self, run_variables: TemplateVarsType) -> dict[str, Any]:
+        """Render run variables after the trigger, before checking conditions."""
+        run_variables = run_variables or {}
+        variables = {**self._rendered_trigger_variables, **run_variables}
+        if not self._run_variables:
+            return variables
+        # Trigger variables can be overridden but trigger data can't, so drop
+        # variables that collide with trigger data before rendering.
+        section = self._run_variables
+        if not run_variables.keys().isdisjoint(section.as_dict()):
+            section = ScriptVariables(
+                {
+                    key: value
+                    for key, value in section.as_dict().items()
+                    if key not in run_variables
+                }
+            )
+        variables.update(section.async_simple_render(variables))
+        return variables
 
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        # Render run variables after the trigger, before checking conditions.
-        if self._run_variables:
-            run_variables = self._run_variables.async_render(self.hass, run_variables)
+        run_variables = self._render_run_variables(run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -144,23 +188,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        if self._run_variables:
-            run_variables = self._run_variables.async_render(self.hass, run_variables)
+        run_variables = self._render_run_variables(run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         self._execute_update(run_variables, context)
-
-    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
-        if not self._cond_func:
-            return True
-        condition_result = self._cond_func(run_variables)
-        if condition_result is False:
-            _LOGGER.debug(
-                "Conditions not met, aborting template trigger update. Condition summary: %s",
-                trace_get(clear=False),
-            )
-        return condition_result
 
     @callback
     def _execute_update(

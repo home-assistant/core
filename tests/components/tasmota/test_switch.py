@@ -10,6 +10,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
@@ -30,9 +32,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.common import async_fire_mqtt_message
 from tests.components.switch import common
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_controlling_state_via_mqtt(
@@ -107,7 +107,7 @@ async def test_sending_mqtt_commands(
     # Turn the switch on and verify MQTT message is sent
     await common.async_turn_on(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -118,7 +118,7 @@ async def test_sending_mqtt_commands(
     # Turn the switch off and verify MQTT message is sent
     await common.async_turn_off(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("switch.tasmota_test")

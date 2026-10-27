@@ -6,6 +6,9 @@ from unittest.mock import Mock, patch
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.google_photos.const import (
@@ -19,10 +22,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import EXPIRES_IN, FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN, USER_IDENTIFIER
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
@@ -31,7 +30,7 @@ CLIENT_SECRET = "5678"
 def mock_setup_entry() -> Generator[Mock]:
     """Fixture to mock out integration setup."""
     with patch(
-        "homeassistant.components.google_photos.async_setup_entry", return_value=True
+        "homeassistant.components.google_photos.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -48,7 +47,7 @@ def mock_patch_api(mock_api: Mock) -> Generator[None]:
 
 @pytest.fixture(name="updated_token_entry", autouse=True)
 def mock_updated_token_entry() -> dict[str, Any]:
-    """Fixture to provide any test specific overrides to token data from the oauth token endpoint."""
+    """Fixture to provide test specific overrides to token data."""
     return {}
 
 
@@ -132,7 +131,6 @@ async def test_full_flow(
 
 @pytest.mark.usefixtures(
     "current_request_with_host",
-    "setup_credentials",
     "mock_api",
 )
 @pytest.mark.parametrize(
@@ -179,7 +177,7 @@ async def test_api_not_enabled(
     assert result["description_placeholders"]["message"].endswith("some error")
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

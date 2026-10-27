@@ -1,20 +1,23 @@
 """Remote control support for Panasonic Viera TV."""
 
-from __future__ import annotations
-
+import asyncio
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
-from homeassistant.components.remote import RemoteEntity
-from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    RemoteEntity,
+)
+from homeassistant.const import CONF_MAC, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PanasonicVieraConfigEntry, Remote
 from .const import (
     ATTR_DEVICE_INFO,
-    ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
     ATTR_UDN,
     DEFAULT_MANUFACTURER,
@@ -35,23 +38,30 @@ async def async_setup_entry(
     remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
+    mac = config.get(CONF_MAC)
 
-    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info)])
+    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info, mac)])
 
 
 class PanasonicVieraRemoteEntity(RemoteEntity):
     """Representation of a Panasonic Viera TV Remote."""
 
     def __init__(
-        self, remote: Remote, name: str, device_info: dict[str, Any] | None = None
+        self,
+        remote: Remote,
+        name: str,
+        device_info: dict[str, Any] | None = None,
+        mac: str | None = None,
     ) -> None:
         """Initialize the entity."""
         # Save a reference to the imported class
         self._remote = remote
         self._name = name
         self._device_info = device_info
+        self._mac = mac
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the device."""
         if self._device_info is None:
@@ -59,41 +69,56 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._device_info[ATTR_UDN]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if self._device_info is None:
             return None
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
-            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            connections={(CONNECTION_NETWORK_MAC, self._mac)} if self._mac else set(),
+            manufacturer=self._device_info.get("manufacturer", DEFAULT_MANUFACTURER),
             model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
             name=self._name,
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available."""
         return self._remote.available
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._remote.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._remote.async_turn_on(context=self._context)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._remote.async_turn_off()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        for cmd in command:
-            await self._remote.async_send_key(cmd)
+        num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)
+        delay_secs: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        command_list = list(command)
+
+        for repeat in range(num_repeats):
+            for index, cmd in enumerate(command_list):
+                if repeat or index:
+                    await asyncio.sleep(delay_secs)
+                await self._remote.async_send_key(cmd)

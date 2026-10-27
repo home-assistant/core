@@ -6,6 +6,7 @@ from asusrouter import AsusRouterError
 from asusrouter.modules.data import AsusData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import (
@@ -42,8 +43,6 @@ from .common import (
 )
 from .conftest import make_async_get_data_side_effect
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_LOAD_AVG, *SENSORS_RATES]
 
 SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_TEMPERATURES_LEGACY]
@@ -60,7 +59,7 @@ SENSORS_ALL_HTTP = [
 def create_device_registry_devices_fixture(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ):
-    """Create device registry devices so the device tracker entities are enabled when added."""
+    """Create device registry devices so device tracker entities are enabled."""
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openweathermap.const import (
@@ -11,15 +12,13 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
 )
-from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.openweathermap.services import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "weather.openweathermap"
 
@@ -60,7 +59,8 @@ async def test_get_minute_forecast_unavailable(
     await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     with pytest.raises(
         ServiceValidationError,
-        match="Minute forecast is available only when OpenWeatherMap mode is set to v3.0",
+        match="Minute forecast is available only when"
+        " OpenWeatherMap mode is set to v3.0",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -81,7 +81,7 @@ async def test_weather_states(
     mock_config_entry: MockConfigEntry,
     owm_client_mock: MagicMock,
 ) -> None:
-    """Test weather states are correctly collected from library with different modes and mocked function responses."""
+    """Test weather states are collected from library correctly."""
 
     await setup_platform(hass, mock_config_entry, [Platform.WEATHER])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

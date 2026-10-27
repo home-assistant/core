@@ -5,9 +5,10 @@ from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
-from homeassistant.components import gpslogger, zone
+from homeassistant.components import zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -64,7 +63,7 @@ async def setup_zones(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 async def webhook_id(hass: HomeAssistant, gpslogger_client: TestClient) -> str:
-    """Initialize the GPSLogger component and get the webhook_id."""
+    """Initialize the GPSLogger integration and get the webhook_id."""
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
@@ -228,6 +227,6 @@ async def test_load_unload_entry(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await gpslogger.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

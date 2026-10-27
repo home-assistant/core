@@ -7,17 +7,22 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
-from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
+from homeassistant.components.trace import ActionTrace
+from homeassistant.components.trace.const import DATA_TRACE, DEFAULT_STORED_TRACES
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
+from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.trace import TraceElement
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
-
-from tests.common import async_load_fixture
-from tests.typing import WebSocketGenerator
 
 
 def _find_run_id(traces, trace_type, item_id):
@@ -449,8 +454,8 @@ async def test_restore_traces(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(
-        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    saved_traces = await async_load_json_object_fixture(
+        hass, f"{domain}_saved_traces.json", "trace"
     )
     hass_storage["trace.saved_traces"] = saved_traces
     await _setup_automation_or_script(hass, domain, [])
@@ -630,8 +635,8 @@ async def test_restore_traces_overflow(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(
-        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    saved_traces = await async_load_json_object_fixture(
+        hass, f"{domain}_saved_traces.json", "trace"
     )
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
@@ -713,8 +718,8 @@ async def test_restore_traces_late_overflow(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(
-        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    saved_traces = await async_load_json_object_fixture(
+        hass, f"{domain}_saved_traces.json", "trace"
     )
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
@@ -1012,6 +1017,99 @@ async def test_nested_traces(
     assert set(trace["trace"]) == {f"{prefix}/0"} | extra_trace_keys
     assert len(trace["trace"][f"{prefix}/0"]) == 1
     child_id = trace["trace"][f"{prefix}/0"][0]["child_id"]
+    assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
+
+
+@pytest.mark.parametrize(
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
+)
+async def test_nested_traces_script_started_listener(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    prefix: str,
+) -> None:
+    """Test an automation triggered by script_started is not a child of the caller."""
+    msg_id = 1
+
+    def next_id():
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    sun_config = {
+        "id": "sun",
+        "triggers": {"platform": "event", "event_type": "test_event"},
+        "actions": {"service": "script.moon"},
+    }
+    moon_config = {
+        "moon": {
+            "sequence": [
+                {"wait_for_trigger": {"trigger": "event", "event_type": "go_on"}},
+                {"event": "another_event"},
+            ]
+        }
+    }
+    listener_config = {
+        "id": "listener",
+        "triggers": {
+            "trigger": "event",
+            "event_type": "script_started",
+            "event_data": {"entity_id": "script.moon"},
+        },
+        "actions": {"event": "listened"},
+    }
+    if domain == "automation":
+        await _setup_automation_or_script(
+            hass, domain, [sun_config, listener_config], moon_config
+        )
+    else:
+        await _setup_automation_or_script(hass, domain, [sun_config], moon_config)
+        assert await async_setup_component(
+            hass, "automation", {"automation": listener_config}
+        )
+
+    listened = asyncio.Event()
+
+    @callback
+    def _handle_listened(_):
+        listened.set()
+
+    hass.bus.async_listen("listened", _handle_listened)
+    client = await hass_ws_client()
+
+    # Start "sun", which waits in "moon" while the listener runs
+    if domain == "automation":
+        hass.bus.async_fire("test_event")
+    else:
+        await hass.services.async_call("script", "turn_on", {"entity_id": "script.sun"})
+    await asyncio.wait_for(listened.wait(), 1)
+    hass.bus.async_fire("go_on")
+    await hass.async_block_till_done()
+
+    traces = []
+    for trace_domain in ("automation", "script"):
+        await client.send_json(
+            {"id": next_id(), "type": "trace/list", "domain": trace_domain}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        traces += response["result"]
+    moon_run_id = _find_run_id(traces, "script", "moon")
+    assert _find_run_id(traces, "automation", "listener")
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": domain,
+            "item_id": "sun",
+            "run_id": _find_run_id(traces, domain, "sun"),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    child_id = response["result"]["trace"][f"{prefix}/0"][0]["child_id"]
     assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
 
 
@@ -1660,3 +1758,164 @@ async def test_trace_blueprint_automation(
     assert trace["script_execution"] == "error"
     assert trace["item_id"] == "sun"
     assert trace.get("trigger", UNDEFINED) == "event 'blueprint_event'"
+
+
+async def test_automation_without_id_does_not_store_trace(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Automations without an id do not create an invalid trace."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "triggers": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
+                "actions": {"event": "automation_ran"},
+            }
+        ],
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+    assert "automation.None" not in hass.data[DATA_TRACE]
+
+
+async def test_automation_without_id_is_not_linked_as_child(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A step that triggers an automation without an id does not link to it."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "id": "sun",
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": {
+                    "action": "automation.trigger",
+                    "target": {"entity_id": "automation.no_id"},
+                },
+            },
+            {
+                "alias": "No id",
+                "triggers": {"platform": "event", "event_type": "never_fired"},
+                "actions": {"event": "automation_ran"},
+            },
+        ],
+    )
+    events = async_capture_events(hass, "automation_ran")
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+    assert response["success"]
+    sun_run_id = _find_run_id(response["result"], "automation", "sun")
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "sun",
+            "run_id": sun_run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "child_id" not in response["result"]["trace"]["action/0"][0]
+
+
+class _DiagnosticActionTrace(ActionTrace):
+    """Automation-domain trace used to exercise not-triggered serialization."""
+
+    _domain = "automation"
+
+
+def _serialize_trace(not_triggered: bool, reason: str) -> dict[str, Any]:
+    """Build a trace serialized the way the trace Store persists it to disk."""
+    trace = _DiagnosticActionTrace("diag", {"id": "diag"}, None, Context())
+    trace.not_triggered = not_triggered
+    element = TraceElement({"trigger": {"idx": "0"}}, "trigger/0")
+    element.set_result(reason=reason)
+    trace.set_trace({"trigger/0": [element]})
+    trace.finished()
+    return json.loads(json.dumps(trace.as_dict(), cls=ExtendedJSONEncoder))
+
+
+async def test_not_triggered_trace_serialization(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Not-triggered traces serialize with their flag and restore to their bucket."""
+    run = _serialize_trace(False, "ran")
+    not_triggered = _serialize_trace(True, "mock_reason")
+
+    # Serialization: only the not-triggered trace carries the flag, and its
+    # diagnostics survive in the extended dict.
+    assert "not_triggered" not in run["short_dict"]
+    assert not_triggered["short_dict"]["not_triggered"] is True
+    assert not_triggered["extended_dict"]["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason"
+    }
+
+    hass_storage["trace.saved_traces"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "trace.saved_traces",
+        "data": {"automation.diag": [run, not_triggered]},
+    }
+    assert await async_setup_component(hass, "trace", {})
+    client = await hass_ws_client()
+
+    # Restore (lazily, on the first query) and confirm the flag round-trips.
+    await client.send_json(
+        {"id": 1, "type": "trace/list", "domain": "automation", "item_id": "diag"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert {
+        trace["run_id"]: trace.get("not_triggered", False)
+        for trace in response["result"]
+    } == {
+        run["short_dict"]["run_id"]: False,
+        not_triggered["short_dict"]["run_id"]: True,
+    }
+
+    # Restored traces are routed back into their separate buckets.
+    trace_bucket = hass.data[DATA_TRACE]["automation.diag"]
+    assert list(trace_bucket.runs) == [run["short_dict"]["run_id"]]
+    assert list(trace_bucket.not_triggered) == [not_triggered["short_dict"]["run_id"]]
+
+    # The restored not-triggered trace keeps its diagnostics.
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "diag",
+            "run_id": not_triggered["short_dict"]["run_id"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["not_triggered"] is True
+    assert response["result"]["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason"
+    }

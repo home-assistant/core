@@ -1,11 +1,13 @@
 {
   "domain": "technove",
   "name": "TechnoVE",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@Moustachauve"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/technove",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["python-technove==2.0.0"],
+  "quality_scale": "platinum",
+  "requirements": ["python-technove==2.1.3"],
   "zeroconf": ["_technove-stations._tcp.local."]
 }

@@ -2,24 +2,29 @@
 
 from unittest.mock import AsyncMock
 
-from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather.exceptions import ApiError, InvalidApiKeyError, RequestsExceededError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
-
 VALID_CONFIG = {
-    CONF_NAME: "abcd",
     CONF_API_KEY: "32-character-string-1234567890qw",
-    CONF_LATITUDE: 55.55,
-    CONF_LONGITUDE: 122.12,
+    CONF_LOCATION: {
+        CONF_LATITUDE: 55.55,
+        CONF_LONGITUDE: 122.12,
+    },
 }
 
 
@@ -42,12 +47,24 @@ async def test_invalid_api_key(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_api_error(
@@ -59,12 +76,24 @@ async def test_api_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_requests_exceeded_error(
@@ -76,12 +105,24 @@ async def test_requests_exceeded_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
     assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
+
+    mock_accuweather_client.async_get_location.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_integration_already_exists(
@@ -95,9 +136,14 @@ async def test_integration_already_exists(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -109,17 +155,22 @@ async def test_create_entry(
 ) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "abcd"
-    assert result["data"][CONF_NAME] == "abcd"
+    assert result["title"] == "Test location"
     assert result["data"][CONF_LATITUDE] == 55.55
     assert result["data"][CONF_LONGITUDE] == 122.12
     assert result["data"][CONF_API_KEY] == "32-character-string-1234567890qw"
+    assert result["result"].unique_id == "0123456"
 
 
 async def test_reauth_successful(

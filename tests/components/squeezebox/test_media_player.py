@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -73,8 +78,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
 from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, VOLUME_STEP
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -516,7 +519,10 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     """Test play service call with announce and volume zero."""
     with pytest.raises(
         ServiceValidationError,
-        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+        match=(
+            "announce_volume must be a number greater than 0"
+            " and less than or equal to 1"
+        ),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

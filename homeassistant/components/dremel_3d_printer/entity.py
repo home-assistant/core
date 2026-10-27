@@ -1,5 +1,7 @@
 """Entity representing a Dremel 3D Printer."""
 
+from typing import override
+
 from dremel3dpy import Dremel3DPrinter
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,6 +28,7 @@ class Dremel3DPrinterEntity(CoordinatorEntity[Dremel3DPrinterDataUpdateCoordinat
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Dremel printer."""
         return DeviceInfo(

@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, Generator, MockConfigEntry, patch
 
 from homeassistant.components.comelit.const import BRIDGE, DOMAIN, VEDO
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -18,15 +19,13 @@ from .const import (
     VEDO_PORT,
 )
 
-from tests.common import AsyncMock, Generator, MockConfigEntry, patch
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.comelit.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -50,6 +49,7 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
         bridge.vedo_enabled.return_value = True
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
+        bridge.base_url = f"http://{BRIDGE_HOST}:{BRIDGE_PORT}"
         bridge.device_pin = BRIDGE_PIN
         yield bridge
 
@@ -86,6 +86,7 @@ def mock_vedo() -> Generator[AsyncMock]:
         vedo.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
         vedo.host = VEDO_HOST
         vedo.port = VEDO_PORT
+        vedo.base_url = f"http://{VEDO_HOST}:{VEDO_PORT}"
         vedo.device_pin = VEDO_PIN
         vedo.type = VEDO
         yield vedo

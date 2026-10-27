@@ -5,6 +5,8 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealplanResponse
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, Platform
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 async def test_api_calendar(
@@ -93,7 +92,7 @@ async def test_legacy_calendars(
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that only legacy calendars are created for Mealie versions prior to 3.7.0."""
+    """Test only legacy calendars created for Mealie versions < 3.7.0."""
 
     mock_mealie_client.get_about.return_value = About(version="v3.6.0")
 

@@ -1,22 +1,26 @@
 """Test the Google Generative AI Conversation config flow."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
+from homeassistant.components import tts
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -32,19 +36,22 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.components.google_generative_ai_conversation.entity import (
+    GoogleGenerativeAILLMBaseEntity,
+)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
-
-from tests.common import MockConfigEntry
 
 
 def get_models_pager():
@@ -52,7 +59,7 @@ def get_models_pager():
     model_25_flash = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash.name = "models/gemini-2.5-flash"
+    model_25_flash.name = "models/gemini-3.1-flash-lite"
 
     model_20_flash = Mock(
         supported_actions=["generateContent"],
@@ -69,17 +76,43 @@ def get_models_pager():
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
-    model_25_flash_tts = Mock(
+    model_31_flash_tts = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash_tts.name = "models/gemini-2.5-flash-preview-tts"
+    model_31_flash_tts.name = "models/gemini-3.1-flash-tts-preview"
+
+    model_38_flash_tts = Mock(
+        supported_actions=["generateContent"],
+    )
+    model_38_flash_tts.name = "models/gemini-3.8-flash-tts"
 
     async def models_pager():
         yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
-        yield model_25_flash_tts
+        yield model_31_flash_tts
+        yield model_38_flash_tts
+
+    return models_pager()
+
+
+def get_prefix_collision_models_pager():
+    """Return a pager of model ids that start with letters from "models/"."""
+    models = []
+    for name in (
+        "models/gemini-2.5-pro",
+        "models/embedding-001",
+        "models/learnlm-2.0-flash-experimental",
+        "models/lyria-realtime-exp",
+    ):
+        model = Mock(supported_actions=["generateContent"])
+        model.name = name
+        models.append(model)
+
+    async def models_pager():
+        for model in models:
+            yield model
 
     return models_pager()
 
@@ -105,7 +138,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -248,6 +281,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -266,6 +301,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -279,13 +316,6 @@ async def test_creating_subentry(
                 CONF_RECOMMENDED: False,
                 CONF_CHAT_MODEL: RECOMMENDED_TTS_MODEL,
                 CONF_TEMPERATURE: 1.0,
-                CONF_TOP_P: 1.0,
-                CONF_TOP_K: 1,
-                CONF_MAX_TOKENS: 1024,
-                CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
-                CONF_DANGEROUS_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
             },
         ),
         (
@@ -298,6 +328,8 @@ async def test_creating_subentry(
                 CONF_TOP_P: 1.0,
                 CONF_TOP_K: 1,
                 CONF_MAX_TOKENS: 1024,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_HATE_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
                 CONF_SEXUAL_BLOCK_THRESHOLD: "BLOCK_MEDIUM_AND_ABOVE",
@@ -330,19 +362,8 @@ async def test_creating_subentry_custom_options(
     assert result["step_id"] == "set_options"
     assert not result["errors"]
 
-    # Uncheck recommended to show custom options
-    with patch(
-        "google.genai.models.AsyncModels.list",
-        return_value=get_models_pager(),
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            result["data_schema"]({CONF_RECOMMENDED: False}),
-        )
-    assert result2["type"] is FlowResultType.FORM
-
     # Find the schema key for CONF_CHAT_MODEL and check its default
-    schema_dict = result2["data_schema"].schema
+    schema_dict = result["data_schema"].schema
     chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
     assert chat_model_key.default() == recommended_model
     models_in_selector = [
@@ -355,18 +376,18 @@ async def test_creating_subentry_custom_options(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
     ):
-        result3 = await hass.config_entries.subentries.async_configure(
-            result2["flow_id"],
-            result2["data_schema"]({CONF_NAME: "Mock name", **options}),
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            result["data_schema"]({CONF_NAME: "Mock name", **options}),
         )
         await hass.async_block_till_done()
 
     expected_options = options.copy()
     if CONF_PROMPT in expected_options:
         expected_options[CONF_PROMPT] = expected_options[CONF_PROMPT].strip()
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Mock name"
-    assert result3["data"] == expected_options
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Mock name"
+    assert result2["data"] == expected_options
 
     assert len(mock_config_entry.subentries) == len(old_subentries) + 1
 
@@ -376,6 +397,55 @@ async def test_creating_subentry_custom_options(
     assert new_subentry.subentry_type == subentry_type
     assert new_subentry.data == expected_options
     assert new_subentry.title == "Mock name"
+
+
+async def test_creating_conversation_subentry_google_search_error(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Google Search tool cannot be combined with an LLM API."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+    user_input = {
+        CONF_NAME: "Mock name",
+        CONF_PROMPT: "You are Mario",
+        CONF_LLM_HASS_API: ["assist"],
+        CONF_RECOMMENDED: False,
+        CONF_USE_GOOGLE_SEARCH_TOOL: True,
+    }
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {
+        CONF_USE_GOOGLE_SEARCH_TOOL: "invalid_google_search_option"
+    }
+    name_key = next(key for key in result["data_schema"].schema if key == CONF_NAME)
+    assert name_key.default() == "Mock name"
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {**user_input, CONF_USE_GOOGLE_SEARCH_TOOL: False}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mock name"
+    assert result["data"][CONF_USE_GOOGLE_SEARCH_TOOL] is False
 
 
 async def test_creating_conversation_subentry_not_loaded(
@@ -399,11 +469,6 @@ async def test_creating_conversation_subentry_not_loaded(
     assert result["reason"] == "entry_not_loaded"
 
 
-def will_options_be_rendered_again(current_options, new_options) -> bool:
-    """Determine if options will be rendered again."""
-    return current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED)
-
-
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options", "errors"),
     [
@@ -425,6 +490,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -442,12 +509,16 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
                 CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
+                CONF_TEMPERATURE: 0.3,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
                 CONF_RECOMMENDED: True,
@@ -465,6 +536,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -479,6 +552,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -493,6 +568,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -510,6 +587,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -525,6 +604,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -539,6 +620,8 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_THINKING_LEVEL: RECOMMENDED_THINKING_LEVEL,
                 CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -562,6 +645,24 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_RECOMMENDED: True,
                 CONF_PROMPT: "",
                 CONF_LLM_HASS_API: ["assist"],
+            },
+            None,
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
             },
             None,
         ),
@@ -590,19 +691,6 @@ async def test_subentry_options_switching(
         options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
             hass, subentry.subentry_id
         )
-    if will_options_be_rendered_again(current_options, new_options):
-        retry_options = {
-            **current_options,
-            CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-        }
-        with patch(
-            "google.genai.models.AsyncModels.list",
-            return_value=get_models_pager(),
-        ):
-            options_flow = await hass.config_entries.subentries.async_configure(
-                options_flow["flow_id"],
-                retry_options,
-            )
     with patch(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
@@ -619,6 +707,7 @@ async def test_subentry_options_switching(
 
     else:
         assert options["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert options.get("errors", None) == errors
 
 
@@ -640,7 +729,9 @@ async def test_subentry_options_switching(
         (Exception, "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, side_effect: Exception | type[Exception], error: str
+) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -656,6 +747,23 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    with (
+        patch(
+            "google.genai.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "api_key": "bla",
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
@@ -690,11 +798,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_unload_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -712,11 +820,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        ("assist", ["assist"], ["assist", "homeassistant"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        ("non-existent", [], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(
@@ -757,3 +871,258 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+async def test_subentry_chat_model_labels_keep_the_full_model_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test the chat model selector labels only drop the "models/" prefix."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_prefix_collision_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "set_options"
+    schema_dict = result["data_schema"].schema
+    chat_model_key = next(key for key in schema_dict if key.schema == CONF_CHAT_MODEL)
+    assert [opt["label"] for opt in schema_dict[chat_model_key].config["options"]] == [
+        "embedding-001",
+        "gemini-2.5-pro",
+        "learnlm-2.0-flash-experimental",
+        "lyria-realtime-exp",
+    ]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "subentry_id", ["ulid-conversation", "ulid-ai-task", "ulid-stt"]
+)
+async def test_sampling_options_model_switch_and_reset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    subentry_id: str,
+) -> None:
+    """Reconfigure and reload saved choices before building actual SDK requests."""
+
+    async def sampling_models_pager() -> AsyncGenerator[Mock]:
+        async for model in get_models_pager():
+            yield model
+        for name in (
+            "models/gemini-3.8-flash",
+            "models/gemini-3.6-flash",
+            "models/gemini-2.5-pro",
+        ):
+            model = Mock(supported_actions=["generateContent"])
+            model.name = name
+            yield model
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    advanced = {
+        **subentry.data,
+        CONF_RECOMMENDED: False,
+        CONF_TEMPERATURE: 0.2,
+        CONF_TOP_P: 0.7,
+        CONF_TOP_K: 17,
+        CONF_THINKING_LEVEL: "minimal",
+        CONF_THINKING_BUDGET: 512,
+        CONF_MAX_TOKENS: 900,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=advanced
+    )
+    await hass.async_block_till_done()
+    preserved = {"temperature": 0.2, "topP": 0.7, "topK": 17}
+    minimal = {"include_thoughts": True, "thinking_level": "MINIMAL"}
+    default = {"include_thoughts": True}
+    budget = {"include_thoughts": True, "thinking_budget": 512}
+    for model, expected, thinking in (
+        ("models/gemini-3.1-flash-lite", preserved, minimal),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-3.1-flash-lite", preserved, minimal),
+        ("models/gemini-3.6-flash", {}, minimal),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-3.6-flash", {}, minimal),
+        ("models/gemini-2.5-pro", preserved, budget),
+        ("models/gemini-3.8-flash", {}, default),
+        ("models/gemini-2.5-pro", preserved, budget),
+    ):
+        with patch(
+            "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+        ):
+            flow = await mock_config_entry.start_subentry_reconfigure_flow(
+                hass, subentry_id
+            )
+            result = await hass.config_entries.subentries.async_configure(
+                flow["flow_id"], {**advanced, CONF_CHAT_MODEL: model}
+            )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert subentry.data[CONF_TEMPERATURE] == 0.2
+        assert subentry.data[CONF_THINKING_LEVEL] == "minimal"
+        assert subentry.data[CONF_THINKING_BUDGET] == 512
+        mock_genai_transport.return_value = [
+            {"candidates": [{"content": {"parts": [{"text": "Done"}]}}]}
+        ]
+        entity = GoogleGenerativeAILLMBaseEntity(mock_config_entry, subentry)
+        await mock_config_entry.runtime_data.aio.models.generate_content(
+            model=subentry.data[CONF_CHAT_MODEL],
+            contents="Hello",
+            config=entity.create_generate_content_config(),
+        )
+        config = mock_genai_transport.call_args.kwargs["http_request"].data[
+            "generationConfig"
+        ]
+        assert {
+            key: config[key] for key in ("temperature", "topP", "topK") if key in config
+        } == expected
+        assert config["thinkingConfig"] == thinking
+        assert config["maxOutputTokens"] == 900
+    with patch(
+        "google.genai.models.AsyncModels.list", return_value=sampling_models_pager()
+    ):
+        flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert subentry.data == {CONF_RECOMMENDED: True}
+    mock_genai_transport.return_value = [
+        {"candidates": [{"content": {"parts": [{"text": "Done"}]}}]}
+    ]
+    entity = GoogleGenerativeAILLMBaseEntity(mock_config_entry, subentry)
+    await mock_config_entry.runtime_data.aio.models.generate_content(
+        model=RECOMMENDED_CHAT_MODEL,
+        contents="Hello",
+        config=entity.create_generate_content_config(),
+    )
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert config["temperature"] == 1.0
+    assert config["topP"] == RECOMMENDED_TOP_P
+    assert config["topK"] == RECOMMENDED_TOP_K
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_sampling_options_model_switch_and_reset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+) -> None:
+    """TTS keeps dormant temperature through actual reconfigure/reload requests."""
+
+    sampling_model = "models/gemini-3.1-flash-tts-preview"
+
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    advanced = {
+        CONF_RECOMMENDED: False,
+        CONF_TEMPERATURE: 0.2,
+        CONF_CHAT_MODEL: sampling_model,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=advanced
+    )
+    await hass.async_block_till_done()
+    for model, expected in (
+        (sampling_model, {"temperature": 0.2}),
+        (RECOMMENDED_TTS_MODEL, {}),
+        (sampling_model, {"temperature": 0.2}),
+    ):
+        with patch(
+            "google.genai.models.AsyncModels.list", return_value=get_models_pager()
+        ):
+            flow = await mock_config_entry.start_subentry_reconfigure_flow(
+                hass, subentry.subentry_id
+            )
+            result = await hass.config_entries.subentries.async_configure(
+                flow["flow_id"], {**advanced, CONF_CHAT_MODEL: model}
+            )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.ABORT
+        assert subentry.data[CONF_TEMPERATURE] == 0.2
+        mock_genai_transport.return_value = [
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "inlineData": {
+                                        "data": "YXVkaW8=",
+                                        "mimeType": "audio/L16;rate=24000",
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+        entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+        with patch(
+            "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+            return_value=b"wav",
+        ):
+            assert await entity.async_get_tts_audio(
+                "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+            ) == ("wav", b"wav")
+        config = mock_genai_transport.call_args.kwargs["http_request"].data[
+            "generationConfig"
+        ]
+        assert {
+            key: config[key] for key in ("temperature", "topP", "topK") if key in config
+        } == expected
+        assert "thinkingConfig" not in config
+    with patch("google.genai.models.AsyncModels.list", return_value=get_models_pager()):
+        flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            flow["flow_id"], {CONF_RECOMMENDED: True}
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert subentry.data == {CONF_RECOMMENDED: True}
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "data": "YXVkaW8=",
+                                    "mimeType": "audio/L16;rate=24000",
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+        return_value=b"wav",
+    ):
+        assert await entity.async_get_tts_audio(
+            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+        ) == ("wav", b"wav")
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert "temperature" not in config
+    assert "thinkingConfig" not in config

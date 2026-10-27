@@ -1,26 +1,30 @@
 """The Airthings BLE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
+    AIRTHINGS_CLOUD_DOCUMENTATION_URL,
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
+    UNSUPPORTED_CONNECTIVITY_MODES,
+    get_connectivity_mode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,9 +40,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     def __init__(self, hass: HomeAssistant, entry: AirthingsBLEConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.airthings = AirthingsBluetoothDeviceData(
-            _LOGGER, hass.config.units is METRIC_SYSTEM
-        )
+        self.airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric=True)
 
         device_model = entry.data.get(DEVICE_MODEL)
         interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
@@ -53,6 +55,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             update_interval=timedelta(seconds=interval),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         address = self.config_entry.unique_id
@@ -65,7 +68,16 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
         if not ble_device:
             raise ConfigEntryNotReady(
-                f"Could not find Airthings device with address {address}"
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={
+                    "address": address,
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        self.hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
             )
         self.ble_device = ble_device
 
@@ -88,10 +100,63 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 )
             )
 
+    @override
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""
         try:
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        if not data.address:
+            # The device did not report its address, which means the read did not
+            # complete. Building entities from this would create a duplicate device
+            # and entities with an empty unique id prefix.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_read",
+            )
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+        )
+        if device and device.sw_version != data.sw_version:
+            device_registry.async_update_device(device.id, sw_version=data.sw_version)
+
+        self._async_update_connectivity_mode_issue(data, device)
         return data
+
+    @callback
+    def _async_update_connectivity_mode_issue(
+        self, data: AirthingsDevice, device: dr.DeviceEntry | None
+    ) -> None:
+        """Create or delete the issue for an unsupported connectivity mode."""
+        mode = get_connectivity_mode(data.sensors.get("connectivity_mode"))
+        if mode is None or self._shutdown_requested:
+            return
+
+        issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{self.config_entry.entry_id}"
+        if mode not in UNSUPPORTED_CONNECTIVITY_MODES:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        scan_interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            data.model.value, DEFAULT_SCAN_INTERVAL
+        )
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=self.config_entry.entry_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=f"connectivity_{mode}",
+            translation_placeholders={
+                "device_name": (device and device.name_by_user) or data.friendly_name(),
+                "serial_number": f"{data.model.value}{data.identifier}",
+                "update_interval": str(scan_interval // 60),
+                "airthings_url": AIRTHINGS_CLOUD_DOCUMENTATION_URL,
+            },
+        )

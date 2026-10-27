@@ -1,10 +1,9 @@
 """Data update coordinator for MTA New York City Transit."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from pymta import BusFeed, MTAFeedError, SubwayFeed
 
@@ -83,6 +82,7 @@ class MTADataUpdateCoordinator(DataUpdateCoordinator[MTAData]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> MTAData:
         """Fetch data from MTA."""
         _LOGGER.debug(

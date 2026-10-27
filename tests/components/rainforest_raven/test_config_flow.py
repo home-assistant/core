@@ -5,18 +5,19 @@ from unittest.mock import AsyncMock, patch
 
 from aioraven.device import RAVEnConnectionError
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rainforest_raven.const import DOMAIN
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_mock_device
-from .const import DEVICE_NAME, DISCOVERY_INFO, METER_LIST
+from .const import DEVICE_NAME, DISCOVERY_INFO, METER_INFO, METER_LIST
 
-from tests.common import MockConfigEntry
+UNIQUE_ID = "04B4:0003_1234_Rainforest Automation, Inc._RFA-Z105-2 HW2.7.3 EMU-2"
 
 
 @pytest.fixture
@@ -55,18 +56,40 @@ def mock_device_timeout(mock_device: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_comports() -> Generator[list[ListPortInfo]]:
+def mock_comports() -> Generator[list[USBDevice]]:
     """Mock serial port list."""
-    port = ListPortInfo(DISCOVERY_INFO.device)
-    port.serial_number = DISCOVERY_INFO.serial_number
-    port.manufacturer = DISCOVERY_INFO.manufacturer
-    port.device = DISCOVERY_INFO.device
-    port.description = DISCOVERY_INFO.description
-    port.pid = int(DISCOVERY_INFO.pid, 0)
-    port.vid = int(DISCOVERY_INFO.vid, 0)
+    port = USBDevice(
+        device=DISCOVERY_INFO.device,
+        vid=f"{int(DISCOVERY_INFO.vid, 16):04X}",
+        pid=f"{int(DISCOVERY_INFO.pid, 16):04X}",
+        serial_number=DISCOVERY_INFO.serial_number,
+        manufacturer=DISCOVERY_INFO.manufacturer,
+        description=DISCOVERY_INFO.description,
+    )
     comports = [port]
-    with patch("serial.tools.list_ports.comports", return_value=comports):
+    with patch(
+        "homeassistant.components.rainforest_raven.config_flow.usb.async_scan_serial_ports",
+        return_value=comports,
+    ):
         yield comports
+
+
+async def _async_finish_flow(hass: HomeAssistant, flow_id: str) -> None:
+    """Finish the user flow by selecting the device and the first meter."""
+    with patch(
+        "homeassistant.components.rainforest_raven.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input={CONF_DEVICE: DEVICE_NAME}
+        )
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == "meters"
+
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
+        )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_comports", "mock_device")
@@ -86,6 +109,7 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports", "mock_device_no_open")
@@ -151,6 +175,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports")
@@ -192,8 +217,10 @@ async def test_flow_user_in_progress(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_in_progress"
 
 
-@pytest.mark.usefixtures("mock_comports", "mock_device_no_open")
-async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_comports")
+async def test_flow_user_cannot_connect(
+    hass: HomeAssistant, mock_device_no_open: AsyncMock
+) -> None:
     """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -206,9 +233,15 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
 
+    mock_device_no_open.__aenter__.side_effect = None
 
-@pytest.mark.usefixtures("mock_comports", "mock_device_timeout")
-async def test_flow_user_timeout_connect(hass: HomeAssistant) -> None:
+    await _async_finish_flow(hass, result["flow_id"])
+
+
+@pytest.mark.usefixtures("mock_comports")
+async def test_flow_user_timeout_connect(
+    hass: HomeAssistant, mock_device_timeout: AsyncMock
+) -> None:
     """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -221,9 +254,16 @@ async def test_flow_user_timeout_connect(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "timeout_connect"}
 
+    mock_device_timeout.get_meter_list.side_effect = None
+    mock_device_timeout.get_meter_info.side_effect = lambda meter: METER_INFO[meter]
 
-@pytest.mark.usefixtures("mock_comports", "mock_device_comm_error")
-async def test_flow_user_comm_error(hass: HomeAssistant) -> None:
+    await _async_finish_flow(hass, result["flow_id"])
+
+
+@pytest.mark.usefixtures("mock_comports")
+async def test_flow_user_comm_error(
+    hass: HomeAssistant, mock_device_comm_error: AsyncMock
+) -> None:
     """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -235,3 +275,8 @@ async def test_flow_user_comm_error(hass: HomeAssistant) -> None:
     assert result
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
+
+    mock_device_comm_error.get_meter_list.side_effect = None
+    mock_device_comm_error.get_meter_info.side_effect = lambda meter: METER_INFO[meter]
+
+    await _async_finish_flow(hass, result["flow_id"])

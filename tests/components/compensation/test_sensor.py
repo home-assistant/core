@@ -4,12 +4,18 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -24,9 +30,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, get_fixture_path
 
 TEST_OBJECT_ID = "test_compensation"
 TEST_ENTITY_ID = "sensor.test_compensation"
@@ -45,6 +50,21 @@ TEST_CONFIG = {
     "unit_of_measurement": "a",
     **TEST_BASE_CONFIG,
 }
+
+
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        SENSOR_DOMAIN,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def async_setup_compensation(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -116,6 +136,17 @@ async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None
     assert state is not None
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_initial_state_from_existing_source(hass: HomeAssistant) -> None:
+    """Test the sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, 4, {})
+
+    await async_setup_compensation(hass, TEST_CONFIG)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
 
 
 @pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])
@@ -353,19 +384,18 @@ async def test_non_numerical_states_from_source_entity(
 
 async def test_source_state_none(hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
-    config = {
-        "sensor": [
-            {
-                "platform": "template",
-                "sensors": {
-                    "uncompensated": {
-                        "value_template": "{{ states.sensor.test_state.state }}"
-                    }
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "uncompensated",
+                    "state": "{{ states.sensor.test_state.state }}",
                 },
-            },
-        ]
-    }
-    await async_setup_component(hass, "sensor", config)
+            }
+        },
+    )
     await async_setup_compensation(hass, TEST_CONFIG)
 
     hass.states.async_set("sensor.test_state", 4)

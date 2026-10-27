@@ -1,7 +1,8 @@
 {
   "domain": "xbox",
   "name": "Xbox",
-  "codeowners": ["@hunterjm", "@tr4nt0r"],
+  "categories": ["media_entertainment.gaming"],
+  "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "dhcp": [
@@ -14,7 +15,7 @@
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
 
-  "requirements": ["python-xbox==0.2.0"],
+  "requirements": ["python-xbox==0.4.0"],
   "ssdp": [
     {
       "manufacturer": "Microsoft Corporation",

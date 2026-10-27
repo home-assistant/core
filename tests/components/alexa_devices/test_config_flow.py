@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
@@ -19,15 +20,12 @@ from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_CODE, TEST_PASSWORD, TEST_USERNAME
-
-from tests.common import MockConfigEntry
+from .const import TEST_CODE, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_amazon_devices_client: AsyncMock
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -45,17 +43,23 @@ async def test_full_flow(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "login"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
-    assert result["result"].unique_id == TEST_USERNAME
+    assert result["result"].unique_id == TEST_USER_ID
     mock_amazon_devices_client.login.login_mode_interactive.assert_called_once_with(
         "023123"
     )
@@ -69,10 +73,10 @@ async def test_full_flow(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -95,8 +99,15 @@ async def test_flow_errors(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "login"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
     mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
@@ -109,13 +120,19 @@ async def test_flow_errors(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "login"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -137,15 +154,21 @@ async def test_already_configured(
             CONF_CODE: TEST_CODE,
         },
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "login"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test starting a reauthentication flow."""
@@ -170,7 +193,7 @@ async def test_reauth_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: "other_fake_password",
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
@@ -184,10 +207,10 @@ async def test_reauth_successful(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_not_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
@@ -228,16 +251,16 @@ async def test_reauth_not_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: "fake_password",
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the entry can be reconfigured."""
@@ -268,7 +291,7 @@ async def test_reconfigure_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: new_password,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
@@ -282,10 +305,10 @@ async def test_reconfigure_successful(
         (CannotRetrieveData, "cannot_retrieve_data"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_fails(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
@@ -327,7 +350,7 @@ async def test_reconfigure_fails(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }

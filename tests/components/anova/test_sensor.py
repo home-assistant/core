@@ -18,9 +18,15 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     assert len(hass.states.async_all("sensor")) == 8
     assert (
         hass.states.get("sensor.anova_precision_cooker_cook_time_remaining").state
-        == "0"
+        == "0.0"
     )
-    assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0"
+    assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0.0"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_cook_time").attributes[
+            "unit_of_measurement"
+        ]
+        == "h"
+    )
     assert (
         hass.states.get("sensor.anova_precision_cooker_heater_temperature").state
         == "22.37"
@@ -43,6 +49,9 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
 
 @pytest.mark.usefixtures("anova_api_no_data")
 async def test_no_data_sensors(hass: HomeAssistant) -> None:
-    """Test that if we have no data for the device, and we have not set it up previously, It is not immediately set up."""
+    """Test no data and no previous setup.
+
+    Device is not immediately set up.
+    """
     await async_init_integration(hass)
     assert hass.states.get("sensor.anova_precision_cooker_triac_temperature") is None

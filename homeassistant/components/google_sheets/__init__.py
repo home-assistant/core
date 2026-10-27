@@ -1,21 +1,11 @@
 """Support for Google Sheets."""
 
-from __future__ import annotations
-
-import aiohttp
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -39,32 +29,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Sheets from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            "OAuth session is not valid, reauth required"
-        ) from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     entry.runtime_data = session
-
-    return True
 
 
 def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) -> bool:
@@ -74,6 +47,5 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True

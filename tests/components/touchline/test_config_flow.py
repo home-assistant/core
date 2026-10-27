@@ -1,16 +1,14 @@
 """Test the Touchline config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
+
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.touchline.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_DATA = {CONF_HOST: TEST_HOST}
@@ -112,59 +110,6 @@ async def test_already_configured_by_unique_id(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=TEST_DATA,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_success(
-    hass: HomeAssistant, mock_pytouchline: MagicMock, mock_setup_entry: MagicMock
-) -> None:
-    """Test YAML import creates an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=TEST_DATA,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_HOST
-    assert result["data"] == TEST_DATA
-    assert result["result"].unique_id == TEST_UNIQUE_ID
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_cannot_connect(
-    hass: HomeAssistant, mock_pytouchline: MagicMock
-) -> None:
-    """Test YAML import aborts when it cannot connect."""
-    mock_pytouchline.get_number_of_devices.side_effect = ConnectionError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=TEST_DATA,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_already_configured(
-    hass: HomeAssistant, mock_pytouchline: MagicMock
-) -> None:
-    """Test YAML import aborts when already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "5.6.7.8"},
-        unique_id=TEST_UNIQUE_ID,
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=TEST_DATA,
     )
 
     assert result["type"] is FlowResultType.ABORT

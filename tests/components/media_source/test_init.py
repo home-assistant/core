@@ -16,8 +16,6 @@ async def test_is_media_source_id() -> None:
 async def test_generate_media_source_id() -> None:
     """Test identifier generation."""
     tests = [
-        (None, None),
-        (None, ""),
         ("", ""),
         ("domain", None),
         ("domain", ""),

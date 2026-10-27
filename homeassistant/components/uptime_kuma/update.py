@@ -1,8 +1,7 @@
 """Update platform for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
+from typing import TYPE_CHECKING, override
 
 from yarl import URL
 
@@ -12,7 +11,8 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.const import CONF_URL, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -84,33 +84,39 @@ class UptimeKumaUpdateEntity(
         )
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Current version."""
 
         return self.coordinator.api.version.version
 
     @property
+    @override
     def title(self) -> str | None:
         """Title of the release."""
 
         return f"Uptime Kuma {self.update_checker.data.name}"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes."""
 
         return self.update_checker.data.html_url
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version."""
 
         return self.update_checker.data.tag_name
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         return self.update_checker.data.body
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass.
 
@@ -122,6 +128,26 @@ class UptimeKumaUpdateEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.update_checker.last_update_success
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device_info, DeviceInfo)
+        if self.device_info.sw_version != self.coordinator.api.version.version:
+            device_registry = dr.async_get(self.hass)
+            if device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.coordinator.config_entry.entry_id),
+                self.coordinator.config_entry.entry_id,
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, sw_version=self.coordinator.api.version.version
+                )
+                self.device_info.sw_version = self.coordinator.api.version.version
+
+        super()._handle_coordinator_update()

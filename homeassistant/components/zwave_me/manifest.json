@@ -2,12 +2,13 @@
   "domain": "zwave_me",
   "name": "Z-Wave.Me",
   "after_dependencies": ["zeroconf"],
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@lawfulchaos", "@Z-Wave-Me", "@PoltoS"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_me",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["zwave-me-ws==0.4.3", "url-normalize==2.2.1"],
+  "requirements": ["zwave-me-ws==0.4.3", "url-normalize==3.0.1"],
   "zeroconf": [
     {
       "name": "*z.wave-me*",

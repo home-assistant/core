@@ -1,9 +1,8 @@
 """Support for 1-Wire environment select entities."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import os
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -12,12 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import OneWireEntity
-from .onewirehub import (
-    SIGNAL_NEW_DEVICE_CONNECTED,
-    OneWireConfigEntry,
-    OneWireHub,
-    OWDeviceDescription,
-)
+from .model import OWDeviceDescription
+from .onewirehub import SIGNAL_NEW_DEVICE_CONNECTED, OneWireConfigEntry, OneWireHub
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server
@@ -92,10 +87,12 @@ class OneWireSelectEntity(OneWireEntity, SelectEntity):
     """Implementation of a 1-Wire switch."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self._state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._write_value(option.encode("ascii"))

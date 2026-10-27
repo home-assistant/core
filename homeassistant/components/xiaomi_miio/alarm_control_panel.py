@@ -1,9 +1,8 @@
 """Support for Xiomi Gateway alarm control panels."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
+from typing import override
 
 from miio import DeviceException
 
@@ -74,12 +73,14 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Turn on."""
         await self._try_command(
             "Turning the alarm on failed: %s", self._gateway.alarm.on
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Turn off."""
         await self._try_command(

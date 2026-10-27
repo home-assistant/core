@@ -1,6 +1,10 @@
 {
   "domain": "compit",
   "name": "Compit",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@Przemko92"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/compit",
@@ -8,5 +12,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["compit"],
   "quality_scale": "bronze",
-  "requirements": ["compit-inext-api==0.8.0"]
+  "requirements": ["compit-inext-api==0.9.2"]
 }

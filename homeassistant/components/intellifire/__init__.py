@@ -1,9 +1,8 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 import asyncio
 
+import aiohttp
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
 from intellifire4py.const import IntelliFireApiMode
@@ -66,7 +65,7 @@ def _construct_common_data(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Migrate entries."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -130,10 +129,8 @@ async def async_migrate_entry(
             )
             LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> None:
     """Set up IntelliFire from a config entry."""
 
     if CONF_USERNAME not in entry.data:
@@ -143,7 +140,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     try:
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
-                _construct_common_data(entry)
+                _construct_common_data(entry),
+                polling_enabled=False,
             )
         )
         LOGGER.debug("Waiting for Fireplace to Initialize")
@@ -153,6 +151,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Initialization of fireplace timed out after 10 minutes"
+        ) from err
+    except (aiohttp.ClientConnectionError, ConnectionError) as err:
+        raise ConfigEntryNotReady(
+            "Error communicating with fireplace during initialization"
         ) from err
 
     # Construct coordinator
@@ -166,8 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
-
-    return True
 
 
 async def async_update_options(
@@ -188,11 +188,11 @@ async def async_update_options(
     current_control_mode = fireplace.control_mode
 
     # Only update modes that actually changed
-    if new_read_mode != current_read_mode:
+    if new_read_mode is not current_read_mode:
         LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
         await fireplace.set_read_mode(new_read_mode)
 
-    if new_control_mode != current_control_mode:
+    if new_control_mode is not current_control_mode:
         LOGGER.debug(
             "Updating control mode: %s -> %s", current_control_mode, new_control_mode
         )
@@ -215,6 +215,6 @@ async def _async_wait_for_initialization(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

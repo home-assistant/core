@@ -1,24 +1,24 @@
 # serializer version: 1
-# name: test_all_entities[number.backyard_balance-entry]
+# name: test_all_entities[number.backyard_backyard_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_balance',
+    'entity_id': 'number.backyard_backyard_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,43 +41,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_balance-state]
+# name: test_all_entities[number.backyard_backyard_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Balance',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Balance',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_balance',
+    'entity_id': 'number.backyard_backyard_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_bass-entry]
+# name: test_all_entities[number.backyard_backyard_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_bass',
+    'entity_id': 'number.backyard_backyard_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -100,43 +100,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_bass-state]
+# name: test_all_entities[number.backyard_backyard_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Bass',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Bass',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_bass',
+    'entity_id': 'number.backyard_backyard_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_treble-entry]
+# name: test_all_entities[number.backyard_backyard_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_treble',
+    'entity_id': 'number.backyard_backyard_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,43 +159,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_treble-state]
+# name: test_all_entities[number.backyard_backyard_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Treble',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Treble',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_treble',
+    'entity_id': 'number.backyard_backyard_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.backyard_turn_on_volume-entry]
+# name: test_all_entities[number.backyard_backyard_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.backyard_turn_on_volume',
+    'entity_id': 'number.backyard_backyard_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -218,43 +218,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.backyard_turn_on_volume-state]
+# name: test_all_entities[number.backyard_backyard_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Turn-on volume',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Turn-on volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.backyard_turn_on_volume',
+    'entity_id': 'number.backyard_backyard_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_balance-entry]
+# name: test_all_entities[number.bedroom_bedroom_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_balance',
+    'entity_id': 'number.bedroom_bedroom_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -277,43 +277,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_balance-state]
+# name: test_all_entities[number.bedroom_bedroom_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Balance',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Balance',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_balance',
+    'entity_id': 'number.bedroom_bedroom_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_bass-entry]
+# name: test_all_entities[number.bedroom_bedroom_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_bass',
+    'entity_id': 'number.bedroom_bedroom_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,43 +336,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_bass-state]
+# name: test_all_entities[number.bedroom_bedroom_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Bass',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Bass',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_bass',
+    'entity_id': 'number.bedroom_bedroom_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_treble-entry]
+# name: test_all_entities[number.bedroom_bedroom_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_treble',
+    'entity_id': 'number.bedroom_bedroom_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -395,43 +395,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_treble-state]
+# name: test_all_entities[number.bedroom_bedroom_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Treble',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Treble',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_treble',
+    'entity_id': 'number.bedroom_bedroom_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.bedroom_turn_on_volume-entry]
+# name: test_all_entities[number.bedroom_bedroom_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.bedroom_turn_on_volume',
+    'entity_id': 'number.bedroom_bedroom_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -454,17 +454,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.bedroom_turn_on_volume-state]
+# name: test_all_entities[number.bedroom_bedroom_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Turn-on volume',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Turn-on volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.bedroom_turn_on_volume',
+    'entity_id': 'number.bedroom_bedroom_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -478,15 +478,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -516,11 +516,11 @@
 # name: test_all_entities[number.kitchen_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Balance',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Balance',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.kitchen_balance',
@@ -537,15 +537,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -575,11 +575,11 @@
 # name: test_all_entities[number.kitchen_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Bass',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Bass',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.kitchen_bass',
@@ -596,15 +596,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -634,11 +634,11 @@
 # name: test_all_entities[number.kitchen_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Treble',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Treble',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.kitchen_treble',
@@ -655,15 +655,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -693,11 +693,11 @@
 # name: test_all_entities[number.kitchen_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Turn-on volume',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Turn-on volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'context': <ANY>,
     'entity_id': 'number.kitchen_turn_on_volume',
@@ -707,26 +707,26 @@
     'state': '40.0',
   })
 # ---
-# name: test_all_entities[number.living_room_balance-entry]
+# name: test_all_entities[number.living_room_living_room_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2-9')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_balance',
+    'entity_id': 'number.living_room_living_room_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -749,43 +749,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_balance-state]
+# name: test_all_entities[number.living_room_living_room_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Balance',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Balance',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_balance',
+    'entity_id': 'number.living_room_living_room_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_bass-entry]
+# name: test_all_entities[number.living_room_living_room_bass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2-9')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_bass',
+    'entity_id': 'number.living_room_living_room_bass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -808,43 +808,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_bass-state]
+# name: test_all_entities[number.living_room_living_room_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Bass',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Bass',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_bass',
+    'entity_id': 'number.living_room_living_room_bass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_treble-entry]
+# name: test_all_entities[number.living_room_living_room_treble-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2-9')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_treble',
+    'entity_id': 'number.living_room_living_room_treble',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -867,43 +867,43 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_treble-state]
+# name: test_all_entities[number.living_room_living_room_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Treble',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Treble',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_treble',
+    'entity_id': 'number.living_room_living_room_treble',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[number.living_room_turn_on_volume-entry]
+# name: test_all_entities[number.living_room_living_room_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('russound_rio', '00:11:22:33:44:55-2-9')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.living_room_turn_on_volume',
+    'entity_id': 'number.living_room_living_room_turn_on_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -926,17 +926,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[number.living_room_turn_on_volume-state]
+# name: test_all_entities[number.living_room_living_room_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Turn-on volume',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Turn-on volume',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2,
     }),
     'context': <ANY>,
-    'entity_id': 'number.living_room_turn_on_volume',
+    'entity_id': 'number.living_room_living_room_turn_on_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

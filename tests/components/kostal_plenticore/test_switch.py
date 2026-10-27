@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from pykoplenti import SettingsData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 pytestmark = [
     pytest.mark.usefixtures("mock_plenticore_client"),
 ]
@@ -31,7 +30,7 @@ async def test_installer_setting_not_available(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the manual charge setting is not available when not using the installer login."""
+    """Test manual charge setting is unavailable without installer login."""
     mock_get_settings.update(
         {
             "devices:local": [
@@ -62,7 +61,7 @@ async def test_installer_setting_available(
     mock_installer_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the manual charge setting is available when using the installer login."""
+    """Test manual charge setting is available with installer login."""
     mock_get_settings.update(
         {
             "devices:local": [

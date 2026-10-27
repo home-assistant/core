@@ -1,14 +1,12 @@
 """Mock of a devolo Home Network device."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api.deviceapi import DeviceApi
 from devolo_plc_api.exceptions.device import DevicePasswordProtected
 from devolo_plc_api.plcnet_api.plcnetapi import PlcNetApi
-import httpx
+import httpx2
 from zeroconf import Zeroconf
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -48,7 +46,7 @@ class MockDevice(Device):
         self._firmware_version = version
 
     async def async_connect(
-        self, session_instance: httpx.AsyncClient | None = None
+        self, session_instance: httpx2.AsyncClient | None = None
     ) -> None:
         """Give a mocked device the needed properties."""
         self.mac = DISCOVERY_INFO.properties["PlcMacAddress"] if self.plcnet else None
@@ -85,7 +83,7 @@ class MockDevice(Device):
 
 
 class MockDeviceWrongPassword(MockDevice):
-    """Mock of a devolo Home Network device, that always complains about a wrong password."""
+    """Mock of a devolo Home Network device that complains about a wrong password."""
 
     def __init__(
         self,

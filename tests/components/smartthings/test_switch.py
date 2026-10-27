@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
@@ -33,8 +34,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -71,7 +70,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.2nd_floor_hallway"},
+        {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -100,7 +99,7 @@ async def test_command_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.dryer_wrinkle_prevent"},
+        {ATTR_ENTITY_ID: "switch.theater_dryer_wrinkle_prevent"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -172,7 +171,7 @@ async def test_custom_commands(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "switch.refrigerator_power_cool"},
+        {ATTR_ENTITY_ID: "switch.theater_refrigerator_power_cool"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -180,6 +179,39 @@ async def test_custom_commands(
         Capability.SAMSUNG_CE_POWER_COOL,
         command,
         MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, "on"),
+        (SERVICE_TURN_OFF, "off"),
+    ],
+)
+async def test_ac_purify_switch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test Samsung OCF AC purify switch."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.theater_ac_office_granit_purify"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.CUSTOM_SPI_MODE,
+        Command.SET_SPI_MODE,
+        MAIN,
+        argument,
     )
 
 
@@ -192,7 +224,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_update(
         hass,
@@ -203,7 +235,7 @@ async def test_state_update(
         "off",
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_OFF
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -275,16 +307,18 @@ async def test_create_issue_with_items(
     suggested_object_id: str,
     issue_string: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     assert await async_setup_component(
@@ -331,11 +365,14 @@ async def test_create_issue_with_items(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
         "entity_name": suggested_object_id,
-        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+        "items": (
+            "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)"
+        ),
     }
 
     entity_registry.async_update_entity(
@@ -436,16 +473,18 @@ async def test_create_issue(
     issue_string: str,
     version: str,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test issue for automation/script using deprecated entity."""
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -454,6 +493,7 @@ async def test_create_issue(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -482,19 +522,21 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+    assert hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
@@ -505,7 +547,9 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("switch.theater_2nd_floor_hallway").state == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
@@ -525,7 +569,7 @@ async def test_turn_on_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -559,7 +603,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -593,7 +637,7 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Option is not supported by selected cycle",
+        match="Option is not supported by the selected cycle",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

@@ -1,10 +1,10 @@
 """Config flow for Cambridge Audio."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aiostreammagic import StreamMagicClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -17,7 +17,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -29,6 +29,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -81,6 +82,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

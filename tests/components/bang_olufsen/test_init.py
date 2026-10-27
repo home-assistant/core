@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ServerTimeoutError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bang_olufsen import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .const import TEST_FRIENDLY_NAME, TEST_MODEL_BALANCE, TEST_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
@@ -31,15 +30,16 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Check that the device has been registered properly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SERIAL_NUMBER), mock_config_entry.entry_id
     )
     assert device is not None
-    # Is usually TEST_NAME, but is updated to the device's friendly name by _update_name_and_beolink
+    # Device name is set from the config entry title (friendly name)
     assert device.name == TEST_FRIENDLY_NAME
     assert device.model == TEST_MODEL_BALANCE
 
-    # Ensure that the connection has been checked WebSocket connection has been initialized
+    # Ensure that the connection has been checked
+    # WebSocket connection has been initialized
     assert mock_mozart_client.check_device_connection.call_count == 1
     assert mock_mozart_client.close_api_client.call_count == 0
     assert mock_mozart_client.connect_notifications.call_count == 1

@@ -6,18 +6,30 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_location": "No results found for that location, try changing the location or station radius.",
+      "invalid_location": "No results found for that location, try changing the location.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::airnow::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for {name} is no longer valid. To generate a new API key, go to {api_key_url}.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "radius": "Station radius (miles; optional)"
+          "location": "[%key:common::config_flow::data::location%]"
         },
-        "description": "To generate API key go to {api_key_url}"
+        "data_description": {
+          "api_key": "To generate an API key, go to {api_key_url}.",
+          "location": "The longitude  and latitude of your location."
+        },
+        "description": "To generate an API key, go to {api_key_url}."
       }
     }
   },
@@ -35,13 +47,9 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "radius": "Station radius (miles)"
-        }
-      }
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The AirNow API key is invalid."
     }
   }
 }

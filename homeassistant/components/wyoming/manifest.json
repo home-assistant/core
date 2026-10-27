@@ -1,6 +1,7 @@
 {
   "domain": "wyoming",
   "name": "Wyoming Protocol",
+  "categories": ["ai_voice.speech", "ai_voice.voice_assistants"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": [
@@ -13,6 +14,6 @@
   "documentation": "https://www.home-assistant.io/integrations/wyoming",
   "integration_type": "service",
   "iot_class": "local_push",
-  "requirements": ["wyoming==1.7.2"],
+  "requirements": ["wyoming==1.10.2"],
   "zeroconf": ["_wyoming._tcp.local."]
 }

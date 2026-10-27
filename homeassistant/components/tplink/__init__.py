@@ -1,6 +1,5 @@
 """Component to embed TP-Link smart home devices."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Iterable
@@ -58,6 +57,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import TPLinkConfigEntry, TPLinkData, TPLinkDataUpdateCoordinator
+from .services import async_setup_services
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -116,6 +116,7 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
+    async_setup_services(hass)
     hass.data.setdefault(DOMAIN, {})
 
     async def _async_discovery(*_: Any) -> None:
@@ -132,7 +133,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> None:
     """Set up TPLink from a config entry."""
     host: str = entry.data[CONF_HOST]
     credentials = await get_credentials(hass)
@@ -243,19 +244,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     live_view = entry.data.get(CONF_LIVE_VIEW)
 
     entry.runtime_data = TPLinkData(parent_coordinator, camera_creds, live_view)
+
+    # Register the parent device before forwarding platforms so child device
+    # entities can resolve their via_device_id from it.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, device.device_id)},
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> None:
     """Unload a config entry."""
     data = entry.runtime_data
     device = data.parent_coordinator.device
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await device.protocol.close()
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        await device.protocol.close()
 
 
 def legacy_device_id(device: Device) -> str:
@@ -332,7 +340,7 @@ def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TPLinkConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     entry_version = config_entry.version
     entry_minor_version = config_entry.minor_version
@@ -454,4 +462,3 @@ async def async_migrate_entry(
         _LOGGER.debug(
             "Migration to version %s.%s complete", entry_version, new_minor_version
         )
-    return True

@@ -1,9 +1,12 @@
 """Define tests for the QNAP QSW config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from aioqsw.const import API_MAC_ADDR, API_PRODUCT, API_RESULT
 from aioqsw.exceptions import LoginError, QswError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.qnap_qsw.const import DOMAIN
@@ -16,8 +19,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .util import CONFIG, LIVE_MOCK, SYSTEM_BOARD_MOCK, USERS_LOGIN_MOCK
 
-from tests.common import MockConfigEntry
-
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="qsw-m408-4c",
     ip="192.168.1.200",
@@ -27,6 +28,31 @@ DHCP_SERVICE_INFO = DhcpServiceInfo(
 TEST_PASSWORD = "test-password"
 TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
+SYSTEM_BOARD_UNIQUE_ID = format_mac(SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR])
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the API calls of a successful attempt and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.qnap_qsw.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+            return_value=LIVE_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
+            return_value=SYSTEM_BOARD_MOCK,
+        ),
+        patch(
+            "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
+            return_value=USERS_LOGIN_MOCK,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -35,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.qnap_qsw.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
@@ -69,13 +95,14 @@ async def test_form(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert (
-            result["title"]
-            == f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]} {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
+        assert result["title"] == (
+            f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]}"
+            f" {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
         )
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == SYSTEM_BOARD_UNIQUE_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -100,7 +127,15 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         return_value=system_board,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -118,7 +153,15 @@ async def test_form_unique_id_error(hass: HomeAssistant) -> None:
         return_value=system_board,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -133,10 +176,25 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         side_effect=QswError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["errors"] == {CONF_URL: "cannot_connect"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_login_error(hass: HomeAssistant) -> None:
@@ -147,10 +205,25 @@ async def test_login_error(hass: HomeAssistant) -> None:
         side_effect=LoginError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
@@ -171,7 +244,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.qnap_qsw.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
@@ -200,6 +273,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_URL: TEST_URL,
     }
+    assert result2["result"].unique_id == format_mac(DHCP_SERVICE_INFO.macaddress)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -251,6 +325,16 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_dhcp_login_error(hass: HomeAssistant) -> None:
     """Test DHCP login error."""
@@ -281,3 +365,13 @@ async def test_dhcp_login_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

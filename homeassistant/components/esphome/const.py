@@ -1,23 +1,38 @@
 """ESPHome constants."""
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.assist_pipeline import indexed_select_key
+from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import UnitOfTemperature, __version__ as ha_version
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .domain_data import DomainData
+
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
+
+ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
 CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
 CONF_SUBSCRIBE_LOGS = "subscribe_logs"
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
+CONF_BLUETOOTH_SCANNING_MODE = "bluetooth_scanning_mode"
 
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
+DEFAULT_BLUETOOTH_SCANNING_MODE = BluetoothScanningMode.AUTO.value
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.11.0"
+STABLE_BLE_VERSION_STR = "2026.5.1"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -27,6 +42,29 @@ STABLE_BLE_URL_VERSION = f"{STABLE_BLE_VERSION.major}.{STABLE_BLE_VERSION.minor}
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
 
 NO_WAKE_WORD: Final[str] = "no_wake_word"
+WAKE_WORD_SELECT_KEY: Final[str] = "wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
+
+
+# Built from the device info, so a cleanup path has to name them.
+ASSIST_SATELLITE_KEY: Final[str] = "assist_satellite"
+VOICE_ASSISTANT_SELECT_COUNT: Final[int] = 2
+VOICE_ASSISTANT_SELECT_KEYS: Final[tuple[str, ...]] = (
+    *(
+        indexed_select_key("pipeline", index)
+        for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+    ),
+    "vad_sensitivity",
+    *(
+        indexed_select_key(WAKE_WORD_SELECT_KEY, index)
+        for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+    ),
+)
+
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
+    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rova', '8381BE13')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_all_entities[sensor.8381be_13_bio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Bio',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Bio',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_bio',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rova', '8381BE13')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -90,8 +90,8 @@
 # name: test_all_entities[sensor.8381be_13_paper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Paper',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Paper',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_paper',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rova', '8381BE13')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -141,8 +141,8 @@
 # name: test_all_entities[sensor.8381be_13_plastic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Plastic',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Plastic',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_plastic',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rova', '8381BE13')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -192,8 +192,8 @@
 # name: test_all_entities[sensor.8381be_13_residual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '8381BE 13 Residual',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8381BE 13 Residual',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.8381be_13_residual',

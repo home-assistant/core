@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_button(
@@ -81,7 +80,8 @@ async def test_button_failure(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while calling the NextDNS API method for button.fake_profile_clear_logs",
+        match="An error occurred while calling the NextDNS API"
+        " method for button.fake_profile_clear_logs",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -96,17 +96,21 @@ async def test_button_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Tests that the press action starts re-auth flow."""
+    """Tests that the press action raises an error and starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
     mock_nextdns_client.clear_logs.side_effect = InvalidApiKeyError
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for NextDNS, please update your API key",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

@@ -1,13 +1,11 @@
 """Diagnostics support for Home Connect Diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomeconnect.model import GetSetting, Status
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
@@ -55,7 +53,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: HomeConnectConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: HomeConnectConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     ha_id = next(

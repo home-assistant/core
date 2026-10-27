@@ -6,18 +6,23 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 from hass_nabucasa import CloudError
 from hass_nabucasa.api import CloudApiError, CloudApiNonRetryableError
 from hass_nabucasa.files import FilesError, StorageType
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
     Folder,
-    UploadBackupEvent,
 )
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
@@ -27,8 +32,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReaderChunked
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -194,6 +202,7 @@ async def test_agents_list_backups_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
+        "agent_error_translations": {},
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
         "last_attempted_automatic_backup": None,
@@ -369,14 +378,13 @@ async def test_agents_upload_on_progress(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     cloud: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test agent upload backup emits UploadBackupEvent via on_progress."""
-    client = await hass_client()
     backup_data = "test"
-    backup_id = "test-backup"
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
-        backup_id=backup_id,
+        backup_id="test-backup",
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
         extra_metadata={},
@@ -391,46 +399,22 @@ async def test_agents_upload_on_progress(
     async def mock_upload(**kwargs: Any) -> None:
         """Mock upload that calls on_progress."""
         on_progress = kwargs["on_progress"]
-        on_progress(bytes_uploaded=2)
-        await hass.async_block_till_done()
-        on_progress(bytes_uploaded=4)
-        await hass.async_block_till_done()
+        on_progress(bytes_uploaded=1)
+        # Report each value in its own event
+        flush_upload_progress(hass, freezer)
+        on_progress(bytes_uploaded=3)
 
     cloud.files.upload.side_effect = mock_upload
 
-    manager = hass.data[DATA_MANAGER]
-    events: list[UploadBackupEvent] = []
-
-    def _collect(event: Any) -> None:
-        if isinstance(event, UploadBackupEvent):
-            events.append(event)
-
-    unsub = manager.async_subscribe_events(_collect)
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        ) as fetch_backup,
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
-    ):
-        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
-        fetch_backup.return_value = test_backup
-        resp = await client.post(
-            "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO(backup_data)},
+    with collect_upload_events(hass, "cloud.cloud") as events:
+        resp = await upload_backup_via_http(
+            await hass_client(), "cloud.cloud", test_backup, [backup_data.encode()]
         )
 
-    unsub()
-
     assert resp.status == 201
-    cloud_events = [e for e in events if e.agent_id == "cloud.cloud"]
-    assert len(cloud_events) >= 1
-    assert all(e.total_bytes == len(backup_data) for e in cloud_events)
-    assert cloud_events[-1].uploaded_bytes == len(backup_data)
+    # The manager emits the first (0) and last (backup size) events
+    assert [e.uploaded_bytes for e in events] == [0, 1, 3, len(backup_data)]
+    assert all(e.total_bytes == len(backup_data) for e in events)
 
 
 @pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])
@@ -499,7 +483,8 @@ async def test_agents_upload_fail(
     [
         (
             CloudApiNonRetryableError("Boom!", code="NC-SH-FH-03"),
-            "The backup size of 13.37GB is too large to be uploaded to Home Assistant Cloud",
+            "The backup size of 13.37GB is too large to be"
+            " uploaded to Home Assistant Cloud",
         ),
         (
             CloudApiNonRetryableError("Boom!", code="NC-CE-01"),
@@ -790,7 +775,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_delete_file.assert_called_once_with(
         filename="462e16810d6841228828d9dd2f9e341e.tar",
         storage_type=StorageType.BACKUP,
@@ -820,7 +805,8 @@ async def test_agents_delete_fail_cloud(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"cloud.cloud": "Failed to delete backup"}
+        "agent_error_translations": {},
+        "agent_errors": {"cloud.cloud": "Failed to delete backup"},
     }
 
 
@@ -842,23 +828,87 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
-@pytest.mark.parametrize("event_type", ["login", "logout"])
-async def test_calling_listener_on_login_logout(
+async def test_agents_follow_cloud_login_state(
     hass: HomeAssistant,
-    event_type: str,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
 ) -> None:
-    """Test calling listener for login and logout events."""
-    listener = MagicMock()
-    async_register_backup_agents_listener(hass, listener=listener)
+    """Test the cloud agent is removed on logout and added back on login."""
+    client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    cloud_agent = {"agent_id": "cloud.cloud", "name": "cloud"}
 
-    assert listener.call_count == 0
-    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": event_type})
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, cloud_agent]}
+
+    # The agents are reloaded eagerly on dispatch, so set the login state first
+    type(cloud).is_logged_in = PropertyMock(return_value=False)
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
     await hass.async_block_till_done()
 
-    assert listener.call_count == 1
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    # A reload on other event types would add the agent back
+    type(cloud).is_logged_in = PropertyMock(return_value=True)
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "auto_login_failed"})
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, cloud_agent]}
+
+
+async def test_agent_follows_server_initiated_logout(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test the cloud agent is removed when hass_nabucasa logs out by itself."""
+    client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    cloud_agent = {"agent_id": "cloud.cloud", "name": "cloud"}
+    # Follow the tokens again, instead of the fixed login state of cloud_logged_in
+    type(cloud).is_logged_in = PropertyMock(
+        side_effect=lambda: cloud.id_token is not None
+    )
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    # Like the IoT logout action or a failed token refresh, not via the logout view
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    assert not cloud.is_logged_in
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    # Auto-login goes through the same login path
+    await cloud.login("test-user", "test-pass", auto=True)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, cloud_agent]}
 
 
 async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
@@ -876,16 +926,3 @@ async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
     async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
     await hass.async_block_till_done()
     assert listener.call_count == 1
-
-
-async def test_not_calling_listener_with_unknown_event_type(
-    hass: HomeAssistant,
-) -> None:
-    """Test not calling listener if we did not get the expected event type."""
-    listener = MagicMock()
-    async_register_backup_agents_listener(hass, listener=listener)
-
-    assert listener.call_count == 0
-    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "unknown"})
-    await hass.async_block_till_done()
-    assert listener.call_count == 0

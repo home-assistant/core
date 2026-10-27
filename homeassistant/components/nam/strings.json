@@ -4,9 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "another_device": "The IP address/hostname of another Nettigo Air Monitor was used.",
       "device_unsupported": "The device is unsupported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -23,12 +21,20 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "The password used to log in to the Nettigo Air Monitor web interface.",
+          "username": "The username used to log in to the Nettigo Air Monitor web interface."
+        },
         "description": "Please enter the username and password."
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::nam::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::nam::config::step::credentials::data_description::username%]"
         },
         "description": "Please enter the correct username and password for host: {host}"
       },
@@ -92,9 +98,6 @@
       },
       "heca_temperature": {
         "name": "HECA temperature"
-      },
-      "last_restart": {
-        "name": "Last restart"
       },
       "mhz14a_carbon_dioxide": {
         "name": "MH-Z14A carbon dioxide"

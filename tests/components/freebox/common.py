@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 
 async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
@@ -18,6 +18,7 @@ async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
         unique_id=MOCK_HOST,
+        version=2,
     )
     mock_entry.add_to_hass(hass)
 

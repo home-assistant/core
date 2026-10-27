@@ -1,9 +1,8 @@
 """TOLO Sauna Select controls."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tololib import ToloClient, ToloSettings
 
@@ -81,15 +80,20 @@ class ToloSelectEntity(ToloSaunaCoordinatorEntity, SelectEntity):
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return available select options."""
         return self.entity_description.options
 
     @property
+    @override
     def current_option(self) -> str:
         """Return current select option."""
         return self.entity_description.getter(self.coordinator.data.settings)
 
-    def select_option(self, option: str) -> None:
+    @override
+    async def async_select_option(self, option: str) -> None:
         """Select a select option."""
-        self.entity_description.setter(self.coordinator.client, option)
+        await self._async_send_command(
+            lambda client: self.entity_description.setter(client, option)
+        )

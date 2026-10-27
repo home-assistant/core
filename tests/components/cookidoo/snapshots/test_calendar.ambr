@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('cookidoo', 'sub_uuid')]>,
     'disabled_by': None,
     'domain': 'calendar',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_calendar[calendar.cookidoo_meal_plan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Meal plan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Meal plan',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.cookidoo_meal_plan',

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -10,9 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 from .conftest import TEST_SIMPLE_MAC, TEST_WEBHOOK_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 UPDATE_DATA = {
     "api_key": "",
@@ -45,10 +44,6 @@ async def test_switch_entities(
         await init_integration(hass, mocked_config_entry)
 
     assert TEST_WEBHOOK_ID in hass.data["webhook"], "Webhook was not registered"
-
-    # Verify the webhook handler
-    webhook_info = hass.data["webhook"][TEST_WEBHOOK_ID]
-    assert webhook_info["handler"], "Webhook handler is not set"
 
     client = await hass_client_no_auth()
     resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)

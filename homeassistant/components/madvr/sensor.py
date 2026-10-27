@@ -1,9 +1,8 @@
 """Sensor entities for the madVR integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -274,6 +273,7 @@ class MadvrSensor(MadVREntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         val = self.entity_description.value_fn(self.coordinator)

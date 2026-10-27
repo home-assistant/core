@@ -1,8 +1,6 @@
 """Support for Tasmota lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from hatasmota import light as tasmota_light
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity, TasmotaEntityConfig
@@ -104,6 +102,7 @@ class TasmotaLight(
 
         self._setup_from_entity()
 
+    @override
     async def discovery_update(
         self, update: TasmotaEntityConfig, write_state: bool = True
     ) -> None:
@@ -149,6 +148,7 @@ class TasmotaLight(
         self._attr_supported_features = supported_features
 
     @callback
+    @override
     def state_updated(self, state: bool, **kwargs: Any) -> None:
         """Handle state updates."""
         self._on_off_state = state
@@ -183,6 +183,7 @@ class TasmotaLight(
         self.async_write_ha_state()
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         return (
@@ -192,6 +193,7 @@ class TasmotaLight(
         )
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(
@@ -199,6 +201,7 @@ class TasmotaLight(
         )
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         return color_util.color_temperature_mired_to_kelvin(
@@ -206,10 +209,12 @@ class TasmotaLight(
         )
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._tasmota_entity.effect_list
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         supported_color_modes = self._attr_supported_color_modes
@@ -242,6 +247,7 @@ class TasmotaLight(
 
         await self._tasmota_entity.set_state(True, attributes)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         attributes = {"state": "OFF"}

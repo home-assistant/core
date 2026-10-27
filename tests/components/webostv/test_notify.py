@@ -41,8 +41,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         },
         blocking=True,
     )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=ICON_PATH)
 
     await hass.services.async_call(
@@ -56,8 +54,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         },
         blocking=True,
     )
-    assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
     client.send_message.assert_called_with(MESSAGE, icon_path=None)
 
     await hass.services.async_call(
@@ -69,7 +65,6 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         blocking=True,
     )
 
-    assert client.connect.call_count == 1
     assert client.send_message.call_args == call(
         "only message, no data", icon_path=None
     )
@@ -81,17 +76,20 @@ async def test_notify(hass: HomeAssistant, client) -> None:
         (
             True,
             WebOsTvCommandError("Some error"),
-            f"Communication error while sending notification to device {TV_NAME}: Some error",
+            "Communication error while sending notification to"
+            f" device {TV_NAME}: Some error",
         ),
         (
             True,
             FileNotFoundError("Some other error"),
-            f"Icon {ICON_PATH} not found when sending notification for device {TV_NAME}",
+            f"Icon {ICON_PATH} not found when sending notification"
+            f" for device {TV_NAME}",
         ),
         (
             False,
             None,
-            f"Error sending notification to device {TV_NAME}: Device is off and cannot be controlled",
+            f"Error sending notification to device {TV_NAME}:"
+            " Device is off and cannot be controlled",
         ),
     ],
 )

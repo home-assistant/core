@@ -1,13 +1,13 @@
 """Test the Bond config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bond.const import DOMAIN
@@ -27,8 +27,6 @@ from .common import (
     patch_bond_token,
     patch_bond_version,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -61,6 +59,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -176,6 +175,20 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -196,6 +209,20 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
     """Test we handle unsupported old firmware."""
@@ -215,6 +242,20 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "old_firmware"}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_client_error(hass: HomeAssistant) -> None:
@@ -305,6 +346,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -448,6 +490,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -532,13 +575,14 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "discovered-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf_form_with_token_available_name_unavailable(
     hass: HomeAssistant,
 ) -> None:
-    """Test we get the discovery form when we can get the token but the name is unavailable."""
+    """Test discovery form when we can get the token but name is unavailable."""
 
     with (
         patch_bond_version(
@@ -651,7 +695,7 @@ async def test_zeroconf_in_setup_retry_state(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) -> None:
-    """Test starting a flow from zeroconf when already configured and the token is out of date."""
+    """Test zeroconf flow when already configured and token is outdated."""
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         unique_id="not-the-same-bond-id",
@@ -702,7 +746,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) ->
 async def test_zeroconf_already_configured_no_reload_same_host(
     hass: HomeAssistant,
 ) -> None:
-    """Test starting a flow from zeroconf when already configured does not reload if the host is the same."""
+    """Test zeroconf when already configured does not reload if host is the same."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="already-registered-bond-id",
@@ -731,6 +775,42 @@ async def test_zeroconf_already_configured_no_reload_same_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_zeroconf_already_configured_keeps_valid_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf keeps the stored host when the bridge still announces it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "127.0.0.3", CONF_ACCESS_TOKEN: "correct-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "correct-token"}),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("127.0.0.2"),
+                ip_addresses=[ip_address("127.0.0.2"), ip_address("127.0.0.3")],
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "127.0.0.3"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -778,9 +858,158 @@ async def _help_test_form_unexpected_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 def _patch_async_setup_entry():
     return patch(
         "homeassistant.components.bond.async_setup_entry",
-        return_value=True,
+        return_value=None,
     )
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("ZXXX12345", id="with_unique_id"),
+        pytest.param(None, id="no_unique_id"),
+    ],
+)
+async def test_reauth(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Test reauth updates the access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "new-token"}
+    assert entry.unique_id == "ZXXX12345"
+
+
+@pytest.mark.parametrize(
+    ("version", "device_ids_side_effect", "error"),
+    [
+        pytest.param(
+            {"return_value": {"bondid": "ZXXX12345"}},
+            ClientResponseError(Mock(), Mock(), status=401),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            {"side_effect": ClientConnectionError()},
+            None,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            {"return_value": {"bondid": "ZXXX12345"}},
+            ClientResponseError(Mock(), Mock(), status=500),
+            "unknown",
+            id="unknown",
+        ),
+        pytest.param(
+            {"return_value": {"no_bond_id": "present"}},
+            None,
+            "old_firmware",
+            id="old_firmware",
+        ),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    version: dict[str, Any],
+    device_ids_side_effect: Exception | None,
+    error: str,
+) -> None:
+    """Test reauth handles errors and can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id="ZXXX12345",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch_bond_version(**version),
+        patch_bond_bridge(),
+        patch_bond_device_ids(side_effect=device_ids_side_effect),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+async def test_reauth_wrong_device(hass: HomeAssistant) -> None:
+    """Test reauth aborts when the token belongs to another Bond device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "old-token"},
+        unique_id="ZXXX12345",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZOTHER999"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert entry.data[CONF_ACCESS_TOKEN] == "old-token"

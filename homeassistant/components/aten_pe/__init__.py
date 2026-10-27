@@ -1,1 +1,0 @@
-"""The ATEN PE component."""

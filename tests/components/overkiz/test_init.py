@@ -1,13 +1,35 @@
 """Tests for Overkiz integration init."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from aiohttp import ClientError
+from pyoverkiz.exceptions import (
+    MaintenanceError,
+    ServiceUnavailableError,
+    SomfyServiceError,
+    TooManyRequestsError,
+)
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    mock_registry,
+)
+
+from homeassistant import config_entries
+from homeassistant.components.overkiz import create_somfy_client
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MockOverkizClient
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
-
-from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
 
 ENTITY_SENSOR_DISCRETE_RSSI_LEVEL = "sensor.zipscreen_woonkamer_discrete_rssi_level"
 ENTITY_ALARM_CONTROL_PANEL = "alarm_control_panel.alarm"
@@ -25,6 +47,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=1,
     )
 
     mock_entry.add_to_hass(hass)
@@ -53,7 +76,9 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
-            # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
+            # This entity will be removed since
+            # "io://1234-5678-1234/3541212-core:TargetClosureState"
+            # already exists
             ENTITY_SENSOR_TARGET_CLOSURE_STATE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",
@@ -72,7 +97,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    ent_reg = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     unique_id_map = {
         ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState",
@@ -88,3 +113,135 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     for entity_id, unique_id in unique_id_map.items():
         entry = ent_reg.async_get(entity_id)
         assert entry.unique_id == unique_id
+
+    # Test if the config entry is migrated to the latest minor version
+    assert mock_entry.minor_version == 2
+
+
+async def test_setup_rexel_local_uses_local_client(
+    hass: HomeAssistant,
+    mock_rexel_local_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """A Rexel gateway configured via the Local API must not use OAuth2."""
+    mock_rexel_local_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.overkiz.create_local_client",
+            return_value=mock_client,
+        ) as mock_create_local_client,
+        patch(
+            "homeassistant.components.overkiz.create_rexel_client"
+        ) as mock_create_rexel_client,
+    ):
+        await hass.config_entries.async_setup(mock_rexel_local_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_create_local_client.assert_called_once_with(
+        hass,
+        host="gateway-1234-5678-9123.local:8443",
+        token="1234123412341234",
+        verify_ssl=True,
+    )
+    mock_create_rexel_client.assert_not_called()
+    assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_token_reauth_error_starts_reauth(
+    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
+) -> None:
+    """A non-recoverable token refresh failure triggers reauth."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestReauthError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        OAuth2TokenRequestError(request_info=MagicMock(), domain=DOMAIN),
+        TooManyRequestsError("Too many requests"),
+        MaintenanceError("Server is down for maintenance"),
+        ServiceUnavailableError("Server is unavailable"),
+        SomfyServiceError("Somfy token refresh failed"),
+        TimeoutError("Timed out"),
+        ClientError("Connection error"),
+    ],
+    ids=[
+        "oauth2_token_request",
+        "too_many_requests",
+        "maintenance",
+        "service_unavailable",
+        "somfy_service_error",
+        "timeout",
+        "client_error",
+    ],
+)
+async def test_setup_transient_error_retries(
+    hass: HomeAssistant,
+    mock_rexel_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """A recoverable error during setup retries instead of failing."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = exception
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_somfy_setup_dispatches_to_create_somfy_client(
+    hass: HomeAssistant,
+    mock_somfy_config_entry: MockConfigEntry,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Server.SOMFY entries dispatch to create_somfy_client and load."""
+    mock_somfy_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.overkiz.create_somfy_client",
+        return_value=mock_client,
+    ) as create_client:
+        await hass.config_entries.async_setup(mock_somfy_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert create_client.call_count == 1
+    assert mock_somfy_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_somfy_on_token_refresh_updates_entry(
+    hass: HomeAssistant,
+    mock_somfy_config_entry: MockConfigEntry,
+) -> None:
+    """The on_token_refresh callback writes the new refresh token to the entry."""
+    mock_somfy_config_entry.add_to_hass(hass)
+
+    client = await create_somfy_client(hass, mock_somfy_config_entry)
+    callback = client._auth.credentials.on_token_refresh
+    await callback("rotated-token")
+
+    assert mock_somfy_config_entry.data["refresh_token"] == "rotated-token"
+    assert mock_somfy_config_entry.data["site_oid"] == "site-oid-1"

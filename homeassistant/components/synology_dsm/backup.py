@@ -1,10 +1,8 @@
 """Support for Synology DSM backup agents."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
@@ -126,6 +124,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         base_name = self.backup_base_names[backup_id]
         return (f"{base_name}.tar", f"{base_name}_meta.json")
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -151,6 +150,7 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         return ChunkAsyncStreamIterator(resp)
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -166,13 +166,21 @@ class SynologyDSMBackupAgent(BackupAgent):
         """
 
         (filename_tar, filename_meta) = suggested_filenames(backup)
+        stream = await open_stream()
+
+        async def stream_with_progress() -> AsyncIterator[bytes]:
+            bytes_uploaded = 0
+            async for chunk in stream:
+                bytes_uploaded += len(chunk)
+                on_progress(bytes_uploaded=bytes_uploaded)
+                yield chunk
 
         # upload backup.tar file first
         try:
             await self._file_station.upload_file(
                 path=self.path,
                 filename=filename_tar,
-                source=await open_stream(),
+                source=stream_with_progress(),
                 create_parents=True,
             )
         except SynologyDSMAPIErrorException as err:
@@ -188,6 +196,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to upload backup") from err
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -214,6 +223,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                     LOGGER.error("Failed to delete backup: %s", err)
                     raise BackupAgentError("Failed to delete backup") from err
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._async_list_backups(**kwargs)).values())
@@ -261,6 +271,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         self.backup_base_names = backup_base_names
         return backups
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

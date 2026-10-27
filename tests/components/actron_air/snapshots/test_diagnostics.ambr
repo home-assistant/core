@@ -1,0 +1,107 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinators': dict({
+      '0': dict({
+        'push_enabled': True,
+        'status': dict({
+          'ac_system': dict({
+            'master_serial': '**REDACTED**',
+            'master_wc_firmware_version': '1.0.0',
+            'master_wc_model': 'Test Model',
+            'outdoor_unit': dict({
+              'amb_temp': 0.0,
+              'comp_power': 0,
+              'comp_running_pwm': 0,
+              'comp_speed': 0.0,
+              'compressor_on': False,
+              'family': '',
+              'model_number': '',
+              'serial_number': '',
+              'software_version': '',
+            }),
+            'system_name': 'Test System',
+          }),
+          'alerts': dict({
+            'clean_filter': True,
+            'defrosting': False,
+          }),
+          'is_online': True,
+          'live_aircon': dict({
+            'compressor_capacity': 75,
+            'compressor_chasing_temperature': 24.0,
+            'compressor_live_temperature': 22.5,
+            'compressor_mode': 'COOL',
+            'defrost': False,
+            'fan_rpm': 850,
+            'is_on': True,
+            'outdoor_unit': dict({
+              'amb_temp': 28.5,
+              'comp_power': 1500,
+              'comp_running_pwm': 80,
+              'comp_speed': 1200.0,
+              'compressor_on': True,
+              'family': 'Neo',
+              'model_number': 'OU-100',
+              'serial_number': '**REDACTED**',
+              'software_version': '2.0.0',
+            }),
+          }),
+          'master_info': dict({
+            'live_humidity_pc': 50.0,
+            'live_outdoor_temp_c': 28.5,
+            'live_temp_c': 22.0,
+          }),
+          'peripherals': list([
+            dict({
+              'battery_level': 85.0,
+              'device_type': 'Sensor',
+              'humidity': 55.0,
+              'logical_address': 1,
+              'serial_number': '**REDACTED**',
+              'temperature': 23.5,
+              'zone_assignments': list([
+                1,
+              ]),
+            }),
+          ]),
+          'remote_zone_info': list([
+          ]),
+          'serial_number': '**REDACTED**',
+          'user_aircon_settings': dict({
+            'away_mode': False,
+            'enabled_zones': list([
+            ]),
+            'fan_mode': 'LOW',
+            'is_on': False,
+            'mode': 'COOL',
+            'mode_support': dict({
+              'auto': True,
+              'cool': True,
+              'dry': False,
+              'fan': True,
+              'heat': True,
+            }),
+            'quiet_mode_enabled': False,
+            'temperature_setpoint_cool_c': 24.0,
+            'temperature_setpoint_heat_c': 20.0,
+            'turbo_mode_enabled': dict({
+              'Enabled': False,
+              'Supported': True,
+            }),
+            'zone_temperature_setpoint_variance': 0.0,
+          }),
+        }),
+        'system': dict({
+          'links': dict({
+          }),
+          'serial': '**REDACTED**',
+          'type': None,
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'api_token': '**REDACTED**',
+    }),
+  })
+# ---

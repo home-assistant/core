@@ -1,12 +1,10 @@
 """The yale_smart_alarm component."""
 
-from __future__ import annotations
-
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
@@ -14,26 +12,32 @@ from .coordinator import YaleDataUpdateCoordinator
 type YaleConfigEntry = ConfigEntry[YaleDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Set up Yale from a config entry."""
 
     coordinator = YaleDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
+    # Register the alarm panel device so child devices can link to it via
+    # via_device_id, since the panel is otherwise only registered by a sibling
+    # entity on a concurrently loaded platform.
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id,
+        device_info=coordinator.device_info,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", entry.version)
+    LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
         new_options = entry.options.copy()
@@ -57,6 +61,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
         del new_data[CONF_NAME]
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    LOGGER.debug("Migration to version %s successful", entry.version)
+    if entry.version == 2 and entry.minor_version == 2:
+        entity_reg = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+        for entity in entries:
+            if entity.unique_id == "yale_smart_alarm-panic":
+                entity_reg.async_update_entity(
+                    entity.entity_id,
+                    new_unique_id=f"{entry.entry_id}-panic",
+                )
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
-    return True
+    LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )

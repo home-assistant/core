@@ -53,6 +53,11 @@
         }
       }
     },
+    "select": {
+      "night_light_control": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "sensor": {
       "light_level": {
         "default": "mdi:brightness-7",
@@ -69,6 +74,11 @@
           "10": "mdi:brightness-7"
         }
       }
+    }
+  },
+  "services": {
+    "upload_art_frame_image": {
+      "service": "mdi:cloud-upload-outline"
     }
   }
 }

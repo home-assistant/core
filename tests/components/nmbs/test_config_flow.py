@@ -3,6 +3,10 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from pyrail import ApiUnavailableError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
@@ -13,8 +17,6 @@ from homeassistant.components.nmbs.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DUMMY_DATA_IMPORT: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
@@ -35,9 +37,8 @@ DUMMY_DATA: dict[str, Any] = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -68,9 +69,8 @@ async def test_full_flow(
     )
 
 
-async def test_same_station(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_same_station(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> None:
     """Test selecting the same station."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -105,13 +105,20 @@ async def test_abort_if_exists(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
         },
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -122,21 +129,45 @@ async def test_dont_abort_if_exists_when_vias_differs(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
             CONF_EXCLUDE_VIAS: True,
         },
     )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{mock_config_entry.unique_id}_excl_vias"
 
 
 async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by user and api is unavailable."""
+    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError(
+        "The iRail API is unavailable"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_unavailable"
+
+
+async def test_api_not_modified(
+    hass: HomeAssistant, mock_nmbs_client: AsyncMock
+) -> None:
+    """Test starting a flow when the station list is not modified."""
     mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

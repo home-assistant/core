@@ -1,12 +1,24 @@
 {
   "domain": "hr_energy_qube",
   "name": "Qube heat pump",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "climate.thermostats_heating",
+    "climate.water_heaters"
+  ],
   "codeowners": ["@MattieGit"],
   "config_flow": true,
+  "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/hr_energy_qube",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["python_qube_heatpump"],
-  "quality_scale": "bronze",
-  "requirements": ["python-qube-heatpump==1.8.0"]
+  "quality_scale": "platinum",
+  "requirements": ["python-qube-heatpump==1.17.0"],
+  "zeroconf": [
+    {
+      "properties": { "ProjectName": "deqsihpb*", "Vendor": "000a5c" },
+      "type": "_workstation._tcp.local."
+    }
+  ]
 }

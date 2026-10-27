@@ -1,9 +1,8 @@
 """Support for Velbus sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
 from velbusaio.properties import LightValue
@@ -14,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -41,7 +41,15 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: float(channel.get_counter_state()),
         unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "flow": VelbusSensorEntityDescription(
+        key="flow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda channel: float(channel.get_state()),
+        unit_fn=lambda channel: channel.get_counter_unit(),
     ),
     "temperature": VelbusSensorEntityDescription(
         key="temperature",
@@ -54,13 +62,45 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda channel: channel.get_unit(),
     ),
-    "counter": VelbusSensorEntityDescription(
-        key="counter",
+    "energy": VelbusSensorEntityDescription(
+        key="energy",
         device_class=SensorDeviceClass.ENERGY,
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda channel: float(channel.get_counter_state()),
+        value_fn=lambda channel: (
+            float(channel.energy)
+            if hasattr(channel, "energy") and channel.energy is not None
+            else None
+        ),
         unit_fn=lambda channel: channel.get_counter_unit(),
+        unique_id_suffix="-counter",
+    ),
+    "gas": VelbusSensorEntityDescription(
+        key="gas",
+        device_class=SensorDeviceClass.GAS,
+        icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        value_fn=lambda channel: (
+            float(total)
+            if isinstance(channel, ButtonCounter)
+            and (total := channel.get_counter_total()) is not None
+            else None
+        ),
+        unique_id_suffix="-counter",
+    ),
+    "water": VelbusSensorEntityDescription(
+        key="water",
+        device_class=SensorDeviceClass.WATER,
+        icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_fn=lambda channel: (
+            float(total)
+            if isinstance(channel, ButtonCounter)
+            and (total := channel.get_counter_total()) is not None
+            else None
+        ),
         unique_id_suffix="-counter",
     ),
 }
@@ -75,21 +115,21 @@ async def async_setup_entry(
     await entry.runtime_data.scan_task
     entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
-        # Determine which description to use for the main sensor
-        if channel.is_counter_channel():
-            description = SENSOR_DESCRIPTIONS["power"]
-        elif channel.is_temperature():
-            description = SENSOR_DESCRIPTIONS["temperature"]
-        else:
-            description = SENSOR_DESCRIPTIONS["measurement"]
-
-        entities.append(VelbusSensor(channel, description))
-
-        # Add counter entity if applicable
-        if channel.is_counter_channel():
+        if isinstance(channel, ButtonCounter) and channel.is_counter_channel():
+            if channel.is_gas():
+                main_key, total_key = "flow", "gas"
+            elif channel.is_water():
+                main_key, total_key = "flow", "water"
+            else:
+                main_key, total_key = "power", "energy"
+            entities.append(VelbusSensor(channel, SENSOR_DESCRIPTIONS[main_key]))
             entities.append(
-                VelbusSensor(channel, SENSOR_DESCRIPTIONS["counter"], is_counter=True)
+                VelbusSensor(channel, SENSOR_DESCRIPTIONS[total_key], is_counter=True)
             )
+        elif channel.is_temperature():
+            entities.append(VelbusSensor(channel, SENSOR_DESCRIPTIONS["temperature"]))
+        else:
+            entities.append(VelbusSensor(channel, SENSOR_DESCRIPTIONS["measurement"]))
 
     async_add_entities(entities)
 
@@ -114,11 +154,11 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_native_unit_of_measurement = description.unit_fn(channel)
         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
 
-        # Modify name for counter entities
         if is_counter:
             self._attr_name = f"{self._attr_name}-counter"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._channel)

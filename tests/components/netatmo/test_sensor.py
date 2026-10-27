@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import selected_platforms, snapshot_platform_entities
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -252,6 +251,6 @@ async def test_climate_battery_sensor(
 
         await hass.async_block_till_done()
 
-    prefix = "sensor.livingroom_"
+    prefix = "sensor.livingroom_livingroom_"
 
     assert hass.states.get(f"{prefix}battery").state == "75"

@@ -1,11 +1,10 @@
 """Coordinator for the ToGrill Bluetooth integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -108,7 +107,11 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 "probe_number": str(probe_number),
             },
             identifiers={(DOMAIN, f"{self.address}_{probe_number}")},
-            via_device=(DOMAIN, self.address),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.address),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
 
     @callback
@@ -165,6 +168,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
         return client
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect from device."""
         await super().async_shutdown()
@@ -195,6 +199,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.async_update_packet_listeners(packet)
         self.async_update_listeners()
 
+    @override
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
         if self.client and not self.client.is_connected:

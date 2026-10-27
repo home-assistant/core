@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,8 +14,6 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -40,8 +39,8 @@ async def test_light_get_state(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert (
-        entry.unique_id
-        == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
+        entry.unique_id == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+        "-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
     )
 
 
@@ -61,8 +60,8 @@ async def test_light_set_on(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert (
-        entry.unique_id
-        == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
+        entry.unique_id == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+        "-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
     )
 
     await hass.services.async_call(
@@ -93,8 +92,8 @@ async def test_light_set_off(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert (
-        entry.unique_id
-        == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*3-QURR5Q6ADA8ML1TBRG59RRGM1F9LVUZLKPYKFJQHC"
+        entry.unique_id == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+        "-LQ*3-QURR5Q6ADA8ML1TBRG59RRGM1F9LVUZLKPYKFJQHC"
     )
 
     await hass.services.async_call(
@@ -125,8 +124,8 @@ async def test_light_set_brightness(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert (
-        entry.unique_id
-        == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
+        entry.unique_id == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+        "-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
     )
 
     await hass.services.async_call(
@@ -158,8 +157,8 @@ async def test_light_set_hue(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert (
-        entry.unique_id
-        == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
+        entry.unique_id == "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+        "-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M"
     )
 
     await hass.services.async_call(

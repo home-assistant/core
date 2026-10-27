@@ -14,6 +14,7 @@ from pyipp import (
     Printer,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -26,8 +27,6 @@ from . import (
     MOCK_ZEROCONF_IPP_SERVICE_INFO,
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -69,14 +68,22 @@ async def test_connection_error(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_ipp_config_flow.printer.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_connection_error(
@@ -122,14 +129,22 @@ async def test_user_connection_upgrade_required(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "connection_upgrade"}
+
+    mock_ipp_config_flow.printer.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_connection_upgrade_required(
@@ -159,9 +174,11 @@ async def test_user_parse_error(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -195,9 +212,11 @@ async def test_user_ipp_error(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -231,9 +250,11 @@ async def test_user_ipp_version_error(
 
     user_input = {**MOCK_USER_INPUT}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -268,9 +289,11 @@ async def test_user_device_exists_abort(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -512,7 +535,7 @@ async def test_full_zeroconf_tls_flow_implementation(
 
 
 async def test_zeroconf_empty_unique_id_uses_serial(hass: HomeAssistant) -> None:
-    """Test zeroconf flow if printer lacks (empty) unique identification with serial fallback."""
+    """Test zeroconf flow with empty unique ID uses serial fallback."""
     fixture = await hass.async_add_executor_job(
         load_fixture, "ipp/printer_without_uuid.json"
     )

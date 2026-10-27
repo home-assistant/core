@@ -1,10 +1,15 @@
 """Test the legacy tts setup."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    assert_setup_component,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -18,14 +23,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
 from .common import SUPPORT_LANGUAGES, MockTTS, MockTTSProvider
-
-from tests.common import (
-    MockModule,
-    assert_setup_component,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-)
 
 
 class DefaultProvider(Provider):

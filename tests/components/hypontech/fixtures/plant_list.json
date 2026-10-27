@@ -4,7 +4,7 @@
       "status": "offline",
       "time": "2026-02-16T18:04:50+01:00",
       "plant_name": "Balcon",
-      "plant_type": "PvGrid",
+      "plant_type": "PvGridStorage",
       "photo": "",
       "owner_name": "admin@example.com",
       "country": "United States",

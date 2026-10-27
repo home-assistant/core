@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.pvpc_hourly_pricing.const import (
@@ -13,16 +15,13 @@ from homeassistant.components.pvpc_hourly_pricing.const import (
     DOMAIN,
     TARIFFS,
 )
-from homeassistant.const import CONF_API_TOKEN, CONF_NAME
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 _MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=dt_util.UTC)
 _MOCK_TIME_BAD_AUTH_RESPONSES = datetime(2023, 1, 8, 12, 0, tzinfo=dt_util.UTC)
@@ -45,7 +44,6 @@ async def test_config_flow(
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
     await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
-        CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
         ATTR_POWER: 4.6,
         ATTR_POWER_P3: 5.75,
@@ -183,7 +181,6 @@ async def test_reauth(
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
     await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
-        CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
         ATTR_POWER: 4.6,
         ATTR_POWER_P3: 5.75,

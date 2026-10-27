@@ -2,6 +2,7 @@
   "domain": "devolo_home_control",
   "name": "devolo Home Control",
   "after_dependencies": ["zeroconf"],
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@2Fake", "@Shutgun"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
@@ -9,6 +10,6 @@
   "iot_class": "local_push",
   "loggers": ["HomeControl", "Mydevolo", "MprmRest", "MprmWebsocket", "Mprm"],
   "quality_scale": "silver",
-  "requirements": ["devolo-home-control-api==0.19.0"],
+  "requirements": ["devolo-home-control-api==0.19.1"],
   "zeroconf": ["_dvl-deviceapi._tcp.local."]
 }

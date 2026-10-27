@@ -1,6 +1,7 @@
 """Test template helper functions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -10,14 +11,16 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.template.helpers import raise_no_default, resolve_area_id
 
-from tests.common import MockConfigEntry
-
 
 def test_raise_no_default() -> None:
     """Test raise_no_default raises ValueError with correct message."""
     with pytest.raises(
         ValueError,
-        match="Template error: test got invalid input 'invalid' when rendering or compiling template '' but no default was specified",
+        match=(
+            "Template error: test got invalid input 'invalid'"
+            " when rendering or compiling template ''"
+            " but no default was specified"
+        ),
     ):
         raise_no_default("test", "invalid")
 
@@ -57,6 +60,7 @@ async def test_resolve_area_id(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     assert resolve_area_id(hass, device_entry.id) is None
     assert resolve_area_id(hass, entity_entry.entity_id) is None

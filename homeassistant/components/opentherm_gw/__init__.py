@@ -8,13 +8,7 @@ import pyotgw.vars as gw_vars
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ID,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE, CONF_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -39,6 +33,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -60,7 +55,7 @@ async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up the OpenTherm Gateway component."""
     if DATA_OPENTHERM_GW not in hass.data:
         hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
@@ -81,15 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup and disconnect from gateway."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
-    await gateway.cleanup()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+        await gateway.cleanup()
 
 
 class OpenThermGatewayHub:
@@ -100,7 +94,6 @@ class OpenThermGatewayHub:
         self.hass = hass
         self.device_path = config_entry.data[CONF_DEVICE]
         self.hub_id = config_entry.data[CONF_ID]
-        self.name = config_entry.data[CONF_NAME]
         self.options = config_entry.options
         self.config_entry_id = config_entry.entry_id
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_update"
@@ -111,6 +104,7 @@ class OpenThermGatewayHub:
     async def cleanup(self, event=None) -> None:
         """Reset overrides on the gateway."""
         await self.gateway.set_control_setpoint(0)
+        await self.gateway.set_control_setpoint_2(0)
         await self.gateway.set_max_relative_mod("-")
         await self.gateway.disconnect()
 
@@ -159,35 +153,63 @@ class OpenThermGatewayHub:
             _LOGGER.debug("Received report: %s", status)
             async_dispatcher_send(self.hass, self.update_signal, status)
 
+            boiler_status = status[OpenThermDataSource.BOILER]
+            boiler_manufacturer = boiler_status.get(gw_vars.DATA_SLAVE_MEMBERID)
+            boiler_model_id = boiler_status.get(gw_vars.DATA_SLAVE_PRODUCT_TYPE)
+            boiler_hw_version = boiler_status.get(gw_vars.DATA_SLAVE_PRODUCT_VERSION)
+            boiler_sw_version = boiler_status.get(gw_vars.DATA_SLAVE_OT_VERSION)
             dev_reg.async_update_device(
                 boiler_device.id,
-                manufacturer=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_MEMBERID
+                manufacturer=(
+                    str(boiler_manufacturer)
+                    if boiler_manufacturer is not None
+                    else None
                 ),
-                model_id=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_PRODUCT_TYPE
+                model_id=(
+                    str(boiler_model_id) if boiler_model_id is not None else None
                 ),
-                hw_version=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_PRODUCT_VERSION
+                hw_version=(
+                    str(boiler_hw_version) if boiler_hw_version is not None else None
                 ),
-                sw_version=status[OpenThermDataSource.BOILER].get(
-                    gw_vars.DATA_SLAVE_OT_VERSION
+                sw_version=(
+                    str(boiler_sw_version) if boiler_sw_version is not None else None
                 ),
             )
 
+            thermostat_status = status[OpenThermDataSource.THERMOSTAT]
+            thermostat_manufacturer = thermostat_status.get(
+                gw_vars.DATA_MASTER_MEMBERID
+            )
+            thermostat_model_id = thermostat_status.get(
+                gw_vars.DATA_MASTER_PRODUCT_TYPE
+            )
+            thermostat_hw_version = thermostat_status.get(
+                gw_vars.DATA_MASTER_PRODUCT_VERSION
+            )
+            thermostat_sw_version = thermostat_status.get(
+                gw_vars.DATA_MASTER_OT_VERSION
+            )
             dev_reg.async_update_device(
                 thermostat_device.id,
-                manufacturer=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_MEMBERID
+                manufacturer=(
+                    str(thermostat_manufacturer)
+                    if thermostat_manufacturer is not None
+                    else None
                 ),
-                model_id=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_PRODUCT_TYPE
+                model_id=(
+                    str(thermostat_model_id)
+                    if thermostat_model_id is not None
+                    else None
                 ),
-                hw_version=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_PRODUCT_VERSION
+                hw_version=(
+                    str(thermostat_hw_version)
+                    if thermostat_hw_version is not None
+                    else None
                 ),
-                sw_version=status[OpenThermDataSource.THERMOSTAT].get(
-                    gw_vars.DATA_MASTER_OT_VERSION
+                sw_version=(
+                    str(thermostat_sw_version)
+                    if thermostat_sw_version is not None
+                    else None
                 ),
             )
 
@@ -199,7 +221,10 @@ class OpenThermGatewayHub:
         return self.gateway.connection.connected
 
     async def set_room_setpoint(self, temp) -> float:
-        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        """Set the room temperature setpoint on the gateway.
+
+        Return the new temperature.
+        """
         return await self.gateway.set_target_temp(
             temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
         )

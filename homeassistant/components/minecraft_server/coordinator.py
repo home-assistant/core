@@ -1,9 +1,8 @@
 """The Minecraft Server integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
@@ -19,6 +18,7 @@ from .api import (
     MinecraftServerNotInitializedError,
     MinecraftServerType,
 )
+from .const import DOMAIN
 
 type MinecraftServerConfigEntry = ConfigEntry[MinecraftServerCoordinator]
 
@@ -48,22 +48,28 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Minecraft Server data coordinator."""
 
-        # Create API instance.
         self._api = MinecraftServer(
             self.hass,
             self.config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
             self.config_entry.data[CONF_ADDRESS],
         )
 
-        # Initialize API instance.
         try:
             await self._api.async_initialize()
         except MinecraftServerAddressError as error:
-            raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="address_lookup_failed",
+                translation_placeholders={
+                    "address": self.config_entry.data[CONF_ADDRESS]
+                },
+            ) from error
 
+    @override
     async def _async_update_data(self) -> MinecraftServerData:
         """Get updated data from the server."""
         try:
@@ -72,4 +78,10 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             MinecraftServerConnectionError,
             MinecraftServerNotInitializedError,
         ) as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_update_failed",
+                translation_placeholders={
+                    "address": self.config_entry.data[CONF_ADDRESS]
+                },
+            ) from error

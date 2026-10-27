@@ -1,24 +1,25 @@
 """The Smart Meter Texas integration."""
 
-import logging
-
 from smart_meter_texas import Account
 from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
-from .coordinator import SmartMeterTexasCoordinator, SmartMeterTexasData
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
+from .coordinator import (
+    SmartMeterTexasConfigEntry,
+    SmartMeterTexasCoordinator,
+    SmartMeterTexasData,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SmartMeterTexasConfigEntry
+) -> None:
     """Set up Smart Meter Texas from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -29,9 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     smart_meter_texas_data = SmartMeterTexasData(hass, account)
     try:
         await smart_meter_texas_data.client.authenticate()
-    except SmartMeterTexasAuthError:
-        _LOGGER.error("Username or password was not accepted")
-        return False
+    except SmartMeterTexasAuthError as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from error
     except TimeoutError as error:
         raise ConfigEntryNotReady from error
 
@@ -43,11 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # too long to update.
     coordinator = SmartMeterTexasCoordinator(hass, entry, smart_meter_texas_data)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-        DATA_SMART_METER: smart_meter_texas_data,
-    }
+    entry.runtime_data = coordinator
 
     entry.async_create_background_task(
         hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
@@ -55,13 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SmartMeterTexasConfigEntry
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

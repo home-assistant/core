@@ -7,14 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.views import async_generate_playback_proxy_url
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 TEST_YEAR = 2023
 TEST_MONTH = 11
@@ -22,7 +21,11 @@ TEST_DAY = 14
 TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
-TEST_FILE_NAME_MP4 = f"Mp4Record/{TEST_YEAR}-{TEST_MONTH}-{TEST_DAY}/RecS04_{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00_123456_AB123C.mp4"
+TEST_FILE_NAME_MP4 = (
+    f"Mp4Record/{TEST_YEAR}-{TEST_MONTH}-{TEST_DAY}/RecS04_"
+    f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}"
+    f"00_123456_AB123C.mp4"
+)
 TEST_STREAM = "sub"
 TEST_CHANNEL = "0"
 TEST_VOD_TYPE = VodRequestType.PLAYBACK.value

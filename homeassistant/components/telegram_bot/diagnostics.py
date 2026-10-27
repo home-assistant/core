@@ -1,7 +1,5 @@
 """Diagnostics platform for Telegram bot integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from yarl import URL
@@ -10,7 +8,7 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry
 from .const import CONF_API_ENDPOINT, CONF_CHAT_ID, DEFAULT_API_ENDPOINT
 
 TO_REDACT = [CONF_API_KEY, CONF_CHAT_ID]

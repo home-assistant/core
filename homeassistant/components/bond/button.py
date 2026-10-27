@@ -1,8 +1,7 @@
 """Support for bond buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from bond_async import Action
 
@@ -260,6 +259,14 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
     ),
 )
 
+PRESET_BUTTON = BondButtonEntityDescription(
+    key=Action.PRESET,
+    name="Preset",
+    translation_key="preset",
+    mutually_exclusive=None,
+    argument=None,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -285,6 +292,8 @@ async def async_setup_entry(
             # we only add the stop action button if we add actions
             # since its not so useful if there are no actions to stop
             device_entities.append(BondButtonEntity(data, device, STOP_BUTTON))
+        if device.has_action(PRESET_BUTTON.key):
+            device_entities.append(BondButtonEntity(data, device, PRESET_BUTTON))
         entities.extend(device_entities)
 
     async_add_entities(entities)
@@ -305,6 +314,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         self.entity_description = description
         super().__init__(data, device, description.name, description.key.lower())
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         description = self.entity_description
@@ -315,5 +325,6 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(key)
         await self._bond.action(self._device_id, action)
 
+    @override
     def _apply_state(self) -> None:
         """Apply the state."""

@@ -10,12 +10,12 @@ import wave
 
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
 from homeassistant.components.cloud.tts import (
     DEFAULT_VOICES,
@@ -44,9 +44,7 @@ from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
-from tests.common import async_mock_service
 from tests.components.tts.common import get_media_source_url
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -91,12 +89,12 @@ def test_schema() -> None:
     processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "non-existing", "gender": "female"}
         )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         PLATFORM_SCHEMA(
             {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
         )
@@ -274,6 +272,7 @@ async def test_get_tts_audio(
 
         # Force streaming
         await client.get(response["path"])
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     if data.get("engine_id", "").startswith("tts."):
         # Streaming

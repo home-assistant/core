@@ -1,6 +1,7 @@
 {
   "domain": "cambridge_audio",
   "name": "Cambridge Audio",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@noahhusby"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cambridge_audio",
@@ -8,6 +9,6 @@
   "iot_class": "local_push",
   "loggers": ["aiostreammagic"],
   "quality_scale": "platinum",
-  "requirements": ["aiostreammagic==2.13.0"],
+  "requirements": ["aiostreammagic==2.13.2"],
   "zeroconf": ["_stream-magic._tcp.local.", "_smoip._tcp.local."]
 }

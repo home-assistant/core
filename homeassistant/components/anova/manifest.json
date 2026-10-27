@@ -1,11 +1,12 @@
 {
   "domain": "anova",
   "name": "Anova",
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@Lash-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anova",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["anova_wifi"],
-  "requirements": ["anova-wifi==0.17.0"]
+  "requirements": ["anova-wifi==1.0.1"]
 }

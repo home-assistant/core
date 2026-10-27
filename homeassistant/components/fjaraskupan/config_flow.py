@@ -1,8 +1,6 @@
 """Config flow for Fjäråskupan integration."""
 
-from __future__ import annotations
-
-from fjaraskupan import device_filter
+from fjaraskupan import UUID_SERVICE
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.core import HomeAssistant
@@ -17,7 +15,8 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     service_infos = async_discovered_service_info(hass)
 
     for service_info in service_infos:
-        if device_filter(service_info.device, service_info.advertisement):
+        uuids = service_info.service_uuids
+        if str(UUID_SERVICE) in uuids:
             return True
 
     return False

@@ -1,7 +1,5 @@
 """Set up the demo environment that mimics interaction with devices."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant import config_entries, core as ha, setup
@@ -34,11 +32,13 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.LAWN_MOWER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.NUMBER,
+    Platform.REMOTE,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
@@ -54,12 +54,17 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    Platform.GEO_LOCATION,
     Platform.TTS,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -183,21 +188,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
         config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
     )
-    return True
 
 
 async def finish_setup(hass: HomeAssistant, config: ConfigType) -> None:

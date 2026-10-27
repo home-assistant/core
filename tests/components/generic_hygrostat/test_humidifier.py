@@ -1,11 +1,18 @@
 """The tests for the generic_hygrostat."""
 
-import datetime
+import datetime as dt
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
@@ -40,13 +47,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.switch.common import MockSwitch
 
 ENTITY = "humidifier.test"
@@ -351,7 +351,7 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert state.attributes.get("humidity") == 40
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_HUMIDITY,
@@ -948,7 +948,7 @@ async def test_humidity_change_dry_trigger_on_not_long_enough(
 @pytest.mark.usefixtures("setup_comp_4")
 async def test_humidity_change_dry_trigger_on_long_enough(hass: HomeAssistant) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
@@ -982,7 +982,7 @@ async def test_humidity_change_dry_trigger_off_not_long_enough(
 @pytest.mark.usefixtures("setup_comp_4")
 async def test_humidity_change_dry_trigger_off_long_enough(hass: HomeAssistant) -> None:
     """Test if humidity change turn dry on."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
@@ -1107,7 +1107,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     hass: HomeAssistant,
 ) -> None:
     """Test if humidity change turn humidifier on after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
@@ -1128,7 +1128,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     hass: HomeAssistant,
 ) -> None:
     """Test if humidity change turn humidifier off after min cycle."""
-    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=datetime.UTC)
+    fake_changed = dt.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt.UTC)
     with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
@@ -1239,10 +1239,10 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1260,16 +1260,58 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+
+
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_off_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, True)
+    # Settle on a humidity that asks for no change, so the device is left running
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Dry enough to want the dehumidifier off, but it only just came on
+    _setup_sensor(hass, 30)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@pytest.mark.usefixtures("setup_comp_7")
+async def test_humidity_change_dry_trigger_on_not_long_enough_keep_alive(
+    hass: HomeAssistant,
+) -> None:
+    """Test a keep-alive interval does not bypass the minimum cycle duration."""
+    calls = await _setup_switch(hass, False)
+    # Settle on a humidity that asks for no change, so the device is left stopped
+    _setup_sensor(hass, 35)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Wet enough to want the dehumidifier on, but it only just went off
+    _setup_sensor(hass, 45)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
 
 @pytest.fixture
@@ -1305,10 +1347,10 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1326,10 +1368,10 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
@@ -1365,7 +1407,7 @@ async def test_float_tolerance_values(hass: HomeAssistant) -> None:
 
 
 async def test_float_tolerance_values_2(hass: HomeAssistant) -> None:
-    """Test if dehumidifier turns off when oudside of floating point tolerance values."""
+    """Test dehumidifier turns off outside of floating point tolerance."""
     assert await async_setup_component(
         hass,
         HUMIDIFIER_DOMAIN,
@@ -1778,7 +1820,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    freezer.tick(datetime.timedelta(minutes=11))
+    freezer.tick(dt.timedelta(minutes=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1794,7 +1836,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    freezer.tick(datetime.timedelta(minutes=11))
+    freezer.tick(dt.timedelta(minutes=11))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1820,7 +1862,7 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     # Wait another 11 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=22))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=22))
     await hass.async_block_till_done()
 
     # Still off
@@ -1856,7 +1898,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     helper_config_entry = MockConfigEntry(
         data={},
@@ -1864,7 +1906,7 @@ async def test_device_id(
         options={
             "device_class": "humidifier",
             "dry_tolerance": 2.0,
-            "humidifier": "switch.test_source",
+            "humidifier": source_entity.entity_id,
             "name": "Test",
             "target_sensor": ENT_SENSOR,
             "wet_tolerance": 4.0,
@@ -1876,6 +1918,50 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    helper_entity = entity_registry.async_get("humidifier.test")
+    helper_entity = entity_registry.async_get("humidifier.mock_title_test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured hygrostat."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        HUMIDIFIER_DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "humidifier": source_entity.entity_id,
+                "target_sensor": ENT_SENSOR,
+                "unique_id": "generic_hygrostat_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("humidifier.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
@@ -13,13 +14,18 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 CONFIG_INPUT = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
 }
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="192.168.1.100",
+    hostname="oven_88_e7_12_1f_53_fc",
+    macaddress="88e7121f53fc",
+)
 
 
 def assert_successful_user_flow(
@@ -62,16 +68,16 @@ def assert_successful_reauth_flow(
 def fixture_mock_whirlpool_setup_entry():
     """Set up async_setup_entry fixture."""
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
+        "homeassistant.components.whirlpool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
 async def test_user_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
     brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
     mock_backend_selector_api: MagicMock,
     mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
@@ -88,6 +94,8 @@ async def test_user_flow(
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+    mock_appliances_manager_api.return_value.connect.assert_awaited_once()
+    mock_appliances_manager_api.return_value.disconnect.assert_awaited_once()
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
@@ -110,7 +118,6 @@ async def test_user_flow_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Test that it succeeds if the authentication is valid
     mock_auth_api.return_value.is_access_token_valid.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
@@ -118,7 +125,6 @@ async def test_user_flow_invalid_auth(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api")
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
@@ -163,7 +169,34 @@ async def test_user_flow_auth_error(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
+async def test_user_flow_connect_error(
+    hass: HomeAssistant,
+    region: tuple[str, Region],
+    brand: tuple[str, Brand],
+    mock_appliances_manager_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
+) -> None:
+    """Test a failed connection in the flow initialized by the user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_appliances_manager_api.return_value.connect.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test that it succeeds if the connection is successful
+    mock_appliances_manager_api.return_value.connect.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
 async def test_already_configured(
     hass: HomeAssistant, region: tuple[str, Region], brand: tuple[str, Brand]
 ) -> None:
@@ -193,7 +226,6 @@ async def test_already_configured(
 @pytest.mark.parametrize(
     "appliance_type", ["aircons", "washers", "dryers", "ovens", "refrigerators"]
 )
-@pytest.mark.usefixtures("mock_auth_api")
 async def test_no_appliances_flow(
     hass: HomeAssistant,
     region: tuple[str, Region],
@@ -236,9 +268,63 @@ async def test_no_appliances_flow(
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
-@pytest.mark.usefixtures(
-    "mock_auth_api", "mock_appliances_manager_api", "mock_whirlpool_setup_entry"
-)
+async def test_dhcp_flow(
+    hass: HomeAssistant,
+    region: tuple[str, Region],
+    brand: tuple[str, Brand],
+    mock_whirlpool_setup_entry: MagicMock,
+) -> None:
+    """Test that DHCP discovery leads to the user step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
+    )
+
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
+
+
+async def test_dhcp_already_configured(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts when an account is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_INPUT, unique_id="test-username"
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_already_in_progress(hass: HomeAssistant) -> None:
+    """Test that discovering multiple appliances results in a single flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.101",
+            hostname="washer_88_e7_12_aa_bb_cc",
+            macaddress="88e712aabbcc",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant, region: tuple[str, Region], brand: tuple[str, Brand]
 ) -> None:
@@ -263,7 +349,7 @@ async def test_reauth_flow(
     assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant,
     region: tuple[str, Region],
@@ -302,7 +388,7 @@ async def test_reauth_flow_invalid_auth(
     assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+@pytest.mark.usefixtures("mock_whirlpool_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [

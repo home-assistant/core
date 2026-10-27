@@ -1,11 +1,13 @@
 """Tests for Shelly number platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -23,6 +25,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -31,11 +34,21 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, patch_platforms, register_device, register_entity
-
-from tests.common import mock_restore_cache_with_extra_data
+from . import (
+    init_integration,
+    mutate_rpc_device_status,
+    patch_platforms,
+    register_device,
+    register_entity,
+)
+from .conftest import (
+    MOCK_LEDSTRIP_STATUS_BLINK,
+    MOCK_LEDSTRIP_STATUS_RAINBOW,
+    MOCK_LEDSTRIP_STATUS_SOLID,
+)
 
 DEVICE_BLOCK_ID = 4
+LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
 
 
 @pytest.fixture(autouse=True)
@@ -217,7 +230,8 @@ async def test_block_set_value_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling action for number.test_name_valve_position of Test name",
+        match="Device communication error occurred while calling"
+        " action for number.test_name_valve_position of Test name",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -358,7 +372,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual number will be removed if the mode has been changed to a label."""
+    """Test virtual number removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["number:200"] = {
         "name": None,
@@ -395,7 +409,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual number will be removed if it has been removed from the device configuration."""
+    """Test virtual number removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -503,11 +517,13 @@ async def test_blu_trv_valve_pos_set_value(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for number.trv_name_external_temperature of Test name",
+            "Device communication error occurred while calling action"
+            " for number.trv_name_external_temperature of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for number.trv_name_external_temperature of Test name",
+            "RPC call error occurred while calling action"
+            " for number.trv_name_external_temperature of Test name",
         ),
     ],
 )
@@ -613,3 +629,110 @@ async def test_cury_number_entity(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
+
+
+@pytest.mark.parametrize(
+    ("control", "ledstrip_status"),
+    [
+        ("speed", MOCK_LEDSTRIP_STATUS_RAINBOW),
+        ("intensity", MOCK_LEDSTRIP_STATUS_BLINK),
+    ],
+)
+async def test_rpc_ledstrip_number(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+    control: str,
+    ledstrip_status: dict[str, Any],
+) -> None:
+    """Test RPC LED strip effect control number."""
+    entity_id = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_{control}"
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
+    )
+
+    await init_integration(hass, 4)
+
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80.0},
+        blocking=True,
+    )
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", control, 80
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "80"
+
+
+@pytest.mark.parametrize(
+    ("ledstrip_status", "expected_state"),
+    [
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, "33"),
+        (MOCK_LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (
+            MOCK_LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True},
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                "id": 0,
+                "on": False,
+                "brightness": 36,
+                "effect": "ddp",
+                "speed": 33,
+                "reverse": True,
+            },
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
+                "id": 0,
+                "on": False,
+                "brightness": 36,
+                "effect": "rainbow",
+                "reverse": True,
+            },
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_rpc_ledstrip_speed_number_availability(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    ledstrip_status: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test RPC LED strip effect speed number availability depends on the effect."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        deepcopy(MOCK_LEDSTRIP_STATUS_SOLID),
+    )
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
+    )
+    mock_ledstrip_rpc_device.mock_update()
+
+    assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
+    assert state.state == expected_state

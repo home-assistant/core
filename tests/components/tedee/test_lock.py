@@ -12,6 +12,12 @@ from aiotedee.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
@@ -35,9 +41,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 async def test_locks(
@@ -134,7 +137,10 @@ async def test_lock_without_pullspring(
 
     with pytest.raises(
         ServiceNotSupported,
-        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
+        match=(
+            "Entity lock.lock_2c3d does not support action"
+            f" {LOCK_DOMAIN}.{SERVICE_OPEN}"
+        ),
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,

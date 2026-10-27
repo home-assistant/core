@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -22,13 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -61,6 +60,12 @@ async def test_snapshots(
             {"on": False},
         ),
         (
+            "switch.wled_rgb_light_freeze",
+            "segment",
+            {"segment_id": 0, "freeze": True},
+            {"segment_id": 0, "freeze": False},
+        ),
+        (
             "switch.wled_rgb_light_reverse",
             "segment",
             {"segment_id": 0, "reverse": True},
@@ -77,6 +82,12 @@ async def test_snapshots(
             "sync",
             {"send": True},
             {"send": False},
+        ),
+        (
+            "switch.wled_rgb_light_audio_reactive",
+            "audio_reactive",
+            {"on": True},
+            {"on": False},
         ),
     ],
 )
@@ -152,8 +163,11 @@ async def test_switch_dynamically_handle_segments(
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert not hass.states.get("switch.wled_rgb_light_segment_1_freeze")
     assert not hass.states.get("switch.wled_rgb_light_segment_1_reverse")
 
     # Test adding a segment dynamically...
@@ -166,10 +180,18 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_ON
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_ON
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_ON
 
     # Test remove segment again...
     mock_wled.update.return_value = return_value
@@ -177,7 +199,75 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0 := hass.states.get("switch.wled_rgb_light_reverse"))
-    assert segment0.state == STATE_OFF
-    assert (segment1 := hass.states.get("switch.wled_rgb_light_segment_1_reverse"))
-    assert segment1.state == STATE_UNAVAILABLE
+    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert segment0_freeze.state == STATE_OFF
+    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert segment0_reverse.state == STATE_OFF
+
+    assert (
+        segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
+    )
+    assert segment1_freeze.state == STATE_UNAVAILABLE
+    assert (
+        segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
+    )
+    assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+async def test_audio_reactive_switch_follows_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Test the AudioReactive switch follows the usermod's state on the device."""
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_OFF
+
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["state"]["AudioReactive"]["on"] = True
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # The usermod is gone, like after flashing firmware without it.
+    del data["state"]["AudioReactive"]
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
+async def test_audio_reactive_switch_once_usermod_shows_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the AudioReactive switch is added once the usermod shows up."""
+    assert not hass.states.get("switch.wled_rgb_light_audio_reactive")
+
+    # Like after flashing firmware with the usermod.
+    data = await async_load_json_object_fixture(hass, "rgb_single_segment.json", DOMAIN)
+    data["state"]["AudioReactive"] = {"on": True}
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # Later updates don't add it a second time.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "does not generate unique IDs" not in caplog.text

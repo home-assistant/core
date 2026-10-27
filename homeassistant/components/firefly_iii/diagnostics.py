@@ -1,15 +1,12 @@
 """Diagnostics for the Firefly III integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import FireflyConfigEntry
-from .coordinator import FireflyDataUpdateCoordinator
+from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 
 TO_REDACT = [CONF_API_KEY, CONF_URL]
 

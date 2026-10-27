@@ -1,9 +1,8 @@
 """Number platform for Airobot thermostat."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyairobotrest.const import HYSTERESIS_BAND_MAX, HYSTERESIS_BAND_MIN
 from pyairobotrest.exceptions import AirobotError
@@ -18,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirobotConfigEntry
 from .const import DOMAIN
-from .coordinator import AirobotDataUpdateCoordinator
+from .coordinator import AirobotConfigEntry, AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 0
@@ -81,10 +79,12 @@ class AirobotNumber(AirobotEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         return self.entity_description.value_fn(self.coordinator)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         try:

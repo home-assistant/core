@@ -1,7 +1,5 @@
 """The tests for the lock component."""
 
-from __future__ import annotations
-
 import re
 from typing import Any
 
@@ -29,7 +27,7 @@ async def help_test_async_lock_service(
     hass: HomeAssistant,
     entity_id: str,
     service: str,
-    code: str | None | UndefinedType = UNDEFINED,
+    code: str | UndefinedType | None = UNDEFINED,
 ) -> None:
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}

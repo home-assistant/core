@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the PECO Outage Counter integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from peco import (
     AlertResults,
@@ -59,6 +58,7 @@ class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
         self._websession = async_get_clientsession(hass)
         self._county: str = entry.data[CONF_COUNTY]
 
+    @override
     async def _async_update_data(self) -> PECOCoordinatorData:
         """Fetch data from API."""
         try:
@@ -95,6 +95,7 @@ class PecoSmartMeterCoordinator(DataUpdateCoordinator[bool]):
         self._websession = async_get_clientsession(hass)
         self._phone_number = phone_number
 
+    @override
     async def _async_update_data(self) -> bool:
         """Fetch data from API."""
         try:

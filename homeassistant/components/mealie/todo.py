@@ -1,13 +1,13 @@
 """Todo platform for Mealie."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
+from typing import override
 
 from aiomealie import (
     MealieConnectionError,
     MealieError,
     MutateShoppingItem,
+    RegisteredParser,
     ShoppingItem,
     ShoppingList,
 )
@@ -20,11 +20,19 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import (
+    CONF_PARSE_TODO_EDIT,
+    CONF_PARSE_TODO_NEW,
+    CONF_PARSER,
+    DEFAULT_PARSER,
+    DOMAIN,
+    LOGGER,
+    MINIMUM_PARSER_CONFIDENCE,
+)
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
 
@@ -112,6 +120,15 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         super().__init__(coordinator, shopping_list_id)
         self._shopping_list_id = shopping_list_id
         self._attr_name = self.shopping_list.name
+        self.parse_todo_new: bool = coordinator.config_entry.options.get(
+            CONF_PARSE_TODO_NEW, True
+        )
+        self.parse_todo_edit: bool = coordinator.config_entry.options.get(
+            CONF_PARSE_TODO_EDIT, True
+        )
+        self.parser = RegisteredParser(
+            coordinator.config_entry.options.get(CONF_PARSER, DEFAULT_PARSER)
+        )
 
     @property
     def shopping_list(self) -> ShoppingList:
@@ -124,24 +141,107 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         return self.coordinator.data[self._shopping_list_id].items
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of To-do items."""
         return [_convert_api_item(item) for item in self.shopping_items]
 
+    async def async_parse_todo_item(
+        self, item_summary: str
+    ) -> MutateShoppingItem | None:
+        """Parse a to-do item into a shopping item.
+
+        The average confidence is a combination of whether there is a food and also if the unit and quantity can be identified.
+        This method will only return a shopping item if the average confidence meets or exceeds the minimum threshold.
+        The returned shopping item can be either a food or a note item, with unit and quantity separated out.
+        """
+        try:
+            parsed_ingredient = await self.coordinator.client.parse_ingredient(
+                item_summary.strip(), parser=self.parser
+            )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except MealieError as exception:
+            LOGGER.warning(
+                "Unable to parse to-do item %s: %s",
+                item_summary,
+                exception,
+            )
+            parsed_ingredient = None
+
+        LOGGER.debug("Parsed ingredient: %s", parsed_ingredient)
+
+        if not parsed_ingredient or not parsed_ingredient.confidence:
+            return None
+        if (parsed_ingredient.confidence.average or 0.0) < MINIMUM_PARSER_CONFIDENCE:
+            return None
+
+        ingredient = parsed_ingredient.ingredient
+        if not ingredient.food:
+            return None
+        if ingredient.unit and ingredient.unit.unit_id is None:
+            return None
+
+        return MutateShoppingItem(
+            is_food=ingredient.food.food_id is not None,
+            food_id=ingredient.food.food_id
+            if ingredient.food.food_id is not None
+            else None,
+            note=ingredient.food.name if not ingredient.food.food_id else None,
+            unit_id=ingredient.unit.unit_id if ingredient.unit else None,
+            quantity=ingredient.quantity or 0.0,
+        )
+
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the list."""
-        position = 0
-        if len(self.shopping_items) > 0:
-            position = self.shopping_items[-1].position + 1
+        new_shopping_item: MutateShoppingItem | None = None
 
-        new_shopping_item = MutateShoppingItem(
-            list_id=self._shopping_list_id,
-            note=item.summary.strip() if item.summary else item.summary,
-            position=position,
-            quantity=0.0,
+        if item.summary and self.parse_todo_new:
+            new_shopping_item = await self.async_parse_todo_item(item.summary)
+
+        # If parsing fails or is not performed, create a fallback shopping item
+        if not new_shopping_item:
+            new_shopping_item = MutateShoppingItem(
+                note=item.summary.strip() if item.summary else item.summary,
+                quantity=0.0,
+            )
+
+        await self._async_add_shopping_item(new_shopping_item)
+
+    async def async_add_ingredient(
+        self,
+        food_id: str | None = None,
+        note: str | None = None,
+        unit_id: str | None = None,
+        quantity: float = 0.0,
+    ) -> None:
+        """Add an ingredient directly to the shopping list."""
+        food_id = food_id or None
+        if not food_id and not note:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="ingredient_requires_food_or_note",
+            )
+
+        await self._async_add_shopping_item(
+            MutateShoppingItem(
+                food_id=food_id,
+                note=note,
+                unit_id=unit_id,
+                quantity=quantity,
+                is_food=bool(food_id),
+            )
         )
+
+    async def _async_add_shopping_item(self, item: MutateShoppingItem) -> None:
+        """Append a shopping item and refresh the list."""
+        item.list_id = self._shopping_list_id
+        item.position = (
+            self.shopping_items[-1].position + 1 if self.shopping_items else 0
+        )
+
         try:
-            await self.coordinator.client.add_shopping_item(new_shopping_item)
+            await self.coordinator.client.add_shopping_item(item)
         except MealieError as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -153,6 +253,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item on the list."""
         list_items = self.shopping_items
@@ -163,31 +264,45 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         assert list_item is not None
         position = list_item.position
 
-        update_shopping_item = MutateShoppingItem(
-            item_id=list_item.item_id,
-            list_id=list_item.list_id,
-            note=list_item.note,
-            display=list_item.display,
-            checked=item.status == TodoItemStatus.COMPLETED,
-            position=position,
-            is_food=list_item.is_food,
-            disable_amount=list_item.disable_amount,
-            quantity=list_item.quantity,
-            label_id=list_item.label_id,
-            food_id=list_item.food_id,
-            unit_id=list_item.unit_id,
-        )
+        update_shopping_item: MutateShoppingItem | None = None
 
-        stripped_item_summary = item.summary.strip() if item.summary else item.summary
+        if (
+            item.summary
+            and self.parse_todo_edit
+            and list_item.display.strip() != item.summary.strip()
+        ):
+            update_shopping_item = await self.async_parse_todo_item(item.summary)
 
-        if list_item.display.strip() != stripped_item_summary:
-            update_shopping_item.note = stripped_item_summary
-            update_shopping_item.position = position
-            if update_shopping_item.is_food is not None:
-                update_shopping_item.is_food = False
-            update_shopping_item.food_id = None
-            update_shopping_item.quantity = 0.0
-            update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+        # If parsing fails or is not performed, create a fallback shopping item
+        if not update_shopping_item:
+            update_shopping_item = MutateShoppingItem(
+                note=list_item.note,
+                display=list_item.display,
+                is_food=list_item.is_food,
+                disable_amount=list_item.disable_amount,
+                quantity=list_item.quantity,
+                label_id=list_item.label_id,
+                food_id=list_item.food_id,
+                unit_id=list_item.unit_id,
+            )
+
+            stripped_item_summary = (
+                item.summary.strip() if item.summary else item.summary
+            )
+
+            if list_item.display.strip() != stripped_item_summary:
+                update_shopping_item.note = stripped_item_summary
+                update_shopping_item.position = position
+                if update_shopping_item.is_food is not None:
+                    update_shopping_item.is_food = False
+                update_shopping_item.food_id = None
+                update_shopping_item.quantity = 0.0
+                update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+
+        update_shopping_item.item_id = list_item.item_id
+        update_shopping_item.list_id = list_item.list_id
+        update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+        update_shopping_item.position = position
 
         try:
             await self.coordinator.client.update_shopping_item(
@@ -204,6 +319,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the list."""
         try:
@@ -220,6 +336,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         finally:
             await self.coordinator.async_refresh()
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
@@ -270,6 +387,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if shopping list no longer available."""
         return super().available and self._shopping_list_id in self.coordinator.data

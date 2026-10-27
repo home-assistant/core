@@ -1,15 +1,15 @@
 """Common fixtures for the IMGW-PIB tests."""
 
 from collections.abc import Generator
+import copy
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from imgw_pib import Alert, HydrologicalData, SensorData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imgw_pib.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 HYDROLOGICAL_DATA = HydrologicalData(
     station="Station Name",
@@ -21,6 +21,8 @@ HYDROLOGICAL_DATA = HydrologicalData(
     water_temperature=SensorData(name="Water Temperature", value=10.8),
     flood_alarm=None,
     flood_warning=None,
+    ice_phenomena=SensorData(name="Ice Phenomena", value=20),
+    ice_phenomena_measurement_date=datetime(2024, 4, 27, 10, 0, tzinfo=UTC),
     water_level_measurement_date=datetime(2024, 4, 27, 10, 0, tzinfo=UTC),
     water_temperature_measurement_date=datetime(2024, 4, 27, 10, 10, tzinfo=UTC),
     water_flow=SensorData(name="Water Flow", value=123.45),
@@ -32,6 +34,12 @@ HYDROLOGICAL_DATA = HydrologicalData(
         level="yellow",
         probability=80,
     ),
+    submerged_vegetation_cover=SensorData(
+        name="Submerged Vegetation Cover", value=33.0
+    ),
+    floating_vegetation_cover=SensorData(name="Floating Vegetation Cover", value=67.0),
+    emergent_vegetation_cover=SensorData(name="Emergent Vegetation Cover", value=100.0),
+    vegetation_phenomena_measurement_date=datetime(2024, 4, 27, 10, 0, tzinfo=UTC),
 )
 
 
@@ -39,7 +47,7 @@ HYDROLOGICAL_DATA = HydrologicalData(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.imgw_pib.async_setup_entry", return_value=True
+        "homeassistant.components.imgw_pib.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -57,7 +65,7 @@ def mock_imgw_pib_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.create.return_value
-        client.get_hydrological_data.return_value = HYDROLOGICAL_DATA
+        client.get_hydrological_data.return_value = copy.deepcopy(HYDROLOGICAL_DATA)
         client.hydrological_stations = {"123": "River Name (Station Name)"}
 
         yield client

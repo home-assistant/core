@@ -1,0 +1,39 @@
+{
+  "Inventory": {
+    "meters": [
+      { "name": "Production meter", "manufacturer": "Acme", "model": "M1" },
+      { "name": "Consumption meter", "manufacturer": "Acme", "model": "M1" }
+    ],
+    "sensors": [],
+    "gateways": [{ "name": "Gateway1", "serialNumber": "G-001" }],
+    "batteries": [
+      {
+        "name": "Battery1",
+        "manufacturer": "Acme",
+        "model": "B1",
+        "SN": "BAT001",
+        "nameplateCapacity": 9700.0
+      }
+    ],
+    "inverters": [
+      {
+        "name": "Inverter1",
+        "manufacturer": "Acme",
+        "model": "I1",
+        "serialNumber": "INV-001"
+      },
+      {
+        "name": "Inverter2",
+        "manufacturer": "Acme",
+        "model": "I1",
+        "serialNumber": "INV-002"
+      },
+      {
+        "name": "Inverter3",
+        "manufacturer": "Acme",
+        "model": "I1",
+        "serialNumber": "INV-003"
+      }
+    ]
+  }
+}

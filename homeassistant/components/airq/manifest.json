@@ -1,13 +1,14 @@
 {
   "domain": "airq",
   "name": "air-Q",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@Sibgatulin", "@dl2080"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airq",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairq"],
-  "requirements": ["aioairq==0.4.7"],
+  "requirements": ["aioairq==0.4.8"],
   "zeroconf": [
     {
       "properties": {

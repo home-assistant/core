@@ -1,8 +1,7 @@
 """Support for monitoring a Smappee energy sensor."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -346,6 +345,7 @@ class SmappeeSensor(SensorEntity):
         )
 
     @property
+    @override
     def name(self):
         """Return the name for this sensor."""
         sensor_key = self.entity_description.key
@@ -359,6 +359,7 @@ class SmappeeSensor(SensorEntity):
         return f"{self._service_location.service_location_name} - {sensor_name}"
 
     @property
+    @override
     def unique_id(self):
         """Return the unique ID for this sensor."""
         sensor_key = self.entity_description.key

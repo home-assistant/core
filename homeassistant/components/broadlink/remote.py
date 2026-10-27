@@ -4,19 +4,20 @@ import asyncio
 from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Iterable
+from contextlib import suppress
 from datetime import timedelta
 from itertools import product
 import logging
-from typing import Any
+from typing import Any, override
 
-from broadlink.exceptions import (
+from broadlink_async.exceptions import (
     AuthorizationError,
     BroadlinkException,
     NetworkTimeoutError,
     ReadError,
     StorageError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
@@ -36,19 +37,21 @@ from homeassistant.components.remote import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
 LEARNING_TIMEOUT = timedelta(seconds=30)
+LEARNING_POLL_INTERVAL = 1
 
 COMMAND_TYPE_IR = "ir"
 COMMAND_TYPE_RF = "rf"
@@ -60,32 +63,38 @@ FLAG_STORAGE_VERSION = 1
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_COMMAND): vol.All(
-            cv.ensure_list, [vol.All(cv.string, vol.Length(min=1))], vol.Length(min=1)
+        probatio.Required(ATTR_COMMAND): probatio.All(
+            probatio.EnsureList(),
+            [probatio.All(cv.string, probatio.NonEmpty())],
+            probatio.NonEmpty(),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Optional(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
+        probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
+            float
+        ),
     }
 )
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
-        vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty()),
+        probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
+            COMMAND_TYPES
+        ),
+        probatio.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.NonEmpty())}
 )
 
 
@@ -95,7 +104,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
         device,
         Store(hass, CODE_STORAGE_VERSION, f"broadlink_remote_{device.unique_id}_codes"),
@@ -179,17 +188,20 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """
         return self._flags
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
@@ -203,6 +215,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags.update(await self._flag_storage.async_load() or {})
         self._storage_loaded = True
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
@@ -226,40 +239,53 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             code_list = self._extract_codes(commands, subdevice)
         except ValueError as err:
-            _LOGGER.error("Failed to call %s: %s", service, err)
-            raise
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_command",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
-        rf_flags = {0xB2, 0xD7}
+        # 0xB1 is what an RM4 Pro returns for a learned 433 MHz code.
+        rf_flags = {0xB1, 0xB2, 0xB4, 0xD7}
         if not hasattr(device.api, "sweep_frequency") and any(
-            c[0] in rf_flags for codes in code_list for c in codes
+            c and c[0] in rf_flags for codes in code_list for c in codes
         ):
-            err_msg = f"{self.entity_id} doesn't support sending RF commands"
-            _LOGGER.error("Failed to call %s: %s", service, err_msg)
-            raise ValueError(err_msg)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="rf_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
 
         at_least_one_sent = False
-        for _, codes in product(range(repeat), code_list):
+        try:
+            for _, codes in product(range(repeat), code_list):
+                if at_least_one_sent:
+                    await asyncio.sleep(delay)
+
+                if len(codes) > 1:
+                    code = codes[self._flags[subdevice]]
+                else:
+                    code = codes[0]
+
+                try:
+                    await device.async_request(device.api.send_data, code)
+                except (BroadlinkException, OSError) as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
+
+                if len(codes) > 1:
+                    self._flags[subdevice] ^= 1
+                at_least_one_sent = True
+
+        finally:
+            # Toggle flags that were used before the failure must be kept in sync.
             if at_least_one_sent:
-                await asyncio.sleep(delay)
+                self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
-            if len(codes) > 1:
-                code = codes[self._flags[subdevice]]
-            else:
-                code = codes[0]
-
-            try:
-                await device.async_request(device.api.send_data, code)
-            except (BroadlinkException, OSError) as err:
-                _LOGGER.error("Error during %s: %s", service, err)
-                break
-
-            if len(codes) > 1:
-                self._flags[subdevice] ^= 1
-            at_least_one_sent = True
-
-        if at_least_one_sent:
-            self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
-
+    @override
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
@@ -287,31 +313,68 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 learn_command = self._async_learn_rf_command
 
             else:
-                err_msg = f"{self.entity_id} doesn't support learning RF commands"
-                _LOGGER.error("Failed to call %s: %s", service, err_msg)
-                raise ValueError(err_msg)
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="rf_not_supported",
+                    translation_placeholders={"entity_id": self.entity_id},
+                )
 
             should_store = False
+            failed_commands: list[str] = []
+            first_error: BroadlinkException | None = None
 
-            for command in commands:
-                try:
-                    code = await learn_command(command)
-                    if toggle:
-                        code = [code, await learn_command(command)]
+            try:
+                for command in commands:
+                    try:
+                        code = await learn_command(command)
+                        if toggle:
+                            code = [code, await learn_command(command)]
 
-                except (AuthorizationError, NetworkTimeoutError, OSError) as err:
-                    _LOGGER.error("Failed to learn '%s': %s", command, err)
-                    break
+                    except (AuthorizationError, NetworkTimeoutError, OSError) as err:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="learn_command_failed",
+                            translation_placeholders={
+                                "command": repr(command),
+                                "error": str(err),
+                            },
+                        ) from err
 
-                except BroadlinkException as err:
-                    _LOGGER.error("Failed to learn '%s': %s", command, err)
-                    continue
+                    except BroadlinkException as err:
+                        # The device could not read this one command, the
+                        # remaining commands are still worth trying.
+                        if first_error is None:
+                            first_error = err
+                        failed_commands.append(command)
+                        continue
 
-                self._codes.setdefault(subdevice, {}).update({command: code})
-                should_store = True
+                    self._codes.setdefault(subdevice, {}).update({command: code})
+                    should_store = True
 
-            if should_store:
-                await self._code_storage.async_save(self._codes)
+            finally:
+                # Commands learned before the failure must still be stored.
+                if should_store:
+                    await self._code_storage.async_save(self._codes)
+
+            if failed_commands:
+                if len(failed_commands) == 1:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="learn_command_failed",
+                        translation_placeholders={
+                            "command": repr(failed_commands[0]),
+                            "error": str(first_error),
+                        },
+                    )
+
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="learn_commands_failed",
+                    translation_placeholders={
+                        "commands": ", ".join(map(repr, failed_commands)),
+                        "error": str(first_error),
+                    },
+                )
 
     async def _async_learn_ir_command(self, command):
         """Learn an infrared command."""
@@ -334,7 +397,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 try:
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:
@@ -372,7 +435,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 is_found, frequency = await device.async_request(
                     device.api.check_frequency
                 )
@@ -380,11 +443,17 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
-                await device.async_request(device.api.cancel_sweep_frequency)
                 raise TimeoutError(
                     "No radiofrequency found within "
                     f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
+
+        except BroadlinkException, OSError, asyncio.CancelledError:
+            # Leave the device out of sweep mode so later learning still works,
+            # also when the action is cancelled while polling.
+            with suppress(BroadlinkException, OSError):
+                await device.async_request(device.api.cancel_sweep_frequency)
+            raise
 
         finally:
             persistent_notification.async_dismiss(
@@ -394,7 +463,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         await asyncio.sleep(1)
 
         try:
-            await device.async_request(device.api.find_rf_packet)
+            await device.async_request(device.api.find_rf_packet, frequency)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
@@ -410,7 +479,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             start_time = dt_util.utcnow()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
+                await asyncio.sleep(LEARNING_POLL_INTERVAL)
                 try:
                     code = await device.async_request(device.api.check_data)
                 except ReadError, StorageError:
@@ -427,6 +496,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
+    @override
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
@@ -448,9 +518,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             codes = self._codes[subdevice]
         except KeyError as err:
-            err_msg = f"Device not found: {subdevice!r}"
-            _LOGGER.error("Failed to call %s. %s", service, err_msg)
-            raise ValueError(err_msg) from err
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device": repr(subdevice)},
+            ) from err
 
         cmds_not_found = []
         for command in commands:
@@ -459,18 +531,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             except KeyError:
                 cmds_not_found.append(command)
 
-        if cmds_not_found:
-            if len(cmds_not_found) == 1:
-                err_msg = f"Command not found: {cmds_not_found[0]!r}"
-            else:
-                err_msg = f"Commands not found: {cmds_not_found!r}"
-
-            if len(cmds_not_found) == len(commands):
-                _LOGGER.error("Failed to call %s. %s", service, err_msg)
-                raise ValueError(err_msg)
-
-            _LOGGER.error("Error during %s. %s", service, err_msg)
-
         # Clean up
         if not codes:
             del self._codes[subdevice]
@@ -478,3 +538,19 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
         self._code_storage.async_delay_save(self._get_codes, CODE_SAVE_DELAY)
+
+        if cmds_not_found:
+            if len(cmds_not_found) == 1:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_not_found",
+                    translation_placeholders={"command": repr(cmds_not_found[0])},
+                )
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="commands_not_found",
+                translation_placeholders={
+                    "commands": ", ".join(map(repr, cmds_not_found))
+                },
+            )

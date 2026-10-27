@@ -1,7 +1,5 @@
 """Tests for the Airthings BLE integration."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from airthings_ble import (
@@ -10,6 +8,11 @@ from airthings_ble import (
     AirthingsDeviceType,
 )
 from bleak.backends.device import BLEDevice
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -21,12 +24,9 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from tests.common import MockConfigEntry, MockEntity
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
-
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
         return_value=return_value,
@@ -56,14 +56,6 @@ def patch_airthings_ble(return_value=AirthingsDevice, side_effect=None):
         "update_device",
         return_value=return_value,
         side_effect=side_effect,
-    )
-
-
-def patch_airthings_device_update():
-    """Patch airthings-ble device."""
-    return patch(
-        "homeassistant.components.airthings_ble.coordinator.AirthingsBluetoothDeviceData.update_device",
-        return_value=WAVE_DEVICE_INFO,
     )
 
 
@@ -259,8 +251,8 @@ WAVE_DEVICE_INFO = AirthingsDevice(
         "temperature": 21.0,
         "co2": 500.0,
         "voc": 155.0,
-        "radon_1day_level": "very low",
-        "radon_longterm_level": "very low",
+        "radon_1day_level": "good",
+        "radon_longterm_level": "poor",
         "pressure": 1020,
     },
     address="cc:cc:cc:cc:cc:cc",
@@ -300,44 +292,9 @@ CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
         "temperature": 20.0,
         "humidity": 55.0,
         "radon_1day_avg": 45,
-        "radon_1day_level": "low",
+        "radon_1day_level": "good",
     },
     address="cc:cc:cc:cc:cc:cc",
-)
-
-TEMPERATURE_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_temperature",
-    name="Airthings Wave Plus 123456 Temperature",
-)
-
-HUMIDITY_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_humidity",
-    name="Airthings Wave Plus (123456) Humidity",
-)
-
-CO2_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_co2",
-    name="Airthings Wave Plus 123456 CO2",
-)
-
-CO2_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_co2",
-    name="Airthings Wave Plus (123456) CO2",
-)
-
-VOC_V1 = MockEntity(
-    unique_id="Airthings Wave Plus 123456_voc",
-    name="Airthings Wave Plus 123456 CO2",
-)
-
-VOC_V2 = MockEntity(
-    unique_id="Airthings Wave Plus (123456)_voc",
-    name="Airthings Wave Plus (123456) VOC",
-)
-
-VOC_V3 = MockEntity(
-    unique_id="cc:cc:cc:cc:cc:cc_voc",
-    name="Airthings Wave Plus (123456) VOC",
 )
 
 

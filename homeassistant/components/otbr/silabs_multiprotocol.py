@@ -1,7 +1,5 @@
 """Silicon Labs Multiprotocol support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import logging
@@ -22,7 +20,7 @@ from .const import DOMAIN
 from .util import OTBRData
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

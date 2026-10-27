@@ -7,6 +7,8 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -23,7 +25,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipelines,
     async_update_pipeline,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr
 
@@ -34,9 +36,6 @@ from .conftest import (
     MockWakeWordEntity2,
     make_10ms_chunk,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -287,7 +286,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test events from a pipeline run with audio input/output + wake word with no timeout."""
+    """Test pipeline run with audio input/output + wake word, no timeout."""
     events = []
     client = await hass_ws_client(hass)
 
@@ -578,6 +577,48 @@ async def test_text_pipeline_timeout(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"events": events}
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test continuing a conversation of another user ends with a clean error."""
+    await conversation.async_converse(
+        hass,
+        "Are the lights on?",
+        "koala",
+        Context(user_id="other-user-id"),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "intent",
+            "end_stage": "intent",
+            "input": {"text": "Are the lights on?"},
+            "conversation_id": "koala",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    for event_type in ("run-start", "intent-start"):
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == event_type
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"]["code"] == "intent-unauthorized"
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-end"
+
+    assert "Unexpected error during intent recognition" not in caplog.text
 
 
 async def test_intent_failed(
@@ -1850,7 +1891,7 @@ async def test_wake_word_cooldown_same_id(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections with the same id are blocked during the cooldown period."""
+    """Test duplicate wake word detections blocked during cooldown."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -2009,7 +2050,7 @@ async def test_wake_word_cooldown_different_entities(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections are blocked even with different wake word entities."""
+    """Test duplicate wake word detections blocked across entities."""
     client_pipeline = await hass_ws_client(hass)
     await client_pipeline.send_json_auto_id(
         {
@@ -2543,7 +2584,7 @@ async def test_stt_cooldown_same_id(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that two speech-to-text pipelines cannot run within the cooldown period if they have the same wake word."""
+    """Test two STT pipelines cannot run in cooldown with same wake word."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -2614,7 +2655,7 @@ async def test_stt_cooldown_different_ids(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that two speech-to-text pipelines can run within the cooldown period if they have the different wake words."""
+    """Test two STT pipelines can run in cooldown with different wake words."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -2694,7 +2735,7 @@ async def test_intent_progress_event(
         """Mock converse method."""
         with (
             chat_session.async_get_chat_session(
-                kwargs["hass"], kwargs["conversation_id"]
+                kwargs["hass"], kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):

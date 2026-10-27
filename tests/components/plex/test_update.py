@@ -1,6 +1,8 @@
 """Tests for update entities."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 import requests_mock
 
 from homeassistant.components.update import (
@@ -12,9 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 UPDATE_ENTITY = "update.plex_server_1_update"
 
@@ -48,16 +47,16 @@ async def test_plex_update(
     # Failed updates
     requests_mock.get("/updater/status", status_code=500)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     requests_mock.get("/updater/status", text=empty_payload)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # New release (not updatable)
     requests_mock.get("/updater/status", text=update_check_new_not_updatable)
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATER_SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(UPDATE_ENTITY).state == STATE_ON
 
     with pytest.raises(HomeAssistantError):

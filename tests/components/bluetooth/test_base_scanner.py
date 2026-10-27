@@ -1,7 +1,5 @@
 """Tests for the Bluetooth base scanner models."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
 from typing import Any
@@ -10,6 +8,19 @@ from unittest.mock import patch
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner as FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -30,18 +41,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
-
-from . import (
-    FakeRemoteScanner as FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    patch_bluetooth_time,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])
@@ -260,7 +259,7 @@ async def test_remote_scanner_expires_non_connectable(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_base_scanner_connecting_behavior(hass: HomeAssistant) -> None:
-    """Test that the default behavior is to mark the scanner as not scanning when connecting."""
+    """Test scanner is marked as not scanning when connecting."""
     manager = _get_manager()
 
     switchbot_device = generate_ble_device(
@@ -306,8 +305,10 @@ async def test_restore_history_remote_adapter(
 ) -> None:
     """Test we can restore history for a remote adapter."""
 
-    data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
-        await async_load_fixture(hass, "bluetooth.remote_scanners", bluetooth.DOMAIN)
+    data = hass_storage[
+        storage.REMOTE_SCANNER_STORAGE_KEY
+    ] = await async_load_json_object_fixture(
+        hass, "bluetooth.remote_scanners", bluetooth.DOMAIN
     )
     now = time.time()
     timestamps = data["data"]["atom-bluetooth-proxy-ceaac4"][
@@ -483,7 +484,8 @@ async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds()
     )
-    # We hit the timer with no detections, so we reset the adapter and restart the scanner
+    # We hit the timer with no detections, so we reset the
+    # adapter and restart the scanner
     with patch_bluetooth_time(failure_reached_time):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -573,11 +575,11 @@ async def test_remote_scanner_bluetooth_config_entry(
     assert adapter_entry is not None
     assert adapter_entry.state is ConfigEntryState.LOADED
 
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), adapter_entry.entry_id
     )
     assert dev is not None
-    assert dev.config_entries == {adapter_entry.entry_id}
+    assert dev.config_entry_id == adapter_entry.entry_id
     assert dev.manufacturer == manufacturer
 
     manager.async_remove_scanner(scanner.source)

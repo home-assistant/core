@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from letpot.exceptions import LetPotConnectionException, LetPotException
 from letpot.models import LightMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("device_type", ["LPH62", "LPH31"])
@@ -69,11 +68,13 @@ async def test_set_select(
     [
         (
             LetPotConnectionException("Connection failed"),
-            "An error occurred while communicating with the LetPot device: Connection failed",
+            "An error occurred while communicating with the LetPot"
+            " device: Connection failed",
         ),
         (
             LetPotException("Random thing failed"),
-            "An unknown error occurred while communicating with the LetPot device: Random thing failed",
+            "An unknown error occurred while communicating with"
+            " the LetPot device: Random thing failed",
         ),
     ],
 )

@@ -3,7 +3,10 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import config_entries
@@ -12,10 +15,11 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    selector,
+)
 
 SWITCH_BEFORE_OPTIONS = {
     "name": "test_template_switch",
@@ -47,6 +51,18 @@ BINARY_SENSOR_OPTIONS = {
     "state": "{{ now().minute % 2 == 0 else }}",
 }
 
+NUMBER_OPTIONS = {
+    "state": "{{ 10 }}",
+    "min": 0,
+    "max": 100,
+    "step": 0.1,
+    "set_value": {
+        "action": "input_number.set_value",
+        "target": {"entity_id": "input_number.test"},
+        "data": {"value": "{{ value }}"},
+    },
+}
+
 
 @pytest.mark.parametrize(
     (
@@ -71,9 +87,22 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "alarm_control_panel",
+            {},
+            "unknown",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {"assumed_state": True},
+        ),
+        (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             "on",
             {"one": "on", "two": "off"},
@@ -83,9 +112,27 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            "heat",
+            {"one": "heat", "two": "cool"},
+            {},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {},
+        ),
+        (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             "50.0",
             {"one": "30.0", "two": "20.0"},
@@ -151,6 +198,34 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "cover",
+            {},
+            "unknown",
+            {"one": "open", "two": "closed"},
+            {},
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {"assumed_state": True},
+        ),
+        (
             "event",
             {"event_type": "{{ states('event.one') }}"},
             "2024-07-09T00:00:00.000+00:00",
@@ -169,6 +244,16 @@ BINARY_SENSOR_OPTIONS = {
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             {},
+        ),
+        (
+            "fan",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
         ),
         (
             "image",
@@ -191,6 +276,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "light",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
+        ),
+        (
             "lock",
             {"state": "{{ states('lock.one') }}"},
             "locked",
@@ -199,6 +294,16 @@ BINARY_SENSOR_OPTIONS = {
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
             {},
+        ),
+        (
+            "lock",
+            {},
+            "unknown",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {"assumed_state": True},
         ),
         (
             "number",
@@ -231,6 +336,36 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "number",
+            {},
+            "unknown",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {"assumed_state": True},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             "on",
@@ -241,6 +376,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "select",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"assumed_state": True},
+        ),
+        (
             "switch",
             {"value_template": "{{ states('switch.one') }}"},
             "on",
@@ -249,6 +394,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
             {},
+        ),
+        (
+            "switch",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {"assumed_state": True},
         ),
         (
             "update",
@@ -268,6 +423,32 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "vacuum",
+            {},
+            "unknown",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
+            {"assumed_state": True},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            "eco",
+            {"one": "eco", "two": "electric"},
+            {},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
             {},
         ),
         (
@@ -316,7 +497,7 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    availability = {"advanced_options": {"availability": "{{ True }}"}}
+    availability = {"additional_options": {"availability": "{{ True }}"}}
 
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
@@ -355,6 +536,44 @@ async def test_config_flow(
         assert state.attributes[key] == value
 
 
+async def test_config_flow_sensor_unit_of_measurement_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "sensor"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sensor"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    expected_context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
+
+
 @pytest.mark.parametrize(
     (
         "template_type",
@@ -374,6 +593,18 @@ async def test_config_flow(
             {"state": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "climate",
+            {"hvac_mode": "{{ 'heat' }}"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
         ),
         (
             "switch",
@@ -474,6 +705,18 @@ async def test_config_flow(
             {"start": []},
         ),
         (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+        ),
+        (
             "weather",
             {"condition": "{{ states('weather.one') }}"},
             {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
@@ -564,35 +807,48 @@ async def test_config_flow_device(
         "extra_options",
         "options_options",
         "key_template",
+        "suggested_device_class",
     ),
     [
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             {
-                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
             },
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {},
-            {},
+            {"device_class": "motion"},
+            {"device_class": "window"},
             "state",
+            "motion",
         ),
         (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             {
-                "state": "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                )
             },
             ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
             {},
             {},
             "state",
+            None,
         ),
         (
             "button",
@@ -620,6 +876,7 @@ async def test_config_flow_device(
                 ],
             },
             "state",
+            None,
         ),
         (
             "cover",
@@ -630,16 +887,37 @@ async def test_config_flow_device(
             {"set_cover_position": []},
             {"set_cover_position": []},
             "state",
+            None,
+        ),
+        (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            {"hvac_mode": "{{ states('climate.two') }}"},
+            ["heat", "cool"],
+            {"one": "heat", "two": "cool"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            "state",
+            None,
         ),
         (
             "event",
             {"event_type": "{{ states('event.one') }}"},
             {"event_type": "{{ states('event.two') }}"},
-            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            # The reloaded entity restores the first timestamp, so the second
+            # event is bumped by 1ms to stay a distinct state change.
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.001+00:00"],
             {"one": "single", "two": "double"},
             {"event_types": "{{ ['single', 'double'] }}"},
             {"event_types": "{{ ['single', 'double'] }}"},
             "event_type",
+            None,
         ),
         (
             "fan",
@@ -650,6 +928,7 @@ async def test_config_flow_device(
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             "state",
+            None,
         ),
         (
             "image",
@@ -667,6 +946,7 @@ async def test_config_flow_device(
                 "verify_ssl": True,
             },
             "url",
+            None,
         ),
         (
             "light",
@@ -677,6 +957,7 @@ async def test_config_flow_device(
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             "state",
+            None,
         ),
         (
             "lock",
@@ -687,6 +968,7 @@ async def test_config_flow_device(
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
             "state",
+            None,
         ),
         (
             "number",
@@ -698,6 +980,7 @@ async def test_config_flow_device(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "device_class": "distance",
                 "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
@@ -709,7 +992,8 @@ async def test_config_flow_device(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
-                "unit_of_measurement": "cm",
+                "device_class": "current",
+                "unit_of_measurement": "mA",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -717,6 +1001,7 @@ async def test_config_flow_device(
                 },
             },
             "state",
+            "distance",
         ),
         (
             "alarm_control_panel",
@@ -727,6 +1012,7 @@ async def test_config_flow_device(
             {"code_arm_required": True, "code_format": "number"},
             {"code_arm_required": True, "code_format": "number"},
             "value_template",
+            None,
         ),
         (
             "select",
@@ -737,6 +1023,7 @@ async def test_config_flow_device(
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
+            None,
         ),
         (
             "switch",
@@ -747,6 +1034,7 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+            None,
         ),
         (
             "update",
@@ -757,6 +1045,7 @@ async def test_config_flow_device(
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
             "installed_version",
+            None,
         ),
         (
             "vacuum",
@@ -767,6 +1056,24 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+            None,
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            {"operation_mode": "{{ states('water_heater.two') }}"},
+            ["eco", "electric"],
+            {"one": "eco", "two": "electric"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            "operation_mode",
+            None,
         ),
         (
             "weather",
@@ -777,6 +1084,7 @@ async def test_config_flow_device(
             {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             "condition",
+            None,
         ),
     ],
 )
@@ -791,6 +1099,7 @@ async def test_options(
     extra_options: dict[str, Any],
     options_options: dict[str, Any],
     key_template: str,
+    suggested_device_class: str | None,
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -828,6 +1137,10 @@ async def test_options(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "device_class")
+        == suggested_device_class
+    )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -842,6 +1155,7 @@ async def test_options(
         "template_type": template_type,
         **new_state_template,
         **extra_options,
+        **options_options,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
@@ -849,6 +1163,7 @@ async def test_options(
         "template_type": template_type,
         **new_state_template,
         **extra_options,
+        **options_options,
     }
     assert config_entry.title == "My template"
 
@@ -880,6 +1195,254 @@ async def test_options(
 @pytest.mark.parametrize(
     (
         "template_type",
+        "old_state_template",
+        "new_state_template",
+        "input_states",
+        "extra_options",
+        "suggested_device_class",
+    ),
+    [
+        (
+            "binary_sensor",
+            {
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
+            },
+            {
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
+            },
+            {"one": "on", "two": "off"},
+            {"device_class": "motion"},
+            "motion",
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {"state": "{{ states('number.two') }}"},
+            {"one": "30.0", "two": "20.0"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "device_class": "distance",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            "distance",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
+async def test_options_remove_device_class(
+    hass: HomeAssistant,
+    template_type: str,
+    old_state_template: dict[str, Any],
+    new_state_template: dict[str, Any],
+    input_states: dict[str, Any],
+    extra_options: dict[str, Any],
+    suggested_device_class: str | None,
+) -> None:
+    """Test removing the device class in options."""
+
+    input_entities = ["one", "two"]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[input_entity], {}
+        )
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": template_type,
+            **old_state_template,
+            **extra_options,
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == template_type
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "device_class")
+        == suggested_device_class
+    )
+
+    extra_options.pop("device_class")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            **new_state_template,
+            **extra_options,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "name": "My template",
+        "template_type": template_type,
+        **new_state_template,
+        **extra_options,
+    }
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": template_type,
+        **new_state_template,
+        **extra_options,
+    }
+    assert "device_class" not in config_entry.options
+
+
+def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
+    """Assert the unit of measurement selector is filtered by the device class."""
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            data_schema, custom_serializer=cv.custom_serializer
+        )
+    }
+    assert fields["unit_of_measurement"]["selector"]["unit_of_measurement"][
+        "context"
+    ] == {"filter_device_class": "device_class"}
+    # The frontend reads the context value from a sibling field in the same form
+    assert (
+        next(iter(fields["device_class"]["selector"]))
+        in selector.UnitOfMeasurementSelector().allowed_context_keys[
+            "filter_device_class"
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_class_input", "unit_of_measurement"),
+    [
+        pytest.param({"device_class": "distance"}, "cm", id="device_class_unit"),
+        pytest.param(
+            {"device_class": "distance"}, "cats", id="device_class_custom_unit"
+        ),
+        pytest.param({}, "cats", id="custom_unit"),
+    ],
+)
+async def test_config_flow_number_unit_of_measurement(
+    hass: HomeAssistant,
+    device_class_input: dict[str, str],
+    unit_of_measurement: str,
+) -> None:
+    """Test setting the number unit of measurement in the config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "number"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "number"
+
+    _assert_number_unit_of_measurement_context(result["data_schema"])
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "My template",
+            **NUMBER_OPTIONS,
+            **device_class_input,
+            "unit_of_measurement": unit_of_measurement,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "number",
+        **NUMBER_OPTIONS,
+        **device_class_input,
+        "unit_of_measurement": unit_of_measurement,
+    }
+
+    state = hass.states.get("number.my_template")
+    assert state.attributes["unit_of_measurement"] == unit_of_measurement
+
+
+@pytest.mark.parametrize(
+    ("device_class_input", "unit_of_measurement"),
+    [
+        pytest.param({"device_class": "distance"}, "m", id="device_class_unit"),
+        pytest.param(
+            {"device_class": "distance"}, "cats", id="device_class_custom_unit"
+        ),
+        pytest.param({}, "cats", id="custom_unit"),
+    ],
+)
+async def test_options_number_unit_of_measurement(
+    hass: HomeAssistant,
+    device_class_input: dict[str, str],
+    unit_of_measurement: str,
+) -> None:
+    """Test changing the number unit of measurement in the options flow."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "number",
+            **NUMBER_OPTIONS,
+            "device_class": "distance",
+            "unit_of_measurement": "cm",
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "number"
+
+    _assert_number_unit_of_measurement_context(result["data_schema"])
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            **NUMBER_OPTIONS,
+            **device_class_input,
+            "unit_of_measurement": unit_of_measurement,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "number",
+        **NUMBER_OPTIONS,
+        **device_class_input,
+        "unit_of_measurement": unit_of_measurement,
+    }
+
+    state = hass.states.get("number.my_template")
+    assert state.attributes["unit_of_measurement"] == unit_of_measurement
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
         "state_template",
         "extra_user_input",
         "input_states",
@@ -890,7 +1453,10 @@ async def test_options(
     [
         (
             "binary_sensor",
-            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            (
+                "{{ states.binary_sensor.one.state == 'on'"
+                " or states.binary_sensor.two.state == 'on' }}"
+            ),
             {},
             {"one": "on", "two": "off"},
             ["off", "on"],
@@ -943,7 +1509,7 @@ async def test_config_flow_preview(
     assert result["preview"] == "template"
 
     availability = {
-        "advanced_options": {
+        "additional_options": {
             "availability": "{{ is_state('binary_sensor.available', 'on') }}"
         }
     }
@@ -971,6 +1537,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -995,6 +1562,7 @@ async def test_config_flow_preview(
             "attributes": {"friendly_name": "My template"}
             | extra_attributes[0]
             | extra_attributes[1],
+            "domain": template_type,
             "listeners": {
                 "all": False,
                 "domains": [],
@@ -1014,6 +1582,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1089,7 +1658,9 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J',"
+                    " 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh',"
+                    " 'mWh', 'thm', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -1368,8 +1939,14 @@ async def test_config_flow_preview_bad_state(
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
-            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " or states('binary_sensor.two') == 'on' }}"
+            ),
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " and states('binary_sensor.two') == 'on' }}"
+            ),
             {},
             {},
             {"one": "on", "two": "off"},
@@ -1449,6 +2026,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1526,6 +2104,18 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
             {},
             {},
+        ),
+        (
+            "climate",
+            {"hvac_mode": "{{ states('climate.one') }}"},
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
+            {
+                "hvac_modes": "{{ ['off', 'heat', 'cool', 'heat_cool'] }}",
+                "set_hvac_mode": [],
+            },
         ),
         (
             "cover",
@@ -1619,6 +2209,18 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",

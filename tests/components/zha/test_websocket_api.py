@@ -1,15 +1,17 @@
 """Test ZHA WebSocket API."""
 
-from __future__ import annotations
-
+import asyncio
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -22,8 +24,12 @@ from zha.application.const import (
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
 )
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
+from zha.zigbee.device import (
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
+    Device,
+    DeviceConfiguredEvent,
+)
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -40,36 +46,37 @@ from homeassistant.components.websocket_api import (
     TYPE_RESULT,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.const import EZSP_OVERWRITE_EUI64
+from homeassistant.components.zha.const import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    EZSP_OVERWRITE_EUI64,
+)
 from homeassistant.components.zha.helpers import (
+    DEBUG_LEVELS,
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
     ATTR_TARGET_IEEE,
     BINDINGS,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
     ID,
-    SERVICE_PERMIT,
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
+from homeassistant.const import ATTR_AREA_ID, ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -254,7 +261,7 @@ async def test_list_devices(zha_client) -> None:
         assert device[ATTR_ENDPOINT_NAMES] is not None
 
         for entity_reference in device["entities"]:
-            assert entity_reference[ATTR_NAME] is not None
+            assert entity_reference[ATTR_NAME] == device[ATTR_NAME]
             assert entity_reference["entity_id"] is not None
 
         await zha_client.send_json(
@@ -263,6 +270,46 @@ async def test_list_devices(zha_client) -> None:
         msg = await zha_client.receive_json()
         device2 = msg["result"]
         assert device == device2
+
+
+async def test_device_info_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test the device info area_id reflects the registry device's effective area.
+
+    ZHA registers all its devices as top-level (never via ``parent_device_id``),
+    so a device's effective area equals its own ``area_id``.
+    """
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+        ieee=IEEE_SWITCH_DEVICE,
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+
+    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] is None
+
+    device_registry.async_update_device(zha_device_proxy.device_id, area_id="12345A")
+
+    assert zha_device_proxy.zha_device_info[ATTR_AREA_ID] == "12345A"
 
 
 async def test_get_zha_config(zha_client) -> None:
@@ -748,7 +795,7 @@ async def test_permit_with_install_code_fail(
 ) -> None:
     """Test permit service with install code."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
@@ -908,6 +955,48 @@ async def test_ws_permit_ha12(
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_link_key.call_count == 0
+
+
+async def test_ws_permit_overlapping_restores_log_levels(
+    zha_client: MockHAClientWebSocket, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test overlapping permit subscriptions restore the original log levels."""
+
+    async def send_and_wait_result(payload: dict[str, Any]) -> None:
+        await zha_client.send_json(payload)
+        msg = await zha_client.receive_json()
+        # Skip the log events relayed to the open permit subscriptions
+        while msg["type"] != TYPE_RESULT:
+            msg = await zha_client.receive_json()
+        assert msg["id"] == payload[ID]
+        assert msg["success"]
+
+    def log_levels() -> dict[str, int]:
+        return {name: logging.getLogger(name).level for name in DEBUG_LEVELS}
+
+    for name in DEBUG_LEVELS:
+        caplog.set_level(logging.INFO, logger=name)
+
+    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    assert log_levels() == DEBUG_LEVELS
+
+    # Ending the first session must leave the second one in debug mode
+    await send_and_wait_result({ID: 22, TYPE: "unsubscribe_events", "subscription": 20})
+    assert log_levels() == DEBUG_LEVELS
+
+    # and still relaying logs to it
+    logging.getLogger("zha").debug("still relayed")
+    async with asyncio.timeout(5):
+        while True:
+            msg = await zha_client.receive_json()
+            log_entry = msg.get("event", {}).get("log_entry", {})
+            if msg["id"] == 21 and log_entry.get("message") == ["still relayed"]:
+                break
+
+    # Ending the last session restores the levels from before the first one
+    await send_and_wait_result({ID: 23, TYPE: "unsubscribe_events", "subscription": 21})
+    assert log_levels() == dict.fromkeys(DEBUG_LEVELS, logging.INFO)
 
 
 async def test_get_network_settings(
@@ -1161,7 +1250,7 @@ async def test_websocket_reconfigure(
     zha_client: MockHAClientWebSocket,
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test websocket API to reconfigure a device."""
+    """Test websocket API to re-interview a device."""
     gateway = get_zha_gateway(hass)
     zigpy_device = zigpy_device_mock(
         {
@@ -1180,11 +1269,13 @@ async def test_websocket_reconfigure(
 
     zha_device_proxy = get_zha_gateway_proxy(hass).get_device_proxy(zha_device.ieee)
 
-    def mock_reconfigure() -> None:
-        zha_device_proxy.handle_zha_channel_configure_reporting(
+    async def mock_reinterview(ieee: EUI64) -> None:
+        zha_device_proxy.handle_zha_cluster_configure_reporting(
             ClusterConfigureReportingEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=258,
+                cluster_name="Window Covering",
                 attributes={
                     "current_position_lift_percentage": {
                         "min": 0,
@@ -1203,35 +1294,26 @@ async def test_websocket_reconfigure(
                         "status": "SUCCESS",
                     },
                 },
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0102",
-                event_type="zha_channel_message",
-                event="zha_channel_configure_reporting",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_bind(
+        zha_device_proxy.handle_zha_cluster_bind(
             ClusterBindEvent(
-                cluster_name="Window Covering",
+                device_ieee=zha_device_proxy.device.ieee,
+                endpoint_id=1,
                 cluster_id=1,
+                cluster_name="Window Covering",
                 success=True,
-                cluster_handler_unique_id="28:2c:02:bf:ff:ea:05:68:1:0x0012",
-                event_type="zha_channel_message",
-                event="zha_channel_bind",
             )
         )
 
-        zha_device_proxy.handle_zha_channel_cfg_done(
-            ClusterHandlerConfigurationComplete(
-                device_ieee="28:2c:02:bf:ff:ea:05:68",
-                unique_id="28:2c:02:bf:ff:ea:05:68",
-                event_type="zha_channel_message",
-                event="zha_channel_cfg_done",
-            )
+        zha_device_proxy.handle_zha_device_configured(
+            DeviceConfiguredEvent(device_ieee=zha_device_proxy.device.ieee)
         )
 
     with patch.object(
-        zha_device_proxy.device, "async_configure", side_effect=mock_reconfigure
-    ):
+        gateway, "async_reinterview_device", side_effect=mock_reinterview
+    ) as reinterview_mock:
         await zha_client.send_json(
             {
                 ID: 6,
@@ -1242,15 +1324,41 @@ async def test_websocket_reconfigure(
 
         messages = []
 
-        while len(messages) != 3:
+        while len(messages) != 4:
             msg = await zha_client.receive_json()
 
             if msg[ID] == 6:
                 messages.append(msg)
 
+    # Ensure the gateway re-interview was triggered with the correct IEEE
+    assert reinterview_mock.mock_calls == [call(zha_device_proxy.device.ieee)]
+
+    # Ensure the subscription is confirmed, so the frontend can unsubscribe
+    assert messages[0]["type"] == "result"
+    assert messages[0]["success"]
+
     # Ensure the frontend receives progress events
-    assert {m["event"]["type"] for m in messages} == {
+    assert {m["event"]["type"] for m in messages[1:]} == {
         "zha_channel_configure_reporting",
         "zha_channel_bind",
         "zha_channel_cfg_done",
     }
+
+
+async def test_websocket_reconfigure_device_not_found(
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test websocket reconfigure returns ERR_NOT_FOUND for an unknown IEEE."""
+    await zha_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zha/devices/reconfigure",
+            ATTR_IEEE: "28:6d:97:00:01:04:11:8c",
+        }
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND

@@ -5,12 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import mqtt, scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-
-from .common import (
+from pytest_homeassistant.common import mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -36,12 +32,15 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import mock_restore_cache
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import scene
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         scene.DOMAIN: {
             "name": "test",
             "command_topic": "test-topic",
@@ -55,7 +54,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 scene.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -81,7 +80,7 @@ async def test_sending_mqtt_commands(
     await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer on", 0, False
+        "command-topic", "beer on", 0, False, message_expiry_interval=None
     )
 
 
@@ -110,7 +109,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             scene.DOMAIN: {
                 "name": "test",
                 "command_topic": "command-topic",
@@ -134,7 +133,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             scene.DOMAIN: {
                 "name": "test",
                 "command_topic": "command-topic",
@@ -158,7 +157,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 scene.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -194,8 +193,8 @@ async def test_discovery_update_payload(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered scene."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][scene.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][scene.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["payload_on"] = "ON"

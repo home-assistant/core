@@ -5,15 +5,17 @@ from functools import partial
 import logging
 from typing import Any
 from urllib.error import HTTPError, URLError
+from uuid import UUID
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,26 +34,45 @@ type PanasonicVieraConfigEntry = ConfigEntry[Remote]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
+                        probatio.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+
+
+def mac_from_udn(udn: str) -> str | None:
+    """Return the MAC address a UDN is built from, if any.
+
+    Panasonic TVs use time-based UUIDs (RFC 4122 version 1), whose node field
+    is the MAC address of the device, e.g. uuid:4D454930-0100-1000-8001-D8AFF1123456
+    for a TV whose Ethernet MAC address is D8:AF:F1:12:34:56.
+    """
+    try:
+        uuid = UUID(udn.removeprefix("uuid:"))
+    except ValueError:
+        return None
+    # A node that is not a MAC address has the multicast bit set (RFC 4122 §4.5)
+    if uuid.version != 1 or not uuid.node or uuid.node & (1 << 40):
+        return None
+    return format_mac(f"{uuid.node:012x}")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -71,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Set up Panasonic Viera from a config entry."""
     config = config_entry.data
 
@@ -108,20 +129,31 @@ async def async_setup_entry(
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    if (
+        CONF_MAC not in config_entry.data
+        and (device_info := config_entry.data[ATTR_DEVICE_INFO]) is not None
+        and (mac := mac_from_udn(device_info[ATTR_UDN])) is not None
+    ):
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, CONF_MAC: mac}
+        )
 
-    return True
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 class Remote:
-    """The Remote class. It stores the TV properties and the remote control connection itself."""
+    """The Remote class.
+
+    It stores the TV properties and the remote control
+    connection itself.
+    """
 
     def __init__(
         self,
@@ -149,6 +181,10 @@ class Remote:
         self.volume: float = 0
         self.muted: bool = False
         self.playing: bool = True
+        # Input selection relies on the optional PAC service of the TV.
+        # None until probed, an empty list when the TV does not support it.
+        self.source_list: list[str] | None = None
+        self.source: str | None = None
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
@@ -188,6 +224,26 @@ class Remote:
         assert self._control is not None
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
+        self._update_source()
+
+    def _update_source(self) -> None:
+        """Retrieve the available inputs and the current one, if supported."""
+        assert self._control is not None
+        if self.source_list is None:
+            try:
+                self.source_list = self._control.list_inputs()
+            except SOAPError:
+                # The TV does not implement the optional PAC service
+                _LOGGER.debug("Input selection is not supported by the TV")
+                self.source_list = []
+        if self.source_list:
+            self.source = self._control.get_input()
+
+    async def async_select_source(self, source: str) -> None:
+        """Select the input of the TV."""
+        assert self._control is not None
+        await self._handle_errors(self._control.set_input, source)
+        self.source = source
 
     async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""

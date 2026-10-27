@@ -1,6 +1,7 @@
 {
   "domain": "apple_tv",
   "name": "Apple TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@postlund"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
@@ -8,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["pyatv", "srptools"],
-  "requirements": ["pyatv==0.17.0"],
+  "requirements": ["pyatv==0.18.0"],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
     "_companion-link._tcp.local.",

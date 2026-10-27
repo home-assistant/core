@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from bond_async import Action, DeviceType
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.services import (
@@ -24,8 +25,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def generic_device(name: str):
@@ -107,7 +106,7 @@ async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
 
 
 async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
-    """Tests that the set power belief service throws HomeAssistantError in the event of an api error."""
+    """Tests that set power belief throws HomeAssistantError on api error."""
     await setup_platform(
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
     )
@@ -126,7 +125,7 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the device is on."""
+    """Tests that update sets correct state when Bond API reports device is on."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
     with patch_bond_device_state(return_value={"power": 1}):
@@ -137,7 +136,7 @@ async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_switch_is_off(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports the device is off."""
+    """Tests that update sets correct state when Bond API reports device is off."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
     with patch_bond_device_state(return_value={"power": 0}):

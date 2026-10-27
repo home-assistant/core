@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from meater import AuthenticationError, ServiceUnavailableError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.meater.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow(
@@ -46,12 +45,9 @@ async def test_user_flow(
         (Exception, "unknown_auth_error"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_meater_client: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_meater_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test that an invalid API/App Key throws an error."""
     result = await hass.config_entries.flow.async_init(

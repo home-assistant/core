@@ -1,17 +1,17 @@
 """The Google Weather coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import TypeVar
+from typing import TypeVar, override
 
 from google_weather_api import (
     CurrentConditionsResponse,
     DailyForecastResponse,
     GoogleWeatherApi,
+    GoogleWeatherApiAuthError,
     GoogleWeatherApiError,
     HourlyForecastResponse,
 )
@@ -19,6 +19,7 @@ from google_weather_api import (
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -27,6 +28,10 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# The API returns at most 24 hourly records per request, so asking for more than
+# that costs an extra request per update. Keep it to a single page.
+HOURLY_FORECAST_HOURS = 24
 
 T = TypeVar(
     "T",
@@ -82,9 +87,9 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
             update_interval=update_interval,
         )
         self.subentry = subentry
-        self._data_type_name = data_type_name
         self._api_method = api_method
 
+    @override
     async def _async_update_data(self) -> T:
         """Fetch data from API and handle errors."""
         try:
@@ -92,13 +97,15 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 self.subentry.data[CONF_LATITUDE],
                 self.subentry.data[CONF_LONGITUDE],
             )
+        except GoogleWeatherApiAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "error": str(err),
+                },
+            ) from err
         except GoogleWeatherApiError as err:
-            _LOGGER.error(
-                "Error fetching %s for %s: %s",
-                self._data_type_name,
-                self.subentry.title,
-                err,
-            )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
@@ -173,5 +180,5 @@ class GoogleWeatherHourlyForecastCoordinator(
             subentry,
             "hourly weather forecast",
             timedelta(hours=1),
-            api.async_get_hourly_forecast,
+            partial(api.async_get_hourly_forecast, hours=HOURLY_FORECAST_HOURS),
         )

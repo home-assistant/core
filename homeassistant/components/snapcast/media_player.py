@@ -1,10 +1,8 @@
 """Support for interacting with Snapcast clients."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
@@ -17,14 +15,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CLIENT_PREFIX, CLIENT_SUFFIX, DOMAIN
-from .coordinator import SnapcastUpdateCoordinator
+from .coordinator import SnapcastConfigEntry, SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
 
 STREAM_STATUS = {
@@ -33,18 +30,23 @@ STREAM_STATUS = {
     "unknown": None,
 }
 
+STREAM_PLAYBACK_STATUS = {
+    "playing": MediaPlayerState.PLAYING,
+    "paused": MediaPlayerState.PAUSED,
+    "stopped": MediaPlayerState.IDLE,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SnapcastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
 
-    # Fetch coordinator from global data
-    coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     _known_client_ids: set[str] = set()
 
@@ -135,11 +137,52 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Return the group the client is associated with."""
         return self._device.group
 
+    @property
+    def _stream_properties(self) -> Mapping[str, Any]:
+        """Return properties reported by the active Snapcast stream."""
+        if self._current_group is None:
+            return {}
+
+        try:
+            stream = self.coordinator.server.stream(self._current_group.stream)
+        except KeyError:
+            return {}
+
+        return stream.properties or {}
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return features supported by the active Snapcast stream."""
+        features = self._attr_supported_features
+        properties = self._stream_properties
+
+        if not properties.get("canControl", False):
+            return features
+
+        if properties.get("canPlay", False):
+            features |= MediaPlayerEntityFeature.PLAY
+
+        if properties.get("canPause", False):
+            features |= MediaPlayerEntityFeature.PAUSE
+
+        if properties.get("canGoNext", False):
+            features |= MediaPlayerEntityFeature.NEXT_TRACK
+
+        if properties.get("canGoPrevious", False):
+            features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+
+        features |= MediaPlayerEntityFeature.STOP
+
+        return features
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
         self._device.set_callback(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         self._device.set_callback(None)
@@ -150,11 +193,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._device.identifier
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return f"{self._device.friendly_name} {CLIENT_SUFFIX}"
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._device.connected:
@@ -164,6 +209,10 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 or self._current_group.muted
             ):
                 return MediaPlayerState.IDLE
+            playback_status = self._stream_properties.get("playbackStatus")
+            if playback_status in STREAM_PLAYBACK_STATUS:
+                return STREAM_PLAYBACK_STATUS[playback_status]
+
             try:
                 return STREAM_STATUS.get(self._current_group.stream_status)
             except KeyError:
@@ -172,6 +221,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         state_attrs = {}
@@ -185,6 +235,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._device.latency
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         if self._current_group is None:
@@ -193,6 +244,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return self._current_group.stream
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         if self._current_group is None:
@@ -200,6 +252,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         return list(self._current_group.streams_by_name().keys())
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
         if self._current_group is None:
@@ -218,24 +271,71 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Volume muted."""
         return self._device.muted
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._device.set_muted(mute)
         self.async_write_ha_state()
 
     @property
+    @override
     def volume_level(self) -> float:
         """Return the volume level."""
         return self._device.volume / 100
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._device.set_volume(round(volume * 100))
         self.async_write_ha_state()
+
+    async def _async_stream_control(self, command: str) -> None:
+        """Send a control command to the active Snapcast stream."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                f"Client '{self.entity_id}' has no group and no stream to control."
+            )
+
+        await self.coordinator.server.stream_control(
+            self._current_group.stream,
+            command,
+            {},
+        )
+
+    @override
+    async def async_media_play(self) -> None:
+        """Start playback."""
+        await self._async_stream_control("play")
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Pause playback."""
+        await self._async_stream_control("pause")
+
+    @override
+    async def async_media_play_pause(self) -> None:
+        """Toggle play/pause."""
+        await self._async_stream_control("playPause")
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Stop playback."""
+        await self._async_stream_control("stop")
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Skip to the next track."""
+        await self._async_stream_control("next")
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Skip to the previous track."""
+        await self._async_stream_control("previous")
 
     async def async_snapshot(self) -> None:
         """Snapshot the group state."""
@@ -252,8 +352,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def group_members(self) -> list[str] | None:
-        """List of player entities which are currently grouped together for synchronous playback."""
+        """List of players currently grouped for synchronous playback."""
         if self._current_group is None:
             return None
 
@@ -270,6 +371,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             )
         ]
 
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add `group_members` to this client's current group."""
         if self._current_group is None:
@@ -302,7 +404,8 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             # Validate client belongs to the same server
             if not client.unique_id.startswith(unique_id_prefix):
                 raise ServiceValidationError(
-                    f"Entity '{client.entity_id}' does not belong to the same Snapcast server."
+                    f"Entity '{client.entity_id}' does not belong"
+                    " to the same Snapcast server."
                 )
 
             # Extract client ID and join it to the current group
@@ -311,11 +414,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 await self._current_group.add_client(identifier)
             except KeyError as e:
                 raise ServiceValidationError(
-                    f"Client with identifier '{identifier}' does not exist on the server."
+                    f"Client with identifier '{identifier}'"
+                    " does not exist on the server."
                 ) from e
 
         self.async_write_ha_state()
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this client from its current group."""
         if self._current_group is None:
@@ -350,16 +455,19 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return {}
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self.metadata.get("title")
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self.metadata.get("artUrl")
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if (value := self.metadata.get("artist")) is not None:
@@ -368,11 +476,13 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self.metadata.get("album")
 
     @property
+    @override
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
         if (value := self.metadata.get("albumArtist")) is not None:
@@ -381,6 +491,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
         if (value := self.metadata.get("trackNumber")) is not None:
@@ -389,6 +500,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if (value := self.metadata.get("duration")) is not None:
@@ -397,6 +509,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if self._current_group is None:

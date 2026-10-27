@@ -1,11 +1,10 @@
 """Fixtures for MJPEG IP Camera integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests_mock import Mocker
 
 from homeassistant.components.mjpeg.const import (
@@ -21,8 +20,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -47,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.mjpeg.async_setup_entry", return_value=True
+        "homeassistant.components.mjpeg.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

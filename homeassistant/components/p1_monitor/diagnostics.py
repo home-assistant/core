@@ -1,7 +1,5 @@
 """Diagnostics support for P1 Monitor."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, cast
 

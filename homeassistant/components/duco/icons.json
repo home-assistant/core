@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "diagnostic_filter": {
+        "default": "mdi:air-filter"
+      },
+      "diagnostic_sun_control": {
+        "default": "mdi:blinds-horizontal-closed"
+      },
+      "diagnostic_ventilation": {
+        "default": "mdi:fan-alert"
+      },
+      "diagnostic_ventilation_cooling": {
+        "default": "mdi:home-thermometer-outline"
+      }
+    },
+    "sensor": {
+      "filter_remaining": {
+        "default": "mdi:air-filter"
+      },
+      "iaq_co2": {
+        "default": "mdi:molecule-co2"
+      },
+      "iaq_rh": {
+        "default": "mdi:water-percent"
+      },
+      "target_flow_level": {
+        "default": "mdi:gauge"
+      },
+      "time_state_end": {
+        "default": "mdi:timer-outline"
+      },
+      "ventilation_state": {
+        "default": "mdi:tune-variant"
+      }
+    }
+  }
+}

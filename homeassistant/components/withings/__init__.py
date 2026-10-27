@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 import contextlib
@@ -42,15 +40,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_started
 
 from .const import DEFAULT_TITLE, DOMAIN, LOGGER
 from .coordinator import (
@@ -101,7 +99,7 @@ class WithingsData:
         }
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
     """Set up Withings from a config entry."""
     if CONF_WEBHOOK_ID not in entry.data or entry.unique_id is None:
         new_data = entry.data.copy()
@@ -114,13 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         )
     session = async_get_clientsession(hass)
     client = WithingsClient(session=session)
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
 
     refresh_lock = asyncio.Lock()
@@ -152,6 +144,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     for coordinator in withings_data.coordinators:
         await coordinator.async_config_entry_first_refresh()
 
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, str(entry.unique_id))},
+        manufacturer="Withings",
+    )
     entry.runtime_data = withings_data
 
     webhook_manager = WithingsWebhookManager(hass, entry)
@@ -164,36 +162,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await webhook_manager.unregister_webhook(None)
             entry.async_on_unload(
-                async_call_later(hass, 30, webhook_manager.register_webhook)
+                async_call_later(hass, 30, webhook_manager.async_start_register_webhook)
             )
+
+    @callback
+    def _async_register_webhook_later(_: HomeAssistant) -> None:
+        """Register the webhook once Home Assistant answers for it."""
+        entry.async_on_unload(
+            async_call_later(
+                hass,
+                WEBHOOK_REGISTER_DELAY,
+                webhook_manager.async_start_register_webhook,
+            )
+        )
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            entry.async_on_unload(
-                async_call_later(
-                    hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
-                )
-            )
+            entry.async_on_unload(async_at_started(hass, _async_register_webhook_later))
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )
     else:
-        entry.async_on_unload(
-            async_call_later(
-                hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
-            )
-        )
+        entry.async_on_unload(async_at_started(hass, _async_register_webhook_later))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> None:
     """Unload Withings config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> None:
@@ -276,6 +275,13 @@ class WithingsWebhookManager:
                 await async_unsubscribe_webhooks(self.withings_data.client)
             except WithingsError as ex:
                 LOGGER.warning("Failed to unsubscribe from Withings webhook: %s", ex)
+
+    @callback
+    def async_start_register_webhook(self, _: Any) -> None:
+        """Register webhooks in a task that is cancelled when the entry unloads."""
+        self.entry.async_create_background_task(
+            self.hass, self.register_webhook(None), "withings_register_webhook"
+        )
 
     async def register_webhook(
         self,

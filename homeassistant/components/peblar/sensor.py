@@ -1,10 +1,9 @@
 """Support for Peblar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from peblar import PeblarUserConfiguration
 
@@ -48,7 +47,11 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         key="cp_state",
         translation_key="cp_state",
         device_class=SensorDeviceClass.ENUM,
-        options=list(PEBLAR_CP_STATE_TO_HOME_ASSISTANT.values()),
+        options=[
+            state
+            for state in PEBLAR_CP_STATE_TO_HOME_ASSISTANT.values()
+            if state is not None
+        ],
         value_fn=lambda x: PEBLAR_CP_STATE_TO_HOME_ASSISTANT[x.ev.cp_state],
     ),
     PeblarSensorDescription(
@@ -251,6 +254,7 @@ class PeblarSensorEntity(PeblarEntity[PeblarDataUpdateCoordinator], SensorEntity
     entity_description: PeblarSensorDescription
 
     @property
+    @override
     def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

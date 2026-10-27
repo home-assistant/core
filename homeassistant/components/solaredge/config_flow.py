@@ -1,14 +1,12 @@
 """Config flow for the SolarEdge platform."""
 
-from __future__ import annotations
-
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 import aiosolaredge
+import probatio
 from solaredge_web import SolarEdgeWeb
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -92,6 +90,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,46 +157,43 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        data_schema_dict: dict[vol.Marker, Any] = {}
+        data_schema_dict: dict[probatio.Marker, Any] = {}
         if self.source != SOURCE_RECONFIGURE:
             data_schema_dict[
-                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME))
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
+                probatio.Required(
+                    CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                )
             ] = str
             data_schema_dict[
-                vol.Required(CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, ""))
+                probatio.Required(
+                    CONF_SITE_ID, default=user_input.get(CONF_SITE_ID, "")
+                )
             ] = str
 
         data_schema_dict.update(
             {
-                vol.Optional(CONF_SECTION_API_AUTH): section(
-                    vol.Schema(
+                probatio.Optional(CONF_SECTION_API_AUTH): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
-                                CONF_API_KEY,
-                                default=user_input.get(CONF_SECTION_API_AUTH, {}).get(
-                                    CONF_API_KEY, ""
-                                ),
+                            probatio.Optional(
+                                probatio.Secret(CONF_API_KEY), default=""
                             ): str,
                         }
                     ),
                     options={"collapsed": False},
                 ),
-                vol.Optional(CONF_SECTION_WEB_AUTH): section(
-                    vol.Schema(
+                probatio.Optional(CONF_SECTION_WEB_AUTH): section(
+                    probatio.Schema(
                         {
-                            vol.Inclusive(
-                                CONF_USERNAME,
-                                "web_account",
-                                default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
-                                    CONF_USERNAME, ""
-                                ),
+                            probatio.Inclusive(
+                                CONF_USERNAME, "web_account", default=""
                             ): str,
-                            vol.Inclusive(
-                                CONF_PASSWORD,
+                            probatio.Inclusive(
+                                probatio.Secret(CONF_PASSWORD),
                                 "web_account",
-                                default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
-                                    CONF_PASSWORD, ""
-                                ),
+                                default="",
                             ): str,
                         }
                     ),
@@ -205,7 +201,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        data_schema = vol.Schema(data_schema_dict)
+        data_schema = probatio.Schema(data_schema_dict)
 
         step_id = "user"
         description_placeholders = {}
@@ -215,9 +211,10 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id = "reconfigure"
             description_placeholders["site_id"] = entry.data[CONF_SITE_ID]
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=self._errors,
             description_placeholders=description_placeholders,
         )

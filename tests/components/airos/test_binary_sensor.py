@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,15 +12,13 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 @pytest.mark.parametrize(
     ("ap_status_fixture"),
     [
         "airos_loco5ac_ap-ptp.json",  # v8 ptp
         "airos_liteapgps_ap_ptmp_40mhz.json",  # v8 ptmp
-        "airos_NanoStation_loco_M5_v6.3.16_XM_sta.json",  # v6 XM (different login process)
+        "airos_NanoStation_loco_M5_v6.3.16_XM_sta.json",  # v6 XM
         "airos_NanoStation_M5_sta_v6.3.16.json",  # v6 XW
     ],
     indirect=True,

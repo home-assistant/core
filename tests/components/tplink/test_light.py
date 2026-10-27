@@ -1,7 +1,5 @@
 """Tests for light platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import re
 from unittest.mock import MagicMock, PropertyMock
@@ -18,6 +16,7 @@ from kasa import (
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
 from homeassistant.components.homeassistant.scene import (
@@ -45,7 +44,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
-from homeassistant.components.tplink.light import (
+from homeassistant.components.tplink.services import (
     SERVICE_RANDOM_EFFECT,
     SERVICE_SEQUENCE_EFFECT,
 )
@@ -71,8 +70,6 @@ from . import (
     _patch_single_discovery,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

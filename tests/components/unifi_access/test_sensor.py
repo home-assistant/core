@@ -1,11 +1,10 @@
 """Tests for the UniFi Access sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import (
     ApiConnectionError,
@@ -27,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_LOCK_RULE_ENTITY = "sensor.front_door_lock_rule"
 FRONT_DOOR_LOCK_RULE_END_TIME_ENTITY = "sensor.front_door_rule_end_time"
@@ -140,7 +137,7 @@ async def test_sensor_created_after_websocket_update_when_initial_fetch_fails(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test websocket updates refine placeholder sensors after a transient startup error."""
+    """Test websocket updates refine placeholders after a transient startup error."""
     mock_client.get_door_lock_rule = AsyncMock(
         side_effect=ApiConnectionError("Connection failed")
     )

@@ -1,14 +1,13 @@
 """Provide an authentication layer for Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
+import logging
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 
@@ -19,7 +18,12 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.data_entry_flow import (
+    FlowHandler,
+    FlowManager,
+    FlowResultType,
+    UnknownHandler,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -28,7 +32,8 @@ from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRA
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
-from .providers.homeassistant import HassAuthProvider
+
+_LOGGER = logging.getLogger(__name__)
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
@@ -45,6 +50,10 @@ class InvalidAuthError(Exception):
 
 class InvalidProvider(Exception):
     """Authentication provider not found."""
+
+
+class DuplicateCredentialsError(Exception):
+    """Raised when new credentials match credentials stored in the meantime."""
 
 
 async def auth_manager_from_config(
@@ -74,12 +83,21 @@ async def auth_manager_from_config(
         key = (provider.type, provider.id)
         provider_hash[key] = provider
 
-        if isinstance(provider, HassAuthProvider):
-            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
-            # We need to initialize the provider to create the repair if needed as otherwise
-            # the provider will be initialized on first use, which could be rare as users
-            # don't frequently change auth settings
-            await provider.async_initialize()
+    # A broken provider must not take every other way into the instance with it.
+    results = await asyncio.gather(
+        *(provider.async_initialize() for provider in providers),
+        return_exceptions=True,
+    )
+    for provider, result in zip(providers, results, strict=True):
+        if isinstance(result, Exception):
+            _LOGGER.error(
+                "Error initializing auth provider %s: %s",
+                provider.type,
+                result,
+                exc_info=result,
+            )
+        elif isinstance(result, BaseException):
+            raise result
 
     if module_configs:
         modules = await asyncio.gather(
@@ -109,6 +127,7 @@ class AuthManagerFlowManager(
         super().__init__(hass)
         self.auth_manager = auth_manager
 
+    @override
     async def async_create_flow(
         self,
         handler_key: tuple[str, str],
@@ -118,10 +137,15 @@ class AuthManagerFlowManager(
     ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
-        if not auth_provider:
-            raise KeyError(f"Unknown auth provider {handler_key}")
+        # Not offered on the login screen is answered like not configured, so
+        # it doesn't reveal which providers are set up.
+        if not auth_provider or not auth_provider.async_can_start_login(
+            context or AuthFlowContext()
+        ):
+            raise UnknownHandler
         return await auth_provider.async_login_flow(context)
 
+    @override
     async def async_finish_flow(
         self,
         flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
@@ -132,9 +156,7 @@ class AuthManagerFlowManager(
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-        flow = cast(LoginFlow, flow)
-
-        if result["type"] != FlowResultType.CREATE_ENTRY:
+        if result["type"] is not FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result
@@ -146,28 +168,9 @@ class AuthManagerFlowManager(
         if not auth_provider:
             raise KeyError(f"Unknown auth provider {result['handler']}")
 
-        credentials = await auth_provider.async_get_or_create_credentials(
+        result["result"] = await auth_provider.async_get_or_create_credentials(
             cast(Mapping[str, str], result["data"]),
         )
-
-        if flow.context.get("credential_only"):
-            result["result"] = credentials
-            return result
-
-        # multi-factor module cannot enabled for new credential
-        # which has not linked to a user yet
-        if auth_provider.support_mfa and not credentials.is_new:
-            user = await self.auth_manager.async_get_user_by_credentials(credentials)
-            if user is not None:
-                modules = await self.auth_manager.async_get_enabled_mfa(user)
-
-                if modules:
-                    flow.credential = credentials
-                    flow.user = user
-                    flow.available_mfa_modules = modules
-                    return await flow.async_step_select_mfa_module()
-
-        result["result"] = credentials
         return result
 
 
@@ -188,6 +191,7 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        self._create_user_lock = asyncio.Lock()
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
@@ -307,26 +311,35 @@ class AuthManager:
         self, credentials: models.Credentials
     ) -> models.User:
         """Get or create a user."""
-        if not credentials.is_new:
-            user = await self.async_get_user_by_credentials(credentials)
-            if user is None:
-                raise ValueError("Unable to find the user.")
-            return user
+        async with self._create_user_lock:
+            if not credentials.is_new:
+                user = await self.async_get_user_by_credentials(credentials)
+                if user is None:
+                    raise ValueError("Unable to find the user.")
+                return user
 
-        auth_provider = self._async_get_auth_provider(credentials)
+            auth_provider = self._async_get_auth_provider(credentials)
 
-        if auth_provider is None:
-            raise RuntimeError("Credential with unknown provider encountered")
+            if auth_provider is None:
+                raise RuntimeError("Credential with unknown provider encountered")
 
-        info = await auth_provider.async_user_meta_for_credentials(credentials)
+            # Each sign in finished before the first code was redeemed brings its
+            # own new credentials for the same account.
+            if any(
+                stored.data == credentials.data
+                for stored in await auth_provider.async_credentials()
+            ):
+                raise DuplicateCredentialsError
 
-        user = await self._store.async_create_user(
-            credentials=credentials,
-            name=info.name,
-            is_active=info.is_active,
-            group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
-            local_only=info.local_only,
-        )
+            info = await auth_provider.async_user_meta_for_credentials(credentials)
+
+            user = await self._store.async_create_user(
+                credentials=credentials,
+                name=info.name,
+                is_active=info.is_active,
+                group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
+                local_only=info.local_only,
+            )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
 
@@ -346,6 +359,8 @@ class AuthManager:
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
+        if user.is_owner:
+            raise ValueError("Unable to remove the owner")
         tasks = [
             self.async_remove_credentials(credentials)
             for credentials in user.credentials
@@ -353,6 +368,10 @@ class AuthManager:
 
         if tasks:
             await asyncio.gather(*tasks)
+
+        # Revoking runs the callbacks, which close connections using the tokens.
+        for refresh_token in list(user.refresh_tokens.values()):
+            self.async_remove_refresh_token(refresh_token)
 
         await self._store.async_remove_user(user)
 
@@ -406,13 +425,21 @@ class AuthManager:
             self.async_remove_refresh_token(refresh_token)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
-        """Remove credentials."""
-        provider = self._async_get_auth_provider(credentials)
-
-        if provider is not None and hasattr(provider, "async_will_remove_credentials"):
+        """Remove credentials and end the sessions that signed in with them."""
+        if (provider := self._async_get_auth_provider(credentials)) is not None:
             await provider.async_will_remove_credentials(credentials)
 
+        user = await self.async_get_user_by_credentials(credentials)
         await self._store.async_remove_credentials(credentials)
+
+        if user is None:
+            return
+        for refresh_token in list(user.refresh_tokens.values()):
+            if (
+                refresh_token.credential is not None
+                and refresh_token.credential.id == credentials.id
+            ):
+                self.async_remove_refresh_token(refresh_token)
 
     async def async_enable_user_mfa(
         self, user: models.User, mfa_module_id: str, data: Any
@@ -673,7 +700,7 @@ class AuthManager:
             jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:

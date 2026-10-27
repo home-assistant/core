@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_6')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -189,8 +189,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_ac_failure',
@@ -208,9 +208,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -240,8 +240,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch AMAX 3000 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_battery',
@@ -259,9 +259,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -291,8 +291,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_battery_missing',
@@ -310,9 +310,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -342,8 +342,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration',
@@ -361,9 +361,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -393,7 +393,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection',
@@ -411,9 +411,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -443,8 +443,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_log_overflow',
@@ -462,9 +462,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -494,8 +494,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_log_threshold_reached',
@@ -513,9 +513,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -545,8 +545,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch AMAX 3000 Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_phone_line_failure',
@@ -564,9 +564,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -596,8 +596,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection',
@@ -615,9 +615,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -647,8 +647,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_problem',
@@ -666,9 +666,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -698,8 +698,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection',
@@ -717,9 +717,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -749,8 +749,8 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch AMAX 3000 User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection',
@@ -768,9 +768,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -800,7 +800,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -818,9 +818,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -850,7 +850,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -868,9 +868,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_5')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -900,7 +900,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -918,9 +918,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_2')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -950,7 +950,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -968,9 +968,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_4')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1000,7 +1000,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -1018,9 +1018,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_0')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1050,7 +1050,7 @@
 # name: test_binary_sensor[amax_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',
@@ -1068,9 +1068,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1100,7 +1100,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -1118,9 +1118,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1150,7 +1150,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -1168,9 +1168,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_6')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1200,7 +1200,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -1218,9 +1218,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1250,8 +1250,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_ac_failure',
@@ -1269,9 +1269,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1301,8 +1301,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch B5512 (US1B) Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_battery',
@@ -1320,9 +1320,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1352,8 +1352,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_battery_missing',
@@ -1371,9 +1371,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1403,8 +1403,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration',
@@ -1422,9 +1422,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1454,7 +1454,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection',
@@ -1472,9 +1472,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1504,8 +1504,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_log_overflow',
@@ -1523,9 +1523,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1555,8 +1555,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_log_threshold_reached',
@@ -1574,9 +1574,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1606,8 +1606,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch B5512 (US1B) Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_phone_line_failure',
@@ -1625,9 +1625,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1657,8 +1657,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection',
@@ -1676,9 +1676,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1708,8 +1708,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_problem',
@@ -1727,9 +1727,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1759,8 +1759,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection',
@@ -1778,9 +1778,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1810,8 +1810,8 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch B5512 (US1B) User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection',
@@ -1829,9 +1829,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1861,7 +1861,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -1879,9 +1879,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1911,7 +1911,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -1929,9 +1929,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_5')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1961,7 +1961,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -1979,9 +1979,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_2')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2011,7 +2011,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -2029,9 +2029,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_4')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2061,7 +2061,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -2079,9 +2079,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '1234567890_point_0')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2111,7 +2111,7 @@
 # name: test_binary_sensor[b5512-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',
@@ -2129,9 +2129,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2161,7 +2161,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm away',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm away',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_away',
@@ -2179,9 +2179,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_area_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2211,7 +2211,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area ready to arm home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Area ready to arm home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.area1_area_ready_to_arm_home',
@@ -2229,9 +2229,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_6')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2261,7 +2261,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom',
@@ -2279,9 +2279,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2311,8 +2311,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 AC failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_ac_failure',
@@ -2330,9 +2330,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2362,8 +2362,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Bosch Solution 3000 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_battery',
@@ -2381,9 +2381,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2413,8 +2413,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Battery missing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Battery missing',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_battery_missing',
@@ -2432,9 +2432,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2464,8 +2464,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 CRC failure in panel configuration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 CRC failure in panel configuration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration',
@@ -2483,9 +2483,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2515,7 +2515,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Failure to call RPS since last RPS connection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Failure to call RPS since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection',
@@ -2533,9 +2533,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2565,8 +2565,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Log overflow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Log overflow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_log_overflow',
@@ -2584,9 +2584,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2616,8 +2616,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Log threshold reached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Log threshold reached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_log_threshold_reached',
@@ -2635,9 +2635,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2667,8 +2667,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bosch Solution 3000 Phone line failure',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Phone line failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_phone_line_failure',
@@ -2686,9 +2686,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2718,8 +2718,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Point bus failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Point bus failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection',
@@ -2737,9 +2737,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2769,8 +2769,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 Problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 Problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_problem',
@@ -2788,9 +2788,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2820,8 +2820,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 SDI failure since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 SDI failure since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection',
@@ -2839,9 +2839,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -2871,8 +2871,8 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 User code tamper since last RPS connection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Solution 3000 User code tamper since last RPS connection',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection',
@@ -2890,9 +2890,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2922,7 +2922,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CO Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CO Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.co_detector',
@@ -2940,9 +2940,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -2972,7 +2972,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door',
@@ -2990,9 +2990,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_5')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -3022,7 +3022,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Glassbreak Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Glassbreak Sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.glassbreak_sensor',
@@ -3040,9 +3040,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_2')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -3072,7 +3072,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Motion Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.motion_detector',
@@ -3090,9 +3090,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_4')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -3122,7 +3122,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Detector',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector',
@@ -3140,9 +3140,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('bosch_alarm', '01JQ917ACKQ33HHM7YCFXYZX51_point_0')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -3172,7 +3172,7 @@
 # name: test_binary_sensor[solution_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window',

@@ -2,10 +2,10 @@
   "entity": {
     "switch": {
       "rain_delay": {
-        "default": "mdi:camera-timer"
+        "default": "mdi:hours-24"
       },
       "standby": {
-        "default": "mdi:power"
+        "default": "mdi:power-sleep"
       }
     }
   },

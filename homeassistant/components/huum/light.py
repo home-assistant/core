@@ -1,9 +1,7 @@
 """Control for light."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -45,15 +43,18 @@ class HuumLight(HuumBaseEntity, LightEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the current light status."""
         return self.coordinator.data.light == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if not self.is_on:
             await self._toggle_light()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if self.is_on:

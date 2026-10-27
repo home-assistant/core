@@ -1,7 +1,5 @@
 """The Home Assistant SkyConnect hardware platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.hardware import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 

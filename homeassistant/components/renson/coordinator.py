@@ -1,11 +1,10 @@
 """DataUpdateCoordinator for the renson integration."""
 
-from __future__ import annotations
-
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from renson_endura_delta.renson import RensonVentilation
 
@@ -15,18 +14,29 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+type RensonConfigEntry = ConfigEntry[RensonData]
+
+
+@dataclass
+class RensonData:
+    """Renson data class."""
+
+    api: RensonVentilation
+    coordinator: RensonCoordinator
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class RensonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Renson."""
 
-    config_entry: ConfigEntry
+    config_entry: RensonConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RensonConfigEntry,
         api: RensonVentilation,
     ) -> None:
         """Initialize my coordinator."""
@@ -41,6 +51,7 @@ class RensonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(30):

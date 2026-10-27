@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.generic_hygrostat import (
-    CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_NAME,
@@ -15,9 +15,8 @@ from homeassistant.components.generic_hygrostat import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 SNAPSHOT_FLOW_PROPS = props("type", "title", "result", "error")
 
@@ -31,7 +30,7 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
 
     with patch(
         "homeassistant.components.generic_hygrostat.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

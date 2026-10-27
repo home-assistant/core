@@ -1,12 +1,11 @@
 """Fixtures for the Yale Smart Living integration."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from yalesmartalarmclient import YaleDoorManAPI, YaleLock, YaleSmartAlarmData
 from yalesmartalarmclient.const import YALE_STATE_ARM_FULL
 
@@ -14,8 +13,6 @@ from homeassistant.components.yale_smart_alarm.const import DOMAIN, PLATFORMS
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 ENTRY_CONFIG = {
     "username": "test-username",
@@ -48,7 +45,7 @@ async def load_config_entry(
             entry_id="1",
             unique_id="username",
             version=2,
-            minor_version=2,
+            minor_version=3,
         )
 
         config_entry.add_to_hass(hass)

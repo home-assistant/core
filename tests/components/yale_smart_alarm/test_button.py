@@ -1,10 +1,9 @@
 """The test for the Yale Smart ALarm button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient.exceptions import UnknownError
 
@@ -13,8 +12,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.freeze_time("2024-04-29T18:00:00.612351+00:00")

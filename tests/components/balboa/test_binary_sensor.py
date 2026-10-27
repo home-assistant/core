@@ -1,9 +1,8 @@
 """Tests of the binary sensors of the balboa integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -11,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_BINARY_SENSOR = "binary_sensor.fakespa_"
 

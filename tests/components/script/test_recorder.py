@@ -1,26 +1,22 @@
 """The tests for script recorder."""
 
-from __future__ import annotations
-
 import pytest
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import script
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.script import (
-    ATTR_CUR,
+from homeassistant.components.script.const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
-    ATTR_MAX,
-    ATTR_MODE,
+    DOMAIN,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_MODE
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.helpers.script import ATTR_CUR, ATTR_MAX
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -47,7 +43,7 @@ async def test_exclude_attributes(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {

@@ -1,7 +1,5 @@
 """Models used for the Matter integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, TypedDict
 
@@ -126,6 +124,18 @@ class MatterDiscoverySchema:
     # [optional] the primary attribute's cluster featuremap must contain this value
     # for example for the DoorSensor on a DoorLock Cluster
     featuremap_contains: int | None = None
+
+    # [optional] the primary attribute's cluster ClusterRevision
+    # must be at least this value (inclusive)
+    cluster_revision_min: int | None = None
+
+    # [optional] the primary attribute's cluster ClusterRevision
+    # must be at most this value (inclusive)
+    cluster_revision_max: int | None = None
+
+    # [optional] the Matter server's schema version
+    # must be at least this value (inclusive)
+    server_schema_min: int | None = None
 
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms

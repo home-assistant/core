@@ -3,16 +3,15 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ping.helpers import PingDataSubProcess
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 class MockAsyncSubprocess:
-    """Minimal mock implementation of asyncio.subprocess.Process for exception testing."""
+    """Minimal mock of asyncio.subprocess.Process for testing."""
 
     def __init__(self, killsig=ProcessLookupError, **kwargs) -> None:
         """Store provided exception type for later."""

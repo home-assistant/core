@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 import ring_doorbell
 from ring_doorbell.webrtcstream import RingWebRtcMessage
 from syrupy.assertion import SnapshotAssertion
@@ -28,9 +30,6 @@ from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
 from .device_mocks import FRONT_DEVICE_ID
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
@@ -294,30 +293,8 @@ async def test_camera_image(
     await setup_platform(hass, Platform.CAMERA)
 
     front_camera_mock = mock_ring_devices.get_device(765432)
-    front_camera_mock.async_get_snapshot.return_value = SMALLEST_VALID_JPEG_BYTES
 
     state = hass.states.get("camera.front_live_view")
-    assert state is not None
-
-    # For live_view camera, snapshot should use async_get_snapshot
-    image = await async_get_image(hass, "camera.front_live_view")
-    assert image.content == SMALLEST_VALID_JPEG_BYTES
-    front_camera_mock.async_get_snapshot.assert_called_once()
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_camera_last_recording_image(
-    hass: HomeAssistant,
-    mock_ring_client,
-    mock_ring_devices,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test last recording camera will return still image from video when available."""
-    await setup_platform(hass, Platform.CAMERA)
-
-    front_camera_mock = mock_ring_devices.get_device(765432)
-
-    state = hass.states.get("camera.front_last_recording")
     assert state is not None
 
     # history not updated yet
@@ -330,21 +307,53 @@ async def test_camera_last_recording_image(
         ),
         pytest.raises(HomeAssistantError),
     ):
-        await async_get_image(hass, "camera.front_last_recording")
+        image = await async_get_image(hass, "camera.front_live_view")
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     # history updated so image available
     front_camera_mock.async_history.assert_called_once()
-    assert front_camera_mock.async_recording_url.call_count == 2
+    front_camera_mock.async_recording_url.assert_called_once()
 
     with patch(
         "homeassistant.components.ring.camera.ffmpeg.async_get_image",
         return_value=SMALLEST_VALID_JPEG_BYTES,
     ):
-        image = await async_get_image(hass, "camera.front_last_recording")
+        image = await async_get_image(hass, "camera.front_live_view")
         assert image.content == SMALLEST_VALID_JPEG_BYTES
+
+
+async def test_camera_live_view_no_subscription(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live view camera skips recording URL when no subscription."""
+    await setup_platform(hass, Platform.CAMERA)
+
+    front_camera_mock = mock_ring_devices.get_device(765432)
+    # Set device to not have subscription
+    front_camera_mock.has_subscription = False
+
+    state = hass.states.get("camera.front_live_view")
+    assert state is not None
+
+    # Reset mock call counts
+    front_camera_mock.async_recording_url.reset_mock()
+
+    # Trigger coordinator update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # For cameras without subscription, recording URL should NOT be fetched
+    front_camera_mock.async_recording_url.assert_not_called()
+
+    # Requesting an image without subscription should raise an error
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front_live_view")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

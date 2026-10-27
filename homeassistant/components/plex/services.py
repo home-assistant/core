@@ -4,20 +4,21 @@ import json
 import logging
 
 from plexapi.exceptions import NotFound
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import result_as_boolean
 
-from .const import DOMAIN, PLEX_URI_SCHEME, SERVERS, SERVICE_REFRESH_LIBRARY
+from .const import DOMAIN, PLEX_URI_SCHEME, SERVICE_REFRESH_LIBRARY
 from .errors import MediaNotFound
-from .helpers import get_plex_data
+from .helpers import get_plex_servers
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
-REFRESH_LIBRARY_SCHEMA = vol.Schema(
-    {vol.Optional("server_name"): str, vol.Required("library_name"): str}
+REFRESH_LIBRARY_SCHEMA = probatio.Schema(
+    {probatio.Optional("server_name"): str, probatio.Required("library_name"): str}
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__package__)
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for the Plex component."""
+    """Set up services for the Plex integration."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
@@ -67,7 +68,7 @@ def get_plex_server(
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
-    servers: dict[str, PlexServer] = get_plex_data(hass)[SERVERS]
+    servers = get_plex_servers(hass)
     if not servers:
         raise HomeAssistantError("No Plex servers available")
 
@@ -181,6 +182,15 @@ def process_plex_payload(
         search_query.pop(internal_key, None)
 
     media = plex_server.lookup_media(content_type, **search_query)
+
+    resume = content.get("resume", False)
+    if isinstance(resume, str):
+        resume = result_as_boolean(resume)
+    if resume and getattr(media, "type", None) == "show":
+        if (on_deck := media.onDeck()) is not None:
+            media = on_deck
+        else:
+            content["resume"] = False
 
     if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(

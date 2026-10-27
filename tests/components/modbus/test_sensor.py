@@ -4,6 +4,7 @@ import math
 import struct
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
@@ -53,8 +54,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
-
-from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 SLAVE_UNIQUE_ID = "ground_floor_sensor"
@@ -230,7 +229,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 16 bytes but `{CONF_COUNT}: 2` is 4 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 16 bytes"
+                f" but `{CONF_COUNT}: 2` is 4 bytes"
+            ),
         ),
         (
             {
@@ -258,7 +260,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes but `{CONF_COUNT}: 4` is 8 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 0 bytes"
+                f" but `{CONF_COUNT}: 4` is 8 bytes"
+            ),
         ),
         (
             {
@@ -272,7 +277,10 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: Size of structure is 1 bytes but `{CONF_COUNT}: 4` is 8 bytes",
+            (
+                f"{TEST_ENTITY_NAME}: Size of structure is 1 bytes"
+                f" but `{CONF_COUNT}: 4` is 8 bytes"
+            ),
         ),
         (
             {
@@ -287,7 +295,11 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
+            (
+                f"{TEST_ENTITY_NAME}:"
+                f" `{CONF_SWAP}:{CONF_SWAP_WORD}` illegal with"
+                f" `{CONF_DATA_TYPE}: {DataType.CUSTOM}`"
+            ),
         ),
     ],
 )
@@ -1234,7 +1246,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x4129,
                 0x109A,
             ],
-            "0,10.60,0.00,10.57",
+            "None,10.60,0.00,10.57",
         ),
         (
             {
@@ -1250,7 +1262,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x0000,
                 0x000A,
             ],
-            "0,10.00",
+            "None,10.00",
         ),
         (
             {

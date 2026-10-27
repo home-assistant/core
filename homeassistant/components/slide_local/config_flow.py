@@ -1,9 +1,7 @@
 """Config flow for slide_local integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -12,7 +10,7 @@ from goslideapi.goslideapi import (
     DigestAuthCalcError,
     GoSlideLocal as SlideLocalApi,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -42,6 +40,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SlideConfigEntry,
     ) -> SlideOptionsFlowHandler:
@@ -102,6 +101,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -128,10 +128,10 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PASSWORD): str,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 {CONF_HOST: self._host},
@@ -165,9 +165,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
+                        probatio.Required(CONF_HOST): str,
                     }
                 ),
                 {
@@ -178,17 +178,34 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-
         # id is in the format 'slide_000000000000'
-        self._mac = format_mac(str(discovery_info.properties.get("id"))[6:])
+        return await self._async_handle_discovery(
+            str(discovery_info.properties.get("id"))[6:],
+            str(discovery_info.ip_address),
+        )
+
+    @override
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle HomeKit discovery."""
+        # name is in the format 'Slide-000000000000._hap._tcp.local.'
+        return await self._async_handle_discovery(
+            discovery_info.name.split(".", 1)[0][6:],
+            str(discovery_info.ip_address),
+        )
+
+    async def _async_handle_discovery(self, mac: str, ip: str) -> ConfigFlowResult:
+        """Handle a discovered Slide device."""
+        self._mac = format_mac(mac)
 
         await self.async_set_unique_id(self._mac)
 
-        ip = str(discovery_info.ip_address)
         _LOGGER.debug("Slide device discovered, ip %s", ip)
 
         self._abort_if_unique_id_configured({CONF_HOST: ip}, reload_on_update=True)
@@ -249,9 +266,9 @@ class SlideOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_INVERT_POSITION): bool,
+                        probatio.Required(CONF_INVERT_POSITION): bool,
                     }
                 ),
                 {CONF_INVERT_POSITION: self.config_entry.options[CONF_INVERT_POSITION]},

@@ -7,6 +7,9 @@ from unittest.mock import MagicMock, patch
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from aiohomeconnect.model import HomeAppliance
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_connect.const import DOMAIN
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -104,7 +103,7 @@ async def test_full_flow(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -137,7 +136,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -159,7 +158,7 @@ async def test_prevent_reconfiguring_same_account(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -238,7 +237,7 @@ async def test_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -354,7 +353,7 @@ async def test_zeroconf_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -436,7 +435,7 @@ async def test_dhcp_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -498,7 +497,9 @@ async def test_dhcp_flow_complete_device_information(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -510,7 +511,9 @@ async def test_dhcp_flow_complete_device_information(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance.ha_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(dhcp_discovery.macaddress))

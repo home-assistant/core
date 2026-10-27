@@ -1,6 +1,7 @@
 {
   "domain": "harmony",
   "name": "Logitech Harmony Hub",
+  "categories": ["buttons_remotes"],
   "codeowners": ["@ehendrix23", "@bdraco", "@mkeesey", "@Aohzan"],
   "config_flow": true,
   "dependencies": ["remote"],
@@ -8,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioharmony", "slixmpp"],
-  "requirements": ["aioharmony==0.5.3"],
+  "requirements": ["aioharmony==1.0.10"],
   "ssdp": [
     {
       "deviceType": "urn:myharmony-com:device:harmony:1",

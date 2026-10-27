@@ -1,6 +1,4 @@
-"""Constants for the Open Thread Border Router integration."""
-
-from __future__ import annotations
+"""Constants for the OpenThread Border Router integration."""
 
 DOMAIN = "otbr"
 

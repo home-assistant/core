@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.niko_home_control.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -46,10 +45,10 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -128,11 +127,11 @@ async def test_duplicate_reconfigure_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -158,11 +157,11 @@ async def test_reconfigure(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:

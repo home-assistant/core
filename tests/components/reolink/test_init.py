@@ -2,16 +2,22 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from reolink_aio.exceptions import (
+    ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginPrivacyModeError,
+    ReolinkConnectionError,
     ReolinkError,
+    ReolinkTimeoutError,
 )
 
 from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
@@ -26,7 +32,7 @@ from homeassistant.components.reolink.coordinator import (
     DEVICE_UPDATE_INTERVAL_MIN,
     NUM_CRED_ERRORS,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -47,12 +53,16 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
+    TEST_BC_CON,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
     TEST_CAM_NAME,
@@ -69,9 +79,6 @@ from .conftest import (
     TEST_USE_HTTPS,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 pytestmark = pytest.mark.usefixtures("reolink_host", "reolink_platforms")
 
@@ -112,6 +119,11 @@ async def test_wait(*args, **key_args) -> None:
             ConfigEntryState.SETUP_ERROR,
         ),
         (
+            "get_host_data",
+            AsyncMock(side_effect=LoginAccountDeviceError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
             "supported",
             Mock(return_value=False),
             ConfigEntryState.LOADED,
@@ -133,7 +145,102 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
+
+
+@pytest.mark.parametrize(
+    ("attr", "value", "translation_key"),
+    [
+        pytest.param("is_admin", False, "user_not_admin", id="user_not_admin"),
+        pytest.param(
+            "valid_password",
+            MagicMock(return_value=False),
+            "password_incompatible",
+            id="password_incompatible",
+        ),
+        pytest.param(
+            "get_host_data",
+            AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            "authentication_failed",
+            id="credentials_invalid",
+        ),
+    ],
+)
+async def test_setup_auth_failed_reason(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    attr: str,
+    value: Any,
+    translation_key: str,
+) -> None:
+    """Test the setup error keeps the reason of the authentication failure."""
+    setattr(reolink_host, attr, value)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.error_reason_translation_key == translation_key
+    assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_setup_no_mac_address(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the setup retry keeps the reason when the MAC address is missing."""
+    reolink_host.mac_address = None
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "no_mac_address"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(ApiError("Test error"), "update_api_error", id="api_error"),
+        pytest.param(
+            ReolinkConnectionError("Test error"),
+            "update_connection_error",
+            id="connection_error",
+        ),
+        pytest.param(ReolinkTimeoutError("Test error"), "update_timeout", id="timeout"),
+        pytest.param(ReolinkError("Test error"), "update_failed", id="other"),
+        pytest.param(
+            CredentialsInvalidError("Test error"),
+            "authentication_failed",
+            id="credentials_invalid",
+        ),
+    ],
+)
+async def test_update_failed_translation_key(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    side_effect: ReolinkError,
+    translation_key: str,
+) -> None:
+    """Test the device update failure uses a key per error type."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    reolink_host.get_states.side_effect = side_effect
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.device_coordinator
+    assert not coordinator.last_update_success
+    assert coordinator.last_exception.translation_key == translation_key
+    assert coordinator.last_exception.translation_placeholders == {
+        "host": reolink_host.host
+    }
 
 
 async def test_firmware_error_twice(
@@ -247,7 +354,7 @@ async def test_removing_disconnected_cams(
     expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
         if device.model == TEST_CAM_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
 
     device_entries = dr.async_entries_for_config_entry(
@@ -324,7 +431,7 @@ async def test_removing_chime(
     expected_success = CHIME_MODEL not in expected_models
     for device in device_entries:
         if device.model == CHIME_MODEL:
-            response = await client.remove_device(device.id, config_entry.entry_id)
+            response = await client.remove_device(device.id)
             assert response["success"] == expected_success
             assert reolink_chime.remove.call_count == expected_remove_call_count
 
@@ -333,6 +440,101 @@ async def test_removing_chime(
     )
     device_models = [device.model for device in device_entries]
     assert sorted(device_models) == sorted(expected_models)
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    reolink_host.channels = [0]
+    assert await async_setup_component(hass, "config", {})
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
+@pytest.mark.parametrize(
+    (
+        "support_uid",
+        "id_prefix",
+        "cam_id",
+    ),
+    [
+        (
+            True,
+            TEST_UID,
+            TEST_UID_CAM,
+        ),
+        (
+            False,
+            TEST_MAC,
+            "ch0",
+        ),
+    ],
+)
+async def test_via_device_id_chain(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    reolink_chime: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    support_uid: bool,
+    id_prefix: str,
+    cam_id: str,
+) -> None:
+    """Test the host -> camera -> chime devices are linked via via_device_id."""
+
+    def mock_supported(ch, capability):
+        if capability == "UID":
+            return support_uid
+        return True
+
+    reolink_host.supported = mock_supported
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, id_prefix), config_entry.entry_id
+    )
+    assert host_device is not None
+
+    camera_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{id_prefix}_{cam_id}"), config_entry.entry_id
+    )
+    assert camera_device is not None
+    assert camera_device.via_device_id == host_device.id
+
+    chime_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{id_prefix}_chime{reolink_chime.dev_id}"), config_entry.entry_id
+    )
+    assert chime_device is not None
+    assert chime_device.via_device_id == camera_device.id
 
 
 @pytest.mark.parametrize(
@@ -457,10 +659,15 @@ async def test_migrate_entity_ids(
     if original_id != new_id:
         assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, original_dev_id), config_entry.entry_id
+    )
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)}) is None
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, new_dev_id), config_entry.entry_id
+            )
+            is None
         )
 
     # setup CH 0 and host entities/device
@@ -474,10 +681,82 @@ async def test_migrate_entity_ids(
 
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, original_dev_id), config_entry.entry_id
+            )
             is None
         )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
+
+
+async def test_migrate_entity_id_zoom(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity ids that need to be migrated."""
+    domain = Platform.NUMBER
+    original_id = f"{TEST_UID}_0_zoom"
+    new_id = f"{TEST_UID}_1_zoom"
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return False
+        if capability in ["zoom_basic", "zoom"] and ch == 0:
+            return False
+        return True
+
+    reolink_host.channels = [0]
+    reolink_host.stream_channels = [0, 1]
+    reolink_host.is_dual_lens = True
+    reolink_host.supported = mock_supported
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=new_id,
+        config_entry=config_entry,
+        suggested_object_id=new_id,
+        disabled_by=None,
+        original_name="NEEDS_REMOVAL",
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=f"{TEST_UID}_0_zoom",
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+        original_name="Zoom",
+    )
+
+    entity_registry.async_get_or_create(
+        domain=Platform.UPDATE,
+        platform=DOMAIN,
+        unique_id=f"{TEST_UID}_firmware",
+        config_entry=config_entry,
+        suggested_object_id=f"{TEST_UID}_firmware",
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+    assert entity_registry.async_get(entity_id).original_name == "NEEDS_REMOVAL"
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+    assert entity_registry.async_get(entity_id).original_name == "Zoom"
 
 
 async def test_migrate_with_already_existing_device(
@@ -514,8 +793,12 @@ async def test_migrate_with_already_existing_device(
         disabled_by=None,
     )
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, original_dev_id), config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
@@ -523,10 +806,14 @@ async def test_migrate_with_already_existing_device(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, original_dev_id), config_entry.entry_id
+        )
         is None
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_dev_id), config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize(
@@ -629,7 +916,9 @@ async def test_cleanup_mac_connection(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == {(CONNECTION_NETWORK_MAC, TEST_MAC)}
 
@@ -639,7 +928,9 @@ async def test_cleanup_mac_connection(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -651,7 +942,7 @@ async def test_cleanup_combined_with_NVR(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was combined with the NVR device."""
+    """Test cleanup when IPC camera was combined with NVR device."""
     reolink_host.channels = [0]
     reolink_host.baichuan.mac_address.return_value = None
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
@@ -681,7 +972,9 @@ async def test_cleanup_combined_with_NVR(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -691,10 +984,14 @@ async def test_cleanup_combined_with_NVR(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == {(DOMAIN, dev_id)}
-    host_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_UID)})
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_UID), config_entry.entry_id
+    )
     assert host_device
     assert host_device.identifiers == {
         (DOMAIN, TEST_UID),
@@ -709,7 +1006,7 @@ async def test_cleanup_hub_and_direct_connection(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was connected directly and through the hub/NVR."""
+    """Test cleanup when IPC was connected directly and via NVR."""
     reolink_host.channels = [0]
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
@@ -738,7 +1035,9 @@ async def test_cleanup_hub_and_direct_connection(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -748,7 +1047,9 @@ async def test_cleanup_hub_and_direct_connection(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dev_id), config_entry.entry_id
+    )
     assert device
     assert device.identifiers == start_identifiers
 
@@ -912,10 +1213,14 @@ async def test_password_too_long_repair_issue(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        DOMAIN,
-        f"password_too_long_{config_entry.entry_id}",
-    ) in issue_registry.issues
+    issue_id = f"password_too_long_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_new_device_discovered(
@@ -959,7 +1264,7 @@ async def test_baichuan_port_changed(
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test config_entry baichuan port update when it has changed during initial login."""
+    """Test baichuan port update when changed during initial login."""
     assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
     reolink_host.baichuan.port = 8901
 
@@ -967,6 +1272,54 @@ async def test_baichuan_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_BC_PORT] == 8901
+
+
+async def test_uid_changed(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+) -> None:
+    """Test the addition of the UID to the config entry when not initially present."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
+            CONF_BC_ONLY: False,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert CONF_UID not in config_entry.data
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
+
+
+async def test_uid_changed_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a change of the UID is not accepted and results in an error during init."""
+    assert config_entry.data[CONF_UID] == TEST_UID
+    reolink_host.uid = "SOME2OTHER89UID4"
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
 
 
 async def test_privacy_mode_on(
@@ -1024,7 +1377,7 @@ async def test_privacy_mode_change_callback(
         def register_callback(
             self, callback_id: str, callback: Callable[[], None], *args, **key_args
         ) -> None:
-            if callback_id == "privacy_mode_change":
+            if callback_id == "privacy_mode_change_623":
                 self.callback_func = callback
 
     callback_mock = callback_mock_class()
@@ -1105,7 +1458,7 @@ async def test_camera_wake_callback(
     with (
         patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]),
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL,
         ),
     ):
@@ -1125,13 +1478,13 @@ async def test_camera_wake_callback(
     assert callback_mock.callback_func is not None
     with (
         patch(
-            "homeassistant.components.reolink.host.time",
+            "homeassistant.components.reolink.host.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,
         ),
         patch(
-            "homeassistant.components.reolink.time",
+            "homeassistant.components.reolink.time_now",
             return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
             + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
             + 5,
@@ -1154,7 +1507,7 @@ async def test_firmware_update_delay(
     call_count: int,
 ) -> None:
     """Test delay of firmware update check."""
-    now = datetime.now(UTC)
+    now = dt_util.utcnow()
     check_delay = (
         now
         + timedelta(seconds=seconds)

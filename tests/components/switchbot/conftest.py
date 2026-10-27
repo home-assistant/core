@@ -1,7 +1,10 @@
 """Define fixtures available for all tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
@@ -14,7 +17,7 @@ from homeassistant.components.switchbot.const import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 
-from tests.common import MockConfigEntry
+from . import WOSENSORTH_SERVICE_INFO
 
 
 @pytest.fixture(autouse=True)
@@ -23,12 +26,24 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 @pytest.fixture
+def meter_service_info() -> BluetoothServiceInfoBleak:
+    """Return a Meter advertisement with a normalized Bluetooth address."""
+    return BluetoothServiceInfoBleak.from_device_and_advertisement_data(
+        generate_ble_device("AA:BB:CC:DD:EE:FF", "WoSensorTH"),
+        WOSENSORTH_SERVICE_INFO.advertisement,
+        source="local",
+        connectable=False,
+        time=0,
+    )
+
+
+@pytest.fixture
 def mock_entry_factory():
     """Fixture to create a MockConfigEntry with a customizable sensor type."""
 
     def _create_entry(sensor_type: str = "curtain") -> MockConfigEntry:
         options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
         return MockConfigEntry(
             domain=DOMAIN,
@@ -38,8 +53,8 @@ def mock_entry_factory():
                 CONF_SENSOR_TYPE: sensor_type,
             },
             unique_id="aabbccddeeff",
-            version=1,
-            minor_version=2,
+            version=2,
+            minor_version=1,
             options=options,
         )
 
@@ -48,11 +63,11 @@ def mock_entry_factory():
 
 @pytest.fixture
 def mock_entry_encrypted_factory():
-    """Fixture to create a MockConfigEntry with an encryption key and a customizable sensor type."""
+    """Create a MockConfigEntry with encryption key and sensor type."""
 
     def _create_entry(sensor_type: str = "lock") -> MockConfigEntry:
         options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
         return MockConfigEntry(
             domain=DOMAIN,
@@ -64,8 +79,8 @@ def mock_entry_encrypted_factory():
                 CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
             },
             unique_id="aabbccddeeff",
-            version=1,
-            minor_version=2,
+            version=2,
+            minor_version=1,
             options=options,
         )
 

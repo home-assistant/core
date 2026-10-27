@@ -1,6 +1,7 @@
 """Support for AlarmDecoder zone states- represented as binary sensors."""
 
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
@@ -103,6 +104,7 @@ class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
             CONF_ZONE_NUMBER: self._zone_number,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

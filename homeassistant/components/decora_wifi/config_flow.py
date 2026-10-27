@@ -1,13 +1,11 @@
 """Config flow for Leviton Decora Wi-Fi integration."""
 
-from __future__ import annotations
-
 import contextlib
-from typing import Any
+from typing import Any, override
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.person import Person
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -19,10 +17,10 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): TextSelector(),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME): TextSelector(),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -46,6 +44,7 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -77,28 +76,4 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        self._async_abort_entries_match({CONF_USERNAME: import_data[CONF_USERNAME]})
-
-        try:
-            user_id = await self.hass.async_add_executor_job(
-                _try_login,
-                import_data[CONF_USERNAME],
-                import_data[CONF_PASSWORD],
-            )
-        except ValueError:
-            return self.async_abort(reason="cannot_connect")
-
-        if user_id is None:
-            return self.async_abort(reason="invalid_auth")
-
-        await self.async_set_unique_id(user_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data[CONF_USERNAME],
-            data=import_data,
         )

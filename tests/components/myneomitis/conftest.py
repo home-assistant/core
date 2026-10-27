@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.myneomitis.const import CONF_USER_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -30,6 +29,9 @@ def mock_pyaxenco_client() -> Generator[AsyncMock]:
         client.get_devices = AsyncMock(return_value=[])
         client.disconnect_websocket = AsyncMock()
         client.set_device_mode = AsyncMock()
+        client.set_device_temperature = AsyncMock()
+        client.set_sub_device_mode = AsyncMock()
+        client.set_sub_device_temperature = AsyncMock()
         client.register_listener = Mock(return_value=Mock())
         client.user_id = "user-123"
         client.token = "tok"
@@ -58,6 +60,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent running the real integration setup during tests."""
     with patch(
         "homeassistant.components.myneomitis.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

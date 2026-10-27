@@ -1,7 +1,5 @@
 """Diagnostics platform for Uptime Kuma."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -18,6 +16,9 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    return async_redact_data(
-        {k: asdict(v) for k, v in entry.runtime_data.data.items()}, TO_REDACT
-    )
+    return {
+        "version": entry.runtime_data.api.version.version,
+        "monitors": async_redact_data(
+            {k: asdict(v) for k, v in entry.runtime_data.data.items()}, TO_REDACT
+        ),
+    }

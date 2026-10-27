@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
+from pytest_homeassistant.common import MockConfigEntry
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +16,6 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 
 from . import MOCK_MAC
 
-from tests.common import MockConfigEntry
-
 
 async def test_init(
     hass: HomeAssistant,
@@ -25,9 +25,25 @@ async def test_init(
 ) -> None:
     """Test initialization."""
     mac = format_mac(MOCK_MAC)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, mac)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), mock_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {(DOMAIN, mac)}
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_device: AsyncMock,
+    mock_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, format_mac(MOCK_MAC)), mock_integration.entry_id
+    )
+    assert device_entry == snapshot
 
 
 async def test_unload_config_entry(
@@ -126,6 +142,7 @@ async def test_deprecated_sensor_issue_lifecycle(
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == "deprecated_sensor_scripts"
+    assert issue.config_entry_id == mock_integration.entry_id
     assert entity_registry.async_get(entity_id) is not None
 
     await hass.config_entries.async_reload(mock_integration.entry_id)

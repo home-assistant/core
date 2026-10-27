@@ -1,8 +1,9 @@
 """The tests for Humidifier device conditions."""
 
+from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -16,8 +17,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -54,7 +53,9 @@ async def test_get_conditions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
     expected_conditions = []
     basic_condition_types = ["is_on", "is_off"]
@@ -215,7 +216,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -293,7 +297,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -479,7 +486,7 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -653,7 +660,7 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
@@ -694,8 +701,22 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
+        to_field_list(
             capabilities["extra_fields"], custom_serializer=cv.custom_serializer
         )
         == expected_capabilities
     )
+
+
+def test_is_mode_without_mode_is_invalid() -> None:
+    """Test the condition type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'mode'"):
+        device_condition.CONDITION_SCHEMA(
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "is_mode",
+            }
+        )

@@ -1,6 +1,6 @@
 """Switch platform for Fressnapf Tracker."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from fressnapftracker import FressnapfTrackerError
 
@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 from .services import handle_fressnapf_tracker_exception
 
@@ -44,6 +44,7 @@ async def async_setup_entry(
 class FressnapfTrackerSwitch(FressnapfTrackerEntity, SwitchEntity):
     """Fressnapf Tracker switch."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         try:
@@ -52,6 +53,7 @@ class FressnapfTrackerSwitch(FressnapfTrackerEntity, SwitchEntity):
             handle_fressnapf_tracker_exception(e)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         try:
@@ -61,6 +63,7 @@ class FressnapfTrackerSwitch(FressnapfTrackerEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if TYPE_CHECKING:

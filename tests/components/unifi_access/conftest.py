@@ -1,11 +1,10 @@
 """Fixtures for UniFi Access integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     Door,
     DoorLockRelayStatus,
@@ -13,6 +12,7 @@ from unifi_access_api import (
     DoorPositionStatus,
     EmergencyStatus,
 )
+from unifi_discovery import AIOUnifiScanner
 
 from homeassistant.components.unifi_access.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -20,13 +20,24 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
-
 MOCK_HOST = "192.168.1.1"
 MOCK_API_TOKEN = "test-api-token-12345"
 
 
 MOCK_ENTRY_ID = "mock-unifi-access-entry-id"
+
+
+@pytest.fixture(autouse=True)
+def mock_discovery() -> Generator[None]:
+    """Prevent real network scanning in all unifi_access tests."""
+    mock_aio_discovery = MagicMock(spec=AIOUnifiScanner)
+    mock_aio_discovery.async_scan = AsyncMock(return_value=[])
+    mock_aio_discovery.found_devices = []
+    with patch(
+        "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+        return_value=mock_aio_discovery,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -50,7 +61,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.unifi_access.async_setup_entry", return_value=True
+        "homeassistant.components.unifi_access.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -105,6 +116,7 @@ def mock_client() -> Generator[MagicMock]:
     ):
         client = client_mock.return_value
         client.authenticate = AsyncMock()
+        client.is_protect_api_key = AsyncMock(return_value=False)
         client.get_doors = AsyncMock(return_value=MOCK_DOORS)
         client.get_emergency_status = AsyncMock(
             return_value=EmergencyStatus(evacuation=False, lockdown=False)

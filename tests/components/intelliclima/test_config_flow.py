@@ -2,12 +2,14 @@
 
 from unittest.mock import AsyncMock
 
+from pyintelliclima import IntelliClimaECO3
 from pyintelliclima.api import (
     IntelliClimaAPIError,
     IntelliClimaAuthError,
     IntelliClimaDevices,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,7 +17,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import create_eco_device
 
 DATA_CONFIG = {
     CONF_USERNAME: "SuperUser",
@@ -23,9 +25,8 @@ DATA_CONFIG = {
 }
 
 
-async def test_user_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cloud_interface
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_cloud_interface) -> None:
     """Test the full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -53,9 +54,9 @@ async def test_user_flow(
         (RuntimeError("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_auth_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     side_effect: Exception,
     error: str,
@@ -86,17 +87,37 @@ async def test_form_auth_errors(
     assert result["data"] == DATA_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param(
+            IntelliClimaDevices(ecocomfort2_devices={}, c800_devices={}),
+            id="no_devices",
+        ),
+        pytest.param(
+            IntelliClimaDevices(
+                ecocomfort2_devices={},
+                c800_devices={},
+                ecocomfort3_devices={
+                    "56789": IntelliClimaECO3(
+                        **vars(create_eco_device("56789", "11223344", "Test VMC"))
+                    )
+                },
+            ),
+            # ECOCOMFORT 3 is discovered by the library but not yet supported here.
+            id="only_ecocomfort3",
+        ),
+    ],
+)
 async def test_form_no_devices(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
+    devices: IntelliClimaDevices,
 ) -> None:
-    """Test we handle no devices found error."""
-    # Return empty devices list
-    mock_cloud_interface.get_all_device_status.return_value = IntelliClimaDevices(
-        ecocomfort2_devices={}, c800_devices={}
-    )
+    """Test we handle no supported devices found error."""
+    mock_cloud_interface.get_all_device_status.return_value = devices
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -121,9 +142,9 @@ async def test_form_no_devices(
     assert result["data"] == DATA_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

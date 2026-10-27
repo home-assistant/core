@@ -31,7 +31,7 @@
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "workdays": "Select which weekdays to include as possible workdays."
         },
-        "description": "Set additional options for {name} configured for country {country}"
+        "description": "Set additional options for country {country}"
       },
       "user": {
         "data": {
@@ -183,21 +183,33 @@
   "selector": {
     "category": {
       "options": {
+        "albanian": "Albanian",
         "armed_forces": "Armed forces",
+        "armenian": "Armenian",
         "bank": "Bank",
+        "bosnian": "Bosnian",
         "catholic": "Catholic",
         "chinese": "Chinese",
         "christian": "Christian",
+        "de_facto": "De facto",
         "government": "Government",
         "half_day": "Half day",
         "hebrew": "Hebrew",
         "hindu": "Hindu",
         "islamic": "Islamic",
         "optional": "Optional",
+        "orthodox": "Orthodox",
+        "protestant": "Protestant",
         "public": "Public",
+        "roma": "Roma",
+        "sabian": "Sabian",
         "school": "School",
+        "serbian": "Serbian",
+        "turkish": "Turkish",
         "unofficial": "Unofficial",
-        "workday": "Workday"
+        "vlach": "Vlach",
+        "workday": "Workday",
+        "yazidi": "Yazidi"
       }
     },
     "days": {

@@ -5,6 +5,8 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
@@ -39,9 +41,6 @@ from .common import (
     ENTITY_HUMIDIFIER_MIST_LEVEL,
     mock_devices_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 
@@ -102,7 +101,8 @@ async def test_humidifier_state_assert(
 
     state = hass.states.get(ENTITY_HUMIDIFIER)
 
-    # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
+    # ATTR_HUMIDITY represents the target_humidity which comes from
+    # configuration.auto_target_humidity node
     assert state.attributes.get(ATTR_HUMIDITY) == 40
 
 
@@ -142,7 +142,8 @@ async def test_set_target_humidity(
 ) -> None:
     """Test handling of return value from VeSyncHumid200300S.set_humidity."""
 
-    # If VeSyncHumid200300S.set_humidity fails (returns False), then HomeAssistantError is raised
+    # If VeSyncHumid200300S.set_humidity fails (returns False),
+    # then HomeAssistantError is raised
     with (
         expectation,
         patch(
@@ -264,7 +265,8 @@ async def test_set_mode(
 ) -> None:
     """Test handling of value in set_mode method."""
 
-    # If VeSyncHumid200300S.set_mode fails (returns False), then HomeAssistantError is raised
+    # If VeSyncHumid200300S.set_mode fails (returns False),
+    # then HomeAssistantError is raised
     with (
         expectation,
         patch(

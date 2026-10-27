@@ -1,25 +1,23 @@
 """Class to hold all alarm control panel accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -58,17 +56,17 @@ HASS_TO_HOMEKIT_TARGET = {
 }
 
 HASS_TO_HOMEKIT_SERVICES = {
-    SERVICE_ALARM_ARM_HOME: HK_ALARM_STAY_ARMED,
-    SERVICE_ALARM_ARM_AWAY: HK_ALARM_AWAY_ARMED,
-    SERVICE_ALARM_ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
-    SERVICE_ALARM_DISARM: HK_ALARM_DISARMED,
+    AlarmControlPanelService.ARM_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelService.ARM_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelService.ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
+    AlarmControlPanelService.DISARM: HK_ALARM_DISARMED,
 }
 
 HK_TO_SERVICE = {
-    HK_ALARM_AWAY_ARMED: SERVICE_ALARM_ARM_AWAY,
-    HK_ALARM_STAY_ARMED: SERVICE_ALARM_ARM_HOME,
-    HK_ALARM_NIGHT_ARMED: SERVICE_ALARM_ARM_NIGHT,
-    HK_ALARM_DISARMED: SERVICE_ALARM_DISARM,
+    HK_ALARM_AWAY_ARMED: AlarmControlPanelService.ARM_AWAY,
+    HK_ALARM_STAY_ARMED: AlarmControlPanelService.ARM_HOME,
+    HK_ALARM_NIGHT_ARMED: AlarmControlPanelService.ARM_NIGHT,
+    HK_ALARM_DISARMED: AlarmControlPanelService.DISARM,
 }
 
 
@@ -84,7 +82,7 @@ class SecuritySystem(HomeAccessory):
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
-            ATTR_SUPPORTED_FEATURES,
+            EntityStateAttribute.SUPPORTED_FEATURES,
             (
                 AlarmControlPanelEntityFeature.ARM_HOME
                 | AlarmControlPanelEntityFeature.ARM_VACATION
@@ -99,6 +97,13 @@ class SecuritySystem(HomeAccessory):
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
         default_current_states = current_char.properties.get("ValidValues")
         default_target_services = target_char.properties.get("ValidValues")
+
+        # Both characteristics start at 0 (stay armed). Panels without
+        # ARM_HOME drop 0 from the valid values below, and HAP-python logs an
+        # error when the current value is outside the new set. Disarmed is
+        # always valid, so start from it.
+        current_char.set_value(HK_ALARM_DISARMED, should_notify=False)
+        target_char.set_value(HK_ALARM_DISARMED, should_notify=False)
 
         current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
         target_supported_services = [HK_ALARM_DISARMED]
@@ -129,7 +134,7 @@ class SecuritySystem(HomeAccessory):
         )
         self.char_target_state = serv_alarm.configure_char(
             CHAR_TARGET_SECURITY_STATE,
-            value=HASS_TO_HOMEKIT_SERVICES[SERVICE_ALARM_DISARM],
+            value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.DISARM],
             valid_values={
                 key: val
                 for key, val in default_target_services.items()
@@ -148,10 +153,11 @@ class SecuritySystem(HomeAccessory):
         service = HK_TO_SERVICE[value]
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
-            params[ATTR_CODE] = self._alarm_code
+            params[AlarmControlPanelServiceArgument.CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state

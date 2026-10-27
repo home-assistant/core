@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       Integration has no actions.
-  appropriate-polling:
-    status: exempt
-    comment: |
-      Integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -17,9 +14,15 @@ rules:
     status: exempt
     comment: |
       Integration has no actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -38,10 +41,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: |
-      The API does not limit parallel updates.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
   # Gold
@@ -55,10 +55,7 @@ rules:
     status: exempt
     comment: |
       Service integration, no discovery.
-  docs-data-update:
-    status: exempt
-    comment: |
-      No data updates.
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
@@ -81,7 +78,10 @@ rules:
     status: exempt
     comment: |
       No entities disabled by default.
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: |
+      Entities explicitly set `_attr_name` to `None`, so entity name translations are not used.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

@@ -1,11 +1,9 @@
 """Support for ZoneMinder switches."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zoneminder.monitor import Monitor, MonitorState
 from zoneminder.zm import ZoneMinder
 
@@ -20,14 +18,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_ON): cv.string,
-        vol.Required(CONF_COMMAND_OFF): cv.string,
+        probatio.Required(CONF_COMMAND_ON): cv.string,
+        probatio.Required(CONF_COMMAND_OFF): cv.string,
     }
 )
 
@@ -71,17 +69,22 @@ class ZMSwitchMonitors(SwitchEntity):
 
     def update(self) -> None:
         """Update the switch value."""
-        self._state = self._monitor.function == self._on_state
+        self._monitor.update_monitor()
+        function = self._monitor.function
+        self._state = None if function is None else function == self._on_state
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._monitor.function = self._on_state
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._monitor.function = self._off_state

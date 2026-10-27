@@ -1,5 +1,7 @@
 """Support for EcoNet products."""
 
+from typing import override
+
 from pyeconet.equipment import Equipment
 
 from homeassistant.core import callback
@@ -21,6 +23,7 @@ class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
         self._attr_name = econet.device_name
         self._attr_unique_id = f"{econet.device_id}_{econet.device_name}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         await super().async_added_to_hass()
@@ -34,11 +37,13 @@ class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is online or not."""
         return self._econet.connected
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return DeviceInfo(

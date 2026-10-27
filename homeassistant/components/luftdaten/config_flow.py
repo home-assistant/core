@@ -1,17 +1,16 @@
 """Config flow to configure the Sensor.Community integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_SENSOR_ID, DOMAIN
 
@@ -26,15 +25,16 @@ class SensorCommunityFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                    vol.Optional(CONF_SHOW_ON_MAP, default=False): bool,
+                    probatio.Required(CONF_SENSOR_ID): cv.positive_int,
+                    probatio.Optional(CONF_SHOW_ON_MAP, default=False): bool,
                 }
             ),
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,7 +45,9 @@ class SensorCommunityFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(user_input[CONF_SENSOR_ID]))
         self._abort_if_unique_id_configured()
 
-        sensor_community = Luftdaten(user_input[CONF_SENSOR_ID])
+        sensor_community = Luftdaten(
+            user_input[CONF_SENSOR_ID], httpx_client=get_async_client(self.hass)
+        )
         try:
             await sensor_community.get_data()
             valid = await sensor_community.validate_sensor()

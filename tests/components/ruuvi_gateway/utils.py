@@ -1,7 +1,5 @@
 """Utilities for ruuvi_gateway tests."""
 
-from __future__ import annotations
-
 import time
 from unittest.mock import _patch, patch
 
@@ -23,5 +21,5 @@ def patch_gateway_ok() -> _patch:
 
 
 def patch_setup_entry_ok() -> _patch:
-    """Patch setup entry to return True."""
-    return patch(ASYNC_SETUP_ENTRY, return_value=True)
+    """Patch setup entry to return None."""
+    return patch(ASYNC_SETUP_ENTRY, return_value=None)

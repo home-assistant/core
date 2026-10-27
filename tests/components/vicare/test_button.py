@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -25,7 +24,10 @@ async def test_all_entities(
     """Test all entities."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
-        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.BUTTON]),
     ):
         await setup_integration(hass, mock_config_entry)

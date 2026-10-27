@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError, Barrier, BarrierState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nice_go.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload_entry(
@@ -34,6 +33,19 @@ async def test_unload_entry(
 
 
 async def test_setup_failure_api_error(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth trigger setup."""
+
+    mock_nice_go.get_all_barriers.side_effect = ApiError()
+
+    await setup_integration(hass, mock_config_entry, [])
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_auth_api_error(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -96,6 +108,13 @@ async def test_firmware_update_required(
         "firmware_update_required_test-device-id",
     )
     assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "firmware_update_required_test-device-id"
+    )
 
 
 async def test_update_refresh_token(
@@ -206,6 +225,26 @@ async def test_client_listen_api_error(
     assert mock_nice_go.connect.call_count == 2
 
 
+async def test_client_listen_auth_failed(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test client listen with error."""
+
+    mock_nice_go.connect.side_effect = AuthFailedError
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    assert (
+        "Got auth failed when connecting to websocket, trying to reauthenticate"
+        in caplog.text
+    )
+    assert mock_nice_go.authenticate_refresh.call_count == 2
+
+
 async def test_on_data_none_parsed(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
@@ -225,7 +264,10 @@ async def test_on_data_none_parsed(
                     "item": {
                         "deviceId": "1",
                         "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"test-display-name", "migrationStatus":"NOT_STARTED"}',
+                        "reported": (
+                            '{"displayName":"test-display-name",'
+                            ' "migrationStatus":"NOT_STARTED"}'
+                        ),
                         "connectionState": {
                             "connected": None,
                             "updatedTimestamp": None,
@@ -336,7 +378,14 @@ async def test_no_connection_state(
                     "item": {
                         "deviceId": "1",
                         "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"Test Garage 1", "migrationStatus":"DONE", "barrierStatus": "1,100,0", "deviceFwVersion": "1.0.0", "lightStatus": "1,100", "vcnMode": false}',
+                        "reported": (
+                            '{"displayName":"Test Garage 1",'
+                            ' "migrationStatus":"DONE",'
+                            ' "barrierStatus": "1,100,0",'
+                            ' "deviceFwVersion": "1.0.0",'
+                            ' "lightStatus": "1,100",'
+                            ' "vcnMode": false}'
+                        ),
                         "connectionState": None,
                         "version": None,
                         "timestamp": None,

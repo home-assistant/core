@@ -3,12 +3,10 @@
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.core import HomeAssistant
-
-from ...common import async_wait_recording_done
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
@@ -46,8 +44,8 @@ async def test_validate_db_schema_fix_utf8_issue(
         in caplog.text
     )
     assert (
-        "Updating table statistics_meta to character set utf8mb4 and collation utf8mb4_bin"
-        in caplog.text
+        "Updating table statistics_meta to character set utf8mb4"
+        " and collation utf8mb4_bin" in caplog.text
     )
 
 

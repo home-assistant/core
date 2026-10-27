@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hdfury.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.123"
 
@@ -18,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hdfury.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -77,7 +76,10 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "AUDOUT": "bitstream 48kHz",
                 "EARCRX": "eARC/ARC not active",
                 "SINK0": "LG TV SSCR2: 4K120 444 FRL6 VRR DSC ALLM DV HDR10 HLG",
-                "EDIDA0": "MAT Atmos, DD Atmos, DD, DTS:X+IMAX, DTSHD, DTS, LPCM 2.0 192kHz 24b",
+                "EDIDA0": (
+                    "MAT Atmos, DD Atmos, DD, DTS:X+IMAX,"
+                    " DTSHD, DTS, LPCM 2.0 192kHz 24b"
+                ),
                 "SINK1": "Signify FCD: 4K60 444 DV HDR10+ HLG",
                 "EDIDA1": "DD, DTS, LPCM 2.0 48kHz 24b",
                 "SINK2": "Bose CineMate: 4K60 420 ",

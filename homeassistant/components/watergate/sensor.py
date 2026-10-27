@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
-    HomeAssistant,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -59,8 +60,8 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.state.water_meter.volume
-            if data.state and data.state.water_meter
+            data.state.water_meter_positive.volume
+            if data.state and data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_volume",
@@ -71,12 +72,36 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.state.water_meter.duration
-            if data.state and data.state.water_meter
+            data.state.water_meter_positive.duration
+            if data.state and data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_duration",
         key="water_meter_duration",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: (
+            data.state.water_meter_negative.volume
+            if data.state and data.state.water_meter_negative
+            else None
+        ),
+        translation_key="water_meter_negative_volume",
+        key="water_meter_negative_volume",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: (
+            data.state.water_meter_negative.duration
+            if data.state and data.state.water_meter_negative
+            else None
+        ),
+        translation_key="water_meter_negative_duration",
+        key="water_meter_negative_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -208,6 +233,7 @@ class SonicSensor(WatergateEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -216,6 +242,7 @@ class SonicSensor(WatergateEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | float | datetime | PowerSupplyMode | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

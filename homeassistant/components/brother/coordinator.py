@@ -2,6 +2,7 @@
 
 from asyncio import timeout
 import logging
+from typing import override
 
 from brother import Brother, BrotherSensors, SnmpError, UnsupportedModelError
 
@@ -36,6 +37,7 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> BrotherSensors:
         """Update data via library."""
         try:

@@ -4,19 +4,34 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from python_qube_heatpump import StatusCode
 from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture(autouse=True)
+def auto_mock_zeroconf(mock_async_zeroconf: MagicMock) -> None:
+    """Use the mocked zeroconf instance in every test."""
+
+
+@pytest.fixture(autouse=True)
+def mock_device_info() -> Generator[AsyncMock]:
+    """Mock the mDNS lookup; it finds nothing unless a test sets a result."""
+    with patch(
+        "homeassistant.components.hr_energy_qube.config_flow.async_get_device_info",
+        return_value=None,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=True
+        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -41,6 +56,7 @@ def mock_qube_client() -> Generator[MagicMock]:
         client.connect = AsyncMock(return_value=True)
         client.is_connected = True
         client.close = AsyncMock(return_value=None)
+        client.async_verify_device = AsyncMock(return_value=True)
         client.async_get_software_version = AsyncMock(return_value="2.15")
 
         state = QubeState()
@@ -63,8 +79,78 @@ def mock_qube_client() -> Generator[MagicMock]:
         state.setpoint_room_cool_day = 25.0
         state.setpoint_room_cool_night = 23.0
         state.status_code = 1
+        state.status = StatusCode.STANDBY
+        state.setpoint_dhw = 50.0
+
+        # Binary sensors - Outputs
+        state.dout_srcpmp_val = True
+        state.dout_usrpmp_val = True
+        state.dout_fourwayvlv_val = False
+        state.dout_cooling_val = False
+        state.dout_threewayvlv_val = False
+        state.dout_bufferpmp_val = False
+        state.dout_heaterstep1_val = False
+        state.dout_heaterstep2_val = False
+        state.dout_heaterstep3_val = False
+
+        # Binary sensors - System status
+        state.keybonoff = True
+        state.daynightmode = True
+
+        # Binary sensors - Alarms
+        state.al_maxtime_antileg_active = False
+        state.al_maxtime_dhw_active = False
+        state.al_dewpoint_active = False
+        state.al_underfloorsafety_active = False
+        state.alrm_flw = False
+        state.usralrms = False
+        state.coolingalrms = False
+        state.heatingalrms = False
+        state.alarmmng_al_workinghour = False
+        state.srsalrm = False
+        state.glbal = False
+        state.alarmmng_al_pwrplus = False
+
+        # Binary sensors - Sensor/controller status
+        state.roomprb_en = True
+        state.plantprb_en = False
+        state.bufferprb_en = False
+        state.en_dhwpid = True
+
+        # Binary sensors - Demand signals
+        state.plantdemand = False
+        state.id_demand = False
+        state.thermostatdemand = True
+
+        # Binary sensors - Digital inputs
+        state.id_summerwinter = False
+        state.dewpoint = False
+        state.boostersecurity = False
+        state.srcflw = True
+        state.req_antileg_1 = False
+
+        # Binary sensors - Energy
+        state.surplus_pv = False
 
         client.get_all_data = AsyncMock(return_value=state)
+
+        # Switches
+        client.read_all_switches = AsyncMock(
+            return_value={
+                "bms_summerwinter": False,
+                "tapw_timeprogram_bms_forced": False,
+                "antilegionella_frcstart_ant": False,
+                "en_plantsetp_compens": True,
+                "bms_sgready_a": False,
+                "bms_sgready_b": False,
+                "modbus_demand": False,
+            }
+        )
+        client.write_switch = AsyncMock(return_value=True)
+        client.write_setpoint = AsyncMock(return_value=True)
+        client.get_sg_ready_mode = AsyncMock(return_value="off")
+        client.set_sg_ready_mode = AsyncMock(return_value=True)
+
         yield client
 
 

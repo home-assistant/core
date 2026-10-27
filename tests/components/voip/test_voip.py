@@ -1,6 +1,7 @@
 """Test VoIP protocol."""
 
 import asyncio
+import contextlib
 import io
 from pathlib import Path
 from typing import Any
@@ -8,23 +9,22 @@ from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
-from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from tests.components.tts.common import MockResultStream
@@ -50,37 +50,19 @@ def _empty_wav(framerate=16000) -> bytes:
         return wav_io.getvalue()
 
 
-def async_get_satellite_entity(
-    hass: HomeAssistant, domain: str, unique_id_prefix: str
-) -> AssistSatelliteEntity | None:
-    """Get Assist satellite entity."""
-    ent_reg = er.async_get(hass)
-    satellite_entity_id = ent_reg.async_get_entity_id(
-        Platform.ASSIST_SATELLITE, domain, f"{unique_id_prefix}-assist_satellite"
-    )
-    if satellite_entity_id is None:
-        return None
-    assert not satellite_entity_id.endswith("none")
-
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[
-        assist_satellite.DOMAIN
-    ]
-    return component.get_entity(satellite_entity_id)
-
-
 async def test_is_valid_call(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
     call_info: CallInfo,
 ) -> None:
     """Test that a call is now allowed from an unknown device."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     protocol = HassVoipDatagramProtocol(hass, voip_devices)
     assert not protocol.is_valid_call(call_info)
 
-    ent_reg = er.async_get(hass)
-    allowed_call_entity_id = ent_reg.async_get_entity_id(
+    allowed_call_entity_id = entity_registry.async_get_entity_id(
         "switch", voip.DOMAIN, f"{voip_device.voip_id}-allow_call"
     )
     assert allowed_call_entity_id is not None
@@ -101,7 +83,7 @@ async def test_calls_not_allowed(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pre-recorded message is played when calls aren't allowed."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     protocol: PreRecordMessageProtocol = make_protocol(hass, voip_devices, call_info)
     assert isinstance(protocol, PreRecordMessageProtocol)
     assert protocol.file_name == "problem.pcm"
@@ -138,7 +120,7 @@ async def test_pipeline_not_found(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pre-recorded message is played when a pipeline isn't found."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with patch(
         "homeassistant.components.voip.voip.async_get_pipeline", return_value=None
@@ -156,10 +138,11 @@ async def test_satellite_prepared(
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
     call_info: CallInfo,
+    satellite: VoipAssistSatellite,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that satellite is prepared for a call."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline = assist_pipeline.Pipeline(
         conversation_engine="test",
@@ -175,9 +158,6 @@ async def test_satellite_prepared(
         wake_word_id=None,
     )
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
-
     with (
         patch(
             "homeassistant.components.voip.voip.async_get_pipeline",
@@ -192,13 +172,12 @@ async def test_pipeline(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
     call_info: CallInfo,
 ) -> None:
     """Test that pipeline function is called from RTP protocol."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
     voip_user_id = satellite.config_entry.data["user"]
     assert voip_user_id
 
@@ -367,13 +346,13 @@ async def test_pipeline(
 
 
 async def test_stt_stream_timeout(
-    hass: HomeAssistant, voip_devices: VoIPDevices, voip_device: VoIPDevice
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test timeout in STT stream during pipeline run."""
-    assert await async_setup_component(hass, "voip", {})
-
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
+    assert await async_setup_component(hass, DOMAIN, {})
 
     done = asyncio.Event()
 
@@ -405,14 +384,10 @@ async def test_stt_stream_timeout(
 
 async def test_tts_timeout(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test that TTS will time out based on its length."""
-    assert await async_setup_component(hass, "voip", {})
-
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
+    assert await async_setup_component(hass, DOMAIN, {})
 
     done = asyncio.Event()
 
@@ -474,7 +449,6 @@ async def test_tts_timeout(
             satellite._tone_bytes[tone] = tone_bytes
 
         satellite.connection_made(Mock())
-        satellite.send_audio = Mock()
 
         original_send_tts = satellite._send_tts
 
@@ -502,17 +476,15 @@ async def test_tts_timeout(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_extension(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test that TTS will only stream WAV audio."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
-    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -581,31 +553,21 @@ async def test_tts_wrong_extension(
 
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(3):
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_wav_format(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test that TTS will only stream WAV audio with a specific format."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
-    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -674,31 +636,21 @@ async def test_tts_wrong_wav_format(
 
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(3):
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_empty_tts_output(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test that TTS will not stream when output is empty."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
-    assert isinstance(satellite, VoipAssistSatellite)
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
@@ -757,16 +709,9 @@ async def test_empty_tts_output(
 
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
 
-        # Wait for mock pipeline to finish
+        # No more chunks: another chunk would start a second pipeline run, which
+        # clears _tts_done again.
         async with asyncio.timeout(2):
             await satellite._tts_done.wait()
 
@@ -775,15 +720,11 @@ async def test_empty_tts_output(
 
 async def test_pipeline_error(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pipeline error causes the error tone to be played."""
-    assert await async_setup_component(hass, "voip", {})
-
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
+    assert await async_setup_component(hass, DOMAIN, {})
 
     done = asyncio.Event()
     played_audio_bytes = b""
@@ -825,17 +766,142 @@ async def test_pipeline_error(
         assert played_audio_bytes == snapshot
 
 
+async def test_hangup_during_listening_tone(
+    hass: HomeAssistant,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test a hang-up during the listening tone doesn't block the next call."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    pipeline_started = asyncio.Event()
+    tone_playing = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        pipeline_started.set()
+
+    async def async_send_audio_forever(*args, **kwargs):
+        tone_playing.set()
+        await asyncio.Event().wait()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        satellite._tones = Tones.LISTENING
+        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio_forever)  # type: ignore[method-assign]
+
+        # First call hangs up while the listening tone is still playing,
+        # before the pipeline task reaches its try/finally block
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await tone_playing.wait()
+
+        first_task = satellite._run_pipeline_task
+        assert first_task is not None
+
+        satellite.disconnect()
+        with pytest.raises(asyncio.CancelledError):
+            await first_task
+
+        assert satellite._run_pipeline_task is None
+        assert not pipeline_started.is_set()
+
+        # The next call must still start a pipeline
+        satellite._async_send_audio = AsyncMock()  # type: ignore[method-assign]
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await pipeline_started.wait()
+
+
+async def test_cancelled_pipeline_keeps_next_call_pipeline(
+    hass: HomeAssistant,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test a cancelled pipeline's cleanup doesn't clear the next call's pipeline."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    pipeline_runs = 0
+    first_pipeline_running = asyncio.Event()
+    second_pipeline_running = asyncio.Event()
+    second_pipeline_received_audio = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        nonlocal pipeline_runs
+        pipeline_runs += 1
+        run_number = pipeline_runs
+
+        stt_stream = kwargs["stt_stream"]
+
+        if run_number == 1:
+            first_pipeline_running.set()
+        if run_number == 2:
+            second_pipeline_running.set()
+
+        async for chunk in stt_stream:
+            if run_number == 2 and chunk:
+                second_pipeline_received_audio.set()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        satellite._tones = Tones(0)
+
+        # First call hangs up while its pipeline is running
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(1):
+            await first_pipeline_running.wait()
+
+        first_task = satellite._run_pipeline_task
+        assert first_task is not None
+        satellite.disconnect()
+
+        # Next call starts before the first pipeline has run its cleanup
+        satellite.connection_made(Mock())
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        second_task = satellite._run_pipeline_task
+        assert second_task is not None
+        assert second_task is not first_task
+
+        try:
+            with contextlib.suppress(asyncio.CancelledError):
+                await first_task
+
+            # The first pipeline's cleanup must not clear the second's
+            # reference, or disconnect() can no longer cancel it
+            assert satellite._run_pipeline_task is second_task
+
+            async with asyncio.timeout(1):
+                await second_pipeline_running.wait()
+
+            # More audio on the same call must not start another pipeline
+            second_pipeline_received_audio.clear()
+            satellite.on_chunk(bytes(_ONE_SECOND))
+
+            async with asyncio.timeout(1):
+                await second_pipeline_received_audio.wait()
+
+            assert pipeline_runs == 2
+        finally:
+            second_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await second_task
+
+
 @pytest.mark.usefixtures("socket_enabled")
 async def test_announce(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test announcement."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
@@ -864,7 +930,7 @@ async def test_announce(
     )
 
     # Protocol has already been mocked, but "outgoing_call" is not async
-    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
 
     with (
@@ -881,9 +947,7 @@ async def test_announce(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await announce_task
@@ -896,14 +960,14 @@ async def test_announce(
 @pytest.mark.usefixtures("socket_enabled")
 async def test_voip_id_is_ip_address(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test announcement when VoIP is an IP address instead of a SIP header."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
@@ -919,7 +983,7 @@ async def test_voip_id_is_ip_address(
     )
 
     # Protocol has already been mocked, but "outgoing_call" is not async
-    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
 
     with (
@@ -941,9 +1005,7 @@ async def test_voip_id_is_ip_address(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await announce_task
@@ -956,14 +1018,12 @@ async def test_voip_id_is_ip_address(
 @pytest.mark.usefixtures("socket_enabled")
 async def test_announce_timeout(
     hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
+    config_entry: MockConfigEntry,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test announcement when user does not pick up the phone in time."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
@@ -979,7 +1039,7 @@ async def test_announce_timeout(
     )
 
     # Protocol has already been mocked, but some methods are not async
-    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
     mock_protocol.cancel_call = Mock()
 
@@ -996,16 +1056,134 @@ async def test_announce_timeout(
 
 
 @pytest.mark.usefixtures("socket_enabled")
-async def test_start_conversation(
+async def test_announce_disconnect(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test announcement."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token=mock_tts_result_stream.token,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
+    mock_protocol.outgoing_call = Mock()
+
+    tts_sent = asyncio.Event()
+
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
+            side_effect=lambda *args, **kwargs: tts_sent.set(),
+        ) as mock_send_tts,
+    ):
+        announce_task = hass.async_create_background_task(
+            satellite.async_announce(announcement), "voip_announce"
+        )
+        await asyncio.sleep(0)
+        satellite.connection_made(Mock())
+        mock_protocol.outgoing_call.assert_called_once()
+
+        # Trigger announcement
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        async with asyncio.timeout(2):
+            await tts_sent.wait()
+
+        assert satellite._announcement is announcement
+        assert voip_device.is_active
+
+        # Disconnect before the hangup checker gets a chance to disconnect.
+        satellite.disconnect()
+
+        assert satellite._announcement is None
+        assert not voip_device.is_active
+
+        async with asyncio.timeout(2):
+            await announce_task
+
+        mock_send_tts.assert_called_once_with(
+            mock_tts_result_stream, wait_for_tone=False
+        )
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_announce_disconnect_before_pickup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
+) -> None:
+    """Test announcement disconnected before pickup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token=mock_tts_result_stream.token,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
+    mock_protocol.outgoing_call = Mock()
+
+    announce_task = hass.async_create_background_task(
+        satellite.async_announce(announcement), "voip_announce"
+    )
+    await asyncio.sleep(0)
+    satellite.connection_made(Mock())
+    mock_protocol.outgoing_call.assert_called_once()
+
+    # No audio has been received, so the pickup checker should still
+    # be waiting for the caller to answer.
+    assert satellite._last_chunk_time is None
+    assert satellite._check_announcement_pickup_task is not None
+    assert not satellite._check_announcement_pickup_task.done()
+
+    # Disconnect before the pickup checker detects a timeout.
+    satellite.disconnect()
+
+    assert satellite._check_announcement_pickup_task is None
+    assert satellite._announcement is None
+
+    async with asyncio.timeout(2):
+        await announce_task
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_start_conversation(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test start conversation."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
@@ -1021,7 +1199,7 @@ async def test_start_conversation(
     )
 
     # Protocol has already been mocked, but "outgoing_call" is not async
-    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
 
     tts_sent = asyncio.Event()
@@ -1086,18 +1264,14 @@ async def test_start_conversation(
 
         # Trigger announcement and wait for it to finish
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await tts_sent.wait()
 
         # Trigger pipeline
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(3)
         async with asyncio.timeout(3):
             # Wait for Conversation end
             await conversation_task
@@ -1106,22 +1280,23 @@ async def test_start_conversation(
 @pytest.mark.usefixtures("socket_enabled")
 async def test_start_conversation_user_doesnt_pick_up(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    satellite: VoipAssistSatellite,
 ) -> None:
     """Test start conversation when the user doesn't pick up."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
-    assert isinstance(satellite, VoipAssistSatellite)
     assert (
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
-    # Protocol has already been mocked, but "outgoing_call" and "cancel_call" are not async
-    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    # Protocol has already been mocked, but "outgoing_call" and
+    # "cancel_call" are not async
+    mock_protocol: AsyncMock = config_entry.runtime_data.domain_data.protocol
     mock_protocol.outgoing_call = Mock()
     mock_protocol.cancel_call = Mock()
 

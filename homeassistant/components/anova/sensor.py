@@ -1,9 +1,8 @@
 """Support for Anova Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
@@ -34,6 +33,7 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
         key="cook_time",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="cook_time",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time,
@@ -63,6 +63,7 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
     AnovaSensorEntityDescription(
         key="cook_time_remaining",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time_remaining,
@@ -137,6 +138,7 @@ class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
     entity_description: AnovaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data.sensor)

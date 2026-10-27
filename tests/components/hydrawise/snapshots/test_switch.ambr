@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('hydrawise', '5965394')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,9 +39,9 @@
 # name: test_all_switches[switch.zone_one_automatic_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'switch',
-      'friendly_name': 'Zone One Automatic watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone One Automatic watering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_one_automatic_watering',
@@ -59,9 +59,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('hydrawise', '5965394')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -91,9 +91,9 @@
 # name: test_all_switches[switch.zone_one_manual_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'switch',
-      'friendly_name': 'Zone One Manual watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone One Manual watering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_one_manual_watering',
@@ -111,9 +111,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('hydrawise', '5965395')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -143,9 +143,9 @@
 # name: test_all_switches[switch.zone_two_automatic_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'switch',
-      'friendly_name': 'Zone Two Automatic watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone Two Automatic watering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_two_automatic_watering',
@@ -163,9 +163,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('hydrawise', '5965395')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -195,9 +195,9 @@
 # name: test_all_switches[switch.zone_two_manual_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'switch',
-      'friendly_name': 'Zone Two Manual watering',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone Two Manual watering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zone_two_manual_watering',

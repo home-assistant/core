@@ -1,7 +1,5 @@
 """Models events in for Recorder."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.util.event_type import EventType

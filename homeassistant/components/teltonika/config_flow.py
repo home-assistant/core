@@ -1,32 +1,31 @@
 """Config flow for the Teltonika integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
-from .util import get_url_variants
+from .util import entry_data_to_url, get_url_variants, url_to_entry_data
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -61,6 +60,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         try:
             device_info = await client.get_device_info()
             auth_valid = await client.validate_credentials()
+            device_id = device_info.device_identifier
+            if auth_valid and device_id is None:
+                system_info = await client.get_system_info()
+                device_id = system_info.mnf_info.serial
         except TeltonikaConnectionError as err:
             _LOGGER.debug(
                 "Failed to connect to Teltonika device at %s: %s", base_url, err
@@ -78,7 +81,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         return {
             "title": device_info.device_name,
-            "device_id": device_info.device_identifier,
+            "device_id": device_id,
             "host": base_url,
         }
 
@@ -89,10 +92,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Teltonika."""
 
-    VERSION = 1
+    VERSION = 2
     MINOR_VERSION = 1
     _discovered_host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,13 +118,9 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info["device_id"])
                 self._abort_if_unique_id_configured()
 
-                data_to_store = dict(user_input)
-                if "host" in info:
-                    data_to_store[CONF_HOST] = info["host"]
-
                 return self.async_create_entry(
                     title=info["title"],
-                    data=data_to_store,
+                    data={**user_input, **url_to_entry_data(info["host"])},
                 )
 
         return self.async_show_form(
@@ -139,10 +139,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
+        base_url = entry_data_to_url(reauth_entry.data)
 
         if user_input is not None:
             data = {
-                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_HOST: base_url,
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_VERIFY_SSL: reauth_entry.data.get(CONF_VERIFY_SSL, False),
@@ -167,10 +168,10 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        reauth_schema = vol.Schema(
+        reauth_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -182,10 +183,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
-                "host": reauth_entry.data[CONF_HOST],
+                "host": base_url,
             },
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -195,7 +197,8 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovered host for later use
         self._discovered_host = host
 
-        # Try to get device info without authentication to get device identifier and name
+        # Try to get device info without authentication
+        # to get device identifier and name
         session = async_get_clientsession(self.hass)
 
         for base_url in get_url_variants(host):
@@ -222,8 +225,28 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # No URL variant worked, device not reachable, don't autodiscover
             return self.async_abort(reason="cannot_connect")
 
-        # Set unique ID and check for existing conf
-        await self.async_set_unique_id(device_id)
+        formatted_mac = dr.format_mac(discovery_info.macaddress)
+
+        if device_id is None:
+            # FW with API v1.0 doesn't expose any unique identifier on the
+            # unauthorized endpoint. Match existing entries by MAC so it
+            # aborts without asking for credentials again.
+            device_reg = dr.async_get(self.hass)
+            for device in device_reg.async_get_devices(
+                connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+            ):
+                entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
+                if (
+                    entry is not None
+                    and entry.domain == DOMAIN
+                    and entry.unique_id is not None
+                ):
+                    device_id = entry.unique_id
+                    break
+
+        # Use the MAC as a placeholder unique_id when nothing matched, so
+        # parallel DHCP advertisements don't both reach dhcp_confirm.
+        await self.async_set_unique_id(device_id or formatted_mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
@@ -245,31 +268,14 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             # Get the host from the discovery
             host = getattr(self, "_discovered_host", "")
 
+            data = {
+                CONF_HOST: host,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_VERIFY_SSL: False,
+            }
             try:
-                # Validate credentials with discovered host
-                data = {
-                    CONF_HOST: host,
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_VERIFY_SSL: False,
-                }
                 info = await validate_input(self.hass, data)
-
-                # Update unique ID to device identifier if we didn't get it during discovery
-                await self.async_set_unique_id(
-                    info["device_id"], raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=info["title"],
-                    data={
-                        CONF_HOST: info["host"],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_VERIFY_SSL: False,
-                    },
-                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -277,13 +283,30 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception during DHCP confirm")
                 errors["base"] = "unknown"
+            else:
+                # Update unique ID to device identifier
+                # if we didn't get it during discovery
+                await self.async_set_unique_id(
+                    info["device_id"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+                return self.async_create_entry(
+                    title=info["title"],
+                    data={
+                        **url_to_entry_data(info["host"]),
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_VERIFY_SSL: False,
+                    },
+                )
 
         return self.async_show_form(
             step_id="dhcp_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

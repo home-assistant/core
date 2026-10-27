@@ -1,13 +1,12 @@
 """Device tracker for Ituran vehicles."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IturanConfigEntry
-from .coordinator import IturanDataUpdateCoordinator
+from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 from .entity import IturanBaseEntity
 
 
@@ -39,11 +38,13 @@ class IturanDeviceTracker(IturanBaseEntity, TrackerEntity):
         super().__init__(coordinator, license_plate, "device_tracker")
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return self.vehicle.gps_coordinates[0]
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self.vehicle.gps_coordinates[1]

@@ -18,25 +18,18 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    DOMAIN,
-    EVENTS,
-    RECONNECT_INTERVAL,
-    SERVER_AVAILABLE,
-    SERVER_UNAVAILABLE,
-)
+from .const import EVENTS, RECONNECT_INTERVAL, SERVER_AVAILABLE, SERVER_UNAVAILABLE
 
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type SyncthingConfigEntry = ConfigEntry[SyncthingClient]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> None:
     """Set up syncthing from a config entry."""
     data = entry.data
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
 
     client = aiosyncthing.Syncthing(
         data[CONF_TOKEN],
@@ -54,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     syncthing = SyncthingClient(hass, client, server_id)
     syncthing.subscribe()
-    hass.data[DOMAIN][entry.entry_id] = syncthing
+    entry.runtime_data = syncthing
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -66,17 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        syncthing = hass.data[DOMAIN].pop(entry.entry_id)
-        await syncthing.unsubscribe()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.unsubscribe()
 
 
 class SyncthingClient:

@@ -1,7 +1,5 @@
 """Test the DLNA config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import dataclasses
 import logging
@@ -10,6 +8,7 @@ from unittest.mock import Mock, patch
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dlna_dmr.const import (
@@ -42,9 +41,7 @@ from .conftest import (
     NEW_DEVICE_LOCATION,
 )
 
-from tests.common import MockConfigEntry
-
-# Auto-use the domain_data_mock and dmr_device_mock fixtures for every test in this module
+# Auto-use the domain_data_mock and dmr_device_mock fixtures for every test
 pytestmark = [
     pytest.mark.usefixtures("domain_data_mock"),
     pytest.mark.usefixtures("dmr_device_mock"),
@@ -110,7 +107,7 @@ def mock_get_mac_address() -> Generator[Mock]:
 def mock_setup_entry() -> Generator[Mock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 
@@ -136,6 +133,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -176,6 +174,7 @@ async def test_user_flow_discovered_manual(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -206,6 +205,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -230,6 +230,13 @@ async def test_user_flow_uncontactable(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
+
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_embedded_st(
@@ -270,6 +277,7 @@ async def test_user_flow_embedded_st(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -293,6 +301,13 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
+
+    upnp_device.device_type = MOCK_DEVICE_TYPE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
@@ -321,6 +336,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -406,7 +422,7 @@ async def test_ssdp_flow_duplicate_location(
 async def test_ssdp_duplicate_mac_ignored_entry(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
-    """Test SSDP with different UDN but matching MAC for ignored config entry is ignored."""
+    """Test SSDP with different UDN but matching MAC for ignored entry is ignored."""
     # Add an ignored entry
     config_entry_mock.source = config_entries.SOURCE_IGNORE
     config_entry_mock.add_to_hass(hass)
@@ -651,6 +667,7 @@ async def test_ignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_ignore_flow_no_ssdp(
@@ -675,6 +692,7 @@ async def test_ignore_flow_no_ssdp(
         CONF_TYPE: None,
         CONF_MAC: None,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_get_mac_address_ipv4(
@@ -756,7 +774,7 @@ async def test_options_flow(
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
-    # Invalid URL for callback (can't be validated automatically by voluptuous)
+    # Invalid URL for callback (can't be validated automatically by probatio)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={

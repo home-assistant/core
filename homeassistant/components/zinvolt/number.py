@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from zinvolt import ZinvoltClient
 
@@ -34,12 +35,20 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda state: state.battery.global_settings.max_output,
+        value_fn=lambda state: (
+            2000
+            if state.battery.global_settings.max_output_unlocked
+            else state.battery.global_settings.max_output
+        ),
         set_value_fn=lambda client, battery_id, value: client.set_max_output(
             battery_id, value
         ),
         native_min_value=0,
-        max_fn=lambda state: state.battery.global_settings.max_output_limit,
+        max_fn=lambda state: (
+            2000
+            if state.battery.global_settings.max_output_unlocked
+            else state.battery.global_settings.max_output_limit
+        ),
     ),
     ZinvoltBatteryStateDescription(
         key="upper_threshold",
@@ -64,6 +73,19 @@ NUMBERS: tuple[ZinvoltBatteryStateDescription, ...] = (
         ),
         native_min_value=9,
         native_max_value=100,
+    ),
+    ZinvoltBatteryStateDescription(
+        key="max_charge_power",
+        translation_key="max_charge_power",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda state: state.battery.global_settings.maximum_charge_power,
+        set_value_fn=lambda client, battery_id, value: client.set_max_charge_power(
+            battery_id, value
+        ),
+        native_min_value=0,
+        native_max_value=2000,
     ),
     ZinvoltBatteryStateDescription(
         key="standby_time",
@@ -113,6 +135,7 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the native maximum value."""
         if self.entity_description.max_fn is None:
@@ -120,10 +143,12 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         return self.entity_description.max_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the sensor."""
         await self.entity_description.set_value_fn(

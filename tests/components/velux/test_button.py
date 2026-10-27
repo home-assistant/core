@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pyvlx import PyVLXException
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +13,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -103,7 +102,8 @@ async def test_button_press_failure(
     # Press the button and expect HomeAssistantError
     with pytest.raises(
         HomeAssistantError,
-        match="Failed to reboot gateway. Try again in a few moments or power cycle the device manually",
+        match="Failed to reboot gateway. Try again in a few moments"
+        " or power cycle the device manually",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -154,7 +154,8 @@ async def test_identify_button_press_failure(
     # Press the button and expect HomeAssistantError
     with pytest.raises(
         HomeAssistantError,
-        match='Failed to communicate with Velux device: <PyVLXException description="Connection failed" />',
+        match="Failed to communicate with Velux device:"
+        ' <PyVLXException description="Connection failed" />',
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,

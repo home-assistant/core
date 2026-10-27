@@ -1,11 +1,9 @@
 """HTTP views to interact with the entity registry."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -13,8 +11,8 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
 from homeassistant.helpers.json import json_dumps
 
@@ -32,10 +30,14 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
     websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_get_settings)
+    websocket_api.async_register_command(hass, websocket_update_settings)
     return True
 
 
-@websocket_api.websocket_command({vol.Required("type"): "config/entity_registry/list"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "config/entity_registry/list"}
+)
 @callback
 def websocket_list_entities(
     hass: HomeAssistant,
@@ -65,7 +67,7 @@ _ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "config/entity_registry/list_for_display"}
+    {probatio.Required("type"): "config/entity_registry/list_for_display"}
 )
 @callback
 def websocket_list_entities_for_display(
@@ -94,8 +96,8 @@ def websocket_list_entities_for_display(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/entity_registry/get",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "config/entity_registry/get",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @callback
@@ -123,8 +125,8 @@ def websocket_get_entity(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/entity_registry/get_entries",
-        vol.Required("entity_ids"): cv.entity_ids,
+        probatio.Required("type"): "config/entity_registry/get_entries",
+        probatio.Required("entity_ids"): cv.entity_ids,
     }
 )
 @callback
@@ -151,11 +153,11 @@ def websocket_get_entities(
 @require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/entity_registry/update",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Optional("aliases"): [vol.Any(str, None)],
+        probatio.Required("type"): "config/entity_registry/update",
+        probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional("aliases"): [probatio.Any(str, None)],
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("area_id"): vol.Any(str, None),
+        probatio.Optional("area_id"): probatio.Any(str, None),
         # Categories is a mapping of key/value (scope/category_id) pairs.
         # If passed in, we update/adjust only the provided scope(s).
         # Other category scopes in the entity, are left as is.
@@ -165,30 +167,32 @@ def websocket_get_entities(
         # Therefore, passing in a category ID will either add or move
         # the entity to that specific category. Passing in None will
         # remove the entity from the category.
-        vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
-        vol.Optional("device_class"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
-        vol.Optional("labels"): [str],
-        vol.Optional("name"): vol.Any(str, None),
-        vol.Optional("new_entity_id"): str,
+        probatio.Optional("categories"): cv.schema_with_slug_keys(
+            probatio.Any(str, None)
+        ),
+        probatio.Optional("device_class"): probatio.Any(str, None),
+        probatio.Optional("icon"): probatio.Any(str, None),
+        probatio.Optional("labels"): [str],
+        probatio.Optional("name"): probatio.Any(str, None),
+        probatio.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
-        vol.Optional("disabled_by"): vol.Any(
+        probatio.Optional("disabled_by"): probatio.Any(
             None,
-            vol.All(
-                vol.Coerce(er.RegistryEntryDisabler),
+            probatio.All(
+                probatio.Coerce(er.RegistryEntryDisabler),
                 er.RegistryEntryDisabler.USER.value,
             ),
         ),
         # We only allow setting hidden_by user via API.
-        vol.Optional("hidden_by"): vol.Any(
+        probatio.Optional("hidden_by"): probatio.Any(
             None,
-            vol.All(
-                vol.Coerce(er.RegistryEntryHider),
+            probatio.All(
+                probatio.Coerce(er.RegistryEntryHider),
                 er.RegistryEntryHider.USER.value,
             ),
         ),
-        vol.Inclusive("options_domain", "entity_option"): str,
-        vol.Inclusive("options", "entity_option"): vol.Any(None, dict),
+        probatio.Inclusive("options_domain", "entity_option"): str,
+        probatio.Inclusive("options", "entity_option"): probatio.Any(None, dict),
     }
 )
 @callback
@@ -236,21 +240,8 @@ def websocket_update_entity(
                 aliases.append(alias)
 
     if "labels" in msg:
-        # Convert labels to a set
-        changes["labels"] = set(msg["labels"])
-
-    if "disabled_by" in msg and msg["disabled_by"] is None:
-        # Don't allow enabling an entity of a disabled device
-        if entity_entry.device_id:
-            device_registry = dr.async_get(hass)
-            device = device_registry.async_get(entity_entry.device_id)
-            if device and device.disabled:
-                connection.send_message(
-                    websocket_api.error_message(
-                        msg["id"], "invalid_info", "Device is disabled"
-                    )
-                )
-                return
+        labels = set(msg["labels"])
+        changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     # Update the categories if provided
     if "categories" in msg:
@@ -263,6 +254,8 @@ def websocket_update_entity(
                 # Add or update the category for the given scope
                 categories[scope] = category_id
         changes["categories"] = categories
+
+    was_disabled = entity_entry.disabled_by is not None
 
     try:
         if changes:
@@ -288,7 +281,7 @@ def websocket_update_entity(
         return
 
     result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
-    if "disabled_by" in changes and changes["disabled_by"] is None:
+    if was_disabled and entity_entry.disabled_by is None:
         # Enabling an entity requires a config entry reload, or HA restart
         if not (config_entry_id := entity_entry.config_entry_id) or (
             (config_entry := hass.config_entries.async_get_entry(config_entry_id))
@@ -303,8 +296,8 @@ def websocket_update_entity(
 @require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/entity_registry/remove",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "config/entity_registry/remove",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @callback
@@ -331,8 +324,8 @@ def websocket_remove_entity(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/entity_registry/get_automatic_entity_ids",
-        vol.Required("entity_ids"): cv.entity_ids,
+        probatio.Required("type"): "config/entity_registry/get_automatic_entity_ids",
+        probatio.Required("entity_ids"): cv.entity_ids,
     }
 )
 @callback
@@ -364,3 +357,49 @@ def websocket_get_automatic_entity_ids(
     connection.send_message(
         websocket_api.result_message(msg["id"], automatic_entity_ids)
     )
+
+
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "config/entity_registry/settings/get"}
+)
+@callback
+def websocket_get_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry settings command."""
+    registry = er.async_get(hass)
+    connection.send_result(
+        msg["id"], {"entity_id_parts": registry.settings.entity_id_parts}
+    )
+
+
+@require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/entity_registry/settings/update",
+        probatio.Optional("entity_id_parts"): probatio.Any(
+            None,
+            probatio.All(
+                [probatio.Coerce(er.EntityNamePart)],
+                probatio.Unique(),
+                probatio.Contains(er.EntityNamePart.ENTITY),
+                probatio.Contains(er.EntityNamePart.DEVICE),
+            ),
+        ),
+    }
+)
+@callback
+def websocket_update_settings(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle update entity registry settings command."""
+    registry = er.async_get(hass)
+    changes: dict[str, Any] = {}
+    if "entity_id_parts" in msg:
+        changes["entity_id_parts"] = msg["entity_id_parts"]
+    settings = registry.async_update_settings(**changes)
+    connection.send_result(msg["id"], {"entity_id_parts": settings.entity_id_parts})

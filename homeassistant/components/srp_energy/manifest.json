@@ -1,8 +1,10 @@
 {
   "domain": "srp_energy",
   "name": "SRP Energy",
-  "codeowners": ["@briglx"],
+  "categories": ["energy.meters_monitoring"],
+  "codeowners": ["@briglx", "@ammmze"],
   "config_flow": true,
+  "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/srp_energy",
   "integration_type": "service",
   "iot_class": "cloud_polling",

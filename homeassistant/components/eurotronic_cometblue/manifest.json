@@ -1,0 +1,20 @@
+{
+  "domain": "eurotronic_cometblue",
+  "name": "Eurotronic Comet Blue",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67"
+    }
+  ],
+  "categories": ["climate.thermostats_heating"],
+  "codeowners": ["@rikroe"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "documentation": "https://www.home-assistant.io/integrations/eurotronic_cometblue",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["eurotronic_cometblue_ha"],
+  "quality_scale": "silver",
+  "requirements": ["eurotronic-cometblue-ha==2.0.0"]
+}

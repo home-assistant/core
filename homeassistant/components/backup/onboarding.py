@@ -1,17 +1,16 @@
 """Backup onboarding views."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.onboarding import (
     BaseOnboardingView,
@@ -20,13 +19,9 @@ from homeassistant.components.onboarding import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import (
-    BackupManager,
-    Folder,
-    IncorrectPasswordError,
-    async_get_manager,
-    http as backup_http,
-)
+from . import async_get_manager, http as backup_http
+from .manager import BackupManager, IncorrectPasswordError
+from .models import Folder
 
 if TYPE_CHECKING:
     from homeassistant.components.onboarding import OnboardingStoreData
@@ -89,16 +84,17 @@ class RestoreBackupView(NoAuthBaseOnboardingView):
 
     url = "/api/onboarding/backup/restore"
     name = "api:onboarding:backup:restore"
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("backup_id"): str,
-                vol.Required("agent_id"): str,
-                vol.Optional("password"): str,
-                vol.Optional("restore_addons"): [str],
-                vol.Optional("restore_database", default=True): bool,
-                vol.Optional("restore_folders"): [vol.Coerce(Folder)],
+                probatio.Required("backup_id"): str,
+                probatio.Required("agent_id"): str,
+                probatio.Optional("password"): str,
+                probatio.Optional("restore_addons"): [str],
+                probatio.Optional("restore_database", default=True): bool,
+                probatio.Optional("restore_folders"): [probatio.Coerce(Folder)],
             }
         )
     )
@@ -136,6 +132,7 @@ class UploadBackupView(NoAuthBaseOnboardingView, backup_http.UploadBackupView):
     name = "api:onboarding:backup:upload"
 
     @with_backup_manager
+    @override
     async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
         """Upload a backup file."""
         return await self._post(request)

@@ -5,13 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import mqtt, notify
-from homeassistant.components.notify import ATTR_MESSAGE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -37,11 +31,16 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import notify
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.notify import ATTR_MESSAGE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {notify.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {notify.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -50,7 +49,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
@@ -79,7 +78,7 @@ async def test_sending_mqtt_commands(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "Beer message", 2, False
+        "command-topic", "Beer message", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("notify.test_notify")
@@ -90,7 +89,7 @@ async def test_sending_mqtt_commands(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: {
                     "command_topic": "command-topic",
                     "command_template": '{ "{{ entity_id }}": "{{ value }}" }',
@@ -118,7 +117,11 @@ async def test_command_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{ "notify.test": "Beer message" }', 0, False
+        "command-topic",
+        '{ "notify.test": "Beer message" }',
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -227,7 +230,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 notify.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -263,8 +266,8 @@ async def test_discovery_update_notify(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered notify."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][notify.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][notify.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][notify.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][notify.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
 

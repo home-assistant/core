@@ -1,10 +1,10 @@
 """The test for the Trafikverket Camera coordinator."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytrafikverket import (
     CameraInfoModel,
     InvalidAuthentication,
@@ -21,9 +21,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import ENTRY_CONFIG
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 
 async def test_coordinator(
     hass: HomeAssistant,
@@ -32,7 +29,7 @@ async def test_coordinator(
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
+        "https://www.testurl.com/test_photo_fullsize.jpg", content=b"0123456789"
     )
 
     entry = MockConfigEntry(

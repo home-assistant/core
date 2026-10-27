@@ -1,8 +1,6 @@
 """Support for KEBA charging station binary sensors."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, KebaHandler
+from . import KebaHandler
+from .const import DOMAIN
 
 
 async def async_setup_platform(
@@ -83,6 +82,7 @@ class KebaBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the binary sensor."""
         return self._attributes
@@ -118,6 +118,7 @@ class KebaBinarySensor(BinarySensorEntity):
         """Schedule a state update."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

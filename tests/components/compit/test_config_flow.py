@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.compit.config_flow import CannotConnect, InvalidAuth
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import CONFIG_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_success(
@@ -38,6 +37,7 @@ async def test_async_step_user_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
+    assert result["result"].unique_id == CONFIG_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -57,7 +57,7 @@ async def test_async_step_user_failed_auth(
     mock_compit_api: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test user step with invalid authentication then success after error is cleared."""
+    """Test user step with invalid auth then success."""
     mock_compit_api.side_effect = [exception, True]
 
     result = await hass.config_entries.flow.async_init(
@@ -129,7 +129,7 @@ async def test_async_step_reauth_confirm_failed_auth(
     mock_compit_api: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test reauth confirm step with invalid authentication then success after error is cleared."""
+    """Test reauth confirm step with invalid auth then success."""
     mock_compit_api.side_effect = [exception, True]
 
     mock_config_entry.add_to_hass(hass)

@@ -1,12 +1,11 @@
 """Fixtures for the Mold indicator integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mold_indicator.const import (
     CONF_CALIBRATION_FACTOR,
@@ -25,15 +24,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path mold indicator."""
     with patch(
         "homeassistant.components.mold_indicator.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

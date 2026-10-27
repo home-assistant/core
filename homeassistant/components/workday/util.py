@@ -1,7 +1,5 @@
 """Helpers functions for the Workday component."""
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 from functools import partial
 from typing import TYPE_CHECKING
@@ -219,6 +217,7 @@ def add_remove_custom_holidays(
                         hass,
                         DOMAIN,
                         f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        config_entry_id=entry.entry_id,
                         is_fixable=True,
                         is_persistent=False,
                         severity=IssueSeverity.WARNING,
@@ -239,6 +238,7 @@ def add_remove_custom_holidays(
                     hass,
                     DOMAIN,
                     f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=False,
                     severity=IssueSeverity.WARNING,

@@ -1,7 +1,5 @@
 """The bluetooth integration websocket apis."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from functools import lru_cache, partial
 import time
@@ -16,7 +14,7 @@ from habluetooth import (
     HaScannerRegistrationEvent,
 )
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -39,7 +37,8 @@ def _async_get_source_from_config_entry(
 ) -> str | None:
     """Get source from config entry id.
 
-    Returns None if no config_entry_id provided or on error (after sending error response).
+    Returns None if no config_entry_id provided or on error
+    (after sending error response).
     If validate_source is True, also validates that the scanner exists.
     """
     if not config_entry_id:
@@ -95,8 +94,8 @@ def serialize_service_info(
         "address": service_info.address,
         "rssi": service_info.rssi,
         "manufacturer_data": {
-            str(manufacturer_id): manufacturer_data.hex()
-            for manufacturer_id, manufacturer_data in service_info.manufacturer_data.items()
+            str(manufacturer_id): data.hex()
+            for manufacturer_id, data in service_info.manufacturer_data.items()
         },
         "service_data": {
             service_uuid: service_data.hex()
@@ -198,7 +197,7 @@ class _AdvertisementSubscription:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "bluetooth/subscribe_advertisements",
+        probatio.Required("type"): "bluetooth/subscribe_advertisements",
     }
 )
 @websocket_api.async_response
@@ -214,8 +213,8 @@ async def ws_subscribe_advertisements(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "bluetooth/subscribe_connection_allocations",
-        vol.Optional("config_entry_id"): str,
+        probatio.Required("type"): "bluetooth/subscribe_connection_allocations",
+        probatio.Optional("config_entry_id"): str,
     }
 )
 @websocket_api.async_response
@@ -250,8 +249,8 @@ async def ws_subscribe_connection_allocations(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "bluetooth/subscribe_scanner_details",
-        vol.Optional("config_entry_id"): str,
+        probatio.Required("type"): "bluetooth/subscribe_scanner_details",
+        probatio.Optional("config_entry_id"): str,
     }
 )
 @websocket_api.async_response
@@ -274,7 +273,7 @@ async def ws_subscribe_scanner_details(
 
     def _async_registration_changed(registration: HaScannerRegistration) -> None:
         added_event = HaScannerRegistrationEvent.ADDED
-        event_type = "add" if registration.event == added_event else "remove"
+        event_type = "add" if registration.event is added_event else "remove"
         _async_event_message({event_type: [registration.scanner.details]})
 
     manager = _get_manager(hass)
@@ -297,8 +296,8 @@ async def ws_subscribe_scanner_details(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "bluetooth/subscribe_scanner_state",
-        vol.Optional("config_entry_id"): str,
+        probatio.Required("type"): "bluetooth/subscribe_scanner_state",
+        probatio.Optional("config_entry_id"): str,
     }
 )
 @websocket_api.async_response

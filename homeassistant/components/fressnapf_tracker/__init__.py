@@ -35,10 +35,13 @@ PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | None:
+async def _get_valid_tracker(
+    hass: HomeAssistant, entry: FressnapfTrackerConfigEntry, device: Device
+) -> Tracker | None:
     """Test if the tracker returns valid data and return it.
 
-    Malformed data might indicate the tracker is broken or hasn't been properly registered with the app.
+    Malformed data might indicate the tracker is broken or
+    hasn't been properly registered with the app.
     """
     client = ApiClient(
         serial_number=device.serialnumber,
@@ -56,6 +59,7 @@ async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | N
             hass,
             DOMAIN,
             f"invalid_fressnapf_tracker_{device.serialnumber}",
+            config_entry_id=entry.entry_id,
             issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",
             is_fixable=False,
@@ -72,7 +76,7 @@ async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | N
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
-) -> bool:
+) -> None:
     """Set up Fressnapf Tracker from a config entry."""
     auth_client = AuthClient(client=get_async_client(hass))
     try:
@@ -88,7 +92,7 @@ async def async_setup_entry(
 
     coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
     for device in devices:
-        tracker = await _get_valid_tracker(hass, device)
+        tracker = await _get_valid_tracker(hass, entry, device)
         if tracker is None:
             continue
         coordinator = FressnapfTrackerDataUpdateCoordinator(
@@ -103,11 +107,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: FressnapfTrackerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

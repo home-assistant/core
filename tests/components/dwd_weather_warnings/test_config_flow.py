@@ -4,6 +4,7 @@ from typing import Final
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dwd_weather_warnings.const import (
     CONF_REGION_DEVICE_TRACKER,
@@ -15,8 +16,6 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 DEMO_CONFIG_ENTRY_REGION: Final = {
     CONF_REGION_IDENTIFIER: "807111000",
@@ -99,7 +98,7 @@ async def test_create_entry_gps(
     hass.states.async_set(
         DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LONGITUDE: 7.610263},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -114,7 +113,7 @@ async def test_create_entry_gps(
     hass.states.async_set(
         DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     mock_dwdwfsapi.__bool__.return_value = False
@@ -143,7 +142,7 @@ async def test_create_entry_gps(
 async def test_config_flow_already_configured(
     hass: HomeAssistant, mock_dwdwfsapi: MagicMock
 ) -> None:
-    """Test aborting, if the warncell ID / name is already configured during the config."""
+    """Test aborting if the warncell ID / name is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=DEMO_CONFIG_ENTRY_REGION.copy(),
@@ -168,6 +167,7 @@ async def test_config_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_dwdwfsapi")
 async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     """Test error scenarios during the configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -197,3 +197,10 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "ambiguous_identifier"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_REGION
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY

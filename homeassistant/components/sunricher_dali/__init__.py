@@ -1,7 +1,5 @@
 """The Sunricher DALI integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Sequence
 import logging
@@ -61,13 +59,10 @@ def _remove_missing_devices(
             continue
 
         if domain_device_ids.isdisjoint(known_device_ids):
-            device_registry.async_update_device(
-                device_entry.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device_entry.id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> None:
     """Set up Sunricher DALI from a config entry."""
 
     gateway = DaliGateway(
@@ -121,11 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
-        await entry.runtime_data.gateway.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    await entry.runtime_data.gateway.disconnect()

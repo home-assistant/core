@@ -1,20 +1,16 @@
 """Test the Nina binary sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pynina import Warning
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nina.const import ATTR_HEADLINE
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_single_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_binary_sensors(
@@ -39,7 +35,7 @@ async def test_binary_sensors_without_corona_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA binary sensors without the corona filter."""
+    """Test NINA binary sensors values without the corona filter."""
 
     await setup_single_platform(
         hass,
@@ -52,15 +48,12 @@ async def test_binary_sensors_without_corona_filter(
     state_w1 = hass.states.get("binary_sensor.aach_stadt_warning_1")
 
     assert state_w1.state == STATE_ON
-    assert (
-        state_w1.attributes.get(ATTR_HEADLINE)
-        == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
-    )
+    assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
 
     state_w2 = hass.states.get("binary_sensor.aach_stadt_warning_2")
 
     assert state_w2.state == STATE_ON
-    assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+    assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
 
     state_w3 = hass.states.get("binary_sensor.aach_stadt_warning_3")
 
@@ -82,7 +75,7 @@ async def test_binary_sensors_with_area_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA binary sensors with a restrictive area filter."""
+    """Test NINA binary sensors with a restrictive area filter."""
 
     await setup_single_platform(
         hass,
@@ -95,7 +88,7 @@ async def test_binary_sensors_with_area_filter(
     state_w1 = hass.states.get("binary_sensor.aach_stadt_warning_1")
 
     assert state_w1.state == STATE_ON
-    assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+    assert state_w1.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
 
     state_w2 = hass.states.get("binary_sensor.aach_stadt_warning_2")
 

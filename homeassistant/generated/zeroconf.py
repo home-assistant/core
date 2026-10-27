@@ -136,6 +136,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Mirror": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Neon": {
         "always_discover": True,
         "domain": "lifx",
@@ -145,6 +149,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Path": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Spot": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -243,6 +255,10 @@ HOMEKIT = {
     "Sensibo": {
         "always_discover": True,
         "domain": "sensibo",
+    },
+    "Slide": {
+        "always_discover": True,
+        "domain": "slide_local",
     },
     "Smart Bridge": {
         "always_discover": False,
@@ -520,6 +536,16 @@ ZEROCONF = {
             "domain": "freebox",
         },
     ],
+    "_gasleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -537,6 +563,11 @@ ZEROCONF = {
     "_hap._udp.local.": [
         {
             "domain": "homekit_controller",
+        },
+    ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
         },
     ],
     "_heos-audio._tcp.local.": [
@@ -584,6 +615,10 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
+            "domain": "duco",
+            "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+        },
+        {
             "domain": "eheimdigital",
             "name": "eheimdigital._http._tcp.local.",
         },
@@ -604,6 +639,10 @@ ZEROCONF = {
             "name": "homevolt*",
         },
         {
+            "domain": "indevolt",
+            "name": "igen_fw*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -614,6 +653,14 @@ ZEROCONF = {
         {
             "domain": "loqed",
             "name": "loqed*",
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-*",
+                "uid": "*",
+            },
         },
         {
             "domain": "nam",
@@ -669,6 +716,20 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
+        },
+    ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -678,6 +739,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
         },
     ],
     "_iometer._tcp.local.": [
@@ -695,6 +761,11 @@ ZEROCONF = {
             "domain": "ipp",
         },
     ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
+        },
+    ],
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
@@ -705,6 +776,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
         },
     ],
     "_linkplay._tcp.local.": [
@@ -793,6 +869,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "my_pv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -846,6 +927,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [
@@ -932,6 +1018,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solaredge-modbus._tcp.local.": [
+        {
+            "domain": "solaredge_modbus",
+        },
+    ],
     "_solarman._tcp.local.": [
         {
             "domain": "solarman",
@@ -970,6 +1061,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_stromleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
@@ -978,6 +1074,11 @@ ZEROCONF = {
     "_systemnexa2._tcp.local.": [
         {
             "domain": "systemnexa2",
+        },
+    ],
+    "_tbk_vmc._tcp.local.": [
+        {
+            "domain": "flow_it",
         },
     ],
     "_technove-stations._tcp.local.": [
@@ -1011,9 +1112,39 @@ ZEROCONF = {
             "domain": "vizio",
         },
     ],
+    "_waermeleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wasserleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wattwaechter._tcp.local.": [
+        {
+            "domain": "wattwaechter",
+        },
+    ],
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_workstation._tcp.local.": [
+        {
+            "domain": "hr_energy_qube",
+            "properties": {
+                "ProjectName": "deqsihpb*",
+                "Vendor": "000a5c",
+            },
+        },
+    ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "watkins_spa*",
         },
     ],
     "_wyoming._tcp.local.": [

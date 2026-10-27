@@ -1,7 +1,5 @@
 """Support for Efergy sensors."""
 
-from __future__ import annotations
-
 import dataclasses
 from re import sub
 from typing import cast

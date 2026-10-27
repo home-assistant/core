@@ -1,8 +1,10 @@
 """Module for ring device mocks.
 
-Creates a MagicMock for all device families, i.e. chimes, doorbells, stickup_cams and other.
+Creates a MagicMock for all device families, i.e. chimes,
+doorbells, stickup_cams and other.
 
-Each device entry in the devices.json will have a MagicMock instead of the RingObject.
+Each device entry in the devices.json will have a MagicMock
+instead of the RingObject.
 
 Mocks the api calls on the devices such as history() and health().
 """
@@ -11,6 +13,7 @@ from datetime import datetime
 from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import load_json_value_fixture
 from ring_doorbell import (
     RingCapability,
     RingChime,
@@ -22,8 +25,6 @@ from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.util import dt as dt_util
-
-from tests.common import load_json_value_fixture
 
 DEVICES_FIXTURE = load_json_value_fixture("devices.json", DOMAIN)
 DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", DOMAIN)

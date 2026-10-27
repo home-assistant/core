@@ -1,15 +1,21 @@
 """Provide common tests tools for tts."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.tts import (
@@ -30,15 +36,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
@@ -125,6 +122,11 @@ async def retrieve_media(
     client = await hass_client()
     req = await client.get(url)
 
+    # The HTTP response returns once the audio is streamed, but the
+    # background task that loads the cache (and writes it to disk) may
+    # still be in flight. Wait for it to avoid lingering tasks.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     return req.status
 
 
@@ -188,7 +190,11 @@ class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-        {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+        {
+            probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+                SUPPORT_LANGUAGES
+            )
+        }
     )
 
     def __init__(self, provider: MockTTSProvider, **kwargs: Any) -> None:
@@ -227,19 +233,17 @@ async def mock_config_entry_setup(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.TTS]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(config_entry, Platform.TTS)
-        return True
 
     mock_integration(
         hass,

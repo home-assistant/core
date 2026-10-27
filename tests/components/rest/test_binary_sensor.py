@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import (
@@ -25,9 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_missing_basic_config(hass: HomeAssistant) -> None:
@@ -672,7 +671,7 @@ async def test_availability_blocks_value_template(
 async def test_setup_get_basic_auth_utf8(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test setup with basic auth using UTF-8 characters including Unicode char \u2018."""
+    """Test setup with basic auth using UTF-8 characters."""
     # Use a password with the Unicode character \u2018 (left single quotation mark)
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
     assert await async_setup_component(

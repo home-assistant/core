@@ -1,23 +1,25 @@
 """Data update coordinator for RDW."""
 
-from __future__ import annotations
+from typing import override
 
-from vehicle import RDW, Vehicle
+from vehicle import RDW, RDWConnectionError, RDWError, Vehicle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LICENSE_PLATE, DOMAIN, LOGGER, SCAN_INTERVAL
+
+type RDWConfigEntry = ConfigEntry[RDWDataUpdateCoordinator]
 
 
 class RDWDataUpdateCoordinator(DataUpdateCoordinator[Vehicle]):
     """Class to manage fetching RDW data."""
 
-    config_entry: ConfigEntry
+    config_entry: RDWConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: RDWConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -31,6 +33,18 @@ class RDWDataUpdateCoordinator(DataUpdateCoordinator[Vehicle]):
             license_plate=config_entry.data[CONF_LICENSE_PLATE],
         )
 
+    @override
     async def _async_update_data(self) -> Vehicle:
         """Fetch data from RDW."""
-        return await self._rdw.vehicle()
+        try:
+            return await self._rdw.vehicle()
+        except RDWConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except RDWError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err

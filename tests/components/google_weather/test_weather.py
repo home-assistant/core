@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from google_weather_api import GoogleWeatherApiError, WeatherCondition
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_weather.weather import _CONDITION_MAP
@@ -24,9 +30,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 async def test_weather(
@@ -50,7 +53,7 @@ async def test_availability(
     mock_google_weather_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     entity_id = "weather.home"
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -131,10 +134,9 @@ async def test_condition(
     expected_ha_condition: str,
 ) -> None:
     """Test condition mapping."""
-    mock_google_weather_api.async_get_current_conditions.return_value.weather_condition.type = api_condition
-    mock_google_weather_api.async_get_current_conditions.return_value.is_daytime = (
-        is_daytime
-    )
+    current = mock_google_weather_api.async_get_current_conditions
+    current.return_value.weather_condition.type = api_condition
+    current.return_value.is_daytime = is_daytime
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 

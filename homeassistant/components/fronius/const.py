@@ -1,15 +1,44 @@
 """Constants for the Fronius integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
+from urllib.parse import urlsplit
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 
 DOMAIN: Final = "fronius"
 
+CONF_MODBUS_PORT: Final = "modbus_port"
+DEFAULT_MODBUS_PORT: Final = 502
+
+CONF_AUTO_REVERT_POWER_LIMIT: Final = "auto_revert_power_limit"
+# how long the device holds a setpoint after it last received it
+AUTO_REVERT_SECONDS: Final = 3600
+# the setpoint is sent again this often, so a restart has room to spare
+HEARTBEAT_INTERVAL: Final = timedelta(minutes=15)
+
 type SolarNetId = str
-SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
+_SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
+
+
+def discovery_signal(entry_id: str) -> str:
+    """Return the signal carrying coordinators of an entry found after setup.
+
+    One signal per config entry: a device found by one entry's re-scan has
+    nothing to do with the platforms of another.
+    """
+    return f"{_SOLAR_NET_DISCOVERY_NEW}_{entry_id}"
+
+
+def host_from_config(host: str) -> str | None:
+    """Return the lowercased host name of a configured host, or None if unusable."""
+    # the configured host may be a bare host name or a full URL
+    url = host if "://" in host else f"//{host}"
+    return urlsplit(url).hostname
+
+
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
 SOLAR_NET_ID_SYSTEM: SolarNetId = "system"
 SOLAR_NET_RESCAN_TIMER: Final = 60
@@ -20,6 +49,8 @@ class FroniusConfigEntryData(TypedDict):
 
     host: str
     is_logger: bool
+    modbus_port: int
+    auto_revert_power_limit: bool
 
 
 class FroniusDeviceInfo(NamedTuple):

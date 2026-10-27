@@ -3,15 +3,14 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.rainmachine import DOMAIN
+from homeassistant.components.rainmachine.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_buttons(

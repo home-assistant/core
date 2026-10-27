@@ -1,7 +1,7 @@
 """Class to hold all cover accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import (
     CATEGORY_DOOR,
@@ -13,24 +13,14 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, EntityStateAttribute
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -128,6 +118,7 @@ class GarageDoorOpener(HomeAccessory):
 
     @callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -178,13 +169,14 @@ class GarageDoorOpener(HomeAccessory):
         if value == HK_DOOR_OPEN:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_OPENING)
-            self.async_call_service(COVER_DOMAIN, SERVICE_OPEN_COVER, params)
+            self.async_call_service(COVER_DOMAIN, CoverService.OPEN, params)
         elif value == HK_DOOR_CLOSED:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_CLOSING)
-            self.async_call_service(COVER_DOMAIN, SERVICE_CLOSE_COVER, params)
+            self.async_call_service(COVER_DOMAIN, CoverService.CLOSE, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover state after state changed."""
         hass_state: CoverState = new_state.state  # type: ignore[assignment]
@@ -215,7 +207,9 @@ class OpeningDeviceBase(HomeAccessory):
         super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
         assert state
-        self.features: int = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        self.features: int = state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
@@ -245,7 +239,7 @@ class OpeningDeviceBase(HomeAccessory):
         if value != 1:
             return
         self.async_call_service(
-            COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
+            COVER_DOMAIN, CoverService.STOP, {ATTR_ENTITY_ID: self.entity_id}
         )
 
     def set_tilt(self, value: float) -> None:
@@ -256,19 +250,25 @@ class OpeningDeviceBase(HomeAccessory):
         # We'll have to normalize to [0,100]
         value = round((value + 90) / 180.0 * 100.0)
 
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TILT_POSITION: value}
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            CoverServiceArgument.TILT_POSITION: value,
+        }
 
         self.async_call_service(
-            COVER_DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value
+            COVER_DOMAIN, CoverService.SET_TILT_POSITION, params, value
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         # update tilt
         if not self._supports_tilt:
             return
-        current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+        current_tilt = new_state.attributes.get(
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION
+        )
         if not isinstance(current_tilt, (float, int)):
             return
         # HomeKit sends values between -90 and 90.
@@ -320,19 +320,46 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     def move_cover(self, value: int) -> None:
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
-        self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
+        params = {ATTR_ENTITY_ID: self.entity_id, CoverServiceArgument.POSITION: value}
+        self.async_call_service(COVER_DOMAIN, CoverService.SET_POSITION, params, value)
 
     @callback
+    def _async_update_target_position_while_moving(
+        self, state: str, current_position: int
+    ) -> None:
+        """Aim the target position at the end of travel while moving.
+
+        The Home app reads the direction of travel from the target position
+        relative to the current one, so a target the cover has already passed
+        makes it report the opposite direction. Only a passed target is
+        replaced: one the cover is still travelling towards, or has just
+        reached, is what HomeKit asked for.
+        """
+        if not self.features & CoverEntityFeature.SET_POSITION:
+            # Tilt-only covers lock the target position to closed.
+            return
+        target_position = self.char_target_position.value
+        if state == CoverState.OPENING:
+            if target_position < current_position:
+                self.char_target_position.set_value(100)
+        elif state == CoverState.CLOSING and target_position > current_position:
+            self.char_target_position.set_value(0)
+
+    @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
-        current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
+        current_position = new_state.attributes.get(
+            CoverEntityStateAttribute.CURRENT_POSITION
+        )
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            # Writing target_position on a moving cover
-            # will break the moving state in HK.
-            if new_state.state not in MOVING_STATES:
+            if new_state.state in MOVING_STATES:
+                self._async_update_target_position_while_moving(
+                    new_state.state, current_position
+                )
+            else:
                 self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)
@@ -412,11 +439,11 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         if (self._supports_stop and value > 70) or (
             not self._supports_stop and value >= 50
         ):
-            service, position = (SERVICE_OPEN_COVER, 100)
+            service, position = (CoverService.OPEN, 100)
         elif value < 30 or not self._supports_stop:
-            service, position = (SERVICE_CLOSE_COVER, 0)
+            service, position = (CoverService.CLOSE, 0)
         else:
-            service, position = (SERVICE_STOP_COVER, 50)
+            service, position = (CoverService.STOP, 50)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(COVER_DOMAIN, service, params)
@@ -426,6 +453,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         self.char_target_position.set_value(position)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position after state changed."""
         position_mapping = {CoverState.OPEN: 100, CoverState.CLOSED: 0}

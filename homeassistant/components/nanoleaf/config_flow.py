@@ -1,14 +1,12 @@
 """Config flow for Nanoleaf integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
-from aionanoleaf2 import InvalidToken, Nanoleaf, Unauthorized, Unavailable
-import voluptuous as vol
+from aionanoleaf2 import AuthError, Nanoleaf, NanoleafError, Unauthorized
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -33,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 # For discovery integration import
 CONFIG_FILE: Final = ".nanoleaf.conf"
 
-USER_SCHEMA: Final = vol.Schema(
+USER_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -51,6 +49,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -65,15 +64,16 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.nanoleaf.authorize()
-        except Unavailable:
+        except Unauthorized:
+            # Pairing mode is not active yet: the link step explains how to enable it
+            pass
+        except NanoleafError:
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
                 last_step=False,
             )
-        except Unauthorized:
-            pass
         except Exception:
             _LOGGER.exception("Unknown error connecting to Nanoleaf")
             return self.async_show_form(
@@ -94,6 +94,45 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._get_reauth_entry().title}
         return await self.async_step_link()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Nanoleaf host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            nanoleaf = Nanoleaf(
+                async_get_clientsession(self.hass),
+                user_input[CONF_HOST],
+                reconfigure_entry.data[CONF_TOKEN],
+            )
+            try:
+                await nanoleaf.get_info()
+            except AuthError:
+                errors["base"] = "invalid_token"
+            except NanoleafError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unknown error connecting to Nanoleaf")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(nanoleaf.name)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                USER_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -101,6 +140,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
         return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -118,6 +158,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.properties[ATTR_PROPERTIES_ID],
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -174,7 +215,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
-        except Unavailable:
+        except NanoleafError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
@@ -194,10 +235,10 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         """Finish Nanoleaf config flow."""
         try:
             await self.nanoleaf.get_info()
-        except Unavailable:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidToken:
+        except AuthError:
             return self.async_abort(reason="invalid_token")
+        except NanoleafError:
+            return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host

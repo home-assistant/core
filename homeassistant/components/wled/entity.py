@@ -1,5 +1,7 @@
 """Base entity for WLED."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -13,6 +15,7 @@ class WLEDEntity(CoordinatorEntity[WLEDDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this WLED device."""
         return DeviceInfo(

@@ -1,7 +1,5 @@
 """The tests for the Command line sensor platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from typing import Any
@@ -9,40 +7,22 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.sensor import CommandSensor
+from homeassistant.components.command_line.utils import render_template_args
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from . import mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+from . import mock_asyncio_subprocess_exec, mock_asyncio_subprocess_run
 
 
 @pytest.mark.parametrize(
@@ -134,7 +114,7 @@ async def test_template_render(
 
 
 async def test_template_render_with_quote(hass: HomeAssistant) -> None:
-    """Ensure command with templates and quotes get rendered properly."""
+    """Ensure command with templates and quotes uses exec for security."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
     await setup.async_setup_component(
         hass,
@@ -144,7 +124,9 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 {
                     "sensor": {
                         "name": "Test",
-                        "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
+                        "command": (
+                            'echo "{{ states.sensor.input_sensor.state }}" "3 4"'
+                        ),
                     }
                 }
             ]
@@ -152,7 +134,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with mock_asyncio_subprocess_run(b"Works\n") as mock_subprocess_run:
+    with mock_asyncio_subprocess_exec(b"Works\n") as mock_subprocess_exec:
         # Give time for template to load
         async_fire_time_changed(
             hass,
@@ -160,9 +142,13 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert len(mock_subprocess_run.mock_calls) == 1
-        mock_subprocess_run.assert_called_with(
-            'echo "sensor_value" "3 4"',
+        assert len(mock_subprocess_exec.mock_calls) == 1
+        # shlex splits the quoted args: "sensor_value" → sensor_value, "3 4" → 3 4
+        mock_subprocess_exec.assert_called_with(
+            "echo",
+            "sensor_value",
+            "3 4",
+            stdin=None,
             stdout=-1,
             close_fds=False,
         )
@@ -264,8 +250,12 @@ async def test_return_code(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                     }
@@ -295,8 +285,12 @@ async def test_update_with_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                         "value_template": '{{ value_json["key"] }}',
@@ -426,8 +420,12 @@ async def test_update_with_json_attrs_bad_json(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": [
                             "key",
@@ -463,8 +461,12 @@ async def test_update_with_missing_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key"],
                     }
@@ -514,7 +516,7 @@ async def test_update_with_unnecessary_json_attrs(
 async def test_update_with_json_attrs_with_json_attrs_path(
     hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
-    """Test using json_attributes_path to select a different part of the json object as root."""
+    """Test json_attributes_path selects a different root."""
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -613,8 +615,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -626,8 +628,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
@@ -714,7 +716,9 @@ async def test_scrape_sensor_device_timestamp(
                         "name": "Test",
                         "command": "echo January 17, 2022",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                     }
                 }
             ]
@@ -746,7 +750,9 @@ async def test_template_not_error_when_data_is_none(
                             "name": "Test",
                             "command": "failed command",
                             "unit_of_measurement": "MB",
-                            "value_template": "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}",
+                            "value_template": (
+                                "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}"
+                            ),
                         }
                     }
                 ]
@@ -848,9 +854,13 @@ async def test_availability_json_attributes_without_value_template(
                         "name": "Test",
                         "command": "echo January 17, 2022",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                         "availability": '{{ states("sensor.input1")=="on" }}',
-                        "icon": "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}",
+                        "icon": (
+                            "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}"
+                        ),
                     }
                 }
             ]
@@ -924,8 +934,8 @@ async def test_template_render_with_availability_syntax_error(
     assert state.state == "1"
 
     assert (
-        "Error rendering availability template for sensor.test: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for sensor.test:"
+        " UndefinedError: 'what_the_heck' is undefined" in caplog.text
     )
 
 
@@ -1022,3 +1032,493 @@ async def test_availability_blocks_value_template(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert error in caplog.text
+
+
+async def test_template_without_shell_features_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Templated commands with no shell metacharacters run via exec, no repair issue."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"sensor_value\n") as mock_exec:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "echo",
+        "sensor_value",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_with_shell_features_uses_shell_and_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Templated commands with shell metacharacters keep shell path and create a repair issue."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }} | cat",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        "echo safe_value | cat",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    issues = [
+        issue
+        for issue in issue_registry.issues.values()
+        if issue.translation_key == "shell_command_template_deprecation"
+    ]
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.4.0"
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].translation_placeholders == {
+        "program": "echo",
+        "platform": "sensor",
+        "name": "Test",
+    }
+
+
+async def test_static_command_with_shell_features_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Commands without a template keep the shell path and create no repair issue."""
+    # A folded YAML block scalar (command: >) leaves a trailing newline,
+    # which rendering would strip.
+    command = "echo 'ROC temperature 42' | awk '/ROC temperature/ {print $NF}'\n"
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"42\n") as mock_shell:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        command,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_shell_feature_issue_cleared_when_metachar_gone(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Repair issue is deleted when the rendered args no longer contain shell features."""
+    hass.states.async_set("sensor.input_sensor", "bad | value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # First update: rendered args contain "|" → shell path + repair issue
+    with mock_asyncio_subprocess_run(b"bad | value\n"):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+    # Second update: rendered args are clean → exec path, issue deleted
+    hass.states.async_set("sensor.input_sensor", "clean_value")
+    with mock_asyncio_subprocess_exec(b"clean_value\n"):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_render_unbalanced_quote_logs_and_skips(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A rendered value with an unbalanced quote is handled without crashing."""
+    hass.states.async_set("sensor.input_sensor", "O'Brien")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error parsing command" in caplog.text
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [
+        # "!" is not special to /bin/sh in argument position, so a value
+        # containing it is safe to run via exec without a deprecation warning.
+        pytest.param("hello!", id="exclamation_mark"),
+    ],
+)
+async def test_template_non_shell_metachar_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    state_value: str,
+) -> None:
+    """Values with characters that are not special to /bin/sh run via exec."""
+    hass.states.async_set("sensor.input_sensor", state_value)
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(f"{state_value}\n".encode()) as mock_exec:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "echo",
+        state_value,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_args"),
+    [
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}"',
+            ["echo", "abc|def;ghi&jkl*"],
+            id="double_quoted",
+        ),
+        pytest.param(
+            "echo '{{ states.sensor.input_sensor.state }}'",
+            ["echo", "abc|def;ghi&jkl*"],
+            id="single_quoted",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}" "a\\"b\\\\c"',
+            ["echo", "abc|def;ghi&jkl*", 'a"b\\c'],
+            id="escaped_quote_in_double_quotes",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}" a\\|b',
+            ["echo", "abc|def;ghi&jkl*", "a|b"],
+            id="escaped_outside_quotes",
+        ),
+    ],
+)
+async def test_template_quoted_shell_metachar_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+    expected_args: list[str],
+) -> None:
+    """Quoted or escaped shell metacharacters are literal, so exec is used."""
+    hass.states.async_set("sensor.input_sensor", "abc|def;ghi&jkl*")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"5\n") as mock_exec:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        *expected_args,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        # "$" and "`" are still expanded by the shell inside double quotes.
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}$HOME"',
+            id="variable_in_double_quotes",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}`id`"',
+            id="backtick_in_double_quotes",
+        ),
+        # The shell drops these backslashes but shlex.split keeps them.
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}\\$HOME"',
+            id="escaped_variable_in_double_quotes",
+        ),
+        pytest.param(
+            "echo {{ states.sensor.input_sensor.state }}\\\nmore",
+            id="escaped_newline",
+        ),
+        pytest.param(
+            "echo '{{ states.sensor.input_sensor.state }}' | cat",
+            id="pipe_after_quoted_arg",
+        ),
+    ],
+)
+async def test_template_unquoted_shell_feature_keeps_shell(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+) -> None:
+    """Shell features the shell still interprets keep the shell path and warn."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"5\n") as mock_shell:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once()
+    assert any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    ("command", "assembled"),
+    [
+        # A redirect in the executable token must be detected too, not only in
+        # the rendered args, or exec would try to launch the literal token.
+        pytest.param(
+            "echo>/tmp/out {{ states.sensor.input_sensor.state }}",
+            "echo>/tmp/out safe_value",
+            id="redirect_in_executable",
+        ),
+        pytest.param(
+            "$HOME/bin/tool {{ states.sensor.input_sensor.state }}",
+            "$HOME/bin/tool safe_value",
+            id="variable_in_executable",
+        ),
+        # A leading assignment carries no metacharacter but still needs a shell.
+        pytest.param(
+            "FOO=bar tool {{ states.sensor.input_sensor.state }}",
+            "FOO=bar tool safe_value",
+            id="assignment_prefix",
+        ),
+    ],
+)
+async def test_template_shell_feature_in_executable_keeps_shell(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+    assembled: str,
+) -> None:
+    """Shell syntax in the executable token keeps the shell path and warns."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        assembled,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+async def test_template_quoted_executable_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A quoted executable is unquoted for exec instead of taken literally."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": (
+                            '"/usr/bin/echo" {{ states.sensor.input_sensor.state }}'
+                        ),
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"safe_value\n") as mock_exec:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        "/usr/bin/echo",
+        "safe_value",
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    "edited_command",
+    [
+        pytest.param("echo {{ 'clean' }}", id="template_without_shell_features"),
+        pytest.param("echo clean | cat", id="no_template"),
+    ],
+)
+async def test_template_issue_id_stable_across_command_edits(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    edited_command: str,
+) -> None:
+    """Editing the command to remove templated shell features clears the original issue."""
+    # A shell feature creates the issue for this entity.
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test")
+    assert [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
+
+    # The same entity with an edited command clears it; a command-derived
+    # id would instead leave the original issue behind.
+    render_template_args(hass, edited_command, "sensor", "Test")
+    assert not [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
+
+
+async def test_template_issue_id_distinct_for_slugify_collision(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Names that slugify identically get distinct issue ids."""
+    # Both names slugify to "test_more", so a slug-only id would collide.
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test More")
+    render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test_(More)")
+    assert len([iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]) == 2
+
+    # Clearing one entity's issue with a safe command leaves the other's intact.
+    render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test More")
+    assert len([iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]) == 1

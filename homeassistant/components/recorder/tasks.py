@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections.abc import Callable, Iterable
@@ -9,16 +7,16 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import threading
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
-from .util import periodic_db_cleanups, session_scope
+from .util import periodic_db_cleanups
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +44,7 @@ class ChangeStatisticsUnitTask(RecorderTask):
     new_unit_of_measurement: str
     old_unit_of_measurement: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.change_statistics_unit(
@@ -62,10 +61,18 @@ class ClearStatisticsTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_ids: list[str]
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
-        statistics.clear_statistics(instance, self.statistic_ids)
+        if self.start_time is not None and self.end_time is not None:
+            statistics.clear_statistics_range(
+                instance, self.statistic_ids, self.start_time, self.end_time
+            )
+        else:
+            statistics.clear_statistics(instance, self.statistic_ids)
         if self.on_done:
             self.on_done()
 
@@ -76,10 +83,11 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_id: str
-    new_statistic_id: str | None | UndefinedType
-    new_unit_class: str | None | UndefinedType
-    new_unit_of_measurement: str | None | UndefinedType
+    new_statistic_id: str | UndefinedType | None
+    new_unit_class: str | UndefinedType | None
+    new_unit_of_measurement: str | UndefinedType | None
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.update_statistics_metadata(
@@ -100,6 +108,7 @@ class UpdateStatesMetadataTask(RecorderTask):
     entity_id: str
     new_entity_id: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         entity_registry.update_states_metadata(
@@ -117,6 +126,7 @@ class PurgeTask(RecorderTask):
     repack: bool
     apply_filter: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
         if purge.purge_old_data(
@@ -140,6 +150,7 @@ class PurgeEntitiesTask(RecorderTask):
     entity_filter: Callable[[str], bool]
     purge_before: datetime
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Purge entities from the database."""
         if purge.purge_entity_data(instance, self.entity_filter, self.purge_before):
@@ -155,6 +166,7 @@ class PerodicCleanupTask(RecorderTask):
     Trigger cleanup tasks when auto purge is disabled.
     """
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         periodic_db_cleanups(instance)
@@ -167,6 +179,7 @@ class StatisticsTask(RecorderTask):
     start: datetime
     fire_events: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.compile_statistics(instance, self.start, self.fire_events):
@@ -177,8 +190,9 @@ class StatisticsTask(RecorderTask):
 
 @dataclass(slots=True)
 class CompileMissingStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run a compile missing statistics."""
+    """An object to insert into the recorder queue to compile missing statistics."""
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task to compile missing statistics."""
         if statistics.compile_missing_statistics(instance):
@@ -195,6 +209,7 @@ class ImportStatisticsTask(RecorderTask):
     statistics: Iterable[StatisticData]
     table: type[Statistics | StatisticsShortTerm]
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.import_statistics(
@@ -216,6 +231,7 @@ class AdjustStatisticsTask(RecorderTask):
     sum_adjustment: float
     adjustment_unit: str
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
         if statistics.adjust_statistics(
@@ -246,6 +262,7 @@ class WaitTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._queue_watch.set()  # noqa: SLF001
@@ -259,6 +276,7 @@ class DatabaseLockTask(RecorderTask):
     database_unlock: threading.Event
     queue_overflow: bool
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._lock_database(self)  # noqa: SLF001
@@ -270,6 +288,7 @@ class StopTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance.stop_requested = True
@@ -281,6 +300,7 @@ class KeepAliveTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._send_keep_alive()  # noqa: SLF001
@@ -292,6 +312,7 @@ class CommitTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         instance._commit_event_session_or_retry()  # noqa: SLF001
@@ -305,6 +326,7 @@ class AddRecorderPlatformTask(RecorderTask):
     platform: Any
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         hass = instance.hass
@@ -321,6 +343,7 @@ class SynchronizeTask(RecorderTask):
     # commit_before is the default
     future: asyncio.Future
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # Does not use a tracked task to avoid
@@ -339,6 +362,7 @@ class AdjustLRUSizeTask(RecorderTask):
 
     commit_before = False
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # noqa: SLF001
@@ -350,6 +374,7 @@ class RefreshEventTypesTask(RecorderTask):
 
     event_types: list[EventType[Any] | str]
 
+    @override
     def run(self, instance: Recorder) -> None:
         """Refresh event types."""
         with session_scope(session=instance.get_session(), read_only=True) as session:

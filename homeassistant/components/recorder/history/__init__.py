@@ -1,7 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from itertools import groupby
@@ -25,7 +23,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.helpers.recorder import get_instance
+from homeassistant.helpers.recorder import get_instance, session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 
@@ -43,7 +41,7 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import execute_stmt_lambda_element, session_scope
+from ..util import execute_stmt_lambda_element
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
@@ -85,6 +83,28 @@ def _stmt_and_join_attributes(
     return _select
 
 
+def _row_field_indices(
+    no_attributes: bool,
+    include_last_changed: bool,
+    include_last_reported: bool,
+) -> tuple[int | None, int | None, int | None]:
+    """Return the (last_changed_ts, last_reported_ts, attributes) row indices.
+
+    Must match the column order selected by _stmt_and_join_attributes.
+    """
+    next_idx = len(_FIELD_MAP)
+    last_changed_ts_idx = last_reported_ts_idx = attributes_idx = None
+    if include_last_changed:
+        last_changed_ts_idx = next_idx
+        next_idx += 1
+    if include_last_reported:
+        last_reported_ts_idx = next_idx
+        next_idx += 1
+    if not no_attributes:
+        attributes_idx = next_idx
+    return last_changed_ts_idx, last_reported_ts_idx, attributes_idx
+
+
 def _stmt_and_join_attributes_for_start_state(
     no_attributes: bool,
     include_last_changed: bool,
@@ -103,7 +123,7 @@ def _stmt_and_join_attributes_for_start_state(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect,
+    subquery: Subquery,
     no_attributes: bool,
     include_last_changed: bool,
     include_last_reported: bool,
@@ -318,6 +338,9 @@ def get_significant_states_with_session(
         minimal_response,
         compressed_state_format,
         no_attributes=no_attributes,
+        field_indices=_row_field_indices(
+            no_attributes, not significant_changes_only, False
+        ),
     )
 
 
@@ -399,9 +422,11 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    descending: bool,
 ) -> Select | CompoundSelect:
     stmt = (
         _stmt_and_join_attributes(no_attributes, False, True)
+        .add_columns(States.state_id)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -419,37 +444,37 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+    if descending and limit:
+        # Select the newest samples before restoring the converter's ascending order.
+        subquery = stmt.order_by(
+            States.last_updated_ts.desc(), States.state_id.desc()
+        ).subquery()
+        stmt = select(subquery).order_by(
+            subquery.c.last_updated_ts, subquery.c.state_id
+        )
+    else:
+        stmt = stmt.order_by(
+            States.metadata_id, States.last_updated_ts, States.state_id
+        )
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
         # we can return the statement as is as there will
         # never be a start time state.
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                    True,
-                ).subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-            _select_from_subquery(
-                stmt.subquery(),
-                no_attributes,
-                False,
-                True,
-            ),
-        ).subquery(),
-        no_attributes,
-        False,
-        True,
+    start_state = (
+        _get_single_entity_start_time_stmt(
+            start_time_ts, single_metadata_id, no_attributes, False, True
+        )
+        .add_columns(States.state_id)
+        .order_by(States.state_id.desc())
+        .subquery()
+    )
+    unioned_subquery = union_all(
+        select(start_state), select(stmt.subquery())
+    ).subquery()
+    return _select_from_subquery(unioned_subquery, no_attributes, False, True).order_by(
+        unioned_subquery.c.last_updated_ts, unioned_subquery.c.state_id
     )
 
 
@@ -496,11 +521,13 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 oldest_ts,
+                descending,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
+                descending,
                 include_start_time_state,
             ],
         )
@@ -515,6 +542,7 @@ def state_changes_during_period(
                 entity_id_to_metadata_id,
                 descending=descending,
                 no_attributes=no_attributes,
+                field_indices=_row_field_indices(no_attributes, False, True),
             ),
         )
 
@@ -609,6 +637,7 @@ def get_last_state_changes(
                 entity_ids,
                 entity_id_to_metadata_id,
                 no_attributes=False,
+                field_indices=_row_field_indices(False, False, number_of_states > 1),
             ),
         )
 
@@ -798,6 +827,8 @@ def _sorted_states_to_dict(
     compressed_state_format: bool = False,
     descending: bool = False,
     no_attributes: bool = False,
+    *,
+    field_indices: tuple[int | None, int | None, int | None],
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -811,8 +842,19 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     field_map = _FIELD_MAP
+    last_changed_ts_idx, last_reported_ts_idx, attributes_idx = field_indices
     state_class: Callable[
-        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
+        [
+            dict[str, dict[str, Any]],
+            float | None,
+            str,
+            str,
+            float | None,
+            Any,
+            float | None,
+            float | None,
+            bool,
+        ],
         State | dict[str, Any],
     ]
     if compressed_state_format:
@@ -858,12 +900,18 @@ def _sorted_states_to_dict(
             ent_results.extend(
                 [
                     state_class(
-                        db_state,
                         attr_cache,
                         start_time_ts,
                         entity_id,
                         db_state[state_idx],
                         db_state[last_updated_ts_idx],
+                        None if attributes_idx is None else db_state[attributes_idx],
+                        None
+                        if last_changed_ts_idx is None
+                        else db_state[last_changed_ts_idx],
+                        None
+                        if last_reported_ts_idx is None
+                        else db_state[last_reported_ts_idx],
                         False,
                     )
                     for db_state in group
@@ -882,12 +930,18 @@ def _sorted_states_to_dict(
             prev_state = first_state[state_idx]
             ent_results.append(
                 state_class(
-                    first_state,
                     attr_cache,
                     start_time_ts,
                     entity_id,
                     prev_state,
                     first_state[last_updated_ts_idx],
+                    None if attributes_idx is None else first_state[attributes_idx],
+                    None
+                    if last_changed_ts_idx is None
+                    else first_state[last_changed_ts_idx],
+                    None
+                    if last_reported_ts_idx is None
+                    else first_state[last_reported_ts_idx],
                     no_attributes,
                 )
             )

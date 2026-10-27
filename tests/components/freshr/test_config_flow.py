@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientError
 from pyfreshr.exceptions import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.freshr.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass"}
 
@@ -226,7 +225,7 @@ async def test_form_already_configured_case_insensitive(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test config flow aborts when the same account is configured with different casing."""
+    """Test config flow aborts when same account has different casing."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

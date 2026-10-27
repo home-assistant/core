@@ -1,9 +1,7 @@
 """Implement a iotty Light Switch Device."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from iottycloud.lightswitch import LightSwitch
 from iottycloud.outlet import Outlet
@@ -159,6 +157,7 @@ class IottySwitch(IottyEntity, SwitchEntity):
         self._attr_device_class = entity_description.device_class
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the Switch is on."""
         _LOGGER.debug(
@@ -168,12 +167,14 @@ class IottySwitch(IottyEntity, SwitchEntity):
         )
         return self._iotty_device.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Switch on."""
         _LOGGER.debug("[%s] Turning on", self._iotty_device.device_id)
         await self._iotty_cloud.command(self._iotty_device.device_id, COMMAND_TURNON)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Switch off."""
         _LOGGER.debug("[%s] Turning off", self._iotty_device.device_id)
@@ -181,6 +182,7 @@ class IottySwitch(IottyEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

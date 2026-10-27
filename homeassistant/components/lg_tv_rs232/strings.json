@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "troubleshoot": {
+        "description": "Home Assistant could not communicate with the LG TV over the serial port.\n\nThe most common cause is that **RS-232C Control** is not enabled on the TV. On most LG models this setting is in a hidden service menu (often called **InStart**); the exact location varies by model, so check your TV's documentation.\n\nAlso make sure that:\n- The TV is powered on.\n- The serial cable is a null-modem (cross-over) cable and is fully seated. LG's RS-232 jack is recessed, so push the plug in until it clicks.\n- The correct serial port was selected.\n\nSelect **Submit** to try again.",
+        "title": "Connection failed"
+      },
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]",
+          "set_id": "Set ID"
+        },
+        "data_description": {
+          "device": "Serial port path to connect to. The TV must be powered on for the initial connection.",
+          "set_id": "The set ID configured on the TV. Leave this at 1 unless you have multiple TVs daisy-chained on the same RS-232 bus."
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tv": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "analog_antenna": "Analog (antenna)",
+              "analog_cable": "Analog (cable)",
+              "av1": "AV 1",
+              "av2": "AV 2",
+              "component1": "Component 1",
+              "component2": "Component 2",
+              "component3": "Component 3",
+              "dtv_antenna": "Digital TV (antenna)",
+              "dtv_cable": "Digital TV (cable)",
+              "hdmi1": "HDMI 1",
+              "hdmi2": "HDMI 2",
+              "hdmi3": "HDMI 3",
+              "hdmi4": "HDMI 4",
+              "rgb_pc": "RGB PC"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send the command to the TV: {error}"
+    },
+    "command_rejected": {
+      "message": "The TV rejected the command: {error}"
+    }
+  }
+}

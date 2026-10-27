@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
@@ -47,8 +48,6 @@ from . import (
     _patch_discovery_interval,
     _patch_discovery_timeout,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_ip_changes_fallback_discovery(
@@ -156,7 +155,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 async def test_setup_discovery_with_manually_configured_network_adapter(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting up Yeelight by discovery with a manually configured network adapter."""
+    """Test Yeelight discovery with manual network adapter config."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
     )
@@ -214,7 +213,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING = [
 async def test_setup_discovery_with_manually_configured_network_adapter_one_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test setting up Yeelight by discovery with a manually configured network adapter with one that fails to bind."""
+    """Test Yeelight discovery with manual adapter when one fails to bind."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
     )
@@ -613,7 +612,7 @@ async def test_oserror_on_first_update_results_in_unavailable(
 async def test_non_oserror_exception_on_first_update(
     hass: HomeAssistant, exception: Exception
 ) -> None:
-    """Test that an exceptions other than OSError on first update do not result in unavailable.
+    """Test non-OSError on first update does not result in unavailable.
 
     The unavailable state will come as a push update in this case
     """

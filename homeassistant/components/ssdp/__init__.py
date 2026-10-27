@@ -1,7 +1,5 @@
 """The SSDP integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import partial
 from typing import Any
@@ -10,17 +8,12 @@ from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo as _SsdpServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_ssdp, bind_hass
+from homeassistant.loader import async_get_ssdp
 from homeassistant.util.logging import catch_log_exception
 
 from . import websocket_api
 from .const import DOMAIN, SSDP_SCANNER, UPNP_SERVER
-from .scanner import (
-    IntegrationMatchers,
-    Scanner,
-    SsdpChange,
-    SsdpHassJobCallback,  # noqa: F401
-)
+from .scanner import IntegrationMatchers, Scanner, SsdpChange
 from .server import Server
 
 # Attributes for accessing info from SSDP response
@@ -39,13 +32,23 @@ ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "ATTR_SSDP_BOOTID",
+    "ATTR_SSDP_LOCATION",
+    "ATTR_SSDP_NEXTBOOTID",
+    "DOMAIN",
+    "SsdpChange",
+    "async_get_discovery_info_by_st",
+    "async_get_discovery_info_by_udn_st",
+    "async_register_callback",
+]
+
 
 def _format_err(name: str, *args: Any) -> str:
     """Format error message."""
     return f"Exception in SSDP callback {name}: {args}"
 
 
-@bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
     callback: Callable[
@@ -68,7 +71,6 @@ async def async_register_callback(
     return await scanner.async_register_callback(job, match_dict)
 
 
-@bind_hass
 async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
 ) -> _SsdpServiceInfo | None:
@@ -77,7 +79,6 @@ async def async_get_discovery_info_by_udn_st(
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
 
 
-@bind_hass
 async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
 ) -> list[_SsdpServiceInfo]:
@@ -86,7 +87,6 @@ async def async_get_discovery_info_by_st(
     return await scanner.async_get_discovery_info_by_st(st)
 
 
-@bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
 ) -> list[_SsdpServiceInfo]:

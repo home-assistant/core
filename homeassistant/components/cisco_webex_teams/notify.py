@@ -1,11 +1,9 @@
 """Cisco Webex notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from webexpythonsdk import ApiError, WebexAPI, exceptions
 
 from homeassistant.components.notify import (
@@ -15,15 +13,21 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "cisco_webex_teams"
+
 CONF_ROOM_ID = "room_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_ROOM_ID): cv.string}
+    {
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
+        probatio.Required(CONF_ROOM_ID): cv.string,
+    }
 )
 
 
@@ -52,6 +56,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
         self.room = room
         self.client = client
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -62,6 +67,7 @@ class CiscoWebexNotificationService(BaseNotificationService):
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
         except ApiError as api_error:
-            _LOGGER.error(
-                "Could not send Cisco Webex notification. Error: %s", api_error
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from api_error

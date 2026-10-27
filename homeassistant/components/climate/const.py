@@ -1,6 +1,24 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import ClimateEntity
+
+DOMAIN: Final = "climate"
+
+DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMIDITY = 30
+DEFAULT_MAX_HUMIDITY = 99
 
 
 class HVACMode(StrEnum):
@@ -124,8 +142,8 @@ DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN = "climate"
 
+INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
 SERVICE_SET_FAN_MODE = "set_fan_mode"
@@ -135,6 +153,48 @@ SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_SWING_HORIZONTAL_MODE = "set_swing_horizontal_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
+
+
+class ClimateEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for climate entities."""
+
+    HVAC_MODES = "hvac_modes"
+    MIN_TEMP = "min_temp"
+    MAX_TEMP = "max_temp"
+    TARGET_TEMP_STEP = "target_temp_step"
+    MIN_HUMIDITY = "min_humidity"
+    MAX_HUMIDITY = "max_humidity"
+    TARGET_HUMIDITY_STEP = "target_humidity_step"
+    FAN_MODES = "fan_modes"
+    PRESET_MODES = "preset_modes"
+    SWING_MODES = "swing_modes"
+    SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
+
+
+class ClimateEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.2.0"),
+        "HUMIDITY": ("ClimateEntityStateAttribute.TARGET_HUMIDITY", "2027.2.0"),
+    },
+):
+    """State attributes for climate entities."""
+
+    CURRENT_TEMPERATURE = "current_temperature"
+    TARGET_TEMPERATURE = "temperature"
+    TEMPERATURE = "temperature"  # Deprecated, replaced with TARGET_TEMPERATURE
+    TARGET_TEMP_HIGH = "target_temp_high"
+    TARGET_TEMP_LOW = "target_temp_low"
+    CURRENT_HUMIDITY = "current_humidity"
+    TARGET_HUMIDITY = "humidity"
+    HUMIDITY = "humidity"  # Deprecated, replaced with TARGET_HUMIDITY
+    FAN_MODE = "fan_mode"
+    HVAC_ACTION = "hvac_action"
+    PRESET_MODE = "preset_mode"
+    SWING_MODE = "swing_mode"
+    SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class ClimateEntityFeature(IntFlag):
@@ -149,3 +209,32 @@ class ClimateEntityFeature(IntFlag):
     TURN_OFF = 128
     TURN_ON = 256
     SWING_HORIZONTAL_MODE = 512
+
+
+class ClimateService(StrEnum):
+    """Store keys for climate services."""
+
+    SET_FAN_MODE = "set_fan_mode"
+    SET_HUMIDITY = "set_humidity"
+    SET_HVAC_MODE = "set_hvac_mode"
+    SET_PRESET_MODE = "set_preset_mode"
+    SET_SWING_HORIZONTAL_MODE = "set_swing_horizontal_mode"
+    SET_SWING_MODE = "set_swing_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class ClimateServiceArgument(StrEnum):
+    """Store keys for climate service arguments."""
+
+    FAN_MODE = "fan_mode"
+    HUMIDITY = "humidity"
+    HVAC_MODE = "hvac_mode"
+    PRESET_MODE = "preset_mode"
+    SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+    SWING_MODE = "swing_mode"
+    TARGET_TEMP_HIGH = "target_temp_high"
+    TARGET_TEMP_LOW = "target_temp_low"
+    TEMPERATURE = "temperature"

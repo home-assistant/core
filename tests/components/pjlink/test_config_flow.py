@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.pjlink.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_DATA, DEFAULT_DATA_W_ENCODING, DEFAULT_DATA_WO_PORT
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_creates_entry(
@@ -38,11 +37,9 @@ async def test_user_flow_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_aborts_if_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_projector: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_projector: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user flow aborts if already configured."""
 
@@ -124,11 +121,9 @@ async def test_import_creates_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_aborts_if_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_projector: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_projector: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test importing a YAML config aborts if already configured."""
 

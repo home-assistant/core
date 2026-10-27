@@ -1,7 +1,5 @@
 """The OneDrive for Business integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import cast
@@ -18,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -42,7 +39,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Set up OneDrive from a config entry."""
     client, get_access_token = await _get_onedrive_client(hass, entry)
 
@@ -80,12 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Unload a OneDrive config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _get_onedrive_client(
@@ -93,14 +88,11 @@ async def _get_onedrive_client(
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
     with tenant_id_context(entry.data[CONF_TENANT_ID]):
-        try:
-            implementation = await async_get_config_entry_implementation(hass, entry)
-        except ImplementationUnavailableError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="oauth2_implementation_unavailable",
-            ) from err
+        implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
+
+    # Refresh up front, so a failure surfaces here instead of from inside the client
+    await session.async_ensure_token_valid()
 
     async def get_access_token() -> str:
         await session.async_ensure_token_valid()

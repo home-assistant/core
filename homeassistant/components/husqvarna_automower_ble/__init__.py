@@ -1,13 +1,12 @@
 """The Husqvarna Autoconnect Bluetooth integration."""
 
-from __future__ import annotations
-
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address, get_device
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
@@ -24,7 +23,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
     if CONF_PIN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -46,6 +45,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
         device = bluetooth.async_ble_device_from_address(
             hass, address, connectable=True
         ) or await get_device(address)
+        if device is None:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "address": address,
+                    "error": "device not found",
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
+            )
         response_result = await mower.connect(device)
         if response_result == ResponseResult.INVALID_PIN:
             raise ConfigEntryAuthFailed(
@@ -53,11 +66,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
             )
         if response_result != ResponseResult.OK:
             raise ConfigEntryNotReady(
-                f"Unable to connect to device {address}, mower returned {response_result}"
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "address": address,
+                    "error": response_result.name,
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
             )
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
-            f"Unable to connect to device {address} due to {exception}"
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "address": address,
+                "error": str(exception) or type(exception).__name__,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         ) from exception
 
     LOGGER.debug("connected and paired")
@@ -71,13 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: HusqvarnaCoordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator: HusqvarnaCoordinator = entry.runtime_data
+    await coordinator.async_shutdown()

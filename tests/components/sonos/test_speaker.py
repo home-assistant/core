@@ -3,6 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
@@ -15,12 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent, group_speakers, ungroup_speakers
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
 
 
 async def test_fallback_to_polling(
@@ -45,7 +44,8 @@ async def test_fallback_to_polling(
 
     caplog.clear()
 
-    # Ensure subscriptions are cancelled and polling methods are called when subscriptions time out
+    # Ensure subscriptions are cancelled and polling methods are
+    # called when subscriptions time out
     with (
         patch("homeassistant.components.sonos.media.SonosMedia.poll_media"),
         patch(
@@ -105,8 +105,9 @@ async def test_zgs_event_group_speakers(
     hass: HomeAssistant, sonos_setup_two_speakers: list[MockSoCo]
 ) -> None:
     """Tests grouping and ungrouping two speakers."""
-    # When Sonos speakers are grouped; one of the speakers is the coordinator and is in charge
-    # of playback across both speakers. Hence, service calls to play or pause on media_players
+    # When Sonos speakers are grouped; one of the speakers is the coordinator
+    # and is in charge of playback across both speakers. Hence, service calls
+    # to play or pause on media_players
     # that are part of the group are routed to the coordinator.
     soco_lr = sonos_setup_two_speakers[0]
     soco_br = sonos_setup_two_speakers[1]

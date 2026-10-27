@@ -1,14 +1,12 @@
 """Models for scaffolding."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any
 
 import attr
 
-from script.util import sort_manifest
+from script.hassfest.manifest_util import sort_manifest
 
 from .const import COMPONENT_DIR, TESTS_DIR
 
@@ -26,7 +24,7 @@ class Info:
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)
-    helper: str = attr.ib(default=None)
+    integration_type: str = attr.ib(default=None)
 
     files_added: set[Path] = attr.ib(factory=set)
     tests_added: set[Path] = attr.ib(factory=set)

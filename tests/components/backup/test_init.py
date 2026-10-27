@@ -4,16 +4,15 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceNotFound, Unauthorized
 
 from .common import setup_backup_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("supervisor_client")
@@ -157,3 +156,30 @@ async def test_setup_entry(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("service", "with_hassio"),
+    [
+        ("create", False),
+        ("create_automatic", False),
+        ("create_automatic", True),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_services_require_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service: str,
+    with_hassio: bool,
+) -> None:
+    """Test backup services require admin."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            context=Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )

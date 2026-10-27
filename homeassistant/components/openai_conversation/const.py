@@ -3,13 +3,14 @@
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.helpers import llm
 
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+DEFAULT_EVALUATION_NAME = "OpenAI Evaluation"
 DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
 DEFAULT_STT_NAME = "OpenAI STT"
 DEFAULT_TTS_NAME = "OpenAI TTS"
@@ -18,9 +19,8 @@ DEFAULT_NAME = "OpenAI Conversation"
 CONF_CHAT_MODEL = "chat_model"
 CONF_IMAGE_MODEL = "image_model"
 CONF_CODE_INTERPRETER = "code_interpreter"
-CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
-CONF_PROMPT = "prompt"
+CONF_PRO_MODE = "pro_mode"
 CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_REASONING_SUMMARY = "reasoning_summary"
 CONF_RECOMMENDED = "recommended"
@@ -39,9 +39,11 @@ CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 CONF_WEB_SEARCH_INLINE_CITATIONS = "inline_citations"
 RECOMMENDED_CODE_INTERPRETER = False
+RECOMMENDED_DECISION_MODEL = "gpt-6-luna"
 RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
-RECOMMENDED_IMAGE_MODEL = "gpt-image-1.5"
+RECOMMENDED_IMAGE_MODEL = "gpt-image-2.5-flare"
 RECOMMENDED_MAX_TOKENS = 3000
+RECOMMENDED_PRO_MODE = False
 RECOMMENDED_REASONING_EFFORT = "low"
 RECOMMENDED_STORE_RESPONSES = False
 RECOMMENDED_REASONING_SUMMARY = "auto"
@@ -72,7 +74,6 @@ UNSUPPORTED_MODELS: list[str] = [
 ]
 
 UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
-    "gpt-5-nano",
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4.1-nano",
@@ -117,6 +118,9 @@ RECOMMENDED_CONVERSATION_OPTIONS = {
 }
 RECOMMENDED_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
+}
+RECOMMENDED_EVALUATION_OPTIONS = {
+    CONF_CHAT_MODEL: RECOMMENDED_DECISION_MODEL,
 }
 RECOMMENDED_STT_OPTIONS: dict[str, Any] = {}
 RECOMMENDED_TTS_OPTIONS = {

@@ -1,7 +1,5 @@
 """The tests for the InfluxDB sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
@@ -10,8 +8,9 @@ from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import sensor
 from homeassistant.components.influxdb.const import (
@@ -29,8 +28,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
 INFLUXDB_CLIENT_PATH = f"{INFLUXDB_PATH}.InfluxDBClient"

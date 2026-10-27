@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -14,8 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -64,7 +63,9 @@ async def test_ping_entity(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert "There is no value to refresh for this entity" in caplog.text
+    assert (
+        "There is no value to refresh for button.z_wave_thermostat_ping" in caplog.text
+    )
 
     # Assert a node ping button entity is not created for the controller
     driver = client.driver
@@ -72,7 +73,7 @@ async def test_ping_entity(
     assert node.is_controller_node
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN, "sensor", f"{get_valueless_base_unique_id(driver, node)}.ping"
+            BUTTON_DOMAIN, DOMAIN, f"{get_valueless_base_unique_id(driver, node)}.ping"
         )
         is None
     )
@@ -132,3 +133,19 @@ async def test_notification_idle_button(
         "property": "Home Security",
         "propertyKey": "Cover status",
     }
+
+
+@pytest.mark.usefixtures("wallmote_central_scene", "integration")
+async def test_power_management_notification_idle_button(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the idle button derived from the Power Management value still exists.
+
+    The battery charging binary sensor is derived from the same Notification value,
+    so this guards against the idle button being silently dropped in discovery.
+    """
+    entity_id = "button.mbr_wallmote_quad_idle_power_management_battery_load_status"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

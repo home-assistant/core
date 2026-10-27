@@ -1,11 +1,11 @@
 """Fixtures for the Tuya integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import (
@@ -17,15 +17,7 @@ from homeassistant.components.tuya.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import (
-    DEVICE_MOCKS,
-    MockDeviceListener,
-    create_device,
-    create_listener,
-    create_manager,
-)
-
-from tests.common import MockConfigEntry
+from . import DEVICE_MOCKS, TuyaNotificationHelper, create_device, create_manager
 
 
 @pytest.fixture
@@ -60,7 +52,10 @@ async def mock_loaded_entry(
 
     # Initialize the component
     with (
-        patch("homeassistant.components.tuya.Manager", return_value=mock_manager),
+        patch(
+            "homeassistant.components.tuya.coordinator.Manager",
+            return_value=mock_manager,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -71,7 +66,7 @@ async def mock_loaded_entry(
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.tuya.async_setup_entry", return_value=None):
         yield
 
 
@@ -139,6 +134,18 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
 
 
 @pytest.fixture
-def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListener:
-    """Fixture for Tuya DeviceListener."""
-    return create_listener(hass, mock_manager)
+def notification_helper(
+    hass: HomeAssistant, mock_manager: Manager
+) -> TuyaNotificationHelper:
+    """Fixture for Tuya NotificationHelper."""
+    return TuyaNotificationHelper(hass, mock_manager)
+
+
+@pytest.fixture
+def no_quirk() -> Generator[None]:
+    """Fixture to bypass all quirk registration."""
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+    ):
+        yield

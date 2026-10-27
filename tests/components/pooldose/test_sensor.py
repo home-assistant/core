@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pooldose.request_status import RequestStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import (
@@ -16,8 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -142,7 +145,6 @@ async def test_sensor_entity_unavailable_no_coordinator_data(
     assert temp_state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("mock_pooldose_client")
 async def test_sensor_unit_fallback_to_description(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

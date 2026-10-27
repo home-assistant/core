@@ -4,6 +4,8 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from aiostreammagic import StreamMagicError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
@@ -11,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.20.218"),
@@ -31,10 +31,9 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_stream_magic_client: AsyncMock
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -56,10 +55,9 @@ async def test_full_flow(
     assert result["result"].unique_id == "0020c2d8"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_stream_magic_client: AsyncMock
 ) -> None:
     """Test flow errors."""
     mock_stream_magic_client.connect.side_effect = StreamMagicError
@@ -88,10 +86,10 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -113,10 +111,9 @@ async def test_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow(
-    hass: HomeAssistant,
-    mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_stream_magic_client: AsyncMock
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -139,10 +136,9 @@ async def test_zeroconf_flow(
     assert result["result"].unique_id == "0020c2d8"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_errors(
-    hass: HomeAssistant,
-    mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_stream_magic_client: AsyncMock
 ) -> None:
     """Test zeroconf flow."""
     mock_stream_magic_client.connect.side_effect = StreamMagicError
@@ -176,10 +172,10 @@ async def test_zeroconf_flow_errors(
     assert result["result"].unique_id == "0020c2d8"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -211,10 +207,10 @@ async def _start_reconfigure_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -231,10 +227,10 @@ async def test_reconfigure_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unique_id_mismatch(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure reconfigure flow aborts when the bride changes."""

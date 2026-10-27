@@ -6,6 +6,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.device_tracker import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
@@ -27,12 +28,10 @@ from homeassistant.util import dt as dt_util
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-from tests.common import async_fire_time_changed
-
 
 @pytest.fixture(autouse=True)
 def device_tracker_platforms_only():
-    """Only set up the device_tracker platforms and required base platforms to speed up tests."""
+    """Only set up device_tracker and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

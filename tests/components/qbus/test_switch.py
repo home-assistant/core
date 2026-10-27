@@ -1,5 +1,8 @@
 """Test Qbus switch entities."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -7,9 +10,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 _PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
 _PAYLOAD_SWITCH_STATE_OFF = '{"id":"UL10","properties":{"value":false},"type":"state"}'
@@ -23,7 +23,7 @@ _PAYLOAD_SWITCH_SET_STATE_OFF = (
 _TOPIC_SWITCH_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/state"
 _TOPIC_SWITCH_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/setState"
 
-_SWITCH_ENTITY_ID = "switch.living"
+_SWITCH_ENTITY_ID = "switch.living_living"
 
 
 async def test_switch_turn_on_off(
@@ -43,7 +43,11 @@ async def test_switch_turn_on_off(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_ON, 0, False
+        _TOPIC_SWITCH_SET_STATE,
+        _PAYLOAD_SWITCH_SET_STATE_ON,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -62,7 +66,11 @@ async def test_switch_turn_on_off(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_OFF, 0, False
+        _TOPIC_SWITCH_SET_STATE,
+        _PAYLOAD_SWITCH_SET_STATE_OFF,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response

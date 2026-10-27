@@ -1,14 +1,12 @@
 """DataUpdateCoordinator for the LG ThinQ device."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import time
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from thinqconnect import ThinQAPIException
-from thinqconnect.integration import HABridge
+from thinqconnect.integration import HABridge, NotConnectedDeviceError
 
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
@@ -42,6 +40,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = ha_bridge
         self.device_id = ha_bridge.device.device_id
         self.sub_id = ha_bridge.sub_id
+        self.device_connected = True
 
         alias = ha_bridge.device.alias
 
@@ -96,12 +95,20 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             REVERSE_DEVICE_UNIT_TO_HA.get(self.hass.config.units.temperature_unit)
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
         try:
-            return await self.api.fetch_data()
+            data = await self.api.fetch_data()
+        except NotConnectedDeviceError as e:
+            _LOGGER.debug("Device %s is not connected: %s", self.device_name, e)
+            self.device_connected = False
+            return self.data
         except ThinQAPIException as e:
             raise UpdateFailed(e) from e
+
+        self.device_connected = True
+        return data
 
     def refresh_status(self) -> None:
         """Refresh current status."""
@@ -111,6 +118,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle the status received from the mqtt connection."""
         data = self.api.update_status(status)
         if data is not None:
+            self.device_connected = True
             self.async_set_updated_data(data)
 
     def handle_notification_message(self, message: str | None) -> None:

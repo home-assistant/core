@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,8 +39,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Ethernet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Ethernet',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_ethernet',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -90,8 +90,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_internet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Internet',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Internet',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_internet',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -141,8 +141,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_vpn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title VPN',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title VPN',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_vpn',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -192,8 +192,8 @@
 # name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock Title Wi-Fi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Wi-Fi',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_wi_fi',

@@ -1,7 +1,5 @@
 """Test the Matter config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -11,6 +9,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
@@ -18,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Matter Server",
@@ -63,7 +60,7 @@ ZEROCONF_INFO_UDP = ZeroconfServiceInfo(
 def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.matter.async_setup_entry", return_value=True
+        "homeassistant.components.matter.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -72,7 +69,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
 def unload_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry unload."""
     with patch(
-        "homeassistant.components.matter.async_unload_entry", return_value=True
+        "homeassistant.components.matter.async_unload_entry", return_value=None
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -180,6 +177,17 @@ async def test_manual_errors(
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    client_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_already_configured(

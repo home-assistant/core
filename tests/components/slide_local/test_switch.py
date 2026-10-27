@@ -9,6 +9,7 @@ from goslideapi.goslideapi import (
     DigestAuthCalcError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -91,7 +90,10 @@ async def test_service_exception(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Error while sending the request setting Touch&Go to {service[5:]} to the device",
+        match=(
+            "Error while sending the request setting Touch&Go"
+            f" to {service[5:]} to the device"
+        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

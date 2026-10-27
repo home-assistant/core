@@ -13,19 +13,19 @@ from opendisplay import (
     BLEConnectionError,
 )
 from PIL import Image as PILImage
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
+from homeassistant.components.media_source import MediaImage
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import ENCRYPTION_KEY
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -128,11 +128,60 @@ async def test_upload_image_remote_url(
     mock_upload_device.upload_image.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        pytest.param("media-source://image/image.collection", id="image_entity"),
+        pytest.param("media-source://camera/camera.front_door", id="camera_entity"),
+    ],
+)
+async def test_upload_image_from_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    media_content_id: str,
+) -> None:
+    """Test uploading a single image from an image or camera entity."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    buf = io.BytesIO()
+    PILImage.new("RGB", (10, 10)).save(buf, format="PNG")
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.services.async_get_media_image",
+            return_value=MediaImage(buf.getvalue(), "image/png"),
+        ) as mock_get_image,
+        patch(
+            "homeassistant.components.opendisplay.services.async_resolve_media"
+        ) as mock_resolve,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": media_content_id,
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    mock_get_image.assert_awaited_once_with(hass, media_content_id)
+    mock_resolve.assert_not_called()
+    mock_upload_device.upload_image.assert_called_once()
+
+
 async def test_upload_image_invalid_device_id(
     hass: HomeAssistant,
 ) -> None:
     """Test that an invalid device_id raises ServiceValidationError."""
-    with pytest.raises(ServiceValidationError, match="not a valid OpenDisplay device"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Device with ID not-a-real-device-id was not found",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "upload_image",
@@ -252,7 +301,7 @@ async def test_upload_image_invalid_mode(
     """Test that invalid mode strings are rejected by the schema."""
     device_id = _device_id(hass, mock_config_entry)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "upload_image",
@@ -371,7 +420,7 @@ async def test_upload_image_invalid_encryption_key_format(
     mock_config_entry: MockConfigEntry,
     mock_resolve_media: MagicMock,
 ) -> None:
-    """Test that a malformed stored encryption key triggers reauth and raises an error."""
+    """Test malformed encryption key triggers reauth and error."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: "not-valid-hex!"},

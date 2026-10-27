@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 
 @pytest.fixture
@@ -150,7 +149,7 @@ async def test_midnight_turnover_before_midnight_outside_period(
 
 @pytest.mark.freeze_time("2019-01-10 10:00:00-08:00")
 async def test_after_happens_tomorrow(hass: HomeAssistant) -> None:
-    """Test when both before and after are in the future, and after is later than before."""
+    """Test when before and after are in the future, after is later than before."""
     config = {
         "binary_sensor": [
             {"platform": "tod", "name": "Night", "after": "23:00", "before": "12:00"}
@@ -760,7 +759,8 @@ async def test_dst5(
         ]
     }
     # Test DST #5:
-    # Test the case where the end time does not exist (roll out to the next available time)
+    # Test case where end time does not exist
+    # (roll out to the next available time)
     # First test before the sensor is turned on
     entity_id = "binary_sensor.day"
     freezer.move_to(test_time1)
@@ -774,7 +774,8 @@ async def test_dst5(
     assert state.attributes["next_update"] == "2019-03-31T01:50:00+01:00"
     assert state.state == STATE_OFF
 
-    # Seconds, test state when sensor is ON but end time has rolled out to next available time.
+    # Second, test state when sensor is ON but end time has rolled
+    # out to next available time.
     freezer.move_to(test_time2)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
@@ -801,7 +802,8 @@ async def test_dst6(
         ]
     }
     # Test DST #6:
-    # Test the case where the end time does not exist (roll out to the next available time)
+    # Test case where end time does not exist
+    # (roll out to the next available time)
     # First test before the sensor is turned on
     entity_id = "binary_sensor.day"
     freezer.move_to(test_time1)
@@ -815,7 +817,8 @@ async def test_dst6(
     assert state.attributes["next_update"] == "2019-03-31T03:00:00+02:00"
     assert state.state == STATE_OFF
 
-    # Seconds, test state when sensor is ON but end time has rolled out to next available time.
+    # Second, test state when sensor is ON but end time has rolled
+    # out to next available time.
     freezer.move_to(test_time2)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()

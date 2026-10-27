@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
@@ -20,7 +21,11 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.typing import WebSocketGenerator
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.VACUUM
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -145,6 +150,34 @@ async def test_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
 
+@pytest.mark.parametrize("node_fixture", ["roborock_saros_10"])
+async def test_vacuum_locate_action(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum locate service action."""
+    entity_ids = [state.entity_id for state in hass.states.async_all("vacuum")]
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    await hass.services.async_call(
+        "vacuum",
+        "locate",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Identify.Commands.Identify(identifyTime=10),
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_updates(
     hass: HomeAssistant,
@@ -179,14 +212,16 @@ async def test_vacuum_updates(
     assert state
     assert state.state == "returning"
 
-    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is idle
+    # confirm state is 'idle' by setting the operational state to
+    # 0x01 (running) but mode is idle
     set_node_attribute(matter_node, 1, 97, 4, 0x01)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "idle"
 
-    # confirm state is 'idle' by setting the operational state to 0x01 (running) but mode is cleaning
+    # confirm state is 'idle' by setting the operational state to
+    # 0x01 (running) but mode is cleaning
     set_node_attribute(matter_node, 1, 97, 4, 0x01)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
@@ -478,6 +513,7 @@ async def test_vacuum_clean_area_select_areas_failure(
 async def test_vacuum_no_issue_on_transient_empty_segments(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
@@ -504,8 +540,7 @@ async def test_vacuum_no_issue_on_transient_empty_segments(
     set_node_attribute(matter_node, 1, 336, 0, [])
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
-    issue = issue_reg.async_get_issue(
+    issue = issue_registry.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
     assert issue is None
@@ -515,6 +550,7 @@ async def test_vacuum_no_issue_on_transient_empty_segments(
 async def test_vacuum_raise_segments_changed_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
@@ -540,8 +576,7 @@ async def test_vacuum_raise_segments_changed_issue(
     set_node_attribute(matter_node, 1, 97, 4, 0x02)
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
-    issue = issue_reg.async_get_issue(
+    issue = issue_registry.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
     assert issue is not None

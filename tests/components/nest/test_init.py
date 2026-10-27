@@ -9,7 +9,7 @@ relevant modes.
 """
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, patch
@@ -23,28 +23,55 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .common import (
+    LEGACY_TOPIC_NAME,
     PROJECT_ID,
     SUBSCRIBER_ID,
+    SUBSCRIPTION_NAME,
+    TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_NEW_SUBSCRIPTION,
+    TOPIC_NAME,
     CreateDevice,
+    NestTestConfig,
     PlatformSetup,
     create_nest_event,
 )
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 PLATFORM = "sensor"
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
+
+TEST_CONFIG_LEGACY_TOPIC = NestTestConfig(
+    config_entry_data={
+        **TEST_CONFIG_NEW_SUBSCRIPTION.config_entry_data,
+        "topic_name": LEGACY_TOPIC_NAME,
+    },
+    credential=TEST_CONFIG_NEW_SUBSCRIPTION.credential,
+)
+TEST_CONFIG_PREVIEW_REALM_TOPIC = NestTestConfig(
+    config_entry_data={
+        **TEST_CONFIG_NEW_SUBSCRIPTION.config_entry_data,
+        "topic_name": f"projects/sdm-preview/topics/enterprise-{PROJECT_ID}",
+    },
+    credential=TEST_CONFIG_NEW_SUBSCRIPTION.credential,
+)
+TEST_CONFIG_SELF_HOSTED_TOPIC = NestTestConfig(
+    config_entry_data={
+        **TEST_CONFIG_NEW_SUBSCRIPTION.config_entry_data,
+        "topic_name": TOPIC_NAME,
+    },
+    credential=TEST_CONFIG_NEW_SUBSCRIPTION.credential,
+)
 
 
 @pytest.fixture
@@ -128,7 +155,7 @@ async def test_setup_subscriber_failure(
     setup_base_platform,
     expected_log_message: str,
 ) -> None:
-    """Test subscriber error handling (SubscriberException and SubscriberTimeoutException)."""
+    """Test subscriber error handling for various exceptions."""
     await setup_base_platform()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -227,16 +254,45 @@ async def test_subscriber_auth_failure(
 @pytest.mark.parametrize("subscriber_side_effect", [ConfigurationException()])
 async def test_subscriber_configuration_failure(
     hass: HomeAssistant,
-    error_caplog: pytest.LogCaptureFixture,
     setup_base_platform,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
-    assert "Configuration error: " in error_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].reason == "Configuration error in the Nest subscriber"
+
+
+async def test_subscriber_create_failure(
+    hass: HomeAssistant,
+    setup_base_platform,
+) -> None:
+    """Test setup fails when the subscriber can't be created."""
+    with patch("homeassistant.components.nest.api.new_subscriber", return_value=None):
+        await setup_base_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].reason == "Failed to create the Nest subscriber"
+
+
+async def test_legacy_entry_setup_error(hass: HomeAssistant) -> None:
+    """Test setup of a legacy config entry fails and the entry is removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        entry.reason == "This config entry uses the legacy Nest API and will be removed"
+    )
+    mock_remove.assert_awaited_once_with(entry.entry_id)
 
 
 async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
@@ -446,3 +502,131 @@ async def test_stale_device_cleanup(
     )
     assert len(device_entries) == 1
     assert device_entries[0].identifiers == {(DOMAIN, device_id1)}
+
+
+@pytest.mark.parametrize(
+    ("nest_test_config", "expected_issues"),
+    [
+        pytest.param(TEST_CONFIG_APP_CREDS, 1, id="subscriber-id-no-topic"),
+        pytest.param(TEST_CONFIG_NEW_SUBSCRIPTION, 1, id="subscription-name-no-topic"),
+        pytest.param(TEST_CONFIG_LEGACY_TOPIC, 1, id="legacy-topic"),
+        pytest.param(TEST_CONFIG_PREVIEW_REALM_TOPIC, 1, id="legacy-preview-realm"),
+        pytest.param(TEST_CONFIG_SELF_HOSTED_TOPIC, 0, id="self-hosted-topic"),
+    ],
+)
+async def test_legacy_topic_detection(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    expected_issues: int,
+) -> None:
+    """Test entries without a self-hosted topic raise a repair issue."""
+    await setup_platform()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(issue_registry.issues) == expected_issues
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+async def test_legacy_topic_issue(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the legacy topic issue details and removal after migrating."""
+    await setup_platform()
+
+    issue_id = f"legacy_pubsub_topic_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.translation_key == "legacy_pubsub_topic"
+
+    # Simulate a reconfigure that moved to a self-hosted topic
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, "topic_name": TOPIC_NAME}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+@pytest.mark.parametrize(
+    ("subscriber_side_effect", "expected_state"),
+    [
+        pytest.param(
+            SubscriberException(), ConfigEntryState.SETUP_RETRY, id="subscriber-error"
+        ),
+        pytest.param(
+            ConfigurationException(),
+            ConfigEntryState.SETUP_ERROR,
+            id="configuration-error",
+        ),
+    ],
+)
+async def test_legacy_topic_issue_on_setup_failure(
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test the legacy topic issue is raised even when the subscriber fails."""
+    await setup_base_platform()
+
+    assert config_entry.state is expected_state
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"legacy_pubsub_topic_{config_entry.entry_id}"
+    )
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_SELF_HOSTED_TOPIC])
+async def test_subscription_not_found_issue(
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    subscriber: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a missing subscription raises an issue that clears after setup."""
+    subscriber.start.side_effect = ConfigurationException()
+    await setup_base_platform()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    issue_id = f"pubsub_subscription_not_found_{config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert not issue.is_fixable
+    assert issue.translation_key == "pubsub_subscription_not_found"
+
+    subscriber.start.side_effect = None
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+@pytest.mark.parametrize("subscriber_side_effect", [ConfigurationException()])
+async def test_remove_entry_deletes_issues(
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the entry removes its repair issues."""
+    await setup_base_platform()
+    assert len(issue_registry.issues) == 2
+
+    aioclient_mock.delete(f"https://pubsub.googleapis.com/v1/{SUBSCRIPTION_NAME}")
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert not issue_registry.issues

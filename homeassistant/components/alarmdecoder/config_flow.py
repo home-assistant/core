@@ -1,14 +1,13 @@
 """Config flow for AlarmDecoder."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from adext import AdExt
 from alarmdecoder.devices import Device, SerialDevice, SocketDevice
 from alarmdecoder.util import NoDeviceError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -20,7 +19,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -52,6 +51,12 @@ from .const import (
 EDIT_KEY = "edit_selection"
 EDIT_ZONES = "Zones"
 EDIT_SETTINGS = "Arming Settings"
+DEFAULT_CONNECTION = {
+    CONF_HOST: DEFAULT_DEVICE_HOST,
+    CONF_PORT: DEFAULT_DEVICE_PORT,
+    CONF_DEVICE_PATH: DEFAULT_DEVICE_PATH,
+    CONF_DEVICE_BAUD: DEFAULT_DEVICE_BAUD,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +72,14 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AlarmDecoderOptionsFlowHandler:
         """Get the options flow for AlarmDecoder."""
         return AlarmDecoderOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,9 +90,9 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROTOCOL): vol.In(
+                    probatio.Required(CONF_PROTOCOL): probatio.In(
                         [PROTOCOL_SOCKET, PROTOCOL_SERIAL]
                     ),
                 }
@@ -102,60 +109,48 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._async_current_entries(), user_input, self.protocol
             ):
                 return self.async_abort(reason="already_configured")
-            connection: dict[str, Any] = {}
-            baud = None
-            device: Device
-            if self.protocol == PROTOCOL_SOCKET:
-                host = connection[CONF_HOST] = cast(str, user_input[CONF_HOST])
-                port = connection[CONF_PORT] = cast(int, user_input[CONF_PORT])
-                title: str = f"{host}:{port}"
-                device = SocketDevice(interface=(host, port))
-            if self.protocol == PROTOCOL_SERIAL:
-                path = connection[CONF_DEVICE_PATH] = cast(
-                    str, user_input[CONF_DEVICE_PATH]
-                )
-                baud = connection[CONF_DEVICE_BAUD] = cast(
-                    int, user_input[CONF_DEVICE_BAUD]
-                )
-                title = path
-                device = SerialDevice(interface=path)
-
-            controller = AdExt(device)
-
-            def test_connection():
-                controller.open(baud)
-                controller.close()
-
-            try:
-                await self.hass.async_add_executor_job(test_connection)
+            errors = await _async_test_connection(self.hass, self.protocol, user_input)
+            if not errors:
                 return self.async_create_entry(
-                    title=title, data={CONF_PROTOCOL: self.protocol, **connection}
+                    title=_connection_title(self.protocol, user_input),
+                    data={CONF_PROTOCOL: self.protocol, **user_input},
                 )
-            except NoDeviceError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
-                errors["base"] = "unknown"
-
-        schema: vol.Schema
-        if self.protocol == PROTOCOL_SOCKET:
-            schema = vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=DEFAULT_DEVICE_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_DEVICE_PORT): int,
-                }
-            )
-        if self.protocol == PROTOCOL_SERIAL:
-            schema = vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): str,
-                    vol.Required(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): int,
-                }
-            )
 
         return self.async_show_form(
             step_id="protocol",
-            data_schema=schema,
+            data_schema=_connection_schema(self.protocol, DEFAULT_CONNECTION),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the connection settings of an existing entry."""
+        entry = self._get_reconfigure_entry()
+        protocol = entry.data[CONF_PROTOCOL]
+        errors = {}
+        if user_input is not None:
+            other_entries = [
+                other
+                for other in self._async_current_entries()
+                if other.entry_id != entry.entry_id
+            ]
+            if _device_already_added(other_entries, user_input, protocol):
+                return self.async_abort(reason="already_configured")
+            errors = await _async_test_connection(self.hass, protocol, user_input)
+            if not errors:
+                # Keep a title the user chose; replace the generated one.
+                title = entry.title
+                if title == _connection_title(protocol, entry.data):
+                    title = _connection_title(protocol, user_input)
+                # The entry's update listener reloads it.
+                return self.async_update_and_abort(
+                    entry, title=title, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_connection_schema(protocol, entry.data),
             errors=errors,
         )
 
@@ -184,9 +179,9 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(EDIT_KEY, default=EDIT_SETTINGS): vol.In(
+                    probatio.Required(EDIT_KEY, default=EDIT_SETTINGS): probatio.In(
                         [EDIT_SETTINGS, EDIT_ZONES]
                     )
                 },
@@ -205,16 +200,16 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="arm_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALT_NIGHT_MODE,
                         default=self.arm_options[CONF_ALT_NIGHT_MODE],
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AUTO_BYPASS, default=self.arm_options[CONF_AUTO_BYPASS]
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CODE_ARM_REQUIRED,
                         default=self.arm_options[CONF_CODE_ARM_REQUIRED],
                     ): bool,
@@ -236,7 +231,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="zone_select",
-            data_schema=vol.Schema({vol.Required(CONF_ZONE_NUMBER): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_ZONE_NUMBER): str}),
             errors=errors,
         )
 
@@ -265,9 +260,9 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="zone_details",
             description_placeholders={CONF_ZONE_NUMBER: self.selected_zone},
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_NAME,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -275,13 +270,13 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_TYPE,
                         default=existing_zone_settings.get(
                             CONF_ZONE_TYPE, DEFAULT_ZONE_TYPE
                         ),
                     ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_RFID,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -289,7 +284,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_LOOP,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -297,7 +292,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RELAY_ADDR,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -305,7 +300,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RELAY_CHAN,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -356,8 +351,9 @@ def _validate_zone_input(zone_input: dict[str, Any] | None) -> dict[str, str]:
 def _fix_input_types(zone_input: dict[str, Any]) -> dict[str, Any]:
     """Convert necessary keys to int.
 
-    Since ConfigFlow inputs of type int cannot default to an empty string, we collect the values below as
-    strings and then convert them to ints.
+    Since ConfigFlow inputs of type int cannot default to an empty
+    string, we collect the values below as strings and then convert
+    them to ints.
     """
 
     for key in (CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN):
@@ -397,3 +393,60 @@ def _device_already_added(
             return True
 
     return False
+
+
+def _connection_schema(
+    protocol: str | None, defaults: Mapping[str, Any]
+) -> probatio.Schema:
+    """Return the connection settings schema for a protocol."""
+    if protocol == PROTOCOL_SOCKET:
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
+                probatio.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
+            }
+        )
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_DEVICE_PATH, default=defaults[CONF_DEVICE_PATH]
+            ): str,
+            probatio.Required(
+                CONF_DEVICE_BAUD, default=defaults[CONF_DEVICE_BAUD]
+            ): int,
+        }
+    )
+
+
+def _connection_title(protocol: str | None, connection: Mapping[str, Any]) -> str:
+    """Return the entry title generated for connection settings."""
+    if protocol == PROTOCOL_SOCKET:
+        return f"{connection[CONF_HOST]}:{connection[CONF_PORT]}"
+    return cast(str, connection[CONF_DEVICE_PATH])
+
+
+async def _async_test_connection(
+    hass: HomeAssistant, protocol: str | None, connection: dict[str, Any]
+) -> dict[str, str]:
+    """Open and close a connection to the AlarmDecoder; return form errors."""
+    baud = None
+    device: Device
+    if protocol == PROTOCOL_SOCKET:
+        device = SocketDevice(interface=(connection[CONF_HOST], connection[CONF_PORT]))
+    else:
+        device = SerialDevice(interface=connection[CONF_DEVICE_PATH])
+        baud = connection[CONF_DEVICE_BAUD]
+    controller = AdExt(device)
+
+    def test_connection() -> None:
+        controller.open(baud)
+        controller.close()
+
+    try:
+        await hass.async_add_executor_job(test_connection)
+    except NoDeviceError:
+        return {"base": "cannot_connect"}
+    except Exception:
+        _LOGGER.exception("Unexpected exception connecting to the AlarmDecoder")
+        return {"base": "unknown"}
+    return {}

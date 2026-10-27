@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from habiticalib import HabiticaUserResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.habitica.const import (
     CONF_API_USER,
@@ -31,8 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 TEST_API_USER = "a380546a-94be-4b8e-8a0b-23e0d5c03303"
 TEST_API_KEY = "cd0e5985-17de-4b4f-849e-5d506c5e4382"
@@ -639,7 +638,10 @@ async def test_add_party_member_not_in_a_party(
 
 @pytest.mark.usefixtures("habitica")
 async def test_add_party_member_entry_disabled(hass: HomeAssistant) -> None:
-    """Test we abort add party member subentry flow when the main config entry is disabled."""
+    """Test we abort add party member subentry flow.
+
+    Specifically when the main config entry is disabled.
+    """
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,

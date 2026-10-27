@@ -1,12 +1,15 @@
 """Tests for the TTS entity."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     DEFAULT_LANG,
@@ -15,8 +18,6 @@ from .common import (
     MockTTSEntity,
     mock_config_entry_setup,
 )
-
-from tests.common import mock_restore_cache
 
 
 class DefaultEntity(tts.TextToSpeechEntity):
@@ -59,7 +60,7 @@ async def test_restore_state(
 async def test_tts_entity_subclass_properties(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
+    """Test errors when TextToSpeechEntity subclasses miss required properties."""
 
     class TestClass1(tts.TextToSpeechEntity):
         _attr_default_language = DEFAULT_LANG
@@ -88,7 +89,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass3())
 
     assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the"
+        " '_attr_supported_languages' attribute or override"
+        " the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -103,7 +106,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass4())
 
     assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the"
+        " '_attr_default_language' attribute or override"
+        " the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -120,7 +125,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass5())
 
     assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the"
+        " '_attr_supported_languages' attribute or override"
+        " the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -137,7 +144,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass6())
 
     assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the"
+        " '_attr_default_language' attribute or override"
+        " the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -175,6 +184,32 @@ def test_streaming_supported() -> None:
 
     sync_non_streaming_entity = SyncNonStreamingEntity()
     assert sync_non_streaming_entity.async_supports_streaming_input() is False
+
+
+async def test_stream_tts_audio_no_audio() -> None:
+    """Test a translated error is raised when no audio is generated."""
+
+    class NoAudioEntity(DefaultEntity):
+        entity_id = "tts.no_audio"
+
+        async def async_get_tts_audio(
+            self, message: str, language: str, options: dict[str, Any]
+        ) -> tts.TtsAudioType:
+            return None, None
+
+    async def message_gen() -> AsyncGenerator[str]:
+        yield "hello"
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await NoAudioEntity().async_stream_tts_audio(
+            tts.TTSAudioRequest(DEFAULT_LANG, {}, message_gen())
+        )
+    assert exc_info.value.translation_domain == tts.DOMAIN
+    assert exc_info.value.translation_key == "no_tts_audio"
+    assert exc_info.value.translation_placeholders == {
+        "engine": "tts.no_audio",
+        "message": "hello",
+    }
 
 
 async def test_internal_get_tts_audio_writes_state(

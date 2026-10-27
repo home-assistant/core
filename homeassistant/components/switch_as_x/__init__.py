@@ -1,24 +1,27 @@
 """Component to wrap switch entities in entities of other domains."""
 
-from __future__ import annotations
-
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
-    async_remove_helper_config_entry_from_source_device,
+    async_remove_helper_devices,
 )
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 @callback
@@ -32,20 +35,20 @@ def async_get_parent_device_id(hass: HomeAssistant, entity_id: str) -> str | Non
     return wrapped_switch.device_id
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     entity_registry = er.async_get(hass)
     try:
         entity_id = er.async_validate_entity_id(
             entity_registry, entry.options[CONF_ENTITY_ID]
         )
-    except vol.Invalid:
+    except probatio.Invalid as err:
         # The entity is identified by an unknown entity registry ID
-        _LOGGER.error(
-            "Failed to setup switch_as_x for unknown entity %s",
-            entry.options[CONF_ENTITY_ID],
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_entity",
+            translation_placeholders={"entity_id": entry.options[CONF_ENTITY_ID]},
+        ) from err
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
@@ -62,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_get_parent_device_id(hass, entity_id),
@@ -74,18 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
@@ -95,7 +93,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if source_device_id := async_get_parent_device_id(
                 hass, options[CONF_ENTITY_ID]
             ):
-                async_remove_helper_config_entry_from_source_device(
+                async_remove_helper_devices(
                     hass,
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
@@ -110,12 +108,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
 
@@ -130,7 +126,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         switch_entity_id = er.async_validate_entity_id(
             registry, entry.options[CONF_ENTITY_ID]
         )
-    except vol.Invalid:
+    except probatio.Invalid:
         # The source entity has been removed from the entity registry
         return
 

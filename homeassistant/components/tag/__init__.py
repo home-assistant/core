@@ -1,13 +1,11 @@
 """The Tag integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, override
 import uuid
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID, CONF_NAME
@@ -18,7 +16,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -26,11 +23,11 @@ from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, LOGGER, TAG_ID
+from .entity import TagEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 LAST_SCANNED = "last_scanned"
-LAST_SCANNED_BY_DEVICE_ID = "last_scanned_by_device_id"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 3
@@ -38,21 +35,26 @@ STORAGE_VERSION_MINOR = 3
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 
 CREATE_FIELDS: VolDictType = {
-    vol.Optional(TAG_ID): cv.string,
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
-    vol.Optional(DEVICE_ID): cv.string,
+    probatio.Optional(TAG_ID): cv.string,
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional("description"): cv.string,
+    probatio.Optional(LAST_SCANNED): cv.datetime,
+    probatio.Optional(DEVICE_ID): cv.string,
 }
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional("description"): cv.string,
-    vol.Optional(LAST_SCANNED): cv.datetime,
-    vol.Optional(DEVICE_ID): cv.string,
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional("description"): cv.string,
+    probatio.Optional(LAST_SCANNED): cv.datetime,
+    probatio.Optional(DEVICE_ID): cv.string,
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "async_scan_tag",
+]
 
 
 class TagIDExistsError(HomeAssistantError):
@@ -67,6 +69,7 @@ class TagIDExistsError(HomeAssistantError):
 class TagIDManager(collection.IDManager):
     """ID manager for tags."""
 
+    @override
     def generate_id(self, suggestion: str) -> str:
         """Generate an ID."""
         if self.has_id(suggestion):
@@ -94,6 +97,7 @@ def _create_entry(
 class TagStore(Store[collection.SerializedStorageCollection]):
     """Store tag data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -124,8 +128,8 @@ class TagStore(Store[collection.SerializedStorageCollection]):
 class TagStorageCollection(collection.DictStorageCollection):
     """Tag collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     def __init__(
         self,
@@ -136,6 +140,7 @@ class TagStorageCollection(collection.DictStorageCollection):
         super().__init__(store, id_manager)
         self.entity_registry = er.async_get(self.hass)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -153,10 +158,12 @@ class TagStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_ID]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**item, **self.UPDATE_SCHEMA(update_data)}
@@ -174,6 +181,7 @@ class TagStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     def _serialize_item(self, item_id: str, item: dict) -> dict:
         """Return the serialized representation of an item for storing.
 
@@ -202,6 +210,7 @@ class TagDictStorageCollectionWebsocket(
         self.entity_registry = er.async_get(storage_collection.hass)
 
     @callback
+    @override
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -358,69 +367,3 @@ async def async_scan_tag(
             {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
-
-
-class TagEntity(Entity):
-    """Representation of a Tag entity."""
-
-    _unrecorded_attributes = frozenset({TAG_ID})
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        entity_update_handlers: dict[str, Callable[[str | None, str | None], None]],
-        name: str,
-        tag_id: str,
-        last_scanned: str | None,
-        device_id: str | None,
-    ) -> None:
-        """Initialize the Tag event."""
-        self._entity_update_handlers = entity_update_handlers
-        self._attr_name = name
-        self._tag_id = tag_id
-        self._attr_unique_id = tag_id
-        self._last_device_id: str | None = device_id
-        self._last_scanned = last_scanned
-
-    @callback
-    def async_handle_event(
-        self, device_id: str | None, last_scanned: str | None
-    ) -> None:
-        """Handle the Tag scan event."""
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Tag %s scanned by device %s at %s, last scanned at %s",
-                self._tag_id,
-                device_id,
-                last_scanned,
-                self._last_scanned,
-            )
-        self._last_device_id = device_id
-        self._last_scanned = last_scanned
-        self.async_write_ha_state()
-
-    @property
-    @final
-    def state(self) -> str | None:
-        """Return the entity state."""
-        if (
-            not self._last_scanned
-            or (last_scanned := dt_util.parse_datetime(self._last_scanned)) is None
-        ):
-            return None
-        return last_scanned.isoformat(timespec="milliseconds")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the sun."""
-        return {TAG_ID: self._tag_id, LAST_SCANNED_BY_DEVICE_ID: self._last_device_id}
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._entity_update_handlers[self._tag_id] = self.async_handle_event
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle entity being removed."""
-        await super().async_will_remove_from_hass()
-        del self._entity_update_handlers[self._tag_id]

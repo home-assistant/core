@@ -1,6 +1,7 @@
 """The tests for Lock device conditions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_conditions(
@@ -149,7 +148,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -167,7 +169,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_unlocked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_unlocked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -185,7 +190,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_unlocking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_unlocking - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -203,7 +211,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locking - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -221,7 +232,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_jammed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_jammed - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -239,7 +253,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_opening - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -257,7 +274,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_open - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -346,7 +366,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_locked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_locked - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

@@ -1,5 +1,9 @@
 """LD2410 BLE integration binary sensor platform."""
 
+from typing import override
+
+from ld2410_ble import LD2410BLE
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -11,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LD2410BLE, LD2410BLECoordinator
+from .coordinator import LD2410BLECoordinator
 from .models import LD2410BLEConfigEntry
 
 ENTITY_DESCRIPTIONS = (
@@ -67,12 +71,14 @@ class LD2410BLEBinarySensor(
         self._attr_is_on = getattr(self._device, self._key)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = getattr(self._device, self._key)
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Unavailable if coordinator isn't connected."""
         return self._coordinator.connected and super().available

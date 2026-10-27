@@ -1,6 +1,7 @@
 {
   "domain": "wirelesstag",
   "name": "Wireless Sensor Tags",
+  "categories": ["sensors"],
   "codeowners": ["@sergeymaysak"],
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
   "iot_class": "cloud_push",

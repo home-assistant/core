@@ -1,7 +1,5 @@
 """Models used by multiple MQTT modules."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 import asyncio
 from collections import deque
@@ -9,11 +7,17 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, Required, TypedDict, override
+
+from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import ServiceValidationError, TemplateError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    TemplateError,
+)
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -26,8 +30,6 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import MQTTMessage
-
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -42,6 +44,69 @@ class PayloadSentinel(StrEnum):
 
     NONE = "none"
     DEFAULT = "default"
+
+
+MAX_28BIT: int = 268435455
+
+
+class SubscriptionID:
+    """ID generator for wildcard subscriptions."""
+
+    _next_id: int = 2
+    _used_ids: set[int]
+    _available_ids: set[int]
+    _registered_subscriptions: dict[str, int]  # topic, subscription_id
+
+    def __init__(self) -> None:
+        """Initialize the Subscription Identifier generator."""
+        self._used_ids = set()
+        self._available_ids = set()
+        self._registered_subscriptions = {}
+
+    def _generate(self, topic: str) -> int:
+        """Generate a new subscription ID."""
+        if self._available_ids:
+            subscription_id = self._available_ids.pop()
+            self._used_ids.add(subscription_id)
+            self._registered_subscriptions[topic] = subscription_id
+            return subscription_id
+
+        subscription_id = self._next_id
+        if subscription_id > MAX_28BIT:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_max_subscription_id_reached",
+            )
+        self._used_ids.add(subscription_id)
+        self._next_id += 1
+        self._registered_subscriptions[topic] = subscription_id
+        return subscription_id
+
+    def get_subscription_id(self, topic: str) -> int:
+        """Get a registered subscription ID."""
+        return self._registered_subscriptions[topic]
+
+    def get_or_generate(self, topic: str) -> int:
+        """Get an existing or generate a new subscription ID.
+
+        ID 0 is reserved.
+        ID 1 is used for non wildcard topics.
+        Generator starts at ID 2.
+        """
+        if topic in self._registered_subscriptions:
+            return self._registered_subscriptions[topic]
+        return self._generate(topic)
+
+    def release(self, topic: str) -> None:
+        """Release a Subscription Identifier to allow reuse."""
+        if (
+            (subscription_id := self._registered_subscriptions.pop(topic, None))
+            is not None
+            and subscription_id
+            and subscription_id in self._used_ids
+        ):
+            self._used_ids.remove(subscription_id)
+            self._available_ids.add(subscription_id)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,6 +189,28 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
+@dataclass(slots=True, frozen=True)
+class DiscoveredDisabledEntity:
+    """Discovered entity that is disabled in the entity registry."""
+
+    # Entity registry index (entity_platform, "mqtt", unique_id)
+    registry_key: tuple[str, str, str]
+    discovery_data: DiscoveryInfoType
+
+
+class MqttChildDeviceConfig(TypedDict, total=False):
+    """Child device config of an MQTT entity."""
+
+    identifiers: Required[str | list[str]]
+    name: str
+
+
+class MqttDiscoveryChildDevice(MqttChildDeviceConfig):
+    """Child device with its components in a device discovery payload."""
+
+    components: Required[dict[str, dict[str, Any]]]
+
+
 class MqttOriginInfo(TypedDict, total=False):
     """Integration info of discovered entity."""
 
@@ -159,10 +246,14 @@ class MqttCommandTemplateException(ServiceValidationError):
         }
         entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{command_template}' and payload: {value_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{command_template}'"
+            f" and payload: {value_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message
@@ -196,7 +287,11 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._command_template.hass is not None:
+            # Created again when the entity_id is changed in place
+            if self._command_template.hass is not None and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._entity.hass, self._entity.entity_id
                 )
@@ -245,10 +340,15 @@ class MqttValueTemplateException(TemplateError):
         )
         payload_log = str(payload)
         self._message = (
-            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
-            f", template: '{value_template}'{default_payload_log} and payload: {payload_log}"
+            f"{type(base_exception).__name__}:"
+            f" {base_exception} rendering"
+            f" template{entity_id_log}"
+            f", template: '{value_template}'"
+            f"{default_payload_log}"
+            f" and payload: {payload_log}"
         )
 
+    @override
     def __str__(self) -> str:
         """Return exception message string."""
         return self._message
@@ -294,7 +394,11 @@ class MqttValueTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._value_template.hass:
+            # Created again when the entity_id is changed in place
+            if self._value_template.hass and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._value_template.hass, self._entity.entity_id
                 )
@@ -400,6 +504,12 @@ class MqttData:
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
+    # the disabled entity, so it can be cleaned up when an empty payload
+    # is received on the topic it was discovered on.
+    discovery_discovered_and_disabled: dict[
+        tuple[str, str], DiscoveredDisabledEntity
+    ] = field(default_factory=dict)
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
@@ -417,6 +527,7 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+    subscription_id_generator: SubscriptionID = field(default_factory=SubscriptionID)
 
 
 @dataclass(slots=True)
@@ -429,10 +540,20 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
+class MessageExpiryInterval(TypedDict, total=False):
+    """Hold the Message Expiry Interval."""
+
+    days: float
+    hours: float
+    minutes: float
+    seconds: float
+
+
 class DeviceMqttOptions(TypedDict, total=False):
     """Hold the shared MQTT specific options for an MQTT device."""
 
     qos: int
+    message_expiry_interval: MessageExpiryInterval
 
 
 class MqttDeviceData(TypedDict, total=False):

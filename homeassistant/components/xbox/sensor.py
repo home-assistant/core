@@ -1,26 +1,22 @@
 """Sensor platform for the Xbox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import SmartglassConsole, StorageDevice
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, UnitOfInformation
+from homeassistant.const import CONF_NAME, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -29,13 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry, XboxConsolesCoordinator
-from .entity import (
-    MAP_MODEL,
-    XboxBaseEntity,
-    XboxBaseEntityDescription,
-    check_deprecated_entity,
-    to_https,
-)
+from .entity import MAP_MODEL, XboxBaseEntity, XboxBaseEntityDescription, to_https
 
 PARALLEL_UPDATES = 0
 
@@ -60,8 +50,6 @@ class XboxSensor(StrEnum):
 
     STATUS = "status"
     GAMER_SCORE = "gamer_score"
-    ACCOUNT_TIER = "account_tier"
-    GOLD_TENURE = "gold_tenure"
     LAST_ONLINE = "last_online"
     FOLLOWING = "following"
     FOLLOWER = "follower"
@@ -92,7 +80,9 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(
+    person: Person, title: Title | None, total_achievements: int | None
+) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -154,7 +144,8 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
         attributes.update(
             {
                 "achievements": (
-                    f"{achievement.current_achievements} / {achievement.total_achievements}"
+                    f"{achievement.current_achievements}"
+                    f" / {total_achievements or achievement.total_achievements}"
                 ),
                 "gamerscore": (
                     f"{achievement.current_gamerscore} / {achievement.total_gamerscore}"
@@ -200,16 +191,6 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         translation_key=XboxSensor.GAMER_SCORE,
         value_fn=lambda x, _: x.gamer_score,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.ACCOUNT_TIER,
-        value_fn=lambda _, __: None,
-        deprecated=True,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.GOLD_TENURE,
-        value_fn=lambda _, __: None,
-        deprecated=True,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.LAST_ONLINE,
@@ -305,9 +286,6 @@ async def async_setup_entry(
         [
             XboxSensorEntity(presence, config_entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
-            if check_deprecated_entity(
-                hass, config_entry.unique_id, description, SENSOR_DOMAIN
-            )
         ]
     )
     for subentry_id, subentry in config_entry.subentries.items():
@@ -316,9 +294,6 @@ async def async_setup_entry(
                 XboxSensorEntity(presence, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
-                and check_deprecated_entity(
-                    hass, subentry.unique_id, description, SENSOR_DOMAIN
-                )
                 and subentry.unique_id in presence.data.presence
                 and subentry.subentry_type == "friend"
             ],
@@ -360,6 +335,7 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     entity_description: XboxSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data, self.title_info)
@@ -418,6 +394,7 @@ class XboxStorageDeviceSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the requested attribute."""
 

@@ -1,6 +1,7 @@
 {
   "domain": "minecraft_server",
   "name": "Minecraft Server",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@elmurato", "@zachdeibert"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
@@ -8,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["dnspython", "mcstatus"],
   "quality_scale": "silver",
-  "requirements": ["mcstatus==12.1.0"]
+  "requirements": ["mcstatus==14.2.0"]
 }

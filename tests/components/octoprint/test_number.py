@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -15,8 +16,6 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -165,7 +164,8 @@ async def test_set_bed_temp(
         )
 
         assert len(mock_set_bed_temp.mock_calls) == 1
-        # Verify that we pass integer, expected by the pyoctoprintapi, and that it's rounded down
+        # Verify that we pass integer, expected by pyoctoprintapi,
+        # and that it's rounded down
         mock_set_bed_temp.assert_called_with(80)
 
 
@@ -189,7 +189,7 @@ async def test_set_bed_temp(
 async def test_set_tool_n_temp(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting tool temperature via number entity when multiple tools are present."""
+    """Test setting tool temperature when multiple tools present."""
     with patch(
         "pyoctoprintapi.OctoprintClient.set_tool_temperature"
     ) as mock_set_tool_temp:

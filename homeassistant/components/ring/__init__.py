@@ -1,7 +1,5 @@
 """Support for Ring Doorbell/Chimes."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 import uuid
@@ -33,7 +31,7 @@ def get_auth_user_agent() -> str:
     return f"{APPLICATION_NAME}/{DOMAIN}-integration"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> None:
     """Set up a config entry."""
 
     def token_updater(token: dict[str, Any]) -> None:
@@ -78,22 +76,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RingConfigEntry) -> None:
     """Unload Ring entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: RingConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: RingConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: RingConfigEntry) -> None:
     """Migrate old config entry."""
     entry_version = entry.version
     entry_minor_version = entry.minor_version
@@ -171,5 +167,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bo
         _LOGGER.debug(
             "Migration to version %s.%s complete", entry_version, new_minor_version
         )
-
-    return True

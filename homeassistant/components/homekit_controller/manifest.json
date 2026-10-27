@@ -8,13 +8,14 @@
       "manufacturer_id": 76
     }
   ],
+  "categories": ["hubs_protocols"],
   "codeowners": ["@Jc2k", "@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters", "zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "integration_type": "device",
   "iot_class": "local_push",
-  "loggers": ["aiohomekit", "commentjson"],
-  "requirements": ["aiohomekit==3.2.20"],
+  "loggers": ["aiohomekit"],
+  "requirements": ["aiohomekit==4.0.1"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."]
 }

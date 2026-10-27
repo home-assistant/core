@@ -1,7 +1,5 @@
 """The Airgradient integration."""
 
-from __future__ import annotations
-
 from airgradient import AirGradientClient
 
 from homeassistant.const import CONF_HOST, Platform
@@ -20,7 +18,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirGradientConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirGradientConfigEntry) -> None:
     """Set up Airgradient from a config entry."""
 
     client = AirGradientClient(
@@ -35,11 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirGradientConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AirGradientConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

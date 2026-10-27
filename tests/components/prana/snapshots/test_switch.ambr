@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('prana', 'ECC9FFE0E574')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_switches[switch.prana_recuperator_auto-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Auto',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Auto',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_auto',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('prana', 'ECC9FFE0E574')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_switches[switch.prana_recuperator_auto_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Auto plus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Auto plus',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_auto_plus',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('prana', 'ECC9FFE0E574')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_switches[switch.prana_recuperator_bound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Bound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Bound',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_bound',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('prana', 'ECC9FFE0E574')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_switches[switch.prana_recuperator_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_heater',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('prana', 'ECC9FFE0E574')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -239,7 +239,7 @@
 # name: test_switches[switch.prana_recuperator_winter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Winter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Winter',
     }),
     'context': <ANY>,
     'entity_id': 'switch.prana_recuperator_winter',

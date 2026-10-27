@@ -1,21 +1,25 @@
 """Config flow for buienradar integration."""
 
-from __future__ import annotations
-
 import copy
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_COUNTRY_CODE,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     CONF_DELTA,
@@ -27,14 +31,14 @@ from .const import (
     SUPPORTED_COUNTRY_CODES,
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY
         ): selector.CountrySelector(
             selector.CountrySelectorConfig(countries=SUPPORTED_COUNTRY_CODES)
         ),
-        vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
+        probatio.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 step=1,
@@ -42,7 +46,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 unit_of_measurement="seconds",
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME
         ): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -78,38 +82,48 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            lat = user_input.get(CONF_LATITUDE)
-            lon = user_input.get(CONF_LONGITUDE)
+            lat = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon = user_input[CONF_LOCATION][CONF_LONGITUDE]
 
             await self.async_set_unique_id(f"{lat}-{lon}")
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=f"{lat},{lon}", data=user_input)
+            return self.async_create_entry(
+                title=f"{lat},{lon}", data=user_input[CONF_LOCATION]
+            )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
+                probatio.Required(CONF_LOCATION): LocationSelector(
+                    LocationSelectorConfig(radius=False)
+                ),
             }
         )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema,
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
+                },
+            ),
             errors={},
         )

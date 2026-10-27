@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from solarlog_cli.solarlog_exceptions import (
     SolarLogAuthenticationError,
     SolarLogConnectionError,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("test_connect")
@@ -210,12 +209,12 @@ async def test_reconfigure_flow(
         (SolarLogError, {CONF_HOST: "unknown"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
     mock_solarlog_connector: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth-flow works."""
 

@@ -1,9 +1,7 @@
 """Config flow for ecowitt."""
 
-from __future__ import annotations
-
 import secrets
-from typing import Any
+from typing import Any, override
 
 from yarl import URL
 
@@ -22,6 +20,7 @@ class EcowittConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _webhook_id: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

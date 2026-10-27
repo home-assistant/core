@@ -1,11 +1,9 @@
 """Config flow for Kaleidescape."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -25,6 +23,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     discovered_device: KaleidescapeDeviceInfo
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -56,10 +55,13 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=host): str}
+            ),
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

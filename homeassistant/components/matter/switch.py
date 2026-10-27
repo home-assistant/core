@@ -1,27 +1,30 @@
 """Matter switches."""
 
-from __future__ import annotations
-
+from asyncio import Lock
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, override
+from weakref import WeakKeyDictionary
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
+from matter_server.client.models.node import MatterEndpoint
+from matter_server.common import custom_clusters
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 EVSE_SUPPLY_STATE_MAP = {
@@ -31,14 +34,37 @@ EVSE_SUPPLY_STATE_MAP = {
     clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: False,
 }
 
+ALARM_MODE_VISUAL = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kVisual
+ALARM_MODE_AUDIBLE = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kAudible
+
+BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL = (
+    clusters.BooleanStateConfiguration.Bitmaps.Feature.kVisual
+)
+BOOLEAN_STATE_CONFIGURATION_FEATURE_AUDIBLE = (
+    clusters.BooleanStateConfiguration.Bitmaps.Feature.kAudible
+)
+
+
+@dataclass
+class _AlarmEnabledState:
+    """Track pending alarm state for an endpoint."""
+
+    lock: Lock = field(default_factory=Lock)
+    pending_alarms_enabled: int | None = None
+
+
+ALARM_ENABLED_STATES: WeakKeyDictionary[MatterEndpoint, _AlarmEnabledState] = (
+    WeakKeyDictionary()
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
@@ -67,15 +93,18 @@ class MatterSwitch(MatterEntity, SwitchEntity):
             else clusters.OnOff.Commands.Off()
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.send_device_command(self._get_command_for_value(True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.send_device_command(self._get_command_for_value(False))
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -91,6 +120,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
     _platform_translation_key = "switch"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         if self.entity_description.on_command:
@@ -100,6 +130,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                 self.entity_description.command_timeout,
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         if self.entity_description.off_command:
@@ -109,6 +140,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -116,6 +148,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             value = value_convert(value)
         self._attr_is_on = value
 
+    @override
     async def send_device_command(
         self,
         command: ClusterCommand,
@@ -143,6 +176,87 @@ class MatterGenericCommandSwitchEntityDescription(MatterSwitchEntityDescription)
 
 
 @dataclass(frozen=True, kw_only=True)
+class MatterBitmapSwitchEntityDescription(MatterSwitchEntityDescription):
+    """Describe Matter switch entities that map to a single bit of a bitmap attribute."""
+
+    bitmask: int
+
+
+def _write_error_status(result: Any) -> int | None:
+    """Return the first unsuccessful Matter status of a write response, if any.
+
+    A write is answered with a list of per-path results rather than an error, so
+    a device rejecting the write otherwise looks like a successful service call.
+    """
+    if not isinstance(result, list):
+        return None
+    for item in result:
+        status: int | None = item.get("Status") if isinstance(item, dict) else None
+        if status:
+            return status
+    return None
+
+
+class MatterBitmapSwitch(MatterSwitch):
+    """Representation of a single bit of a Matter bitmap attribute as a Switch entity.
+
+    Writes read the other bits from the last reported value, so two entities on
+    the same attribute would race: both compose from that value and the second
+    write drops the first one's bit. Discovery prevents this today by claiming
+    the attribute for one schema, so giving a second bit of the same attribute
+    an entity needs allow_multi plus serialization, as MatterAlarmEnabledSwitch
+    does for AlarmsEnabled.
+    """
+
+    entity_description: MatterBitmapSwitchEntityDescription
+
+    async def _async_set_bit(self, value: bool) -> None:
+        """Set or clear the bit in the bitmap attribute, preserving the other bits."""
+        current_value: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        # inverting an IntFlag is bounded by the flags the cluster declares, so
+        # mask as a plain int to preserve bits outside of those
+        bitmask = int(self.entity_description.bitmask)
+        new_value = current_value | bitmask if value else current_value & ~bitmask
+        result = await self.write_attribute(value=new_value)
+        if status := _write_error_status(result):
+            # the spec answers an unsupported mode bit with CONSTRAINT_ERROR
+            unsupported = status == clusters.Globals.Enums.status.kConstraintError
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "bitmap_write_not_supported"
+                    if unsupported
+                    else "bitmap_write_failed"
+                ),
+                translation_placeholders={
+                    "name": str(self.name),
+                    "status": str(status),
+                },
+            )
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Set the bit."""
+        await self._async_set_bit(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Clear the bit."""
+        await self._async_set_bit(False)
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        self._attr_is_on = (
+            None if value is None else bool(value & self.entity_description.bitmask)
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterNumericSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Numeric Switch entities."""
 
@@ -159,21 +273,101 @@ class MatterNumericSwitch(MatterSwitch):
             send_value = value_convert(value)
         await self.write_attribute(value=send_value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._async_set_native_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._async_set_native_value(False)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_is_on = value
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterAlarmEnabledSwitchEntityDescription(MatterSwitchEntityDescription):
+    """Describe Matter alarm enabled Switch entities."""
+
+    alarm_mode: int
+
+
+class MatterAlarmEnabledSwitch(MatterSwitch):
+    """Representation of a Matter Boolean State Configuration alarm switch."""
+
+    entity_description: MatterAlarmEnabledSwitchEntityDescription
+
+    async def _async_set_alarm_enabled(self, value: bool) -> None:
+        """Set the enabled state for an alarm mode."""
+        state = ALARM_ENABLED_STATES.setdefault(self._endpoint, _AlarmEnabledState())
+        async with state.lock:
+            alarms_enabled = state.pending_alarms_enabled
+            if alarms_enabled is None:
+                alarms_enabled = (
+                    self.get_matter_attribute_value(
+                        clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+                    )
+                    or 0
+                )
+            if value:
+                alarms_enabled |= self.entity_description.alarm_mode
+            else:
+                alarms_enabled &= ~self.entity_description.alarm_mode
+
+            state.pending_alarms_enabled = alarms_enabled
+            try:
+                await self.send_device_command(
+                    clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+                        alarmsToEnableDisable=alarms_enabled,
+                    )
+                )
+            except BaseException:
+                if state.pending_alarms_enabled == alarms_enabled:
+                    state.pending_alarms_enabled = None
+                raise
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn alarm mode on."""
+        await self._async_set_alarm_enabled(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn alarm mode off."""
+        await self._async_set_alarm_enabled(False)
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        alarm_mode = self.entity_description.alarm_mode
+        alarms_supported = (
+            self.get_matter_attribute_value(
+                clusters.BooleanStateConfiguration.Attributes.AlarmsSupported
+            )
+            or 0
+        )
+        self._attr_available = self._attr_available and bool(
+            alarms_supported & alarm_mode
+        )
+
+        alarms_enabled = (
+            self.get_matter_attribute_value(
+                clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled
+            )
+            or 0
+        )
+        if state := ALARM_ENABLED_STATES.get(self._endpoint):
+            state.pending_alarms_enabled = alarms_enabled
+        self._attr_is_on = bool(alarms_enabled & alarm_mode)
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -215,6 +409,18 @@ DISCOVERY_SCHEMAS = [
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterSwitchEntityDescription(
+            key="MatterSwitch",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="display",
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        vendor_id=(4476,),  # IKEA of Sweden
+        product_id=(12289,),  # ALPSTUGA air quality monitor
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
@@ -297,6 +503,16 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnableOneTouchLocking",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="one_touch_locking",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.DoorLock.Attributes.EnableOneTouchLocking,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
         entity_description=MatterGenericCommandSwitchEntityDescription(
             key="EnergyEvseChargingSwitch",
             translation_key="evse_charging_switch",
@@ -316,5 +532,82 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="EveChildLock",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterAlarmEnabledSwitchEntityDescription(
+            key="BooleanStateConfigurationVisualAlarmEnabled",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="visual_alarm_enabled",
+            alarm_mode=ALARM_MODE_VISUAL,
+        ),
+        entity_class=MatterAlarmEnabledSwitch,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+            clusters.BooleanStateConfiguration.Attributes.AcceptedCommandList,
+            clusters.BooleanStateConfiguration.Attributes.AlarmsSupported,
+        ),
+        secondary_value_contains=(
+            clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm.command_id
+        ),
+        featuremap_contains=BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterAlarmEnabledSwitchEntityDescription(
+            key="BooleanStateConfigurationAudibleAlarmEnabled",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="audible_alarm_enabled",
+            alarm_mode=ALARM_MODE_AUDIBLE,
+        ),
+        entity_class=MatterAlarmEnabledSwitch,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.AlarmsEnabled,
+            clusters.BooleanStateConfiguration.Attributes.AcceptedCommandList,
+            clusters.BooleanStateConfiguration.Attributes.AlarmsSupported,
+        ),
+        secondary_value_contains=(
+            clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm.command_id
+        ),
+        featuremap_contains=BOOLEAN_STATE_CONFIGURATION_FEATURE_AUDIBLE,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterBitmapSwitchEntityDescription(
+            key="WindowCoveringReverseMotorDirection",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="reverse_motor_direction",
+            bitmask=clusters.WindowCovering.Bitmaps.Mode.kMotorDirectionReversed,
+        ),
+        entity_class=MatterBitmapSwitch,
+        required_attributes=(clusters.WindowCovering.Attributes.Mode,),
+        # Mode is mandatory on every covering, but the bit reverses the lift
+        # direction, so a tilt-only covering has nothing to configure
+        featuremap_contains=clusters.WindowCovering.Bitmaps.Feature.kLift,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="AqaraLedStripMusicSyncEnabled",
+            translation_key="music_sync",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEnabled,
+        ),
+        vendor_id=(4447,),
     ),
 ]

@@ -4,6 +4,9 @@ from collections.abc import Generator
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.yale.application_credentials import (
     OAUTH2_AUTHORIZE,
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .mocks import USER_ID
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 CLIENT_ID = "1"
 
 
@@ -28,12 +27,11 @@ CLIENT_ID = "1"
 def mock_setup_entry() -> Generator[Mock]:
     """Patch setup entry."""
     with patch(
-        "homeassistant.components.yale.async_setup_entry", return_value=True
+        "homeassistant.components.yale.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
-@pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -100,14 +98,12 @@ async def test_full_flow(
     }
 
 
-@pytest.mark.usefixtures("client_credentials")
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry", "current_request_with_host")
 async def test_full_flow_already_exists(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     jwt: str,
-    mock_setup_entry: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Check full flow for a user that already exists."""
@@ -154,15 +150,13 @@ async def test_full_flow_already_exists(
     assert result2["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("client_credentials")
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry", "current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     reauth_jwt: str,
-    mock_setup_entry: Mock,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
 
@@ -214,8 +208,7 @@ async def test_reauth(
     assert mock_config_entry.data["token"]["access_token"] == reauth_jwt
 
 
-@pytest.mark.usefixtures("client_credentials")
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry", "current_request_with_host")
 async def test_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -223,9 +216,8 @@ async def test_reauth_wrong_account(
     mock_config_entry: MockConfigEntry,
     reauth_jwt_wrong_account: str,
     jwt: str,
-    mock_setup_entry: Mock,
 ) -> None:
-    """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
+    """Test reauthentication aborts when using another account."""
     assert mock_config_entry.data["token"]["access_token"] == jwt
 
     mock_config_entry.add_to_hass(hass)

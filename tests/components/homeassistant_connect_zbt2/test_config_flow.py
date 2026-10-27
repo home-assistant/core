@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
@@ -30,8 +31,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
@@ -48,7 +47,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -120,6 +119,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -226,6 +226,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -305,7 +306,8 @@ async def test_options_flow(
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=usb_data.device,
                     firmware_type=ApplicationType.SPINEL,
@@ -335,9 +337,19 @@ async def test_options_flow(
         assert pick_result["type"] is FlowResultType.MENU
         assert pick_result["step_id"] == "zigbee_installation_type"
 
-        create_result = await hass.config_entries.options.async_configure(
+        progress_result = await hass.config_entries.options.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert progress_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert progress_result["step_id"] == "install_zigbee_firmware"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
+
+        create_result = await hass.config_entries.options.async_configure(
+            progress_result["flow_id"]
         )
 
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
@@ -425,13 +437,8 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=1,
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        minor_version=2,
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -448,7 +455,7 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
-    """Test that firmware notification triggers import flow that auto-creates config entry."""
+    """Test firmware notification triggers import flow creating entry."""
     await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
     await async_setup_component(hass, USB_DOMAIN, {})
 
@@ -522,12 +529,7 @@ async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> 
             "manufacturer": USB_DATA_ZBT2.manufacturer,
             "product": USB_DATA_ZBT2.description,
         },
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 

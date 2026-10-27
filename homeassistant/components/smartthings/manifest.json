@@ -1,6 +1,7 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -38,5 +39,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "quality_scale": "bronze",
-  "requirements": ["pysmartthings==3.7.3"]
+  "requirements": ["pysmartthings==4.0.3"]
 }

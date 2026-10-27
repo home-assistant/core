@@ -71,7 +71,7 @@ MOCK_BOOTTIME = {
 def mock_controller_patch_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        f"{ASUSWRT_BASE}.async_setup_entry", return_value=True
+        f"{ASUSWRT_BASE}.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 
@@ -183,7 +183,7 @@ def mock_controller_connect_http(mock_devices_http):
 
 
 def make_async_get_data_side_effect(fail_types=None):
-    """Return a side effect for async_get_data that fails for specified AsusData types."""
+    """Return a side effect for async_get_data that fails for types."""
     fail_types = set(fail_types or [])
 
     def side_effect(datatype, *args, **kwargs):

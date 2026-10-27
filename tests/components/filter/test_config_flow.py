@@ -1,11 +1,10 @@
 """Test the Filter config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.filter.const import (
@@ -34,8 +33,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

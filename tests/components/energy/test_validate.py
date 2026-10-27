@@ -1,5 +1,7 @@
 """Test that validation works."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.energy import validate
@@ -301,6 +303,51 @@ async def test_validation_solar(
                 }
             ]
         ],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+@pytest.mark.usefixtures("mock_get_metadata")
+@pytest.mark.parametrize(
+    ("unit", "issues"),
+    [
+        pytest.param(
+            "beers",
+            [
+                {
+                    "type": "entity_unexpected_unit_energy",
+                    "affected_entities": {("sensor.home_energy", "beers")},
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
+                }
+            ],
+            id="unexpected_unit",
+        ),
+        pytest.param("kWh", [], id="valid"),
+    ],
+)
+async def test_validation_home(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    unit: str,
+    issues: list[dict[str, Any]],
+) -> None:
+    """Test validating the whole-home meter unit."""
+    await mock_energy_manager.async_update(
+        {"energy_sources": [{"type": "home", "stat_energy_to": "sensor.home_energy"}]}
+    )
+    hass.states.async_set(
+        "sensor.home_energy",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": unit,
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [issues],
         "device_consumption": [],
         "device_consumption_water": [],
     }
@@ -826,11 +873,151 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            f"{ENERGY_PRICE_UNITS_STRING}, EUR/CCF, EUR/ft³, EUR/m³, EUR/L, EUR/MCF"
+                            f"{ENERGY_PRICE_UNITS_STRING},"
+                            " EUR/CCF, EUR/ft³, EUR/m³,"
+                            " EUR/L, EUR/MCF"
                         )
                     },
                 },
             ],
+        ],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+@pytest.mark.parametrize(
+    ("usage_device_class", "usage_unit", "price_unit", "expected_issues"),
+    [
+        pytest.param(
+            "gas",
+            "m³",
+            "EUR/kWh",
+            [
+                {
+                    "type": "entity_gas_price_unit_mismatch",
+                    "affected_entities": {("sensor.gas_price", "EUR/kWh")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="volume_usage_energy_price",
+        ),
+        pytest.param(
+            "energy",
+            "kWh",
+            "EUR/m³",
+            [
+                {
+                    "type": "entity_gas_price_unit_mismatch",
+                    "affected_entities": {("sensor.gas_price", "EUR/m³")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="energy_usage_volume_price",
+        ),
+        pytest.param("gas", "m³", "EUR/L", [], id="volume_usage_volume_price"),
+        pytest.param("energy", "kWh", "EUR/MWh", [], id="energy_usage_energy_price"),
+        pytest.param(
+            "gas",
+            "m³",
+            None,
+            [
+                {
+                    "type": "entity_unexpected_unit_gas_price",
+                    "affected_entities": {("sensor.gas_price", None)},
+                    "translation_placeholders": {
+                        "price_units": (
+                            f"{ENERGY_PRICE_UNITS_STRING},"
+                            " EUR/CCF, EUR/ft³, EUR/m³,"
+                            " EUR/L, EUR/MCF"
+                        )
+                    },
+                }
+            ],
+            id="price_unit_none",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_is_entity_recorded", "mock_get_metadata")
+async def test_validation_gas_price_unit_mismatch(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    usage_device_class: str,
+    usage_unit: str,
+    price_unit: str | None,
+    expected_issues: list[dict[str, Any]],
+) -> None:
+    """Test validating a gas price unit that does not match the usage unit."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": "sensor.gas_price",
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        "10.10",
+        {
+            "device_class": usage_device_class,
+            "unit_of_measurement": usage_unit,
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {"unit_of_measurement": price_unit}
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [expected_issues],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
+@pytest.mark.usefixtures("mock_is_entity_recorded", "mock_get_metadata")
+async def test_validation_gas_price_not_exist(
+    hass: HomeAssistant, mock_energy_manager: EnergyManager
+) -> None:
+    """Test validating gas when the price entity does not exist."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": "sensor.gas_price",
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        "10.10",
+        {
+            "device_class": "gas",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_not_defined",
+                    "affected_entities": {("sensor.gas_price", None)},
+                    "translation_placeholders": None,
+                }
+            ]
         ],
         "device_consumption": [],
         "device_consumption_water": [],
@@ -1040,7 +1227,9 @@ async def test_validation_water(
                     "type": "entity_unexpected_unit_water_price",
                     "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
                     "translation_placeholders": {
-                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
+                        "price_units": (
+                            "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L, EUR/MCF"
+                        )
                     },
                 },
             ],

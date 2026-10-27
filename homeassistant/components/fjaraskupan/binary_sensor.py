@@ -1,9 +1,8 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from fjaraskupan import Device
 
@@ -87,6 +86,7 @@ class BinarySensor(CoordinatorEntity[FjaraskupanCoordinator], BinarySensorEntity
         self._attr_device_info = device_info
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if data := self.coordinator.data:

@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
-from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
@@ -16,8 +16,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +43,7 @@ async def webhook_id(hass: HomeAssistant, locative_client: TestClient) -> str:
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "locative", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM, result
 
@@ -308,6 +306,6 @@ async def test_load_unload_entry(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    await locative.async_unload_entry(hass, entry)
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

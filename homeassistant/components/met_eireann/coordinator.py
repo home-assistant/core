@@ -1,16 +1,19 @@
 """The met_eireann component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import meteireann
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -51,9 +54,11 @@ class MetEireannWeatherData:
 class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
     """Coordinator for Met Éireann weather data."""
 
-    config_entry: ConfigEntry
+    config_entry: MetEireannConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MetEireannConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -64,12 +69,13 @@ class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
         )
         raw_weather_data = meteireann.WeatherData(
             async_get_clientsession(hass),
-            latitude=config_entry.data[CONF_LATITUDE],
-            longitude=config_entry.data[CONF_LONGITUDE],
+            latitude=config_entry.data[CONF_LOCATION][CONF_LATITUDE],
+            longitude=config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
             altitude=config_entry.data[CONF_ELEVATION],
         )
         self._weather_data = MetEireannWeatherData(config_entry.data, raw_weather_data)
 
+    @override
     async def _async_update_data(self) -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:

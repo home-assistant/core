@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydroid_ipcam import PyDroidIPCam
 from pydroid_ipcam.exceptions import PyDroidIPCamException
@@ -39,6 +40,7 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=10),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Android IP Webcam entities."""
         try:

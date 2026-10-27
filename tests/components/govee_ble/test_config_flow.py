@@ -2,14 +2,43 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant import config_entries
 from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import GVH5075_SERVICE_INFO, GVH5177_SERVICE_INFO, NOT_GOVEE_SERVICE_INFO
+from . import (
+    GVH5055_SERVICE_INFO,
+    GVH5075_SERVICE_INFO,
+    GVH5177_SERVICE_INFO,
+    NOT_GOVEE_SERVICE_INFO,
+)
 
-from tests.common import MockConfigEntry
+
+async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with an H5055."""
+    inject_bluetooth_service_info(hass, GVH5055_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+
+    result = flows[0]
+    assert result["step_id"] == "bluetooth_confirm"
+
+    with patch(
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_DEVICE_TYPE: "H5055"}
+    assert result2["result"].unique_id == "C0:A3:C7:0A:5C:77"
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -22,7 +51,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -56,9 +85,14 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.govee_ble.config_flow.async_discovered_service_info",
-        return_value=[GVH5177_SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.govee_ble.config_flow.async_discovered_service_info",
+            return_value=[GVH5177_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.govee_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -66,8 +100,9 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -99,7 +134,7 @@ async def test_async_step_user_replace_ignored_device(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -131,7 +166,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -222,7 +257,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

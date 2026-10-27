@@ -1,6 +1,6 @@
 """Support for Velbus Buttons."""
 
-from __future__ import annotations
+from typing import override
 
 from velbusaio.channels import (
     Button as VelbusaioButton,
@@ -39,6 +39,7 @@ class VelbusButton(VelbusEntity, ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     @api_call
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._channel.press()

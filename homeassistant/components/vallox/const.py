@@ -28,6 +28,7 @@ I18N_KEY_TO_VALLOX_PROFILE = {
     "boost": VALLOX_PROFILE.BOOST,
     "fireplace": VALLOX_PROFILE.FIREPLACE,
     "extra": VALLOX_PROFILE.EXTRA,
+    "auto": VALLOX_PROFILE.AUTO,
 }
 
 VALLOX_PROFILE_TO_PRESET_MODE = {
@@ -36,6 +37,7 @@ VALLOX_PROFILE_TO_PRESET_MODE = {
     VALLOX_PROFILE.BOOST: "Boost",
     VALLOX_PROFILE.FIREPLACE: "Fireplace",
     VALLOX_PROFILE.EXTRA: "Extra",
+    VALLOX_PROFILE.AUTO: "Auto",
 }
 
 PRESET_MODE_TO_VALLOX_PROFILE = {
@@ -48,3 +50,7 @@ VALLOX_CELL_STATE_TO_STR = {
     2: "Bypass",
     3: "Defrosting",
 }
+
+# The vallox_websocket_api client uses a hardcoded value of 65535 to
+# represent an indefinite duration.
+PROFILE_DURATION_INDEFINITE = 65535

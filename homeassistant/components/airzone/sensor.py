@@ -1,8 +1,6 @@
 """Support for the Airzone sensors."""
 
-from __future__ import annotations
-
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.const import (
     AZD_HOT_WATER,
@@ -161,6 +159,7 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

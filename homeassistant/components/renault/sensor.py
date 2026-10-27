@@ -1,11 +1,9 @@
 """Support for Renault sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
@@ -26,6 +24,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
@@ -34,7 +33,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
@@ -64,15 +63,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultSensor[Any]] = [
-        RenaultSensor(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in SENSOR_TYPES
-        if description.coordinator in vehicle.coordinators
-        and (not description.requires_fuel or vehicle.details.uses_fuel())
-        and (not description.condition_lambda or description.condition_lambda(vehicle))
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultSensor(vehicle, description)
+            for description in SENSOR_TYPES
+            if description.coordinator in vehicle.coordinators
+            and (not description.requires_fuel or vehicle.details.uses_fuel())
+            and (
+                not description.condition_lambda
+                or description.condition_lambda(vehicle)
+            )
+        )
+
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultSensor[T: KamereonVehicleDataAttributes](
@@ -83,18 +90,10 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
     entity_description: RenaultSensorEntityDescription[T]
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         return self.entity_description.value_lambda(self)
-
-
-def _get_charging_power(
-    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
-) -> StateType:
-    """Return the charging_power of this entity."""
-    if (data := entity.coordinator.data.chargingInstantaneousPower) is None:
-        return None
-    return data / 1000
 
 
 def _get_charge_state_formatted(
@@ -156,6 +155,10 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "waiting_for_current_charge",
             "energy_flap_opened",
             "charge_in_progress",
+            "v2l_connected",
+            "v2g_charging_normal",
+            "v2g_charging_waiting",
+            "v2g_discharging",
             "charge_error",
             "unavailable",
         ],
@@ -190,9 +193,10 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         condition_lambda=lambda a: a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_lambda=_get_charging_power,
+        value_lambda=lambda e: e.coordinator.data.chargingInstantaneousPower,
         translation_key="charging_power",
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
@@ -238,6 +242,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](
         key="battery_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -284,6 +289,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
         key="hvac_soc_threshold",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="hvac_status",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="hvac_soc_threshold",
@@ -291,6 +297,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
         key="hvac_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="hvac_status",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -299,6 +306,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleLocationData](
         key="location_last_activity",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="location",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -313,6 +321,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleResStateData](
         key="res_state_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="res_state",
         entity_registry_enabled_default=False,
         translation_key="res_state_code",
@@ -320,12 +329,14 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     ),
     RenaultSensorEntityDescription[KamereonVehicleChargingSettingsData](
         key="charging_settings_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="charging_settings",
         translation_key="charging_settings_mode",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "always",
             "delayed",
+            "delegated",
             "scheduled",
         ],
         value_lambda=_get_charging_settings_mode_formatted,

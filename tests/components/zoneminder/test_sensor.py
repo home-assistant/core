@@ -1,12 +1,11 @@
 """Tests for ZoneMinder sensor entities."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zoneminder.monitor import MonitorState, TimePeriod
 
 from homeassistant.components.zoneminder.const import DOMAIN
@@ -15,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_monitor
-
-from tests.common import async_fire_time_changed
 
 
 async def _setup_zm_with_sensors(
@@ -94,6 +91,31 @@ async def test_monitor_status_sensor_value(
     state = hass.states.get("sensor.front_door_status")
     assert state is not None
     assert state.state == "Record"
+
+
+async def test_monitor_status_sensor_follows_server_change(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    single_server_config: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test monitor status sensor refreshes the monitor on each poll."""
+    monitor = create_mock_monitor(name="Front Door", function=MonitorState.MONITOR)
+    await _setup_zm_with_sensors(
+        hass, mock_zoneminder_client, single_server_config, [monitor], freezer
+    )
+    assert hass.states.get("sensor.front_door_status").state == "Monitor"
+
+    def change_on_server() -> None:
+        monitor.function = MonitorState.RECORD
+
+    # zm-py only fetches new monitor data in update_monitor
+    monitor.update_monitor.side_effect = change_on_server
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.front_door_status").state == "Record"
 
 
 @pytest.mark.parametrize(

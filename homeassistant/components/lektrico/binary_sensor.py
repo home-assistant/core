@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
 
@@ -134,6 +134,7 @@ class LektricoBinarySensor(LektricoEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

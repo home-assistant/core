@@ -1,15 +1,13 @@
 """Config flow for Fully Kiosk Browser integration."""
 
-from __future__ import annotations
-
 import asyncio
 import json
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -50,7 +48,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Any:
     ) as error:
         LOGGER.debug(error.args, exc_info=True)
         raise CannotConnect from error
-    except Exception as error:  # pylint: disable=broad-except
+    except Exception as error:
         LOGGER.exception("Unexpected exception")
         raise UnknownError from error
 
@@ -102,6 +100,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,17 +113,18 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SSL, default=False): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    probatio.Optional(CONF_SSL, default=False): bool,
+                    probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -161,17 +161,18 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_SSL, default=False): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    probatio.Optional(CONF_SSL, default=False): bool,
+                    probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             description_placeholders=placeholders,
             errors=errors,
         )
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -227,12 +228,12 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PASSWORD): str,
-                        vol.Optional(CONF_SSL, default=False): bool,
-                        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                        probatio.Optional(CONF_SSL, default=False): bool,
+                        probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                     }
                 ),
                 suggested_values=user_input or suggested_values,

@@ -1,15 +1,23 @@
 """Offer state listening automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
+from enum import StrEnum
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+
+# The names marked with noqa are kept for custom integrations,
+# and should be deprecated in favour of StateTriggerArgument
+from homeassistant.const import (
+    CONF_ATTRIBUTE,  # noqa: F401
+    CONF_ENTITY_ID,  # noqa: F401
+    CONF_FOR,  # noqa: F401
+    CONF_PLATFORM,  # noqa: F401
+    MATCH_ALL,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -34,37 +42,66 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 CONF_NOT_FROM = "not_from"
 CONF_NOT_TO = "not_to"
 
+
+class StateTriggerArgument(StrEnum):
+    """Store keys for state trigger arguments."""
+
+    ATTRIBUTE = "attribute"
+    ENTITY_ID = "entity_id"
+    FOR = "for"
+    FROM = "from"
+    NOT_FROM = "not_from"
+    NOT_TO = "not_to"
+    PLATFORM = "platform"
+    TO = "to"
+
+
 BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
-        vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+        probatio.Required(StateTriggerArgument.PLATFORM): "state",
+        probatio.Required(StateTriggerArgument.ENTITY_ID): cv.entity_ids_or_uuids,
+        probatio.Optional(StateTriggerArgument.FOR): cv.positive_time_period_template,
+        probatio.Optional(StateTriggerArgument.ATTRIBUTE): cv.match_all,
     }
 )
 
 TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
     {
         # These are str on purpose. Want to catch YAML conversions
-        vol.Exclusive(CONF_FROM, CONF_FROM): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_TO, CONF_TO): vol.Any(str, [str], None),
-        vol.Exclusive(CONF_NOT_TO, CONF_TO): vol.Any(str, [str], None),
+        probatio.Exclusive(
+            StateTriggerArgument.FROM, StateTriggerArgument.FROM
+        ): probatio.Any(str, [str], None),
+        probatio.Exclusive(
+            StateTriggerArgument.NOT_FROM, StateTriggerArgument.FROM
+        ): probatio.Any(str, [str], None),
+        probatio.Exclusive(
+            StateTriggerArgument.TO, StateTriggerArgument.TO
+        ): probatio.Any(str, [str], None),
+        probatio.Exclusive(
+            StateTriggerArgument.NOT_TO, StateTriggerArgument.TO
+        ): probatio.Any(str, [str], None),
     }
 )
 
 TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
     {
-        vol.Exclusive(CONF_FROM, CONF_FROM): cv.match_all,
-        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): cv.match_all,
-        vol.Exclusive(CONF_TO, CONF_TO): cv.match_all,
-        vol.Exclusive(CONF_NOT_TO, CONF_TO): cv.match_all,
+        probatio.Exclusive(
+            StateTriggerArgument.FROM, StateTriggerArgument.FROM
+        ): cv.match_all,
+        probatio.Exclusive(
+            StateTriggerArgument.NOT_FROM, StateTriggerArgument.FROM
+        ): cv.match_all,
+        probatio.Exclusive(
+            StateTriggerArgument.TO, StateTriggerArgument.TO
+        ): cv.match_all,
+        probatio.Exclusive(
+            StateTriggerArgument.NOT_TO, StateTriggerArgument.TO
+        ): cv.match_all,
     }
 )
 
@@ -74,18 +111,18 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate trigger config."""
     if not isinstance(config, dict):
-        raise vol.Invalid("Expected a dictionary")
+        raise probatio.Invalid("Expected a dictionary")
 
-    # We use this approach instead of vol.Any because
+    # We use this approach instead of probatio.Any because
     # this gives better error messages.
-    if CONF_ATTRIBUTE in config:
+    if StateTriggerArgument.ATTRIBUTE in config:
         config = TRIGGER_ATTRIBUTE_SCHEMA(config)
     else:
         config = TRIGGER_STATE_SCHEMA(config)
 
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
-        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    config[StateTriggerArgument.ENTITY_ID] = er.async_validate_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[StateTriggerArgument.ENTITY_ID])
     )
 
     return config
@@ -100,31 +137,37 @@ async def async_attach_trigger(
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_ids = config[CONF_ENTITY_ID]
+    entity_ids = config[StateTriggerArgument.ENTITY_ID]
 
-    if (from_state := config.get(CONF_FROM)) is not None:
+    if (from_state := config.get(StateTriggerArgument.FROM)) is not None:
         match_from_state = process_state_match(from_state)
-    elif (not_from_state := config.get(CONF_NOT_FROM)) is not None:
+    elif (not_from_state := config.get(StateTriggerArgument.NOT_FROM)) is not None:
         match_from_state = process_state_match(not_from_state, invert=True)
     else:
         match_from_state = process_state_match(MATCH_ALL)
 
-    if (to_state := config.get(CONF_TO)) is not None:
+    if (to_state := config.get(StateTriggerArgument.TO)) is not None:
         match_to_state = process_state_match(to_state)
-    elif (not_to_state := config.get(CONF_NOT_TO)) is not None:
+    elif (not_to_state := config.get(StateTriggerArgument.NOT_TO)) is not None:
         match_to_state = process_state_match(not_to_state, invert=True)
     else:
         match_to_state = process_state_match(MATCH_ALL)
 
-    time_delta = config.get(CONF_FOR)
-    # If neither CONF_FROM or CONF_TO are specified,
+    time_delta = config.get(StateTriggerArgument.FOR)
+    # If neither StateTriggerArgument.FROM or StateTriggerArgument.TO are specified,
     # fire on all changes to the state or an attribute
     match_all = all(
-        item not in config for item in (CONF_FROM, CONF_NOT_FROM, CONF_NOT_TO, CONF_TO)
+        item not in config
+        for item in (
+            StateTriggerArgument.FROM,
+            StateTriggerArgument.NOT_FROM,
+            StateTriggerArgument.NOT_TO,
+            StateTriggerArgument.TO,
+        )
     )
     unsub_track_same: dict[str, Callable[[], None]] = {}
     period: dict[str, timedelta] = {}
-    attribute = config.get(CONF_ATTRIBUTE)
+    attribute = config.get(StateTriggerArgument.ATTRIBUTE)
     job = HassJob(action, f"state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
@@ -203,7 +246,7 @@ async def async_attach_trigger(
             period[entity] = cv.positive_time_period(
                 template.render_complex(time_delta, variables)
             )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
+        except (exceptions.TemplateError, probatio.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", trigger_info["name"], ex
             )
@@ -219,7 +262,10 @@ async def async_attach_trigger(
             else:
                 cur_value = new_st.attributes.get(attribute)
 
-            if CONF_FROM in config and CONF_TO not in config:
+            if (
+                StateTriggerArgument.FROM in config
+                and StateTriggerArgument.TO not in config
+            ):
                 return cur_value != old_value
 
             return cur_value == new_value

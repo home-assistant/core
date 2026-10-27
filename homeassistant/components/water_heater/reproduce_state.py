@@ -1,35 +1,26 @@
 """Reproduce an Water heater state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
-    DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+)
+from .const import (
+    DOMAIN,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
+    WaterHeaterStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,10 +58,10 @@ async def _async_reproduce_state(
     # Return if we are already at the right state.
     if (
         cur_state.state == state.state
-        and cur_state.attributes.get(ATTR_TEMPERATURE)
-        == state.attributes.get(ATTR_TEMPERATURE)
-        and cur_state.attributes.get(ATTR_AWAY_MODE)
-        == state.attributes.get(ATTR_AWAY_MODE)
+        and cur_state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        == state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        and cur_state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
+        == state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
     ):
         return
 
@@ -78,43 +69,49 @@ async def _async_reproduce_state(
 
     if state.state != cur_state.state:
         if state.state == STATE_ON:
-            service = SERVICE_TURN_ON
+            service = WaterHeaterService.TURN_ON
         elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
+            service = WaterHeaterService.TURN_OFF
         else:
-            service = SERVICE_SET_OPERATION_MODE
-            service_data[ATTR_OPERATION_MODE] = state.state
+            service = WaterHeaterService.SET_OPERATION_MODE
+            service_data[WaterHeaterServiceArgument.OPERATION_MODE] = state.state
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
     if (
-        state.attributes.get(ATTR_TEMPERATURE)
-        != cur_state.attributes.get(ATTR_TEMPERATURE)
-        and state.attributes.get(ATTR_TEMPERATURE) is not None
+        state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        != cur_state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        and state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        is not None
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: state.entity_id,
-                ATTR_TEMPERATURE: state.attributes.get(ATTR_TEMPERATURE),
+                WaterHeaterServiceArgument.TEMPERATURE: state.attributes.get(
+                    WaterHeaterStateAttribute.TARGET_TEMPERATURE
+                ),
             },
             context=context,
             blocking=True,
         )
 
     if (
-        state.attributes.get(ATTR_AWAY_MODE) != cur_state.attributes.get(ATTR_AWAY_MODE)
-        and state.attributes.get(ATTR_AWAY_MODE) is not None
+        state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
+        != cur_state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
+        and state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE) is not None
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            WaterHeaterService.SET_AWAY_MODE,
             {
                 ATTR_ENTITY_ID: state.entity_id,
-                ATTR_AWAY_MODE: state.attributes.get(ATTR_AWAY_MODE),
+                WaterHeaterServiceArgument.AWAY_MODE: state.attributes.get(
+                    WaterHeaterStateAttribute.AWAY_MODE
+                ),
             },
             context=context,
             blocking=True,

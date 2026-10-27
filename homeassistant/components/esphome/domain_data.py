@@ -1,15 +1,13 @@
 """Support for esphome domain data."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Self
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import DOMAIN
+from .const import ESPHOME_DATA
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
 
 STORAGE_VERSION = 1
@@ -20,6 +18,8 @@ class DomainData:
     """Define a class that stores global esphome data."""
 
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
+    sendspin_client_ids: dict[str, str] = field(default_factory=dict)
+    sendspin_subscribers: set[Callable[[list[str]], None]] = field(default_factory=set)
 
     def get_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry."""
@@ -36,9 +36,9 @@ class DomainData:
             ),
         )
 
-    @classmethod
+    @staticmethod
     @cache
-    def get(cls, hass: HomeAssistant) -> Self:
+    def get(hass: HomeAssistant) -> DomainData:
         """Get the global DomainData instance stored in hass.data."""
-        ret = hass.data[DOMAIN] = cls()
+        ret = hass.data[ESPHOME_DATA] = DomainData()
         return ret

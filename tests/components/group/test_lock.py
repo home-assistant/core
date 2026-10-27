@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.demo import lock as demo_lock
@@ -14,13 +15,16 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 
 async def test_default_state(
@@ -57,12 +61,18 @@ async def test_default_state(
 async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting.
 
-    The group state is unavailable if all group members are unavailable.
-    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
-    Otherwise, the group state is jammed if at least one group member is jammed.
-    Otherwise, the group state is locking if at least one group member is locking.
-    Otherwise, the group state is unlocking if at least one group member is unlocking.
-    Otherwise, the group state is unlocked if at least one group member is unlocked.
+    The group state is unavailable if all group members are
+    unavailable.
+    Otherwise, the group state is unknown if at least one group member
+    is unknown or unavailable.
+    Otherwise, the group state is jammed if at least one group member
+    is jammed.
+    Otherwise, the group state is locking if at least one group member
+    is locking.
+    Otherwise, the group state is unlocking if at least one group
+    member is unlocking.
+    Otherwise, the group state is unlocked if at least one group
+    member is unlocked.
     Otherwise, the group state is locked.
     """
     await async_setup_component(
@@ -325,7 +335,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "lock.something", "icon": "mdi:work"},
@@ -355,7 +365,7 @@ async def test_reload_with_base_integration_platform_not_setup(
     """Test the ability to reload locks."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "lock.something", "icon": "mdi:work"},
@@ -439,3 +449,41 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("lock.kitchen_door").state == LockState.LOCKED
     assert hass.states.get("lock.some_group").state == LockState.LOCKED
     assert hass.states.get("lock.nested_group").state == LockState.LOCKED
+
+
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
+async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> None:
+    """Test excluding a nested group when targeting all locks."""
+    await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["lock.some_group"],
+                    "name": "Nested Group",
+                },
+                {
+                    "platform": DOMAIN,
+                    "entities": ["lock.front_door", "lock.kitchen_door"],
+                    "name": "Some Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"}},
+        blocking=True,
+    )
+    assert hass.states.get("lock.openable_lock").state == LockState.LOCKED
+    assert hass.states.get("lock.kitchen_door").state == LockState.UNLOCKED
+    assert hass.states.get("lock.some_group").state == LockState.UNLOCKED
+    assert hass.states.get("lock.nested_group").state == LockState.UNLOCKED

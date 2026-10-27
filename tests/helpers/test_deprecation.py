@@ -3,16 +3,24 @@
 from enum import StrEnum
 import logging
 import sys
-from typing import Any
+from typing import Any, Final, cast
 from unittest.mock import MagicMock, Mock, patch
 
+from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
     DeprecatedAlias,
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    DeprecatedEntityAttr,
+    DeprecatedEntityProperty,
     EnumWithDeprecatedMembers,
     check_if_deprecated_constant,
     deprecated_class,
@@ -21,10 +29,10 @@ from homeassistant.helpers.deprecation import (
     deprecated_substitute,
     dir_with_deprecated_constants,
     get_deprecated,
+    migrate_deprecated_entity_members,
 )
-from homeassistant.helpers.frame import MissingIntegrationFrame
-
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.frame import MissingIntegrationFrame, ReportBehavior
 
 
 class MockBaseClassDeprecatedProperty:
@@ -121,6 +129,10 @@ class MockDeprecatedClass:
     """Mock class for deprecated testing."""
 
 
+class MockDeprecatedSubClass(MockDeprecatedClass):
+    """Mock subclass for deprecated testing."""
+
+
 @patch("logging.getLogger")
 def test_deprecated_class(mock_get_logger) -> None:
     """Test deprecated class."""
@@ -130,6 +142,9 @@ def test_deprecated_class(mock_get_logger) -> None:
     MockDeprecatedClass()
     assert mock_logger.warning.called
     assert len(mock_logger.warning.mock_calls) == 1
+
+    MockDeprecatedSubClass()
+    assert len(mock_logger.warning.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
@@ -328,7 +343,8 @@ def _get_value(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            ". It will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            ". It will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -407,8 +423,74 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"The deprecated {description} TEST_CONSTANT was used from hue{extra_msg}{extra_extra_msg}",
+        f"The deprecated {description} TEST_CONSTANT"
+        f" was used from hue{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
+
+
+@pytest.mark.parametrize(
+    ("module_name", "expected_msg"),
+    [
+        pytest.param(
+            "homeassistant.components.hue.light",
+            "The deprecated constant TEST_CONSTANT was used from hue."
+            " It will be removed in HA Core 2099.1.",
+            id="builtin_integration",
+        ),
+        pytest.param(
+            "config.custom_components.hue.light",
+            "The deprecated constant TEST_CONSTANT was used from hue."
+            " It will be removed in HA Core 2099.1. Please report it to the author"
+            " of the 'hue' custom integration",
+            id="custom_integration",
+        ),
+    ],
+)
+def test_check_if_deprecated_constant_without_replacement(
+    caplog: pytest.LogCaptureFixture,
+    module_name: str,
+    expected_msg: str,
+) -> None:
+    """Test check_if_deprecated_constant without a replacement."""
+    module_globals = {
+        "__name__": module_name,
+        "_DEPRECATED_TEST_CONSTANT": DeprecatedConstant(1, None, "2099.1"),
+    }
+    filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
+
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with (
+        patch.dict(sys.modules, {module_name: Mock(__file__=filename)}),
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename=filename,
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
+        ),
+    ):
+        assert check_if_deprecated_constant("TEST_CONSTANT", module_globals) == 1
+
+    assert (module_name, logging.WARNING, expected_msg) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
@@ -431,7 +513,8 @@ def test_check_if_deprecated_constant(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            " which will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -713,3 +796,381 @@ def test_deprecated_hass_argument(
     # modified to remove the hass argument.
     assert calls[0] == calls[1]
     assert calls[0] == calls[2]
+
+
+class MockRenamedEntity(Entity, cached_properties={"native_value"}):
+    """Entity base class which renamed value to native_value."""
+
+    _attr_native_value: int | None = None
+
+    value: Final = DeprecatedEntityProperty[int | None]("native_value", "2099.1")
+    _attr_value: Final = DeprecatedEntityAttr[int | None](
+        "_attr_native_value", "2099.1"
+    )
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Serve native_value from subclasses still providing value."""
+        super().__init_subclass__(**kwargs)
+        migrate_deprecated_entity_members(cls, MockRenamedEntity)
+
+    @cached_property
+    def native_value(self) -> int | None:
+        """Return the value."""
+        return self._attr_native_value
+
+
+def test_deprecated_entity_member_class_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a deprecated _attr_ class attribute becomes the native storage."""
+
+    class LegacyEntity(MockRenamedEntity):
+        _attr_value = 1
+
+    entity = LegacyEntity()
+    assert entity.native_value == 1
+    assert (
+        f"{__name__}::test_deprecated_entity_member_class_attribute.<locals>."
+        "LegacyEntity provides the deprecated _attr_value, this will stop working "
+        "in Home Assistant 2099.1, use _attr_native_value instead"
+    ) in caplog.text
+
+    # Writes through either name invalidate the cached native property
+    entity._attr_value = 2
+    assert entity.native_value == 2
+    entity._attr_native_value = 3
+    assert entity.native_value == 3
+    # Like the property it aliases, the public name can't be written
+    with pytest.raises(AttributeError, match="property 'value' .* has no setter"):
+        entity.value = 4
+    assert entity.native_value == 3
+    assert (
+        "Detected code that writes the deprecated LegacyEntity._attr_value, "
+        "use _attr_native_value instead"
+    ) in caplog.text
+
+
+def test_deprecated_entity_member_property(caplog: pytest.LogCaptureFixture) -> None:
+    """Test a deprecated property override serves the native property."""
+
+    class LegacyEntity(MockRenamedEntity):
+        reads = 0
+
+        @property
+        def value(self) -> int:
+            self.reads += 1
+            return self.reads
+
+    class DelegatingEntity(LegacyEntity):
+        @property
+        def value(self) -> int:
+            return super().value * 10
+
+    # Not cached, the deprecated property may return a new value on every read
+    assert [LegacyEntity().native_value for _ in range(2)] == [1, 1]
+    entity = LegacyEntity()
+    assert [entity.native_value for _ in range(2)] == [1, 2]
+    assert DelegatingEntity().native_value == 10
+    assert "LegacyEntity provides the deprecated value" in caplog.text
+    assert "reads the deprecated" not in caplog.text
+
+
+def test_deprecated_entity_member_migrated(caplog: pytest.LogCaptureFixture) -> None:
+    """Test a migrated subclass of a legacy class serves its native storage."""
+
+    class LegacyEntity(MockRenamedEntity):
+        @property
+        def value(self) -> int | None:
+            return self._attr_value
+
+    class MigratedEntity(LegacyEntity):
+        _attr_native_value = 5
+
+    class NativeEntity(MockRenamedEntity):
+        _attr_native_value = 6
+
+    caplog.clear()
+    assert MigratedEntity().native_value == 5
+    assert NativeEntity().native_value == 6
+    assert NativeEntity().value == 6
+    assert "provides the deprecated" not in caplog.text
+    assert _count_records(caplog, "reads the deprecated") == 2
+
+
+class QuietRenamedEntity(Entity, cached_properties={"native_value"}):
+    """Entity base class not reporting core integrations."""
+
+    _attr_native_value: int | None = None
+    _attr_value: Final = DeprecatedEntityAttr[int | None](
+        "_attr_native_value",
+        "2099.1",
+        core_integration_behavior=ReportBehavior.IGNORE,
+    )
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Serve native_value from subclasses still providing value."""
+        super().__init_subclass__(**kwargs)
+        migrate_deprecated_entity_members(cls, QuietRenamedEntity)
+
+    @cached_property
+    def native_value(self) -> int | None:
+        """Return the value."""
+        return self._attr_native_value
+
+
+class StrictRenamedEntity(Entity, cached_properties={"native_value"}):
+    """Entity base class raising for core integrations."""
+
+    _attr_native_value: int | None = None
+    _attr_value: Final = DeprecatedEntityAttr[int | None](
+        "_attr_native_value",
+        "2099.1",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Serve native_value from subclasses still providing value."""
+        super().__init_subclass__(**kwargs)
+        migrate_deprecated_entity_members(cls, StrictRenamedEntity)
+
+    @cached_property
+    def native_value(self) -> int | None:
+        """Return the value."""
+        return self._attr_native_value
+
+
+def test_deprecated_entity_member_native_storage_wins(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test native storage wins over a deprecated property of the same class."""
+
+    class BothPropertyEntity(MockRenamedEntity):
+        _attr_native_value = 2
+
+        @property
+        def value(self) -> int:
+            return 1
+
+    class BothSlotEntity(MockRenamedEntity):
+        __slots__ = ("value",)
+        _attr_native_value = 2
+
+        def __init__(self) -> None:
+            self.value = 1
+
+    assert BothPropertyEntity().native_value == 2
+    assert BothSlotEntity().native_value == 2
+    assert "provides the deprecated" not in caplog.text
+
+
+def test_deprecated_entity_member_super_reaches_ancestor() -> None:
+    """Test super() from a deprecated override serves what an ancestor authored."""
+
+    class MigratedEntity(MockRenamedEntity):
+        @property
+        def native_value(self) -> int:
+            return 42
+
+    class PlainValueEntity(MockRenamedEntity):
+        native_value = 8
+
+    class LegacyOverMigratedEntity(MigratedEntity):
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    class LegacyOverPlainValueEntity(PlainValueEntity):
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    class LegacyOverBaseEntity(MockRenamedEntity):
+        def __init__(self) -> None:
+            self._attr_native_value = 5
+
+        @property
+        def value(self) -> int:
+            return cast(int, super().value) + 1
+
+    assert LegacyOverMigratedEntity().native_value == 43
+    assert LegacyOverPlainValueEntity().native_value == 9
+    entity = LegacyOverBaseEntity()
+    assert entity.native_value == 6
+    # Reading the base cached property must not cache under the fallback's name
+    entity._attr_native_value = 7
+    assert entity.native_value == 8
+
+
+def test_deprecated_entity_member_super_without_replacement() -> None:
+    """Test super() from a deprecated override when no class provides the native."""
+
+    class BareEntity(Entity):
+        value: Final = DeprecatedEntityProperty[int | None]("native_value", "2099.1")
+
+        def __init_subclass__(cls, **kwargs: Any) -> None:
+            super().__init_subclass__(**kwargs)
+            migrate_deprecated_entity_members(cls, BareEntity)
+
+    class LegacyEntity(BareEntity):
+        @property
+        def value(self) -> int | None:
+            return cast(int | None, super().value)
+
+    with pytest.raises(AttributeError, match="native_value"):
+        _ = LegacyEntity().native_value
+
+
+@pytest.mark.parametrize(
+    ("annotations", "message"),
+    [
+        pytest.param(
+            {},
+            r"BaseEntity\.value must be annotated Final, so type checkers",
+            id="unannotated",
+        ),
+        pytest.param(
+            {"value": int},
+            r"BaseEntity\.value must be annotated Final, so type checkers",
+            id="not_final",
+        ),
+        pytest.param(
+            # As stored by "from __future__ import annotations"
+            {"value": "Final"},
+            r"BaseEntity\.value must be annotated Final, remove 'from __future__",
+            id="stringized",
+        ),
+    ],
+)
+def test_deprecated_entity_member_requires_final(
+    annotations: dict[str, Any], message: str
+) -> None:
+    """Test a deprecated member must be annotated Final."""
+    with pytest.raises(TypeError, match=message):
+        type(
+            "BaseEntity",
+            (Entity,),
+            {
+                "__annotations__": annotations,
+                "value": DeprecatedEntityProperty[int]("native_value", "2099.1"),
+            },
+        )
+
+
+def test_deprecated_entity_member_final_with_type() -> None:
+    """Test a deprecated member may be annotated Final with a type."""
+
+    class BaseEntity(Entity):
+        value: Final[DeprecatedEntityProperty[int]] = DeprecatedEntityProperty[int](
+            "native_value", "2099.1"
+        )
+
+    assert BaseEntity.value.name == "value"
+
+
+def test_deprecated_entity_member_domain() -> None:
+    """Test the domain is the integration of the entity base class."""
+
+    def base_in(module: str) -> type[Entity]:
+        return type(
+            "BaseEntity",
+            (Entity,),
+            {
+                "__module__": module,
+                "__annotations__": {"value": Final},
+                "value": DeprecatedEntityProperty[int]("native_value", "2099.1"),
+            },
+        )
+
+    # Read off the class, the descriptor itself is returned
+    assert base_in("homeassistant.components.hue").value.domain == "hue"
+    assert base_in("homeassistant.components.hue.entity").value.domain == "hue"
+    assert base_in("custom_components.foo").value.domain == "foo"
+
+
+def test_deprecated_entity_member_same_line(caplog: pytest.LogCaptureFixture) -> None:
+    """Test each deprecated member and action on a single line is reported."""
+
+    class LegacyEntity(MockRenamedEntity):
+        _attr_value = 1
+
+    entity = LegacyEntity()
+    caplog.clear()
+
+    assert (entity.value, entity._attr_value) == (1, 1)
+    # Reads, then writes, the deprecated member
+    entity._attr_value += 1
+
+    assert entity.native_value == 2
+    assert _count_records(caplog, "reads the deprecated LegacyEntity.value,") == 1
+    assert _count_records(caplog, "reads the deprecated LegacyEntity._attr_value,") == 2
+    assert (
+        _count_records(caplog, "writes the deprecated LegacyEntity._attr_value,") == 1
+    )
+
+
+def test_deprecated_entity_member_core_declaration_ignored(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test declarations in core integrations are not reported when ignored."""
+    core = type(
+        "CoreEntity",
+        (QuietRenamedEntity,),
+        {"__module__": "homeassistant.components.hue.sensor", "_attr_value": 1},
+    )
+    custom = type(
+        "CustomEntity",
+        (QuietRenamedEntity,),
+        {"__module__": "custom_components.foo.sensor", "_attr_value": 2},
+    )
+
+    assert core().native_value == 1
+    assert custom().native_value == 2
+    assert "CoreEntity" not in caplog.text
+    assert "custom_components.foo.sensor::CustomEntity provides" in caplog.text
+
+
+def test_deprecated_entity_member_core_declaration_error() -> None:
+    """Test declarations in core integrations raise when set to error."""
+    with pytest.raises(
+        RuntimeError,
+        match="homeassistant.components.hue.sensor::CoreEntity provides the "
+        "deprecated _attr_value",
+    ):
+        type(
+            "CoreEntity",
+            (StrictRenamedEntity,),
+            {"__module__": "homeassistant.components.hue.sensor", "_attr_value": 1},
+        )
+
+
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+def test_deprecated_entity_member_core_usage_error() -> None:
+    """Test usage from a core integration raises when set to error."""
+    entity = StrictRenamedEntity()
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected that integration 'hue' writes the deprecated "
+        "StrictRenamedEntity._attr_value",
+    ):
+        entity._attr_value = 1
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+def test_deprecated_entity_member_core_usage_error_without_frame_helper(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test usage before the frame helper is set up is logged, not raised."""
+    entity = StrictRenamedEntity()
+
+    entity._attr_value = 1
+
+    assert entity.native_value == 1
+    assert (
+        "Detected code that writes the deprecated StrictRenamedEntity._attr_value"
+    ) in caplog.text
+
+
+def _count_records(caplog: pytest.LogCaptureFixture, text: str) -> int:
+    """Return the number of logged records containing text."""
+    return sum(text in record.getMessage() for record in caplog.records)

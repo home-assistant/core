@@ -3,7 +3,6 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -111,9 +110,6 @@
       "alarm_sound_mod": {
         "name": "Alarm sound level"
       },
-      "last_alarm_pic": {
-        "name": "Last alarm picture URL"
-      },
       "last_alarm_time": {
         "name": "Last alarm time"
       },
@@ -187,8 +183,12 @@
     "step": {
       "init": {
         "data": {
+          "encryption_password": "Image encryption password",
           "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
           "timeout": "Request timeout (seconds)"
+        },
+        "data_description": {
+          "encryption_password": "Password used to decrypt motion pictures when it differs from the camera verification code. Leave empty to use the verification code."
         }
       }
     }

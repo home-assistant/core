@@ -1,15 +1,14 @@
 """Sensor platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import override
 
 from pynecil import LiveDataResponse, OperatingMode, PowerSource
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
@@ -25,10 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from . import IronOSConfigEntry
 from .const import OHM
-from .coordinator import IronOSLiveDataCoordinator
+from .coordinator import IronOSConfigEntry, IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
 # Coordinator is used to centralize the data updates
@@ -58,7 +58,7 @@ class PinecilSensor(StrEnum):
 class IronOSSensorEntityDescription(SensorEntityDescription):
     """IronOS sensor entity descriptions."""
 
-    value_fn: Callable[[LiveDataResponse, bool], StateType]
+    value_fn: Callable[[LiveDataResponse, bool], StateType | datetime]
 
 
 PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
@@ -118,10 +118,14 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
     IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
         translation_key=PinecilSensor.UPTIME,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data, _: data.uptime,
+        device_class=SensorDeviceClass.UPTIME,
+        value_fn=(
+            lambda data, _: (
+                (dt_util.utcnow() - timedelta(seconds=data.uptime))
+                if data.uptime is not None
+                else None
+            )
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     IronOSSensorEntityDescription(
@@ -202,7 +206,8 @@ class IronOSSensorEntity(IronOSBaseEntity, SensorEntity):
     coordinator: IronOSLiveDataCoordinator
 
     @property
-    def native_value(self) -> StateType:
+    @override
+    def native_value(self) -> StateType | datetime:
         """Return sensor state."""
         return self.entity_description.value_fn(
             self.coordinator.data, self.coordinator.has_tip

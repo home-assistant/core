@@ -1,11 +1,12 @@
 """Test the telegram bot notify platform."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 from telegram import Chat, Message
 from telegram.constants import ChatType, ParseMode
+from telegram.request import BaseRequest
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -15,8 +16,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant
-
-from tests.common import async_capture_events
+from homeassistant.util import dt as dt_util
 
 
 @pytest.mark.freeze_time("2025-01-09T12:00:00+00:00")
@@ -34,7 +34,7 @@ async def test_send_message(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -43,7 +43,7 @@ async def test_send_message(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.mock_title_mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat",
                 ATTR_MESSAGE: "mock message",
                 ATTR_TITLE: "mock title",
             },
@@ -60,11 +60,11 @@ async def test_send_message(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=None,
-            read_timeout=None,
+            read_timeout=BaseRequest.DEFAULT_NONE,
             message_thread_id=None,
         )
 
-    state = hass.states.get("notify.mock_title_mock_chat")
+    state = hass.states.get("notify.mock_chat")
     assert state
     assert state.state == "2025-01-09T12:00:00+00:00"
 

@@ -7,6 +7,18 @@
           "on": "mdi:home-battery"
         }
       },
+      "bluetooth": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth"
+        }
+      },
+      "bluetooth_session": {
+        "state": {
+          "off": "mdi:bluetooth-off",
+          "on": "mdi:bluetooth-connect"
+        }
+      },
       "cellular": {
         "state": {
           "off": "mdi:signal-cellular-outline",
@@ -37,6 +49,9 @@
           "on": "mdi:snowflake-melt"
         }
       },
+      "escan_firmware_updating": {
+        "default": "mdi:update"
+      },
       "grid_services_active": {
         "state": {
           "off": "mdi:transmission-tower-off",
@@ -66,6 +81,9 @@
           "off": "mdi:car-light-dimmed",
           "on": "mdi:car-light-high"
         }
+      },
+      "pw3can_firmware_updating": {
+        "default": "mdi:update"
       },
       "remote_start_enabled": {
         "state": {
@@ -137,6 +155,12 @@
     "button": {
       "boombox": {
         "default": "mdi:volume-high"
+      },
+      "disable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug-off"
+      },
+      "enable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug"
       },
       "enable_keyless_driving": {
         "default": "mdi:car-key"
@@ -487,9 +511,6 @@
           "r": "mdi:alpha-r"
         }
       },
-      "energy_left": {
-        "default": "mdi:battery"
-      },
       "energy_remaining": {
         "default": "mdi:battery-medium"
       },
@@ -497,7 +518,7 @@
         "default": "mdi:battery-clock"
       },
       "forward_collision_warning": {
-        "default": "mdi:car-crash",
+        "default": "mdi:car-emergency",
         "state": {
           "average": "mdi:alert-circle",
           "early": "mdi:alert-octagon",
@@ -634,7 +655,7 @@
         "default": "mdi:key"
       },
       "pedal_position": {
-        "default": "mdi:pedestal"
+        "default": "mdi:gauge"
       },
       "powershare_hours_left": {
         "default": "mdi:clock-time-eight-outline"
@@ -725,9 +746,6 @@
       "total_home_usage": {
         "default": "mdi:home-lightning-bolt"
       },
-      "total_pack_energy": {
-        "default": "mdi:battery-high"
-      },
       "total_solar_production": {
         "default": "mdi:solar-power-variant"
       },
@@ -740,6 +758,9 @@
       "vin": {
         "default": "mdi:car-electric"
       },
+      "wall_connector_energy": {
+        "default": "mdi:ev-station"
+      },
       "wall_connector_fault_state": {
         "default": "mdi:ev-station"
       },
@@ -751,6 +772,12 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "default": "mdi:solar-power",
+        "state": {
+          "off": "mdi:solar-power-variant-outline"
+        }
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },
@@ -794,7 +821,10 @@
       "service": "mdi:calendar-plus"
     },
     "add_precondition_schedule": {
-      "service": "mdi:hvac-outline"
+      "service": "mdi:hvac"
+    },
+    "dispatch_battery_power": {
+      "service": "mdi:home-battery"
     },
     "navigation_gps_request": {
       "service": "mdi:crosshairs-gps"
@@ -803,7 +833,10 @@
       "service": "mdi:calendar-minus"
     },
     "remove_precondition_schedule": {
-      "service": "mdi:hvac-off-outline"
+      "service": "mdi:hvac-off"
+    },
+    "resume_battery_operation": {
+      "service": "mdi:home-battery-outline"
     },
     "set_scheduled_charging": {
       "service": "mdi:timeline-clock-outline"

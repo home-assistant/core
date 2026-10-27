@@ -1,23 +1,23 @@
 """An abstract class common to all Switchbot entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
+from bleak.exc import BleakError
 import switchbot
 from switchbot import Switchbot, SwitchbotDevice, SwitchbotOperationError
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
-from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -40,23 +40,21 @@ class SwitchbotEntity(
         self._last_run_success: bool | None = None
         self._address = coordinator.ble_device.address
         self._attr_unique_id = coordinator.base_unique_id
+        connections = {(dr.CONNECTION_BLUETOOTH, self._address)}
+        # MacOS Bluetooth addresses are not mac addresses. If the bluetooth
+        # address is also a mac address, add this connection as well to prevent
+        # a new device entry from being created when upgrading from a previous
+        # version of the integration.
+        if ":" in self._address:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._address))
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_BLUETOOTH, self._address)},
+            connections=connections,
             manufacturer=MANUFACTURER,
-            model=coordinator.model,  # Sometimes the modelName is missing from the advertisement data
+            # Sometimes the modelName is missing from ads
+            model=coordinator.model,
             name=coordinator.device_name,
         )
         self._channel: int | None = None
-        if ":" not in self._address:
-            # MacOS Bluetooth addresses are not mac addresses
-            return
-        # If the bluetooth address is also a mac address,
-        # add this connection as well to prevent a new device
-        # entry from being created when upgrading from a previous
-        # version of the integration.
-        self._attr_device_info[ATTR_CONNECTIONS].add(
-            (dr.CONNECTION_NETWORK_MAC, self._address)
-        )
 
     @property
     def parsed_data(self) -> dict[str, Any]:
@@ -66,6 +64,7 @@ class SwitchbotEntity(
         return self.coordinator.device.parsed_data
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
@@ -75,22 +74,82 @@ class SwitchbotEntity(
         """Update the entity attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(self._device.subscribe(self._handle_coordinator_update))
         return await super().async_added_to_hass()
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
         """
         await self._device.update()
+
+
+class SwitchbotConnectionPolledEntity(SwitchbotEntity):
+    """Entity whose value has to be read from the device over a connection.
+
+    Reading needs an active connection, which is slow and frequently
+    impossible while Home Assistant is still starting up and competing for the
+    Bluetooth adapter, so the first read is deferred until startup is over.
+    """
+
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    @override
+    def should_poll(self) -> bool:
+        """Poll, since the value is only readable over a connection."""
+        return True
+
+    async def _async_read_value(self) -> None:
+        """Read the value from the device into the entity attributes."""
+        raise NotImplementedError
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks and read the value once startup is over."""
+        await super().async_added_to_hass()
+        self.async_on_remove(async_at_started(self.hass, self._async_hass_started))
+
+    @callback
+    def _async_hass_started(self, _hass: HomeAssistant) -> None:
+        """Read the value now that startup is no longer in the way."""
+        # A background task so a stuck connect is cancelled when the entry
+        # unloads instead of holding up shutdown.
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass,
+            self.async_update_ha_state(force_refresh=True),
+            f"switchbot read {self.entity_id}",
+        )
+
+    @override
+    async def async_update(self) -> None:
+        """Read the value from the device."""
+        if not bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        ):
+            _LOGGER.debug("No connectable path to %s, skipping update", self._address)
+            return
+        try:
+            await self._async_read_value()
+        except SwitchbotOperationError, BleakError:
+            _LOGGER.debug(
+                "Failed to read %s from %s",
+                self.entity_id,
+                self._address,
+                exc_info=True,
+            )
+            return
 
 
 def exception_handler[_EntityT: SwitchbotEntity, **_P](
@@ -120,6 +179,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
     _device: Switchbot
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.debug("Turn Switchbot device on %s", self._address)
@@ -130,6 +190,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.debug("Turn Switchbot device off %s", self._address)

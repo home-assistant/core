@@ -1,7 +1,7 @@
 """The tests for the Tasmota sensor platform."""
 
 import copy
-import datetime
+import datetime as dt
 from datetime import timedelta
 import json
 from unittest.mock import Mock, patch
@@ -13,6 +13,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -37,9 +39,6 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
 )
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 BAD_LIST_SENSOR_CONFIG_3 = {
     "sn": {
@@ -201,7 +200,8 @@ TEMPERATURE_SENSOR_CONFIG = {
             ["sensor.tasmota_tx23_speed_act", "sensor.tasmota_tx23_dir_card"],
             (
                 '{"TX23":{"Speed":{"Act":"12.3"},"Dir": {"Card": "WSW"}}}',
-                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},"Dir": {"Card": "ESE"}}}}',
+                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},'
+                '"Dir": {"Card": "ESE"}}}}',
             ),
         ),
         (
@@ -239,8 +239,10 @@ TEMPERATURE_SENSOR_CONFIG = {
             LIST_SENSOR_CONFIG_2,
             ["sensor.tasmota_energy_total_0", "sensor.tasmota_energy_total_1"],
             (
-                '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
+                '{"ENERGY":{"Total":[1.2, 3.4],'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],'
+                '"TotalStartTime":"2018-11-23T16:33:47"}}}',
             ),
         ),
         # Test dict Total sensors
@@ -251,8 +253,11 @@ TEMPERATURE_SENSOR_CONFIG = {
                 "sensor.tasmota_energy_total_phase2",
             ],
             (
-                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":{"Phase1":5.6, "Phase2":7.8},"TotalStartTime":"2018-11-23T15:33:47"}}}',
+                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":'
+                '{"Total":{"Phase1":5.6, "Phase2":7.8},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}}',
             ),
         ),
         (
@@ -292,7 +297,8 @@ TEMPERATURE_SENSOR_CONFIG = {
                 ),
             ),
         ),
-        # Test we automatically set state class to measurement on unknown numerical sensors
+        # Test we automatically set state class to measurement on
+        # unknown numerical sensors
         (
             DEFAULT_SENSOR_CONFIG_UNKNOWN,
             [
@@ -764,7 +770,7 @@ async def test_single_shot_status_sensor_state_via_mqtt(
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
-@patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=datetime.datetime))
+@patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=dt.datetime))
 async def test_restart_time_status_sensor_state_via_mqtt(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -804,7 +810,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test polled state update
-    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
+    utc_now = dt.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
     hatasmota.status_sensor.datetime.now.return_value = utc_now
     async_fire_mqtt_message(
         hass,

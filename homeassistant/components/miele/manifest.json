@@ -1,6 +1,7 @@
 {
   "domain": "miele",
   "name": "Miele",
+  "categories": ["appliances_cleaning", "climate.fans_ventilation"],
   "codeowners": ["@astrandb"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -9,7 +10,7 @@
   "iot_class": "cloud_push",
   "loggers": ["pymiele"],
   "quality_scale": "platinum",
-  "requirements": ["pymiele==0.6.1"],
+  "requirements": ["pymiele==0.6.3"],
   "single_config_entry": true,
   "zeroconf": ["_mieleathome._tcp.local."]
 }

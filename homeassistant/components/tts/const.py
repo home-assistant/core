@@ -1,8 +1,7 @@
 """Text-to-speech constants."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -13,6 +12,7 @@ if TYPE_CHECKING:
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
+ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 
@@ -25,11 +25,30 @@ DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
 
-DOMAIN = "tts"
+DOMAIN: Final = "tts"
 DATA_COMPONENT: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 
 DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")
 
 MEDIA_SOURCE_STREAM_PATH = "-stream-"
 
+SERVICE_CLEAR_CACHE = "clear_cache"
+
 type TtsAudioType = tuple[str | None, bytes | None]
+
+
+class TextToSpeechService(StrEnum):
+    """Store keys for text-to-speech services."""
+
+    CLEAR_CACHE = "clear_cache"
+    SPEAK = "speak"
+
+
+class TextToSpeechServiceArgument(StrEnum):
+    """Store keys for text-to-speech service arguments."""
+
+    CACHE = "cache"
+    LANGUAGE = "language"
+    MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+    MESSAGE = "message"
+    OPTIONS = "options"

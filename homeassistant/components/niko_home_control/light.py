@@ -1,9 +1,8 @@
 """Light platform Niko Home Control."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+from nhc.controller import NHCController
 from nhc.light import NHCLight
 
 from homeassistant.components.light import (
@@ -15,7 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NHCController, NikoHomeControlConfigEntry
+from . import NikoHomeControlConfigEntry
 from .entity import NikoHomeControlEntity
 
 
@@ -51,14 +50,17 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_brightness = action.state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._action.turn_off()
 
+    @override
     def update_state(self) -> None:
         """Handle updates from the controller."""
         state = self._action.state

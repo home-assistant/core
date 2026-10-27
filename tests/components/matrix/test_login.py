@@ -12,7 +12,7 @@ from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
 
 @dataclass
 class LoginTestParameters:
-    """Dataclass of parameters representing the login parameters and expected result state."""
+    """Login parameters and expected result state."""
 
     password: str
     access_token: dict[str, str]
@@ -34,7 +34,8 @@ good_password_bad_token = LoginTestParameters(
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
-        "Restoring login from access token failed: M_UNKNOWN_TOKEN, Invalid access token passed.",
+        "Restoring login from access token failed:"
+        " M_UNKNOWN_TOKEN, Invalid access token passed.",
         "Logging in using password",
     },
 )
@@ -45,7 +46,8 @@ bad_password_good_access_token = LoginTestParameters(
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
-        f"Successfully restored login from access token: user_id '{TEST_MXID}', device_id '{TEST_DEVICE_ID}'",
+        "Successfully restored login from access token:"
+        f" user_id '{TEST_MXID}', device_id '{TEST_DEVICE_ID}'",
     },
 )
 
@@ -55,7 +57,8 @@ bad_password_bad_access_token = LoginTestParameters(
     expected_login_state=False,
     expected_caplog_messages={
         "Restoring login from stored access token",
-        "Restoring login from access token failed: M_UNKNOWN_TOKEN, Invalid access token passed.",
+        "Restoring login from access token failed:"
+        " M_UNKNOWN_TOKEN, Invalid access token passed.",
         "Logging in using password",
         "Login by password failed: status_code, LoginError",
     },

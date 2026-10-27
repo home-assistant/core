@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from transmission_rpc.error import (
     TransmissionAuthError,
     TransmissionConnectError,
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_CONFIG_DATA_VERSION_1_1, OLD_MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_flow_entry_migrate_1_1_to_1_2(
@@ -77,6 +76,32 @@ async def test_setup_failed_auth_error(
     mock_transmission_client.side_effect = TransmissionAuthError()
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0-RC2"),
+        ("v0.1.0"),
+        ("v1.9.0"),
+        ("3.0.0"),
+        ("3.0.0 (123798)"),
+    ],
+)
+async def test_setup_failed_too_old(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    version: str,
+) -> None:
+    """Test setup of Transmission entry with too old version of Transmission."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_transmission_client.return_value.server_version = version
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 

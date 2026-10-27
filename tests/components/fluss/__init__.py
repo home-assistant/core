@@ -1,7 +1,5 @@
 """Test Script for Fluss+ Initialisation."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from fluss_api import (
@@ -11,14 +9,13 @@ from fluss_api import (
     FlussApiClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fluss import PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -95,5 +92,5 @@ async def test_platforms_forwarded(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert mock_config_entry.state is ConfigEntryState.LOADED
         hass.config_entries.async_forward_entry_setups.assert_called_with(
-            mock_config_entry, [Platform.BUTTON]
+            mock_config_entry, [Platform.BUTTON, Platform.COVER]
         )

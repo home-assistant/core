@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
-) -> bool:
+) -> None:
     """Set up Swiss public transport from a config entry."""
     config = entry.data
 
@@ -90,7 +90,7 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="invalid_data",
             translation_placeholders={
-                **PLACEHOLDERS,
+                "stationboard_url": PLACEHOLDERS["stationboard_url"],
                 "config_title": entry.title,
                 "error": str(e),
             },
@@ -103,25 +103,20 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SwissPublicTransportConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version > 3:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Remove wrongly registered devices and entries
@@ -132,9 +127,7 @@ async def async_migrate_entry(
             device_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_update_device(
-                dev.id, remove_config_entry_id=config_entry.entry_id
-            )
+            device_registry.async_remove_device(dev.id)
 
         entity_id = entity_registry.async_get_entity_id(
             Platform.SENSOR, DOMAIN, "None_departure"
@@ -145,7 +138,8 @@ async def async_migrate_entry(
                 new_unique_id=f"{new_unique_id}_departure",
             )
             _LOGGER.debug(
-                "Faulty entity with unique_id 'None_departure' migrated to new unique_id '%s'",
+                "Faulty entity with unique_id 'None_departure'"
+                " migrated to new unique_id '%s'",
                 f"{new_unique_id}_departure",
             )
 
@@ -155,7 +149,9 @@ async def async_migrate_entry(
         )
 
     if config_entry.version < 3:
-        # Via stations and time/offset settings now available, which are not backwards compatible if used, changes unique id
+        # Via stations and time/offset settings now available,
+        # which are not backwards compatible if used,
+        # changes unique id
         hass.config_entries.async_update_entry(config_entry, version=3, minor_version=1)
 
     _LOGGER.debug(
@@ -163,5 +159,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.version.const import (
@@ -12,9 +13,11 @@ from homeassistant.components.version.const import (
     CONF_IMAGE,
     CONF_VERSION_SOURCE,
     DEFAULT_CONFIGURATION,
+    DEFAULT_NAME_CURRENT,
     DOMAIN,
     UPDATE_COORDINATOR_UPDATE_INTERVAL,
     VERSION_SOURCE_DOCKER_HUB,
+    VERSION_SOURCE_LOCAL,
     VERSION_SOURCE_PYPI,
     VERSION_SOURCE_VERSIONS,
 )
@@ -25,8 +28,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 
 from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_reload_config_entry(hass: HomeAssistant) -> None:
@@ -49,38 +50,38 @@ async def test_reload_config_entry(hass: HomeAssistant) -> None:
 
 
 async def test_basic_form(hass: HomeAssistant) -> None:
-    """Test that we get the form."""
+    """Test that local source creates an entry without the version_source step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_VERSION_SOURCE: VERSION_SOURCE_DOCKER_HUB},
+            {CONF_VERSION_SOURCE: VERSION_SOURCE_LOCAL},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == VERSION_SOURCE_DOCKER_HUB
+    assert result2["title"] == DEFAULT_NAME_CURRENT
     assert result2["data"] == {
         **DEFAULT_CONFIGURATION,
-        CONF_SOURCE: HaVersionSource.CONTAINER,
-        CONF_VERSION_SOURCE: VERSION_SOURCE_DOCKER_HUB,
+        CONF_SOURCE: HaVersionSource.LOCAL,
+        CONF_VERSION_SOURCE: VERSION_SOURCE_LOCAL,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
-    """Show advanced form when pypi is selected."""
+async def test_form_pypi(hass: HomeAssistant) -> None:
+    """Show form when pypi is selected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -99,7 +100,7 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_BETA: True}
@@ -117,11 +118,11 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_advanced_form_container(hass: HomeAssistant) -> None:
-    """Show advanced form when container source is selected."""
+async def test_form_container(hass: HomeAssistant) -> None:
+    """Show form when container source is selected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -140,7 +141,7 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_IMAGE: "odroid-n2-homeassistant"}
@@ -158,11 +159,11 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
-    """Show advanced form when docker source is selected."""
+async def test_form_supervisor(hass: HomeAssistant) -> None:
+    """Show form when supervisor source is selected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -181,7 +182,7 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

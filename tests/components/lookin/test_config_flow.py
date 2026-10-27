@@ -1,12 +1,11 @@
 """Define tests for the lookin config flow."""
 
-from __future__ import annotations
-
 import dataclasses
 from ipaddress import ip_address
 from unittest.mock import patch
 
 from aiolookin import NoUsableService
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lookin.const import DOMAIN
@@ -19,11 +18,10 @@ from . import (
     DEVICE_ID,
     IP_ADDRESS,
     MODULE,
+    ZC_NAME,
     ZEROCONF_DATA,
     _patch_get_info,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_manual_setup(hass: HomeAssistant) -> None:
@@ -37,7 +35,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
 
     with (
         _patch_get_info(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -47,6 +45,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["title"] == DEFAULT_ENTRY_TITLE
+    assert result["result"].unique_id == DEVICE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,6 +90,17 @@ async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
+    with (
+        _patch_get_info(),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_setup_unknown_exception(hass: HomeAssistant) -> None:
     """Test manually setting up, unknown exception."""
@@ -110,6 +120,17 @@ async def test_manual_setup_unknown_exception(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
+    with (
+        _patch_get_info(),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
@@ -128,7 +149,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     with (
         _patch_get_info(),
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -137,6 +158,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: IP_ADDRESS}
     assert result2["title"] == DEFAULT_ENTRY_TITLE
+    assert result2["result"].unique_id == ZC_NAME.upper()
     assert mock_async_setup_entry.called
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -146,7 +168,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     with (
         _patch_get_info(),
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(

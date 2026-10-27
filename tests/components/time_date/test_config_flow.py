@@ -1,20 +1,18 @@
 """Test the Time & Date config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
-from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
+from homeassistant.components.time_date.const import DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -37,9 +35,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_does_not_allow_beat(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user_flow_does_not_allow_beat(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
     result = await hass.config_entries.flow.async_init(
@@ -47,7 +43,7 @@ async def test_user_flow_does_not_allow_beat(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"display_options": ["beat"]},
@@ -89,6 +85,7 @@ async def test_timezone_not_set(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timezone_not_exist"}
 
 

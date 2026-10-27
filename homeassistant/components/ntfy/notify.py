@@ -1,10 +1,8 @@
 """ntfy notification entity."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiontfy import Message
 from aiontfy.exceptions import (
@@ -13,8 +11,11 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
-from homeassistant.components import camera, image
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components import tts
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
@@ -64,12 +65,18 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     )
     _attr_supported_features = NotifyEntityFeature.TITLE
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Publish a message to a topic."""
-        await self.publish(message=message, title=title)
+        """Publish a message to a topic via notify.send_message action."""
+        await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
-        """Publish a message to a topic."""
+        """Publish a message to a topic via ntfy.publish action."""
+        await self._publish(**kwargs)
+        self._async_record_notification()
+
+    async def _publish(self, **kwargs: Any) -> None:
+        """Shared internal helper to publish a message to a topic."""
         attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
@@ -87,14 +94,14 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 )
         if file := params.pop(ATTR_ATTACH_FILE, None):
             media_content_id: str = file["media_content_id"]
-            if media_content_id.startswith("media-source://camera/"):
-                entity_id = media_content_id.removeprefix("media-source://camera/")
-                attachment = (
-                    await camera.async_get_image(self.hass, entity_id)
-                ).content
-            elif media_content_id.startswith("media-source://image/"):
-                entity_id = media_content_id.removeprefix("media-source://image/")
-                attachment = (await image.async_get_image(self.hass, entity_id)).content
+            if media_content_id.startswith("media-source://tts/"):
+                _, attachment = await tts.async_get_media_source_audio(
+                    self.hass, media_content_id
+                )
+            elif media_image := await async_get_media_image(
+                self.hass, media_content_id
+            ):
+                attachment = media_image.content
             else:
                 media = await async_resolve_media(
                     self.hass, file["media_content_id"], None

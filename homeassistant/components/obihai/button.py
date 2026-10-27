@@ -1,6 +1,6 @@
 """Obihai button module."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -48,6 +48,7 @@ class ObihaiButton(ButtonEntity):
         self._pyobihai = requester.pyobihai
         self._attr_unique_id = f"{requester.serial}-reboot"
 
+    @override
     def press(self) -> None:
         """Press button."""
 

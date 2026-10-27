@@ -1,21 +1,21 @@
 """Tests for the melnor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, _patch, patch
 
 from melnor_bluetooth.device import Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 FAKE_ADDRESS_1 = "FAKE-ADDRESS-1"
 FAKE_ADDRESS_2 = "FAKE-ADDRESS-2"
@@ -26,7 +26,10 @@ FAKE_SERVICE_INFO_1 = BluetoothServiceInfoBleak(
     address=FAKE_ADDRESS_1,
     rssi=-63,
     manufacturer_data={
-        13: b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        13: (
+            b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00"
+            b"\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        )
     },
     service_uuids=[],
     service_data={},
@@ -43,7 +46,10 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     address=FAKE_ADDRESS_2,
     rssi=-63,
     manufacturer_data={
-        13: b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        13: (
+            b"Y\x08\x02\x8f\x00\x00\x00\x00\x00\x00"
+            b"\xf0\x00\x00\xf0\x00\x00\xf0\x00\x00\xf0*\x9b\xcf\xbc"
+        )
     },
     service_uuids=[],
     service_data={},
@@ -248,7 +254,7 @@ def mock_melnor_device():
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
-        "homeassistant.components.melnor.async_setup_entry", return_value=True
+        "homeassistant.components.melnor.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -266,7 +272,7 @@ def patch_async_discovered_service_info(
 def patch_async_ble_device_from_address(
     return_value: BluetoothServiceInfoBleak | None = FAKE_SERVICE_INFO_1,
 ):
-    """Patch async_ble_device_from_address to return a mocked BluetoothServiceInfoBleak."""
+    """Patch async_ble_device_from_address to return a mock."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
         return_value=return_value,

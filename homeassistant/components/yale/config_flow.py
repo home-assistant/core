@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import jwt
 
@@ -21,6 +21,7 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return _LOGGER
@@ -42,6 +43,7 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
         )
         return decoded["userId"]
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
         user_id = self._async_get_user_id_from_access_token(

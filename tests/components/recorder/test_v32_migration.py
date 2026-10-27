@@ -7,6 +7,13 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_drop_index,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -19,19 +26,11 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.util import dt as dt_util
 
-from .common import (
-    async_drop_index,
-    async_wait_recording_done,
-    get_patched_live_version,
-)
 from .conftest import instrument_migration
 
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
-
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
-SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
+SCHEMA_MODULE_30 = "pytest_homeassistant.components.recorder.db_schema_30"
+SCHEMA_MODULE_32 = "pytest_homeassistant.components.recorder.db_schema_32"
 
 
 def _create_engine_test(
@@ -526,7 +525,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
-    """Test that we can recover from out of disk space while rebuilding the states table.
+    """Test recovery from out of disk space during states rebuild.
 
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
@@ -852,8 +851,8 @@ async def test_out_of_disk_space_while_removing_foreign_key(
                     is None
                 )
 
-                # Re-add the foreign key constraint to simulate failure to remove it during
-                # schema migration
+                # Re-add the foreign key constraint to simulate
+                # failure to remove it during schema migration
                 with patch.object(migration, "Base", old_db_schema.Base):
                     await instance.async_add_executor_job(
                         migration._restore_foreign_key_constraints,
@@ -862,8 +861,9 @@ async def test_out_of_disk_space_while_removing_foreign_key(
                         [("states", "event_id", "events", "event_id")],
                     )
 
-                # Simulate out of disk space while removing the foreign key from the states table by
-                # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
+                # Simulate out of disk space while removing the
+                # foreign key from the states table by patching
+                # DropConstraint to raise InternalError
                 with (
                     patch(
                         "homeassistant.components.recorder.migration.DropConstraint.__init__",

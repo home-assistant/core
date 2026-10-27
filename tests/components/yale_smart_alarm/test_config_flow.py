@@ -1,18 +1,15 @@
 """Test the Yale Smart Living config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant import config_entries
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -30,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -50,6 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": "test-password",
         "area_id": "1",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -93,7 +91,7 @@ async def test_form_invalid_auth(
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -142,7 +140,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ) as mock_yale,
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -217,7 +215,7 @@ async def test_reauth_flow_error(
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -262,7 +260,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -322,7 +320,7 @@ async def test_reconfigure_username_exist(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -345,7 +343,7 @@ async def test_reconfigure_username_exist(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -421,7 +419,7 @@ async def test_reconfigure_flow_error(
         ),
         patch(
             "homeassistant.components.yale_smart_alarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -468,4 +466,4 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"lock_code_digits": 4}
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED

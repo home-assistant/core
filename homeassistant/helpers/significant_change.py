@@ -27,8 +27,6 @@ The following cases will never be passed to your function:
 - state adding/removing
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import math
 from types import MappingProxyType
@@ -160,7 +158,7 @@ def check_percentage_change(
         if old_state == new_state:
             return 0
         try:
-            return (abs(new_state - old_state) / old_state) * 100.0
+            return (abs(new_state - old_state) / abs(old_state)) * 100.0
         except ZeroDivisionError:
             return math.inf
 

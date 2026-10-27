@@ -1,6 +1,7 @@
 {
   "domain": "immich",
   "name": "Immich",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "dependencies": ["http"],
@@ -9,5 +10,5 @@
   "iot_class": "local_polling",
   "loggers": ["aioimmich"],
   "quality_scale": "platinum",
-  "requirements": ["aioimmich==0.12.1"]
+  "requirements": ["aioimmich==0.18.0"]
 }

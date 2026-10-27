@@ -2,25 +2,25 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.hegel.const import CONF_MODEL, DOMAIN
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.hegel.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import TEST_HOST, TEST_MODEL, TEST_UDN
 
-from tests.common import MockConfigEntry
-
 TEST_NAME = "Hegel H190"
 TEST_SSDP_LOCATION = f"http://{TEST_HOST}:8080/description.xml"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_hegel_client: MagicMock,
+    hass: HomeAssistant, mock_hegel_client: MagicMock
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -38,6 +38,7 @@ async def test_user_flow_success(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Hegel {TEST_MODEL}"
     assert result["data"] == {
@@ -46,10 +47,9 @@ async def test_user_flow_success(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_exception(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_hegel_client: MagicMock,
+    hass: HomeAssistant, mock_hegel_client: MagicMock
 ) -> None:
     """Test user flow when connection fails."""
     result = await hass.config_entries.flow.async_init(
@@ -108,10 +108,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery_success(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_hegel_client: MagicMock,
+    hass: HomeAssistant, mock_hegel_client: MagicMock
 ) -> None:
     """Test successful SSDP discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -143,12 +142,11 @@ async def test_ssdp_discovery_success(
     assert result["result"].unique_id == TEST_UDN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_ssdp_discovery_from_ssdp_location(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_hegel_client: MagicMock,
+    hass: HomeAssistant, mock_hegel_client: MagicMock
 ) -> None:
-    """Test SSDP discovery extracts host from ssdp_location when presentationURL is not available."""
+    """Test SSDP discovery extracts host from ssdp_location when no presentationURL."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
@@ -171,6 +169,7 @@ async def test_ssdp_discovery_from_ssdp_location(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL}
+    assert result["result"].unique_id == TEST_UDN
 
 
 async def test_ssdp_discovery_no_host(hass: HomeAssistant) -> None:
@@ -242,7 +241,7 @@ async def test_ssdp_discovery_already_configured_updates_host(
     mock_config_entry: MockConfigEntry,
     mock_hegel_client: MagicMock,
 ) -> None:
-    """Test SSDP discovery updates host when device is already configured with different IP."""
+    """Test SSDP discovery updates host when device is configured with different IP."""
     new_host = "192.168.1.50"
 
     mock_config_entry.add_to_hass(hass)

@@ -1,13 +1,10 @@
 """Config flow to configure SMHI component."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from pysmhi import SmhiForecastException, SMHIPointForecast
-import voluptuous as vol
 
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -40,6 +37,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,8 +68,12 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_LOCATION, default=home_location
+                    ): LocationSelector()
+                }
             ),
             errors=errors,
         )
@@ -94,20 +96,34 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                 old_lat = reconfigure_entry.data[CONF_LOCATION][CONF_LATITUDE]
                 old_lon = reconfigure_entry.data[CONF_LOCATION][CONF_LONGITUDE]
 
+                old_id = f"{old_lat}, {old_lon}"
+                new_id = f"{lat}, {lon}"
+
+                # Sensor unique IDs are the location followed by "-<key>"
                 entity_reg = er.async_get(self.hass)
-                if entity := entity_reg.async_get_entity_id(
-                    WEATHER_DOMAIN, DOMAIN, f"{old_lat}, {old_lon}"
+                for entity_entry in er.async_entries_for_config_entry(
+                    entity_reg, reconfigure_entry.entry_id
                 ):
-                    entity_reg.async_update_entity(
-                        entity, new_unique_id=f"{lat}, {lon}"
-                    )
+                    if entity_entry.unique_id == old_id or (
+                        entity_entry.unique_id.startswith(f"{old_id}-")
+                    ):
+                        new_unique_id = new_id + entity_entry.unique_id.removeprefix(
+                            old_id
+                        )
+                        # A stale entity of an earlier location can hold it already
+                        if not entity_reg.async_get_entity_id(
+                            entity_entry.domain, DOMAIN, new_unique_id
+                        ):
+                            entity_reg.async_update_entity(
+                                entity_entry.entity_id, new_unique_id=new_unique_id
+                            )
 
                 device_reg = dr.async_get(self.hass)
-                if device := device_reg.async_get_device(
-                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                if device := device_reg.async_get_device_by_identifier(
+                    (DOMAIN, old_id), reconfigure_entry.entry_id
                 ):
                     device_reg.async_update_device(
-                        device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}
+                        device.id, new_identifiers={(DOMAIN, new_id)}
                     )
 
                 return self.async_update_reload_and_abort(
@@ -118,7 +134,7 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "wrong_location"
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()}),
+            probatio.Schema({probatio.Required(CONF_LOCATION): LocationSelector()}),
             reconfigure_entry.data,
         )
         return self.async_show_form(

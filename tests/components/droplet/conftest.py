@@ -5,11 +5,10 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.droplet.const import DOMAIN
 from homeassistant.const import CONF_CODE, CONF_IP_ADDRESS, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 MOCK_CODE = "11223"
 MOCK_HOST = "192.168.1.2"
@@ -44,6 +43,9 @@ def mock_droplet() -> Generator[AsyncMock]:
         client.get_signal_quality.return_value = "strong_signal"
         client.get_server_status.return_value = "connected"
         client.get_flow_rate.return_value = 0.1
+        client.get_volume_delta.return_value = 1000
+        client.get_low_leak.return_value = True
+        client.get_high_leak.return_value = False
         client.get_manufacturer.return_value = MOCK_MANUFACTURER
         client.get_model.return_value = MOCK_MODEL
         client.get_fw_version.return_value = MOCK_SW_VERSION
@@ -63,11 +65,11 @@ def mock_timeout() -> Generator[None]:
             0.05,
         ),
         patch(
-            "homeassistant.components.droplet.coordinator.VERSION_TIMEOUT",
+            "homeassistant.components.droplet.coordinator.CONNECT_TIMEOUT",
             0.1,
         ),
         patch(
-            "homeassistant.components.droplet.coordinator.CONNECT_DELAY",
+            "homeassistant.components.droplet.coordinator.RECONNECT_DELAY",
             0.1,
         ),
     ):

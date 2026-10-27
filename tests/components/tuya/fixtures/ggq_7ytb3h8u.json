@@ -1,0 +1,52 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "GIEX Watering Timer",
+  "category": "ggq",
+  "product_id": "7ytb3h8u",
+  "product_name": "GIEX Watering Timer",
+  "online": true,
+  "sub": true,
+  "time_zone": "+01:00",
+  "active_time": "2026-04-29T18:52:57+00:00",
+  "create_time": "2026-04-29T18:52:57+00:00",
+  "update_time": "2026-04-29T18:52:57+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "start": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "smart_weather": {
+      "type": "Enum",
+      "value": "{\"range\":[\"sunny\",\"cloudy\",\"rainy\",\"snowy\"]}"
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "start": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "smart_weather": {
+      "type": "Enum",
+      "value": "{\"range\":[\"sunny\",\"cloudy\",\"rainy\",\"snowy\"]}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "switch": false,
+    "start": false,
+    "smart_weather": "sunny"
+  }
+}

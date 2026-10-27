@@ -6,6 +6,7 @@ from typing import Any
 
 from doorbirdpy import DoorBirdScheduleEntry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.doorbird.const import (
     CONF_EVENTS,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import VALID_CONFIG
 from .conftest import DoorbirdMockerType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -113,11 +112,15 @@ async def test_custom_url_used_for_favorites(
         "http": {
             "1": {
                 "title": "Home Assistant (mydoorbird_doorbell)",
-                "value": f"{custom_url}/api/doorbird/mydoorbird_doorbell?token=test-token",
+                "value": (
+                    f"{custom_url}/api/doorbird/mydoorbird_doorbell?token=test-token"
+                ),
             },
             "2": {
                 "title": "Home Assistant (mydoorbird_motion)",
-                "value": f"{custom_url}/api/doorbird/mydoorbird_motion?token=test-token",
+                "value": (
+                    f"{custom_url}/api/doorbird/mydoorbird_motion?token=test-token"
+                ),
             },
         }
     }

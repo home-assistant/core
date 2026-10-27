@@ -1,7 +1,5 @@
 """Axis conftest."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 from copy import deepcopy
 import re
@@ -11,6 +9,11 @@ from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.axis.const import DOMAIN
@@ -45,9 +48,6 @@ from .const import (
     VIEW_AREAS_RESPONSE,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]
 
@@ -77,7 +77,7 @@ class _RtspClientMock(Protocol):
 def fixture_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
+        "homeassistant.components.axis.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -142,6 +142,7 @@ def fixture_request(
     aioclient_mock: AiohttpClientMocker,
     port_management_payload: dict[str, Any],
     param_properties_payload: str,
+    param_properties_status_code: int,
     param_ports_payload: str,
     mqtt_status_code: int,
 ) -> Callable[[str], None]:
@@ -151,12 +152,15 @@ def fixture_request(
         def _url_pattern(path: str) -> re.Pattern[str]:
             return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
 
-        def _text_response(url: URL, text: str) -> AiohttpClientMockResponse:
+        def _text_response(
+            url: URL, text: str, status: int = 200
+        ) -> AiohttpClientMockResponse:
             return AiohttpClientMockResponse(
                 "post",
                 url,
                 text=text,
                 headers={"Content-Type": "text/plain"},
+                status=status,
             )
 
         async def _param_cgi_response(
@@ -174,7 +178,9 @@ def fixture_request(
             if group == "root.Output":
                 return _text_response(url, PORTS_RESPONSE)
             if group == "root.Properties":
-                return _text_response(url, param_properties_payload)
+                return _text_response(
+                    url, param_properties_payload, param_properties_status_code
+                )
             if group == "root.PTZ":
                 return _text_response(url, PTZ_RESPONSE)
             if group == "root.StreamProfile":
@@ -278,9 +284,15 @@ def fixture_param_ports_data() -> str:
     return PORTS_RESPONSE
 
 
+@pytest.fixture(name="param_properties_status_code")
+def fixture_param_properties_status_code() -> int:
+    """Property parameter status code."""
+    return 200
+
+
 @pytest.fixture(name="mqtt_status_code")
 def fixture_mqtt_status_code() -> int:
-    """Property parameter data."""
+    """MQTT status code."""
     return 200
 
 

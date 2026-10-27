@@ -1,13 +1,11 @@
 """Support for functionality to keep track of the sun."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -20,11 +18,7 @@ from . import (
     binary_sensor as binary_sensor_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
 )
-from .const import (  # noqa: F401  # noqa: F401
-    DOMAIN,
-    STATE_ABOVE_HORIZON,
-    STATE_BELOW_HORIZON,
-)
+from .const import DOMAIN, STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from .entity import Sun, SunConfigEntry
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -32,6 +26,12 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+    "STATE_ABOVE_HORIZON",
+    "STATE_BELOW_HORIZON",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -50,19 +50,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> None:
     """Set up from a config entry."""
+    # Remove deprecated solar_rising sensor entity (removed in 2026.1)
+    ent_reg = er.async_get(hass)
+    if entity_id := ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{entry.entry_id}-solar_rising"
+    ):
+        ent_reg.async_remove(entity_id)
+
     sun = Sun(hass)
     component = EntityComponent[Sun](_LOGGER, DOMAIN, hass)
     await component.async_add_entities([sun])
     entry.runtime_data = sun
     entry.async_on_unload(sun.remove_listeners)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_remove()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_remove()

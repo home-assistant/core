@@ -28,6 +28,7 @@ from aiohomeconnect.model.program import (
     ProgramDefinitionOption,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -43,11 +44,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SWITCH]
 
@@ -79,7 +78,9 @@ def platforms() -> list[str]:
             "Dishwasher",
             {
                 OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "switch.dishwasher_half_load",
-                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: "switch.dishwasher_silence_on_demand",
+                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: (
+                    "switch.dishwasher_silence_on_demand"
+                ),
                 OptionKey.DISHCARE_DISHWASHER_ECO_DRY: "switch.dishwasher_eco_dry",
             },
             [(STATE_ON, True), (STATE_OFF, False), (None, None)],
@@ -107,7 +108,7 @@ async def test_program_options_retrieval(
     option_without_default: tuple[OptionKey, str],
     option_without_constraints: tuple[OptionKey, str],
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    """Test options are retrieved at start and updated on programs."""
     original_get_all_programs_mock = client.get_all_programs.side_effect
     options_values = [
         Option(
@@ -222,7 +223,8 @@ async def test_program_options_retrieval(
     await hass.async_block_till_done()
 
     # Verify default values
-    # Every time the program is updated, the available options should use the default value if existing
+    # Every time the program is updated, the available options should use the default
+    # value if existing
     for entity_id, available in zip(
         option_entity_id.values(), options_availability_stage_2, strict=True
     ):
@@ -332,7 +334,7 @@ async def test_program_options_retrieval_after_appliance_connection(
     option_key: OptionKey,
     option_entity_id: str,
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    """Test options are retrieved at start and updated on programs."""
     appliance.connected = False
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(

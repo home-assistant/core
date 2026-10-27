@@ -1,10 +1,11 @@
 {
   "domain": "intesishome",
   "name": "IntesisHome",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@jnimmo"],
   "documentation": "https://www.home-assistant.io/integrations/intesishome",
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_polling",
   "loggers": ["pyintesishome"],
   "quality_scale": "legacy",
-  "requirements": ["pyintesishome==1.8.0"]
+  "requirements": ["pyintesishome==2.5.0"]
 }

@@ -1,16 +1,12 @@
 """Models for Recorder."""
 
-from __future__ import annotations
+from homeassistant.util.ulid import bytes_to_ulid_or_none, ulid_to_bytes_or_none
 
-from .context import (
-    bytes_to_ulid_or_none,
-    bytes_to_uuid_hex_or_none,
-    ulid_to_bytes_or_none,
-    uuid_hex_to_bytes_or_none,
-)
+from .context import bytes_to_uuid_hex_or_none, uuid_hex_to_bytes_or_none
 from .database import DatabaseEngine, DatabaseOptimizer, UnsupportedDialect
 from .event import extract_event_type_ids
 from .state import LazyState, extract_metadata_ids, row_to_compressed_state
+from .state_attributes import decode_attributes_from_source
 from .statistics import (
     CalendarStatisticPeriod,
     FixedStatisticPeriod,
@@ -46,6 +42,7 @@ __all__ = [
     "bytes_to_ulid_or_none",
     "bytes_to_uuid_hex_or_none",
     "datetime_to_timestamp_or_none",
+    "decode_attributes_from_source",
     "extract_event_type_ids",
     "extract_metadata_ids",
     "process_timestamp",

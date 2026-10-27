@@ -1,6 +1,6 @@
 """Data coordinator for the dwd_weather_warnings integration."""
 
-from __future__ import annotations
+from typing import override
 
 from dwdwfsapi import DwdWeatherWarningsAPI
 
@@ -16,7 +16,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .exceptions import EntityNotFoundError
+from .exceptions import CoordinatesNotFoundError, EntityNotFoundError
 from .util import get_position_data
 
 type DwdWeatherWarningsConfigEntry = ConfigEntry[DwdWeatherWarningsCoordinator]
@@ -43,6 +43,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
         self._device_tracker = None
         self._previous_position = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         if region_identifier := self.config_entry.data.get(CONF_REGION_IDENTIFIER):
@@ -54,12 +55,13 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
                 CONF_REGION_DEVICE_TRACKER
             )
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from the DWD Weather Warnings API."""
         if self._device_tracker:
             try:
                 position = get_position_data(self.hass, self._device_tracker)
-            except (EntityNotFoundError, AttributeError) as err:
+            except (EntityNotFoundError, CoordinatesNotFoundError) as err:
                 raise UpdateFailed(f"Error fetching position: {err!r}") from err
 
             distance = None

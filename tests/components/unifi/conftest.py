@@ -1,21 +1,23 @@
 """Fixtures for UniFi Network methods."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
+from copy import deepcopy
 from datetime import timedelta
+import json
 from types import MappingProxyType
 from typing import Any, Protocol
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiounifi.models.message import MessageKey
 import orjson
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
-from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
+from homeassistant.components.unifi.hub.connection import RETRY_DELAYS, RETRY_JITTER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -28,8 +30,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
+
+def retry_window(attempt: int) -> tuple[float, float]:
+    """Return the earliest and latest delay of a retry, jitter included."""
+    delay = RETRY_DELAYS[min(attempt, len(RETRY_DELAYS) - 1)]
+    return delay * (1 - RETRY_JITTER), delay * (1 + RETRY_JITTER)
+
+
+# Fires any pending retry, whatever the attempt number and jitter
+MAX_RETRY_DELAY = retry_window(len(RETRY_DELAYS))[1]
+FIRST_RETRY_DELAY = retry_window(0)[1]
+
+
+def invalid_json() -> json.JSONDecodeError:
+    """Return what aiounifi raises for a body that is not JSON."""
+    return json.JSONDecodeError("Expecting value", "", 0)
+
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
@@ -69,10 +85,18 @@ class WebsocketMessageMock(Protocol):
 @pytest.fixture(autouse=True, name="mock_discovery")
 def fixture_discovery():
     """No real network traffic allowed."""
-    with patch(
-        "homeassistant.components.unifi.config_flow._async_discover_unifi",
-        return_value=None,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.unifi.config_flow._async_discover_unifi",
+            return_value=None,
+        ) as mock,
+        patch(
+            "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
+            return_value=MagicMock(
+                async_scan=AsyncMock(return_value=[]), found_devices=[]
+            ),
+        ),
+    ):
         yield mock
 
 
@@ -173,13 +197,14 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     firewall_policy_payload: list[dict[str, Any]],
+    object_oriented_network_config_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
     site_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
-) -> Callable[[str], None]:
+) -> Callable[[str, str], None]:
     """Mock default UniFi requests responses."""
 
     def __mock_requests(host: str = DEFAULT_HOST, site_id: str = DEFAULT_SITE) -> None:
@@ -215,6 +240,10 @@ def fixture_request(
         mock_get_request(
             f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
         )
+        mock_get_request(
+            f"/v2/api/site/{site_id}/object-oriented-network-configs",
+            object_oriented_network_config_payload,
+        )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
@@ -240,9 +269,9 @@ def fixture_clients_all_data() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="device_payload")
-def fixture_device_data() -> list[dict[str, Any]]:
+def fixture_device_data(request: pytest.FixtureRequest) -> list[dict[str, Any]]:
     """Device data."""
-    return []
+    return deepcopy(getattr(request, "param", []))
 
 
 @pytest.fixture(name="dpi_app_payload")
@@ -260,6 +289,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="firewall_policy_payload")
 def firewall_policy_payload_data() -> list[dict[str, Any]]:
     """Firewall policy data."""
+    return []
+
+
+@pytest.fixture(name="object_oriented_network_config_payload")
+def object_oriented_network_config_payload_data() -> list[dict[str, Any]]:
+    """Object-oriented network config data."""
     return []
 
 
@@ -358,11 +393,15 @@ class WebsocketStateManager(asyncio.Event):
     """
 
     def __init__(
-        self, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+        self,
+        hass: HomeAssistant,
+        aioclient_mock: AiohttpClientMocker,
+        mock_requests: Callable[[str, str], None],
     ) -> None:
         """Store hass object and initialize asyncio.Event."""
         self.hass = hass
         self.aioclient_mock = aioclient_mock
+        self.mock_requests = mock_requests
         super().__init__()
 
     async def waiter(self, input: Callable[[bytes], None]) -> None:
@@ -372,7 +411,7 @@ class WebsocketStateManager(asyncio.Event):
     async def disconnect(self) -> None:
         """Mark future as done to make 'await self.api.start_websocket' return."""
         self.set()
-        await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done(wait_background_tasks=True)
 
     async def reconnect(self, fail: bool = False) -> None:
         """Set up new future to make 'await self.api.start_websocket' block.
@@ -387,12 +426,19 @@ class WebsocketStateManager(asyncio.Event):
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+        self.aioclient_mock.get(
+            f"https://{DEFAULT_HOST}:1234/api/s/{DEFAULT_SITE}/stat/sysinfo",
+            json={"meta": {"rc": "OK"}, "data": [{"version": "7.4.162"}]},
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
+        # Recovery refetches every handler
+        self.mock_requests(DEFAULT_HOST, DEFAULT_SITE)
 
         if not fail:
             self.clear()
-        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+        new_time = dt_util.utcnow() + timedelta(seconds=MAX_RETRY_DELAY)
         async_fire_time_changed(self.hass, new_time)
-        await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(autouse=True, name="_mock_websocket")
@@ -404,10 +450,13 @@ def fixture_aiounifi_websocket_method() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True, name="mock_websocket_state")
 def fixture_aiounifi_websocket_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, _mock_websocket: AsyncMock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_requests: Callable[[str, str], None],
+    _mock_websocket: AsyncMock,
 ) -> WebsocketStateManager:
     """Provide a state manager for UniFi websocket."""
-    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
+    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock, mock_requests)
     _mock_websocket.side_effect = websocket_state_manager.waiter
     return websocket_state_manager
 

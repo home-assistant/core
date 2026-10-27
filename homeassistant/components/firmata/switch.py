@@ -1,7 +1,7 @@
 """Support for Firmata switch output."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME, CONF_PIN
@@ -49,20 +49,24 @@ async def async_setup_entry(
 class FirmataSwitch(FirmataPinEntity, SwitchEntity):
     """Representation of a switch on a Firmata board."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a switch."""
         await self._api.start_pin()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._api.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._api.turn_on()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._api.turn_off()

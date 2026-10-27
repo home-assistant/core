@@ -1,8 +1,7 @@
 """Support for Lutron Homeworks buttons."""
 
-from __future__ import annotations
-
 import asyncio
+from typing import override
 
 from pyhomeworks.pyhomeworks import Homeworks
 
@@ -69,6 +68,7 @@ class HomeworksButton(HomeworksEntity, ButtonEntity):
         )
         self._release_delay = release_delay
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(

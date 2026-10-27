@@ -1,8 +1,6 @@
 """Litter-Robot services."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -23,8 +21,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_SLEEP_MODE,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Required("enabled"): cv.boolean,
-            vol.Optional("start_time"): cv.time,
+            probatio.Required("enabled"): cv.boolean,
+            probatio.Optional("start_time"): cv.time,
         },
         func="async_set_sleep_mode",
     )

@@ -1,6 +1,7 @@
 {
   "domain": "lifx",
   "name": "LIFX",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@Djelibeybi"],
   "config_flow": true,
   "dependencies": ["network"],
@@ -34,13 +35,16 @@
       "LIFX Lightstrip",
       "LIFX Luna",
       "LIFX Mini",
+      "LIFX Mirror",
       "LIFX Neon",
       "LIFX Nightvision",
       "LIFX PAR38",
+      "LIFX Path",
       "LIFX Permanent Outdoor",
       "LIFX Pls",
       "LIFX Plus",
       "LIFX Round",
+      "LIFX Spot",
       "LIFX Square",
       "LIFX String",
       "LIFX Tile",
@@ -51,10 +55,8 @@
   },
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
-  "requirements": [
-    "aiolifx==1.2.1",
-    "aiolifx-effects==0.3.2",
-    "aiolifx-themes==1.0.2"
-  ]
+  "loggers": ["lifx"],
+  "quality_scale": "platinum",
+  "requirements": ["lifx-async==7.10.1"],
+  "zeroconf": ["_lifx._udp.local."]
 }

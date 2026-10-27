@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import pydeconz
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.deconz.config_flow import (
     CONF_MANUAL_INPUT,
@@ -31,9 +33,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .conftest import API_KEY, BRIDGE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 BAD_BRIDGEID = "0000000000000000"
 
@@ -83,6 +82,35 @@ async def test_flow_discovered_bridges(
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
+
+
+async def test_flow_discovered_bridge_already_configured(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test that a discovered bridge updates an existing config entry."""
+    aioclient_mock.get(
+        pydeconz.utils.URL_DISCOVER,
+        json=[{"id": BRIDGE_ID, "internalipaddress": "2.3.4.5", "internalport": 80}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "2.3.4.5"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
 
 
 async def test_flow_manual_configuration_decision(
@@ -137,12 +165,13 @@ async def test_flow_manual_configuration_decision(
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
 
 
 async def test_flow_manual_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that config flow works with manual configuration after no discovered bridges."""
+    """Test config flow works with manual config after no discovered bridges."""
     logging.getLogger("homeassistant.components.deconz").setLevel(logging.DEBUG)
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -188,6 +217,7 @@ async def test_flow_manual_configuration(
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
 
 
 async def test_manual_configuration_after_discovery_timeout(
@@ -398,6 +428,19 @@ async def test_link_step_fails(
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": error_string}
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "http://1.2.3.4:80/api",
+        json=[{"success": {"username": API_KEY}}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant,
@@ -474,6 +517,7 @@ async def test_flow_ssdp_discovery(
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
 
 
 async def test_ssdp_discovery_update_configuration(
@@ -482,7 +526,7 @@ async def test_ssdp_discovery_update_configuration(
     """Test if a discovered bridge is configured but updates with new attributes."""
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -582,7 +626,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -595,6 +639,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -605,7 +650,7 @@ async def test_hassio_discovery_update_configuration(
     """Test we can update an existing config entry."""
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

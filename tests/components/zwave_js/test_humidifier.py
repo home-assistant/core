@@ -485,7 +485,8 @@ async def test_humidifier_missing_mode(
 
     client.async_send_command.reset_mock()
 
-    # Test turning off when device is previously auto for a device which does not have de-humidify mode
+    # Test turning off when device is previously auto for a device
+    # which does not have de-humidify mode
     event = Event(
         type="value updated",
         data={

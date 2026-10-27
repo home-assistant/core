@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockEntityPlatform
+
 from homeassistant.components.kira import sensor as kira
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntityPlatform
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
 

@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, SHARED_DATA, LinkPlaySharedData
+from .const import DOMAIN, PLATFORMS, SHARED_DATA_KEY, LinkPlaySharedData
 from .services import async_setup_services
 from .utils import async_get_client_session
 
@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> None:
     """Async setup hass config entry. Called when an entry has been setup."""
 
     session: ClientSession = await async_get_client_session(hass)
@@ -54,12 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
 
     # setup the controller and discover multirooms
     controller: LinkPlayController | None = None
-    hass.data.setdefault(DOMAIN, {})
-    if SHARED_DATA not in hass.data[DOMAIN]:
+    if SHARED_DATA_KEY not in hass.data:
         controller = LinkPlayController(session)
-        hass.data[DOMAIN][SHARED_DATA] = LinkPlaySharedData(controller, {})
+        hass.data[SHARED_DATA_KEY] = LinkPlaySharedData(controller, {})
     else:
-        controller = hass.data[DOMAIN][SHARED_DATA].controller
+        controller = hass.data[SHARED_DATA_KEY].controller
 
     await controller.add_bridge(bridge)
     await controller.discover_multirooms()
@@ -67,16 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     # forward to platforms
     entry.runtime_data = LinkPlayData(bridge=bridge)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> None:
     """Unload a config entry."""
 
     # remove the bridge from the controller and discover multirooms
     bridge: LinkPlayBridge | None = entry.runtime_data.bridge
-    controller: LinkPlayController = hass.data[DOMAIN][SHARED_DATA].controller
+    controller: LinkPlayController = hass.data[SHARED_DATA_KEY].controller
     await controller.remove_bridge(bridge)
     await controller.discover_multirooms()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

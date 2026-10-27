@@ -1,12 +1,13 @@
 {
   "domain": "peblar",
   "name": "Peblar",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/peblar",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["peblar==0.4.0"],
+  "requirements": ["peblar==2.1.0"],
   "zeroconf": [{ "name": "pblr-*", "type": "_http._tcp.local." }]
 }

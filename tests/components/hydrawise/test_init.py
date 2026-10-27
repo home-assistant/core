@@ -1,30 +1,91 @@
 """Tests for the Hydrawise integration."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Controller, User, Zone
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hydrawise.const import DOMAIN, MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from tests.common import MockConfigEntry, async_fire_time_changed
 
-
+@pytest.mark.parametrize("side_effect", [ClientError, APIError("unavailable")])
 async def test_connect_retry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pydrawise: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    side_effect: Exception,
 ) -> None:
     """Test that a connection error triggers a retry."""
-    mock_pydrawise.get_user.side_effect = ClientError
+    mock_pydrawise.get_user.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_auth_error_starts_reauth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pydrawise: AsyncMock
+) -> None:
+    """Test that an authorization error during setup starts a reauth flow."""
+    mock_pydrawise.get_user.side_effect = NotAuthorizedError("HTTP 401")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))
+
+
+async def test_update_api_error(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an API error during a refresh is an update failure, not unexpected."""
+    assert hass.states.get("binary_sensor.zone_one_watering").state != STATE_UNAVAILABLE
+
+    mock_pydrawise.get_user.side_effect = APIError("{'message': 'unavailable'}")
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering").state == STATE_UNAVAILABLE
+    assert "Unexpected error fetching hydrawise data" not in caplog.text
+    assert "Error communicating with the Hydrawise API" in caplog.text
+
+    mock_pydrawise.get_user.side_effect = None
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering").state != STATE_UNAVAILABLE
+
+
+async def test_update_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an authorization error during a refresh starts a reauth flow."""
+    mock_pydrawise.get_user.side_effect = NotAuthorizedError("HTTP 401")
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert any(mock_added_config_entry.async_get_active_flows(hass, {"reauth"}))
 
 
 async def test_update_version(
@@ -35,6 +96,9 @@ async def test_update_version(
     await hass.config_entries.async_setup(mock_config_entry_legacy.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry_legacy.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry_legacy.error_reason_translation_key == "missing_credentials"
+    )
 
     # Make sure reauth flow has been initiated
     assert any(mock_config_entry_legacy.async_get_active_flows(hass, {"reauth"}))
@@ -51,13 +115,13 @@ async def test_auto_add_devices(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are auto-added to the device registry."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller.id))}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
     )
     assert device is not None
     for zone in zones:
-        zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert zone_device is not None
     all_devices = dr.async_entries_for_config_entry(
@@ -65,6 +129,12 @@ async def test_auto_add_devices(
     )
     # 1 controller + 2 zones
     assert len(all_devices) == 3
+
+    # Sensors that use the water-use coordinator should exist for the initial zones.
+    assert hass.states.get("sensor.zone_one_daily_active_water_use") is not None
+    assert hass.states.get("sensor.zone_one_daily_active_watering_time") is not None
+    assert hass.states.get("sensor.zone_two_daily_active_water_use") is not None
+    assert hass.states.get("sensor.zone_two_daily_active_watering_time") is not None
 
     controller2 = deepcopy(controller)
     controller2.id += 10
@@ -84,13 +154,19 @@ async def test_auto_add_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    new_controller_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(controller2.id))}
+    new_controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(controller2.id)), mock_added_config_entry.entry_id
     )
     assert new_controller_device is not None
+
+    # The new controller's own entities must also be added, not just its device.
+    # Registering the controller device must not make _add_remove_zones treat the
+    # controller as already-known and skip the new-controller callbacks.
+    assert hass.states.get("binary_sensor.home_controller_2_connectivity") is not None
+
     for zone in zones2:
-        new_zone_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(zone.id))}
+        new_zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
         )
         assert new_zone_device is not None
 
@@ -99,6 +175,11 @@ async def test_auto_add_devices(
     )
     # 2 controllers + 4 zones
     assert len(all_devices) == 6
+
+    # Sensors that use the water-use coordinator must also be created for the
+    # newly added zones, even though the water-use coordinator hasn't refreshed.
+    assert hass.states.get("sensor.zone_one_2_daily_active_watering_time") is not None
+    assert hass.states.get("sensor.zone_two_2_daily_active_watering_time") is not None
 
 
 async def test_auto_remove_devices(
@@ -112,11 +193,15 @@ async def test_auto_remove_devices(
 ) -> None:
     """Test old devices are auto-removed from the device registry."""
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is not None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is not None
 
     user.controllers = []
@@ -126,13 +211,64 @@ async def test_auto_remove_devices(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, str(controller.id))})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(controller.id)), mock_added_config_entry.entry_id
+        )
         is None
     )
     for zone in zones:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, str(zone.id))})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(zone.id)), mock_added_config_entry.entry_id
+        )
         assert device is None
     all_devices = dr.async_entries_for_config_entry(
         device_registry, mock_added_config_entry.entry_id
     )
     assert len(all_devices) == 0
+
+
+async def test_zones_of_one_controller_go_missing(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    zones: list[Zone],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a controller answering without its zones does not crash the update.
+
+    The controller is still there, so the entities of its zones are still
+    subscribed when the refresh that drops them arrives.
+    """
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+
+    mock_pydrawise.get_zones.return_value = []
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_pydrawise.get_zones.return_value = zones
+
+    freezer.tick(MAIN_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("binary_sensor.zone_one_watering") is not None
+    assert "KeyError" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_pydrawise")
+async def test_setup_uses_shared_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the integration passes Home Assistant's client session along."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("pydrawise.auth.HybridAuth", autospec=True) as mock_hybrid_auth:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_hybrid_auth.call_args.kwargs["session"] is async_get_clientsession(hass)

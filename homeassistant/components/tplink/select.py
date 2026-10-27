@@ -1,9 +1,7 @@
 """Support for TPLink select entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final, cast, override
 
 from kasa import Device, Feature
 
@@ -15,10 +13,9 @@ from homeassistant.components.select import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
-    TPLinkDataUpdateCoordinator,
     TPLinkFeatureEntityDescription,
     async_refresh_after,
 )
@@ -102,11 +99,13 @@ class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
         self._attr_options = cast(list, self._feature.choices)
 
     @async_refresh_after
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         await self._feature.set_value(option)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_current_option = cast(str | None, self._feature.value)

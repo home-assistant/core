@@ -1,13 +1,11 @@
 """Diagnostics support for Netatmo."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .data_handler import ACCOUNT, NetatmoConfigEntry
+from .coordinator import ACCOUNT, NetatmoConfigEntry
 
 TO_REDACT = {
     "access_token",
@@ -39,7 +37,8 @@ async def async_get_config_entry_diagnostics(
         "info": async_redact_data(
             {
                 **config_entry.as_dict(),
-                "webhook_registered": data_handler.webhook,
+                "webhook_registered": data_handler.webhook_registered,
+                "webhook_delivering": data_handler.webhook_delivering,
             },
             TO_REDACT,
         ),

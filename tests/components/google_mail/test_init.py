@@ -6,6 +6,8 @@ from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_mail import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -21,9 +23,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_success(
@@ -210,7 +209,9 @@ async def test_device_info(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

@@ -1,46 +1,58 @@
 """Support for functionality to download files."""
 
-from __future__ import annotations
-
+from enum import StrEnum
 from http import HTTPStatus
 import os
 import re
-import threading
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
-    _LOGGER,
-    ATTR_FILENAME,
-    ATTR_HEADERS,
-    ATTR_OVERWRITE,
-    ATTR_SUBDIR,
-    ATTR_URL,
     CONF_DOWNLOAD_DIR,
     DOMAIN,
     DOWNLOAD_COMPLETED_EVENT,
     DOWNLOAD_FAILED_EVENT,
-    SERVICE_DOWNLOAD_FILE,
+    LOGGER,
 )
 
 
-def download_file(service: ServiceCall) -> None:
-    """Start thread to download file specified in the URL."""
+class DownloaderService(StrEnum):
+    """Store keys for Downloader services."""
 
-    entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    DOWNLOAD_FILE = "download_file"
+
+
+class DownloaderServiceArgument(StrEnum):
+    """Store keys for Downloader service arguments."""
+
+    FILENAME = "filename"
+    HEADERS = "headers"
+    OVERWRITE = "overwrite"
+    SUBDIR = "subdir"
+    URL = "url"
+
+
+async def download_file(service: ServiceCall) -> None:
+    """Download file specified in the URL."""
+
+    if not (entries := service.hass.config_entries.async_loaded_entries(DOMAIN)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="not_loaded"
+        )
+    entry = entries[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
-    url: str = service.data[ATTR_URL]
-    subdir: str | None = service.data.get(ATTR_SUBDIR)
-    target_filename: str | None = service.data.get(ATTR_FILENAME)
-    overwrite: bool = service.data[ATTR_OVERWRITE]
-    headers: dict[str, str] = service.data[ATTR_HEADERS]
+    url: str = service.data[DownloaderServiceArgument.URL]
+    subdir: str | None = service.data.get(DownloaderServiceArgument.SUBDIR)
+    target_filename: str | None = service.data.get(DownloaderServiceArgument.FILENAME)
+    overwrite: bool = service.data[DownloaderServiceArgument.OVERWRITE]
+    headers: dict[str, str] = service.data[DownloaderServiceArgument.HEADERS]
 
     if subdir:
         # Check the path
@@ -67,7 +79,7 @@ def download_file(service: ServiceCall) -> None:
             req = requests.get(url, stream=True, headers=headers, timeout=10)
 
             if req.status_code != HTTPStatus.OK:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Downloading '%s' failed, status_code=%d", url, req.status_code
                 )
                 service.hass.bus.fire(
@@ -115,29 +127,18 @@ def download_file(service: ServiceCall) -> None:
 
                         final_path = f"{path}_{tries}.{ext}"
 
-                _LOGGER.debug("%s -> %s", url, final_path)
+                LOGGER.debug("%s -> %s", url, final_path)
 
                 with open(final_path, "wb") as fil:
                     fil.writelines(req.iter_content(1024))
 
-                _LOGGER.debug("Downloading of %s done", url)
+                LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(
                     f"{DOMAIN}_{DOWNLOAD_COMPLETED_EVENT}",
                     {"url": url, "filename": filename},
                 )
 
-        except requests.exceptions.ConnectionError:
-            _LOGGER.exception("ConnectionError occurred for %s", url)
-            service.hass.bus.fire(
-                f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
-                {"url": url, "filename": filename},
-            )
-
-            # Remove file if we started downloading but failed
-            if final_path and os.path.isfile(final_path):
-                os.remove(final_path)
-        except ValueError:
-            _LOGGER.exception("Invalid value")
+        except requests.exceptions.ConnectionError as err:
             service.hass.bus.fire(
                 f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                 {"url": url, "filename": filename},
@@ -147,7 +148,28 @@ def download_file(service: ServiceCall) -> None:
             if final_path and os.path.isfile(final_path):
                 os.remove(final_path)
 
-    threading.Thread(target=do_download).start()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"url": url},
+            ) from err
+        except ValueError as err:
+            service.hass.bus.fire(
+                f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
+                {"url": url, "filename": filename},
+            )
+
+            # Remove file if we started downloading but failed
+            if final_path and os.path.isfile(final_path):
+                os.remove(final_path)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value",
+                translation_placeholders={"url": url},
+            ) from err
+
+    await service.hass.async_add_executor_job(do_download)
 
 
 @callback
@@ -156,17 +178,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DOWNLOAD_FILE,
+        DownloaderService.DOWNLOAD_FILE,
         download_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(ATTR_FILENAME): cv.string,
-                vol.Optional(ATTR_SUBDIR): cv.string,
-                vol.Required(ATTR_URL): cv.url,
-                vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
-                    {cv.string: cv.string}
-                ),
+                probatio.Optional(DownloaderServiceArgument.FILENAME): cv.string,
+                probatio.Optional(DownloaderServiceArgument.SUBDIR): cv.string,
+                probatio.Required(DownloaderServiceArgument.URL): cv.url,
+                probatio.Optional(
+                    DownloaderServiceArgument.OVERWRITE, default=False
+                ): cv.boolean,
+                probatio.Optional(
+                    DownloaderServiceArgument.HEADERS, default=dict
+                ): probatio.Schema({cv.string: cv.string}),
             }
         ),
     )

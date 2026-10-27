@@ -1,10 +1,9 @@
 """Test the Switch as X config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -19,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from . import PLATFORMS_TO_TEST, STATE_MAP
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

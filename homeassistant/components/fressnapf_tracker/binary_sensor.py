@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from fressnapftracker import Tracker
 
@@ -14,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
 # Coordinator is used to centralize the data updates
@@ -60,6 +61,7 @@ class FressnapfTrackerBinarySensor(FressnapfTrackerEntity, BinarySensorEntity):
     entity_description: FressnapfTrackerBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.data)

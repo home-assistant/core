@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 
 import mpd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mpd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -49,16 +48,29 @@ async def test_full_flow(
         (TimeoutError, "cannot_connect"),
         (gaierror, "cannot_connect"),
         (mpd.ConnectionError, "cannot_connect"),
+        (mpd.ProtocolError, "cannot_connect"),
         (OSError, "cannot_connect"),
+        pytest.param(
+            mpd.CommandError("[3@0] {password} incorrect password"),
+            "invalid_auth",
+            id="CommandError-invalid_auth",
+        ),
+        pytest.param(
+            mpd.CommandError("[5@0] {password} unknown command"),
+            "unknown",
+            id="CommandError-unknown",
+        ),
+        pytest.param(
+            mpd.CommandError("unparsable error"),
+            "unknown",
+            id="CommandError-unparsable",
+        ),
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mpd_client: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_mpd_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we handle errors correctly."""
     result = await hass.config_entries.flow.async_init(
@@ -76,8 +88,41 @@ async def test_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    mock_mpd_client.disconnect.assert_called_once()
 
     mock_mpd_client.password.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.1", CONF_PORT: 6600, CONF_PASSWORD: "test123"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_password_required(
+    hass: HomeAssistant, mock_mpd_client: AsyncMock
+) -> None:
+    """Test we report invalid auth when a required password is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_mpd_client.status.side_effect = mpd.CommandError(
+        '[4@0] {status} you don\'t have permission for "status"'
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.0.1", CONF_PORT: 6600}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_mpd_client.status.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -1,20 +1,17 @@
 """The test for the sensibo update platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -42,5 +39,5 @@ async def test_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.hallway_firmware")
+    state = hass.states.get("update.hallway_hallway_firmware")
     assert state.state == STATE_OFF

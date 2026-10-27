@@ -1,10 +1,11 @@
 {
   "domain": "aosmith",
   "name": "A. O. Smith",
+  "categories": ["climate.water_heaters"],
   "codeowners": ["@bdr99"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aosmith",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["py-aosmith==1.0.17"]
+  "requirements": ["py-aosmith==1.0.18"]
 }

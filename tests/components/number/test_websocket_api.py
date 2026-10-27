@@ -1,10 +1,10 @@
 """Test the number websocket API."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.number.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_device_class_units(

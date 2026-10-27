@@ -57,11 +57,12 @@
       "manufacturer_id": 12884
     }
   ],
+  "categories": ["sensors.temperature_humidity", "appliances_cleaning.cooking"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["inkbird-ble==1.1.1"]
+  "requirements": ["inkbird-ble==1.7.1"]
 }

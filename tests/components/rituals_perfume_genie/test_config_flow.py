@@ -2,23 +2,25 @@
 
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientError
-from pyrituals import AuthenticationException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from ritualsgenie import (
+    RitualsGenieAuthenticationError,
+    RitualsGenieConnectionError,
+    RitualsGenieRateLimitError,
+)
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_EMAIL, TEST_PASSWORD
-
-from tests.common import MockConfigEntry
+from .const import TEST_EMAIL, TEST_PASSWORD, TEST_TOKEN
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_rituals_account: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_rituals_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful user flow setup."""
     result = await hass.config_entries.flow.async_init(
@@ -41,6 +43,7 @@ async def test_user_flow_success(
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
+        CONF_TOKEN: TEST_TOKEN,
     }
     assert result["result"].unique_id == TEST_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
@@ -49,14 +52,15 @@ async def test_user_flow_success(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (AuthenticationException, "invalid_auth"),
-        (ClientError, "cannot_connect"),
+        (RitualsGenieAuthenticationError, "invalid_auth"),
+        (RitualsGenieConnectionError, "cannot_connect"),
+        (RitualsGenieRateLimitError("Too many login attempts"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
-    mock_rituals_account: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    mock_rituals_client: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -64,7 +68,7 @@ async def test_user_flow_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_rituals_account.authenticate.side_effect = exception
+    mock_rituals_client.login.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -77,7 +81,7 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_rituals_account.authenticate.side_effect = None
+    mock_rituals_client.login.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -92,7 +96,7 @@ async def test_user_flow_errors(
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_rituals_account: AsyncMock,
+    mock_rituals_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user flow with invalid credentials."""
@@ -115,7 +119,7 @@ async def test_duplicate_entry(
 
 async def test_reauth_flow_success(
     hass: HomeAssistant,
-    mock_rituals_account: AsyncMock,
+    mock_rituals_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -135,20 +139,22 @@ async def test_reauth_flow_success(
     assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data[CONF_PASSWORD] == "new_correct_password"
+    assert mock_config_entry.data[CONF_TOKEN] == TEST_TOKEN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (AuthenticationException, "invalid_auth"),
-        (ClientError, "cannot_connect"),
+        (RitualsGenieAuthenticationError, "invalid_auth"),
+        (RitualsGenieConnectionError, "cannot_connect"),
+        (RitualsGenieRateLimitError("Too many login attempts"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    mock_rituals_account: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    mock_rituals_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -157,7 +163,7 @@ async def test_reauth_flow_errors(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    mock_rituals_account.authenticate.side_effect = exception
+    mock_rituals_client.login.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -167,7 +173,7 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_rituals_account.authenticate.side_effect = None
+    mock_rituals_client.login.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -182,7 +188,7 @@ async def test_reauth_flow_errors(
 
 
 async def test_reauth_migrated_entry(
-    hass: HomeAssistant, mock_rituals_account: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_rituals_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful reauth flow (updating credentials)."""
     mock_config_entry = MockConfigEntry(
@@ -209,5 +215,6 @@ async def test_reauth_migrated_entry(
     assert mock_config_entry.data == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: "new_correct_password",
+        CONF_TOKEN: TEST_TOKEN,
     }
     assert len(mock_setup_entry.mock_calls) == 1

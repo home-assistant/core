@@ -1,13 +1,16 @@
 """Support for Abode Security System entities."""
 
+from typing import override
+
 from jaraco.abode.automation import Automation as AbodeAuto
 from jaraco.abode.devices.base import Device as AbodeDev
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import AbodeSystem
-from .const import ATTRIBUTION, DOMAIN, DOMAIN_DATA
+from .const import ATTRIBUTION, DOMAIN
 
 
 class AbodeEntity(Entity):
@@ -21,6 +24,7 @@ class AbodeEntity(Entity):
         self._data = data
         self._attr_should_poll = data.polling
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to Abode connection status updates."""
         await self.hass.async_add_executor_job(
@@ -29,10 +33,20 @@ class AbodeEntity(Entity):
             self._update_connection_status,
         )
 
-        self.hass.data[DOMAIN_DATA].entity_ids.add(self.entity_id)
+        self._data.entity_ids.add(self.entity_id)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Make the services target the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._data.entity_ids.discard(old_entity_id)
+        self._data.entity_ids.add(self.entity_id)
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from Abode connection status updates."""
+        self._data.entity_ids.discard(self.entity_id)
         await self.hass.async_add_executor_job(
             self._data.abode.events.remove_connection_status_callback, self.unique_id
         )
@@ -52,6 +66,7 @@ class AbodeDevice(AbodeEntity):
         self._device = device
         self._attr_unique_id = device.uuid
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         await super().async_added_to_hass()
@@ -61,6 +76,7 @@ class AbodeDevice(AbodeEntity):
             self._update_callback,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from device events."""
         await super().async_will_remove_from_hass()
@@ -73,6 +89,7 @@ class AbodeDevice(AbodeEntity):
         self._device.refresh()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
@@ -83,6 +100,7 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return DeviceInfo(

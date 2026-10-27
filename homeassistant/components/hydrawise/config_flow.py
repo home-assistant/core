@@ -1,29 +1,31 @@
 """Config flow for the Hydrawise integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
-from aiohttp import ClientError
-from pydrawise import auth as pydrawise_auth, hybrid
+from aiohttp import ClientError, ClientSession
+import probatio
+from pydrawise import APIError, auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import APP_ID, DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PASSWORD): str, vol.Required(CONF_API_KEY): str}
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+    }
 )
 
 
@@ -33,6 +35,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -42,7 +45,9 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
-        unique_id, errors = await _authenticate(username, password, api_key)
+        unique_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
         if errors:
             return self._show_user_form(errors)
         await self.async_set_unique_id(unique_id)
@@ -75,10 +80,18 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_reauth_form({})
 
         reauth_entry = self._get_reauth_entry()
-        username = reauth_entry.data[CONF_USERNAME]
+        # Entries from the legacy API only hold an API key, so the form asks
+        # for the username as well.
+        if CONF_USERNAME in reauth_entry.data:
+            username = reauth_entry.data[CONF_USERNAME]
+        else:
+            username = user_input[CONF_USERNAME]
+
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
-        user_id, errors = await _authenticate(username, password, api_key)
+        user_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
         if user_id is None:
             return self._show_reauth_form(errors)
 
@@ -94,37 +107,83 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        data_schema = (
+            STEP_REAUTH_DATA_SCHEMA
+            if CONF_USERNAME in self._get_reauth_entry().data
+            else STEP_USER_DATA_SCHEMA
+        )
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the account credentials."""
+        if user_input is None:
+            return self._show_reconfigure_form({})
+
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        api_key = user_input[CONF_API_KEY]
+        unique_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
+        if errors:
+            return self._show_reconfigure_form(errors)
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_mismatch(reason="wrong_account")
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(),
+            title=username,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_API_KEY: api_key,
+            },
+        )
+
+    def _show_reconfigure_form(self, errors: dict[str, str]) -> ConfigFlowResult:
+        # Only the username is suggested, the secrets have to be entered again.
+        # Entries from the legacy API only hold an API key, without a username.
+        entry_data = self._get_reconfigure_entry().data
+        suggested_values = (
+            {CONF_USERNAME: entry_data[CONF_USERNAME]}
+            if CONF_USERNAME in entry_data
+            else {}
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
         )
 
 
 async def _authenticate(
-    username: str, password: str, api_key: str
+    session: ClientSession, username: str, password: str, api_key: str
 ) -> tuple[str | None, dict[str, str]]:
     """Authenticate with the Hydrawise API."""
     unique_id = None
     errors: dict[str, str] = {}
-    auth = pydrawise_auth.HybridAuth(username, password, api_key)
+    auth = pydrawise_auth.HybridAuth(username, password, api_key, session=session)
     try:
         await auth.check()
+        api = hybrid.HybridClient(auth, app_id=APP_ID)
+        # Don't fetch zones because we don't need them yet.
+        user = await api.get_user(fetch_zones=False)
     except NotAuthorizedError:
         errors["base"] = "invalid_auth"
     except TimeoutError:
         errors["base"] = "timeout_connect"
-
-    if errors:
-        return unique_id, errors
-
-    try:
-        api = hybrid.HybridClient(auth, app_id=APP_ID)
-        # Don't fetch zones because we don't need them yet.
-        user = await api.get_user(fetch_zones=False)
-    except TimeoutError:
-        errors["base"] = "timeout_connect"
-    except ClientError as ex:
+    except (APIError, ClientError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
         errors["base"] = "cannot_connect"
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
     else:
         unique_id = f"hydrawise-{user.customer_id}"
 

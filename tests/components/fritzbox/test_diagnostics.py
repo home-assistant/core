@@ -1,8 +1,9 @@
 """Tests for the AVM Fritz!Box integration."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
+
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fritzbox.const import DOMAIN
@@ -12,9 +13,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry
 from .const import MOCK_CONFIG
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

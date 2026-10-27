@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from energyflip import EnergyFlip, EnergyFlipException
 
@@ -52,16 +52,14 @@ class EnergyFlipUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]
 
         self._energyflip = energyflip
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Update the data by performing a request to EnergyFlip."""
         try:
             # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(FETCH_TIMEOUT):
-                if not self._energyflip.is_authenticated():
-                    _LOGGER.warning("EnergyFlip is unauthenticated. Reauthenticating")
-                    await self._energyflip.authenticate()
-
+                # Invalidated authentications are handled by current_measurements itself
                 current_measurements = await self._energyflip.current_measurements()
 
                 return {

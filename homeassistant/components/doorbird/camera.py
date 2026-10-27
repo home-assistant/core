@@ -1,23 +1,26 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 import logging
+from typing import override
 
 import aiohttp
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .deprecation import async_should_create_deprecated_entity
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
+from .util import get_mac_address_from_door_station_info
 
-_LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
-_LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
-_LIVE_INTERVAL = datetime.timedelta(seconds=45)
+_LAST_VISITOR_INTERVAL = dt.timedelta(minutes=2)
+_LAST_MOTION_INTERVAL = dt.timedelta(seconds=30)
+_LIVE_INTERVAL = dt.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
@@ -30,30 +33,42 @@ async def async_setup_entry(
     """Set up the DoorBird camera platform."""
     door_bird_data = config_entry.runtime_data
     device = door_bird_data.door_station.device
+    mac_addr = get_mac_address_from_door_station_info(door_bird_data.door_station_info)
+    entity_registry = er.async_get(hass)
 
-    async_add_entities(
-        [
-            DoorBirdCamera(
-                door_bird_data,
-                device.live_image_url,
-                "live",
-                _LIVE_INTERVAL,
-                device.rtsp_live_video_url,
-            ),
-            DoorBirdCamera(
-                door_bird_data,
-                device.history_image_url(1, "doorbell"),
-                "last_ring",
-                _LAST_VISITOR_INTERVAL,
-            ),
-            DoorBirdCamera(
-                door_bird_data,
-                device.history_image_url(1, "motionsensor"),
-                "last_motion",
-                _LAST_MOTION_INTERVAL,
-            ),
-        ]
-    )
+    entities = [
+        DoorBirdCamera(
+            door_bird_data,
+            device.live_image_url,
+            "live",
+            _LIVE_INTERVAL,
+            device.rtsp_live_video_url,
+        )
+    ]
+
+    for camera_id, history_type, interval in (
+        ("last_ring", "doorbell", _LAST_VISITOR_INTERVAL),
+        ("last_motion", "motionsensor", _LAST_MOTION_INTERVAL),
+    ):
+        if async_should_create_deprecated_entity(
+            hass,
+            entity_registry,
+            config_entry_id=config_entry.entry_id,
+            platform_domain=Platform.CAMERA,
+            entity_unique_id=f"{mac_addr}_{camera_id}",
+            issue_id=f"deprecated_camera_{mac_addr}_{camera_id}",
+            translation_key=f"deprecated_camera_{camera_id}",
+        ):
+            entities.append(
+                DoorBirdCamera(
+                    door_bird_data,
+                    device.history_image_url(1, history_type),
+                    camera_id,
+                    interval,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class DoorBirdCamera(DoorBirdEntity, Camera):
@@ -64,7 +79,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         door_bird_data: DoorBirdData,
         url: str,
         camera_id: str,
-        interval: datetime.timedelta,
+        interval: dt.timedelta,
         stream_url: str | None = None,
     ) -> None:
         """Initialize the camera on a DoorBird device."""
@@ -76,13 +91,15 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM
         self._interval = interval
-        self._last_update = datetime.datetime.min
+        self._last_update = dt.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         return self._stream_url
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -96,6 +113,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             self._last_image = await self._door_station.device.get_image(
                 self._url, timeout=_TIMEOUT
             )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             _LOGGER.error("DoorBird %s: Camera image timed out", self.name)
             return self._last_image
@@ -107,18 +125,3 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         self._last_update = now
         return self._last_image
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to events."""
-        await super().async_added_to_hass()
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
-            event_to_entity_id[event] = self.entity_id
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from events."""
-        event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
-            # If the clear api was called, the events may not be in the dict
-            event_to_entity_id.pop(event, None)
-        await super().async_will_remove_from_hass()

@@ -1,10 +1,9 @@
 """Entity representing a Sonos player."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-import datetime
+import datetime as dt
 import logging
+from typing import override
 
 from soco.core import SoCo
 
@@ -32,6 +31,7 @@ class SonosEntity(Entity):
         self.speaker = speaker
         self.config_entry = config_entry
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         assert self.unique_id
@@ -53,12 +53,13 @@ class SonosEntity(Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
         assert self.unique_id
         del self.config_entry.runtime_data.unique_id_speaker_mappings[self.unique_id]
 
-    async def async_fallback_poll(self, now: datetime.datetime) -> None:
+    async def async_fallback_poll(self, now: dt.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
             self.speaker.subscriptions_failed = True
@@ -81,6 +82,7 @@ class SonosEntity(Entity):
         return self.speaker.soco
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         suggested_area: str | None = None
@@ -103,17 +105,22 @@ class SonosEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available
 
 
 class SonosPollingEntity(SonosEntity):
-    """Representation of a Sonos entity which may not support updating by subscriptions."""
+    """Representation of a Sonos entity without subscription support."""
 
     @abstractmethod
     def poll_state(self) -> None:
         """Poll the device for the current state."""
+
+    @override
+    async def _async_fallback_poll(self) -> None:
+        """No-op: polling entities are already handled by HA's built-in poller."""
 
     def update(self) -> None:
         """Update the state using the built-in entity poller."""
@@ -122,4 +129,4 @@ class SonosPollingEntity(SonosEntity):
         try:
             self.poll_state()
         except SonosUpdateError as err:
-            _LOGGER.debug("Could not poll: %s", err)
+            _LOGGER.debug("Could not poll: %s", err.__cause__)

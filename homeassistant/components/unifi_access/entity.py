@@ -1,6 +1,6 @@
 """Base entity for the UniFi Access integration."""
 
-from __future__ import annotations
+from typing import override
 
 from unifi_access_api import Door
 
@@ -33,6 +33,7 @@ class UnifiAccessEntity(CoordinatorEntity[UnifiAccessCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._door_id in self.coordinator.data.doors

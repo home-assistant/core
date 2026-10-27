@@ -1,10 +1,9 @@
 """Config flow for Switchbot."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from switchbot import (
     SwitchbotAccountConnectionError,
     SwitchBotAdvertisement,
@@ -14,8 +13,8 @@ from switchbot import (
     fetch_cloud_devices,
     parse_advertisement_data,
 )
-import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -79,11 +78,12 @@ def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
@@ -96,7 +96,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
         self._cloud_username: str | None = None
         self._cloud_password: str | None = None
+        self._encryption_method_selected = False
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -140,7 +142,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         sensor_type = SUPPORTED_MODEL_TYPES[model_name]
 
         options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
         return self.async_create_entry(
@@ -164,7 +166,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv)
             },
@@ -183,7 +185,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="password",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv)
             },
@@ -196,6 +200,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self._discovered_adv is not None
         description_placeholders: dict[str, str] = {}
+
+        if user_input is None:
+            if not self._encryption_method_selected and not (
+                self._cloud_username and self._cloud_password
+            ):
+                return await self.async_step_encrypted_choose_method()
+            self._encryption_method_selected = False
 
         # If we have saved credentials from cloud login, try them first
         if user_input is None and self._cloud_username and self._cloud_password:
@@ -238,12 +249,12 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="encrypted_auth",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={
@@ -258,6 +269,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the SwitchBot API chose method step."""
         assert self._discovered_adv is not None
 
+        self._encryption_method_selected = True
         return self.async_show_menu(
             step_id="encrypted_choose_method",
             menu_options=["encrypted_auth", "encrypted_key"],
@@ -272,6 +284,12 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the encryption key step."""
         errors: dict[str, str] = {}
         assert self._discovered_adv is not None
+
+        if user_input is None:
+            if not self._encryption_method_selected:
+                return await self.async_step_encrypted_choose_method()
+            self._encryption_method_selected = False
+
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
             cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
@@ -290,10 +308,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="encrypted_key",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_KEY_ID): str,
-                    vol.Required(CONF_ENCRYPTION_KEY): str,
+                    probatio.Required(CONF_KEY_ID): str,
+                    probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str,
                 }
             ),
             description_placeholders={
@@ -336,6 +354,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._abort_if_unique_id_configured()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -385,12 +404,12 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud_login",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -411,6 +430,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
 
+        await bluetooth.async_request_active_scan(self.hass)
         self._async_discover_devices()
         if len(self._discovered_advs) == 1:
             # If there is only one device we can ask for a password
@@ -425,9 +445,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: name_from_discovery(parsed)
                             for address, parsed in self._discovered_advs.items()
@@ -450,8 +470,8 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options: dict[vol.Optional, Any] = {
-            vol.Optional(
+        options: dict[probatio.Optional, Any] = {
+            probatio.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
@@ -464,10 +484,14 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             SupportedModels.LOCK,
             SupportedModels.LOCK_PRO,
             SupportedModels.LOCK_ULTRA,
+            SupportedModels.LOCK_ULTRA_MAX,
+            SupportedModels.LOCK_PRO_WIFI,
+            SupportedModels.LOCK_VISION,
+            SupportedModels.LOCK_VISION_PRO,
         ):
             options.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LOCK_NIGHTLATCH,
                         default=self.config_entry.options.get(
                             CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
@@ -475,13 +499,12 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                     ): bool
                 }
             )
-        if (
-            CONF_SENSOR_TYPE in self.config_entry.data
-            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.CURTAIN
-        ):
+        if CONF_SENSOR_TYPE in self.config_entry.data and self.config_entry.data[
+            CONF_SENSOR_TYPE
+        ] in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CURTAIN_SPEED,
                         default=self.config_entry.options.get(
                             CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
@@ -497,4 +520,6 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 }
             )
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

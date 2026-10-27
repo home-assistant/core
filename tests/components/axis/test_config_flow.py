@@ -1,11 +1,17 @@
 """Test Axis config flow."""
 
 from collections.abc import Callable
+from hashlib import sha256
 from ipaddress import ip_address
 from unittest.mock import patch
+from urllib.request import parse_http_list, parse_keqv_list
 
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+import respx
 
+from homeassistant.components import camera
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
@@ -16,6 +22,8 @@ from homeassistant.components.axis.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -36,11 +44,108 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_HOST, MAC, MODEL, NAME
-
-from tests.common import MockConfigEntry
+from .const import API_DISCOVERY_BASIC_DEVICE_INFO, DEFAULT_HOST, MAC, MODEL, NAME
 
 DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
+
+
+@pytest.mark.parametrize("source", [SOURCE_REAUTH, SOURCE_RECONFIGURE])
+@pytest.mark.parametrize("username", ["root", "user2"])
+@respx.mock
+async def test_credentials_update_camera_authentication(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    source: str,
+    username: str,
+) -> None:
+    """Refresh snapshot authentication after changing alphanumeric credentials."""
+    old_hub = config_entry_setup.runtime_data
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": config_entry_setup.entry_id},
+        data=config_entry_setup.data,
+    )
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PROTOCOL: "http",
+                CONF_HOST: DEFAULT_HOST,
+                CONF_PORT: 80,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: "pass2",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == f"{source}_successful"
+    assert config_entry_setup.data[CONF_PASSWORD] == "pass2"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, f"camera.{NAME}")
+    assert await camera_entity.stream_source() == (
+        f"rtsp://{username}:pass2@{DEFAULT_HOST}/axis-media/media.amp?videocodec=h264"
+    )
+
+    image = b"synthetic image"
+    route = respx.get(f"http://{DEFAULT_HOST}/axis-cgi/jpg/image.cgi").mock(
+        side_effect=[
+            httpx2.Response(
+                401,
+                headers={
+                    "WWW-Authenticate": 'Digest realm="axis", nonce="testnonce", '
+                    'algorithm=SHA-256, qop="auth"',
+                },
+            ),
+            httpx2.Response(200, content=image),
+        ]
+    )
+    assert await camera_entity.async_camera_image() == image
+    assert route.call_count == 2
+    request = route.calls.last.request
+    digest = parse_keqv_list(
+        parse_http_list(request.headers["Authorization"].removeprefix("Digest "))
+    )
+    assert digest["username"] == username
+    # Verify the response with the new password, using the client's random cnonce.
+    ha1 = sha256(f"{username}:axis:pass2".encode()).hexdigest()
+    ha2 = sha256(f"GET:{request.url.raw_path.decode()}".encode()).hexdigest()
+    expected_response = sha256(
+        f"{ha1}:testnonce:{digest['nc']}:{digest['cnonce']}:auth:{ha2}".encode()
+    ).hexdigest()
+    assert digest["response"] == expected_response
+    assert config_entry_setup.runtime_data is not old_hub
+    assert config_entry_setup.runtime_data.api.config.username == username
+    assert config_entry_setup.runtime_data.api.config.password == "pass2"
+    reload_entry.assert_awaited_once_with(config_entry_setup.entry_id)
+
+
+@pytest.mark.parametrize(("protocol", "port"), [("https", 80), ("http", 8080)])
+async def test_reconfigure_connection_settings(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    protocol: str,
+    port: int,
+) -> None:
+    """Rebuild clients when the protocol or port changes without new credentials."""
+    old_hub = config_entry_setup.runtime_data
+    result = await config_entry_setup.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PROTOCOL: protocol, CONF_PORT: port},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_setup.runtime_data is not old_hub
+    assert config_entry_setup.runtime_data.api.config.web_proto == protocol
+    assert config_entry_setup.runtime_data.api.config.port == port
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, f"camera.{NAME}")
+    assert camera_entity.image_source == (
+        f"{protocol}://{DEFAULT_HOST}:{port}/axis-cgi/jpg/image.cgi"
+    )
 
 
 @pytest.mark.usefixtures("mock_default_requests")
@@ -65,7 +170,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -73,8 +178,9 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
 
 async def test_manual_configuration_duplicate_fails(
@@ -117,8 +223,9 @@ async def test_manual_configuration_duplicate_fails(
         (config_flow.CannotConnect, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_fails_on_api(
-    hass: HomeAssistant, exc: Exception, error: str
+    hass: HomeAssistant, exc: type[Exception], error: str
 ) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -144,6 +251,76 @@ async def test_flow_fails_on_api(
         )
 
     assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+@pytest.mark.parametrize("param_properties_status_code", [404])
+async def test_flow_aborts_if_no_serial_number(hass: HomeAssistant) -> None:
+    """Test that config flow aborts if property_handler is not initialized and no serial is found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_serial_number"
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
+async def test_flow_succeeds_with_basic_device_info(
+    hass: HomeAssistant,
+) -> None:
+    """Test that config flow succeeds when basic device info is present (positive path)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
+    assert result["data"][CONF_HOST] == "1.2.3.4"
+    assert result["data"][CONF_MODEL] == "M1065-LW"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
 
 @pytest.mark.usefixtures("mock_default_requests")
@@ -181,7 +358,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -189,10 +366,11 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 2",
+        CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
-    assert result["data"][CONF_NAME] == "M1065-LW 2"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
 
 
 async def test_reauth_flow_update_configuration(
@@ -266,7 +444,7 @@ async def test_reconfiguration_flow_update_configuration(
 
 
 @pytest.mark.parametrize(
-    ("source", "discovery_info"),
+    ("source", "discovery_info", "expected_title"),
     [
         (
             SOURCE_DHCP,
@@ -275,6 +453,7 @@ async def test_reconfiguration_flow_update_configuration(
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
             ),
+            f"axis-{MAC}",
         ),
         (
             SOURCE_SSDP,
@@ -283,7 +462,10 @@ async def test_reconfiguration_flow_update_configuration(
                 ssdp_st="mock_st",
                 upnp={
                     "st": "urn:axis-com:service:BasicService:1",
-                    "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
+                    "usn": (
+                        f"uuid:Upnp-BasicDevice-1_0-{MAC}"
+                        "::urn:axis-com:service:BasicService:1"
+                    ),
                     "ext": "",
                     "server": (
                         "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP"
@@ -311,6 +493,7 @@ async def test_reconfiguration_flow_update_configuration(
                     "presentationURL": f"http://{DEFAULT_HOST}:80/",
                 },
             ),
+            f"AXIS M1065-LW - {MAC}",
         ),
         (
             SOURCE_ZEROCONF,
@@ -326,6 +509,7 @@ async def test_reconfiguration_flow_update_configuration(
                     "macaddress": MAC,
                 },
             ),
+            f"AXIS M1065-LW - {MAC}",
         ),
     ],
 )
@@ -334,6 +518,7 @@ async def test_discovery_flow(
     hass: HomeAssistant,
     source: str,
     discovery_info: BaseServiceInfo,
+    expected_title: str,
 ) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
@@ -359,7 +544,7 @@ async def test_discovery_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == expected_title
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -367,10 +552,11 @@ async def test_discovery_flow(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: expected_title,
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
-    assert result["data"][CONF_NAME] == "M1065-LW 0"
+    assert result["data"][CONF_NAME] == expected_title
 
 
 @pytest.mark.parametrize(

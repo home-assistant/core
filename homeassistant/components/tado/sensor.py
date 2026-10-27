@@ -1,11 +1,9 @@
 """Support for Tado sensors for each zone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -58,7 +56,7 @@ def get_tado_mode(data: dict[str, str]) -> str | None:
 
 
 def get_automatic_geofencing(data: dict[str, str]) -> bool:
-    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    """Return whether Automatic Geofencing is enabled."""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
             return False
@@ -242,6 +240,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
@@ -284,6 +283,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:

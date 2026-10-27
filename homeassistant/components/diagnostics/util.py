@@ -1,20 +1,25 @@
 """Diagnostic utilities."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 from typing import Any, cast, overload
 
 import attr
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.device_registry import (
+    AnyDeviceEntry,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
+from homeassistant.helpers.entity_registry import RegistryEntry, _serialize_aliases
 
 from .const import REDACTED
 
 
 @overload
-def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict: ...
+def async_redact_data(
+    data: Mapping | DeviceInfo | ChildDeviceInfo, to_redact: Iterable[Any]
+) -> dict: ...
 
 
 @overload
@@ -24,6 +29,10 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T: ...
 @callback
 def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
     """Redact sensitive data in a dict."""
+    if isinstance(data, DeviceInfo | ChildDeviceInfo):
+        # Not a mapping, but it holds serial numbers and addresses
+        return cast(_T, async_redact_data(data.as_dict(), to_redact))
+
     if not isinstance(data, (Mapping, list)):
         return data
 
@@ -39,7 +48,7 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
             continue
         if key in to_redact:
             redacted[key] = REDACTED
-        elif isinstance(value, Mapping):
+        elif isinstance(value, Mapping | DeviceInfo | ChildDeviceInfo):
             redacted[key] = async_redact_data(value, to_redact)
         elif isinstance(value, list):
             redacted[key] = [async_redact_data(item, to_redact) for item in value]
@@ -47,10 +56,38 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
     return cast(_T, redacted)
 
 
+# DeviceEntry attributes that are internal bookkeeping and must not be exposed in
+# diagnostics. Underscore attributes (_cache, _suggested_area, and the transient
+# _pending_move / _composite_subentries) are excluded separately by _device_entry_filter.
+# The composite-device migration attributes below can be removed in HA Core 2027.8.
+_INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
+    "composite_device_id",
+    "composite_primary_config_entry",
+    "has_composite_identifiers",
+    "split_at",
+)
+
+
+def _device_entry_filter(a: attr.Attribute, _: Any) -> bool:
+    return (
+        not a.name.startswith("_") and a.name not in _INTERNAL_DEVICE_ENTRY_ATTRIBUTES
+    )
+
+
+@callback
+def device_entry_as_dict(entry: AnyDeviceEntry) -> dict[str, Any]:
+    """Convert a device registry entry to a dict for diagnostics.
+
+    This excludes internal fields that should not be exposed in diagnostics.
+    """
+    return attr.asdict(entry, filter=_device_entry_filter)
+
+
 def _entity_entry_filter(a: attr.Attribute, _: Any) -> bool:
     return a.name not in (
         "_cache",
         "compat_aliases",
+        "compat_name",
         "original_name_unprefixed",
     )
 
@@ -61,4 +98,6 @@ def entity_entry_as_dict(entry: RegistryEntry) -> dict[str, Any]:
 
     This excludes internal fields that should not be exposed in diagnostics.
     """
-    return attr.asdict(entry, filter=_entity_entry_filter)
+    data = attr.asdict(entry, filter=_entity_entry_filter)
+    data["aliases"] = _serialize_aliases(entry.aliases)
+    return data

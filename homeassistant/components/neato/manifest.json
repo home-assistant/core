@@ -1,6 +1,7 @@
 {
   "domain": "neato",
   "name": "Neato Botvac",
+  "categories": ["appliances_cleaning.cleaning"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -8,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pybotvac"],
-  "requirements": ["pybotvac==0.0.28"]
+  "requirements": ["pybotvac==0.0.29"]
 }

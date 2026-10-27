@@ -1,11 +1,9 @@
 """Switch platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pynecil import CharSetting, SettingsDataResponse, TempUnit
 
@@ -14,9 +12,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IronOSConfigEntry
 from .const import MIN_BOOST_TEMP, MIN_BOOST_TEMP_F
-from .coordinator import IronOSCoordinators
+from .coordinator import IronOSConfigEntry, IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -137,12 +134,14 @@ class IronOSSwitchEntity(IronOSBaseEntity, SwitchEntity):
         self.settings = coordinators.settings
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(
             self.settings.data,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.entity_description.key is IronOSSwitch.BOOST:
@@ -155,10 +154,12 @@ class IronOSSwitchEntity(IronOSBaseEntity, SwitchEntity):
         else:
             await self.settings.write(self.entity_description.characteristic, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.settings.write(self.entity_description.characteristic, False)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 

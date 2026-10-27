@@ -1,9 +1,10 @@
 """Test the Azure storage config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.azure_storage.const import (
     CONF_ACCOUNT_NAME,
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def __async_start_flow(
@@ -38,11 +37,8 @@ async def __async_start_flow(
     )
 
 
-async def test_flow(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test config flow."""
     mock_client.exists.return_value = False
     result = await __async_start_flow(hass)
@@ -67,10 +63,10 @@ async def test_flow(
         (Exception, {"base": "unknown"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_client: MagicMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     errors: dict[str, str],
 ) -> None:
@@ -114,10 +110,9 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth flow works."""
 
@@ -139,11 +134,9 @@ async def test_reauth_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth flow works with an errors."""
 
@@ -174,10 +167,9 @@ async def test_reauth_flow_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reconfigure flow works."""
 

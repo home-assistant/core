@@ -1,10 +1,9 @@
 """DataUpdateCoordinators for awair integration."""
 
-from __future__ import annotations
-
 from asyncio import gather, timeout
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientSession
 from python_awair import Awair, AwairLocal
@@ -82,6 +81,7 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_CLOUD)
 
+    @override
     async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
@@ -117,6 +117,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_LOCAL)
 
+    @override
     async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
@@ -127,6 +128,5 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
             except AwairError as err:
-                LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
             return {result.device.uuid: result}

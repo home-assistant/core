@@ -47,7 +47,7 @@ async def test_form(
 
 
 async def test_form_device_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, config_entry, mock_device, config
+    hass: HomeAssistant, config_entry, mock_device, config
 ) -> None:
     """Test device already exists."""
     result = await hass.config_entries.flow.async_init(

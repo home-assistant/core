@@ -1,13 +1,12 @@
 """Fixtures for the History stats integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.history_stats.const import (
     CONF_END,
@@ -22,15 +21,13 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically patch history stats setup."""
     with patch(
         "homeassistant.components.history_stats.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

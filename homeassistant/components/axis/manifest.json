@@ -2,6 +2,10 @@
   "domain": "axis",
   "name": "Axis",
   "after_dependencies": ["mqtt"],
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@Kane610"],
   "config_flow": true,
   "dhcp": [
@@ -29,7 +33,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["axis"],
-  "requirements": ["axis==68"],
+  "requirements": ["axis==74"],
   "ssdp": [
     {
       "manufacturer": "AXIS"

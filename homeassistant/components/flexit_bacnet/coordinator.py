@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for Flexit Nordic (BACnet) integration.."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 from datetime import timedelta
 import logging
+from typing import override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -12,8 +11,7 @@ from flexit_bacnet.bacnet import DecodingError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -42,13 +40,14 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
             self.config_entry.data[CONF_DEVICE_ID],
         )
 
+    @override
     async def _async_update_data(self) -> FlexitBACnet:
         """Fetch data from the device."""
 
         try:
             await self.device.update()
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
                 translation_placeholders={

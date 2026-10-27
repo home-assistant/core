@@ -19,6 +19,4 @@ DEVICES = "devices"
 MANUFACTURER = "ABB"
 
 ATTR_DEVICE_NAME = "device_name"
-ATTR_DEVICE_ID = "device_id"
-ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"

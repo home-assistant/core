@@ -1,6 +1,7 @@
 """Coordinator for Ituran."""
 
 import logging
+from typing import override
 
 from pyituran import Ituran, Vehicle
 from pyituran.exceptions import IturanApiError, IturanAuthError
@@ -44,6 +45,7 @@ class IturanDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
             entry.data[CONF_MOBILE_ID],
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Vehicle]:
         """Fetch data from Ituran."""
 
@@ -71,6 +73,4 @@ class IturanDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
         )
         for device in device_entries:
             if not device.identifiers.intersection(account_vehicles):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)

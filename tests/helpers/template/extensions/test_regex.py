@@ -1,7 +1,5 @@
 """Test regex template extension."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -168,7 +166,9 @@ def test_regex_groups_and_replacement_patterns(hass: HomeAssistant) -> None:
     # Test findall with groups
     result = render(
         hass,
-        r"""{{ 'Email: test@example.com, Phone: 123-456-7890' | regex_findall('(\\w+@\\w+\\.\\w+)|(\\d{3}-\\d{3}-\\d{4})') }}""",
+        r"{{ 'Email: test@example.com, Phone: 123-456-7890'"
+        r" | regex_findall('(\\w+@\\w+\\.\\w+)"
+        r"|(\\d{3}-\\d{3}-\\d{4})') }}",
     )
     # The result will contain tuples with empty strings for non-matching groups
     assert len(result) == 2

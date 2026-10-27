@@ -1,9 +1,8 @@
 """Sensor for the zamg integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -16,16 +15,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
-from .coordinator import ZamgDataUpdateCoordinator
+from .coordinator import ZamgConfigEntry, ZamgDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ZamgConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZAMG weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [ZamgWeather(coordinator, entry.title, entry.data[CONF_STATION_ID])]
     )
@@ -57,6 +56,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         )
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
@@ -73,6 +73,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         try:
@@ -81,6 +82,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the humidity."""
         try:
@@ -89,6 +91,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
@@ -105,6 +108,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:

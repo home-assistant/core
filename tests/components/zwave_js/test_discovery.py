@@ -4,9 +4,14 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
@@ -28,8 +33,10 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_UNKNOWN,
@@ -39,8 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_aeon_smart_switch_6_state(
@@ -133,6 +138,17 @@ async def test_inovelli_lzw36(
     assert state
 
 
+async def test_leviton_vrf01(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test Leviton VRF01 multilevel switch is discovered as a fan, not a light."""
+    node = leviton_vrf01
+    assert node.device_class.specific.label == "Multilevel Scene Switch"
+
+    assert hass.states.get("fan.fan")
+    assert not hass.states.get("light.fan")
+
+
 async def test_vision_security_zl7432(
     hass: HomeAssistant, client, vision_security_zl7432, integration
 ) -> None:
@@ -210,35 +226,43 @@ async def test_merten_507801(
     assert state
 
 
-async def test_shelly_001p10_disabled_entities(
+async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
-    shelly_qnsh_001P10_shutter,
-    integration,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    entity_ids = [
-        "cover.wave_shutter_2",
-    ]
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is None
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
-        # Test enabling entity
-        updated_entry = entity_registry.async_update_entity(
-            entry.entity_id, disabled_by=None
+    Endpoint 2 covers the same shutter as endpoint 1 and has no practical function.
+    The discovery schema suppresses it completely so it doesn't produce even a
+    disabled entity, and endpoint 1 therefore has no collision partner, so the
+    shutter cover stays on the main node device rather than on a child device.
+    """
+    node = shelly_qnsh_001P10_shutter
+
+    # Endpoint 2 is suppressed, so the node exposes exactly one cover entity (endpoint 1)
+    # and no second, disabled or hidden, endpoint-2 cover.
+    cover_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, integration.entry_id
         )
-        assert updated_entry != entry
-        assert updated_entry.disabled is False
+        if entry.domain == Platform.COVER
+    ]
+    assert [entry.entity_id for entry in cover_entries] == ["cover.wave_shutter"]
+    assert hass.states.get("cover.wave_shutter")
 
-    # Test if the main entity from endpoint 1 was created.
-    state = hass.states.get("cover.wave_shutter")
-    assert state
+    # With no collision partner, the shutter cover stays on the main node device rather
+    # than on an endpoint child device.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert cover_entries[0].device_id == node_device.id
 
 
 async def test_merten_507801_disabled_enitites(
@@ -444,7 +468,7 @@ async def test_indicator_test(
 async def test_light_device_class_is_null(
     hass: HomeAssistant, client, light_device_class_is_null, integration
 ) -> None:
-    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+    """Test Multilevel Switch CC with null device class is a light.
 
     Tied to #117121.
     """
@@ -658,3 +682,82 @@ async def test_nabu_casa_zwa2_legacy(
     assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
         "The LED should have the correct friendly name"
     )
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
+async def test_fibaro_fgms001_unknown_firmware_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_unknown_firmware: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setup completes when an FGMS001 node has no firmware version.
+
+    Regression test for a crash where comparing AwesomeVersion(None) to a
+    schema's firmware_version_range raised AwesomeVersionCompareException
+    and aborted setup of the whole config entry.
+    """
+    assert integration.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_unknown_firmware),
+        integration.entry_id,
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert motion_entries == []
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
+async def test_fibaro_fgms001_v2_8_motion_discovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_v2_8: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the Fibaro FGMS001 on firmware 2.8 is discovered as a motion sensor.
+
+    The device exposes its motion state via the Sensor Binary CC under the
+    "Any" sensor type. Without the device-specific discovery override the
+    value would either fall through to the disabled legacy boolean schema
+    or be misclassified, so we assert that exactly one binary_sensor entity
+    with device_class=motion is created and no light entity exists.
+    """
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_v2_8), integration.entry_id
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert len(motion_entries) == 1
+    motion_entry = motion_entries[0]
+    assert motion_entry.disabled_by is None
+
+    state = hass.states.get(motion_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
+
+    assert not [entry for entry in entries if entry.domain == Platform.LIGHT]

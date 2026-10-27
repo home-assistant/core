@@ -1,7 +1,5 @@
 """Constants for the cloud component."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING, Any
 
@@ -9,7 +7,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from hass_nabucasa import Cloud
+    from hass_nabucasa import AutoLoginController, Cloud
 
     from .client import CloudClient
     from .helpers import FixedSizeQueueLogHandler
@@ -20,9 +18,15 @@ DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
 DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")
+# In memory only, so a restart drops the registration and the user signs in by hand.
+DATA_PENDING_AUTO_LOGIN: HassKey[AutoLoginController | None] = HassKey(
+    "cloud_pending_auto_login"
+)
 EVENT_CLOUD_EVENT = "cloud_event"
 
 REQUEST_TIMEOUT = 10
+
+PREVIEW_FEATURE_STT_V2 = "stt_v2"
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
 PREF_ENABLE_GOOGLE = "google_enabled"
@@ -48,6 +52,9 @@ PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 PREF_GOOGLE_CONNECTED = "google_connected"
 PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
 PREF_ENABLE_CLOUD_ICE_SERVERS = "cloud_ice_servers_enabled"
+PREF_ONBOARDED_ITEMS = "onboarded_items"
+PREF_ONBOARDING_POSTPONED_UNTIL = "onboarding_postponed_until"
+ONBOARDING_ITEMS = {"remote", "backup", "voice", "streaming"}
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True

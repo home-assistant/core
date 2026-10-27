@@ -1,11 +1,12 @@
 {
   "domain": "hvv_departures",
   "name": "HVV Departures",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@vigonotion"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hvv_departures",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pygti"],
-  "requirements": ["pygti==0.9.4"]
+  "requirements": ["pygti==1.1.1"]
 }

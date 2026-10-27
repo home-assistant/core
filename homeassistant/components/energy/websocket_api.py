@@ -1,16 +1,13 @@
 """The Energy websocket API."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
 import functools
 from itertools import chain
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import recorder, websocket_api
 from homeassistant.components.recorder.statistics import StatisticsRow
@@ -103,7 +100,7 @@ def _ws_with_manager(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/get_prefs",
+        probatio.Required("type"): "energy/get_prefs",
     }
 )
 @websocket_api.async_response
@@ -126,10 +123,10 @@ def ws_get_prefs(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/save_prefs",
-        vol.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
-        vol.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
-        vol.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Required("type"): "energy/save_prefs",
+        probatio.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
+        probatio.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 @websocket_api.async_response
@@ -149,7 +146,7 @@ async def ws_save_prefs(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/info",
+        probatio.Required("type"): "energy/info",
     }
 )
 @websocket_api.async_response
@@ -171,7 +168,7 @@ async def ws_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/validate",
+        probatio.Required("type"): "energy/validate",
     }
 )
 @websocket_api.async_response
@@ -186,7 +183,7 @@ async def ws_validate(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/solar_forecast",
+        probatio.Required("type"): "energy/solar_forecast",
     }
 )
 @websocket_api.async_response
@@ -239,12 +236,12 @@ async def ws_solar_forecast(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "energy/fossil_energy_consumption",
-        vol.Required("start_time"): str,
-        vol.Required("end_time"): str,
-        vol.Required("energy_statistic_ids"): [str],
-        vol.Required("co2_statistic_id"): str,
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
+        probatio.Required("type"): "energy/fossil_energy_consumption",
+        probatio.Required("start_time"): str,
+        probatio.Required("end_time"): str,
+        probatio.Required("energy_statistic_ids"): [str],
+        probatio.Required("co2_statistic_id"): str,
+        probatio.Required("period"): probatio.Any("5minute", "hour", "day", "month"),
     }
 )
 @websocket_api.async_response
@@ -304,7 +301,6 @@ async def ws_get_fossil_energy_consumption(
         stat_list: list[dict[str, Any]],
         same_period: Callable[[float, float], bool],
         period_start_end: Callable[[float], tuple[float, float]],
-        period: timedelta,
     ) -> list[dict[str, Any]]:
         """Reduce hourly deltas to daily or monthly deltas."""
         result: list[dict[str, Any]] = []
@@ -312,7 +308,10 @@ async def ws_get_fossil_energy_consumption(
         if not stat_list:
             return result
         prev_stat: dict[str, Any] = stat_list[0]
-        fake_stat = {"start": stat_list[-1]["start"] + period.total_seconds()}
+        # The end of the last period is the start of the next one, so the fake
+        # entry always closes it, even across a DST change
+        _, end = period_start_end(stat_list[-1]["start"])
+        fake_stat = {"start": end}
 
         # Loop over the hourly deltas + a fake entry to end the period
         for statistic in chain(stat_list, (fake_stat,)):
@@ -364,7 +363,6 @@ async def ws_get_fossil_energy_consumption(
             fossil_energy,
             _same_day_ts,
             _day_start_end_ts,
-            timedelta(days=1),
         )
     else:
         (
@@ -375,7 +373,6 @@ async def ws_get_fossil_energy_consumption(
             fossil_energy,
             _same_month_ts,
             _month_start_end_ts,
-            timedelta(days=1),
         )
 
     result = {period["start"]: period["delta"] for period in reduced_fossil_energy}

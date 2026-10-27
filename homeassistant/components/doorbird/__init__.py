@@ -1,7 +1,5 @@
 """Support for DoorBird devices."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 
@@ -40,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Set up DoorBird from a config entry."""
     door_station_config = entry.data
     config_entry_id = entry.entry_id
@@ -77,12 +75,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     entry.runtime_data = door_bird_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_register_events(
@@ -105,6 +101,7 @@ async def _async_register_events(
                 "error": str(ex),
                 "name": door_station.name or entry.data[CONF_NAME],
             },
+            config_entry_id=entry.entry_id,
         )
         _LOGGER.debug("Error registering DoorBird events", exc_info=True)
         return False
@@ -116,7 +113,5 @@ async def _async_register_events(
 
 async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> None:
     """Handle options update."""
-    door_station = entry.runtime_data.door_station
-    door_station.update_events(entry.options[CONF_EVENTS])
-    # Subscribe to doorbell or motion events
-    await _async_register_events(hass, door_station, entry)
+    # The entities are built from the registered events, so rebuild them.
+    await hass.config_entries.async_reload(entry.entry_id)

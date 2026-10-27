@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from thinqconnect import ThinQAPIException
 
 from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_thinq_api_response(
@@ -49,7 +48,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.lg_thinq.async_setup_entry", return_value=True
+        "homeassistant.components.lg_thinq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -94,7 +93,7 @@ def mock_invalid_thinq_api(mock_config_thinq_api: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_thinq_api(mock_thinq_mqtt_client: None) -> Generator[AsyncMock]:
+def mock_thinq_api(mock_thinq_mqtt_client: AsyncMock) -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api:
         thinq_api = mock_api.return_value
@@ -102,21 +101,26 @@ def mock_thinq_api(mock_thinq_mqtt_client: None) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_mqtt_client() -> Generator[None]:
+def mock_thinq_mqtt_client() -> Generator[AsyncMock]:
     """Mock a thinq mqtt client."""
+    client = AsyncMock()
+    client.async_prepare_mqtt.return_value = True
     with patch(
         "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient",
-        autospec=True,
-        return_value=True,
+        new=AsyncMock(return_value=client),
     ):
-        yield
+        yield client
 
 
 @pytest.fixture(
     params=[
         "air_conditioner",
-        "washer",
+        "air_conditioner1",
+        "air_conditioner2",
+        "air_purifier",
         "dehumidifier",
+        "kimchi_refrigerator",
+        "washer",
     ]
 )
 def device_fixture(request: pytest.FixtureRequest) -> Generator[str]:

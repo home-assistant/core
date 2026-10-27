@@ -1,16 +1,13 @@
 """Tests for the Fish Audio integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fishaudio import FishAudioError, ServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

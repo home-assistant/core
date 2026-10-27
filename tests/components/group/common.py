@@ -4,33 +4,21 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
-from homeassistant.components.group import (
-    ATTR_ADD_ENTITIES,
-    ATTR_ENTITIES,
-    ATTR_OBJECT_ID,
-    DOMAIN,
-    SERVICE_REMOVE,
-    SERVICE_SET,
-)
-from homeassistant.const import ATTR_ICON, ATTR_NAME, SERVICE_RELOAD
+from homeassistant.components.group import DOMAIN, GroupService, GroupServiceArgument
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 
 
-@bind_hass
 def reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
     hass.add_job(async_reload, hass)
 
 
 @callback
-@bind_hass
 def async_reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_RELOAD))
+    hass.async_create_task(hass.services.async_call(DOMAIN, GroupService.RELOAD))
 
 
-@bind_hass
 def set_group(
     hass: HomeAssistant,
     object_id: str,
@@ -52,7 +40,6 @@ def set_group(
 
 
 @callback
-@bind_hass
 def async_set_group(
     hass: HomeAssistant,
     object_id: str,
@@ -65,21 +52,20 @@ def async_set_group(
     data = {
         key: value
         for key, value in (
-            (ATTR_OBJECT_ID, object_id),
-            (ATTR_NAME, name),
-            (ATTR_ENTITIES, entity_ids),
-            (ATTR_ICON, icon),
-            (ATTR_ADD_ENTITIES, add),
+            (GroupServiceArgument.OBJECT_ID, object_id),
+            (GroupServiceArgument.NAME, name),
+            (GroupServiceArgument.ENTITIES, entity_ids),
+            (GroupServiceArgument.ICON, icon),
+            (GroupServiceArgument.ADD_ENTITIES, add),
         )
         if value is not None
     }
 
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_SET, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, GroupService.SET, data))
 
 
 @callback
-@bind_hass
 def async_remove(hass: HomeAssistant, object_id: str) -> None:
     """Remove a user group."""
-    data = {ATTR_OBJECT_ID: object_id}
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_REMOVE, data))
+    data = {GroupServiceArgument.OBJECT_ID: object_id}
+    hass.async_create_task(hass.services.async_call(DOMAIN, GroupService.REMOVE, data))

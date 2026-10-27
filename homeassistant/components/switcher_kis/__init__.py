@@ -1,7 +1,5 @@
 """The Switcher integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aioswitcher.bridge import SwitcherBridge
@@ -10,10 +8,12 @@ from aioswitcher.device import SwitcherBase
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -30,7 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switcher integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Set up Switcher from a config entry."""
 
     token = entry.data.get(CONF_TOKEN)
@@ -43,12 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # Existing device update device data
         if coordinator := coordinators.get(device.device_id):
+            if coordinator.data.ip_address != device.ip_address:
+                _LOGGER.info(
+                    "Switcher device %s changed ip from %s to %s",
+                    device.device_id,
+                    coordinator.data.ip_address,
+                    device.ip_address,
+                )
             coordinator.async_set_updated_data(device)
             return
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s), is_token_needed: %s",
+            "Discovered Switcher device - id: %s, key: %s,"
+            " name: %s, type: %s (%s), is_token_needed: %s",
             device.device_id,
             device.device_key,
             device.name,
@@ -81,16 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: SwitcherConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: SwitcherConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return not device_entry.identifiers.intersection(

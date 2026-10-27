@@ -1,6 +1,7 @@
 """Constants for the droplet integration."""
 
-CONNECT_DELAY = 5
+CONNECT_TIMEOUT = 15
+RECONNECT_DELAY = 5
 
 DOMAIN = "droplet"
 DEVICE_NAME = "Droplet"
@@ -9,3 +10,5 @@ KEY_CURRENT_FLOW_RATE = "current_flow_rate"
 KEY_VOLUME = "volume"
 KEY_SIGNAL_QUALITY = "signal_quality"
 KEY_SERVER_CONNECTIVITY = "server_connectivity"
+KEY_HIGH_FLOW = "high_flow"
+KEY_UNUSUAL_FLOW = "unusual_flow"

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_button_snapshot[button.test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_button_snapshot[button.test_button_automatic_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Automatic mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Automatic mode',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_automatic_mode',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_button_snapshot[button.test_button_briefly_open-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Briefly open',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Briefly open',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_briefly_open',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -189,8 +189,8 @@
 # name: test_button_snapshot[button.test_button_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Test Button Identification mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Identification mode',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_identification_mode',
@@ -208,9 +208,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -240,7 +240,7 @@
 # name: test_button_snapshot[button.test_button_impulse_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Impulse 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Impulse 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_impulse_1',
@@ -258,9 +258,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -290,7 +290,7 @@
 # name: test_button_snapshot[button.test_button_impulse_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Impulse 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Impulse 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_impulse_2',
@@ -308,9 +308,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -340,7 +340,7 @@
 # name: test_button_snapshot[button.test_button_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Light',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_light',
@@ -358,9 +358,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -390,7 +390,7 @@
 # name: test_button_snapshot[button.test_button_open_partially-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Open partially',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Open partially',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_open_partially',
@@ -408,9 +408,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -440,7 +440,7 @@
 # name: test_button_snapshot[button.test_button_open_permanently-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Open permanently',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Open permanently',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_open_permanently',
@@ -458,9 +458,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -490,7 +490,7 @@
 # name: test_button_snapshot[button.test_button_reset_meter_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Reset meter 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Reset meter 1',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_reset_meter_1',
@@ -508,9 +508,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -540,7 +540,7 @@
 # name: test_button_snapshot[button.test_button_reset_meter_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Reset meter 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Reset meter 2',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_reset_meter_2',
@@ -558,9 +558,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homee', '00055511EECC-1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -590,7 +590,7 @@
 # name: test_button_snapshot[button.test_button_ventilate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Ventilate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Button Ventilate',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_button_ventilate',

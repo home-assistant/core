@@ -1,7 +1,5 @@
 """PG LAB Electronics integration."""
 
-from __future__ import annotations
-
 from pypglab.mqtt import (
     Client as PyPGLabMqttClient,
     Sub_State as PyPGLabSubState,
@@ -20,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .discovery import PGLabDiscovery
 
 type PGLabConfigEntry = ConfigEntry[PGLabDiscovery]
@@ -30,7 +28,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PGLabConfigEntry
-) -> bool:
+) -> None:
     """Set up PG LAB Electronics integration from a config entry."""
 
     async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
@@ -62,7 +60,6 @@ async def async_setup_entry(
         async_unsubscribe_topics(hass, sub_state)
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 
     # Create an MQTT client for PGLab used for PGLab python module.
@@ -74,16 +71,12 @@ async def async_setup_entry(
     # Start to discovery PG Lab devices.
     await config_entry.runtime_data.start(hass, pglab_mqtt, config_entry)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: PGLabConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
 
     # Stop PGLab device discovery.
     pglab_discovery = config_entry.runtime_data
     await pglab_discovery.stop(hass, config_entry)
-
-    return True

@@ -1,8 +1,7 @@
 """Plugged In Status Support for the Nissan Leaf."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -49,16 +48,19 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_plugstatus"
 
     @property
+    @override
     def name(self) -> str:
         """Sensor name."""
         return f"{self.car.leaf.nickname} Plug Status"
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor availability."""
         return self.car.data[DATA_PLUGGED_IN] is not None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if plugged in."""
         return bool(self.car.data[DATA_PLUGGED_IN])
@@ -75,16 +77,19 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_chargingstatus"
 
     @property
+    @override
     def name(self) -> str:
         """Sensor name."""
         return f"{self.car.leaf.nickname} Charging Status"
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor availability."""
         return self.car.data[DATA_CHARGING] is not None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if charging."""
         return bool(self.car.data[DATA_CHARGING])

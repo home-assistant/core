@@ -1,12 +1,10 @@
 """Provides core stream functionality."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
-import datetime
+import datetime as dt
 from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -90,7 +88,7 @@ class Segment:
     init: bytes
     # For detecting discontinuities across stream restarts
     stream_id: int
-    start_time: datetime.datetime
+    start_time: dt.datetime
     _stream_outputs: Iterable[StreamOutput]
     duration: float = 0
     parts: list[Part] = field(default_factory=list)
@@ -200,7 +198,7 @@ class Segment:
     def render_hls(
         self, last_stream_id: int, render_parts: bool, add_hint: bool
     ) -> str:
-        """Render the HLS playlist section for the Segment including a hint if requested."""
+        """Render the Segment HLS playlist, optionally including parts and a hint."""
         playlist_template = self._render_hls_template(last_stream_id, render_parts)
         playlist = playlist_template.format(
             self.hls_playlist_parts[0] if render_parts else ""
@@ -263,7 +261,7 @@ class IdleTimer:
             self._unsub()
 
     @callback
-    def fire(self, _now: datetime.datetime) -> None:
+    def fire(self, _now: dt.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
@@ -419,15 +417,17 @@ TRANSFORM_IMAGE_FUNCTION = (
 
 
 class KeyFrameConverter:
-    """Enables generating and getting an image from the last keyframe seen in the stream.
+    """Generate and get an image from the last keyframe.
 
     An overview of the thread and state interaction:
         the worker thread sets a packet
         get_image is called from the main asyncio loop
-        get_image schedules _generate_image in an executor thread
-        _generate_image will try to create an image from the packet
-        _generate_image will clear the packet, so there will only be one attempt per packet
-    If successful, self._image will be updated and returned by get_image
+        get_image schedules _generate_image in an executor
+        _generate_image will try to create an image from
+        the packet
+        _generate_image will clear the packet, so there
+        will only be one attempt per packet
+    If successful, self._image will be updated and returned
     If unsuccessful, get_image will return the previous image
     """
 

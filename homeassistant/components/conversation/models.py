@@ -1,7 +1,5 @@
 """Agent foundation for conversation integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -70,6 +68,7 @@ class ConversationInput:
             language=self.language,
             assistant=DOMAIN,
             device_id=self.device_id,
+            agent_id=self.agent_id,
         )
 
 
@@ -102,8 +101,8 @@ class AbstractConversationAgent(ABC):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
 
-    async def async_reload(self, language: str | None = None) -> None:
+    async def async_reload(self, language: str | None = None) -> None:  # noqa: B027
         """Clear cached intents for a language."""
 
-    async def async_prepare(self, language: str | None = None) -> None:
+    async def async_prepare(self, language: str | None = None) -> None:  # noqa: B027
         """Load intents for a language."""

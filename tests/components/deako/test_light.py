@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_light_setup_with_device(
@@ -27,6 +26,9 @@ async def test_light_setup_with_device(
         "some_device": {},
     }
     pydeako_deako_mock.return_value.get_name.return_value = "some device"
+    pydeako_deako_mock.return_value.get_state.return_value = {
+        "power": False,
+    }
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

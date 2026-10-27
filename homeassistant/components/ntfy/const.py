@@ -13,3 +13,5 @@ CONF_TAGS = "filter_tags"
 SECTION_AUTH = "auth"
 SECTION_FILTER = "filter"
 NTFY_EVENT = "ntfy_event"
+
+SUBENTRY_TYPE_TOPIC = "topic"

@@ -1,0 +1,106 @@
+[
+  {
+    "node_id": 1,
+    "general": {
+      "node_type": "BOX",
+      "sub_type": 1,
+      "network_type": "VIRT",
+      "parent": 0,
+      "asso": 0,
+      "name": "Living",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "AUTO",
+      "flow_lvl_tgt": 0
+    },
+    "sensor": {
+      "co2": null,
+      "iaq_co2": null,
+      "rh": null,
+      "iaq_rh": null,
+      "temp": 27.9
+    }
+  },
+  {
+    "node_id": 2,
+    "general": {
+      "node_type": "UCCO2",
+      "sub_type": 0,
+      "network_type": "RF",
+      "parent": 1,
+      "asso": 1,
+      "name": "Office CO2",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": 405,
+      "iaq_co2": 80,
+      "rh": null,
+      "iaq_rh": null,
+      "temp": 19.8
+    }
+  },
+  {
+    "node_id": 113,
+    "general": {
+      "node_type": "BSRH",
+      "sub_type": 0,
+      "network_type": "RF",
+      "parent": 1,
+      "asso": 1,
+      "name": "Bathroom RH",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": null,
+      "iaq_co2": null,
+      "rh": 42.0,
+      "iaq_rh": 85,
+      "temp": 27.9
+    }
+  },
+  {
+    "node_id": 50,
+    "general": {
+      "node_type": "UCRH",
+      "sub_type": 0,
+      "network_type": "RF",
+      "parent": 1,
+      "asso": 1,
+      "name": "Kitchen RH",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": null,
+      "iaq_co2": null,
+      "rh": 61.0,
+      "iaq_rh": 90,
+      "temp": 22.5
+    }
+  }
+]

@@ -1,13 +1,11 @@
 """Diagnostics support for the Mealie integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import MealieConfigEntry
+from .coordinator import MealieConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

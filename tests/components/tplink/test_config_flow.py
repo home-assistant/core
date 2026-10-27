@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, patch
 
 from kasa import Module, TimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components import stream
@@ -72,8 +73,6 @@ from .const import (
     SMALLEST_VALID_JPEG_BYTES,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     ("device_config", "expected_entry_data", "credentials_hash"),
@@ -136,7 +135,7 @@ async def test_discovery(
         _patch_single_discovery(device),
         _patch_connect(device),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -147,6 +146,7 @@ async def test_discovery(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == expected_entry_data
+    assert result3["result"].unique_id == MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -637,7 +637,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         _patch_discovery(),
         _patch_single_discovery(),
         _patch_connect(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+        patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
@@ -710,7 +710,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         _patch_single_discovery(),
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -959,6 +959,7 @@ async def test_manual_camera_no_live_view(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_CAMERA_CREDENTIALS not in result["data"]
     assert result["data"][CONF_LIVE_VIEW] is False
+    assert result["result"].unique_id == MAC_ADDRESS3
 
 
 async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
@@ -975,7 +976,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
         _patch_single_discovery(),
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -1083,6 +1084,7 @@ async def test_manual_auth_camera(
         CONF_PASSWORD: "campass",
     }
     assert result["data"][CONF_LIVE_VIEW] is True
+    assert result["result"].unique_id == MAC_ADDRESS3
 
 
 @pytest.mark.parametrize(
@@ -1258,7 +1260,7 @@ async def test_manual_port_override_invalid(
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
-    """Test we get the form with discovery and abort for dhcp source when we get both."""
+    """Test we get the form with discovery and abort for dhcp source."""
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         result = await hass.config_entries.flow.async_init(
@@ -1370,7 +1372,7 @@ async def test_discovered_by_dhcp_or_discovery(
         _patch_connect(),
         patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
         patch(
-            f"{MODULE}.async_setup_entry", return_value=True
+            f"{MODULE}.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -2135,9 +2137,9 @@ async def test_pick_device_errors(
             {CONF_DEVICE: MAC_ADDRESS},
         )
         await hass.async_block_till_done()
-    assert result3["type"] == expected_flow
+    assert result3["type"] is expected_flow
 
-    if expected_flow != FlowResultType.ABORT:
+    if expected_flow is not FlowResultType.ABORT:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             user_input={
@@ -2250,6 +2252,16 @@ async def test_discovery_timeout_try_connect_all_fail(
     assert result3["errors"] == {"base": "cannot_connect"}
     assert mock_connect["connect"].call_count == 1
 
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_update_other_flows(
     hass: HomeAssistant,
@@ -2311,13 +2323,29 @@ async def test_reauth_update_other_flows(
     assert len(flows) == 0
 
 
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param(IP_ADDRESS, id="unchanged_host"),
+        pytest.param("127.0.0.99", id="changed_host"),
+    ],
+)
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
+    host: str,
 ) -> None:
     """Test reconfigure flow."""
+    device = _mocked_device(
+        device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+        credentials_hash=CREDENTIALS_HASH_KLAP,
+        ip_address=host,
+    )
+    mock_discovery["mock_devices"][host] = device
+    mock_connect["mock_devices"][host] = device
+
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -2326,12 +2354,14 @@ async def test_reconfigure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: IP_ADDRESS,
+            CONF_HOST: host,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_added_config_entry.data[CONF_HOST] == host
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_auth_discovered(
@@ -2355,7 +2385,7 @@ async def test_reconfigure_auth_discovered(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_HOST: "WRONG_IP",
+                CONF_HOST: IP_ADDRESS,
             },
         )
 

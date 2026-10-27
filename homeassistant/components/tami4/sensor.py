@@ -1,8 +1,7 @@
 """Sensor entities for Tami4Edge."""
 
 import logging
-
-from Tami4EdgeAPI import Tami4EdgeAPI
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,14 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API, COORDINATOR, DOMAIN
-from .coordinator import Tami4EdgeCoordinator
+from .coordinator import Tami4ConfigEntry, Tami4EdgeCoordinator
 from .entity import Tami4EdgeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,18 +50,15 @@ ENTITY_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: Tami4ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    api: Tami4EdgeAPI = data[API]
-    coordinator: Tami4EdgeCoordinator = data[COORDINATOR]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         Tami4EdgeSensorEntity(
             coordinator=coordinator,
-            api=api,
             entity_description=entity_description,
         )
         for entity_description in ENTITY_DESCRIPTIONS
@@ -81,11 +75,10 @@ class Tami4EdgeSensorEntity(
     def __init__(
         self,
         coordinator: Tami4EdgeCoordinator,
-        api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the Tami4Edge sensor entity."""
-        Tami4EdgeBaseEntity.__init__(self, api, entity_description)
+        Tami4EdgeBaseEntity.__init__(self, coordinator.api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
         self._update_attr()
 
@@ -95,6 +88,7 @@ class Tami4EdgeSensorEntity(
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

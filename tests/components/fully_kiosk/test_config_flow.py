@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKioskError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_MQTT, SOURCE_USER
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_user_flow(
@@ -165,10 +164,9 @@ async def test_duplicate_updates_existing_entry(
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_updates_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)
@@ -264,10 +262,10 @@ async def test_mqtt_discovery_flow(
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_fully_kiosk_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reconfigure flow."""

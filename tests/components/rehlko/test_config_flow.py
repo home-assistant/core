@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiokem import AuthenticationCredentialsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rehlko import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import TEST_EMAIL, TEST_PASSWORD, TEST_SUBJECT
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -151,11 +150,9 @@ async def test_reauth(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_exception(
-    hass: HomeAssistant,
-    rehlko_config_entry: MockConfigEntry,
-    mock_rehlko: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, rehlko_config_entry: MockConfigEntry, mock_rehlko: AsyncMock
 ) -> None:
     """Test reauth flow."""
     rehlko_config_entry.add_to_hass(hass)
@@ -185,9 +182,8 @@ async def test_reauth_exception(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_dhcp_discovery(
-    hass: HomeAssistant, mock_rehlko: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery(hass: HomeAssistant, mock_rehlko: AsyncMock) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
@@ -204,6 +200,7 @@ async def test_dhcp_discovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_SUBJECT
 
 
 async def test_dhcp_discovery_already_set_up(

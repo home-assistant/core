@@ -1,5 +1,6 @@
 """Tests for the Heos Media Player platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import re
 from typing import Any
@@ -10,6 +11,7 @@ from pyheos import (
     BrowseResult,
     CommandFailedError,
     HeosError,
+    HeosPlayer,
     MediaItem,
     MediaMusicSource,
     MediaType as HeosMediaType,
@@ -23,6 +25,9 @@ from pyheos import (
 )
 from pyheos.util import mediauri
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.plugins import async_setup_component
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -81,10 +86,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.conftest import async_setup_component
-from tests.typing import WebSocketGenerator
 
 
 async def test_state_attributes(
@@ -256,7 +257,9 @@ async def test_updates_from_players_changed_new_ids(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -272,7 +275,9 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 2
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "101"), config_entry.entry_id
+    )
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 2
     assert (
@@ -1562,7 +1567,7 @@ async def test_browse_media_invalid_content_id(
     [
         (["media_player.test_player_2"], [1, 2]),
         (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
-        (["media_player.test_player"], [1]),
+        (["media_player.test_player"], [1, 2]),
     ],
 )
 async def test_media_player_join_group(
@@ -1585,6 +1590,30 @@ async def test_media_player_join_group(
         blocking=True,
     )
     controller.set_group.assert_called_once_with(expected)
+
+
+async def test_media_player_join_group_keeps_existing_members(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    players: dict[int, HeosPlayer],
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> None:
+    """Test joining a player to a group retains the current members."""
+    players[3] = player_factory(3, "Test Player 3", "Speaker")
+    controller.mock_set_players(players)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_3"],
+        },
+        blocking=True,
+    )
+    controller.set_group.assert_called_once_with([1, 2, 3])
 
 
 async def test_media_player_join_group_error(

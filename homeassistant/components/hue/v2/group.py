@@ -1,9 +1,7 @@
 """Support for Hue groups (room/zone)."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -37,6 +35,7 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+from .light import FALLBACK_MAX_MIREDS, FALLBACK_MIN_MIREDS
 
 
 async def async_setup_entry(
@@ -81,13 +80,13 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
     entity_description = LightEntityDescription(
         key="hue_grouped_light",
-        icon="mdi:lightbulb-group",
+        translation_key="hue_grouped_light",
         has_entity_name=True,
         name=None,
     )
@@ -114,6 +113,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self._dynamic_mode_active = False
         self._update_values()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -133,11 +133,13 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self.resource.on.on
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         scenes = {
@@ -158,6 +160,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "dynamics": self._dynamic_mode_active,
         }
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -196,6 +199,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             transition_time=transition,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -224,6 +228,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         )
 
     @callback
+    @override
     def on_update(self) -> None:
         """Call on update event."""
         self._update_values()
@@ -260,22 +265,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     if color_temp.mirek
                     else None
                 )
+                # lights may report a zeroed schema, fall back to the Hue defaults
                 self._attr_min_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_maximum
+                        color_temp.mirek_schema.mirek_maximum or FALLBACK_MAX_MIREDS
                     )
                 )
                 self._attr_max_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek_schema.mirek_minimum
+                        color_temp.mirek_schema.mirek_minimum or FALLBACK_MIN_MIREDS
                     )
                 )
                 # counters for color mode vote and average temp
-                if (
-                    light.on.on
-                    and color_temp.mirek is not None
-                    and color_temp.mirek_valid
-                ):
+                if light.on.on and color_temp.mirek and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
                     light_in_colortemp_mode = True
                     temp_total += color_util.color_temperature_mired_to_kelvin(

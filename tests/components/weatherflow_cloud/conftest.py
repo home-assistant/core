@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.models.rest.forecast import WeatherDataForecastREST
 from weatherflow4py.models.rest.observation import ObservationStationREST
@@ -15,15 +16,13 @@ from weatherflow4py.ws import WeatherFlowWebsocketAPI
 from homeassistant.components.weatherflow_cloud.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
 
-from tests.common import MockConfigEntry, load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.weatherflow_cloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -151,6 +150,8 @@ async def mock_websocket_api():
     mock_ws_instance.connect = AsyncMock()
     mock_ws_instance.send_message = AsyncMock()
     mock_ws_instance.register_callback = MagicMock()
+    mock_ws_instance.stop_all_listeners = AsyncMock()
+    mock_ws_instance.close = AsyncMock()
     mock_ws_instance.websocket = mock_websocket
 
     with (

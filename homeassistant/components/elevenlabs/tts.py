@@ -1,13 +1,11 @@
 """Support for the ElevenLabs text-to-speech service."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, Mapping
 import contextlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
@@ -22,7 +20,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -30,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElevenLabsConfigEntry
 from .const import (
-    ATTR_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
@@ -68,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
-    voices = (await client.voices.get_all()).voices
+    voices = config_entry.runtime_data.voices
     default_voice_id = config_entry.options[CONF_VOICE]
     voice_settings = to_voice_settings(config_entry.options)
     async_add_entities(
@@ -137,10 +134,12 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -159,12 +158,10 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
 
         except ApiError as exc:
-            _LOGGER.warning(
-                "Error during processing of TTS request %s", exc, exc_info=True
-            )
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
 
+    @override
     async def async_stream_tts_audio(
         self, request: TTSAudioRequest
     ) -> TTSAudioResponse:
@@ -296,19 +293,19 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 previous_request_ids.append(rid)
                             else:
                                 _LOGGER.debug(
-                                    "No request-id returned from server; clearing previous requests"
+                                    "No request-id returned from"
+                                    " server; clearing previous"
+                                    " requests"
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
-                    _LOGGER.warning(
-                        "Error during processing of TTS request %s", exc, exc_info=True
-                    )
                     _add_sentences_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
                         await _add_sentences_task
                     raise HomeAssistantError(exc) from exc
 
-                # Capture and store server request-id for next calls (only when supported)
+                # Capture and store server request-id for
+                # next calls (only when supported)
                 _LOGGER.debug("Completed TTS stream for text: %s", text)
 
         _LOGGER.debug("Completed TTS stream")

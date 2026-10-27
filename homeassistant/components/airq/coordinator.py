@@ -1,20 +1,22 @@
 """The air-Q integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, override
 
 from aioairq.core import AirQ, identify_warming_up_sensors
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
+
+if TYPE_CHECKING:
+    from . import AirQConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 class AirQCoordinator(DataUpdateCoordinator):
     """Coordinator is responsible for querying the device at a specified route."""
 
-    config_entry: ConfigEntry
+    config_entry: AirQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AirQConfigEntry,
         clip_negative: bool = True,
         return_average: bool = True,
     ) -> None:
@@ -52,24 +54,22 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.clip_negative = clip_negative
         self.return_average = return_average
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        if "name" not in self.device_info:
+        if self.device_info.name is UNDEFINED:
             _LOGGER.debug(
-                "'name' not found in AirQCoordinator.device_info, fetching from the device"
+                "'name' not found in AirQCoordinator.device_info,"
+                " fetching from the device"
             )
             info = await self.airq.fetch_device_info()
-            self.device_info.update(
-                DeviceInfo(
-                    name=info["name"],
-                    model=info["model"],
-                    sw_version=info["sw_version"],
-                    hw_version=info["hw_version"],
-                )
-            )
+            self.device_info.name = info["name"]
+            self.device_info.model = info["model"]
+            self.device_info.sw_version = info["sw_version"]
+            self.device_info.hw_version = info["hw_version"]
             _LOGGER.debug(
                 "Updated AirQCoordinator.device_info for 'name' %s",
-                self.device_info.get("name"),
+                info["name"],
             )
         data: dict = await self.airq.get_latest_data(
             return_average=self.return_average,

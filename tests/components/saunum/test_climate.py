@@ -1,12 +1,15 @@
 """Test the Saunum climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from freezegun.api import FrozenDateTimeFactory
 from pysaunum import SaunumException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -41,8 +44,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture

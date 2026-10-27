@@ -246,7 +246,7 @@
               },
               {
                 "zoneId": "3450733",
-                "modelType": "xxx",
+                "modelType": "Unknown",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
                   "minHeatSetpoint": 5.0,
@@ -268,7 +268,7 @@
                   "setpointValueResolution": 0.5
                 },
                 "name": "Spare Room",
-                "zoneType": "xxx"
+                "zoneType": "Unknown"
               }
             ],
             "dhw": {
@@ -340,6 +340,15 @@
             ]
           }
         ]
+      },
+      {
+        "gatewayInfo": {
+          "gatewayId": "4400000",
+          "mac": "00D02DEE0044",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": []
       }
     ]
   }

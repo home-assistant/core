@@ -1,5 +1,6 @@
 """Tests for the Withings component."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -18,6 +19,12 @@ from aiowithings import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -26,8 +33,8 @@ from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -37,13 +44,7 @@ from homeassistant.util import dt as dt_util
 from . import call_webhook, prepare_webhook_setup, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_cloud_connection_status,
-)
 from tests.components.cloud import mock_cloud
-from tests.typing import ClientSessionGenerator
 
 
 async def test_data_manager_webhook_subscription(
@@ -55,7 +56,7 @@ async def test_data_manager_webhook_subscription(
     await setup_integration(hass, webhook_config_entry)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert withings.subscribe_notification.call_count == 6
 
@@ -157,6 +158,7 @@ async def test_triggering_reauth(
     polling_config_entry: MockConfigEntry,
     error: Exception,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test triggering reauth."""
     await setup_integration(hass, polling_config_entry, False)
@@ -173,6 +175,7 @@ async def test_triggering_reauth(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert "Authentication with Withings failed. Please reauthenticate" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -185,7 +188,9 @@ async def test_triggering_reauth(
                 "token": {"userid": 123},
                 "profile": "henk",
                 "use_webhook": False,
-                "webhook_id": "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55",
+                "webhook_id": (
+                    "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55"
+                ),
             },
         ),
         MockConfigEntry(
@@ -708,9 +713,34 @@ async def test_devices(
     await hass.async_block_till_done()
 
     for device_id in ("12345", "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"):
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), webhook_config_entry.entry_id
+        )
         assert device is not None
         assert device == snapshot(name=device_id)
+
+
+@pytest.mark.usefixtures("withings")
+async def test_device_via_device_id(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the physical device is linked to the account device via via_device_id."""
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(webhook_config_entry.unique_id)), webhook_config_entry.entry_id
+    )
+    assert account_device is not None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        webhook_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.via_device_id == account_device.id
 
 
 async def test_oauth_implementation_not_available(
@@ -830,6 +860,30 @@ async def test_webhook_subscription_auth_failure(
     )
 
 
+async def test_webhook_subscription_waits_for_start(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the webhook is only subscribed once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+
+    # Withings validates the callback URL by calling it, which cannot work
+    # while our own HTTP server is still starting up
+    assert withings.subscribe_notification.call_count == 0
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    await prepare_webhook_setup(hass, freezer)
+
+    assert withings.subscribe_notification.call_count == 6
+
+
 async def test_webhook_subscription_invalid_params(
     hass: HomeAssistant,
     withings: AsyncMock,
@@ -846,4 +900,34 @@ async def test_webhook_subscription_invalid_params(
     await prepare_webhook_setup(hass, freezer)
 
     assert "Webhook URL rejected by Withings" in caplog.text
+    assert withings.subscribe_notification.call_count == 1
+
+
+async def test_unload_during_webhook_subscription(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading cancels an in-flight webhook subscription."""
+    subscribe_started = asyncio.Event()
+    release_subscribe = asyncio.Event()
+
+    async def _subscribe_notification(*args: Any) -> None:
+        subscribe_started.set()
+        await release_subscribe.wait()
+
+    withings.subscribe_notification.side_effect = _subscribe_notification
+
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await subscribe_started.wait()
+
+    assert await hass.config_entries.async_unload(webhook_config_entry.entry_id)
+    release_subscribe.set()
+    await hass.async_block_till_done()
+
+    assert webhook_config_entry.state is ConfigEntryState.NOT_LOADED
     assert withings.subscribe_notification.call_count == 1

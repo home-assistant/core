@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
+from mashumaro.exceptions import InvalidFieldValue, MissingField
 from spotifyaio import (
     ContextType,
     Device,
@@ -89,6 +91,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self._playlist: Playlist | None = None
         self._checked_playlist_id: str | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -98,6 +101,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self.hass,
                 DOMAIN,
                 f"user_not_premium_{self.config_entry.unique_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.ERROR,
@@ -105,24 +109,37 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 translation_placeholders={"entry_title": self.config_entry.title},
                 learn_more_url=FREE_API_BLOGPOST,
             )
-            raise ConfigEntryError("User is not subscribed to Spotify") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="user_not_premium",
+            ) from err
         except SpotifyConnectionError as err:
-            raise UpdateFailed("Error communicating with Spotify API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
+    @override
     async def _async_update_data(self) -> SpotifyCoordinatorData:
         self.update_interval = UPDATE_INTERVAL
         try:
             current = await self.client.get_playback()
         except SpotifyConnectionError as err:
-            raise UpdateFailed("Error communicating with Spotify API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,
                 position_updated_at=None,
                 playlist=None,
             )
-        # Record the last updated time, because Spotify's timestamp property is unreliable
-        # and doesn't actually return the fetch time as is mentioned in the API description
+        # Record the last updated time, because Spotify's
+        # timestamp property is unreliable and doesn't
+        # actually return the fetch time as described in API
         position_updated_at = dt_util.utcnow()
 
         dj_playlist = False
@@ -139,8 +156,8 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self._checked_playlist_id = context.uri
                 self._playlist = None
                 if context.context_type == ContextType.PLAYLIST:
-                    # Make sure any playlist lookups don't break the current
-                    # playback state update
+                    # Optional playlist metadata must not block setup or playback
+                    # updates when fetching or deserialization fails.
                     try:
                         self._playlist = await self.client.get_playlist(context.uri)
                     except SpotifyNotFoundError:
@@ -150,7 +167,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                             context.uri,
                         )
                         self._playlist = None
-                    except SpotifyConnectionError:
+                    except SpotifyConnectionError, InvalidFieldValue, MissingField:
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "
                             "Continuing without playlist data",
@@ -158,8 +175,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                         )
                         self._playlist = None
                         self._checked_playlist_id = None
-        if current.is_playing and current.progress_ms is not None:
-            assert current.item is not None
+        if (
+            current.is_playing
+            and current.progress_ms is not None
+            and current.item is not None
+        ):
             time_left = timedelta(
                 milliseconds=current.item.duration_ms - current.progress_ms
             )
@@ -194,8 +214,13 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         )
         self._client = client
 
+    @override
     async def _async_update_data(self) -> list[Device]:
         try:
             return await self._client.get_devices()
         except SpotifyConnectionError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

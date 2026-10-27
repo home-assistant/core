@@ -5,15 +5,18 @@ from unittest.mock import AsyncMock, patch
 
 from panasonic_viera import SOAPError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UDN,
     DEFAULT_NAME,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
 )
-from homeassistant.const import CONF_PIN
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,10 +25,9 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_USER_INPUT,
     get_mock_remote,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +35,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.panasonic_viera.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -56,12 +58,40 @@ async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
+
+
+async def test_flow_name_from_tv(hass: HomeAssistant) -> None:
+    """Test the entry is named after the friendly name reported by the TV."""
+    device_info = {**MOCK_DEVICE_INFO, ATTR_FRIENDLY_NAME: "Living_room_TV"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(device_info=device_info),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_INPUT},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living room TV"
+    assert result["data"] == {
+        **MOCK_CONFIG_DATA,
+        CONF_NAME: "Living room TV",
+        ATTR_DEVICE_INFO: device_info,
+    }
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
@@ -80,12 +110,23 @@ async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(encrypted=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_INPUT},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
@@ -104,7 +145,7 @@ async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -114,7 +155,7 @@ async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
 async def test_flow_encrypted_not_connected_pin_code_request(
     hass: HomeAssistant,
 ) -> None:
-    """Test flow with encryption and PIN code request connection error abortion during pairing request step."""
+    """Test encrypted flow with PIN request connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,7 +172,7 @@ async def test_flow_encrypted_not_connected_pin_code_request(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -139,7 +180,7 @@ async def test_flow_encrypted_not_connected_pin_code_request(
 
 
 async def test_flow_encrypted_unknown_pin_code_request(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code request unknown error abortion during pairing request step."""
+    """Test encrypted flow with PIN request unknown error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -156,7 +197,7 @@ async def test_flow_encrypted_unknown_pin_code_request(hass: HomeAssistant) -> N
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -185,7 +226,7 @@ async def test_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -203,6 +244,7 @@ async def test_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
         **MOCK_ENCRYPTION_DATA,
         ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> None:
@@ -223,7 +265,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -242,9 +284,16 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
     assert result["step_id"] == "pairing"
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: "1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code connection error abortion during pairing step."""
+    """Test encrypted flow with PIN connection error during pairing."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -261,7 +310,7 @@ async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -277,7 +326,7 @@ async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
 
 
 async def test_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code unknown error abortion during pairing step."""
+    """Test encrypted flow with PIN unknown error during pairing."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -294,7 +343,7 @@ async def test_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -319,9 +368,15 @@ async def test_flow_non_encrypted_already_configured_abort(hass: HomeAssistant) 
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={**MOCK_BASIC_DATA},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_USER_INPUT},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -338,9 +393,15 @@ async def test_flow_encrypted_already_configured_abort(hass: HomeAssistant) -> N
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={**MOCK_BASIC_DATA},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_USER_INPUT},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -365,6 +426,7 @@ async def test_imported_flow_non_encrypted(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
@@ -401,12 +463,13 @@ async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> No
         **MOCK_ENCRYPTION_DATA,
         ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_imported_flow_encrypted_invalid_pin_code_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test imported flow with encryption and invalid PIN code error during pairing step."""
+    """Test imported encrypted flow with invalid PIN error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=SOAPError)
 
@@ -436,9 +499,16 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(
     assert result["step_id"] == "pairing"
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: "1234"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_imported_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
-    """Test imported flow with encryption and PIN code connection error abortion during pairing step."""
+    """Test imported encrypted flow with PIN connection error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
@@ -465,7 +535,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass: HomeAssistant) 
 
 
 async def test_imported_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
-    """Test imported flow with encryption and PIN code unknown error abortion during pairing step."""
+    """Test imported encrypted flow with PIN unknown error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
 
@@ -507,6 +577,17 @@ async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(encrypted=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_INPUT},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_imported_flow_unknown_abort(hass: HomeAssistant) -> None:

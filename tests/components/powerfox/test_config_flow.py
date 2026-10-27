@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powerfox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MOCK_DIRECT_HOST
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=MOCK_DIRECT_HOST,
@@ -143,10 +142,10 @@ async def test_duplicate_entry_reconfiguration(
         (PowerfoxAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -172,10 +171,9 @@ async def test_exceptions(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test re-authentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -207,11 +205,11 @@ async def test_step_reauth(
         (PowerfoxAuthenticationError, "invalid_auth"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth_exceptions(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -254,7 +252,7 @@ async def test_reconfigure(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
+    assert result.get("step_id") == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -292,7 +290,7 @@ async def test_reconfigure_exceptions(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
+    assert result.get("step_id") == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

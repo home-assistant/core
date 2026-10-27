@@ -5,8 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
     },
     "step": {
@@ -160,12 +158,6 @@
       "peak_hour_time": {
         "name": "Time of max hour consumption"
       },
-      "power": {
-        "name": "Power"
-      },
-      "power_factor": {
-        "name": "Power factor"
-      },
       "power_flow_battery": {
         "name": "Battery power"
       },
@@ -192,9 +184,6 @@
       },
       "range_remaining": {
         "name": "Estimated remaining driving range"
-      },
-      "signal_strength": {
-        "name": "Signal strength"
       },
       "storage_available_energy": {
         "name": "Available energy"
@@ -235,14 +224,20 @@
     "data_api_reauth_required": {
       "message": "Reconnect Tibber so Home Assistant can enable the new Tibber Data API features."
     },
+    "get_prices_communication_failed": {
+      "message": "Could not fetch energy prices from Tibber ({detail})"
+    },
+    "get_prices_invalid_login": {
+      "message": "Could not authenticate with Tibber while fetching prices"
+    },
+    "get_prices_timeout": {
+      "message": "Timeout fetching energy prices from Tibber"
+    },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
     },
     "no_config_entry": {
       "message": "No Tibber integration configured"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"

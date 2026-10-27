@@ -1,66 +1,71 @@
 """Service handlers for the Evohome integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any, Final
 
-from evohomeasync2 import ControlSystem
-from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import (
-    S2_DURATION as SZ_DURATION,
-    S2_PERIOD as SZ_PERIOD,
-)
-import voluptuous as vol
+from evohomeasync2.const import SZ_DURATION, SZ_MODE, SZ_PERIOD, SZ_SETPOINT, SZ_STATE
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_MODE
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
-from .coordinator import EvoDataUpdateCoordinator
+from .const import DOMAIN, EVOHOME_DATA, REFRESH_BREAKS_IN_HA_VERSION, EvoService
+from .helpers import async_create_deprecation_issue_once
 
-# System service schemas (registered as domain services)
-SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+# Controller service schemas (registered as entity services)
+SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
-    vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
+    probatio.Required(SZ_MODE): cv.string,  # ... so, don't use SystemMode enum here
+    probatio.Exclusive(SZ_DURATION, "temporary"): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+        probatio.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
     ),
-    vol.Exclusive(ATTR_PERIOD, "temporary"): vol.All(
+    probatio.Exclusive(SZ_PERIOD, "temporary"): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+        probatio.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
 }
 
 # Zone service schemas (registered as entity services)
-SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_SETPOINT): vol.All(
-        vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
+    probatio.Required(SZ_SETPOINT): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=4.0, max=35.0)
     ),
-    vol.Optional(ATTR_DURATION): vol.All(
+    probatio.Optional(SZ_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+        probatio.Range(min=timedelta(days=0), max=timedelta(days=1)),
     ),
 }
+
+# DHW service schemas (registered as entity services)
+SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
+    probatio.Required(SZ_STATE): cv.boolean,
+    probatio.Optional(SZ_DURATION): probatio.All(
+        cv.time_period,
+        probatio.Range(min=timedelta(days=0), max=timedelta(days=1)),
+    ),
+}
+
+
+def _register_ctl_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for controllers."""
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        EvoService.SET_SYSTEM_MODE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema=SET_SYSTEM_MODE_SCHEMA,
+        func="async_set_system_mode",
+    )
 
 
 def _register_zone_entity_services(hass: HomeAssistant) -> None:
     """Register entity-level services for zones."""
 
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        EvoService.CLEAR_ZONE_OVERRIDE,
-        entity_domain=CLIMATE_DOMAIN,
-        schema=None,
-        func="async_clear_zone_override",
-    )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -71,88 +76,35 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
-    """Validate that a set_system_mode service call is properly formed."""
+def _register_dhw_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for DHW zones."""
 
-    mode = data[ATTR_MODE]
-    tcs_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
-
-    # Validation occurs here, instead of in the library, because it uses a slightly
-    # different schema (until instead of duration/period) for the method invoked
-    # via this service call
-
-    if (mode_info := tcs_modes.get(mode)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="mode_not_supported",
-            translation_placeholders={ATTR_MODE: mode},
-        )
-
-    # voluptuous schema ensures that duration and period are not both present
-
-    if not mode_info[SZ_CAN_BE_TEMPORARY]:
-        if ATTR_DURATION in data or ATTR_PERIOD in data:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="mode_cant_be_temporary",
-                translation_placeholders={ATTR_MODE: mode},
-            )
-        return
-
-    timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
-
-    if timing_mode == SZ_DURATION and ATTR_PERIOD in data:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="mode_cant_have_period",
-            translation_placeholders={ATTR_MODE: mode},
-        )
-
-    if timing_mode == SZ_PERIOD and ATTR_DURATION in data:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="mode_cant_have_duration",
-            translation_placeholders={ATTR_MODE: mode},
-        )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        EvoService.SET_DHW_OVERRIDE,
+        entity_domain=WATER_HEATER_DOMAIN,
+        schema=SET_DHW_OVERRIDE_SCHEMA,
+        func="async_set_dhw_override",
+    )
 
 
 @callback
-def setup_service_functions(
-    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
-) -> None:
-    """Set up the service handlers for Evohome systems."""
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register the Evohome services."""
 
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
-        await coordinator.async_refresh()
-
-    @verify_domain_control(DOMAIN)
-    async def set_system_mode(call: ServiceCall) -> None:
-        """Set the Evohome system mode or reset the system."""
-
-        # No additional validation for RESET_SYSTEM here, as the library method invoked
-        # via that service call may be able to emulate the reset even if the system
-        # doesn't support AutoWithReset natively
-
-        if call.service == EvoService.SET_SYSTEM_MODE:
-            _validate_set_system_mode_params(coordinator.tcs, call.data)
-
-        payload = {
-            "unique_id": coordinator.tcs.id,
-            "service": call.service,
-            "data": call.data,
-        }
-        async_dispatcher_send(hass, DOMAIN, payload)
+        async_create_deprecation_issue_once(
+            hass,
+            "deprecated_refresh_system_service",
+            REFRESH_BREAKS_IN_HA_VERSION,
+        )
+        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
-    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
-    hass.services.async_register(
-        DOMAIN,
-        EvoService.SET_SYSTEM_MODE,
-        set_system_mode,
-        schema=vol.Schema(SET_SYSTEM_MODE_SCHEMA),
-    )
-
+    _register_ctl_entity_services(hass)
     _register_zone_entity_services(hass)
+    _register_dhw_entity_services(hass)

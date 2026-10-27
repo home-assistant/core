@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller, ControllerWaterUseSummary, User, Zone
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import (
@@ -21,8 +26,6 @@ from homeassistant.util.unit_system import (
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
@@ -90,7 +93,7 @@ async def test_no_sensor_and_water_state(
     controller_water_use_summary: ControllerWaterUseSummary,
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
 ) -> None:
-    """Test rain sensor, flow sensor, and water use in the absence of flow and rain sensors."""
+    """Test sensors in the absence of flow and rain sensors."""
     controller.sensors = []
     controller_water_use_summary.total_use = None
     controller_water_use_summary.total_active_use = None

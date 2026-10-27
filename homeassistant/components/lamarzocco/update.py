@@ -2,10 +2,10 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pylamarzocco.const import FirmwareType, UpdateStatus
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -80,6 +80,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     )
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the current firmware version."""
         return self.coordinator.device.settings.firmwares[
@@ -87,6 +88,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         ].build_version
 
     @property
+    @override
     def latest_version(self) -> str:
         """Return the latest firmware version."""
         if available_update := self.coordinator.device.settings.firmwares[
@@ -96,10 +98,12 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         return self.installed_version
 
     @property
+    @override
     def release_url(self) -> str | None:
         """Return the release notes URL."""
         return "https://support-iot.lamarzocco.com/firmware-updates/"
 
+    @override
     def release_notes(self) -> str | None:
         """Return the release notes for the latest firmware version."""
         if available_update := self.coordinator.device.settings.firmwares[
@@ -108,6 +112,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             return available_update.change_log
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -133,7 +138,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
                 await asyncio.sleep(3)
                 counter += 1
 
-        except (TimeoutError, RequestNotSuccessful) as exc:
+        except (TimeoutError, LaMarzoccoError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

@@ -1,7 +1,5 @@
 """Repair issues for the Backblaze B2 integration."""
 
-from __future__ import annotations
-
 import logging
 
 from b2sdk.v2.exception import (
@@ -45,6 +43,7 @@ def _create_issue(
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
         },
+        config_entry_id=entry.entry_id,
     )
 
 

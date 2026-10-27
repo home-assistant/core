@@ -1,12 +1,13 @@
 """Test the Electric Kiwi config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 from electrickiwi_api.exceptions import ApiException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.electric_kiwi.const import (
     DOMAIN,
@@ -21,12 +22,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, REDIRECT_URI
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
-
-@pytest.mark.usefixtures("current_request_with_host", "electrickiwi_api")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

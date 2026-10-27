@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_decimal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Aspect decimal',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Aspect decimal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_aspect_decimal',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_integer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Aspect integer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Aspect integer',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_aspect_integer',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Aspect name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Aspect name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_aspect_name',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_resolution-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Aspect resolution',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Aspect resolution',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_aspect_resolution',
@@ -206,12 +206,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -244,10 +244,10 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_cpu_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'madVR Envy CPU temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy CPU temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_cpu_temperature',
@@ -264,12 +264,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -302,10 +302,10 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_gpu_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'madVR Envy GPU temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy GPU temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_gpu_temperature',
@@ -322,12 +322,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -360,10 +360,10 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_hdmi_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'madVR Envy HDMI temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy HDMI temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_hdmi_temperature',
@@ -380,15 +380,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '16:9',
         '4:3',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -418,9 +418,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_aspect_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming aspect ratio',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming aspect ratio',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '16:9',
         '4:3',
       ]),
@@ -440,16 +440,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '8bit',
         '10bit',
         '12bit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -479,9 +479,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_bit_depth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming bit depth',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming bit depth',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '8bit',
         '10bit',
         '12bit',
@@ -502,15 +502,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'TV',
         'PC',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -540,9 +540,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_black_levels-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming black levels',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming black levels',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'TV',
         'PC',
       ]),
@@ -562,7 +562,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'RGB',
         '444',
         '422',
@@ -570,9 +570,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -602,9 +602,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_color_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming color space',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming color space',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'RGB',
         '444',
         '422',
@@ -626,7 +626,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SDR',
         'HDR10',
         'HLG 601',
@@ -637,9 +637,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -669,9 +669,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_colorimetry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming colorimetry',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming colorimetry',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SDR',
         'HDR10',
         'HLG 601',
@@ -697,9 +697,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -729,7 +729,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_frame_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Incoming frame rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming frame rate',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_incoming_frame_rate',
@@ -747,9 +747,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -779,7 +779,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_resolution-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Incoming resolution',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming resolution',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_incoming_resolution',
@@ -796,15 +796,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2D',
         '3D',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -834,9 +834,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_signal_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Incoming signal type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Incoming signal type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2D',
         '3D',
       ]),
@@ -856,12 +856,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -894,10 +894,10 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_mainboard_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'madVR Envy Mainboard temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Mainboard temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_mainboard_temperature',
@@ -915,9 +915,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -947,7 +947,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_decimal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Masking decimal',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Masking decimal',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_masking_decimal',
@@ -965,9 +965,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -997,7 +997,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_integer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Masking integer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Masking integer',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_masking_integer',
@@ -1015,9 +1015,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1047,7 +1047,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_resolution-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Masking resolution',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Masking resolution',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_masking_resolution',
@@ -1064,16 +1064,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '8bit',
         '10bit',
         '12bit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1103,9 +1103,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_bit_depth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Outgoing bit depth',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing bit depth',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '8bit',
         '10bit',
         '12bit',
@@ -1126,15 +1126,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'TV',
         'PC',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1164,9 +1164,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_black_levels-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Outgoing black levels',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing black levels',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'TV',
         'PC',
       ]),
@@ -1186,7 +1186,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'RGB',
         '444',
         '422',
@@ -1194,9 +1194,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1226,9 +1226,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_color_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Outgoing color space',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing color space',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'RGB',
         '444',
         '422',
@@ -1250,7 +1250,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SDR',
         'HDR10',
         'HLG 601',
@@ -1261,9 +1261,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1293,9 +1293,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_colorimetry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Outgoing colorimetry',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing colorimetry',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'SDR',
         'HDR10',
         'HLG 601',
@@ -1321,9 +1321,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1353,7 +1353,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_frame_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Outgoing frame rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing frame rate',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_outgoing_frame_rate',
@@ -1371,9 +1371,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1403,7 +1403,7 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_resolution-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'madVR Envy Outgoing resolution',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing resolution',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madvr_envy_outgoing_resolution',
@@ -1420,15 +1420,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2D',
         '3D',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('madvr', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1458,9 +1458,9 @@
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_signal_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'madVR Envy Outgoing signal type',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'madVR Envy Outgoing signal type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2D',
         '3D',
       ]),

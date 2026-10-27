@@ -1,20 +1,18 @@
 """Support for ReCollect Waste sensors."""
 
-from __future__ import annotations
-
-from datetime import date
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
-from .coordinator import ReCollectWasteDataUpdateCoordinator
+from .const import LOGGER
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 from .entity import ReCollectWasteEntity
 from .util import async_get_pickup_type_names
 
@@ -38,14 +36,12 @@ SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RecollectWasteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator: ReCollectWasteDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        ReCollectWasteSensor(coordinator, entry, description)
+        ReCollectWasteSensor(entry.runtime_data, entry, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -63,7 +59,7 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
     def __init__(
         self,
         coordinator: ReCollectWasteDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: RecollectWasteConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -73,9 +69,12 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())
+        relevant_events = (
+            e for e in self.coordinator.data if e.date >= dt_util.now().date()
+        )
         pickup_index = self.PICKUP_INDEX_MAP[self.entity_description.key]
 
         try:

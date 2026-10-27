@@ -1,18 +1,18 @@
 """Provides device automations for RFXCOM RFXtrx."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DATA_RFXOBJECT, DOMAIN
+from . import RfxtrxConfigEntry
+from .const import DOMAIN
 from .helpers import async_get_device_object
 
 CONF_DATA = "data"
@@ -33,8 +33,8 @@ ACTION_SELECTION = {
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_SUBTYPE): str,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_SUBTYPE): str,
     }
 )
 
@@ -96,7 +96,10 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
-    rfx = hass.data[DOMAIN][DATA_RFXOBJECT]
+    entries: list[RfxtrxConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
+        raise HomeAssistantError("RFXtrx is not connected, cannot send command")
+    rfx = entries[0].runtime_data
     commands, send_fun = _get_commands(hass, config[CONF_DEVICE_ID], config[CONF_TYPE])
     sub_type = config[CONF_SUBTYPE]
 

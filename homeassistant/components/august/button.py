@@ -1,5 +1,7 @@
 """Support for August buttons."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,10 +25,12 @@ class AugustWakeLockButton(AugustEntity, ButtonEntity):
 
     _attr_translation_key = "wake"
 
+    @override
     async def async_press(self) -> None:
         """Wake the device."""
         await self._data.async_status_async(self._device_id, self._hyper_bridge)
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Nothing to update as buttons are stateless."""

@@ -14,9 +14,17 @@ from aioautomower.exceptions import (
     HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.model import Calendar, MowerAttributes, MowerStates, WorkArea
+from aioautomower.model import (
+    Calendar,
+    MowerAttributes,
+    MowerStates,
+    WorkArea,
+    WorkAreaType,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
@@ -31,9 +39,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
@@ -226,8 +231,8 @@ async def test_model_id_information(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device is not None
     assert reg_device.manufacturer == "Husqvarna"
@@ -247,8 +252,8 @@ async def test_device_info(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device == snapshot
 
@@ -260,10 +265,11 @@ async def test_constant_polling(
     values: dict[str, MowerAttributes],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Verify that receiving a WebSocket update does not interrupt the regular polling cycle.
+    """Verify WebSocket updates do not interrupt regular polling.
 
-    The test simulates a WebSocket update that changes an entity's state, then advances time
-    to trigger a scheduled poll to confirm polled data also arrives.
+    The test simulates a WebSocket update that changes an entity's state, then
+    advances time to trigger a scheduled poll to confirm polled data also
+    arrives.
     """
     test_values = deepcopy(values)
     callback_holder: dict[str, Callable] = {}
@@ -283,10 +289,10 @@ async def test_constant_polling(
     assert mock_automower_client.register_data_callback.called
     assert "cb" in callback_holder
 
-    state = hass.states.get("sensor.test_mower_1_battery")
+    state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "100"
-    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -299,10 +305,10 @@ async def test_constant_polling(
     callback_holder["cb"](test_values)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_mower_1_battery")
+    state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
     assert state is not None
     assert state.state == "40"
 
@@ -312,10 +318,10 @@ async def test_constant_polling(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_automower_client.get_status.assert_awaited()
-    state = hass.states.get("sensor.test_mower_1_battery")
+    state = hass.states.get("sensor.garden_test_mower_1_battery")
     assert state is not None
     assert state.state == "77"
-    state = hass.states.get("sensor.test_mower_1_front_lawn_progress")
+    state = hass.states.get("sensor.garden_test_mower_1_front_lawn_progress")
     assert state is not None
     assert state.state == "50"
 
@@ -463,6 +469,8 @@ async def test_add_and_remove_work_area(
                 last_time_completed=datetime(
                     2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
                 ),
+                type=WorkAreaType.SYSTEMATIC,
+                use_global_cutting_height=False,
             )
         }
     )
@@ -472,7 +480,7 @@ async def test_add_and_remove_work_area(
     await hass.async_block_till_done()
     assert mock_automower_client.get_status.called
 
-    state = hass.states.get("sensor.test_mower_1_new_work_area_progress")
+    state = hass.states.get("sensor.garden_test_mower_1_new_work_area_progress")
     assert state is not None
     assert state.state == "12"
     current_entites_after_addition = len(

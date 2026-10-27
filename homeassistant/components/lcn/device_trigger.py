@@ -1,11 +1,12 @@
 """Provides device triggers for LCN."""
 
-from __future__ import annotations
+from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -17,35 +18,41 @@ from .const import DOMAIN, KEY_ACTIONS, SENDKEYS
 TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "codelock", "send_keys"}
 
 LCN_DEVICE_TRIGGER_BASE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES)}
+    {probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES)}
 )
 
-ACCESS_CONTROL_SCHEMA = {vol.Optional("code"): vol.All(vol.Lower, cv.string)}
+ACCESS_CONTROL_SCHEMA = {
+    probatio.Optional("code"): probatio.All(probatio.Lower, cv.string)
+}
 
 TRANSMITTER_SCHEMA = {
     **ACCESS_CONTROL_SCHEMA,
-    vol.Optional("level"): cv.positive_int,
-    vol.Optional("key"): cv.positive_int,
-    vol.Optional("action"): vol.In([action.lower() for action in KEY_ACTIONS]),
+    probatio.Optional("level"): cv.positive_int,
+    probatio.Optional("key"): cv.positive_int,
+    probatio.Optional("action"): probatio.In(
+        [action.lower() for action in KEY_ACTIONS]
+    ),
 }
 
 SENDKEYS_SCHEMA = {
-    vol.Optional("key"): vol.In([key.lower() for key in SENDKEYS]),
-    vol.Optional("action"): vol.In([action.lower() for action in KEY_ACTIONS]),
+    probatio.Optional("key"): probatio.In([key.lower() for key in SENDKEYS]),
+    probatio.Optional("action"): probatio.In(
+        [action.lower() for action in KEY_ACTIONS]
+    ),
 }
 
-TRIGGER_SCHEMA = vol.Any(
+TRIGGER_SCHEMA = probatio.Any(
     LCN_DEVICE_TRIGGER_BASE_SCHEMA.extend(ACCESS_CONTROL_SCHEMA),
     LCN_DEVICE_TRIGGER_BASE_SCHEMA.extend(TRANSMITTER_SCHEMA),
     LCN_DEVICE_TRIGGER_BASE_SCHEMA.extend(SENDKEYS_SCHEMA),
 )
 
 TYPE_SCHEMAS = {
-    "transmitter": {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)},
-    "transponder": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
-    "fingerprint": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
-    "codelock": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
-    "send_keys": {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)},
+    "transmitter": {"extra_fields": probatio.Schema(TRANSMITTER_SCHEMA)},
+    "transponder": {"extra_fields": probatio.Schema(ACCESS_CONTROL_SCHEMA)},
+    "fingerprint": {"extra_fields": probatio.Schema(ACCESS_CONTROL_SCHEMA)},
+    "codelock": {"extra_fields": probatio.Schema(ACCESS_CONTROL_SCHEMA)},
+    "send_keys": {"extra_fields": probatio.Schema(SENDKEYS_SCHEMA)},
 }
 
 
@@ -54,7 +61,9 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return []
 
     identifier = next(iter(device.identifiers))
@@ -77,7 +86,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    event_data = {
+    event_data: dict[str, Any] = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         **{
             key: config[key]
@@ -88,9 +97,9 @@ async def async_attach_trigger(
 
     event_config = event.TRIGGER_SCHEMA(
         {
-            event.CONF_PLATFORM: "event",
-            event.CONF_EVENT_TYPE: f"lcn_{config[CONF_TYPE]}",
-            event.CONF_EVENT_DATA: event_data,
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_TYPE: f"lcn_{config[CONF_TYPE]}",
+            EventTriggerArgument.EVENT_DATA: event_data,
         }
     )
 
@@ -101,6 +110,6 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     return TYPE_SCHEMAS.get(config[CONF_TYPE], {})

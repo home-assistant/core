@@ -1,6 +1,6 @@
 """Button platform for BSB-Lan integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -54,6 +54,7 @@ class BSBLanButtonEntity(BSBLanEntity, ButtonEntity):
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
         self._data = data
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await async_sync_device_time(self._data.client, self._data.device.name)

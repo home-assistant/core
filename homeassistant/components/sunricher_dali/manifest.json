@@ -1,6 +1,7 @@
 {
   "domain": "sunricher_dali",
   "name": "Sunricher DALI",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@niracler"],
   "config_flow": true,
   "dhcp": [
@@ -12,5 +13,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["PySrDaliGateway==0.19.3"]
+  "requirements": ["PySrDaliGateway==0.21.0"]
 }

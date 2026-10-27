@@ -6,6 +6,7 @@ import os
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader, setup
 from homeassistant.core import HomeAssistant
@@ -19,8 +20,6 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
     async_process_requirements,
 )
-
-from .common import MockModule, mock_integration
 
 
 def env_without_wheel_links():
@@ -47,29 +46,6 @@ async def test_requirement_installed_in_venv(hass: HomeAssistant) -> None:
         assert "comp" in hass.config.components
         assert mock_install.call_args == call(
             "package==0.0.1",
-            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
-            timeout=60,
-        )
-
-
-async def test_requirement_installed_in_deps(hass: HomeAssistant) -> None:
-    """Test requirement installed in deps directory."""
-    with (
-        patch("os.path.dirname", return_value="ha_package_path"),
-        patch("homeassistant.util.package.is_virtual_env", return_value=False),
-        patch("homeassistant.util.package.is_docker_env", return_value=False),
-        patch(
-            "homeassistant.util.package.install_package", return_value=True
-        ) as mock_install,
-        patch.dict(os.environ, env_without_wheel_links(), clear=True),
-    ):
-        hass.config.skip_pip = False
-        mock_integration(hass, MockModule("comp", requirements=["package==0.0.1"]))
-        assert await setup.async_setup_component(hass, "comp", {})
-        assert "comp" in hass.config.components
-        assert mock_install.call_args == call(
-            "package==0.0.1",
-            target=hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             timeout=60,
         )
@@ -314,10 +290,49 @@ async def test_get_integration_with_requirements_concurrency(
     assert process_integration_calls == 1
 
 
+async def test_get_integration_with_requirements_concurrent_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
+    )
+    process_event = asyncio.Event()
+    finish_event = asyncio.Event()
+
+    async def _async_process_integration_blocked(*args: object) -> None:
+        process_event.set()
+        await finish_event.wait()
+
+    manager = _async_get_manager(hass)
+    with patch.object(
+        manager, "_async_process_integration", _async_process_integration_blocked
+    ):
+        load_task1 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        load_task2 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        await process_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        finish_event.set()
+        integration = await load_task1
+
+    assert integration.domain == "test_component_dep"
+    assert (
+        await async_get_integration_with_requirements(hass, "test_component_dep")
+        is integration
+    )
+
+
 async def test_get_integration_with_requirements_pip_install_fails_two_passes(
     hass: HomeAssistant,
 ) -> None:
-    """Check getting an integration with loaded requirements and the pip install fails two passes."""
+    """Check integration with requirements when pip install fails."""
     hass.config.skip_pip = False
     mock_integration(
         hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
@@ -491,7 +506,7 @@ async def test_get_integration_with_missing_dependencies(hass: HomeAssistant) ->
 async def test_get_built_in_integration_with_missing_after_dependencies(
     hass: HomeAssistant,
 ) -> None:
-    """Check getting a built_in integration with missing after_dependencies results in exception."""
+    """Check built-in integration with missing after_dependencies."""
     hass.config.skip_pip = False
     mock_integration(
         hass,
@@ -586,8 +601,8 @@ async def test_discovery_requirements_mqtt(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 2
-    # one for mqtt and one for hassio
+    assert len(mock_process.mock_calls) == 3
+    # one for mqtt, one for hassio and one for network (hassio dependency)
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 
@@ -683,8 +698,8 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "pyserial-asyncio",
             False,
             "Detected that custom integration",
-            "which should be replaced by pyserial-asyncio-fast. This will stop"
-            " working in Home Assistant 2026.7, please create a bug report at "
+            "which should be replaced by serialx. This will stop"
+            " working in Home Assistant 2027.2, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),
@@ -692,8 +707,8 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "pyserial-asyncio>=0.6",
             True,
             "Detected that integration",
-            "which should be replaced by pyserial-asyncio-fast. This will stop"
-            " working in Home Assistant 2026.7, please create a bug report at "
+            "which should be replaced by serialx. This will stop"
+            " working in Home Assistant 2027.2, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),

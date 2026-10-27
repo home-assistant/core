@@ -1,6 +1,35 @@
 {
   "common": {
-    "trigger_behavior_name": "Trigger when"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_available": {
+      "description": "Tests if one or more updates are available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is available"
+    },
+    "is_not_available": {
+      "description": "Tests if one or more updates are not available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
+        }
+      },
+      "name": "Update is not available"
+    }
   },
   "device_automation": {
     "extra_fields": {
@@ -58,13 +87,30 @@
       "name": "Firmware"
     }
   },
-  "selector": {
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
+  "exceptions": {
+    "backup_not_supported": {
+      "message": "Backup is not supported for {entity_id}."
+    },
+    "clear_skipped_not_supported": {
+      "message": "Clearing skipped update is not supported for {entity_id}."
+    },
+    "no_update_available": {
+      "message": "No update available for {entity_id}."
+    },
+    "no_update_available_to_skip": {
+      "message": "No update available to skip for {entity_id}."
+    },
+    "skip_not_supported": {
+      "message": "Skipping update is not supported for {entity_id}."
+    },
+    "specific_version_not_supported": {
+      "message": "Installing a specific version is not supported for {entity_id}."
+    },
+    "unknown_version_to_skip": {
+      "message": "Cannot skip an unknown version for {entity_id}."
+    },
+    "update_in_progress": {
+      "message": "Update installation already in progress for {entity_id}."
     }
   },
   "services": {
@@ -93,11 +139,14 @@
   },
   "title": "Update",
   "triggers": {
-    "update_became_available": {
-      "description": "Triggers after one or more updates become available.",
+    "became_available": {
+      "description": "Triggers when one or more updates become available.",
       "fields": {
         "behavior": {
           "name": "[%key:component::update::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::trigger_for_name%]"
         }
       },
       "name": "Update became available"

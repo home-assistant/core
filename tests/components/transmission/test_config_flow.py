@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from transmission_rpc.error import (
     TransmissionAuthError,
     TransmissionConnectError,
@@ -12,12 +13,11 @@ from transmission_rpc.error import (
 from homeassistant import config_entries
 from homeassistant.components import transmission
 from homeassistant.components.transmission.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG_DATA, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -64,9 +64,9 @@ async def test_device_already_configured(
     assert result["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.usefixtures("mock_transmission_client")
 async def test_options(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
@@ -74,23 +74,20 @@ async def test_options(
         data=MOCK_CONFIG_DATA,
         options={"limit": 10, "order": "oldest_first"},
     )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, entry)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"limit": 20}
-    )
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={"limit": 20}
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_awaited_once_with(entry.entry_id)
 
     assert result["data"]["limit"] == 20
     assert result["data"]["order"] == "oldest_first"
@@ -160,6 +157,45 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0-RC2"),
+        ("v0.1.0"),
+        ("v1.9.0"),
+        ("3.0.0"),
+        ("3.0.0 (123798)"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_version_error(
+    hass: HomeAssistant, mock_transmission_client: AsyncMock, version: str
+) -> None:
+    """Test flow version error."""
+    mock_transmission_client.return_value.server_version = version
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG_DATA
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "transmission_version"}
+
+    mock_transmission_client.return_value.server_version = "4.0.5 (a6fe2a64aa)"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
@@ -179,7 +215,7 @@ async def test_reauth_success(
 
     with patch(
         "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -189,6 +225,50 @@ async def test_reauth_success(
         )
 
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reauth_success_after_setup_error(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth retries an entry that failed during setup."""
+    mock_config_entry.add_to_hass(hass)
+    mock_transmission_client.side_effect = TransmissionAuthError()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_transmission_client.side_effect = None
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "test-password"}
+        )
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reauth_success_when_credentials_are_unchanged(
+    hass: HomeAssistant,
+    mock_transmission_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth reloads when the credentials are unchanged."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "pass"}
+        )
+
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
     assert result["reason"] == "reauth_successful"
     assert result["type"] is FlowResultType.ABORT
 
@@ -244,3 +324,50 @@ async def test_reauth_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0-RC2"),
+        ("v0.1.0"),
+        ("v1.9.0"),
+        ("3.0.0"),
+        ("3.0.0 (123798)"),
+    ],
+)
+async def test_reauth_version_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_transmission_client: AsyncMock,
+    version: str,
+) -> None:
+    """Test reauth version error."""
+    mock_transmission_client.return_value.server_version = version
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "transmission_version"}
+
+    mock_transmission_client.return_value.server_version = "4.0.5 (a6fe2a64aa)"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

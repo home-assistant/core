@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
@@ -10,9 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @patch(
@@ -156,3 +157,44 @@ async def test_web_login_config_not_ready(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("get_details_response", "expected_state"),
+    [
+        # Missing 'details' key → ConfigEntryNotReady → SETUP_RETRY
+        ({}, ConfigEntryState.SETUP_RETRY),
+        # Site status is not 'active' → ConfigEntryError → SETUP_ERROR
+        ({"details": {"status": "Disabled"}}, ConfigEntryState.SETUP_ERROR),
+    ],
+    ids=["missing_details_key", "site_not_active"],
+)
+async def test_setup_api_key_failure(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+    get_details_response: dict,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test the API-key setup failure paths in async_setup_entry."""
+    solaredge_api.get_details.return_value = get_details_response
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+
+
+async def test_setup_site_not_active(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test the setup error reason when the site is not active."""
+    solaredge_api.get_details.return_value = {"details": {"status": "Disabled"}}
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == "The SolarEdge site is not active"

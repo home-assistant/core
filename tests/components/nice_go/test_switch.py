@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from nice_go import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_turn_on(
@@ -95,7 +94,7 @@ async def test_auth_failed_error(
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that if an auth failed error occurs, the integration attempts a token refresh and a retry before throwing an error."""
+    """Test auth failure triggers token refresh and retry."""
 
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 

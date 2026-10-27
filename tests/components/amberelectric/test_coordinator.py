@@ -1,7 +1,5 @@
 """Tests for the Amber Electric Data Coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import date
 from unittest.mock import Mock, patch
@@ -14,10 +12,12 @@ from amberelectric.models.site_status import SiteStatus
 from amberelectric.models.spike_status import SpikeStatus
 from dateutil import parser
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.amberelectric.const import (
     CONF_SITE_ID,
     CONF_SITE_NAME,
+    DOMAIN,
     REQUEST_TIMEOUT,
 )
 from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
@@ -35,10 +35,8 @@ from .helpers import (
     generate_current_interval,
 )
 
-from tests.common import MockConfigEntry
-
 MOCKED_ENTRY = MockConfigEntry(
-    domain="amberelectric",
+    domain=DOMAIN,
     data={
         CONF_SITE_NAME: "mock_title",
         CONF_API_TOKEN: "psk_0000000000000000",

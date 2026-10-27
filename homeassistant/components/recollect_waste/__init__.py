@@ -1,7 +1,5 @@
 """The ReCollect Waste integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,42 +7,41 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
-from .coordinator import ReCollectWasteDataUpdateCoordinator
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, LOGGER
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: RecollectWasteConfigEntry
+) -> None:
     """Set up ReCollect Waste as config entry."""
     coordinator = ReCollectWasteDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, entry: RecollectWasteConfigEntry
+) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RecollectWasteConfigEntry
+) -> None:
     """Unload an ReCollect Waste config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -70,5 +67,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.debug("Migration to version %s successful", version)
-
-    return True

@@ -1,14 +1,41 @@
 """Constants for cover entity platform."""
 
 from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
-DOMAIN = "cover"
+import probatio
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import CoverEntity
+
+DOMAIN: Final = "cover"
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
+ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
+
+
+class CoverEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for cover entities."""
+
+    SUPPORTED_SPEEDS = "supported_speeds"
+
+
+class CoverEntityStateAttribute(StrEnum):
+    """State attributes for cover entities."""
+
+    IS_CLOSED = "is_closed"
+    CURRENT_POSITION = "current_position"
+    CURRENT_TILT_POSITION = "current_tilt_position"
+
 
 INTENT_OPEN_COVER = "HassOpenCover"
 INTENT_CLOSE_COVER = "HassCloseCover"
@@ -25,6 +52,7 @@ class CoverEntityFeature(IntFlag):
     CLOSE_TILT = 32
     STOP_TILT = 64
     SET_TILT_POSITION = 128
+    SPEED = 256
 
 
 class CoverState(StrEnum):
@@ -50,3 +78,29 @@ class CoverDeviceClass(StrEnum):
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
+
+class CoverService(StrEnum):
+    """Store keys for cover services."""
+
+    CLOSE = "close_cover"
+    CLOSE_TILT = "close_cover_tilt"
+    OPEN = "open_cover"
+    OPEN_TILT = "open_cover_tilt"
+    SET_POSITION = "set_cover_position"
+    SET_TILT_POSITION = "set_cover_tilt_position"
+    STOP = "stop_cover"
+    STOP_TILT = "stop_cover_tilt"
+    TOGGLE = "toggle"
+    TOGGLE_TILT = "toggle_cover_tilt"
+
+
+class CoverServiceArgument(StrEnum):
+    """Store keys for cover service arguments."""
+
+    POSITION = "position"
+    SPEED = "speed"
+    TILT_POSITION = "tilt_position"

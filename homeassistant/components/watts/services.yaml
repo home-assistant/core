@@ -1,0 +1,18 @@
+activate_timer_mode:
+  target:
+    entity:
+      domain: climate
+      integration: watts
+  fields:
+    temperature:
+      required: true
+      selector:
+        number:
+          step: 0.5
+          unit_of_measurement: "°"
+          mode: box
+    duration:
+      required: true
+      selector:
+        duration:
+          enable_second: false

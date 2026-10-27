@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "This charger is already configured",
-      "unavailable_host": "Unable to connect to host"
+      "unavailable_host": "Unable to connect to host",
+      "unique_id_mismatch": "The charger identifier does not match the previous identifier"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,6 +20,30 @@
           "username": "The username to access your OpenEVSE charger"
         }
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::openevse::config::step::auth::data_description::password%]",
+          "username": "[%key:component::openevse::config::step::auth::data_description::username%]"
+        },
+        "description": "The credentials for your OpenEVSE charger at {host} are no longer valid. Please enter your current username and password."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Enter the IP address of your OpenEVSE.",
+          "password": "[%key:component::openevse::config::step::auth::data_description::password%]",
+          "username": "[%key:component::openevse::config::step::auth::data_description::username%]"
+        },
+        "description": "Update the configuration for your OpenEVSE charger."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -30,9 +55,47 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "divert_active": {
+        "name": "Divert active"
+      },
+      "has_limit": {
+        "name": "Limit active"
+      },
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "shaper_active": {
+        "name": "Shaper active"
+      },
+      "station_status": {
+        "name": "Station status"
+      },
+      "using_ethernet": {
+        "name": "Ethernet connected"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      }
+    },
+    "button": {
+      "restart_wifi": {
+        "name": "Restart Wi-Fi"
+      }
+    },
     "number": {
       "charge_rate": {
         "name": "Charge rate"
+      }
+    },
+    "select": {
+      "override_state": {
+        "name": "Override state",
+        "state": {
+          "active": "Active",
+          "auto": "Auto",
+          "disabled": "Disabled"
+        }
       }
     },
     "sensor": {
@@ -117,7 +180,21 @@
         "name": "Smoothed available current"
       },
       "status": {
-        "name": "Charging status"
+        "name": "Charging status",
+        "state": {
+          "charging": "Charging",
+          "connected": "Connected",
+          "diode_check_failed": "Diode check failed",
+          "disabled": "Disabled",
+          "gfci_fault": "GFCI fault",
+          "gfci_self_test_failure": "GFCI self-test failure",
+          "no_ground": "No ground",
+          "not_connected": "Not connected",
+          "over_temperature": "Over temperature",
+          "sleeping": "Sleeping",
+          "stuck_relay": "Stuck relay",
+          "vent_required": "Vent required"
+        }
       },
       "stuck_relay_trip_count": {
         "name": "Stuck relay trip count"
@@ -152,16 +229,74 @@
       "vehicle_soc": {
         "name": "Vehicle state of charge"
       }
+    },
+    "switch": {
+      "current_shaper": {
+        "name": "Current shaper"
+      },
+      "manual_override": {
+        "name": "Manual override"
+      },
+      "solar_pv_divert": {
+        "name": "Solar PV divert"
+      }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_unavailable_host": {
-      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error while trying to import the YAML configuration.\n\nEnsure your OpenEVSE charger is accessible and restart Home Assistant to try again.",
-      "title": "The {integration_title} YAML configuration import failed"
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed"
     },
-    "yaml_deprecated": {
-      "description": "Configuring OpenEVSE using YAML is being removed. Your existing YAML configuration has been imported into the UI automatically. Remove the `openevse` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-      "title": "OpenEVSE YAML configuration is deprecated"
+    "communication_error": {
+      "message": "Failed to communicate with the charger"
+    },
+    "invalid_value": {
+      "message": "Value {value} is invalid for the charger."
+    },
+    "no_matching_target_entries": {
+      "message": "No matching OpenEVSE chargers found for the specified target."
+    },
+    "unsupported_feature": {
+      "message": "The charger does not support this feature."
+    }
+  },
+  "selector": {
+    "override_state": {
+      "options": {
+        "active": "Active",
+        "disabled": "Disabled"
+      }
+    }
+  },
+  "services": {
+    "set_override": {
+      "description": "Sets or updates the manual override on the charger.",
+      "fields": {
+        "auto_release": {
+          "description": "Automatically clear the override when the session completes or limits are reached.",
+          "name": "Auto release"
+        },
+        "charge_current": {
+          "description": "Target charging current in Amperes.",
+          "name": "Charge current"
+        },
+        "energy_limit": {
+          "description": "Energy limit for the override session in Watt-hours.",
+          "name": "Energy limit"
+        },
+        "max_current": {
+          "description": "Maximum allowed charging current in Amperes.",
+          "name": "Maximum current"
+        },
+        "state": {
+          "description": "Override charging state.",
+          "name": "State"
+        },
+        "time_limit": {
+          "description": "Time limit duration for the override session.",
+          "name": "Time limit"
+        }
+      },
+      "name": "Set manual override"
     }
   }
 }

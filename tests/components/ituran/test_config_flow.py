@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyituran.exceptions import IturanApiError, IturanAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ituran.const import (
     CONF_ID_OR_PASSPORT,
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def __do_successful_user_step(
@@ -64,9 +63,8 @@ async def __do_successful_otp_step(
     return result
 
 
-async def test_full_user_flow(
-    hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_user_flow(hass: HomeAssistant, mock_ituran: AsyncMock) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -79,9 +77,8 @@ async def test_full_user_flow(
     await __do_successful_otp_step(hass, result, mock_ituran)
 
 
-async def test_invalid_auth(
-    hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_invalid_auth(hass: HomeAssistant, mock_ituran: AsyncMock) -> None:
     """Test invalid credentials configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -108,9 +105,8 @@ async def test_invalid_auth(
     await __do_successful_otp_step(hass, result, mock_ituran)
 
 
-async def test_invalid_otp(
-    hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_invalid_otp(hass: HomeAssistant, mock_ituran: AsyncMock) -> None:
     """Test invalid OTP configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -140,10 +136,10 @@ async def test_invalid_otp(
     ("exception", "expected_error"),
     [(IturanApiError, "cannot_connect"), (Exception, "unknown")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
     mock_ituran: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -186,8 +182,9 @@ async def test_errors(
     await __do_successful_otp_step(hass, result, mock_ituran)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_authenticated(
-    hass: HomeAssistant, mock_ituran: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_ituran: AsyncMock
 ) -> None:
     """Test user already authenticated configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -214,11 +211,9 @@ async def test_already_authenticated(
     assert result["result"].unique_id == MOCK_CONFIG_DATA[CONF_ID_OR_PASSPORT]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
-    hass: HomeAssistant,
-    mock_ituran: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_ituran: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthenticating."""
     result = await hass.config_entries.flow.async_init(

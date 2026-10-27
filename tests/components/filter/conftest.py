@@ -1,13 +1,12 @@
 """Fixtures for the Filter integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.filter.const import (
     CONF_FILTER_NAME,
@@ -25,8 +24,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="values")
@@ -46,7 +43,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically patch setup_entry."""
     with patch(
         "homeassistant.components.filter.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

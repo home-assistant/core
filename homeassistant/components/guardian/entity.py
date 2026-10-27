@@ -1,9 +1,8 @@
 """The Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -45,7 +44,11 @@ class PairedSensorEntity(GuardianEntity):
             manufacturer="Elexa",
             model=coordinator.data["codename"],
             name=f"Guardian paired sensor {paired_sensor_uid}",
-            via_device=(DOMAIN, entry.data[CONF_UID]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, entry.data[CONF_UID]),
+                config_entry_id=entry.entry_id,
+            ),
         )
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
 

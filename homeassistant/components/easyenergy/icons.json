@@ -1,11 +1,32 @@
 {
   "entity": {
     "sensor": {
+      "average_price": {
+        "default": "mdi:cash-multiple"
+      },
+      "current_hour_price": {
+        "default": "mdi:cash"
+      },
+      "highest_price_time": {
+        "default": "mdi:clock-outline"
+      },
       "hours_priced_equal_or_higher": {
         "default": "mdi:clock"
       },
       "hours_priced_equal_or_lower": {
         "default": "mdi:clock"
+      },
+      "lowest_price_time": {
+        "default": "mdi:clock-outline"
+      },
+      "max_price": {
+        "default": "mdi:cash-plus"
+      },
+      "min_price": {
+        "default": "mdi:cash-minus"
+      },
+      "next_hour_price": {
+        "default": "mdi:cash"
       },
       "percentage_of_max": {
         "default": "mdi:percent"

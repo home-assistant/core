@@ -1,16 +1,16 @@
 """Config flow for ElevenLabs text-to-speech integration."""
 
-from __future__ import annotations
-
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
-import voluptuous as vol
+from httpx2 import ConnectError
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -22,7 +22,6 @@ from homeassistant.helpers.selector import (
 from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
-    CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STT_AUTO_LANGUAGE,
@@ -41,7 +40,9 @@ from .const import (
     STT_MODELS,
 )
 
-USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+USER_STEP_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,22 +76,37 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    async def _validate_api_key(
+        self, api_key: str
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Validate the API key and return the available voices and errors."""
+        errors: dict[str, str] = {}
+        try:
+            voices, _ = await get_voices_models(self.hass, api_key)
+        except ConnectError:
+            errors["base"] = "cannot_connect"
+            return {}, errors
+        except ApiError as exc:
+            details = getattr(exc, "body", {}).get("detail", {})
+            if details.get("status") == "api_key_id_used_as_api_key":
+                errors["base"] = "api_key_id_used"
+            elif "invalid_api_key" in (details.get("status"), details.get("code")):
+                errors["base"] = "invalid_api_key"
+            else:
+                _LOGGER.exception("Unexpected error validating ElevenLabs API key")
+                errors["base"] = "unknown"
+            return {}, errors
+        return voices, errors
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
-            except ApiError as exc:
-                errors["base"] = "unknown"
-                details = getattr(exc, "body", {}).get("detail", {})
-                if details:
-                    status = details.get("status")
-                    if status == "invalid_api_key":
-                        errors["base"] = "invalid_api_key"
-            else:
+            voices, errors = await self._validate_api_key(user_input[CONF_API_KEY])
+            if not errors:
                 return self.async_create_entry(
                     title="ElevenLabs",
                     data=user_input,
@@ -105,7 +121,30 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_STEP_SCHEMA, errors=errors
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            _, errors = await self._validate_api_key(user_input[CONF_API_KEY])
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=USER_STEP_SCHEMA, errors=errors
+        )
+
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:
@@ -156,12 +195,12 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             data_schema=schema,
         )
 
-    def elevenlabs_config_option_schema(self) -> vol.Schema:
+    def elevenlabs_config_option_schema(self) -> probatio.Schema:
         """Elevenlabs options schema."""
         return self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -171,7 +210,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_VOICE,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -181,7 +220,7 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_STT_MODEL,
                     ): SelectSelector(
                         SelectSelectorConfig(
@@ -191,13 +230,13 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_STT_AUTO_LANGUAGE,
                         default=self.config_entry.options.get(
                             CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
                         ),
                     ): bool,
-                    vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
+                    probatio.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
             self.config_entry.options,
@@ -222,36 +261,36 @@ class ElevenLabsOptionsFlow(OptionsFlow):
             data_schema=self.elevenlabs_config_options_voice_schema(),
         )
 
-    def elevenlabs_config_options_voice_schema(self) -> vol.Schema:
+    def elevenlabs_config_options_voice_schema(self) -> probatio.Schema:
         """Elevenlabs options voice schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_STABILITY,
                     default=self.config_entry.options.get(
                         CONF_STABILITY, DEFAULT_STABILITY
                     ),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_SIMILARITY,
                     default=self.config_entry.options.get(
                         CONF_SIMILARITY, DEFAULT_SIMILARITY
                     ),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_STYLE,
                     default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),
-                ): vol.All(
-                    vol.Coerce(float),
-                    vol.Range(min=0, max=1),
+                ): probatio.All(
+                    probatio.Coerce(float),
+                    probatio.Range(min=0, max=1),
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_SPEAKER_BOOST,
                     default=self.config_entry.options.get(
                         CONF_USE_SPEAKER_BOOST, DEFAULT_USE_SPEAKER_BOOST

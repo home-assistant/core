@@ -1,25 +1,26 @@
 # serializer version: 1
-# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-entry]
+# name: test_selects[aqara_led_strip_t2][select.aqara_led_strip_t2_music_sync_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
-        '10 mm',
-        '20 mm',
-        '30 mm',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'stretch',
+        'pulse',
+        'dash',
+        'flash',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000002D6-MatterNodeDevice'), ('matter', 'serial_serial_726')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'entity_id': 'select.aqara_led_strip_t2_music_sync_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27,60 +28,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sensitivity',
+    'object_id_base': 'Music sync effect',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sensitivity',
+    'original_name': 'Music sync effect',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-1-AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'translation_key': 'music_sync_effect',
+    'unique_id': '00000000000004D2-00000000000002D6-MatterNodeDevice-1-AqaraLedStripMusicSyncEffect-291503119-21',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-state]
+# name: test_selects[aqara_led_strip_t2][select.aqara_led_strip_t2_music_sync_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Door and Window Sensor P2 Sensitivity',
-      'options': list([
-        '10 mm',
-        '20 mm',
-        '30 mm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara LED Strip T2 Music sync effect',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'stretch',
+        'pulse',
+        'dash',
+        'flash',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'entity_id': 'select.aqara_led_strip_t2_music_sync_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30 mm',
+    'state': 'pulse',
   })
 # ---
-# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
+# name: test_selects[aqara_led_strip_t2][select.aqara_led_strip_t2_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000002D6-MatterNodeDevice'), ('matter', 'serial_serial_726')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'entity_id': 'select.aqara_led_strip_t2_power_on_behavior',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,60 +91,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sensitivity',
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sensitivity',
+    'original_name': 'Power-on behavior',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000002D6-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-state]
+# name: test_selects[aqara_led_strip_t2][select.aqara_led_strip_t2_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara LED Strip T2 Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'entity_id': 'select.aqara_led_strip_t2_power_on_behavior',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'standard',
+    'state': 'on',
   })
 # ---
-# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-entry]
+# name: test_selects[aqara_light_switch_h2_us_4099][select.aqara_smart_wall_switch_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F6-MatterNodeDevice'), ('matter', 'serial_serial_1014')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -149,37 +154,353 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sensitivity',
+    'object_id_base': 'Power-on behavior',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sensitivity',
+    'original_name': 'Power-on behavior',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F6-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-state]
+# name: test_selects[aqara_light_switch_h2_us_4099][select.aqara_smart_wall_switch_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4100][select.aqara_smart_wall_switch_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4100][select.aqara_smart_wall_switch_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4100][select.aqara_smart_wall_switch_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F7-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4100][select.aqara_smart_wall_switch_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_1_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_1_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_1_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_1_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_2_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_2_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_2_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_2_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (3)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F8-MatterNodeDevice-3-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_light_switch_h2_us_4101][select.aqara_smart_wall_switch_power_on_behavior_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Power-on behavior (3)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_wall_switch_power_on_behavior_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
   })
 # ---
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
@@ -189,15 +510,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000064-MatterNodeDevice'), ('matter', 'serial_serial_100')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -227,14 +548,73 @@
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
     'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500_presets][select.floor_heating_thermostat_temperature_display_mode_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000041-MatterNodeDevice'), ('matter', 'serial_serial_65')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature display mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500_presets][select.floor_heating_thermostat_temperature_display_mode_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -248,15 +628,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000014-MatterNodeDevice'), ('matter', 'serial_serial_20')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -286,8 +666,8 @@
 # name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -307,16 +687,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000005-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -346,8 +726,8 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Lighting',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Lighting',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -368,7 +748,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -376,9 +756,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000005-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -408,8 +788,8 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -424,6 +804,258 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[cync_keypad_dimmer][select.cync_keypad_dimmer_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000041B-MatterNodeDevice'), ('matter', 'serial_serial_1051')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cync_keypad_dimmer_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000041B-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[cync_keypad_dimmer][select.cync_keypad_dimmer_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cync Keypad Dimmer Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cync_keypad_dimmer_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000459-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000459-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (3)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000459-MatterNodeDevice-3-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[dewenwils_3_zone_transformer][select.dewenwils_3_zone_transformer_power_on_behavior_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Power-on behavior (3)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dewenwils_3_zone_transformer_power_on_behavior_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -431,16 +1063,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Vacuum & Mop',
         'Vacuum-Only',
         'Mop after Vacuum',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002F-MatterNodeDevice'), ('matter', 'serial_serial_47')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -470,8 +1102,8 @@
 # name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ecodeebot Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ecodeebot Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Vacuum & Mop',
         'Vacuum-Only',
         'Mop after Vacuum',
@@ -492,7 +1124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto Mop & Vacuum',
         'Auto Vacuum',
         'Auto Deep Mop & Vacuum',
@@ -504,9 +1136,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000028-MatterNodeDevice'), ('matter', 'serial_serial_40')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -536,8 +1168,8 @@
 # name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2BAVS-AB6031X-44PE Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2BAVS-AB6031X-44PE Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto Mop & Vacuum',
         'Auto Vacuum',
         'Auto Deep Mop & Vacuum',
@@ -563,7 +1195,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -571,9 +1203,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice'), ('matter', 'serial_serial_199')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -603,8 +1235,8 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -626,7 +1258,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -634,9 +1266,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice'), ('matter', 'serial_serial_199')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -666,8 +1298,8 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (top)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (top)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -689,7 +1321,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -697,9 +1329,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000003D-MatterNodeDevice'), ('matter', 'serial_serial_61')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -729,8 +1361,8 @@
 # name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -752,7 +1384,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -760,9 +1392,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000B7-MatterNodeDevice'), ('matter', 'serial_serial_183')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -792,8 +1424,8 @@
 # name: test_selects[eve_energy_plug_patched][select.eve_energy_plug_patched_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Patched Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -815,15 +1447,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000021-MatterNodeDevice'), ('matter', 'serial_serial_33')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -853,8 +1485,8 @@
 # name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -874,15 +1506,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000C-MatterNodeDevice'), ('matter', 'serial_serial_12')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -912,8 +1544,8 @@
 # name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -933,16 +1565,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000A-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -972,8 +1604,8 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Lighting',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Lighting',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
         'Light',
@@ -994,7 +1626,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1002,9 +1634,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000A-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1034,8 +1666,8 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1050,67 +1682,6 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.smart_motion_sensor_sensitivity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Sensitivity',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sensitivity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart motion sensor Sensitivity',
-      'options': list([
-        'low',
-        'standard',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.smart_motion_sensor_sensitivity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'high',
-  })
-# ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1118,7 +1689,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No Delay',
         '300ms',
         '400ms',
@@ -1130,9 +1701,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1162,8 +1733,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Button Press Delay',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button Press Delay',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No Delay',
         '300ms',
         '400ms',
@@ -1189,7 +1760,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1208,9 +1779,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1240,8 +1811,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Dimming Speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Dimming Speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1274,7 +1845,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -1291,9 +1862,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1323,8 +1894,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -1355,7 +1926,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Solid',
         'Fast Blink',
         'Slow Blink',
@@ -1376,9 +1947,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1408,8 +1979,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Effect',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Effect',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Solid',
         'Fast Blink',
         'Slow Blink',
@@ -1444,15 +2015,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Protection Disable',
         'Local Protection Enable',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1482,8 +2053,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Protection',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Protection',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Protection Disable',
         'Local Protection Enable',
       ]),
@@ -1503,15 +2074,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Timer Disable',
         'Local Timer Enable',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1541,8 +2112,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Timer',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Timer',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Timer Disable',
         'Local Timer Enable',
       ]),
@@ -1562,7 +2133,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1570,9 +2141,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1602,8 +2173,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (Load Control)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (Load Control)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1625,7 +2196,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1633,9 +2204,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1665,8 +2236,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -1688,15 +2259,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1726,8 +2297,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Smart Bulb Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Smart Bulb Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -1747,7 +2318,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'On/Off+Single',
         'On/Off+AUX',
         'Dimmer+Single',
@@ -1755,9 +2326,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000100-MatterNodeDevice'), ('matter', 'serial_serial_256')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1787,8 +2358,8 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Switch Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Switch Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'On/Off+Single',
         'On/Off+AUX',
         'Dimmer+Single',
@@ -1810,15 +2381,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Leading',
         'Trailing',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1848,8 +2419,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_edge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Edge',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Edge',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Leading',
         'Trailing',
       ]),
@@ -1869,7 +2440,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1888,9 +2459,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1920,8 +2491,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
         '800ms',
@@ -1954,7 +2525,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -1971,9 +2542,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2003,8 +2574,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2035,7 +2606,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2043,9 +2614,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2075,8 +2646,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (1)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2098,7 +2669,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2106,9 +2677,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2138,8 +2709,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (6)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (6)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2161,15 +2732,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Relay Click Enable',
         'Relay Click Disable',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2199,8 +2770,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Relay',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Relay',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Relay Click Enable',
         'Relay Click Disable',
       ]),
@@ -2220,15 +2791,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2258,8 +2829,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Smart Bulb Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Smart Bulb Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
       ]),
@@ -2279,7 +2850,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OnOff+Single',
         'OnOff+Dumb',
         'OnOff+AUX',
@@ -2290,9 +2861,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C5-MatterNodeDevice'), ('matter', 'serial_serial_197')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2322,8 +2893,8 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Switch Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Switch Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OnOff+Single',
         'OnOff+Dumb',
         'OnOff+AUX',
@@ -2341,6 +2912,321 @@
     'state': 'Dimmer+Single',
   })
 # ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_41-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_41',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (41)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (41)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-41-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_41-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (41)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_41',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_42-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_42',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (42)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (42)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-42-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_42-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (42)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_42',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_43-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_43',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (43)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (43)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-43-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_43-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (43)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_43',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_44-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000446-MatterNodeDevice'), ('matter', 'serial_serial_1094')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_44',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (44)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (44)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000446-MatterNodeDevice-44-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[lifx_switch_115][select.kitchen_switch_power_on_behavior_44-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Switch Power-on behavior (44)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_switch_power_on_behavior_44',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000448-MatterNodeDevice'), ('matter', 'serial_serial_1096')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.kitchen_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000448-MatterNodeDevice-41-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[lifx_switch_89][select.kitchen_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2348,15 +3234,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000004-MatterNodeDevice'), ('matter', 'serial_serial_4')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2386,8 +3272,8 @@
 # name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -2400,6 +3286,67 @@
     'state': 'Celsius',
   })
 # ---
+# name: test_selects[mock_chime][select.mock_chime_chime_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Classic Ding Dong',
+        'Merry Melodies',
+        'Digital Alert',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000009E-MatterNodeDevice'), ('matter', 'serial_serial_158')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_chime_chime_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chime sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chime sound',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'selected_chime',
+    'unique_id': '00000000000004D2-000000000000009E-MatterNodeDevice-1-ChimeSelectedChime-1366-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_chime][select.mock_chime_chime_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Chime Chime sound',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'Classic Ding Dong',
+        'Merry Melodies',
+        'Digital Alert',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_chime_chime_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Classic Ding Dong',
+  })
+# ---
 # name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2407,16 +3354,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002B-MatterNodeDevice'), ('matter', 'serial_serial_43')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -2446,8 +3393,8 @@
 # name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Cooktop Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Cooktop Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -2468,7 +3415,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2485,9 +3432,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000D-MatterNodeDevice'), ('matter', 'serial_serial_13')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2517,8 +3464,8 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light LED Color',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light LED Color',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
         'Lemon',
@@ -2549,7 +3496,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2557,9 +3504,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000D-MatterNodeDevice'), ('matter', 'serial_serial_13')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2589,8 +3536,8 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2612,7 +3559,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2620,9 +3567,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000024-MatterNodeDevice'), ('matter', 'serial_serial_36')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2652,8 +3599,8 @@
 # name: test_selects[mock_dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Plugin Unit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2675,15 +3622,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000010-MatterNodeDevice'), ('matter', 'serial_serial_16')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2713,8 +3660,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2734,7 +3681,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2742,9 +3689,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000010-MatterNodeDevice'), ('matter', 'serial_serial_16')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2774,8 +3721,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2797,7 +3744,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -2805,9 +3752,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000010-MatterNodeDevice'), ('matter', 'serial_serial_16')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2837,8 +3784,8 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -2860,15 +3807,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000F-MatterNodeDevice'), ('matter', 'serial_serial_15')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2898,8 +3845,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -2919,7 +3866,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2927,9 +3874,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000F-MatterNodeDevice'), ('matter', 'serial_serial_15')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2959,8 +3906,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -2982,7 +3929,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -2990,9 +3937,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000F-MatterNodeDevice'), ('matter', 'serial_serial_15')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3022,8 +3969,8 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3045,16 +3992,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000008-MatterNodeDevice'), ('matter', 'serial_serial_8')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3084,8 +4031,8 @@
 # name: test_selects[mock_laundry_dryer][select.mock_laundrydryer_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3106,15 +4053,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000097-MatterNodeDevice'), ('matter', 'serial_serial_151')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3144,8 +4091,8 @@
 # name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
       ]),
@@ -3165,7 +4112,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3173,9 +4120,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000097-MatterNodeDevice'), ('matter', 'serial_serial_151')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3205,8 +4152,8 @@
 # name: test_selects[mock_lock][select.mock_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Sound volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Sound volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
         'medium',
@@ -3228,7 +4175,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '100',
         '200',
         '300',
@@ -3242,9 +4189,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000009D-MatterNodeDevice'), ('matter', 'serial_serial_157')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3274,8 +4221,8 @@
 # name: test_selects[mock_microwave_oven][select.mock_microwave_oven_power_level_w-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Microwave Oven Power level (W)',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Power level (W)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '100',
         '200',
         '300',
@@ -3303,7 +4250,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3311,9 +4258,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000E-MatterNodeDevice'), ('matter', 'serial_serial_14')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3343,8 +4290,8 @@
 # name: test_selects[mock_mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Mounted dimmable load control Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3366,7 +4313,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3374,9 +4321,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000001A-MatterNodeDevice'), ('matter', 'serial_serial_26')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3406,8 +4353,8 @@
 # name: test_selects[mock_on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3429,7 +4376,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3437,9 +4384,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000001E-MatterNodeDevice'), ('matter', 'serial_serial_30')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3469,8 +4416,8 @@
 # name: test_selects[mock_onoff_light][select.mock_onoff_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3492,7 +4439,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3500,9 +4447,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000001B-MatterNodeDevice'), ('matter', 'serial_serial_27')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3532,8 +4479,8 @@
 # name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3555,7 +4502,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3563,9 +4510,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000001C-MatterNodeDevice'), ('matter', 'serial_serial_28')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3595,8 +4542,8 @@
 # name: test_selects[mock_onoff_light_no_name][select.mock_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Light Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3618,7 +4565,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Bake',
         'Convection',
         'Grill',
@@ -3631,9 +4578,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000029-MatterNodeDevice'), ('matter', 'serial_serial_41')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3663,8 +4610,8 @@
 # name: test_selects[mock_oven][select.mock_oven_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Bake',
         'Convection',
         'Grill',
@@ -3691,16 +4638,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000029-MatterNodeDevice'), ('matter', 'serial_serial_41')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3730,8 +4677,8 @@
 # name: test_selects[mock_oven][select.mock_oven_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
         'High',
@@ -3752,7 +4699,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'minimum',
         'maximum',
@@ -3760,9 +4707,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002C-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3792,8 +4739,8 @@
 # name: test_selects[mock_pump][select.mock_pump_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'minimum',
         'maximum',
@@ -3815,7 +4762,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3823,9 +4770,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000023-MatterNodeDevice'), ('matter', 'serial_serial_35')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3855,8 +4802,8 @@
 # name: test_selects[mock_switch_unit][select.mock_switchunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock SwitchUnit Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -3878,15 +4825,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000096-MatterNodeDevice'), ('matter', 'serial_serial_150')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -3916,8 +4863,8 @@
 # name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Temperature display mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Temperature display mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
       ]),
@@ -3937,7 +4884,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -3946,9 +4893,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000042-MatterNodeDevice'), ('matter', 'serial_serial_66')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -3978,8 +4925,8 @@
 # name: test_selects[mock_vacuum_cleaner][select.mock_vacuum_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Vacuum Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -3995,14 +4942,14 @@
     'state': 'Quick',
   })
 # ---
-# name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior-entry]
+# name: test_selects[nanoleaf_nl77k1][select.multicolor_ceiling_light_power_on_behavior_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4010,9 +4957,135 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.multicolor_ceiling_light_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[nanoleaf_nl77k1][select.multicolor_ceiling_light_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.multicolor_ceiling_light_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[nanoleaf_nl77k1][select.multicolor_ceiling_light_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.multicolor_ceiling_light_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000003F3-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[nanoleaf_nl77k1][select.multicolor_ceiling_light_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.multicolor_ceiling_light_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000030-MatterNodeDevice'), ('matter', 'serial_serial_48')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -4042,8 +5115,8 @@
 # name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'D215S Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D215S Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4065,7 +5138,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quiet, Vacuum Only',
         'Auto, Vacuum Only',
         'Deep Clean, Vacuum Only',
@@ -4078,9 +5151,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000CA-MatterNodeDevice'), ('matter', 'serial_serial_202')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4110,8 +5183,8 @@
 # name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robotic Vacuum Cleaner Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robotic Vacuum Cleaner Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quiet, Vacuum Only',
         'Auto, Vacuum Only',
         'Deep Clean, Vacuum Only',
@@ -4138,16 +5211,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'privacy',
         'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002A-MatterNodeDevice'), ('matter', 'serial_serial_42')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -4177,8 +5250,8 @@
 # name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock Operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'privacy',
         'no_remote_lock_unlock',
@@ -4199,7 +5272,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4208,9 +5281,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000017-MatterNodeDevice'), ('matter', 'serial_serial_23')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4240,8 +5313,8 @@
 # name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Energy management mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Energy management mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4264,7 +5337,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Manual',
         'Auto-scheduled',
         'Solar',
@@ -4272,9 +5345,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000017-MatterNodeDevice'), ('matter', 'serial_serial_23')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4304,8 +5377,8 @@
 # name: test_selects[silabs_evse_charging][select.evse_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Manual',
         'Auto-scheduled',
         'Solar',
@@ -4327,15 +5400,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'normal',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000038-MatterNodeDevice'), ('matter', 'serial_serial_56')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4365,8 +5438,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_number_of_rinses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Number of rinses',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Number of rinses',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'normal',
       ]),
@@ -4386,7 +5459,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Low',
         'Medium',
@@ -4394,9 +5467,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000038-MatterNodeDevice'), ('matter', 'serial_serial_56')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4426,8 +5499,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Spin speed',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Spin speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Low',
         'Medium',
@@ -4449,16 +5522,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Cold',
         'Colors',
         'Whites',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000038-MatterNodeDevice'), ('matter', 'serial_serial_56')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4488,8 +5561,8 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Cold',
         'Colors',
         'Whites',
@@ -4510,7 +5583,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4518,9 +5591,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000072-MatterNodeDevice'), ('matter', 'serial_serial_114')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -4550,8 +5623,8 @@
 # name: test_selects[silabs_range_hood][select.sl_rangehood_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SL-RangeHood Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4573,16 +5646,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Normal',
         'Rapid Cool',
         'Rapid Freeze',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000003A-MatterNodeDevice'), ('matter', 'serial_serial_58')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4612,8 +5685,8 @@
 # name: test_selects[silabs_refrigerator][select.refrigerator_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Normal',
         'Rapid Cool',
         'Rapid Freeze',
@@ -4634,7 +5707,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4643,9 +5716,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000039-MatterNodeDevice'), ('matter', 'serial_serial_57')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4675,8 +5748,8 @@
 # name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Energy management mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Energy management mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
         'Optimized within building',
@@ -4699,7 +5772,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -4708,9 +5781,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000061-MatterNodeDevice'), ('matter', 'serial_serial_97')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -4740,8 +5813,8 @@
 # name: test_selects[switchbot_k11_plus][select.k11_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'K11+ Clean mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'K11+ Clean mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
         'Deep Clean',
@@ -4757,14 +5830,14 @@
     'state': 'Quick',
   })
 # ---
-# name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-entry]
+# name: test_selects[tapo_smart_outdoor_plug_in_dimmer][select.smart_outdoor_plug_in_dimmer_power_on_behavior-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',
@@ -4772,9 +5845,1056 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000438-MatterNodeDevice'), ('matter', 'serial_serial_1080')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_outdoor_plug_in_dimmer_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000438-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_outdoor_plug_in_dimmer][select.smart_outdoor_plug_in_dimmer_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Outdoor Plug-In Dimmer Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_outdoor_plug_in_dimmer_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice'), ('matter', 'serial_serial_138')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000008A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice'), ('matter', 'serial_serial_138')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000008A-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (3)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (3)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-3-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (3)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (4)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-4-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (4)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (5)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (5)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-5-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (5)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (6)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (6)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000437-MatterNodeDevice-6-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_power_strip][select.smart_wi_fi_power_strip_power_on_behavior_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Power-on behavior (6)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_wi_fi_power_strip_power_on_behavior_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[uascent_smart_switch][select.smart_switch_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000443-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_switch_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000443-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[uascent_smart_switch][select.smart_switch_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Switch Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_switch_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[uascent_smart_switch][select.smart_switch_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000443-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_switch_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000443-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[uascent_smart_switch][select.smart_switch_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Switch Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_switch_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_blind_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'roller_shutter',
+        'venetian_blind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_blind_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blind type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blind type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blind_type',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoBlindType-258-355729413',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_blind_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Blind type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'roller_shutter',
+        'venetian_blind',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_blind_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'roller_shutter',
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Connection mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_connection_mode',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-0-WagoDirectlyConnected-355793920-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Connection mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'directly_connected',
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_switch_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_switch_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_type',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-0-WagoSwitchType-355793920-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_switch_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Switch type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_switch_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'button',
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_travel_time_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'automatic',
+        'manual',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000157-MatterNodeDevice'), ('matter', 'serial_serial_343')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_blind_wi_fi_travel_time_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Travel time mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Travel time mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'travel_time_mode',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoManualMode-258-355729412',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_travel_time_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Blind Wi-Fi Travel time mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'automatic',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_blind_wi_fi_travel_time_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000106-MatterNodeDevice'), ('matter', 'serial_serial_262')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_relay_16a_thread_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Connection mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_connection_mode',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-0-WagoDirectlyConnected-355793920-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Connection mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'directly_connected',
+        'matter_only',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_relay_16a_thread_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'directly_connected',
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_switch_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000106-MatterNodeDevice'), ('matter', 'serial_serial_262')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.home_relay_16a_thread_switch_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_type',
+    'unique_id': '00000000000004D2-0000000000000106-MatterNodeDevice-0-WagoSwitchType-355793920-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[wago_home_relay_16a][select.home_relay_16a_thread_switch_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Relay 16A Thread Switch type',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'switch',
+        'button',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.home_relay_16a_thread_switch_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'switch',
+  })
+# ---
+# name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002E-MatterNodeDevice'), ('matter', 'serial_serial_46')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -4804,8 +6924,8 @@
 # name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'YNDX-00540 Power-on behavior',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540 Power-on behavior',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'toggle',

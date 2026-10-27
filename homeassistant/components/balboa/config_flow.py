@@ -1,13 +1,11 @@
 """Config flow for Balboa Spa Client integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -24,11 +22,11 @@ from .const import CONF_SYNC_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SYNC_TIME, default=False): bool,
+        probatio.Required(CONF_SYNC_TIME, default=False): bool,
     }
 )
 OPTIONS_FLOW = {
@@ -61,10 +59,12 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -102,6 +102,7 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self._host},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

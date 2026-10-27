@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from dio_chacon_wifi_api.exceptions import DIOChaconAPIError, DIOChaconInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.chacon_dio.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -11,11 +12,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
 
-
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_dio_chacon_client: AsyncMock
+    hass: HomeAssistant, mock_dio_chacon_client: AsyncMock
 ) -> None:
     """Test the full flow."""
 
@@ -27,9 +27,15 @@ async def test_full_flow(
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "dummylogin",
             CONF_PASSWORD: "dummypass",
         },
@@ -52,9 +58,9 @@ async def test_full_flow(
         (DIOChaconAPIError, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_dio_chacon_client: AsyncMock,
     exception: Exception,
     expected: dict[str, str],
@@ -63,9 +69,15 @@ async def test_errors(
     mock_dio_chacon_client.get_user_id.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: "nada",
             CONF_PASSWORD: "nadap",
         },

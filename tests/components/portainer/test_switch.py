@@ -1,7 +1,5 @@
 """Tests for the Portainer switch platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from pyportainer.exceptions import (
@@ -10,6 +8,7 @@ from pyportainer.exceptions import (
     PortainerTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -17,14 +16,13 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_portainer_client")
@@ -126,7 +124,7 @@ async def test_turn_off_on_exceptions(
     raise_exception: Exception,
     expected_exception: Exception,
 ) -> None:
-    """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
+    """Test switch actions raise on client errors."""
     await setup_integration(hass, mock_config_entry)
 
     client_method = (
@@ -142,3 +140,28 @@ async def test_turn_off_on_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_switch_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid API key on a switch action starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_client.stop_container.side_effect = PortainerAuthenticationError(
+        "auth"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.practical_morse_container"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

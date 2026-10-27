@@ -3,25 +3,26 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.select.condition import CONF_OPTION
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture
@@ -36,18 +37,39 @@ async def target_input_selects(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_select")
 
 
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_option_selected": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
-    "condition",
-    ["select.is_option_selected"],
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("select.is_option_selected", {"option": ["option_a"]}, True, True),
+    ],
 )
-async def test_select_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_select_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the select conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that select conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("select"),
@@ -84,7 +106,6 @@ async def test_select_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("select"),
@@ -121,7 +142,6 @@ async def test_select_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_select"),
@@ -158,7 +178,6 @@ async def test_input_select_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_select"),
@@ -198,11 +217,10 @@ async def test_input_select_condition_behavior_all(
 # --- Cross-domain test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_select_condition_evaluates_both_domains(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the select condition evaluates both select and input_select entities."""
+    """Test select condition evaluates both select and input_select."""
     entity_id_select = "select.test_select"
     entity_id_input_select = "input_select.test_input_select"
 
@@ -218,25 +236,24 @@ async def test_select_condition_evaluates_both_domains(
         condition_options={CONF_OPTION: ["option_a", "option_b"]},
     )
 
-    assert cond(hass) is True
+    assert cond.async_check() is True
 
     # Set one to a non-matching option - "any" behavior should still pass
     hass.states.async_set(entity_id_select, "option_c")
     await hass.async_block_till_done()
 
-    assert cond(hass) is True
+    assert cond.async_check() is True
 
     # Set both to non-matching options
     hass.states.async_set(entity_id_input_select, "option_c")
     await hass.async_block_till_done()
 
-    assert cond(hass) is False
+    assert cond.async_check() is False
 
 
 # --- Schema validation tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition", "condition_options", "expected_result"),
     [
@@ -256,13 +273,13 @@ async def test_select_condition_evaluates_both_domains(
             "select.is_option_selected",
             # Empty option list
             {CONF_OPTION: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "select.is_option_selected",
             # Missing CONF_OPTION
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )

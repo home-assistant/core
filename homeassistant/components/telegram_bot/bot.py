@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Sequence
+import errno
 import io
 import logging
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
 
-import httpx
+import httpx2
 from telegram import (
     Bot,
     CallbackQuery,
@@ -34,11 +35,12 @@ from telegram import (
 from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
-from telegram.request import HTTPXRequest
+from telegram.request import BaseRequest, HTTPXRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -48,6 +50,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.os_error import os_write_error
+from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -57,7 +61,6 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
     ATTR_DATA,
-    ATTR_DATE,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -122,7 +125,23 @@ from .helpers import signal
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
+# Telegram keeps this per bot, server side, and keeps whatever it was told last
+# when the setting is omitted, so a bot narrowed by an earlier consumer of the
+# token silently drops the rest. Ask for what `handle_update` turns into events:
+# a callback query, and the updates `Update.effective_message` is drawn from.
+ALLOWED_UPDATES = [
+    Update.CALLBACK_QUERY,
+    Update.MESSAGE,
+    Update.EDITED_MESSAGE,
+    Update.CHANNEL_POST,
+    Update.EDITED_CHANNEL_POST,
+    Update.BUSINESS_MESSAGE,
+    Update.EDITED_BUSINESS_MESSAGE,
+]
+
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
+
+_RETRY_DELAY = 1  # 1 second delay between retries
 
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
@@ -157,7 +176,8 @@ class BaseTelegramBot:
 
         # establish event type: text, command or callback_query
         if update.callback_query:
-            # NOTE: Check for callback query first since effective message will be populated with the message
+            # NOTE: Check for callback query first since
+            # effective message will be populated with the message
             # in .callback_query (python-telegram-bot docs are wrong)
             event_type, event_data = self._get_callback_query_event_data(
                 update.callback_query
@@ -200,8 +220,12 @@ class BaseTelegramBot:
             ATTR_DATE: message.date,
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
+        if message.reply_to_message:
+            event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
+
         if filters.COMMAND.filter(message):
-            # This is a command message - set event type to command and split data into command and args
+            # This is a command message - set event type
+            # to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -223,7 +247,7 @@ class BaseTelegramBot:
             photos = cast(Sequence[PhotoSize], message.effective_attachment)
             return {
                 ATTR_FILE_ID: photos[-1].file_id,
-                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_MIME_TYPE: "image/jpeg",
                 ATTR_FILE_SIZE: photos[-1].file_size,
             }
         return {
@@ -302,6 +326,7 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.app = app
         self.config = config
+        self.old_config_data = config.data.copy()
         self._parsers: dict[str, str | None] = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
@@ -394,7 +419,7 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: None,
+            ATTR_TIMEOUT: BaseRequest.DEFAULT_NONE,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
@@ -542,7 +567,7 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send media group to a chat ID.
 
-        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        Returns a dict mapping each chat_id to message_ids.
         """
         params = self._get_msg_kwargs(kwargs)
 
@@ -560,17 +585,22 @@ class TelegramNotificationService:
                 authentication=entry.get(ATTR_AUTHENTICATION),
                 verify_ssl=entry[ATTR_VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
-            caption: str | None = entry.get(ATTR_CAPTION)
+            # The parse mode of the media group itself only applies to a caption
+            # of the whole group, so each caption needs its own
+            caption_kwargs: dict[str, Any] = {
+                "caption": entry.get(ATTR_CAPTION),
+                "parse_mode": params[ATTR_PARSER],
+            }
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
-                media.append(InputMediaAudio(file_content, caption=caption))
+                media.append(InputMediaAudio(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
-                media.append(InputMediaDocument(file_content, caption=caption))
+                media.append(InputMediaDocument(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
-                media.append(InputMediaPhoto(file_content, caption=caption))
+                media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
-                media.append(InputMediaVideo(file_content, caption=caption))
+                media.append(InputMediaVideo(file_content, **caption_kwargs))
 
         return await self._send_msg_formatted(
             self.bot.send_media_group,
@@ -581,7 +611,6 @@ class TelegramNotificationService:
             protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 
@@ -1012,6 +1041,36 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_message_draft(
+        self,
+        message: str,
+        chat_id: int,
+        draft_id: int,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """Stream a partial message to a user while the message is being generated."""
+        params = self._get_msg_kwargs(kwargs)
+
+        _LOGGER.debug(
+            "Sending message draft %s in chat ID %s with params: %s",
+            draft_id,
+            chat_id,
+            params,
+        )
+
+        await self._send_msg(
+            self.bot.send_message_draft,
+            None,
+            chat_id=chat_id,
+            draft_id=draft_id,
+            text=message,
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            parse_mode=params[ATTR_PARSER],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
+
     async def download_file(
         self,
         file_id: str,
@@ -1021,8 +1080,41 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
-        if not directory_path:
+        if directory_path:
+            try:
+                raise_if_invalid_path(directory_path)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_directory_path",
+                    translation_placeholders={"directory_path": directory_path},
+                ) from err
+
+            # A caller supplied destination has to sit inside
+            # allowlist_external_dirs, the boundary load_data already applies to
+            # reads. is_allowed_path resolves the path first, so a symlink inside
+            # an allowed directory that points out of it is rejected too.
+            if not await self.hass.async_add_executor_job(
+                self.hass.config.is_allowed_path, directory_path
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="allowlist_external_dirs_error",
+                )
+        else:
+            # The integration's own directory needs no allowlist entry.
             directory_path = self.hass.config.path(DOMAIN)
+
+        if file_name:
+            try:
+                raise_if_invalid_filename(file_name)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_file_name",
+                    translation_placeholders={"file_name": file_name},
+                ) from err
+
         file: File = await self._send_msg(
             self.bot.get_file,
             None,
@@ -1032,30 +1124,33 @@ class TelegramNotificationService:
         if not file.file_path:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "error": "No file path returned from Telegram"
-                },
+                translation_key="no_file_path",
             )
         if not file_name:
             file_name = os.path.basename(file.file_path)
 
         custom_path = os.path.join(directory_path, file_name)
-        await self.hass.async_add_executor_job(
-            self._prepare_download_directory, directory_path
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self._prepare_download_directory, directory_path
+            )
+        except OSError as err:
+            raise os_write_error(err, directory_path) from err
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
-            await self.hass.async_add_executor_job(
-                Path(custom_path).write_bytes, file_content
-            )
         except (RuntimeError, OSError, TelegramError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
                 translation_placeholders={"error": str(exc)},
             ) from exc
+        try:
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except OSError as err:
+            raise os_write_error(err, custom_path) from err
         return {ATTR_FILE_PATH: custom_path}
 
     @staticmethod
@@ -1078,7 +1173,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
-        proxy = httpx.Proxy(proxy_url)
+        proxy = httpx2.Proxy(proxy_url)
         request = HTTPXRequest(
             connection_pool_size=8,
             proxy=proxy,
@@ -1124,9 +1219,9 @@ async def load_data(
         if authentication == HTTP_BEARER_AUTHENTICATION:
             headers = {"Authorization": f"Bearer {password}"}
         elif authentication == HTTP_DIGEST_AUTHENTICATION:
-            params["auth"] = httpx.DigestAuth(username, password)
+            params["auth"] = httpx2.DigestAuth(username, password)
         elif authentication == HTTP_BASIC_AUTHENTICATION:
-            params["auth"] = httpx.BasicAuth(username, password)
+            params["auth"] = httpx2.BasicAuth(username, password)
 
         retry_num = 0
         async with get_async_client(hass, verify_ssl) as client:
@@ -1135,7 +1230,7 @@ async def load_data(
                     response = await client.get(
                         url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
                     )
-                except (httpx.HTTPError, httpx.InvalidURL) as err:
+                except (httpx2.HTTPError, httpx2.InvalidURL) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
@@ -1159,13 +1254,19 @@ async def load_data(
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
                 if retry_num < num_retries:
-                    await asyncio.sleep(
-                        1
-                    )  # Add a sleep to allow other async operations to proceed
+                    # Add a sleep to allow other async operations to proceed
+                    await asyncio.sleep(_RETRY_DELAY)
+
+            # A 200 with data returns early, so a final 200 means an empty body
+            if response.status_code == 200:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_load_url_empty",
+                )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(response.status_code)},
+                translation_key="failed_to_load_url_status",
+                translation_placeholders={"status_code": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
@@ -1212,6 +1313,14 @@ def _validate_credentials_input(
         )
 
 
+# OS errors are not translatable, so the common causes get their own message
+READ_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.ENOENT: "file_not_found",
+    errno.EACCES: "file_permission_denied",
+    errno.EPERM: "file_permission_denied",
+}
+
+
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     try:
@@ -1222,6 +1331,8 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     except OSError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_to_load_file",
-            translation_placeholders={"error": str(err)},
+            translation_key=READ_ERROR_TRANSLATION_KEYS.get(
+                err.errno, "failed_to_load_file"
+            ),
+            translation_placeholders={"file_path": file_path},
         ) from err

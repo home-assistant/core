@@ -1,7 +1,5 @@
 """The Backblaze B2 integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -34,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 type BackblazeConfigEntry = ConfigEntry[Bucket]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> None:
     """Set up Backblaze B2 from a config entry."""
 
     info = InMemoryAccountInfo()
@@ -43,7 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     def _authorize_and_get_bucket_sync() -> Bucket:
         """Synchronously authorize the Backblaze B2 account and retrieve the bucket.
 
-        This function runs in the event loop's executor as b2sdk operations are blocking.
+        This function runs in the event loop's executor as
+        b2sdk operations are blocking.
         """
         b2_api.authorize_account(
             BACKBLAZE_REALM,
@@ -115,14 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     hass.async_create_task(async_check_for_repair_issues(hass, entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> None:
     """Unload a Backblaze B2 config entry.
 
     Any resources directly managed by this entry that need explicit shutdown
     would be handled here. In this case, the `async_on_state_change` listener
     handles the notification logic on unload.
     """
-    return True

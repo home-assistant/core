@@ -1,16 +1,20 @@
 """Test the Home Assistant SkyConnect hardware platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
-
 CONFIG_ENTRY_DATA = {
-    "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "device": (
+        "/dev/serial/by-id/"
+        "usb-Nabu_Casa_SkyConnect_v1.0"
+        "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+    ),
     "vid": "10C4",
     "pid": "EA60",
     "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
@@ -20,17 +24,25 @@ CONFIG_ENTRY_DATA = {
 }
 
 CONFIG_ENTRY_DATA_2 = {
-    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "device": (
+        "/dev/serial/by-id/"
+        "usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+        "_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+    ),
     "vid": "10C4",
     "pid": "EA60",
-    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
     "manufacturer": "Nabu Casa",
     "product": "Home Assistant Connect ZBT-1",
     "firmware": "ezsp",
 }
 
 CONFIG_ENTRY_DATA_BAD = {
-    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_a87b7d75b18beb119fe564a0f320645d-if00-port0",
+    "device": (
+        "/dev/serial/by-id/"
+        "usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+        "_a87b7d75b18beb119fe564a0f320645d-if00-port0"
+    ),
 }
 
 
@@ -106,7 +118,7 @@ async def test_hardware_info(
                 "dongle": {
                     "vid": "10C4",
                     "pid": "EA60",
-                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
                     "manufacturer": "Nabu Casa",
                     "description": "Home Assistant Connect ZBT-1",
                 },

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-import serial.tools.list_ports
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
@@ -20,8 +20,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from . import init_integration
 from .const import PORT_SERIAL
 
-from tests.common import MockConfigEntry
-
 DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,
     pid="10CF",
@@ -30,18 +28,6 @@ DISCOVERY_INFO = UsbServiceInfo(
     description="Velbus VMB1USB",
     manufacturer="Velleman",
 )
-
-USB_DEV = "/dev/ttyACME100 - Some serial port, s/n: 1234 - Virtual serial port"
-
-
-def com_port():
-    """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo(PORT_SERIAL)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = PORT_SERIAL
-    port.description = "Some serial port"
-    return port
 
 
 @pytest.fixture
@@ -79,7 +65,7 @@ def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
         patch(
-            "homeassistant.components.velbus.async_setup_entry", return_value=True
+            "homeassistant.components.velbus.async_setup_entry", return_value=None
         ) as mock,
     ):
         yield mock
@@ -150,6 +136,7 @@ async def test_user_network_succes(
         {},
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     data = result.get("data")
     assert data
@@ -190,9 +177,22 @@ async def test_user_network_connect_failure(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"host": "cannot_connect"}
 
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {
+                CONF_HOST: "velbus",
+                CONF_PORT: 6000,
+                CONF_TLS: True,
+                CONF_PASSWORD: "password",
+            },
+        )
+    assert result.get("step_id") == "vlp"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("controller_connection_failed")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
     """Test user usb step."""
     result = await hass.config_entries.flow.async_init(
@@ -206,16 +206,26 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"port": "cannot_connect"}
 
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PORT: PORT_SERIAL,
+            },
+        )
+    assert result.get("step_id") == "vlp"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("controller")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_usb_success(hass: HomeAssistant) -> None:
     """Test user usb step."""
     result = await hass.config_entries.flow.async_init(
@@ -229,7 +239,7 @@ async def test_user_usb_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
@@ -240,6 +250,7 @@ async def test_user_usb_success(hass: HomeAssistant) -> None:
         {},
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Velbus USB"
     data = result.get("data")
@@ -276,7 +287,7 @@ async def test_vlp_step_no_modules(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -296,6 +307,18 @@ async def test_vlp_step_no_modules(
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_VLP_FILE: "no_modules"}
+
+    with (
+        patch("velbusaio.vlp_reader.VlpFile.read", AsyncMock(return_value=True)),
+        patch("velbusaio.vlp_reader.VlpFile.get", return_value=[1, 2, 3, 4]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_VLP_FILE: file_id[CONF_VLP_FILE]},
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("controller")
@@ -327,7 +350,7 @@ async def test_vlp_step_success(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -345,6 +368,7 @@ async def test_vlp_step_success(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -359,6 +383,19 @@ async def test_reconfigure_step(
     await init_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "network"
+
+    # Submit the network step with the same host/port
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: False,
+            CONF_HOST: "127.0.1.0.1",
+            CONF_PORT: 3788,
+            CONF_PASSWORD: "",
+        },
+    )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "vlp"
 
@@ -381,6 +418,108 @@ async def test_reconfigure_step(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reconfigure_step_change_host_port(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Testcase for the reconfigure step changing host and port."""
+    await init_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "network"
+
+    # Submit the network step with a new host/port
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: False,
+            CONF_HOST: "192.168.0.3",
+            CONF_PORT: 3788,
+            CONF_PASSWORD: "",
+        },
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+    with (
+        patch(
+            "velbusaio.vlp_reader.VlpFile.read",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            "velbusaio.vlp_reader.VlpFile.get",
+            return_value=[1, 2, 3, 4],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_PORT] == "192.168.0.3:3788"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reconfigure_step_password_preserved(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
+) -> None:
+    """Test that an existing password is pre-filled and preserved during reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: "tls://secret@192.168.0.1:27015"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "network"
+    # Verify the password is pre-filled in the suggested values
+    assert result["data_schema"](
+        {
+            CONF_TLS: True,
+            CONF_HOST: "192.168.0.1",
+            CONF_PORT: 27015,
+            CONF_PASSWORD: "secret",
+        }
+    )
+
+    # Submit without changing the password
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: True,
+            CONF_HOST: "192.168.0.1",
+            CONF_PORT: 27015,
+            CONF_PASSWORD: "secret",
+        },
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+    with (
+        patch("velbusaio.vlp_reader.VlpFile.read", AsyncMock(return_value=True)),
+        patch("velbusaio.vlp_reader.VlpFile.get", return_value=[1, 2, 3, 4]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_PORT] == "tls://secret@192.168.0.1:27015"
 
 
 @pytest.mark.usefixtures("controller")
@@ -413,7 +552,6 @@ async def test_network_abort_if_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_flow_usb(hass: HomeAssistant) -> None:
     """Test usb discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -435,7 +573,6 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Velbus USB discovbery aborts in case it is already setup."""
     entry = MockConfigEntry(
@@ -456,7 +593,7 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
@@ -465,7 +602,6 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_flow_usb_failed(hass: HomeAssistant) -> None:
     """Test usb discovery flow with a failed velbus test."""
     result = await hass.config_entries.flow.async_init(

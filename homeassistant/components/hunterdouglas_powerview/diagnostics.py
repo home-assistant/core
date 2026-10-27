@@ -1,17 +1,17 @@
 """Diagnostics support for Powerview Hunter Douglas."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
-import attr
-
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
 from .model import PowerviewConfigEntry
@@ -43,7 +43,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: PowerviewConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     data = _async_get_diagnostics(hass, entry)
@@ -71,13 +71,15 @@ def _async_get_diagnostics(
 
 
 @callback
-def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str, Any]:
+def _async_device_as_dict(
+    hass: HomeAssistant, device: AnyDeviceEntry
+) -> dict[str, Any]:
     """Represent a Powerview device as a dictionary."""
 
     # Gather information how this device is represented in Home Assistant
     entity_registry = er.async_get(hass)
 
-    data = async_redact_data(attr.asdict(device), REDACT_CONFIG)
+    data = async_redact_data(device_entry_as_dict(device), REDACT_CONFIG)
     data["entities"] = []
     entities: list[dict[str, Any]] = data["entities"]
 

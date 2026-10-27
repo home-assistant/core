@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -31,8 +32,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def shades(name: str):
@@ -227,7 +226,7 @@ async def test_tilt_and_open(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_open_cover(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports cover is open."""
+    """Tests that update sets correct state when Bond API reports cover is open."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
     with patch_bond_device_state(return_value={"open": 1}):
@@ -238,7 +237,7 @@ async def test_update_reports_open_cover(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_closed_cover(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports cover is closed."""
+    """Tests that update sets correct state when Bond API reports cover is closed."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
     with patch_bond_device_state(return_value={"open": 0}):

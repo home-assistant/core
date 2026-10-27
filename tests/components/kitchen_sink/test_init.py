@@ -1,12 +1,14 @@
 """The tests for the Everything but the Kitchen Sink integration."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from unittest.mock import ANY
 
+import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.labs import EVENT_LABS_UPDATED
@@ -23,9 +25,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -75,7 +74,7 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     hass.config.units = US_CUSTOMARY_SYSTEM
 
     now = dt_util.now()
-    last_week = now - datetime.timedelta(days=7)
+    last_week = now - dt.timedelta(days=7)
     last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
 
     statistic_id = f"{DOMAIN}:energy_consumption_kwh"
@@ -359,7 +358,7 @@ async def test_service(
     """Test we can call the service."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
 
     await hass.services.async_call(
@@ -369,7 +368,7 @@ async def test_service(
     await hass.services.async_call(
         DOMAIN,
         "test_service_1",
-        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forward"},
         blocking=True,
     )
 
@@ -388,7 +387,7 @@ async def test_special_repair_issue_not_created_when_disabled(
     issue_registry: ir.IssueRegistry,
     setup_kitchen_sink_with_repairs: None,
 ) -> None:
-    """Test that special repair issue is not created when preview feature is disabled."""
+    """Test repair issue is not created when preview is disabled."""
     # Check that issue does not exist when preview feature is disabled
     issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
     assert issue is None
@@ -432,7 +431,7 @@ async def test_special_repair_preview_feature_toggle(
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that special repair issue is created/deleted when preview feature is toggled."""
+    """Test repair issue is created/deleted when preview is toggled."""
     # Setup repairs and kitchen_sink first
     assert await async_setup_component(hass, "labs", {})
     assert await async_setup_component(hass, "repairs", {})

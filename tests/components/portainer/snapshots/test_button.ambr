@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,7 +39,7 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_kill_container',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -89,10 +89,60 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -107,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -139,8 +189,8 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container',
@@ -158,9 +208,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -190,10 +240,61 @@
 # name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_resume_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.dashy_update_stack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dashy_update_stack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Update stack',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Update stack',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'update_stack',
+    'unique_id': 'portainer_test_entry_123_2_update_stack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.dashy_update_stack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy Update stack',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dashy_update_stack',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -208,9 +309,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -240,7 +341,7 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_kill_container',
@@ -258,9 +359,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -290,10 +391,60 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.focused_einstein_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.focused_einstein_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.focused_einstein_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.focused_einstein_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -308,9 +459,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -340,8 +491,8 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'focused_einstein Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_restart_container',
@@ -359,9 +510,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -391,14 +542,14 @@
 # name: test_all_button_entities_snapshot[button.focused_einstein_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'focused_einstein Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.focused_einstein_resume_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_button_entities_snapshot[button.funny_chatelet_kill_container-entry]
@@ -409,9 +560,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -441,7 +592,7 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_kill_container',
@@ -459,9 +610,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -491,10 +642,60 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.funny_chatelet_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.funny_chatelet_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.funny_chatelet_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.funny_chatelet_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -509,9 +710,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -541,8 +742,8 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'funny_chatelet Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_restart_container',
@@ -560,9 +761,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -592,10 +793,60 @@
 # name: test_all_button_entities_snapshot[button.funny_chatelet_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'funny_chatelet Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.funny_chatelet_resume_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_build_cache-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_environment_prune_build_cache',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prune build cache',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prune build cache',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'build_cache_prune',
+    'unique_id': 'portainer_test_entry_123_1_build_cache_prune',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_build_cache-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune build cache',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_environment_prune_build_cache',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -610,9 +861,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -642,11 +893,61 @@
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_images-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'my-environment Prune unused images',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused images',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_images',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_unused_networks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_environment_prune_unused_networks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prune unused networks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prune unused networks',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'networks_prune',
+    'unique_id': 'portainer_test_entry_123_1_networks_prune',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_prune_unused_networks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused networks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_environment_prune_unused_networks',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -661,9 +962,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -693,7 +994,7 @@
 # name: test_all_button_entities_snapshot[button.my_environment_prune_unused_volumes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my-environment Prune unused volumes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Prune unused volumes',
     }),
     'context': <ANY>,
     'entity_id': 'button.my_environment_prune_unused_volumes',
@@ -711,9 +1012,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -743,7 +1044,7 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_kill_container',
@@ -761,9 +1062,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -793,10 +1094,60 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.practical_morse_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.practical_morse_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_practical_morse_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.practical_morse_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.practical_morse_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -811,9 +1162,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -843,8 +1194,8 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'practical_morse Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_restart_container',
@@ -862,9 +1213,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -894,14 +1245,14 @@
 # name: test_all_button_entities_snapshot[button.practical_morse_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'practical_morse Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.practical_morse_resume_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_button_entities_snapshot[button.serene_banach_kill_container-entry]
@@ -912,9 +1263,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -944,7 +1295,7 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_kill_container',
@@ -962,9 +1313,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -994,10 +1345,60 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.serene_banach_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.serene_banach_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_serene_banach_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.serene_banach_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.serene_banach_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1012,9 +1413,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1044,8 +1445,8 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'serene_banach Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_restart_container',
@@ -1063,9 +1464,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1095,14 +1496,14 @@
 # name: test_all_button_entities_snapshot[button.serene_banach_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'serene_banach Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.serene_banach_resume_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_button_entities_snapshot[button.stoic_turing_kill_container-entry]
@@ -1113,9 +1514,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1145,7 +1546,7 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_kill_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Kill container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Kill container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_kill_container',
@@ -1163,9 +1564,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1195,10 +1596,60 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_pause_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Pause container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Pause container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_pause_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.stoic_turing_recreate_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.stoic_turing_recreate_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Recreate container',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recreate container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'recreate_container',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_recreate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.stoic_turing_recreate_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Recreate container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.stoic_turing_recreate_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1213,9 +1664,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1245,8 +1696,8 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'stoic_turing Restart container',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Restart container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_restart_container',
@@ -1264,9 +1715,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1296,10 +1747,61 @@
 # name: test_all_button_entities_snapshot[button.stoic_turing_resume_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'stoic_turing Resume container',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Resume container',
     }),
     'context': <ANY>,
     'entity_id': 'button.stoic_turing_resume_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.webstack_update_stack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.webstack_update_stack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Update stack',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Update stack',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'update_stack',
+    'unique_id': 'portainer_test_entry_123_1_update_stack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.webstack_update_stack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'webstack Update stack',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.webstack_update_stack',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

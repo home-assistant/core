@@ -1,6 +1,6 @@
 """application_credentials platform for Withings."""
 
-from typing import Any
+from typing import Any, override
 
 from aiowithings import AUTHORIZATION_URL, TOKEN_URL
 
@@ -33,6 +33,7 @@ async def async_get_auth_implementation(
 class WithingsLocalOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request and adapt Withings API reply."""
         new_token = await super()._token_request(data)
@@ -53,6 +54,7 @@ class WithingsLocalOAuth2Implementation(AuthImplementation):
             new_token.update(body)
         return new_token
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         return await self._token_request(
@@ -64,6 +66,7 @@ class WithingsLocalOAuth2Implementation(AuthImplementation):
             }
         )
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         new_token = await self._token_request(

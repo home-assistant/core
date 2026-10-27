@@ -2,16 +2,17 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
-from pyairnow.errors import AirNowError, InvalidJsonError
+from pyairnow.errors import AirNowError, InvalidJsonError, InvalidKeyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -51,13 +52,11 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api_key: str,
         latitude: float,
         longitude: float,
-        distance: int,
         update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.distance = distance
 
         self.airnow = WebServiceAPI(api_key, session=session)
 
@@ -69,6 +68,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data: dict[str, Any] = {}
@@ -76,9 +76,12 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             obs = await self.airnow.observations.latLong(
                 self.latitude,
                 self.longitude,
-                distance=self.distance,
             )
 
+        except InvalidKeyError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from error
         except (AirNowError, ClientConnectorError, InvalidJsonError) as error:
             raise UpdateFailed(error) from error
 

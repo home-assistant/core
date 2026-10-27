@@ -1,15 +1,13 @@
 """Offer calendar automation rules."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,7 +27,12 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -40,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_START = "start"
 EVENT_END = "end"
-UPDATE_INTERVAL = datetime.timedelta(minutes=15)
+UPDATE_INTERVAL = dt.timedelta(minutes=15)
 
 CONF_OFFSET_TYPE = "offset_type"
 OFFSET_TYPE_BEFORE = "before"
@@ -48,26 +51,40 @@ OFFSET_TYPE_AFTER = "after"
 
 
 _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA = {
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
-    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+    probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+    probatio.Optional(CONF_EVENT, default=EVENT_START): probatio.In(
+        {EVENT_START, EVENT_END}
+    ),
+    probatio.Optional(CONF_OFFSET, default=dt.timedelta(0)): cv.time_period,
 }
 
-_SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = vol.Schema(
+_SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA,
+        probatio.Required(CONF_OPTIONS): _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA,
     },
 )
 
-_EVENT_TRIGGER_SCHEMA = vol.Schema(
+
+def _apply_offset_type(options: dict[str, Any]) -> dict[str, Any]:
+    if options.pop(CONF_OFFSET_TYPE, None) == OFFSET_TYPE_BEFORE:
+        options[CONF_OFFSET] = -options[CONF_OFFSET]
+    return options
+
+
+_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
-            vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
-                {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
-            ),
-        },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS, default={}): probatio.All(
+            {
+                probatio.Required(CONF_OFFSET, default=dt.timedelta(0)): cv.time_period,
+                # Older configs set a positive offset with an offset type,
+                # which is folded into the sign of the offset.
+                probatio.Optional(CONF_OFFSET_TYPE): probatio.In(
+                    {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
+                ),
+            },
+            _apply_offset_type,
+        ),
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
@@ -78,7 +95,7 @@ _EVENT_TRIGGER_SCHEMA = vol.Schema(
 class QueuedCalendarEvent:
     """An event that is queued to be fired in the future."""
 
-    trigger_time: datetime.datetime
+    trigger_time: dt.datetime
     event: CalendarEvent
     entity_id: str
 
@@ -87,23 +104,21 @@ class QueuedCalendarEvent:
 class Timespan:
     """A time range part of start/end dates, used for considering active events."""
 
-    start: datetime.datetime
+    start: dt.datetime
     """The start datetime of the interval."""
 
-    end: datetime.datetime
+    end: dt.datetime
     """The end datetime (exclusive) of the interval."""
 
-    def with_offset(self, offset: datetime.timedelta) -> Timespan:
+    def with_offset(self, offset: dt.timedelta) -> Timespan:
         """Return a new interval shifted by the specified offset."""
         return Timespan(self.start + offset, self.end + offset)
 
-    def __contains__(self, trigger: datetime.datetime) -> bool:
+    def __contains__(self, trigger: dt.datetime) -> bool:
         """Return true if the trigger time is within the time span."""
         return self.start <= trigger < self.end
 
-    def next_upcoming(
-        self, now: datetime.datetime, interval: datetime.timedelta
-    ) -> Timespan:
+    def next_upcoming(self, now: dt.datetime, interval: dt.timedelta) -> Timespan:
         """Return a subsequent time span following the current time span.
 
         This effectively gives us a cursor like interface for advancing through
@@ -115,6 +130,7 @@ class Timespan:
         """
         return Timespan(self.end, max(self.end, now) + interval)
 
+    @override
     def __str__(self) -> str:
         """Return a string representing the half open interval time span."""
         return f"[{self.start}, {self.end})"
@@ -142,7 +158,7 @@ def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
     async def async_get_events(timespan: Timespan) -> list[tuple[str, CalendarEvent]]:
         """Return events active in the specified time span."""
         # Expand by one second to make the end time exclusive
-        end_time = timespan.end + datetime.timedelta(seconds=1)
+        end_time = timespan.end + dt.timedelta(seconds=1)
 
         events: list[tuple[str, CalendarEvent]] = []
         for entity_id in entity_ids:
@@ -159,11 +175,11 @@ def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
 
 
 def queued_event_fetcher(
-    fetcher: EventFetcher, event_type: str, offset: datetime.timedelta
+    fetcher: EventFetcher, event_type: str, offset: dt.timedelta
 ) -> QueuedEventFetcher:
     """Build a fetcher that produces a schedule of upcoming trigger events."""
 
-    def get_trigger_time(event: CalendarEvent) -> datetime.datetime:
+    def get_trigger_time(event: CalendarEvent) -> dt.datetime:
         if event_type == EVENT_START:
             return event.start_datetime_local
         return event.end_datetime_local
@@ -260,14 +276,14 @@ class CalendarEventListener:
             self._unsub_event()
         self._unsub_event = None
 
-    async def _handle_calendar_event(self, now: datetime.datetime) -> None:
+    async def _handle_calendar_event(self, now: dt.datetime) -> None:
         """Handle calendar event."""
         _LOGGER.debug("Calendar event @ %s", dt_util.as_local(now))
         self._dispatch_events(now)
         self._clear_event_listener()
         self._listen_next_calendar_event()
 
-    def _dispatch_events(self, now: datetime.datetime) -> None:
+    def _dispatch_events(self, now: dt.datetime) -> None:
         """Dispatch all events that are eligible to fire."""
         while self._events and self._events[0].trigger_time <= now:
             queued_event = self._events.pop(0)
@@ -279,7 +295,7 @@ class CalendarEventListener:
             }
             self._action_runner(payload, "calendar event state change")
 
-    async def _handle_refresh(self, now_utc: datetime.datetime) -> None:
+    async def _handle_refresh(self, now_utc: dt.datetime) -> None:
         """Handle core config update."""
         now = dt_util.as_local(now_utc)
         _LOGGER.debug("Refresh events @ %s", now)
@@ -303,7 +319,7 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         hass: HomeAssistant,
         target_selection: TargetSelection,
         event_type: str,
-        offset: datetime.timedelta,
+        offset: dt.timedelta,
         run_action: TriggerActionRunner,
     ) -> None:
         """Initialize the state change tracker."""
@@ -328,8 +344,9 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         self._calendar_event_listener: CalendarEventListener | None = None
 
     @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Restart the listeners when the list of entities of the tracked targets is updated."""
+        """Restart listeners when tracked target entities update."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(
@@ -353,6 +370,7 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         )
         await self._calendar_event_listener.async_attach()
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
@@ -370,6 +388,7 @@ class SingleEntityEventTrigger(Trigger):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -380,6 +399,7 @@ class SingleEntityEventTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -394,8 +414,11 @@ class SingleEntityEventTrigger(Trigger):
             assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -429,6 +452,7 @@ class EventTrigger(Trigger):
     _event_type: str
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -445,24 +469,22 @@ class EventTrigger(Trigger):
         self._target = config.target
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
         offset = self._options[CONF_OFFSET]
-        offset_type = self._options[CONF_OFFSET_TYPE]
-
-        if offset_type == OFFSET_TYPE_BEFORE:
-            offset = -offset
-
         target_selection = TargetSelection(self._target)
         if not target_selection.has_any_target:
             raise HomeAssistantError(f"No target defined in {self._target}")
         listener = TargetCalendarEventListener(
             self._hass, target_selection, self._event_type, offset, run_action
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
 
 class EventStartedTrigger(EventTrigger):

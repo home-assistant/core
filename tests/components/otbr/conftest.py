@@ -1,10 +1,15 @@
-"""Test fixtures for the Open Thread Border Router integration."""
+"""Test fixtures for the OpenThread Border Router integration."""
 
 from collections.abc import Generator
+from http import HTTPStatus
+import re
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from python_otbr_api import KeyFormat
 
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
@@ -17,8 +22,6 @@ from . import (
     TEST_BORDER_AGENT_ID,
     TEST_COPROCESSOR_VERSION,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="enable_compute_pskc")
@@ -42,6 +45,27 @@ def compute_pskc_fixture(enable_compute_pskc: bool) -> Any:
 def dataset_fixture() -> Any:
     """Return the discovery info from the supervisor."""
     return DATASET_CH16
+
+
+@pytest.fixture(name="key_format")
+def key_format_fixture() -> KeyFormat:
+    """Override to control the OTBR JSON key format probe outcome."""
+    return KeyFormat.PASCAL_CASE
+
+
+@pytest.fixture(autouse=True)
+def mock_api_actions(
+    aioclient_mock: AiohttpClientMocker, key_format: KeyFormat
+) -> None:
+    """Mock the /api/actions probe used by python_otbr_api to detect key format.
+
+    The probe was added in python_otbr_api 2.10.0: it returns 200 for OTBRs
+    that speak camelCase and 404 for older PascalCase OTBRs.
+    """
+    status = (
+        HTTPStatus.OK if key_format is KeyFormat.CAMEL_CASE else HTTPStatus.NOT_FOUND
+    )
+    aioclient_mock.get(re.compile(r".*/api/actions$"), status=status)
 
 
 @pytest.fixture(name="get_active_dataset_tlvs")
@@ -90,12 +114,12 @@ async def otbr_config_entry_multipan_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> str:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -111,12 +135,12 @@ async def otbr_config_entry_thread_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> None:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_THREAD,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)

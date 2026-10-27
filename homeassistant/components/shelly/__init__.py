@@ -1,14 +1,13 @@
 """The Shelly integration."""
 
-from __future__ import annotations
-
+import asyncio
 from functools import partial
 from typing import Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -16,7 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
@@ -24,12 +23,16 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -39,18 +42,24 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
+    CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
+    OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     PUSH_UPDATE_ISSUE_ID,
+    BLEScannerMode,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
+    ShellyBluTrvUpdateCoordinator,
     ShellyConfigEntry,
     ShellyEntryData,
     ShellyRestCoordinator,
@@ -58,21 +67,26 @@ from .coordinator import (
     ShellyRpcPollingCoordinator,
 )
 from .repairs import (
+    async_create_issue_unsupported_firmware,
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
+    async_manage_ir_raw_receive_disabled_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_rtsp_disabled_issue,
 )
 from .services import async_setup_services
 from .utils import (
-    async_create_issue_unsupported_firmware,
     async_migrate_rpc_sensor_description_unique_ids,
     async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
+    get_rpc_key_ids,
+    get_rpc_key_instances,
     get_rpc_scripts_event_types,
     get_ws_context,
+    is_rpc_ble_scanner_supported,
     remove_empty_sub_devices,
     remove_stale_blu_trv_devices,
 )
@@ -80,10 +94,13 @@ from .utils import (
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
+    Platform.INFRARED,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -105,18 +122,26 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.UPDATE,
 ]
+UNSUPPORTED_FIRMWARE_PLATFORMS: Final = [Platform.UPDATE]
 
-COAP_SCHEMA: Final = vol.Schema(
+COAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): probatio.Port(),
     }
 )
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: COAP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
+
+# Max time to wait at startup for a BLE proxy to register its scanner.
+STARTUP_SCANNER_WAIT: Final = 3.0
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     if (conf := config.get(DOMAIN)) is not None:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
     async_setup_services(hass)
@@ -124,34 +149,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
+    """Migrate old config entries."""
+
+    if entry.minor_version < 3:
+        # One-time flip of explicit Active scanning to Auto so existing
+        # installs get the new battery-friendly default; Passive stays
+        # Passive because users picked it deliberately.
+        options = dict(entry.options)
+        if options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE:
+            options[CONF_BLE_SCANNER_MODE] = BLEScannerMode.AUTO
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=3)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Set up Shelly from a config entry."""
     entry.runtime_data = ShellyEntryData([])
 
-    # The community integration for Shelly devices uses Shelly domain as well as Core
-    # integration. If the user removes the community integration but doesn't remove
-    # the config entry, Core integration will try to configure that config entry with
-    # an error. The config entry data for this community integration doesn't contain
-    # host value, so if host isn't present, config entry will not be configured.
+    # The custom component for Shelly devices uses shelly domain as well as core
+    # integration. If the user removes the custom component but doesn't remove the
+    # config entry, core integration will try to configure that config entry with an
+    # error. The config entry data for this custom component doesn't contain host
+    # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
-        LOGGER.warning(
-            (
-                "The config entry %s probably comes from a community integration, "
-                "please remove it if you want to use the Core Shelly integration"
-            ),
-            entry.title,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="custom_integration_entry",
+            translation_placeholders={"title": entry.title},
         )
-        return False
 
     if get_device_entry_gen(entry) in RPC_GENERATIONS:
-        return await _async_setup_rpc_entry(hass, entry)
+        await _async_setup_rpc_entry(hass, entry)
+        return
 
-    return await _async_setup_block_entry(hass, entry)
+    await _async_setup_block_entry(hass, entry)
 
 
 async def _async_setup_block_entry(
     hass: HomeAssistant, entry: ShellyConfigEntry
-) -> bool:
+) -> None:
     """Set up Shelly block based device from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -171,13 +207,9 @@ async def _async_setup_block_entry(
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -205,14 +237,6 @@ async def _async_setup_block_entry(
         runtime_data.platforms = PLATFORMS
         try:
             await device.initialize()
-            if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
-                )
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
@@ -231,6 +255,20 @@ async def _async_setup_block_entry(
         runtime_data.block = ShellyBlockCoordinator(hass, entry, device)
         runtime_data.block.async_setup()
         runtime_data.rest = ShellyRestCoordinator(hass, device, entry)
+        if not device.firmware_supported:
+            # Keep polling even without enabled entities to detect a firmware update
+            entry.async_on_unload(
+                runtime_data.rest.async_add_listener(
+                    runtime_data.rest.async_reload_on_supported_firmware
+                )
+            )
+            runtime_data.unsupported_firmware = True
+            runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+            await hass.config_entries.async_forward_entry_setups(
+                entry, runtime_data.platforms
+            )
+            async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+            return
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
@@ -261,10 +299,9 @@ async def _async_setup_block_entry(
     ir.async_delete_issue(
         hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
     )
-    return True
 
 
-async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
+async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Set up Shelly RPC based device from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -272,6 +309,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
         port=get_http_port(entry.data),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     ws_context = await get_ws_context(hass)
@@ -285,13 +323,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     dev_reg = dr.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
-        device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+        device_entry = dev_reg.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
         )
-    # https://github.com/home-assistant/core/pull/48076
-    if device_entry and entry.entry_id not in device_entry.config_entries:
-        LOGGER.debug("Detected first time setup for device %s", entry.title)
-        device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
@@ -310,18 +344,26 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         try:
             await device.initialize()
             if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
+                runtime_data.unsupported_firmware = True
+                runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+                runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
+                runtime_data.rpc.async_setup()
+                runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+                await hass.config_entries.async_forward_entry_setups(
+                    entry, runtime_data.platforms
                 )
+                async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+                return
             runtime_data.rpc_zigbee_firmware = device.zigbee_firmware
             runtime_data.rpc_supports_scripts = await device.supports_scripts()
             if runtime_data.rpc_supports_scripts:
                 runtime_data.rpc_script_events = await get_rpc_scripts_event_types(
                     device, ignore_scripts=[BLE_SCRIPT_NAME]
+                )
+            if get_rpc_key_instances(device.status, "ledstrip"):
+                runtime_data.rpc_ledstrip_effects = await device.ledstrip_list_effects()
+                runtime_data.rpc_ledstrip_palettes = (
+                    await device.ledstrip_list_palettes()
                 )
             remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
@@ -347,7 +389,33 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
 
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()
+
+        if (
+            is_rpc_ble_scanner_supported(entry)
+            and entry.options.get(CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED)
+            != BLEScannerMode.DISABLED
+        ):
+            # Wait for the proxy to register its scanner before finishing setup.
+            try:
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await runtime_data.rpc.ble_scanner_setup_done.wait()
+            except TimeoutError:
+                LOGGER.debug(
+                    "%s: Timed out waiting for BLE scanner to register", entry.title
+                )
+
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+        if get_rpc_key_ids(device.status, BLU_TRV_IDENTIFIER):
+            runtime_data.rpc_blu_trv_update = ShellyBluTrvUpdateCoordinator(
+                hass, entry, device
+            )
+            # Checking the firmware repository reaches out to the internet, so it must
+            # not hold up setup; the update entities pick the result up when it lands.
+            entry.async_create_background_task(
+                hass,
+                runtime_data.rpc_blu_trv_update.async_refresh(),
+                "blu trv firmware check",
+            )
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
@@ -361,6 +429,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             entry,
         )
         async_manage_open_wifi_ap_issue(hass, entry)
+        async_manage_rtsp_disabled_issue(hass, entry)
+        async_manage_ir_raw_receive_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None
@@ -393,10 +463,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     ir.async_delete_issue(
         hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Unload a config entry."""
     # delete push update issue if it exists
     LOGGER.debug(
@@ -414,13 +483,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     if runtime_data.block:
         await runtime_data.block.shutdown()
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, runtime_data.platforms
     )
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove a config entry."""
+    # Issues raised before they were linked to the entry outlive it otherwise
+    for issue_id in (
+        BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+        DEPRECATED_FIRMWARE_ISSUE_ID,
+        OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id.format(unique=entry.unique_id))
     if get_device_entry_gen(entry) in RPC_GENERATIONS and (
         mac_address := entry.unique_id
     ):

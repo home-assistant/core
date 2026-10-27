@@ -1,13 +1,18 @@
 {
   "domain": "freebox",
   "name": "Freebox",
-  "codeowners": ["@hacf-fr", "@Quentame"],
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence",
+    "security_safety.alarm_systems"
+  ],
+  "codeowners": ["@Quentame"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["freebox_api"],
-  "requirements": ["freebox-api==1.3.0"],
+  "requirements": ["freebox-api==1.3.1"],
   "zeroconf": ["_fbx-api._tcp.local."]
 }

@@ -4,13 +4,15 @@ from datetime import timedelta
 from typing import Any
 
 from aioharmony.const import SendCommandDevice
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.harmony.const import (
     DOMAIN,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from homeassistant.components.harmony.remote import ATTR_CHANNEL, ATTR_DELAY_SECS
+from homeassistant.components.harmony.remote import ATTR_DELAY_SECS
+from homeassistant.components.harmony.services import ATTR_CHANNEL
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_COMMAND,
@@ -36,8 +38,6 @@ from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
 from .const import ENTITY_REMOTE, HUB_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 PLAY_COMMAND = "Play"
 STOP_COMMAND = "Stop"
@@ -293,7 +293,7 @@ async def test_async_send_command_custom_delay(
     mock_write_config,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Ensure calls to send remote commands properly propagate to devices with custom delays."""
+    """Ensure calls to send remote commands propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123",

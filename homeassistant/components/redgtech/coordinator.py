@@ -1,12 +1,10 @@
 """Coordinator for Redgtech integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
@@ -37,7 +35,8 @@ type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
 class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevice]]):
     """Coordinator to manage fetching data from the Redgtech API.
 
-    Uses a dictionary keyed by unique_id for O(1) device lookup instead of O(n) list iteration.
+    Uses a dictionary keyed by unique_id for O(1) device lookup
+    instead of O(n) list iteration.
     """
 
     config_entry: RedgtechConfigEntry
@@ -96,6 +95,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevi
             )
             return await api_call(*args)
 
+    @override
     async def _async_update_data(self) -> dict[str, RedgtechDevice]:
         """Fetch data from the API on demand.
 

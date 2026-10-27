@@ -1,27 +1,23 @@
 """Allow users to set and activate scenes."""
 
-from __future__ import annotations
-
-import functools as ft
 import importlib
 import logging
-from typing import Any, Final, final
+from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "scene"
-DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
+from .const import DATA_COMPONENT, DOMAIN, SceneService, SceneServiceArgument
+from .entity import BaseScene, Scene
+from .services import async_setup_services
+
 STATES: Final = "states"
 
 
@@ -41,7 +37,7 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
             f"homeassistant.components.{platform_name}.scene"
         )
     except ImportError:
-        raise vol.Invalid("Invalid platform specified") from None
+        raise probatio.Invalid("Invalid platform specified") from None
 
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
@@ -49,14 +45,28 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
     return platform.PLATFORM_SCHEMA(config)  # type: ignore[no-any-return]
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.All(
         _hass_domain_validator,
-        vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
+        probatio.Schema(
+            {probatio.Required(CONF_PLATFORM): str}, extra=probatio.ALLOW_EXTRA
+        ),
         _platform_validator,
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_TRANSITION",
+    "DOMAIN",
+    "PLATFORM_SCHEMA",
+    "SERVICE_TURN_ON",
+    "STATES",
+    "BaseScene",
+    "Scene",
+    "SceneService",
+    "SceneServiceArgument",
+]
 
 # mypy: disallow-any-generics
 
@@ -75,84 +85,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         eager_start=True,
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
-        "_async_activate",
-    )
+    async_setup_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class BaseScene(RestoreEntity):
-    """Base type for scenes."""
-
-    _attr_should_poll = False
-    __last_activated: str | None = None
-
-    @property
-    @final
-    def state(self) -> str | None:
-        """Return the state of the scene."""
-        if self.__last_activated is None:
-            return None
-        return self.__last_activated
-
-    @final
-    def _record_activation(self) -> None:
-        run_callback_threadsafe(self.hass.loop, self._async_record_activation).result()
-
-    @final
-    @callback
-    def _async_record_activation(self) -> None:
-        """Update the activation timestamp."""
-        self.__last_activated = dt_util.utcnow().isoformat()
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the scene is added to hass."""
-        await super().async_internal_added_to_hass()
-        state = await self.async_get_last_state()
-        if (
-            state is not None
-            and state.state is not None
-            and state.state != STATE_UNAVAILABLE
-        ):
-            self.__last_activated = state.state
-
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene."""
-        raise NotImplementedError
-
-    def activate(self, **kwargs: Any) -> None:
-        """Activate scene. Try to get entities into requested state."""
-        raise NotImplementedError
-
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate scene. Try to get entities into requested state."""
-        task = self.hass.async_add_executor_job(ft.partial(self.activate, **kwargs))
-        if task:
-            await task
-
-
-class Scene(BaseScene):
-    """A scene is a group of entities and the states we want them to be."""
-
-    @final
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene.
-
-        Should not be overridden, handle setting last press timestamp.
-        """
-        self._async_record_activation()
-        self.async_write_ha_state()
-        await self.async_activate(**kwargs)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)

@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 async def test_numbers(
     hass: HomeAssistant,
@@ -25,14 +24,24 @@ async def test_numbers(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test the Ohme sensors."""
+    """Test the Ohme numbers."""
     with patch("homeassistant.components.ohme.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity(
+        "number.ohme_home_pro_state_of_charge_input",
+        disabled_by=None,
+    )
+
+    with patch("homeassistant.components.ohme.PLATFORMS", [Platform.NUMBER]):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_set_number(
+async def test_set_target_percentage(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
@@ -53,3 +62,35 @@ async def test_set_number(
     )
 
     assert len(mock_client.async_set_target.mock_calls) == 1
+
+
+async def test_set_state_of_charge_input(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the number set."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity(
+        "number.ohme_home_pro_state_of_charge_input",
+        disabled_by=None,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={
+            ATTR_VALUE: 100,
+        },
+        target={
+            ATTR_ENTITY_ID: "number.ohme_home_pro_state_of_charge_input",
+        },
+        blocking=True,
+    )
+
+    assert len(mock_client.async_set_state_of_charge.mock_calls) == 1

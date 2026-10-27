@@ -1,17 +1,17 @@
 """Support for events which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
@@ -24,7 +24,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import validators as tcv
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -33,7 +34,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -45,20 +46,27 @@ DEFAULT_NAME = "Template Event"
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_TYPES = "event_types"
 
-DEVICE_CLASS_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
+DEVICE_CLASS_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(EventDeviceClass)
+)
 
-EVENT_COMMON_SCHEMA = vol.Schema(
+EVENT_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
-        vol.Required(CONF_EVENT_TYPE): cv.template,
-        vol.Required(CONF_EVENT_TYPES): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
+        probatio.Required(CONF_EVENT_TYPE): cv.template,
+        probatio.Required(CONF_EVENT_TYPES): cv.template,
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(
+        EventEntityCapabilityAttribute,
+        EventEntityStateAttribute,
+    )
+)
+
 EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_attributes_schema(
-        EVENT_DOMAIN, DEFAULT_NAME
-    ).schema
+    make_template_entity_common_schema(EVENT_DOMAIN, DEFAULT_NAME).schema
 )
 
 
@@ -119,15 +127,20 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         self._event_type = None
         self._attr_event_types = []
+        self._event_types_known = False
 
         self.setup_template(
             CONF_EVENT_TYPES,
@@ -145,6 +158,8 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     @callback
     def _update_event_types(self, event_types: Any) -> None:
         """Update the event types from the template."""
+        self._event_types_known = True
+
         if event_types in (None, "None", ""):
             self._attr_event_types = []
             return

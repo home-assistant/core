@@ -1,18 +1,30 @@
 """Tests for the Home Assistant auth module."""
 
+import asyncio
 from datetime import timedelta
+from ipaddress import ip_address
+from pathlib import Path
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import jwt
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     EVENT_USER_UPDATED,
+    DuplicateCredentialsError,
     InvalidAuthError,
     auth_store,
     const as auth_const,
@@ -23,14 +35,7 @@ from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    CLIENT_ID,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    ensure_auth_manager_loaded,
-    flush_store,
-)
+INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 
 
 @pytest.fixture
@@ -41,7 +46,7 @@ def mock_hass(hass: HomeAssistant) -> HomeAssistant:
 
 async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
     """Test get auth providers."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -82,7 +87,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass) -> None:
 
 async def test_auth_manager_from_config_auth_modules(mock_hass) -> None:
     """Test get auth modules."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         manager = await auth.auth_manager_from_config(
             mock_hass,
             [
@@ -172,12 +177,12 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     credential = step["result"]
     assert credential is not None
 
@@ -189,6 +194,74 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def _async_sign_in(manager: auth.AuthManager) -> Credentials:
+    """Finish a login flow as test-user and return its credentials."""
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "test-user", "password": "test-pass"}
+    )
+    return step["result"]
+
+
+async def test_new_credentials_signed_in_twice(hass: HomeAssistant) -> None:
+    """Test two first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    assert first.is_new
+    assert second.is_new
+
+    user = await manager.async_get_or_create_user(first)
+    with pytest.raises(DuplicateCredentialsError):
+        await manager.async_get_or_create_user(second)
+
+    assert await manager.async_get_users() == [user]
+
+
+async def test_new_credentials_redeemed_concurrently(hass: HomeAssistant) -> None:
+    """Test concurrent first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    provider = manager.auth_providers[0]
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    release = asyncio.Event()
+    user_meta = provider.async_user_meta_for_credentials
+
+    async def slow_user_meta(credentials: Credentials) -> auth_models.UserMeta:
+        await release.wait()
+        return await user_meta(credentials)
+
+    with patch.object(provider, "async_user_meta_for_credentials", slow_user_meta):
+        tasks = [
+            hass.async_create_task(manager.async_get_or_create_user(credentials))
+            for credentials in (first, second)
+        ]
+        await asyncio.sleep(0)
+        release.set()
+        user, error = await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert isinstance(error, DuplicateCredentialsError)
+    assert await manager.async_get_users() == [user]
 
 
 async def test_login_as_existing_user(mock_hass) -> None:
@@ -241,12 +314,12 @@ async def test_login_as_existing_user(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
     user = await manager.async_get_user_by_credentials(credential)
@@ -285,9 +358,7 @@ async def test_linking_user_to_two_auth_providers(
     user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
-    step = await manager.login_flow.async_init(
-        ("insecure_example", "another-provider"), context={"credential_only": True}
-    )
+    step = await manager.login_flow.async_init(("insecure_example", "another-provider"))
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )
@@ -299,11 +370,56 @@ async def test_linking_user_to_two_auth_providers(
     await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
-    # Linking a credential to a user while the credential is already linked to another user should raise
+    # Linking a credential to a user while the credential is
+    # already linked to another user should raise
     user_2 = await manager.async_create_user("User 2")
     with pytest.raises(ValueError):
         await manager.async_link_user(user_2, new_credential)
     assert len(user_2.credentials) == 0
+
+
+async def test_removing_credentials_ends_their_sessions(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test removing credentials revokes only the sessions that signed in with them."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    other_provider = manager.get_auth_provider("insecure_example", "another-provider")
+    assert provider is not None
+    assert other_provider is not None
+    user = await manager.async_create_user("Alice")
+    removed = provider.async_create_credentials({"username": "alice"})
+    kept = other_provider.async_create_credentials({"username": "alice"})
+    await manager.async_link_user(user, removed)
+    await manager.async_link_user(user, kept)
+    removed_session = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=removed
+    )
+    kept_session = await manager.async_create_refresh_token(
+        user, "https://other.example.com/", credential=kept
+    )
+    unrelated = await manager.async_create_refresh_token(
+        user, "https://unrelated.example.com/"
+    )
+    revoked: list[str] = []
+    manager.async_register_revoke_token_callback(
+        removed_session.id, lambda: revoked.append(removed_session.id)
+    )
+
+    await manager.async_remove_credentials(removed)
+
+    assert user.credentials == [kept]
+    assert manager.async_get_refresh_token(removed_session.id) is None
+    assert revoked == [removed_session.id]
+    assert manager.async_get_refresh_token(kept_session.id) is kept_session
+    assert manager.async_get_refresh_token(unrelated.id) is unrelated
 
 
 async def test_saving_loading(
@@ -577,6 +693,17 @@ async def test_cannot_deactive_owner(mock_hass) -> None:
         await manager.async_deactivate_user(owner)
 
 
+async def test_cannot_remove_owner(mock_hass: HomeAssistant) -> None:
+    """Test that we cannot remove the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    owner = MockUser(is_owner=True).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_remove_user(owner)
+
+    assert await manager.async_get_user(owner.id) is owner
+
+
 async def test_deactivate_user_removes_refresh_tokens(hass: HomeAssistant) -> None:
     """Test that deactivating a user removes their refresh tokens."""
     manager = await auth.auth_manager_from_config(hass, [], [])
@@ -839,14 +966,14 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request auth module input form
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -854,7 +981,7 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Invalid code error
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
     assert step["errors"] == {"base": "invalid_code"}
 
@@ -863,8 +990,94 @@ async def test_login_with_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_command_line_with_auth_module(mock_hass: HomeAssistant) -> None:
+    """Test the command line provider asks for an enabled auth module."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {
+                "type": "command_line",
+                "command": str(
+                    Path(__file__).parent / "providers/test_command_line_cmd.sh"
+                ),
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="command_line",
+            auth_provider_id=None,
+            data={"username": "good-user"},
+            is_new=False,
+        )
+    )
+
+    step = await manager.login_flow.async_init(("command_line", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "good-user", "password": "good-pass"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
+    assert step["step_id"] == "mfa"
+
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"pin": "test-pin"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_trusted_networks_skips_auth_module(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test a provider without an MFA login flow does not ask for auth modules."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [{"type": "trusted_networks", "trusted_networks": ["192.168.0.1"]}],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="trusted_networks",
+            auth_provider_id=None,
+            data={"user_id": "mock-user"},
+            is_new=False,
+        )
+    )
+    assert await manager.async_get_enabled_mfa(user)
+
+    step = await manager.login_flow.async_init(
+        ("trusted_networks", None), context={"ip_address": ip_address("192.168.0.1")}
+    )
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"user": "mock-user"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"].id == "mock-id"
 
 
@@ -914,21 +1127,21 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request select auth module
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "select_mfa_module"
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"multi_factor_auth_module": "module2"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -936,7 +1149,7 @@ async def test_login_with_multi_auth_module(mock_hass) -> None:
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -982,13 +1195,13 @@ async def test_auth_module_expired_session(mock_hass) -> None:
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
-    assert step["type"] == data_entry_flow.FlowResultType.FORM
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     with freeze_time(dt_util.utcnow() + MFA_SESSION_EXPIRATION):
@@ -996,7 +1209,7 @@ async def test_auth_module_expired_session(mock_hass) -> None:
             step["flow_id"], {"pin": "test-pin"}
         )
         # login flow abort due session timeout
-        assert step["type"] == data_entry_flow.FlowResultType.ABORT
+        assert step["type"] is data_entry_flow.FlowResultType.ABORT
         assert step["reason"] == "login_expired"
 
 
@@ -1118,6 +1331,22 @@ async def test_async_remove_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def test_async_remove_user_revokes_refresh_tokens(hass: HomeAssistant) -> None:
+    """Test removing a user revokes its refresh tokens."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser(is_owner=False).add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+    revoked = Mock()
+    manager.async_register_revoke_token_callback(refresh_token.id, revoked)
+
+    await manager.async_remove_user(user)
+
+    revoked.assert_called_once_with()
+    assert manager.async_get_refresh_token(refresh_token.id) is None
+    assert manager.async_validate_access_token(access_token) is None
 
 
 async def test_async_remove_user_fail_if_remove_credential_fails(
@@ -1339,7 +1568,7 @@ async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with invalid json payload."""
     jws = jwt.PyJWS()
     token_with_invalid_json = jws.encode(
-        b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b"invalid", INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_with_invalid_json) is None
@@ -1349,7 +1578,7 @@ async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
     """Test rejecting access tokens with not a dict json payload."""
     jws = jwt.PyJWS()
     token_not_a_dict_json = jws.encode(
-        b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+        b'["invalid"]', INVALID_SIGNING_KEY, "HS256", {"alg": "HS256", "typ": "JWT"}
     )
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     assert manager.async_validate_access_token(token_not_a_dict_json) is None
@@ -1398,3 +1627,50 @@ async def test_access_token_from_the_future(mock_hass) -> None:
     with freeze_time(now + timedelta(days=365)):
         rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id
+
+
+_EXAMPLE_PROVIDER = "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+
+
+async def test_every_provider_is_initialized(mock_hass: HomeAssistant) -> None:
+    """Test providers are initialized before anybody tries to log in."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize") as mock_initialize:
+        await auth.auth_manager_from_config(
+            mock_hass,
+            [
+                {"type": "insecure_example", "users": []},
+                {"type": "insecure_example", "id": "another", "users": []},
+            ],
+            [],
+        )
+
+    assert mock_initialize.call_count == 2
+
+
+async def test_a_provider_that_cannot_initialize_is_not_fatal(
+    mock_hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a broken provider leaves the other ways into the instance working."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize", side_effect=ValueError("boom")):
+        manager = await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )
+
+    assert "Error initializing auth provider insecure_example" in caplog.text
+    assert len(manager.auth_providers) == 1
+
+
+async def test_provider_initialization_is_not_swallowed_when_cancelled(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test only errors of a provider are logged, not a cancellation."""
+    with (
+        patch(
+            f"{_EXAMPLE_PROVIDER}.async_initialize",
+            side_effect=asyncio.CancelledError,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )

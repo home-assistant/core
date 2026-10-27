@@ -1,6 +1,4 @@
-"""The Open Thread Border Router integration."""
-
-from __future__ import annotations
+"""The OpenThread Border Router integration."""
 
 import logging
 
@@ -13,7 +11,11 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 )
 from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -34,7 +36,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Open Thread Border Router component."""
+    """Set up the OpenThread Border Router component."""
     websocket_api.async_setup(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
@@ -42,8 +44,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
-    """Set up an Open Thread Border Router config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
+    """Set up an OpenThread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
@@ -51,17 +53,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
-    except GetBorderAgentIdNotSupported:
+    except GetBorderAgentIdNotSupported as err:
         ir.async_create_issue(
             hass,
             DOMAIN,
             f"get_get_border_agent_id_unsupported_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="get_get_border_agent_id_unsupported",
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="border_agent_id_unsupported",
+        ) from err
     except (
         HomeAssistantError,
         aiohttp.ClientError,
@@ -85,12 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     if fw_info := await homeassistant_hardware.async_get_firmware_info(hass, entry):
         await async_notify_firmware_info(hass, DOMAIN, fw_info)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Unload a config entry."""
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:

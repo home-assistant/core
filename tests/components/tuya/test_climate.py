@@ -1,11 +1,11 @@
 """Test Tuya climate platform."""
 
-from __future__ import annotations
-
+import json
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from tuya_sharing import CustomerDevice, Manager
@@ -36,11 +36,13 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +52,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -175,6 +178,100 @@ async def test_action(
 
 
 @pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "status_updates", "expected_state"),
+    [
+        pytest.param(
+            "wk_cpmgn2cf",
+            "climate.bathroom_radiator",
+            {"mode": "eco"},
+            HVACMode.HEAT_COOL,
+            id="preset_without_switch",
+        ),
+        pytest.param(
+            "wk_6kijc7nd",
+            "climate.kabinet",
+            {"mode": "program", "switch": True},
+            HVACMode.HEAT_COOL,
+            id="preset_switch_on",
+        ),
+        pytest.param(
+            "wk_6kijc7nd",
+            "climate.kabinet",
+            {"mode": "program", "switch": False},
+            HVACMode.OFF,
+            id="preset_switch_off",
+        ),
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "off", "switch": True},
+            HVACMode.OFF,
+            id="hvac_mode_value",
+        ),
+    ],
+)
+async def test_hvac_mode_with_preset(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    status_updates: dict[str, Any],
+    expected_state: HVACMode,
+) -> None:
+    """Test the HVAC mode while the mode DP holds a preset."""
+    mock_device.status.update(status_updates)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "status_updates", "expected_commands"),
+    [
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "off", "switch": True},
+            [{"code": "switch", "value": True}, {"code": "mode", "value": "auto"}],
+            id="from_hvac_mode_value",
+        ),
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "manual", "switch": False},
+            [{"code": "switch", "value": True}],
+            id="keep_active_preset",
+        ),
+    ],
+)
+async def test_set_switch_only_hvac_mode_with_preset(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    status_updates: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
+) -> None:
+    """Test setting the switch-only HVAC mode on a device with presets."""
+    mock_device.status.update(status_updates)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, expected_commands
+    )
+
+
+@pytest.mark.parametrize(
     "mock_device_code",
     ["kt_5wnlzekkstwcdsvm"],
 )
@@ -221,3 +318,131 @@ async def test_action_not_supported(
             },
             blocking=True,
         )
+
+
+def _override_temperature_unit(
+    device: CustomerDevice, *, temp_set: str, temp_current: str
+) -> None:
+    """Override the unit of the temp_set/temp_current DPCodes."""
+    units = {"temp_set": temp_set, "temp_current": temp_current}
+    for container in (device.function, device.status_range):
+        for code, unit in units.items():
+            if code in container:
+                values = json.loads(container[code].values)
+                values["unit"] = unit
+                container[code].values = json.dumps(values)
+
+
+@pytest.mark.parametrize("mock_device_code", ["kt_5wnlzekkstwcdsvm"])
+@pytest.mark.parametrize(
+    (
+        "units",
+        "temp_current_native_unit",
+        "expected_current",
+        "temp_set_native_unit",
+        "expected_target",
+        "service_temperature",
+        "expected_set_value",
+    ),
+    # Note: status in the fixture "temp_set": 23 / "temp_current": 22,
+    [
+        pytest.param(
+            METRIC_SYSTEM, "℉", -5.6, "℉", -5, 25, 77, id="metric-both-fahrenheit"
+        ),
+        pytest.param(
+            METRIC_SYSTEM, "℃", 22.0, "℃", 23.0, 25, 25, id="metric-both-celsius"
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            "℃",
+            22.0,
+            "℉",
+            -5,
+            25,
+            77,
+            id="metric-set-fahrenheit-current-celsius",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            "℉",
+            -5.6,
+            "℃",
+            23.0,
+            25,
+            25,
+            id="metric-set-celsius-current-fahrenheit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM, "℉", 22, "℉", 23, 70, 70, id="us-both-fahrenheit"
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM, "℃", 72, "℃", 73, 70, 21, id="us-both-celsius"
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            "℃",
+            72,
+            "℉",
+            23,
+            70,
+            70,
+            id="us-set-fahrenheit-current-celsius",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            "℉",
+            22,
+            "℃",
+            73,
+            70,
+            21,
+            id="us-set-celsius-current-fahrenheit",
+        ),
+    ],
+)
+async def test_temperature_unit_conversion(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    units: UnitSystem,
+    temp_current_native_unit: str,
+    expected_current: float,
+    temp_set_native_unit: str,
+    expected_target: float,
+    service_temperature: float,
+    expected_set_value: int,
+) -> None:
+    """Test current/target temperature conversion from the device native unit.
+
+    The kt_5wnlzekkstwcdsvm fixture reports its temperatures with the combined
+    "℃ ℉" unit, so the definition falls back to the system unit. Overriding the
+    DPCode units exercises the conversion between the device native unit and the
+    entity unit, independently for temp_set/temp_current and per unit system.
+    """
+    hass.config.units = units
+    _override_temperature_unit(
+        mock_device,
+        temp_set=temp_set_native_unit,
+        temp_current=temp_current_native_unit,
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("climate.air_conditioner")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == expected_current
+    assert state.attributes[ATTR_TEMPERATURE] == expected_target
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.air_conditioner",
+            ATTR_TEMPERATURE: service_temperature,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "temp_set", "value": expected_set_value}]
+    )

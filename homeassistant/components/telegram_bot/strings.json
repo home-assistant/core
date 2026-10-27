@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "bot_logout_failed": "Failed to log out Telegram bot. Please try again later.",
@@ -33,16 +31,16 @@
         },
         "description": "Reconfigure Telegram bot",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data::proxy_url%]"
             },
             "data_description": {
-              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::api_endpoint%]",
-              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::api_endpoint%]",
+              "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::data_description::proxy_url%]"
             },
-            "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]"
+            "name": "[%key:component::telegram_bot::config::step::user::sections::additional_settings::name%]"
           }
         },
         "title": "Telegram bot setup"
@@ -58,7 +56,7 @@
         },
         "description": "To create a Telegram bot, follow these steps:\n\n1. Open Telegram and start a chat with [{botfather_username}]({botfather_url}).\n1. Send the command `/newbot`.\n1. Follow the instructions to create your bot and get your API token.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "api_endpoint": "API endpoint",
               "proxy_url": "Proxy URL"
@@ -67,7 +65,7 @@
               "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
               "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -188,17 +186,41 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "cannot_connect": {
+      "message": "Could not connect to Telegram."
+    },
     "entry_not_loaded": {
       "message": "{telegram_bot} is not loaded"
     },
     "failed_to_load_file": {
-      "message": "Failed to load file: {error}"
+      "message": "Failed to load file {file_path}."
     },
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
     },
+    "failed_to_load_url_empty": {
+      "message": "Failed to load URL: the server returned no data."
+    },
+    "failed_to_load_url_status": {
+      "message": "Failed to load URL: the server responded with status code {status_code}."
+    },
+    "file_not_found": {
+      "message": "File {file_path} does not exist."
+    },
+    "file_permission_denied": {
+      "message": "Cannot read file {file_path}: permission denied."
+    },
+    "invalid_api_key": {
+      "message": "The Telegram bot API token is invalid."
+    },
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
+    },
+    "invalid_directory_path": {
+      "message": "Invalid directory path: {directory_path}. The path must not contain `~` or `..`."
+    },
+    "invalid_file_name": {
+      "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
     },
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
@@ -217,6 +239,12 @@
     },
     "multiple_errors": {
       "message": "Action failed with multiple errors.\n{errors}"
+    },
+    "no_file_path": {
+      "message": "Telegram did not return a path for the requested file."
+    },
+    "platform_setup_failed": {
+      "message": "Failed to set up the Telegram bot."
     }
   },
   "issues": {
@@ -224,7 +252,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
+            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then select **Submit** to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
             "title": "The `timeout` parameter for {integration_title} is being removed"
           }
         }
@@ -235,7 +263,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The `target` parameter is being deprecated. You should update any automations and scripts that use that parameter in Telegram bot actions. Use `entity_id` to specify Telegram bot notify entities or `chat_id` to replace `target`.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Update the `{action}` action using either of the following methods:\n    - Delete the `target` parameter and add the new `entity_id` parameter to specify [Telegram bot notify entities]({telegram_bot_entities_url}).\n    - Replace the `target` parameter with `chat_id`.\n1. Click SUBMIT to fix this issue.\n\n**Example old action:**\n{example_old}\n\n**Example new action (using notify entities):**\n{example_new_entity_id}\n\n**Example new action (replacing `target` with `chat_id`):**\n{example_new_chat_id}",
+            "description": "The `target` parameter is being deprecated. You should update any automations and scripts that use that parameter in Telegram bot actions. Use `entity_id` to specify Telegram bot notify entities or `chat_id` to replace `target`.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Update the `{action}` action using either of the following methods:\n    - Delete the `target` parameter and add the new `entity_id` parameter to specify [Telegram bot notify entities]({telegram_bot_entities_url}).\n    - Replace the `target` parameter with `chat_id`.\n1. Select **Submit** to fix this issue.\n\n**Example old action:**\n{example_old}\n\n**Example new action (using notify entities):**\n{example_new_entity_id}\n\n**Example new action (replacing `target` with `chat_id`):**\n{example_new_chat_id}",
             "title": "The `target` parameter for {integration_title} is being removed"
           }
         }
@@ -361,8 +389,8 @@
       },
       "name": "Delete message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -419,8 +447,8 @@
       },
       "name": "Edit caption",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -466,8 +494,8 @@
       },
       "name": "Edit message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -529,8 +557,8 @@
       },
       "name": "Edit message media",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -563,8 +591,8 @@
       },
       "name": "Edit reply markup",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -586,8 +614,8 @@
       },
       "name": "Leave chat",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -665,8 +693,8 @@
       },
       "name": "Send animation",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -699,8 +727,8 @@
       },
       "name": "Send chat action",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -778,8 +806,8 @@
       },
       "name": "Send document",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -836,8 +864,8 @@
       },
       "name": "Send location",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -883,8 +911,8 @@
       },
       "name": "Send media group",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -946,8 +974,47 @@
       },
       "name": "Send message",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "Additional options"
+        }
+      }
+    },
+    "send_message_draft": {
+      "description": "Shows a partial message (draft) in Telegram while the full message is still being generated.",
+      "fields": {
+        "chat_id": {
+          "description": "One or more pre-authorized chat IDs to send the message draft to.",
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the message draft.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "draft_id": {
+          "description": "Unique identifier of the message draft. Changes of drafts with the same identifier are animated.",
+          "name": "Draft ID"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "message": {
+          "description": "Available part of the message for temporary notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message::name%]"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        }
+      },
+      "name": "Send message draft",
+      "sections": {
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -1025,8 +1092,8 @@
       },
       "name": "Send photo",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "URL options"
@@ -1083,8 +1150,8 @@
       },
       "name": "Send poll",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -1158,8 +1225,8 @@
       },
       "name": "Send sticker",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1240,8 +1307,8 @@
       },
       "name": "Send video",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1318,8 +1385,8 @@
       },
       "name": "Send voice",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1356,8 +1423,8 @@
       },
       "name": "Set message reaction",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     }

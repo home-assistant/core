@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from letpot.exceptions import LetPotConnectionException, LetPotException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import SERVICE_SET_VALUE
@@ -14,8 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -61,11 +60,13 @@ async def test_set_time(
     [
         (
             LetPotConnectionException("Connection failed"),
-            "An error occurred while communicating with the LetPot device: Connection failed",
+            "An error occurred while communicating with the LetPot"
+            " device: Connection failed",
         ),
         (
             LetPotException("Random thing failed"),
-            "An unknown error occurred while communicating with the LetPot device: Random thing failed",
+            "An unknown error occurred while communicating with"
+            " the LetPot device: Random thing failed",
         ),
     ],
 )

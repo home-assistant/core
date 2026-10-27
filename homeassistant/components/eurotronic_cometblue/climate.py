@@ -1,0 +1,198 @@
+"""Comet Blue climate integration."""
+
+from typing import Any, override
+
+from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
+from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
+from .entity import CometBlueBluetoothEntity
+
+PARALLEL_UPDATES = 1
+MIN_TEMP = 7.5
+MAX_TEMP = 28.5
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: CometBlueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the client entities."""
+
+    coordinator = entry.runtime_data
+    async_add_entities([CometBlueClimateEntity(coordinator)])
+
+
+class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
+    """A Comet Blue Climate climate entity."""
+
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
+    _attr_name = None
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = [
+        PRESET_COMFORT,
+        PRESET_ECO,
+        PRESET_BOOST,
+        PRESET_AWAY,
+        PRESET_NONE,
+    ]
+    _attr_supported_features: ClimateEntityFeature = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    _attr_target_temperature_step = PRECISION_HALVES
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: CometBlueDataUpdateCoordinator) -> None:
+        """Initialize CometBlueClimateEntity."""
+
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.address
+
+    @property
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self.coordinator.data.temperatures["currentTemp"]
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the temperature currently set to be reached."""
+        return self.coordinator.data.temperatures["manualTemp"]
+
+    @property
+    def _device_comfort_setpoint(self) -> float | None:
+        """Return the comfort setpoint temperature.
+
+        Internally used for preset selection.
+        """
+        return self.coordinator.data.temperatures["targetTempHigh"]
+
+    @property
+    def _device_eco_setpoint(self) -> float | None:
+        """Return the eco setpoint temperature.
+
+        Internally used for preset selection.
+        """
+        return self.coordinator.data.temperatures["targetTempLow"]
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode | None:
+        """Return hvac operation mode."""
+        if self.native_target_temperature == MIN_TEMP:
+            return HVACMode.OFF
+        if self.native_target_temperature == MAX_TEMP:
+            return HVACMode.HEAT
+        return HVACMode.AUTO
+
+    @property
+    @override
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode, e.g., home, away, temp."""
+        # presets have an order in which they are displayed on TRV:
+        # away, boost, comfort, eco, none (manual)
+        if (
+            self.coordinator.data.holiday.get("start") is None
+            and self.coordinator.data.holiday.get("end") is not None
+            and self.native_target_temperature
+            == self.coordinator.data.holiday.get("temperature")
+        ):
+            return PRESET_AWAY
+        if self.native_target_temperature == MAX_TEMP:
+            return PRESET_BOOST
+        if self.native_target_temperature == self._device_comfort_setpoint:
+            return PRESET_COMFORT
+        if self.native_target_temperature == self._device_eco_setpoint:
+            return PRESET_ECO
+        return PRESET_NONE
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperatures."""
+
+        if self.preset_mode == PRESET_AWAY:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_adjust_during_holiday",
+            )
+
+        await self.coordinator.send_command(
+            self.coordinator.device.set_temperature_async,
+            {
+                "values": {
+                    # manual temperature always needs to be set,
+                    # otherwise TRV will turn OFF
+                    "manualTemp": kwargs.get(ATTR_TEMPERATURE)
+                    or self.native_target_temperature,
+                    # other temperatures can be left unchanged by setting them to None
+                    "targetTempLow": kwargs.get(ATTR_TARGET_TEMP_LOW),
+                    "targetTempHigh": kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                }
+            },
+        )
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new target preset mode."""
+
+        if preset_mode == PRESET_ECO:
+            return await self.async_set_temperature(
+                temperature=self._device_eco_setpoint
+            )
+        if preset_mode == PRESET_COMFORT:
+            return await self.async_set_temperature(
+                temperature=self._device_comfort_setpoint
+            )
+        if preset_mode == PRESET_BOOST:
+            return await self.async_set_temperature(temperature=MAX_TEMP)
+
+        # PRESET_NONE and PRESET_AWAY are display-only presets
+        # Other presets are blocked by self._valid_mode_or_raise
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="display_only_preset",
+            translation_placeholders={"preset_mode": preset_mode},
+        )
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+
+        if hvac_mode == HVACMode.OFF:
+            return await self.async_set_temperature(temperature=MIN_TEMP)
+        if hvac_mode == HVACMode.HEAT:
+            return await self.async_set_temperature(temperature=MAX_TEMP)
+        # Other presets are blocked by self._valid_mode_or_raise
+        return await self.async_set_temperature(temperature=self._device_eco_setpoint)
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        await self.async_set_hvac_mode(HVACMode.AUTO)
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        await self.async_set_hvac_mode(HVACMode.OFF)

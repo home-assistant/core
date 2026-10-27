@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, patch
 from huum.const import SaunaStatus
 from huum.schemas import HuumStatusResponse, SaunaConfig
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -36,8 +35,7 @@ def mock_huum_client() -> Generator[AsyncMock]:
             target_temperature=80,
             config=3,
             light=1,
-            humidity=0,
-            target_humidity=5,
+            humidity=5,
             sauna_config=SaunaConfig(
                 child_lock="OFF",
                 max_heating_time=3,
@@ -55,7 +53,7 @@ def mock_huum_client() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.huum.async_setup_entry", return_value=True
+        "homeassistant.components.huum.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 

@@ -1,17 +1,19 @@
 """Expose images as media sources."""
 
-from __future__ import annotations
-
+import math
 from pathlib import Path
+from time import time
 
-from homeassistant.components.media_source import MediaSource, local_source
+from homeassistant.components.media_source import local_source
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.singleton import singleton
 
-from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR
+from .const import DATA_MEDIA_SOURCE, DOMAIN, IMAGE_DIR, LOGGER
 
 
-async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
+@singleton(DATA_MEDIA_SOURCE, async_=True)
+async def async_get_media_source(hass: HomeAssistant) -> local_source.LocalSource:
     """Set up local media source."""
     media_dirs = list(hass.config.media_dirs.values())
 
@@ -22,11 +24,31 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
     media_dir = Path(media_dirs[0]) / DOMAIN / IMAGE_DIR
 
-    hass.data[DATA_MEDIA_SOURCE] = source = local_source.LocalSource(
+    return local_source.LocalSource(
         hass,
         DOMAIN,
-        "AI Generated Images",
+        "AI generated images",
         {IMAGE_DIR: str(media_dir)},
         f"/{DOMAIN}",
     )
-    return source
+
+
+async def async_clear_images(hass: HomeAssistant, days: int | None) -> None:
+    """Delete generated images, or only those older than the given days."""
+    source = await async_get_media_source(hass)
+    image_dir = Path(source.media_dirs[IMAGE_DIR])
+    cutoff = time() - days * 86400 if days else math.inf
+
+    def remove_images() -> None:
+        """Remove images from the filesystem."""
+        if not image_dir.is_dir():
+            return
+        for image in image_dir.iterdir():
+            try:
+                if not image.is_file() or image.stat().st_mtime >= cutoff:
+                    continue
+                image.unlink()
+            except OSError as err:
+                LOGGER.warning("Can't remove image '%s': %s", image.name, err)
+
+    await hass.async_add_executor_job(remove_images)

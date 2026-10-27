@@ -1,10 +1,9 @@
 """The tests for event recorder."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import select
 from homeassistant.components.event import ATTR_EVENT_TYPES
@@ -14,8 +13,6 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)

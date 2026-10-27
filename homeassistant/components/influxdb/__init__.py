@@ -1,7 +1,5 @@
 """Support for sending data to an Influx database."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -10,19 +8,20 @@ import math
 import queue
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
 from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
 from influxdb_client.rest import ApiException
+import probatio
 import requests.exceptions
 import urllib3.exceptions
-import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_EXCLUDE,
@@ -41,6 +40,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -63,7 +63,6 @@ from .const import (
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,
@@ -141,19 +140,19 @@ def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
     if conf.get(CONF_API_VERSION, DEFAULT_API_VERSION) == API_VERSION_2:
         if CONF_TOKEN not in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
                 f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
         if CONF_USERNAME in conf:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when"
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
     elif CONF_TOKEN in conf:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
             f" {CONF_API_VERSION} is {API_VERSION_2}"
         )
@@ -161,35 +160,39 @@ def validate_version_specific_config(conf: dict) -> dict:
     return conf
 
 
-_CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
+_CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_IGNORE_ATTRIBUTES): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_IGNORE_ATTRIBUTES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 )
 
 _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
-        vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
-        vol.Optional(CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR): vol.In(
-            ["unit_of_measurement", "domain__device_class", "entity_id"]
+        probatio.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
+        probatio.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        probatio.Optional(
+            CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR
+        ): probatio.In(["unit_of_measurement", "domain__device_class", "entity_id"]),
+        probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_TAGS, default={}): probatio.Schema(
+            {cv.string: cv.string}
         ),
-        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
-        vol.Optional(CONF_TAGS, default={}): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(CONF_TAGS_ATTRIBUTES, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+        probatio.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
-        vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
+        probatio.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_ENTITY_SCHEMA}
         ),
     }
@@ -200,16 +203,25 @@ INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
 )
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(INFLUX_SCHEMA, validate_version_specific_config)},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(INFLUX_SCHEMA, validate_version_specific_config)},
+    extra=probatio.ALLOW_EXTRA,
 )
+
+
+def _single_line(value: str) -> str:
+    """Return the value with its line breaks replaced by spaces.
+
+    Line protocol has no escape for a line break, in a string field it ends
+    the point, and the escape the clients use for tags is not one either.
+    """
+    return " ".join(value.splitlines())
 
 
 def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
-    tags = conf.get(CONF_TAGS)
+    tags = {key: _single_line(value) for key, value in conf[CONF_TAGS].items()}
     tags_attributes: list[str] = conf[CONF_TAGS_ATTRIBUTES]
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     measurement_attr: str = conf[CONF_MEASUREMENT_ATTR]
@@ -254,7 +266,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 if measurement_attr == "entity_id":
                     measurement = state.entity_id
                 elif measurement_attr == "domain__device_class":
-                    device_class = state.attributes.get("device_class")
+                    device_class = state.attributes.get(
+                        EntityStateAttribute.DEVICE_CLASS
+                    )
                     if device_class is None:
                         # This entity doesn't have a device_class set, use only domain
                         measurement = state.domain
@@ -271,6 +285,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
 
+        if isinstance(measurement, str):
+            measurement = _single_line(measurement)
+
         json: dict[str, Any] = {
             INFLUX_CONF_MEASUREMENT: measurement,
             INFLUX_CONF_TAGS: {
@@ -281,7 +298,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
             INFLUX_CONF_FIELDS: {},
         }
         if _include_state:
-            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = state.state
+            json[INFLUX_CONF_FIELDS][INFLUX_CONF_STATE] = _single_line(state.state)
         if _include_value:
             json[INFLUX_CONF_FIELDS][INFLUX_CONF_VALUE] = _state_as_value
 
@@ -289,7 +306,9 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
         ignore_attributes.update(global_ignore_attributes)
         for key, value in state.attributes.items():
             if key in tags_attributes:
-                json[INFLUX_CONF_TAGS][key] = value
+                json[INFLUX_CONF_TAGS][key] = (
+                    _single_line(value) if isinstance(value, str) else value
+                )
             elif (
                 (key != CONF_UNIT_OF_MEASUREMENT or include_uom)
                 and (key != "device_class" or include_dc)
@@ -306,7 +325,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     json[INFLUX_CONF_FIELDS][key] = float(value)
                 except ValueError, TypeError:
                     new_key = f"{key}_str"
-                    new_value = str(value)
+                    new_value = _single_line(str(value))
                     json[INFLUX_CONF_FIELDS][new_key] = new_value
 
                     if RE_DIGIT_TAIL.match(new_value):
@@ -318,6 +337,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
+
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
 
         json[INFLUX_CONF_TAGS].update(tags)
 
@@ -425,7 +452,7 @@ def get_influx_connection(  # noqa: C901
     if CONF_HOST in conf:
         kwargs[CONF_HOST] = conf[CONF_HOST]
 
-    if (path := conf.get(CONF_PATH)) is not None:
+    if (path := conf.get(CONF_PATH)) is not None and path != "/":
         kwargs[CONF_PATH] = path
 
     if (port := conf.get(CONF_PORT)) is not None:
@@ -511,7 +538,7 @@ async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
         async_create_deprecated_yaml_issue(hass)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Set up InfluxDB from a config entry."""
     data = entry.data
 
@@ -556,17 +583,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     entry.runtime_data = influx_thread
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
     # Run shutdown in the executor so the event loop isn't blocked
     await hass.async_add_executor_job(influx_thread.shutdown)
-
-    return True
 
 
 class InfluxThread(threading.Thread):
@@ -668,6 +691,7 @@ class InfluxThread(threading.Thread):
                         _LOGGER.error(err)
                     self.write_errors += len(json)
 
+    @override
     def run(self):
         """Process incoming events."""
         while not self._shutdown:

@@ -6,17 +6,16 @@ from unittest.mock import AsyncMock
 
 from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_alarm.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_user(
@@ -67,9 +66,9 @@ async def test_form_user(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
     config_flow_data: dict[str, Any],
     exception: Exception,
@@ -116,9 +115,9 @@ async def test_form_exceptions(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions_user(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
     config_flow_data: dict[str, Any],
     exception: Exception,
@@ -208,9 +207,9 @@ async def test_entry_already_configured_serial(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_can_finish(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
     serial_number: str,
@@ -246,6 +245,7 @@ async def test_dhcp_can_finish(
         CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
+    assert result["result"].unique_id == serial_number
 
 
 @pytest.mark.parametrize(
@@ -255,9 +255,9 @@ async def test_dhcp_can_finish(
         (Exception(), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
     serial_number: str,
@@ -282,9 +282,9 @@ async def test_dhcp_exceptions(
 
 
 @pytest.mark.parametrize("mac_address", ["34ea34b43b5a"])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_updates_host(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     mac_address: str | None,
@@ -311,16 +311,16 @@ async def test_dhcp_updates_host(
 
 
 @pytest.mark.parametrize("serial_number", ["12345678"])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_if_panel_setup_config_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     serial_number: str,
     panel_model: PanelModel,
     config_flow_data: dict[str, Any],
 ) -> None:
-    """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
+    """Test DHCP discovery doesn't fail if a different panel was set up."""
     await setup_integration(hass, mock_config_entry)
 
     # change out the serial number so we can test discovery for a different panel
@@ -391,16 +391,16 @@ async def test_dhcp_abort_ongoing_flow(
     assert result["reason"] == "already_in_progress"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_updates_mac(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
-    """Test DHCP discovery flow updates mac if the previous entry did not have a mac address."""
+    """Test DHCP discovery flow updates mac if previous entry had no mac address."""
     await setup_integration(hass, mock_config_entry)
     assert CONF_MAC not in mock_config_entry.data
 
@@ -420,9 +420,9 @@ async def test_dhcp_updates_mac(
     assert mock_config_entry.data[CONF_MAC] == "34:ea:34:b4:3b:5a"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_success(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
@@ -455,9 +455,9 @@ async def test_reauth_flow_success(
         (Exception(), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
@@ -490,9 +490,9 @@ async def test_reauth_flow_error(
     assert compare == mock_config_entry.data
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfig_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
@@ -503,13 +503,7 @@ async def test_reconfig_flow(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -536,9 +530,9 @@ async def test_reconfig_flow(
 
 
 @pytest.mark.parametrize("model", ["b5512"])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfig_flow_incorrect_model(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     panel_model: PanelModel,
@@ -549,13 +543,7 @@ async def test_reconfig_flow_incorrect_model(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_panel.model = PanelModel("Solution 3000", family=PANEL_FAMILY.SOLUTION)
 

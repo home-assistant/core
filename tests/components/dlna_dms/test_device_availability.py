@@ -1,7 +1,5 @@
 """Test how the DmsDeviceSource handles available and unavailable devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 import logging
@@ -11,6 +9,7 @@ from unittest.mock import ANY, DEFAULT, Mock
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
@@ -28,8 +27,6 @@ from .conftest import (
     MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 DUMMY_OBJECT_ID: Final = "123"
 
@@ -601,7 +598,8 @@ async def test_ssdp_bootid(
     await assert_source_available(hass)
     assert upnp_factory_mock.async_create_device.await_count == 1
 
-    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    # Send a new SSDP alive with an incremented boot ID,
+    # device should be dis/reconnected
     await ssdp_callback(
         SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -627,7 +625,8 @@ async def test_repeated_connect(
     """Test trying to connect an already connected device is safely ignored."""
     upnp_factory_mock.async_create_device.reset_mock()
 
-    # Calling internal function directly to skip trying to time 2 SSDP messages carefully
+    # Calling internal function directly to skip trying to
+    # time 2 SSDP messages carefully
     domain_data = get_domain_data(hass)
     device_source = domain_data.sources[MOCK_SOURCE_ID]
     with caplog.at_level(logging.DEBUG):

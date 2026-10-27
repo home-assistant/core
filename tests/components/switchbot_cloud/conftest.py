@@ -13,7 +13,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.switchbot_cloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -30,6 +30,29 @@ def mock_get_status():
     """Mock get_status."""
     with patch.object(SwitchBotAPI, "get_status") as mock_get_status:
         yield mock_get_status
+
+
+@pytest.fixture
+def mock_setup_webhook():
+    """Mock setup_webhook."""
+    with patch.object(SwitchBotAPI, "setup_webhook") as mock_setup_webhook:
+        yield mock_setup_webhook
+
+
+@pytest.fixture
+def mock_delete_webhook():
+    """Mock delete_webhook."""
+    with patch.object(SwitchBotAPI, "delete_webhook") as mock_delete_webhook:
+        yield mock_delete_webhook
+
+
+@pytest.fixture
+def mock_get_webook_configuration():
+    """Mock get_webook_configuration."""
+    with patch.object(
+        SwitchBotAPI, "get_webook_configuration"
+    ) as mock_get_webook_configuration:
+        yield mock_get_webook_configuration
 
 
 @pytest.fixture(scope="package", autouse=True)

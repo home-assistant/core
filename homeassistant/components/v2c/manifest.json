@@ -1,10 +1,11 @@
 {
   "domain": "v2c",
   "name": "V2C",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/v2c",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["pytrydan==0.8.0"]
+  "requirements": ["pytrydan==1.0.5"]
 }

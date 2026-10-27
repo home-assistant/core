@@ -4,10 +4,18 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from satel_integra import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -21,10 +29,11 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
     ConfigSubentry,
+    FlowType,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from . import (
     MOCK_CONFIG_DATA,
@@ -33,10 +42,9 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -51,8 +59,12 @@ from tests.common import MockConfigEntry
         (
             {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
             {},
-            {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
-            {CONF_CODE: None},
+            {
+                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ENCRYPTION_KEY: None,
+            },
+            {},
         ),
     ],
 )
@@ -78,23 +90,40 @@ async def test_setup_flow(
         result["flow_id"],
         user_input_connection,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "code"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input_code,
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
     assert result["data"] == entry_data
-    assert result["options"] == entry_options
+    assert result["options"] == {}
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    # Continues to options flow
+    flow_type, flow_id = result["next_flow"]
+    assert flow_type is FlowType.OPTIONS_FLOW
+
+    options_result = await hass.config_entries.options.async_configure(
+        flow_id, user_input_code
+    )
+    assert options_result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].options == entry_options
+
+    await hass.async_block_till_done()
+    assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_setup_connection_failed(
-    hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test the setup flow when connection fails."""
     user_input = MOCK_CONFIG_DATA
@@ -103,7 +132,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.connect.return_value = False
+    mock_satel.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -111,32 +140,25 @@ async def test_setup_connection_failed(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "code"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["next_flow"][0] is FlowType.OPTIONS_FLOW
+    assert mock_setup_entry.call_count == 1
 
 
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
         ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
-        ({}, {CONF_CODE: None}),
+        ({}, {}),
     ],
 )
 async def test_options_flow(
@@ -167,10 +189,49 @@ async def test_options_flow(
 
 
 @pytest.mark.parametrize(
+    ("code", "expected_error"),
+    [
+        ("123", "invalid_code_length"),
+        ("12345678901234567", "invalid_code_length"),
+        ("12a4", "invalid_code_format"),
+    ],
+)
+async def test_options_flow_rejects_invalid_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    code: str,
+    expected_error: str,
+) -> None:
+    """Test options reject an invalid user code."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    with pytest.raises(InvalidData) as err:
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_CODE: code}
+        )
+
+    assert err.value.schema_errors == {CONF_CODE: expected_error}
+    assert mock_config_entry.options == MOCK_CONFIG_OPTIONS
+    assert mock_reload_after_entry_update.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CODE: "4321"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_CODE: "4321"}
+    assert mock_reload_after_entry_update.call_count == 1
+
+
+@pytest.mark.parametrize(
     ("user_input", "subentry"),
     [
         (MOCK_PARTITION_SUBENTRY.data, MOCK_PARTITION_SUBENTRY),
         (MOCK_ZONE_SUBENTRY.data, MOCK_ZONE_SUBENTRY),
+        (MOCK_ZONE_TEMPERATURE_SUBENTRY.data, MOCK_ZONE_TEMPERATURE_SUBENTRY),
         (MOCK_OUTPUT_SUBENTRY.data, MOCK_OUTPUT_SUBENTRY),
         (MOCK_SWITCHABLE_OUTPUT_SUBENTRY.data, MOCK_SWITCHABLE_OUTPUT_SUBENTRY),
     ],
@@ -217,6 +278,85 @@ async def test_subentry_creation(
 
 
 @pytest.mark.parametrize(
+    ("read_temperature_side_effect", "expected_errors"),
+    [
+        (
+            None,
+            {CONF_ENABLE_TEMPERATURE_SENSOR: "zone_does_not_report_temperature"},
+        ),
+        (Exception("Boom"), {"base": "unknown"}),
+    ],
+)
+async def test_zone_temperature_sensor_validation_on_create(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    read_temperature_side_effect: Exception | None,
+    expected_errors: dict[str, str],
+) -> None:
+    """Test temperature sensor enablement validation errors."""
+    await setup_integration(hass, mock_config_entry)
+    mock_satel.read_temperature.return_value = None
+    mock_satel.read_temperature.side_effect = read_temperature_side_effect
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, MOCK_ZONE_SUBENTRY.subentry_type),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        MOCK_ZONE_TEMPERATURE_SUBENTRY.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == expected_errors
+    assert len(mock_config_entry.subentries) == 0
+    mock_satel.read_temperature.assert_awaited_once_with(1)
+    assert mock_reload_after_entry_update.call_count == 0
+
+    mock_satel.read_temperature.side_effect = None
+    mock_satel.read_temperature.return_value = 21.5
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        MOCK_ZONE_TEMPERATURE_SUBENTRY.data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_zone_temperature_sensor_validation_requires_loaded_entry(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test temperature validation only runs against a loaded config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, MOCK_ZONE_SUBENTRY.subentry_type),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        MOCK_ZONE_TEMPERATURE_SUBENTRY.data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+    mock_satel.read_temperature.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
     (
         "user_input",
         "subentry",
@@ -229,8 +369,21 @@ async def test_subentry_creation(
             CONF_PARTITION_NUMBER,
         ),
         (
-            {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
+            {
+                CONF_NAME: "Backdoor",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                CONF_ENABLE_TEMPERATURE_SENSOR: False,
+            },
             MOCK_ZONE_SUBENTRY,
+            CONF_ZONE_NUMBER,
+        ),
+        (
+            {
+                CONF_NAME: "Backdoor",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                CONF_ENABLE_TEMPERATURE_SENSOR: True,
+            },
+            MOCK_ZONE_TEMPERATURE_SUBENTRY,
             CONF_ZONE_NUMBER,
         ),
         (
@@ -251,7 +404,6 @@ async def test_subentry_creation(
 async def test_subentry_reconfigure(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
@@ -294,6 +446,105 @@ async def test_subentry_reconfigure(
     ) == ConfigSubentry(**subentry_result)
 
 
+async def test_zone_temperature_sensor_validation_on_reconfigure(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test enabling a temperature sensor fails if the zone returns no data."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+    mock_satel.read_temperature.return_value = None
+
+    result = await hass.config_entries.subentries.async_init(
+        (
+            mock_config_entry_with_subentries.entry_id,
+            MOCK_ZONE_SUBENTRY.subentry_type,
+        ),
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "subentry_id": MOCK_ZONE_SUBENTRY.subentry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Backdoor",
+            CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+            CONF_ENABLE_TEMPERATURE_SENSOR: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {
+        CONF_ENABLE_TEMPERATURE_SENSOR: "zone_does_not_report_temperature"
+    }
+    assert (
+        mock_config_entry_with_subentries.subentries.get(MOCK_ZONE_SUBENTRY.subentry_id)
+        == MOCK_ZONE_SUBENTRY
+    )
+    mock_satel.read_temperature.assert_awaited_once_with(1)
+    assert mock_reload_after_entry_update.call_count == 0
+
+    mock_satel.read_temperature.return_value = 21.5
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Backdoor",
+            CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+            CONF_ENABLE_TEMPERATURE_SENSOR: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_zone_temperature_sensor_validation_on_reconfigure_requires_loaded_entry(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test temperature validation only runs against a loaded config entry."""
+    mock_config_entry_with_subentries.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (
+            mock_config_entry_with_subentries.entry_id,
+            MOCK_ZONE_SUBENTRY.subentry_type,
+        ),
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "subentry_id": MOCK_ZONE_SUBENTRY.subentry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Backdoor",
+            CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+            CONF_ENABLE_TEMPERATURE_SENSOR: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+    assert (
+        mock_config_entry_with_subentries.subentries.get(MOCK_ZONE_SUBENTRY.subentry_id)
+        == MOCK_ZONE_SUBENTRY
+    )
+    mock_satel.read_temperature.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     ("subentry", "error_field"),
     [
@@ -333,6 +584,12 @@ async def test_cannot_create_same_subentry(
 
     assert len(mock_setup_entry.mock_calls) == 0
 
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {**subentry.data, error_field: 2}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reconfigure_flow_success(
     hass: HomeAssistant,
@@ -362,6 +619,7 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data == {
         CONF_HOST: "10.0.0.2",
         CONF_PORT: 4321,
+        CONF_ENCRYPTION_KEY: None,
     }
 
     await hass.async_block_till_done()
@@ -422,13 +680,25 @@ async def test_reconfigure_flow_config_unchanged_not_loaded(
     assert mock_setup_entry.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SatelConnectFailedError, "cannot_connect"),
+        (SatelPanelBusyError, "panel_busy"),
+        (SatelConnectionInitializationError, "connection_initialization_failed"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_reconfigure_connection_failed(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Failure path for the reconfigure flow."""
-    mock_satel.connect.return_value = False
+
+    mock_satel.connect.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
 
@@ -444,9 +714,9 @@ async def test_reconfigure_connection_failed(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_satel.connect.return_value = True
+    mock_satel.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -459,6 +729,7 @@ async def test_reconfigure_connection_failed(
     assert mock_config_entry.data == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
+        CONF_ENCRYPTION_KEY: None,
     }
 
 
@@ -483,3 +754,71 @@ async def test_same_host_config_disallowed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_encryption_key_changed(
+    hass: HomeAssistant, mock_satel: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow when encryption key is changed."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Change encryption key
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: "new_key",
+    }
+    assert mock_config_entry.data == expected_data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_encryption_key_removed(
+    hass: HomeAssistant, mock_satel: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow when encryption key is explicitly removed."""
+    # Start with config that has encryption key
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Explicitly set encryption key to None (empty string in UI)
+    user_input = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    expected_data = {
+        CONF_HOST: "192.168.0.2",
+        CONF_PORT: DEFAULT_PORT,
+        CONF_ENCRYPTION_KEY: None,
+    }
+    assert mock_config_entry.data == expected_data

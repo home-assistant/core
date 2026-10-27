@@ -3,12 +3,13 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, call, patch
 
 import aiohttp
 from aiohttp import web
 from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
@@ -35,7 +36,6 @@ from homeassistant.util import dt as dt_util
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.common import async_fire_time_changed
 from tests.components.alexa import test_smart_home as test_alexa
 
 
@@ -104,7 +104,6 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     """Test handler Google Actions."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
-    hass.states.async_set("group.all_locks", "on", {"friendly_name": "Evil locks"})
 
     await mock_cloud(
         hass,
@@ -168,7 +167,7 @@ async def test_handler_google_actions_disabled(
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
     with patch("hass_nabucasa.Cloud.initialize"):
-        assert await async_setup_component(hass, "cloud", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": intent}]}
@@ -190,7 +189,7 @@ async def test_handler_ice_servers(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test handler ICE servers."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     # make sure that preferences will not be reset
     await cloud.client.prefs.async_set_username(cloud.username)
@@ -214,7 +213,7 @@ async def test_handler_ice_servers_disabled(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test handler ICE servers when user has disabled it."""
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     # make sure that preferences will not be reset
     await cloud.client.prefs.async_set_username(cloud.username)
@@ -242,7 +241,7 @@ async def test_webhook_msg(
 ) -> None:
     """Test webhook msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -316,6 +315,51 @@ async def test_webhook_msg(
     assert '{"nonexisting": "payload"}' in caplog.text
 
 
+async def test_webhook_msg_local_only(hass: HomeAssistant) -> None:
+    """Test a cloudhook for a local_only webhook does not fire the handler."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
+        assert setup
+    cloud = hass.data[DATA_CLOUD]
+
+    await cloud.client.prefs.async_initialize()
+    await cloud.client.prefs.async_update(
+        cloudhooks={
+            "mock-webhook-id": {
+                "webhook_id": "mock-webhook-id",
+                "cloudhook_id": "mock-cloud-id",
+            },
+        }
+    )
+
+    received = []
+
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle a webhook."""
+        received.append(request)
+        return web.json_response({"from": "handler"})
+
+    webhook.async_register(
+        hass, "test", "Test", "mock-webhook-id", handler, local_only=True
+    )
+
+    response = await cloud.client.async_webhook_message(
+        {
+            "cloudhook_id": "mock-cloud-id",
+            "body": '{"hello": "world"}',
+            "headers": {"content-type": CONTENT_TYPE_JSON},
+            "method": "POST",
+            "query": None,
+        }
+    )
+
+    assert response["status"] == 200
+    # Handler not called because cloudhooks are not considered local
+    assert len(received) == 0
+
+
 @pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
 async def test_google_config_expose_entity(
     hass: HomeAssistant,
@@ -333,14 +377,13 @@ async def test_google_config_expose_entity(
     )
 
     cloud_client = hass.data[DATA_CLOUD].client
-    state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
-    assert gconf.should_expose(state)
+    assert gconf.should_expose(entity_entry.entity_id)
 
     async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
-    assert not gconf.should_expose(state)
+    assert not gconf.should_expose(entity_entry.entity_id)
 
 
 @pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")
@@ -410,7 +453,7 @@ async def test_login_recovers_bad_internet(
 async def test_system_msg(hass: HomeAssistant) -> None:
     """Test system msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -433,7 +476,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
         patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock,
     ):
         hexmock.return_value = "12345678901234567890"
-        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        setup = await async_setup_component(hass, DOMAIN, {"cloud": {}})
         assert setup
     cloud = hass.data[DATA_CLOUD]
 
@@ -510,6 +553,7 @@ async def test_async_delete_repair_issue(
     issue_registry.issues[(DOMAIN, identifier)] = ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
+        config_entry_id=None,
         created=dt_util.utcnow(),
         data={},
         dismissed_version=None,
@@ -555,7 +599,7 @@ async def test_logged_out(
 ) -> None:
     """Test cleanup when logged out from the cloud."""
 
-    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
@@ -589,6 +633,33 @@ async def test_remote_enable(hass: HomeAssistant) -> None:
 
     await client.async_cloud_connect_update(True)
     prefs.async_update.assert_called_once_with(remote_enabled=True)
+
+
+@pytest.mark.parametrize(
+    ("stored_domain", "expected_calls"),
+    [
+        pytest.param(None, 1, id="changed"),
+        pytest.param("example.ui.nabu.casa", 0, id="unchanged"),
+    ],
+)
+async def test_remote_backend_up_updates_remote_domain(
+    hass: HomeAssistant, stored_domain: str | None, expected_calls: int
+) -> None:
+    """Test the remote domain preference is synced when the backend is up."""
+    prefs = MagicMock(
+        async_update=AsyncMock(return_value=None), remote_domain=stored_domain
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock()
+    client.cloud.remote.instance_domain = "example.ui.nabu.casa"
+
+    client.dispatcher_message("remote_backend_up")
+    await hass.async_block_till_done()
+
+    assert (
+        prefs.async_update.call_args_list
+        == [call(remote_domain="example.ui.nabu.casa")] * expected_calls
+    )
 
 
 async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:

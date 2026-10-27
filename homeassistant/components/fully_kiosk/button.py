@@ -1,10 +1,8 @@
 """Fully Kiosk Browser button."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fullykiosk import FullyKiosk
 
@@ -17,8 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FullyKioskConfigEntry
-from .coordinator import FullyKioskDataUpdateCoordinator
+from .coordinator import FullyKioskConfigEntry, FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
@@ -107,6 +104,7 @@ class FullyButtonEntity(FullyKioskEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Set the value of the entity."""
         await self.entity_description.press_action(self.coordinator.fully)

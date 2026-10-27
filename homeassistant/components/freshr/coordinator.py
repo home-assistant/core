@@ -2,11 +2,12 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientError
 from pyfreshr import FreshrClient
 from pyfreshr.exceptions import ApiResponseError, LoginError
-from pyfreshr.models import DeviceReadings, DeviceSummary
+from pyfreshr.models import DeviceReadings, DeviceSummary, DeviceType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -17,6 +18,12 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+_DEVICE_TYPE_NAMES: dict[DeviceType, str] = {
+    DeviceType.FRESH_R: "Fresh-r",
+    DeviceType.FORWARD: "Fresh-r Forward",
+    DeviceType.MONITOR: "Fresh-r Monitor",
+}
 
 DEVICES_SCAN_INTERVAL = timedelta(hours=1)
 READINGS_SCAN_INTERVAL = timedelta(minutes=10)
@@ -49,6 +56,7 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
         )
         self.client = FreshrClient(session=async_create_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> dict[str, DeviceSummary]:
         """Fetch the list of devices from the Fresh-r API."""
         username = self.config_entry.data[CONF_USERNAME]
@@ -77,13 +85,10 @@ class FreshrDevicesCoordinator(DataUpdateCoordinator[dict[str, DeviceSummary]]):
             if stale_ids:
                 device_registry = dr.async_get(self.hass)
                 for device_id in stale_ids:
-                    if device := device_registry.async_get_device(
-                        identifiers={(DOMAIN, device_id)}
+                    if device := device_registry.async_get_device_by_identifier(
+                        (DOMAIN, device_id), self.config_entry.entry_id
                     ):
-                        device_registry.async_update_device(
-                            device.id,
-                            remove_config_entry_id=self.config_entry.entry_id,
-                        )
+                        device_registry.async_remove_device(device.id)
 
         return current
 
@@ -110,12 +115,19 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[DeviceReadings]):
         )
         self._device = device
         self._client = client
+        self.device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, device.id)},
+            name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
+            serial_number=device.id,
+            manufacturer="Fresh-r",
+        )
 
     @property
     def device_id(self) -> str:
         """Return the device ID."""
         return self._device.id
 
+    @override
     async def _async_update_data(self) -> DeviceReadings:
         """Fetch current readings for this device from the Fresh-r API."""
         try:

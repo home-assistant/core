@@ -1,7 +1,5 @@
 """The myUplink integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 
@@ -15,11 +13,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -39,16 +36,10 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MyUplinkConfigEntry
-) -> bool:
+) -> None:
     """Set up myUplink from a config entry."""
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, config_entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, config_entry)
 
     session = OAuth2Session(hass, config_entry, implementation)
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
@@ -88,12 +79,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
@@ -121,7 +110,7 @@ def create_devices(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: MyUplinkConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: MyUplinkConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove myuplink config entry from a device."""
 
@@ -133,7 +122,7 @@ async def async_remove_config_entry_device(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MyUplinkConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     # Use sub(ject) from access_token as unique_id
@@ -151,5 +140,3 @@ async def async_migrate_entry(
             config_entry.version,
             config_entry.minor_version,
         )
-
-    return True

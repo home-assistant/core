@@ -1,21 +1,20 @@
 """Support for Snoo Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from python_snoo.containers import SnooData, SnooStates
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    StateType,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import SnooConfigEntry
 from .entity import SnooDescriptionEntity
@@ -66,6 +65,7 @@ class SnooSensor(SnooDescriptionEntity, SensorEntity):
     entity_description: SnooSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

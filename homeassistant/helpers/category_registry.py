@@ -1,14 +1,12 @@
 """Provide a way to categorize things within a defined scope."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -69,6 +67,7 @@ class CategoryEntry:
 class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
     """Store category registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -122,6 +121,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         return self.categories[scope].values()
 
     @callback
+    @verify_event_loop_thread("category_registry.async_create")
     def async_create(
         self,
         *,
@@ -130,7 +130,6 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         icon: str | None = None,
     ) -> CategoryEntry:
         """Create a new category."""
-        self.hass.verify_event_loop_thread("category_registry.async_create")
         self._async_ensure_name_is_available(scope, name)
         category = CategoryEntry(
             icon=icon,
@@ -152,9 +151,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         return category
 
     @callback
+    @verify_event_loop_thread("category_registry.async_delete")
     def async_delete(self, *, scope: str, category_id: str) -> None:
         """Delete category."""
-        self.hass.verify_event_loop_thread("category_registry.async_delete")
         del self.categories[scope][category_id]
         self.hass.bus.async_fire_internal(
             EVENT_CATEGORY_REGISTRY_UPDATED,
@@ -167,12 +166,13 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("category_registry.async_update")
     def async_update(
         self,
         *,
         scope: str,
         category_id: str,
-        icon: str | None | UndefinedType = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> CategoryEntry:
         """Update name or icon of the category."""
@@ -191,7 +191,6 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         changes["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("category_registry.async_update")
         new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()
@@ -204,6 +203,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
 
         return new
 
+    @override
     async def _async_load(self) -> None:
         """Load the category registry."""
         data = await self._store.async_load()
@@ -225,6 +225,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         self.categories = category_entries
 
     @callback
+    @override
     def _data_to_save(self) -> CategoryRegistryStoreData:
         """Return data of category registry to store in a file."""
         return {

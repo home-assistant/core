@@ -1,8 +1,7 @@
 """Sensor data of the Renson ventilation unit."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_FIELD,
@@ -34,10 +33,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolumeFlowRate,
@@ -45,9 +42,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RensonData
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 
@@ -82,7 +77,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
@@ -90,7 +85,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=AIR_QUALITY_FIELD,
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
@@ -149,7 +144,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     RensonSensorEntityDescription(
         key="MANUAL_LEVEL_FIELD",
@@ -198,7 +193,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         translation_key="co2_threshold",
         field=CO2_THRESHOLD_FIELD,
         raw_format=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -206,7 +201,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         translation_key="co2_hysteresis",
         field=CO2_HYSTERESIS_FIELD,
         raw_format=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -225,7 +220,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
 )
 
@@ -251,6 +246,7 @@ class RensonSensor(RensonEntity, SensorEntity):
         self.raw_format = description.raw_format
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         all_data = self.coordinator.data
@@ -271,12 +267,12 @@ class RensonSensor(RensonEntity, SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
 
     entities = [
         RensonSensor(description, data.api, data.coordinator) for description in SENSORS

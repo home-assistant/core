@@ -4,12 +4,11 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, InvalidAuth
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -65,7 +64,10 @@ async def test_config_entry_reauth_at_setup(
 async def test_config_entry_reauth_while_reconnecting(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test the Android TV Remote configuration entry needs reauth while reconnecting."""
+    """Test the Android TV Remote config entry needs reauth.
+
+    Occurs while reconnecting.
+    """
     invalid_auth_callback: Callable | None = None
 
     def mocked_keep_reconnecting(callback: Callable):

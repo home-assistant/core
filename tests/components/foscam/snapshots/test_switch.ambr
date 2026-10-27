@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_entities[switch.mock_title_car_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Car detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Car detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_car_detection',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_entities[switch.mock_title_flip-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Flip',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Flip',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_flip',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_entities[switch.mock_title_human_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Human detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Human detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_human_detection',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_entities[switch.mock_title_infrared_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Infrared mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Infrared mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_infrared_mode',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -239,7 +239,7 @@
 # name: test_entities[switch.mock_title_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_light',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -289,7 +289,7 @@
 # name: test_entities[switch.mock_title_mirror-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Mirror',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Mirror',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_mirror',
@@ -307,9 +307,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -339,7 +339,7 @@
 # name: test_entities[switch.mock_title_pet_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Pet detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Pet detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_pet_detection',
@@ -357,9 +357,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -389,7 +389,7 @@
 # name: test_entities[switch.mock_title_siren_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Siren alarm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Siren alarm',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_siren_alarm',
@@ -407,9 +407,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -439,7 +439,7 @@
 # name: test_entities[switch.mock_title_sleep_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Sleep mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Sleep mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_sleep_mode',
@@ -457,9 +457,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -489,7 +489,7 @@
 # name: test_entities[switch.mock_title_volume_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Volume muted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Volume muted',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_volume_muted',
@@ -507,9 +507,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('foscam', '123ABC')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -539,7 +539,7 @@
 # name: test_entities[switch.mock_title_white_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title White light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title White light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_white_light',

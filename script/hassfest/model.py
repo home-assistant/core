@@ -1,7 +1,5 @@
 """Models for manifest validator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import IntEnum, StrEnum
 import json
@@ -214,6 +212,16 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @property
+    def categories(self) -> list[str]:
+        """Return the integration categories, the primary category first."""
+        return self.manifest.get("categories", [])
+
+    @property
+    def connectivity(self) -> list[str]:
+        """Return the protocols used to reach the devices or service."""
+        return self.manifest.get("connectivity", [])
 
     @property
     def iot_standards(self) -> list[str]:

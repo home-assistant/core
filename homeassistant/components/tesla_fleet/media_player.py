@@ -1,6 +1,6 @@
 """Media player platform for Tesla Fleet integration."""
 
-from __future__ import annotations
+from typing import override
 
 from tesla_fleet_api.const import Scope
 
@@ -67,6 +67,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         if not scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         self._volume_max = (
@@ -75,14 +76,11 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         self._attr_state = STATES.get(
             self.get("vehicle_state_media_info_media_playback_status") or "Off",
         )
+        # volume_level is audio_volume / audio_volume_max, so one notch as a
+        # fraction of range is the per-notch increment divided by the max.
         self._attr_volume_step = (
-            1.0
-            / self._volume_max
-            / (
-                self.get("vehicle_state_media_info_audio_volume_increment")
-                or VOLUME_STEP
-            )
-        )
+            self.get("vehicle_state_media_info_audio_volume_increment") or VOLUME_STEP
+        ) / self._volume_max
 
         if volume := self.get("vehicle_state_media_info_audio_volume"):
             self._attr_volume_level = volume / self._volume_max
@@ -113,6 +111,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         )
         self._attr_source = self.get("vehicle_state_media_info_now_playing_source")
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.wake_up_if_asleep()
@@ -122,6 +121,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state != MediaPlayerState.PLAYING:
@@ -130,6 +130,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PLAYING
             self.async_write_ha_state()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if self.state == MediaPlayerState.PLAYING:
@@ -138,11 +139,13 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PAUSED
             self.async_write_ha_state()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.media_next_track())
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.wake_up_if_asleep()

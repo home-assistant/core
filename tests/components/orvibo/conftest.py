@@ -9,11 +9,10 @@ with patch("socket.socket.bind"):
     import orvibo.s20  # noqa: F401
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.orvibo.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -47,8 +46,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_setup_entry():
-    """Override async_setup_entry so config flow tests don't try to setup the integration."""
+    """Override async_setup_entry for config flow tests."""
     with patch(
-        "homeassistant.components.orvibo.async_setup_entry", return_value=True
+        "homeassistant.components.orvibo.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

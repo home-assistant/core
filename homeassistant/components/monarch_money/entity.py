@@ -1,6 +1,12 @@
 """Monarch money entity definition."""
 
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from typing import override
+
+from typedmonarchmoney.models import (
+    MonarchAccount,
+    MonarchBudget,
+    MonarchCashflowSummary,
+)
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -66,11 +72,16 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
             name=f"{account.institution_name} {account.name}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=account.data_provider,
-            model=f"{account.institution_name} - {account.type_name} - {account.subtype_name}",
+            model=(
+                f"{account.institution_name}"
+                f" - {account.type_name}"
+                f" - {account.subtype_name}"
+            ),
             configuration_url=account.institution_url,
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (
@@ -81,3 +92,38 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
         return self.coordinator.data.account_data[self._account_id]
+
+
+class MonarchMoneyBudgetEntity(MonarchMoneyEntityBase):
+    """Entity for budget sensors."""
+
+    def __init__(
+        self,
+        coordinator: MonarchMoneyDataUpdateCoordinator,
+        description: EntityDescription,
+        budget: MonarchBudget,
+    ) -> None:
+        """Initialize the budget entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._budget_id = budget.id
+        self._attr_unique_id = (
+            f"{coordinator.subscription_id}_budget_{budget.id}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.subscription_id}_budget_{budget.id}")},
+            name=f"{budget.group_name} - {budget.name}",
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Monarch Money",
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the budget has data for the current month."""
+        return (
+            super().available
+            and (budget := self.coordinator.data.budgets.get(self._budget_id))
+            is not None
+            and self.coordinator.data.budget_month in budget.monthly_amounts
+        )

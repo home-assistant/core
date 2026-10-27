@@ -1,9 +1,8 @@
 """Representation of a sensorMultilevel."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -13,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -22,14 +20,15 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 
@@ -50,13 +49,13 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "co": ZWaveMeSensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": ZWaveMeSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": ZWaveMeSensorEntityDescription(
@@ -117,20 +116,20 @@ DEVICE_NAME = ZWaveMePlatform.SENSOR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
-        description = SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"])
-        sensor = ZWaveMeSensor(controller, new_device, description)
-
         async_add_entities(
             [
-                sensor,
+                ZWaveMeSensor(
+                    config_entry.runtime_data,
+                    new_device,
+                    SENSORS_MAP.get(new_device.probeType, SENSORS_MAP["generic"]),
+                )
             ]
         )
 
@@ -157,6 +156,7 @@ class ZWaveMeSensor(ZWaveMeEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.entity_description.value(self.device.level)

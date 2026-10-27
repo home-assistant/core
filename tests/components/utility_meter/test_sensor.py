@@ -1,9 +1,15 @@
 """The tests for the utility_meter sensor platform."""
 
 from datetime import timedelta
+from decimal import Decimal
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -16,13 +22,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.utility_meter import DEFAULT_OFFSET
 from homeassistant.components.utility_meter.const import (
-    ATTR_VALUE,
     DAILY,
     DOMAIN,
     HOURLY,
     QUARTER_HOURLY,
-    SERVICE_CALIBRATE_METER,
-    SERVICE_RESET,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
@@ -30,6 +33,11 @@ from homeassistant.components.utility_meter.sensor import (
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
+    UtilitySensorExtraStoredData,
+)
+from homeassistant.components.utility_meter.services import (
+    UtilityMeterService,
+    UtilityMeterServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -46,12 +54,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -194,8 +196,11 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALIBRATE_METER,
-        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "100"},
+        UtilityMeterService.CALIBRATE,
+        {
+            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            UtilityMeterServiceArgument.VALUE: "100",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -205,8 +210,11 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALIBRATE_METER,
-        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
+        UtilityMeterService.CALIBRATE,
+        {
+            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            UtilityMeterServiceArgument.VALUE: "0.123",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -657,6 +665,40 @@ async def test_device_class(
         assert state.attributes.get(attr) == value
 
 
+async def test_state_class_monetary_device_class(hass: HomeAssistant) -> None:
+    """Test that monetary device class uses state_class total, not total_increasing."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "utility_meter": {
+                "cost_meter": {
+                    "source": "sensor.energy_cost",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.energy_cost",
+        2,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.MONETARY,
+            ATTR_UNIT_OF_MEASUREMENT: "EUR",
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.cost_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
+
+
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
@@ -811,6 +853,29 @@ async def test_restore_state(
 
 
 @pytest.mark.parametrize(
+    "last_valid_state",
+    [
+        pytest.param(Decimal(0), id="zero"),
+        pytest.param(Decimal("12.5"), id="non_zero"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_extra_restore_state_data_roundtrip(last_valid_state: Decimal | None) -> None:
+    """Test the extra restore state data survives a roundtrip, including a 0 state."""
+    data = UtilitySensorExtraStoredData(
+        Decimal(3),
+        "kWh",
+        Decimal(1),
+        dt_util.utcnow(),
+        last_valid_state,
+        COLLECTING,
+        SensorDeviceClass.ENERGY,
+    )
+
+    assert UtilitySensorExtraStoredData.from_dict(data.as_dict()) == data
+
+
+@pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
         (
@@ -897,7 +962,7 @@ async def test_service_reset_no_tariffs(
     with freeze_time(now):
         await hass.services.async_call(
             domain=DOMAIN,
-            service=SERVICE_RESET,
+            service=UtilityMeterService.RESET,
             service_data={},
             target={"entity_id": "sensor.energy_bill"},
             blocking=True,
@@ -1036,7 +1101,7 @@ async def test_service_reset_no_tariffs_correct_with_multi(
     with freeze_time(now):
         await hass.services.async_call(
             domain=DOMAIN,
-            service=SERVICE_RESET,
+            service=UtilityMeterService.RESET,
             service_data={},
             target={"entity_id": "sensor.energy_bill"},
             blocking=True,
@@ -1638,7 +1703,8 @@ async def _test_self_reset(
 
     now += timedelta(seconds=30)
     with freeze_time(now):
-        # Listen for events and check that state in the first event after reset is actually 0, issue #142053
+        # Listen for events and check that state in the first event
+        # after reset is actually 0, issue #142053
         events = []
 
         async def handle_energy_bill_event(event):
@@ -1678,7 +1744,8 @@ async def _test_self_reset(
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
 
-    # Check next day when nothing should happen for weekly, monthly, bimonthly and yearly
+    # Check next day when nothing should happen for weekly,
+    # monthly, bimonthly and yearly
     if config["utility_meter"]["energy_bill"].get("cycle") in [
         QUARTER_HOURLY,
         HOURLY,
@@ -1745,6 +1812,33 @@ async def test_self_reset_quarter_hourly_third_quarter(hass: HomeAssistant) -> N
     )
 
 
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-03T13:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(minutes=5), "2024-01-03T13:05:00+00:00", id="5_min"),
+        pytest.param(timedelta(minutes=20), "2024-01-03T13:05:00+00:00", id="20_min"),
+        pytest.param(timedelta(minutes=50), "2024-01-03T13:05:00+00:00", id="50_min"),
+        pytest.param(
+            timedelta(hours=1, minutes=35), "2024-01-03T13:05:00+00:00", id="95_min"
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:52:00+00:00")
+async def test_quarter_hourly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a quarter-hourly meter with an offset of 15 minutes or more resets every quarter."""
+    assert await async_setup_component(
+        hass, DOMAIN, gen_config("quarter-hourly", offset)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
+
+
 async def test_self_reset_hourly(hass: HomeAssistant) -> None:
     """Test hourly reset of meter."""
     await _test_self_reset(
@@ -1799,6 +1893,63 @@ async def test_tz_changes(hass: HomeAssistant) -> None:
     assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
 
 
+async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
+    """Test that a missed reset fires on restore after entity rename.
+
+    When an entity is restored (e.g. after rename) and a reset was missed,
+    the scheduler should catch up from last_reset rather than starting from
+    now(), which would skip the missed reset entirely.
+    """
+    last_reset = "2024-10-27T00:00:00+00:00"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.energy_bill",
+                    "3",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": "3",
+                    "status": "collecting",
+                    "input_device_class": "energy",
+                },
+            ),
+        ],
+    )
+
+    # Restore at noon on Oct 28 - the Oct 28 midnight reset was missed
+    now = dt_util.parse_datetime("2024-10-28T12:00:00+00:00")
+    with freeze_time(now):
+        assert await async_setup_component(hass, DOMAIN, gen_config("daily"))
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    # The missed reset should have fired as a catch-up, updating last_reset
+    # and recording the previous period value. Without the fix, last_reset
+    # stays at the original value because the scheduler starts from now()
+    # and skips the missed period entirely.
+    assert state.attributes.get("last_reset") != last_reset
+    assert state.attributes.get("last_period") == "3"
+    assert state.state == "0"
+
+
 async def test_self_reset_daily(hass: HomeAssistant) -> None:
     """Test daily reset of meter."""
     await _test_self_reset(
@@ -1811,6 +1962,35 @@ async def test_self_reset_weekly(hass: HomeAssistant) -> None:
     await _test_self_reset(
         hass, gen_config("weekly"), "2017-12-31T23:59:00.000000+00:00"
     )
+
+
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-08T00:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(days=6), "2024-01-07T00:00:00+00:00", id="6_days"),
+        pytest.param(timedelta(days=7), "2024-01-08T00:00:00+00:00", id="7_days"),
+        pytest.param(
+            timedelta(days=8, hours=2), "2024-01-09T02:00:00+00:00", id="8_days"
+        ),
+        pytest.param(
+            timedelta(days=27, hours=23, minutes=59),
+            "2024-01-07T23:59:00+00:00",
+            id="27_days",
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:00:00+00:00")
+async def test_weekly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a weekly meter with an offset of a week or more still resets weekly."""
+    assert await async_setup_component(hass, DOMAIN, gen_config("weekly", offset))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
 
 
 async def test_self_reset_monthly(hass: HomeAssistant) -> None:
@@ -1888,12 +2068,10 @@ async def test_bad_offset(hass: HomeAssistant) -> None:
 
 
 def test_calculate_adjustment_invalid_new_state(
-    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that calculate_adjustment method returns None if the new state is invalid."""
+    """Test calculate_adjustment returns None if the new state is invalid."""
     mock_sensor = UtilityMeterSensor(
-        hass,
         cron_pattern=None,
         delta_values=False,
         meter_offset=DEFAULT_OFFSET,
@@ -1918,7 +2096,7 @@ async def test_unit_of_measurement_missing_invalid_new_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a suggestion is created when new_state is missing unit_of_measurement."""
+    """Test suggestion is created when new_state has no unit_of_measurement."""
     yaml_config = {
         "utility_meter": {
             "energy_bill": {
@@ -1968,7 +2146,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
@@ -1980,7 +2158,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": ["peak", "offpeak"],
         },
         title="Energy",
@@ -1991,11 +2169,11 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_peak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_peak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
-    utility_meter_entity = entity_registry.async_get("sensor.energy_offpeak")
+    utility_meter_entity = entity_registry.async_get("sensor.mock_title_energy_offpeak")
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
 
@@ -2009,7 +2187,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": [],
         },
         title="Energy",
@@ -2022,6 +2200,51 @@ async def test_device_id(
     )
     await hass.async_block_till_done()
 
-    utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
+    utility_meter_no_tariffs_entity = entity_registry.async_get(
+        "sensor.mock_title_energy"
+    )
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Utility Meter."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "energy_bill": {
+                    "source": "sensor.test_source",
+                    "unique_id": "utility_meter_yaml",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    utility_meter_entity = entity_registry.async_get("sensor.energy_bill")
+    assert utility_meter_entity is not None
+    assert utility_meter_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text

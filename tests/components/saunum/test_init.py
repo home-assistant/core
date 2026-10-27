@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 from pysaunum import SaunumConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.saunum.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(
@@ -44,6 +43,10 @@ async def test_async_setup_entry_connection_failed(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "host": mock_config_entry.data["host"],
+    }
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -54,8 +57,8 @@ async def test_device_entry(
 ) -> None:
     """Test device registry entry."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.entry_id)}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

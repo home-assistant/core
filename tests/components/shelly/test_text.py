@@ -92,7 +92,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual text will be removed if the mode has been changed to a label."""
+    """Test virtual text removal when mode changes to label."""
     config = deepcopy(mock_rpc_device.config)
     config["text:200"] = {"name": None, "meta": {"ui": {"view": "label"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -124,7 +124,7 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual text will be removed if it has been removed from the device configuration."""
+    """Test virtual text removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -147,11 +147,13 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for text.test_name_text_203 of Test name",
+            "Device communication error occurred while calling action"
+            " for text.test_name_text_203 of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for text.test_name_text_203 of Test name",
+            "RPC call error occurred while calling action"
+            " for text.test_name_text_203 of Test name",
         ),
     ],
 )

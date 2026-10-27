@@ -1,13 +1,19 @@
 """Test fixtures for voice assistant."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components import conversation, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
@@ -28,14 +34,6 @@ from homeassistant.helpers import chat_session, device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
 from tests.components.tts.common import MockTTSEntity, MockTTSProvider
 
@@ -216,21 +214,19 @@ async def init_supporting_components(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.STT, Platform.TTS, Platform.WAKE_WORD]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.STT, Platform.WAKE_WORD]
         )
-        return True
 
     async def async_setup_entry_stt_platform(
         hass: HomeAssistant,
@@ -311,7 +307,7 @@ async def init_supporting_components(
 async def init_components(hass: HomeAssistant, init_supporting_components):
     """Initialize relevant components with empty configs."""
 
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 @pytest.fixture
@@ -330,21 +326,19 @@ async def assist_device(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.SELECT]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.SELECT]
         )
-        return True
 
     async def async_setup_entry_select_platform(
         hass: HomeAssistant,
@@ -411,6 +405,6 @@ def mock_chat_session(hass: HomeAssistant) -> Generator[chat_session.ChatSession
     # pylint: disable-next=contextmanager-generator-missing-cleanup
     with (
         patch("homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"),
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
     ):
         yield session

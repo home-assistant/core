@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from actron_neo_api import ActronAirAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switch_entities(
@@ -83,7 +82,10 @@ async def test_turbo_mode_not_supported(
 ) -> None:
     """Test turbo mode switch is not created when not supported."""
     status = mock_actron_api.state_manager.get_status.return_value
-    status.user_aircon_settings.turbo_supported = False
+    status.user_aircon_settings.turbo_mode_enabled = {
+        "Enabled": False,
+        "Supported": False,
+    }
 
     await setup_integration(hass, mock_config_entry)
 

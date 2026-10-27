@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from ondilo import OndiloError
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensors(
@@ -37,7 +36,7 @@ async def test_no_ico_for_one_pool(
     ico_details2: dict[str, Any],
     last_measures: list[dict[str, Any]],
 ) -> None:
-    """Test if an ICO is not attached to a pool, then no sensor for that pool is created."""
+    """Test no sensor created when ICO is not attached to a pool."""
     mock_ondilo_client.get_pools.return_value = two_pools
     mock_ondilo_client.get_ICO_details.side_effect = [None, ico_details2]
 
@@ -75,7 +74,7 @@ async def test_error_retrieving_measures(
     pool1: dict[str, Any],
     ico_details1: dict[str, Any],
 ) -> None:
-    """Test if there's an error retrieving measures of ICO, then no sensor is created."""
+    """Test no sensor created on error retrieving ICO measures."""
     mock_ondilo_client.get_pools.return_value = pool1
     mock_ondilo_client.get_ICO_details.return_value = ico_details1
     mock_ondilo_client.get_last_pool_measures.side_effect = OndiloError(400, "error")

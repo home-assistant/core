@@ -1,9 +1,8 @@
 """Buttons for the Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from aioguardian import Client
 
@@ -99,6 +98,7 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
         self._client = data.client
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_press(self) -> None:
         """Send out a restart command."""
         async with self._client:

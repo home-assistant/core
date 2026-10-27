@@ -1,31 +1,30 @@
 """Config flow for Aurora."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100)
+        probatio.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): probatio.All(
+            probatio.Coerce(int), probatio.Percentage()
         ),
     }
 )
@@ -41,12 +40,14 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -54,14 +55,15 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            longitude = user_input[CONF_LONGITUDE]
-            latitude = user_input[CONF_LATITUDE]
+            location = user_input[CONF_LOCATION]
 
             session = aiohttp_client.async_get_clientsession(self.hass)
             api = AuroraForecast(session=session)
 
             try:
-                await api.get_forecast_data(longitude, latitude)
+                await api.get_forecast_data(
+                    location[CONF_LONGITUDE], location[CONF_LATITUDE]
+                )
             except ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -69,25 +71,26 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_LONGITUDE]}_{user_input[CONF_LATITUDE]}"
+                    f"{location[CONF_LONGITUDE]}_{location[CONF_LATITUDE]}"
                 )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Aurora visibility", data=user_input
-                )
+                return self.async_create_entry(title="Aurora visibility", data=location)
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
                     }
                 ),
                 {
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LOCATION: {
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_LATITUDE: self.hass.config.latitude,
+                    }
                 },
             ),
             errors=errors,

@@ -1,7 +1,5 @@
 """Support for ZoneMinder camera streaming."""
 
-from __future__ import annotations
-
 import logging
 
 from zoneminder.monitor import Monitor
@@ -13,7 +11,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

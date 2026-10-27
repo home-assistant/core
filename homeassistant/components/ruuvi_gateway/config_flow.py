@@ -1,9 +1,7 @@
 """Config flow for Ruuvi Gateway integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aioruuvigateway.api as gw_api
 from aioruuvigateway.excs import CannotConnect, InvalidAuth
@@ -14,7 +12,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import DOMAIN
+from .const import DOMAIN
 from .schemata import CONFIG_SCHEMA, get_config_schema_with_default_host
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +62,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return (None, errors)
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -81,6 +80,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=(errors or None),
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -1,15 +1,19 @@
 """Test the DHCP discovery integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import threading
 from typing import Any, cast
 from unittest.mock import patch
 
 import aiodhcpwatcher
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+)
 from scapy import interfaces
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
@@ -40,13 +44,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-)
 
 # connect b8:b7:f1:6d:b5:33 192.168.210.56
 RAW_DHCP_REQUEST = (
@@ -323,6 +320,47 @@ async def test_registered_devices(
         hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
         macaddress="50147903852c",
     )
+
+
+async def test_registered_devices_multiple_config_entries_same_mac(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test registered-device rediscovery covers every config entry sharing a MAC."""
+    integration_matchers = dhcp.async_index_integration_matchers(
+        [
+            {"domain": "mock-domain-a", "registered_devices": True},
+            {"domain": "mock-domain-b", "registered_devices": True},
+        ]
+    )
+
+    packet = Ether(RAW_DHCP_RENEWAL)
+
+    # Two config entries each own a device for the same MAC; both must be rediscovered.
+    config_entry_a = MockConfigEntry(domain="mock-domain-a", data={})
+    config_entry_a.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
+    config_entry_b = MockConfigEntry(domain="mock-domain-b", data={})
+    config_entry_b.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
+        name="name",
+    )
+
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
+        hass, integration_matchers
+    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        await async_handle_dhcp_packet(packet)
+
+    assert {call[1][0] for call in mock_init.mock_calls} == {
+        "mock-domain-a",
+        "mock-domain-b",
+    }
 
 
 async def test_dhcp_match_hostname(hass: HomeAssistant) -> None:
@@ -616,6 +654,46 @@ async def test_setup_and_stop(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     resolve_iface_call.assert_called_once()
+
+
+async def test_discovered_service_info(hass: HomeAssistant) -> None:
+    """Test getting the discovered DHCP devices from the cache."""
+    saved_callback: Callable[[aiodhcpwatcher.DHCPRequest], None] | None = None
+
+    async def mock_start(
+        callback: Callable[[aiodhcpwatcher.DHCPRequest], None],
+        if_indexes: list[int] | None = None,
+    ) -> None:
+        """Mock start."""
+        nonlocal saved_callback
+        saved_callback = callback
+
+    with (
+        patch("homeassistant.components.dhcp.aiodhcpwatcher.async_start", mock_start),
+        patch("homeassistant.components.dhcp.DiscoverHosts"),
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert dhcp.async_discovered_service_info(hass) == []
+
+    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.2", "happy", "44:44:33:11:23:12"))
+    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.1", "Sad", "44:44:33:11:23:13"))
+
+    assert dhcp.async_discovered_service_info(hass) == [
+        DhcpServiceInfo(
+            ip="4.3.2.2",
+            hostname="happy",
+            macaddress="444433112312",
+        ),
+        DhcpServiceInfo(
+            ip="4.3.2.1",
+            hostname="sad",
+            macaddress="444433112313",
+        ),
+    ]
 
 
 async def test_setup_fails_as_root(
@@ -975,7 +1053,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(
 async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missing(
     hass: HomeAssistant,
 ) -> None:
-    """Test matching based on hostname and macaddress after start but missing hostname."""
+    """Test matching based on hostname and macaddress after start, missing hostname."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         device_tracker_watcher = _make_device_tracker_watcher(
@@ -1214,7 +1292,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
             ],
         ),
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=65))
+        async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(minutes=65))
         await hass.async_block_till_done()
         device_tracker_watcher.async_stop()
         await hass.async_block_till_done()

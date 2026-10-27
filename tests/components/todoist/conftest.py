@@ -2,23 +2,20 @@
 
 from collections.abc import AsyncGenerator, Callable, Generator
 from http import HTTPStatus
-from typing import TypeVar
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import HTTPError
 from requests.models import Response
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
-from homeassistant.components.todoist import DOMAIN
+from homeassistant.components.todoist.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-
-T = TypeVar("T")
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
@@ -26,19 +23,19 @@ SUMMARY = "A task"
 TOKEN = "some-token"
 
 
-async def _async_generator(items: list[T]) -> AsyncGenerator[list[T]]:
+async def _async_generator[T](items: list[T]) -> AsyncGenerator[list[T]]:
     """Create an async generator that yields items as a single page."""
     yield items
 
 
-def make_api_response(items: list[T]) -> Callable[[], AsyncGenerator[list[T]]]:
+def make_api_response[T](items: list[T]) -> Callable[..., AsyncGenerator[list[T]]]:
     """Create a callable that returns a fresh async generator each time.
 
     This is needed because async generators can only be iterated once,
     but mocks may be called multiple times.
     """
 
-    async def _generator(*args, **kwargs) -> AsyncGenerator[list[T]]:
+    async def _generator(*args: Any, **kwargs: Any) -> AsyncGenerator[list[T]]:
         async for page in _async_generator(items):
             yield page
 
@@ -70,7 +67,7 @@ def make_api_due(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.todoist.async_setup_entry", return_value=True
+        "homeassistant.components.todoist.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

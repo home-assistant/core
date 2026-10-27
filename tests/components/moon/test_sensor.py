@@ -1,12 +1,11 @@
 """The test for the moon sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.moon.sensor import (
+from homeassistant.components.moon.helpers import (
     STATE_FIRST_QUARTER,
     STATE_FULL_MOON,
     STATE_LAST_QUARTER,
@@ -20,8 +19,6 @@ from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -49,7 +46,7 @@ async def test_moon_day(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.moon.sensor.moon.phase", return_value=moon_value
+        "homeassistant.components.moon.helpers.moon.phase", return_value=moon_value
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

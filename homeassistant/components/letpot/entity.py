@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Concatenate
 
 from letpot.exceptions import LetPotConnectionException, LetPotException
+from letpot.models import LetPotDeviceStatus
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,12 +23,14 @@ class LetPotEntityDescription(EntityDescription):
     supported_fn: Callable[[LetPotDeviceCoordinator], bool] = lambda _: True
 
 
-class LetPotEntity(CoordinatorEntity[LetPotDeviceCoordinator]):
+class LetPotEntity[_DataT: LetPotDeviceStatus](
+    CoordinatorEntity[LetPotDeviceCoordinator[_DataT]]
+):
     """Defines a base LetPot entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: LetPotDeviceCoordinator) -> None:
+    def __init__(self, coordinator: LetPotDeviceCoordinator[_DataT]) -> None:
         """Initialize a LetPot entity."""
         super().__init__(coordinator)
         info = coordinator.device_client.device_info(coordinator.device.serial_number)

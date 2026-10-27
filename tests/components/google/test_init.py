@@ -1,30 +1,38 @@
 """The tests for the Google Calendar component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import http
+import re
 import time
 from typing import Any
 from unittest.mock import Mock, patch
 import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google import DOMAIN
-from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
+from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
@@ -37,10 +45,7 @@ from .conftest import (
     ComponentSetup,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 type HassApi = Callable[[], Awaitable[dict[str, Any]]]
@@ -167,6 +172,7 @@ async def test_calendar_yaml_missing_required_fields(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -181,6 +187,7 @@ async def test_invalid_calendar_yaml(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 async def test_calendar_yaml_error(
@@ -289,36 +296,36 @@ async def test_multiple_config_entries(
     [
         (
             {},
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -326,8 +333,8 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T06:00:00",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -335,7 +342,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -343,7 +350,7 @@ async def test_multiple_config_entries(
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -351,7 +358,7 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -361,7 +368,7 @@ async def test_multiple_config_entries(
                     "weeks": 2,
                 }
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "two or more values in the same group of exclusion 'event_types'",
         ),
         (
@@ -372,8 +379,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -383,8 +390,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
     ],
     ids=[
@@ -419,7 +426,7 @@ async def test_add_event_invalid_params(
     mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await add_event_call_service(date_fields)
 
 
@@ -428,13 +435,13 @@ async def test_add_event_invalid_params(
     [
         (
             {"in": {"days": 3}},
-            datetime.timedelta(days=3),
-            datetime.timedelta(days=4),
+            dt.timedelta(days=3),
+            dt.timedelta(days=4),
         ),
         (
             {"in": {"weeks": 1}},
-            datetime.timedelta(days=7),
-            datetime.timedelta(days=8),
+            dt.timedelta(days=7),
+            dt.timedelta(days=8),
         ),
     ],
     ids=["in_days", "in_weeks"],
@@ -447,10 +454,11 @@ async def test_add_event_date_in_x(
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
     date_fields: dict[str, Any],
-    start_timedelta: datetime.timedelta,
-    end_timedelta: datetime.timedelta,
+    start_timedelta: dt.timedelta,
+    end_timedelta: dt.timedelta,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[[dict[str, Any]], Awaitable[None]],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
@@ -458,9 +466,13 @@ async def test_add_event_date_in_x(
     mock_events_list({})
     assert await component_setup()
 
-    now = datetime.datetime.now()
-    start_date = now + start_timedelta
-    end_date = now + end_timedelta
+    # Freeze at 2025-06-15 03:00 UTC which is 2025-06-14 21:00 in America/Regina
+    # (the test timezone). This ensures dt_util.now().date() returns June 14
+    # while a naive datetime.now().date() would return June 15 in UTC.
+    freezer.move_to("2025-06-15 03:00:00+00:00")
+    today = dt.date(2025, 6, 14)
+    start_date = today + start_timedelta
+    end_date = today + end_timedelta
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -472,8 +484,8 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "start": {"date": start_date.date().isoformat()},
-        "end": {"date": end_date.date().isoformat()},
+        "start": {"date": start_date.isoformat()},
+        "end": {"date": end_date.isoformat()},
     }
 
 
@@ -495,7 +507,7 @@ async def test_add_event_date(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -533,8 +545,8 @@ async def test_add_event_date_time(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
     aioclient_mock.clear_requests()
@@ -596,8 +608,8 @@ async def test_unsupported_create_event(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
     entity_id = "calendar.backyard_light"
 
@@ -664,7 +676,7 @@ async def test_add_event_location(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -691,7 +703,7 @@ async def test_add_event_location(
 @pytest.mark.parametrize(
     "config_entry_token_expiry",
     [
-        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (dt.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
         (utcnow().replace(tzinfo=None).timestamp()),
     ],
     ids=["max_timestamp", "timestamp_naive"],
@@ -892,8 +904,10 @@ async def test_remove_entry(
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test load and remove of a ConfigEntry."""
+    """Removing a loaded entry also cancels delayed cache writes."""
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -902,9 +916,60 @@ async def test_remove_entry(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    storage_key = f"google.{entry.entry_id}"
+    assert await entry.runtime_data.store.async_load()
+    assert storage_key not in hass_storage
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert storage_key not in hass_storage
+
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+
+async def test_remove_entry_after_failed_unload(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Removal prevents pending and future writes after an unload failure."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    store = entry.runtime_data.store
+    data = await store.async_load()
+    assert data
+    storage_key = f"google.{entry.entry_id}"
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert await hass.config_entries.async_remove(entry.entry_id) == {
+            "require_restart": True
+        }
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert storage_key not in hass_storage
+
+    # A platform that failed to unload can still update its calendar store.
+    await store.async_save(data)
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
 
 
 async def test_oauth_implementation_not_available(

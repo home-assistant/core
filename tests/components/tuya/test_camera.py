@@ -1,11 +1,10 @@
 """Test Tuya camera platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -20,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import initialize_entry
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 @pytest.fixture(autouse=True)
 def platform_autouse():
@@ -30,23 +27,14 @@ def platform_autouse():
         patch("homeassistant.components.tuya.PLATFORMS", [Platform.CAMERA]),
         # Mock camera access token which normally is randomized.
         patch(
-            "homeassistant.components.camera.SystemRandom.getrandbits",
+            "homeassistant.components.camera.entity.SystemRandom.getrandbits",
             return_value=1,
         ),
     ):
         yield
 
 
-@pytest.fixture(autouse=True)
-def mock_getrandbits():
-    """Mock camera access token which normally is randomized."""
-    with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
-        return_value=1,
-    ):
-        yield
-
-
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

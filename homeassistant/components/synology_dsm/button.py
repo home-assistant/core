@@ -1,11 +1,11 @@
 """Support for Synology DSM buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
+
+from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -14,10 +14,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SynoApi
+from .common import SynoApi
 from .const import DOMAIN
 from .coordinator import SynologyDSMConfigEntry
 
@@ -79,6 +80,7 @@ class SynologyDSMButton(ButtonEntity):
             identifiers={(DOMAIN, api.information.serial)}
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Synology DSM button press service."""
         if TYPE_CHECKING:
@@ -88,4 +90,11 @@ class SynologyDSMButton(ButtonEntity):
             self.entity_description.key,
             self.syno_api.network.hostname,
         )
-        await self.entity_description.press_action(self.syno_api)()
+        try:
+            await self.entity_description.press_action(self.syno_api)()
+        except SynologyDSMAPIErrorException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=f"{self.entity_description.key}_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -1,6 +1,7 @@
 """Test reproduce state for Fan."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -10,11 +11,10 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    DOMAIN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 
 async def test_reproducing_states(
@@ -27,11 +27,11 @@ async def test_reproducing_states(
     hass.states.async_set("fan.entity_oscillating", "on", {"oscillating": True})
     hass.states.async_set("fan.entity_direction", "on", {"direction": "forward"})
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_calls = async_mock_service(hass, "fan", "set_percentage")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_calls = async_mock_service(hass, DOMAIN, "set_percentage")
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(
@@ -177,12 +177,12 @@ async def test_modern_turn_on_invalid(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, turning on with invalid state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     # Turn on with an invalid config (speed, percentage, preset_modes all None)
     await async_reproduce_state(
@@ -221,15 +221,18 @@ async def test_modern_turn_on_invalid(hass: HomeAssistant, start_state) -> None:
 async def test_modern_turn_on_percentage_from_different_speed(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with a different percentage of the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with a different percentage of the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
@@ -250,15 +253,18 @@ async def test_modern_turn_on_percentage_from_different_speed(
 
 
 async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) -> None:
-    """Test modern fan state reproduction, turning on with the same percentage as in the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with the same percentage as in the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PERCENTAGE15_STATE)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
@@ -289,15 +295,18 @@ async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) ->
 async def test_modern_turn_on_preset_mode_from_different_speed(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with a different preset mode from the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with a different preset mode from the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
@@ -318,17 +327,20 @@ async def test_modern_turn_on_preset_mode_from_different_speed(
 
 
 async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -> None:
-    """Test modern fan state reproduction, turning on with the same preset mode as in the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with the same preset mode as in the state.
+    """
     hass.states.async_set(
         MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PPRESET_MODE_AUTO_STATE
     )
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
@@ -359,15 +371,18 @@ async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -
 async def test_modern_turn_on_preset_mode_reverse(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with preset mode "Auto" and reverse direction."""
+    """Test modern fan state reproduction.
+
+    Turning on with preset mode "Auto" and reverse direction.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass,
@@ -405,12 +420,12 @@ async def test_modern_to_preset(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, switching to preset mode "Auto"."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)]
@@ -441,12 +456,12 @@ async def test_modern_to_percentage(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, switching to 15% speed."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", start_state)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass, [State(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PERCENTAGE15_STATE)]
@@ -469,12 +484,12 @@ async def test_modern_direction(hass: HomeAssistant) -> None:
     """Test modern fan state reproduction, switching only direction state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)
 
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    set_direction_calls = async_mock_service(hass, "fan", "set_direction")
-    oscillate_calls = async_mock_service(hass, "fan", "oscillate")
-    set_percentage_mode = async_mock_service(hass, "fan", "set_percentage")
-    set_preset_mode = async_mock_service(hass, "fan", "set_preset_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    set_direction_calls = async_mock_service(hass, DOMAIN, "set_direction")
+    oscillate_calls = async_mock_service(hass, DOMAIN, "oscillate")
+    set_percentage_mode = async_mock_service(hass, DOMAIN, "set_percentage")
+    set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     await async_reproduce_state(
         hass,

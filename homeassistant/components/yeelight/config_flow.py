@@ -1,19 +1,16 @@
 """Config flow for Yeelight integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -28,6 +25,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
+from . import YeelightConfigEntry
 from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
@@ -61,8 +59,9 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YeelightConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler()
@@ -71,6 +70,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Any] = {}
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -78,6 +78,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -85,6 +86,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -93,6 +95,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{int(discovery_info.name[-26:-18]):#018x}")
         return await self._async_handle_discovery_with_unique_id()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -108,7 +111,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ID
             ):
                 continue
-            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            reload = entry.state is ConfigEntryState.SETUP_RETRY
             if entry.data.get(CONF_HOST) != self._discovered_ip:
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
@@ -143,9 +146,10 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
+        return other_flow._discovered_ip == self._discovered_ip
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -172,6 +176,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -200,8 +205,12 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_HOST, default=user_input.get(CONF_HOST, "")
+                    ): str
+                }
             ),
             errors=errors,
         )
@@ -250,7 +259,9 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -323,19 +334,23 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if is_unknown_model or model != detected_model:
             schema_dict.update(
                 {
-                    vol.Optional(CONF_MODEL, default=model): vol.In(known_models),
+                    probatio.Optional(CONF_MODEL, default=model): probatio.In(
+                        known_models
+                    ),
                 }
             )
         schema_dict.update(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_TRANSITION, default=options[CONF_TRANSITION]
                 ): cv.positive_int,
-                vol.Required(CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]): bool,
-                vol.Required(
+                probatio.Required(
+                    CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
+                ): bool,
+                probatio.Required(
                     CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
                 ): bool,
             }
@@ -343,7 +358,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema_dict),
+            data_schema=probatio.Schema(schema_dict),
         )
 
 

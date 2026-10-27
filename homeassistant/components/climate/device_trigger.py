@@ -1,14 +1,16 @@
 """Provides device automations for Climate."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
+)
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -25,7 +27,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, const
+from .const import DOMAIN, HVAC_MODES, ClimateEntityStateAttribute
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -35,29 +37,36 @@ TRIGGER_TYPES = {
 
 HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): "hvac_mode_changed",
-        vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): "hvac_mode_changed",
+        probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
-CURRENT_TRIGGER_SCHEMA = vol.All(
+CURRENT_TRIGGER_SCHEMA = probatio.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_TYPE): vol.In(
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            probatio.Required(CONF_TYPE): probatio.In(
                 ["current_temperature_changed", "current_humidity_changed"]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            probatio.Optional(CONF_BELOW): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_ABOVE): probatio.Any(probatio.Coerce(float)),
+            probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
-TRIGGER_SCHEMA = vol.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "hvac_mode_changed": HVAC_MODE_TRIGGER_SCHEMA,
+        "current_temperature_changed": CURRENT_TRIGGER_SCHEMA,
+        "current_humidity_changed": CURRENT_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_get_triggers(
@@ -89,7 +98,10 @@ async def async_get_triggers(
             }
         )
 
-        if state and const.ATTR_CURRENT_TEMPERATURE in state.attributes:
+        if (
+            state
+            and ClimateEntityStateAttribute.CURRENT_TEMPERATURE in state.attributes
+        ):
             triggers.append(
                 {
                     **base_trigger,
@@ -97,7 +109,7 @@ async def async_get_triggers(
                 }
             )
 
-        if state and const.ATTR_CURRENT_HUMIDITY in state.attributes:
+        if state and ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes:
             triggers.append(
                 {
                     **base_trigger,
@@ -116,18 +128,16 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if (trigger_type := config[CONF_TYPE]) == "hvac_mode_changed":
-        state_config = {
-            state_trigger.CONF_PLATFORM: "state",
-            state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: config[state_trigger.CONF_TO],
-            state_trigger.CONF_FROM: [
-                mode
-                for mode in const.HVAC_MODES
-                if mode != config[state_trigger.CONF_TO]
+        state_config: ConfigType = {
+            StateTriggerArgument.PLATFORM: "state",
+            StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            StateTriggerArgument.TO: config[StateTriggerArgument.TO],
+            StateTriggerArgument.FROM: [
+                mode for mode in HVAC_MODES if mode != config[StateTriggerArgument.TO]
             ],
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )
@@ -135,26 +145,26 @@ async def async_attach_trigger(
             hass, state_config, action, trigger_info, platform_type="device"
         )
 
-    numeric_state_config = {
-        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    numeric_state_config: ConfigType = {
+        NumericStateTriggerArgument.PLATFORM: "numeric_state",
+        NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     if trigger_type == "current_temperature_changed":
-        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+        numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
             "{{ state.attributes.current_temperature }}"
         )
     else:  # trigger_type == "current_humidity_changed"
-        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+        numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
             "{{ state.attributes.current_humidity }}"
         )
 
     if CONF_ABOVE in config:
-        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[NumericStateTriggerArgument.ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[NumericStateTriggerArgument.BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
-        numeric_state_config[CONF_FOR] = config[CONF_FOR]
+        numeric_state_config[NumericStateTriggerArgument.FOR] = config[CONF_FOR]
 
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config
@@ -166,7 +176,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     trigger_type = config[CONF_TYPE]
 
@@ -175,10 +185,10 @@ async def async_get_trigger_capabilities(
 
     if trigger_type == "hvac_mode_changed":
         return {
-            "extra_fields": vol.Schema(
+            "extra_fields": probatio.Schema(
                 {
-                    vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
-                    vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                    probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
+                    probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
                 }
             )
         }
@@ -189,15 +199,15 @@ async def async_get_trigger_capabilities(
         unit_of_measurement = PERCENTAGE
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_ABOVE, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(
+                ): probatio.Coerce(float),
+                probatio.Optional(
                     CONF_BELOW, description={"suffix": unit_of_measurement}
-                ): vol.Coerce(float),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                ): probatio.Coerce(float),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

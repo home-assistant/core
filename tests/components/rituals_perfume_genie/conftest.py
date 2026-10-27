@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.rituals_perfume_genie import ACCOUNT_HASH, DOMAIN
+from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import TEST_EMAIL, TEST_PASSWORD
-
-from tests.common import MockConfigEntry
+from .const import TEST_EMAIL, TEST_PASSWORD, TEST_TOKEN
 
 
 @pytest.fixture
@@ -18,26 +17,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.rituals_perfume_genie.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
 
 @pytest.fixture
-def mock_rituals_account() -> Generator[AsyncMock]:
-    """Mock Rituals Account."""
+def mock_rituals_client() -> Generator[AsyncMock]:
+    """Mock the Rituals Perfume Genie client."""
     with (
         patch(
-            "homeassistant.components.rituals_perfume_genie.config_flow.Account",
+            "homeassistant.components.rituals_perfume_genie.config_flow.RitualsGenie",
             autospec=True,
-        ) as mock_account_cls,
+        ) as mock_client_cls,
         patch(
-            "homeassistant.components.rituals_perfume_genie.Account",
-            new=mock_account_cls,
+            "homeassistant.components.rituals_perfume_genie.RitualsGenie",
+            new=mock_client_cls,
         ),
     ):
-        mock_account = mock_account_cls.return_value
-        yield mock_account
+        client = mock_client_cls.return_value
+        client.token = TEST_TOKEN
+        yield client
 
 
 @pytest.fixture

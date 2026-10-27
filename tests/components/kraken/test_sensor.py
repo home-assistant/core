@@ -6,14 +6,15 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pykrakenapi.pykrakenapi import KrakenAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TRACKED_ASSET_PAIR,
     DOMAIN,
+    SCAN_INTERVAL,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -23,8 +24,6 @@ from .const import (
     TICKER_INFORMATION_RESPONSE,
     TRADEABLE_ASSET_PAIR_RESPONSE,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,7 +46,6 @@ async def test_sensor(
             domain=DOMAIN,
             unique_id="0123456789",
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [
                     "ADA/XBT",
                     "ADA/ETH",
@@ -70,6 +68,7 @@ async def test_sensor(
         xbt_usd_sensor = hass.states.get("sensor.xbt_usd_ask")
         assert xbt_usd_sensor.state == "0.0003494"
         assert xbt_usd_sensor.attributes["icon"] == "mdi:currency-usd"
+        assert xbt_usd_sensor.attributes["unit_of_measurement"] == "USD"
 
         xbt_eur_sensor = hass.states.get("sensor.xbt_eur_ask")
         assert xbt_eur_sensor.state == "0.0003494"
@@ -102,24 +101,38 @@ async def test_sensor(
 
         xbt_usd_volume_today = hass.states.get("sensor.xbt_usd_volume_today")
         assert xbt_usd_volume_today.state == "146300.24906838"
+        assert xbt_usd_volume_today.attributes["unit_of_measurement"] == "XBT"
 
         xbt_usd_volume_last_24h = hass.states.get("sensor.xbt_usd_volume_last_24h")
         assert xbt_usd_volume_last_24h.state == "253478.04715403"
+        assert xbt_usd_volume_last_24h.attributes["unit_of_measurement"] == "XBT"
+
+        ada_xbt_volume_last_24h = hass.states.get("sensor.ada_xbt_volume_last_24h")
+        assert ada_xbt_volume_last_24h.attributes["unit_of_measurement"] == "ADA"
 
         xbt_usd_volume_weighted_average_today = hass.states.get(
             "sensor.xbt_usd_volume_weighted_average_today"
         )
         assert xbt_usd_volume_weighted_average_today.state == "0.000348573"
+        assert (
+            xbt_usd_volume_weighted_average_today.attributes["unit_of_measurement"]
+            == "USD"
+        )
 
         xbt_usd_volume_weighted_average_last_24h = hass.states.get(
             "sensor.xbt_usd_volume_weighted_average_last_24h"
         )
         assert xbt_usd_volume_weighted_average_last_24h.state == "0.000344881"
+        assert (
+            xbt_usd_volume_weighted_average_last_24h.attributes["unit_of_measurement"]
+            == "USD"
+        )
 
         xbt_usd_number_of_trades_today = hass.states.get(
             "sensor.xbt_usd_number_of_trades_today"
         )
         assert xbt_usd_number_of_trades_today.state == "82"
+        assert "unit_of_measurement" not in xbt_usd_number_of_trades_today.attributes
 
         xbt_usd_number_of_trades_last_24h = hass.states.get(
             "sensor.xbt_usd_number_of_trades_last_24h"
@@ -157,7 +170,6 @@ async def test_sensors_available_after_restart(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -199,7 +211,6 @@ async def test_sensors_added_after_config_update(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -219,13 +230,12 @@ async def test_sensors_added_after_config_update(
         hass.config_entries.async_update_entry(
             entry,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR, "ADA/XBT"],
             },
         )
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("sensor.ada_xbt_ask")
 
@@ -247,7 +257,6 @@ async def test_missing_pair_marks_sensor_unavailable(
         entry = MockConfigEntry(
             domain=DOMAIN,
             options={
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
@@ -269,15 +278,15 @@ async def test_missing_pair_marks_sensor_unavailable(
         ticket_information_mock.side_effect = KrakenAPIError(
             "EQuery:Unknown asset pair"
         )
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         ticket_information_mock.side_effect = None
         ticket_information_mock.return_value = MISSING_PAIR_TICKER_INFORMATION_RESPONSE
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL * 2))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         sensor = hass.states.get("sensor.xbt_usd_ask")
         assert sensor.state == "unavailable"

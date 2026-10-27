@@ -1,8 +1,8 @@
 """Base class for iRobot devices."""
 
-from __future__ import annotations
+from typing import override
 
-from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -31,13 +31,17 @@ class IRobotEntity(Entity):
             model=self.vacuum_state.get("sku"),
             name=str(self.vacuum_state.get("name")),
             sw_version=self.vacuum_state.get("softwareVer"),
-            hw_version=self.vacuum_state.get("hardwareRev"),
+            hw_version=(
+                str(hw_rev)
+                if (hw_rev := self.vacuum_state.get("hardwareRev")) is not None
+                else None
+            ),
         )
 
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
             "wlan0HwAddr", self.vacuum_state.get("mac")
         ):
-            self._attr_device_info[ATTR_CONNECTIONS] = {
+            self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
 
@@ -47,6 +51,7 @@ class IRobotEntity(Entity):
         return f"roomba_{self._blid}"
 
     @property
+    @override
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return self.robot_unique_id
@@ -54,7 +59,9 @@ class IRobotEntity(Entity):
     @property
     def run_stats(self):
         """Return the run stats."""
-        return self.vacuum_state.get("bbrun", {})
+        return self.vacuum_state.get("runtimeStats", {}) | self.vacuum_state.get(
+            "bbrun", {}
+        )
 
     @property
     def mission_stats(self):
@@ -85,16 +92,18 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback function."""
-        self.vacuum.register_on_message_callback(self.on_message)
+        self.async_on_remove(self.vacuum.register_on_message_callback(self.on_message))
 
     def new_state_filter(self, new_state):
         """Filter out wifi state messages."""
         return len(new_state) > 1 or "signal" not in new_state
 
+    @callback
     def on_message(self, json_data):
         """Update state on message change."""
         state = json_data.get("state", {}).get("reported", {})
         if self.new_state_filter(state):
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()

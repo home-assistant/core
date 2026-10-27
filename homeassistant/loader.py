@@ -4,8 +4,6 @@ This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -17,15 +15,24 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    final,
+    override,
+)
 
 from awesomeversion import (
     AwesomeVersion,
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from . import generated
 from .const import Platform
@@ -34,13 +41,14 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.lorawan import LORAWAN
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import json_bytes, json_fragment
+from .helpers.json import cached_json_fragment, json_fragment
 from .helpers.typing import UNDEFINED, UndefinedType
-from .util.async_ import create_eager_task
+from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -52,6 +60,41 @@ if TYPE_CHECKING:
     from .helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+LORAWAN_SCHEMA = probatio.All(
+    [
+        probatio.All(
+            probatio.ExactSequence(
+                (
+                    probatio.All(str, probatio.Length(min=1)),
+                    probatio.Any(
+                        probatio.All(
+                            probatio.Check(
+                                lambda value: type(value) is int,
+                                "Expected an integer brand ID",
+                            ),
+                            probatio.Range(min=0),
+                        ),
+                        probatio.All(str, probatio.Length(min=1)),
+                    ),
+                )
+            ),
+            probatio.Coerce(tuple),
+        )
+    ],
+    probatio.Length(min=1),
+    probatio.Unique(),
+)
+LORAWAN_MANIFEST_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("lorawan"): LORAWAN_SCHEMA,
+        probatio.Required("config_flow"): True,
+        probatio.Required("dependencies"): probatio.All(
+            [str], probatio.Contains("lorawan")
+        ),
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
 
 #
 # Integration.get_component will check preload platforms and
@@ -89,6 +132,7 @@ class BlockedIntegration:
 
     lowest_good_version: AwesomeVersion | None
     reason: str
+    replaced_by: str | None = None
 
 
 BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
@@ -130,6 +174,20 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
         AwesomeVersion("0.7.1"),
         "crashes Home Assistant when it can't connect to the API",
     ),
+    # Added in 2026.11.0 because HACS ships with Home Assistant now
+    "hacs": BlockedIntegration(
+        None,
+        "is now built into Home Assistant as the Marketplace",
+        replaced_by="marketplace",
+    ),
+}
+
+# Custom integrations that a built-in integration took over. Their config
+# entries are rewritten to the built-in domain when they are loaded.
+MIGRATED_CUSTOM_INTEGRATIONS: dict[str, str] = {
+    domain: blocked.replaced_by
+    for domain, blocked in BLOCKED_CUSTOM_INTEGRATIONS.items()
+    if blocked.replaced_by is not None
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
@@ -258,8 +316,11 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    categories: list[str]
+    connectivity: list[str]
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
+    lorawan: list[tuple[str, int | str]]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, bool | str]]
@@ -277,7 +338,7 @@ class Manifest(TypedDict, total=False):
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the necessary data structures."""
-    _async_mount_config_dir(hass)
+    async_mount_config_dir(hass)
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
@@ -333,16 +394,39 @@ async def async_get_custom_components(
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        try:
+            comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        except BaseException as err:
+            if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+                del hass.data[DATA_CUSTOM_COMPONENTS]
+            future.set_exception(err)
+            # Retrieve the exception even when there are no concurrent callers.
+            future.exception()
+            raise
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        # A cache cleared during the scan asks for a newer scan, this one
+        # must not put its older result back.
+        if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+            hass.data[DATA_CUSTOM_COMPONENTS] = comps
         future.set_result(comps)
         return comps
 
     if isinstance(comps_or_future, asyncio.Future):
-        return await comps_or_future
+        return await wait_shared_future(comps_or_future)
 
     return comps_or_future
+
+
+@callback
+def async_clear_custom_components_cache(hass: HomeAssistant) -> None:
+    """Clear the cached list of custom integrations.
+
+    The next call to async_get_custom_components scans the custom_components
+    directory again, which is what makes a freshly installed integration
+    visible. Safe to call when nothing is cached, and when the list is still
+    being built: whoever is waiting for that gets the result it was promised.
+    """
+    hass.data.pop(DATA_CUSTOM_COMPONENTS, None)
 
 
 async def async_get_config_flows(
@@ -372,22 +456,22 @@ async def async_get_config_flows(
 class ComponentProtocol(Protocol):
     """Define the format of an integration."""
 
-    CONFIG_SCHEMA: vol.Schema
+    CONFIG_SCHEMA: probatio.Schema
     DOMAIN: str
 
     async def async_setup_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up a config entry."""
 
     async def async_unload_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload a config entry."""
 
     async def async_migrate_entry(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Migrate an old config entry."""
 
     async def async_remove_entry(
@@ -399,9 +483,13 @@ class ComponentProtocol(Protocol):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
-        """Remove a config entry device."""
+        """Remove a config entry device.
+
+        Only integrations that register child devices can receive a
+        ChildDeviceEntry. Removing a parent device also removes its child devices.
+        """
 
     async def async_reset_platform(
         self, hass: HomeAssistant, integration_name: str
@@ -448,7 +536,9 @@ async def async_get_integration_descriptions(
             integration_key = "integration"
 
         metadata = {
+            "categories": integration.categories,
             "config_flow": integration.config_flow,
+            "connectivity": integration.connectivity,
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
@@ -505,7 +595,12 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[ZeroconfMatcher]] = ZEROCONF.copy()  # type: ignore[assignment]
+    # Copy the lists too, custom integrations append to them below
+    generated_zeroconf = cast(dict[str, list[ZeroconfMatcher]], ZEROCONF)
+    zeroconf = {
+        service_type: list(matchers)
+        for service_type, matchers in generated_zeroconf.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -618,6 +713,29 @@ async def async_get_homekit(
     return homekit
 
 
+async def async_get_lorawan(
+    hass: HomeAssistant,
+) -> dict[str, list[tuple[str, int | str]]]:
+    """Return LoRaWAN vendor registrations, including custom integrations."""
+    registrations = LORAWAN.copy()
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        registrations.pop(integration.domain, None)
+        vendors = integration.lorawan
+        if vendors is None:
+            continue
+        try:
+            vendors = LORAWAN_MANIFEST_SCHEMA(integration.manifest)["lorawan"]
+        except probatio.Invalid:
+            _LOGGER.warning(
+                "Ignoring invalid LoRaWAN discovery registration for %s",
+                integration.domain,
+            )
+            continue
+        registrations[integration.domain] = vendors
+    return registrations
+
+
 async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
@@ -697,6 +815,21 @@ class Integration:
             if integration.is_built_in:
                 return integration
 
+            # A custom integration that a built-in one took over is left alone,
+            # without the warning that would make it look like a problem.
+            if (
+                blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain)
+            ) and blocked.replaced_by is not None:
+                _LOGGER.info(
+                    (
+                        "Custom integration '%s' is now part of Home Assistant"
+                        " as '%s' and is no longer loaded"
+                    ),
+                    integration.domain,
+                    blocked.replaced_by,
+                )
+                return None
+
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
 
             if integration.version is None:
@@ -704,8 +837,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a version key in the"
                         " manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -727,8 +860,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a valid version key"
                         " (%s) in the manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -767,6 +900,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        self.logger = logging.getLogger(pkg_path)
         manifest["is_built_in"] = self.is_built_in
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
@@ -786,7 +920,7 @@ class Integration:
     @cached_property
     def manifest_json_fragment(self) -> json_fragment:
         """Return manifest as a JSON fragment."""
-        return json_fragment(json_bytes(self.manifest))
+        return cached_json_fragment(self.manifest)
 
     @cached_property
     def name(self) -> str:
@@ -852,6 +986,19 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @cached_property
+    def categories(self) -> list[str]:
+        """Return the integration categories, the primary category first."""
+        return self.manifest.get("categories", [])
+
+    @cached_property
+    def connectivity(self) -> list[str]:
+        """Return the protocols used to reach the devices or service.
+
+        Empty means it is not filled in yet, not that nothing is reached.
+        """
+        return self.manifest.get("connectivity", [])
+
+    @cached_property
     def integration_type(
         self,
     ) -> Literal[
@@ -896,6 +1043,11 @@ class Integration:
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
         return self.manifest.get("mqtt")
+
+    @property
+    def lorawan(self) -> list[tuple[str, int | str]] | None:
+        """Return the stack and brand IDs this integration supports."""
+        return self.manifest.get("lorawan")
 
     @property
     def ssdp(self) -> list[dict[str, str]] | None:
@@ -996,7 +1148,7 @@ class Integration:
             return cache[domain]
 
         if self._component_future:
-            return await self._component_future
+            return await wait_shared_future(self._component_future)
 
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
@@ -1173,8 +1325,9 @@ class Integration:
                             load_executor_platforms,
                             exc_info=ex,
                         )
-                        # If importing in the executor deadlocks because there is a circular
-                        # dependency, we fall back to the event loop.
+                        # If importing in the executor deadlocks
+                        # because there is a circular dependency,
+                        # we fall back to the event loop.
                         load_event_loop_platforms.extend(load_executor_platforms)
 
                 if load_event_loop_platforms:
@@ -1208,7 +1361,7 @@ class Integration:
 
         if in_progress_imports:
             for platform_name, future in in_progress_imports.items():
-                platforms[platform_name] = await future
+                platforms[platform_name] = await wait_shared_future(future)
 
         return platforms
 
@@ -1311,6 +1464,7 @@ class Integration:
         """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
+    @override
     def __repr__(self) -> str:
         """Text representation of class."""
         return f"<Integration {self.domain}: {self.pkg_path}>"
@@ -1417,8 +1571,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:
@@ -1461,9 +1614,11 @@ class _ResolveDependenciesCacheProtocol(Protocol):
 class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
     """Cache for resolve_integrations_dependencies."""
 
+    @override
     def get(self, itg: Integration) -> set[str] | Exception | None:
         return itg._all_dependencies  # noqa: SLF001
 
+    @override
     def __setitem__(
         self, itg: Integration, all_dependencies: set[str] | Exception
     ) -> None:
@@ -1513,11 +1668,12 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
-    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+    """Resolve all dependencies for integrations.
 
+    Possibly includes after_dependencies.
     Detects circular dependencies and missing integrations.
     """
 
@@ -1555,7 +1711,7 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.
@@ -1679,10 +1835,11 @@ def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     return func
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> None:
+def async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
-    Async friendly but not a coroutine.
+    Async friendly but not a coroutine. Only a custom_components folder that
+    exists is mounted, one created later needs another call.
     """
 
     sys.path.insert(0, hass.config.config_dir)

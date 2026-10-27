@@ -1,14 +1,12 @@
 """Provide a way to label and group anything."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -72,6 +70,7 @@ class LabelEntry(NormalizedNameBaseRegistryEntry):
 class LabelRegistryStore(Store[LabelRegistryStoreData]):
     """Store label registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -133,6 +132,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         return self.labels.generate_id_from_name(name)
 
     @callback
+    @verify_event_loop_thread("label_registry.async_create")
     def async_create(
         self,
         name: str,
@@ -142,8 +142,6 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         description: str | None = None,
     ) -> LabelEntry:
         """Create a new label."""
-        self.hass.verify_event_loop_thread("label_registry.async_create")
-
         if label := self.async_get_label_by_name(name):
             raise ValueError(
                 f"The name {name} ({label.normalized_name}) is already in use"
@@ -167,9 +165,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         return label
 
     @callback
+    @verify_event_loop_thread("label_registry.async_delete")
     def async_delete(self, label_id: str) -> None:
         """Delete label."""
-        self.hass.verify_event_loop_thread("label_registry.async_delete")
         del self.labels[label_id]
         self.hass.bus.async_fire_internal(
             EVENT_LABEL_REGISTRY_UPDATED,
@@ -181,13 +179,14 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("label_registry.async_update")
     def async_update(
         self,
         label_id: str,
         *,
-        color: str | None | UndefinedType = UNDEFINED,
-        description: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        color: str | UndefinedType | None = UNDEFINED,
+        description: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> LabelEntry:
         """Update name of label."""
@@ -210,7 +209,6 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         changes["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("label_registry.async_update")
         new = self.labels[label_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()
@@ -224,6 +222,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         return new
 
+    @override
     async def _async_load(self) -> None:
         """Load the label registry."""
         data = await self._store.async_load()
@@ -245,6 +244,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self._label_data = labels.data
 
     @callback
+    @override
     def _data_to_save(self) -> LabelRegistryStoreData:
         """Return data of label registry to store in a file."""
         return {
@@ -268,6 +268,17 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 def async_get(hass: HomeAssistant) -> LabelRegistry:
     """Get label registry."""
     return LabelRegistry(hass)
+
+
+@callback
+def async_get_missing_label_ids(
+    hass: HomeAssistant, label_ids: Iterable[str]
+) -> set[str]:
+    """Return the label ids which are missing from the label registry."""
+    registry = async_get(hass)
+    return {
+        label_id for label_id in label_ids if registry.async_get_label(label_id) is None
+    }
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:

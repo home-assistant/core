@@ -1,7 +1,5 @@
 """Fixtures for Jellyfin integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
@@ -10,6 +8,7 @@ from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -17,8 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from . import load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -40,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.jellyfin.async_setup_entry", return_value=True
+        "homeassistant.components.jellyfin.async_setup_entry", return_value=None
     ) as setup_mock:
         yield setup_mock
 

@@ -1,8 +1,10 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@imicknl"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "gateway*",
@@ -12,8 +14,8 @@
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==1.20.0"],
+  "loggers": ["boto3", "botocore", "pyoverkiz", "s3transfer"],
+  "requirements": ["pyoverkiz[nexity]==2.3.0"],
   "zeroconf": [
     {
       "name": "gateway*",

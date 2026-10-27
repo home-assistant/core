@@ -84,14 +84,57 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
-      "shelter_alarm": {
-        "name": "Shelter alarm"
+      "temperature_alarm": {
+        "name": "Temperature alarm"
       },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },
       "video_mismatch": {
         "name": "Video mismatch"
+      }
+    },
+    "event": {
+      "field_detection": {
+        "name": "[%key:component::hikvision::entity::binary_sensor::field_detection::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "Human",
+              "others": "Other",
+              "pet": "Pet",
+              "triggered": "Triggered",
+              "vehicle": "Vehicle"
+            }
+          }
+        }
+      },
+      "line_crossing": {
+        "name": "[%key:component::hikvision::entity::binary_sensor::line_crossing::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
+              "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
+              "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
+              "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
+              "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
+              "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
+              "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
+            }
+          }
+        }
       }
     }
   },

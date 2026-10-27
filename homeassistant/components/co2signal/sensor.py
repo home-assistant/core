@@ -1,9 +1,8 @@
 """Support for the CO2signal platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aioelectricitymaps import HomeAssistantCarbonIntensityResponse
 
@@ -20,6 +19,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import CO2SignalConfigEntry, CO2SignalCoordinator
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -93,11 +95,13 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self.entity_description.unit_of_measurement_fn:

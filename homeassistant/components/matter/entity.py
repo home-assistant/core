@@ -1,12 +1,10 @@
 """Matter entity base class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, ClusterCommand, NullValue
@@ -21,18 +19,24 @@ from propcache.api import cached_property
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
-from .helpers import get_device_id
+from .helpers import (
+    MatterConfigEntry,
+    get_device_id,
+    get_discovery_key,
+    get_entity_unique_id,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
 
-    from .discovery import MatterEntityInfo
+    from .models import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +100,12 @@ class MatterEntity(Entity):
     _attr_should_poll = False
     _name_postfix: str | None = None
     _platform_translation_key: str | None = None
+    # Cooldown in seconds to debounce state writes on updates from the device.
+    # Platforms which derive their state from multiple attributes can set this
+    # to coalesce attribute updates which arrive as separate events.
+    _write_state_debounce_cooldown: float | None = None
+    _write_state_debouncer: Debouncer[None] | None = None
+    _removal_scheduled = False
 
     def __init__(
         self,
@@ -108,25 +118,23 @@ class MatterEntity(Entity):
         self._endpoint = endpoint
         self._entity_info = entity_info
         self.entity_description = entity_info.entity_description
-        self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
         # The server info is set when the client connects to the server.
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         # create unique_id based on "Operational Instance Name" and endpoint/device type
         node_device_id = get_device_id(server_info, endpoint)
-        self._attr_unique_id = (
-            f"{node_device_id}-"
-            f"{endpoint.endpoint_id}-"
-            f"{entity_info.entity_description.key}-"
-            f"{entity_info.primary_attribute.cluster_id}-"
-            f"{entity_info.primary_attribute.attribute_id}"
+        self._attr_unique_id = get_entity_unique_id(
+            node_device_id, endpoint, entity_info
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
-        self._attr_available = self._endpoint.node.available
-        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        self._attr_available = (
+            self._endpoint.node.available and self._get_bridged_reachable()
+        )
+        # mark endpoint postfix if the device has the primary
+        # attribute on multiple endpoints
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
@@ -154,8 +162,12 @@ class MatterEntity(Entity):
         """Find all labels for a Matter entity."""
 
         device_info = self._endpoint.device_info
-        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
-            device_info.productID
+        labeling_list = (
+            VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+                device_info.productID
+            )
+            if device_info is not None
+            else None
         )
 
         # get the labels from the UserLabel and FixedLabel clusters
@@ -183,9 +195,19 @@ class MatterEntity(Entity):
             return found_labels[0]
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
+
+        if self._write_state_debounce_cooldown is not None:
+            self._write_state_debouncer = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=self._write_state_debounce_cooldown,
+                immediate=False,
+                function=self.async_write_ha_state,
+            )
 
         # Subscribe to attribute updates.
         sub_paths: list[str] = []
@@ -196,7 +218,7 @@ class MatterEntity(Entity):
                 continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
-            self._unsubscribes.append(
+            self.async_on_remove(
                 self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -205,15 +227,53 @@ class MatterEntity(Entity):
                 )
             )
         # subscribe to node (availability changes)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
                 node_filter=self._endpoint.node.node_id,
             )
         )
+        # Subscribe to BridgedDeviceBasicInformation Reachable
+        # attribute (AttributeId: 17) for devices connected via a
+        # Matter bridge, to reflect real reachability status.
+        if self._endpoint.has_attribute(
+            None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        ):
+            reachable_attr_path = self.get_matter_attribute_path(
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+            )
+            if reachable_attr_path not in sub_paths:
+                sub_paths.append(reachable_attr_path)
+                self.async_on_remove(
+                    self.matter_client.subscribe_events(
+                        callback=self._on_matter_event,
+                        event_filter=EventType.ATTRIBUTE_UPDATED,
+                        node_filter=self._endpoint.node.node_id,
+                        attr_path_filter=reachable_attr_path,
+                    )
+                )
+        # If we are a composed device subscribe to the parent's Reachable attribute
+        if self._compose_parent is not None and self._compose_parent.has_attribute(
+            None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        ):
+            parent_reachable_attr_path = create_attribute_path(
+                self._compose_parent.endpoint_id,
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable.cluster_id,
+                clusters.BridgedDeviceBasicInformation.Attributes.Reachable.attribute_id,
+            )
+            if parent_reachable_attr_path not in sub_paths:
+                sub_paths.append(parent_reachable_attr_path)
+                self.async_on_remove(
+                    self.matter_client.subscribe_events(
+                        callback=self._on_matter_event,
+                        event_filter=EventType.ATTRIBUTE_UPDATED,
+                        node_filter=self._compose_parent.node.node_id,
+                        attr_path_filter=parent_reachable_attr_path,
+                    )
+                )
         # subscribe to FeatureMap attribute (as that can dynamically change)
-        self._unsubscribes.append(
+        self.async_on_remove(
             self.matter_client.subscribe_events(
                 callback=self._on_featuremap_update,
                 event_filter=EventType.ATTRIBUTE_UPDATED,
@@ -227,6 +287,7 @@ class MatterEntity(Entity):
         )
 
     @cached_property
+    @override
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -237,35 +298,125 @@ class MatterEntity(Entity):
             name = f"{name} ({self._name_postfix})"
         return name
 
+    @cached_property
+    def _compose_parent(self) -> MatterEndpoint | None:
+        """Return the composed parent endpoint, if any."""
+        return self._endpoint.node.get_compose_parent(self._endpoint.endpoint_id)
+
+    @callback
+    def _get_bridged_reachable(self) -> bool:
+        """Return reachability state for bridged endpoints, True if not applicable."""
+        # if we are the endpoint of a composed device, we have to check the
+        # parent endpoint's reachable attribute
+        if self._compose_parent is not None:
+            compose_parent_reachable = self._compose_parent.get_attribute_value(
+                None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+            )
+            # assume unreachable only if there is an attribute present that
+            # explicitly states reachable=false for the parent
+            if compose_parent_reachable is not None and not compose_parent_reachable:
+                return False
+        # check if our endpoint has a reachable attribute
+        # absence of reachable attribute is assumed as reachable (non-bridged devices)
+        reachable = self.get_matter_attribute_value(
+            clusters.BridgedDeviceBasicInformation.Attributes.Reachable
+        )
+        if reachable is None:
+            return True
+        return bool(reachable)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle being removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_shutdown()
+            self._write_state_debouncer = None
+
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
         """Call on update from the device."""
-        self._attr_available = self._endpoint.node.available
+        if event is EventType.NODE_UPDATED and self._required_attribute_removed():
+            self._async_remove_unsupported()
+            return
+        self._attr_available = (
+            self._endpoint.node.available and self._get_bridged_reachable()
+        )
         self._update_from_device()
-        self.async_write_ha_state()
+        if self._write_state_debouncer is not None:
+            self._write_state_debouncer.async_schedule_call()
+        else:
+            self.async_write_ha_state()
 
     @callback
-    def _on_featuremap_update(
-        self, event: EventType, data: tuple[int, str, int] | None
-    ) -> None:
+    def _on_featuremap_update(self, event: EventType, data: int | None) -> None:
         """Handle FeatureMap attribute updates."""
         if data is None:
             return
-        new_value = data[2]
         # handle edge case where a Feature is removed from a cluster
-        if (
-            self._entity_info.discovery_schema.featuremap_contains is not None
-            and not bool(
-                new_value & self._entity_info.discovery_schema.featuremap_contains
-            )
-        ):
+        if self._feature_removed(data):
             # this entity is no longer supported by the device
-            ent_reg = er.async_get(self.hass)
-            ent_reg.async_remove(self.entity_id)
-
+            self._async_remove_unsupported()
             return
         # all other cases, just update the entity
         self._on_matter_event(event, data)
+
+    @callback
+    def _feature_removed(self, feature_map: int | None) -> bool:
+        """Return if the FeatureMap no longer has the feature this entity needs."""
+        featuremap_contains = self._entity_info.discovery_schema.featuremap_contains
+        return (
+            feature_map is not None
+            and featuremap_contains is not None
+            and not bool(feature_map & featuremap_contains)
+        )
+
+    @callback
+    def _required_attribute_removed(self) -> bool:
+        """Return if the node data no longer has a required attribute."""
+        # Entities of an endpoint that left the node data are left to the endpoint removal
+        if not self._endpoint.has_attribute(
+            None, clusters.Descriptor.Attributes.DeviceTypeList
+        ):
+            return False
+        return not all(
+            self._endpoint.has_attribute(None, attribute)
+            for attribute in self._entity_info.discovery_schema.required_attributes
+        )
+
+    @callback
+    def _unsupported(self) -> bool:
+        """Return if the device no longer supports this entity."""
+        return self._required_attribute_removed() or self._feature_removed(
+            self._endpoint.get_attribute_value(
+                self._entity_info.primary_attribute.cluster_id,
+                FEATUREMAP_ATTRIBUTE_ID,
+            )
+        )
+
+    @callback
+    def _async_remove_unsupported(self) -> None:
+        """Remove this entity because the device no longer supports it."""
+        if self._removal_scheduled:
+            return
+        self._removal_scheduled = True
+        # Removing unsubscribes the entity, which must wait until the client has
+        # finished calling the subscribers of the current event
+        self.hass.loop.call_soon(self._async_remove_from_registry)
+
+    @callback
+    def _async_remove_from_registry(self) -> None:
+        """Remove this entity from the entity registry if it is still unsupported."""
+        self._removal_scheduled = False
+        # a later event of the same batch may have restored the support
+        if not self._unsupported():
+            return
+        entry = cast(MatterConfigEntry, self.platform.config_entry)
+        # let discovery add the entity again if the device supports it later
+        entry.runtime_data.adapter.discovered_entities.discard(
+            get_discovery_key(self._endpoint, self._entity_info)
+        )
+        er.async_get(self.hass).async_remove(self.entity_id)
 
     @callback
     def _update_from_device(self) -> None:
@@ -312,7 +463,7 @@ class MatterEntity(Entity):
     ) -> Any:
         """Write an attribute(value) on the primary endpoint.
 
-        If matter_attribute is not provided, the primary attribute of the entity is used.
+        If matter_attribute is not provided, the primary attribute is used.
         """
         if matter_attribute is None:
             matter_attribute = self._entity_info.primary_attribute

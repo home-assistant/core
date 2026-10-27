@@ -1,36 +1,47 @@
 """Controller module."""
 
-from __future__ import annotations
-
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable
+from dataclasses import asdict
 from functools import partial
 import logging
 import ssl
-from typing import Any
 
 from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
-from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
+from deebot_client.events import FirmwareEvent, NetworkInfoEvent
+from deebot_client.exceptions import (
+    DeebotError,
+    DeviceVerificationRequiredError,
+    InvalidAuthenticationError,
+)
+from deebot_client.models import AccountCredentials
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
+    CONF_ACCOUNT_CREDENTIALS,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
     CONF_VERIFY_MQTT_CERTIFICATE,
+    DOMAIN,
 )
-from .util import get_client_device_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +49,16 @@ _LOGGER = logging.getLogger(__name__)
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, config: Mapping[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
+        self._entry = entry
+        config = entry.data
         self._devices: list[Device] = []
         self._legacy_devices: list[VacBot] = []
+        self._unsubscribe_device_events: list[Callable[[], None]] = []
         rest_url = config.get(CONF_OVERRIDE_REST_URL)
-        self._device_id = get_client_device_id(hass, rest_url is not None)
+        self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
         self._continent = get_continent(country)
 
@@ -57,6 +71,18 @@ class EcovacsController:
             ),
             config[CONF_USERNAME],
             md5(config[CONF_PASSWORD]),
+            # Renewing with the stored account credentials avoids the password
+            # login, which keeps asking some accounts for device verification
+            account_credentials=(
+                AccountCredentials(**account)
+                if (account := config.get(CONF_ACCOUNT_CREDENTIALS))
+                else None
+            ),
+        )
+        self._unsubscribe_account_credentials = (
+            self._authenticator.subscribe_account_credentials(
+                self._async_store_account_credentials
+            )
         )
         self._api_client = ApiClient(self._authenticator)
 
@@ -92,6 +118,7 @@ class EcovacsController:
                     async def _init(device: Device) -> None:
                         """Initialize MQTT device."""
                         await device.initialize(mqtt)
+                        self._subscribe_device_info_events(device)
                         self._devices.append(device)
 
                     for device in mqtt_devices:
@@ -118,15 +145,57 @@ class EcovacsController:
                     device_config,
                 )
 
+        except DeviceVerificationRequiredError as ex:
+            raise ConfigEntryAuthFailed("Device verification required") from ex
         except InvalidAuthenticationError as ex:
-            raise ConfigEntryError("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except DeebotError as ex:
             raise ConfigEntryNotReady("Error during setup") from ex
 
         _LOGGER.debug("Controller initialize complete")
 
+    async def _async_store_account_credentials(
+        self, account: AccountCredentials
+    ) -> None:
+        """Store new account credentials in the config entry."""
+        self._hass.config_entries.async_update_entry(
+            self._entry,
+            data={**self._entry.data, CONF_ACCOUNT_CREDENTIALS: asdict(account)},
+        )
+
+    def _subscribe_device_info_events(self, device: Device) -> None:
+        """Update the device registry when the firmware or MAC is reported."""
+        identifier = (DOMAIN, device.device_info["did"])
+        device_registry = dr.async_get(self._hass)
+
+        def device_entry() -> dr.DeviceEntry | None:
+            return device_registry.async_get_device_by_identifier(
+                identifier, self._entry.entry_id
+            )
+
+        async def on_firmware(event: FirmwareEvent) -> None:
+            if entry := device_entry():
+                device_registry.async_update_device(entry.id, sw_version=event.version)
+
+        async def on_network(event: NetworkInfoEvent) -> None:
+            if event.mac and (entry := device_entry()):
+                device_registry.async_update_device(
+                    entry.id,
+                    new_connections={(dr.CONNECTION_NETWORK_MAC, event.mac)},
+                )
+
+        self._unsubscribe_device_events.extend(
+            (
+                device.events.subscribe(FirmwareEvent, on_firmware),
+                device.events.subscribe(NetworkInfoEvent, on_network),
+            )
+        )
+
     async def teardown(self) -> None:
         """Disconnect controller."""
+        self._unsubscribe_account_credentials()
+        for unsubscribe in self._unsubscribe_device_events:
+            unsubscribe()
         for device in self._devices:
             await device.teardown()
         for legacy_device in self._legacy_devices:

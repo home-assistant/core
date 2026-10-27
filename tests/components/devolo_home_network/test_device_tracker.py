@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
-    LONG_UPDATE_INTERVAL,
+    SHORT_UPDATE_INTERVAL,
 )
 from homeassistant.const import STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from . import configure_integration
 from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 STATION = CONNECTED_STATIONS[0]
 
@@ -40,16 +39,13 @@ async def test_device_tracker(
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    freezer.tick(LONG_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id) == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
         return_value=NO_CONNECTED_STATIONS
     )
-    freezer.tick(LONG_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -61,7 +57,7 @@ async def test_device_tracker(
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    freezer.tick(LONG_UPDATE_INTERVAL)
+    freezer.tick(SHORT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -70,6 +66,7 @@ async def test_device_tracker(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_restoring_clients(
     hass: HomeAssistant,
     mock_device: MockDevice,
@@ -97,3 +94,28 @@ async def test_restoring_clients(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
+
+
+@pytest.mark.usefixtures("mock_device", "entity_registry_enabled_by_default")
+async def test_recreating_removed_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the entity registry is the source of truth for tracked clients."""
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
+    )
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is not None
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is None
+
+    freezer.tick(SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is not None

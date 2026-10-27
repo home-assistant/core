@@ -1,9 +1,7 @@
 """Support for Fibaro binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -16,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 SENSOR_TYPES = {
@@ -48,7 +46,7 @@ async def async_setup_entry(
     controller = entry.runtime_data
     async_add_entities(
         [
-            FibaroBinarySensor(device)
+            FibaroBinarySensor(device, controller)
             for device in controller.fibaro_devices[Platform.BINARY_SENSOR]
         ],
         True,
@@ -58,9 +56,11 @@ async def async_setup_entry(
 class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the binary_sensor."""
-        super().__init__(fibaro_device)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         self._own_extra_state_attributes: Mapping[str, Any] = {}
         self._fibaro_sensor_type = None
@@ -75,10 +75,12 @@ class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the extra state attributes of the device."""
         return {**super().extra_state_attributes, **self._own_extra_state_attributes}
 
+    @override
     def update(self) -> None:
         """Get the latest data and update the state."""
         super().update()

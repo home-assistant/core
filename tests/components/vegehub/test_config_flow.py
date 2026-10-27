@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.vegehub.const import DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
 
-from tests.common import MockConfigEntry
-
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_IP),
     ip_addresses=[ip_address(TEST_IP)],
@@ -46,7 +45,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 def mock_setup_entry() -> Generator[Any]:
     """Prevent the actual integration from being set up."""
     with (
-        patch("homeassistant.components.vegehub.async_setup_entry", return_value=True),
+        patch("homeassistant.components.vegehub.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -73,7 +72,8 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE] is not None
     assert result["data"][CONF_WEBHOOK_ID] is not None
 
-    # Since this is user flow, there is no hostname, so hostname should be the IP address
+    # Since this is user flow, there is no hostname,
+    # so hostname should be the IP address
     assert result["data"][CONF_HOST] == TEST_IP
     assert result["result"].unique_id == TEST_SIMPLE_MAC
 

@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -32,6 +31,21 @@
           "host": "The hostname or IP address of your Frontier Silicon device."
         }
       }
+    }
+  },
+  "entity": {
+    "switch": {
+      "dst": {
+        "name": "Daylight Saving Time"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Failed to execute {command}: {message}"
+    },
+    "connection_error": {
+      "message": "Failed to execute {command}: could not connect to device"
     }
   }
 }

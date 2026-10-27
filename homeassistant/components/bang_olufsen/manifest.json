@@ -1,11 +1,12 @@
 {
   "domain": "bang_olufsen",
   "name": "Bang & Olufsen",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@mj23000"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bang_olufsen",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["mozart-api==5.3.1.108.2"],
+  "requirements": ["mozart-api==6.2.0.44.0"],
   "zeroconf": ["_bangolufsen._tcp.local."]
 }

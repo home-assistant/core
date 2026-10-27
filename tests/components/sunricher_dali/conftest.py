@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from PySrDaliGateway.helper import gen_device_unique_id, gen_group_unique_id
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import (
@@ -17,8 +18,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 GATEWAY_SERIAL = "6A242121110E"
 GATEWAY_HOST = "192.168.1.100"
@@ -134,6 +133,11 @@ def _create_mock_device(device_data: dict[str, Any]) -> MagicMock:
     device.model = device_data["model"]
     device.gw_sn = GATEWAY_SERIAL
     device.color_mode = device_data["color_mode"]
+    device.address = device_data["address"]
+    device.channel = device_data["channel"]
+    device.dev_sn = device_data.get("dev_sn", f"DEVSN-{device_data['address']:04d}")
+    device.area_name = device_data.get("area_name", "Test Area")
+    device.area_id = device_data.get("area_id", "test_area")
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
@@ -223,6 +227,7 @@ def _create_mock_scene(
     scene.unique_id = unique_id
     scene.gw_sn = gw_sn
     scene.channel = channel
+    scene.area_id = area_id
     scene.activate = MagicMock()
     scene.devices = devices_with_ids
 
@@ -320,6 +325,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sunricher_dali.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
