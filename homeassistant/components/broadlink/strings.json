@@ -42,6 +42,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
