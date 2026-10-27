@@ -116,7 +116,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context["title_placeholders"],
