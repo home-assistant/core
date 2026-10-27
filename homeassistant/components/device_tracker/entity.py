@@ -548,7 +548,7 @@ class ScannerEntity(
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None
-    _attr_device_info: DeviceInfo | None = None  # type: ignore[assignment]
+    _attr_device_info: DeviceInfo | None  # type: ignore[assignment]
     # Most scanned network clients are not worth tracking
     _attr_entity_registry_enabled_default = False
     _attr_source_type: SourceType = SourceType.ROUTER
