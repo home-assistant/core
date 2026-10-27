@@ -27,7 +27,7 @@ from homeassistant.components.enphase_envoy.const import (
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.enphase_envoy.sensor import aggregate_acb_sleep_state
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import ATTR_RESTORED, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -2058,3 +2058,134 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
     for name in PHASE_NAMES:
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == "unknown"
+
+
+LIFETIME_ENTITIES: tuple[str, ...] = (
+    "lifetime_energy_production",
+    "lifetime_energy_consumption",
+    "lifetime_energy_production_l1",
+    "lifetime_energy_consumption_l1",
+    "production_ct_energy_delivered",
+    "production_ct_energy_delivered_l1",
+)
+
+
+def _set_lifetime_values(data: Any, value: int) -> None:
+    """Set all lifetime energy values used by LIFETIME_ENTITIES."""
+    data.system_production.watt_hours_lifetime = value
+    data.system_consumption.watt_hours_lifetime = value
+    data.system_production_phases["L1"].watt_hours_lifetime = value
+    data.system_consumption_phases["L1"].watt_hours_lifetime = value
+    data.ctmeters[CtType.PRODUCTION].energy_delivered = value
+    data.ctmeters_phases[CtType.PRODUCTION]["L1"].energy_delivered = value
+    data.raw = {"lifetime": value}
+
+
+def _state(hass: HomeAssistant, entity_id: str) -> str:
+    assert (state := hass.states.get(entity_id))
+    return state.state
+
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize(
+    ("lifetime_wh", "expected_state"),
+    [
+        pytest.param(32_000_000, "32.0", id="32_mwh"),
+        pytest.param(1, "1e-06", id="1_wh"),
+    ],
+)
+@pytest.mark.parametrize("zero_polls", [1, 2])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_lifetime_zero_after_reboot_ignored(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    lifetime_wh: int,
+    expected_state: str,
+    zero_polls: int,
+) -> None:
+    """Test a lifetime value of 0 after a positive one never reaches the state."""
+    _set_lifetime_values(mock_envoy.data, lifetime_wh)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+    for name in LIFETIME_ENTITIES:
+        assert _state(hass, f"{entity_base}_{name}") == expected_state
+
+    _set_lifetime_values(mock_envoy.data, 0)
+    for _ in range(zero_polls):
+        await _poll(hass, freezer)
+        for name in LIFETIME_ENTITIES:
+            assert _state(hass, f"{entity_base}_{name}") == STATE_UNKNOWN
+
+    _set_lifetime_values(mock_envoy.data, lifetime_wh)
+    await _poll(hass, freezer)
+    for name in LIFETIME_ENTITIES:
+        assert _state(hass, f"{entity_base}_{name}") == expected_state
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_lifetime_zero_new_installation(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a real lifetime value of 0 without earlier state is kept."""
+    _set_lifetime_values(mock_envoy.data, 0)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+    for name in LIFETIME_ENTITIES:
+        assert _state(hass, f"{entity_base}_{name}") == "0.0"
+
+    await _poll(hass, freezer)
+    for name in LIFETIME_ENTITIES:
+        assert _state(hass, f"{entity_base}_{name}") == "0.0"
+
+
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize(
+    ("previous_state", "expected_state"),
+    [
+        pytest.param("32.0", STATE_UNKNOWN, id="existing_positive_state"),
+        pytest.param("0.0", "0", id="existing_zero_state"),
+        pytest.param(STATE_UNKNOWN, "0", id="existing_unknown_state"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_lifetime_zero_with_existing_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    previous_state: str,
+    expected_state: str,
+) -> None:
+    """Test a zero on first update uses the state already present in HA."""
+    config_entry.add_to_hass(hass)
+    entity_id = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mock_envoy.serial_number}_lifetime_production",
+        config_entry=config_entry,
+        suggested_object_id=f"envoy_{mock_envoy.serial_number}_lifetime_energy_production",
+    ).entity_id
+    hass.states.async_set(entity_id, previous_state, {ATTR_RESTORED: True})
+
+    _set_lifetime_values(mock_envoy.data, 0)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _state(hass, entity_id) == expected_state

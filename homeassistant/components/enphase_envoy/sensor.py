@@ -1,6 +1,7 @@
 """Support for Enphase Envoy solar energy monitor."""
 
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 from dataclasses import dataclass, replace
 import datetime as dt
 import logging
@@ -1228,6 +1229,7 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
             hw_version=coordinator.envoy.part_number,
             serial_number=self.envoy_serial_num,
         )
+        self._had_lifetime_value = False
 
     def _apply_upper_limit(self, value: int, upper_limit: int | None) -> int | None:
         """Return None for values above the upper limit."""
@@ -1238,6 +1240,29 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
                 value,
                 upper_limit,
             )
+            return None
+        return value
+
+    def _ignore_lifetime_reset[T](self, value: T) -> T | None:
+        """Return None for a zero that follows a positive lifetime value."""
+        description = self.entity_description
+        # Daily sensors (with an upper limit) legitimately reset to 0 at midnight
+        if (
+            description.state_class != SensorStateClass.TOTAL_INCREASING
+            or getattr(description, "upper_limit", None) is not None
+            or not isinstance(value, int)
+        ):
+            return value
+        if value > 0:
+            self._had_lifetime_value = True
+            return value
+        if not self._had_lifetime_value and (
+            state := self.hass.states.get(self.entity_id)
+        ):
+            with suppress(ValueError):
+                self._had_lifetime_value = float(state.state) > 0
+        if self._had_lifetime_value:
+            _LOGGER.debug("Lifetime value 0 discarded for %s", self.entity_id)
             return None
         return value
 
@@ -1253,9 +1278,11 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_production := self.data.system_production) is None:
             return None
-        return self._apply_upper_limit(
-            self.entity_description.value_fn(system_production),
-            self.entity_description.upper_limit,
+        return self._ignore_lifetime_reset(
+            self._apply_upper_limit(
+                self.entity_description.value_fn(system_production),
+                self.entity_description.upper_limit,
+            )
         )
 
 
@@ -1270,9 +1297,11 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_consumption := self.data.system_consumption) is None:
             return None
-        return self._apply_upper_limit(
-            self.entity_description.value_fn(system_consumption),
-            self.entity_description.upper_limit,
+        return self._ignore_lifetime_reset(
+            self._apply_upper_limit(
+                self.entity_description.value_fn(system_consumption),
+                self.entity_description.upper_limit,
+            )
         )
 
 
@@ -1287,7 +1316,9 @@ class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_net_consumption := self.data.system_net_consumption) is None:
             return None
-        return self.entity_description.value_fn(system_net_consumption)
+        return self._ignore_lifetime_reset(
+            self.entity_description.value_fn(system_net_consumption)
+        )
 
 
 class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
@@ -1312,9 +1343,11 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self._apply_upper_limit(
-            self.entity_description.value_fn(system_production),
-            self.entity_description.upper_limit,
+        return self._ignore_lifetime_reset(
+            self._apply_upper_limit(
+                self.entity_description.value_fn(system_production),
+                self.entity_description.upper_limit,
+            )
         )
 
 
@@ -1340,9 +1373,11 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self._apply_upper_limit(
-            self.entity_description.value_fn(system_consumption),
-            self.entity_description.upper_limit,
+        return self._ignore_lifetime_reset(
+            self._apply_upper_limit(
+                self.entity_description.value_fn(system_consumption),
+                self.entity_description.upper_limit,
+            )
         )
 
 
@@ -1371,7 +1406,9 @@ class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_net_consumption)
+        return self._ignore_lifetime_reset(
+            self.entity_description.value_fn(system_net_consumption)
+        )
 
 
 class EnvoyCTEntity(EnvoySystemSensorEntity):
@@ -1389,7 +1426,9 @@ class EnvoyCTEntity(EnvoySystemSensorEntity):
             return None
         if self.data.ctmeters[cttype] is None:
             return None
-        return self.entity_description.value_fn(self.data.ctmeters[cttype])
+        return self._ignore_lifetime_reset(
+            self.entity_description.value_fn(self.data.ctmeters[cttype])
+        )
 
 
 class EnvoyCTPhaseEntity(EnvoySystemSensorEntity):
@@ -1413,8 +1452,8 @@ class EnvoyCTPhaseEntity(EnvoySystemSensorEntity):
             return None
         if self.data.ctmeters_phases[cttype][phase] is None:
             return None
-        return self.entity_description.value_fn(
-            self.data.ctmeters_phases[cttype][phase]
+        return self._ignore_lifetime_reset(
+            self.entity_description.value_fn(self.data.ctmeters_phases[cttype][phase])
         )
 
 
