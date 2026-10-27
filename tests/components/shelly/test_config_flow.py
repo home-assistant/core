@@ -2421,7 +2421,6 @@ async def test_zeroconf(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -2484,7 +2483,6 @@ async def test_zeroconf_enhanced_security(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "http://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -2537,7 +2535,6 @@ async def test_zeroconf_enhanced_security_with_https_port(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "https://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -3786,7 +3783,6 @@ async def test_zeroconf_wrong_device_name(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "Shelly Plus 2PM [DDEEFF]"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -1308,6 +1308,17 @@ TARGET_FIELDS: VolDictType = {
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
 }
 
+
+def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
+    """Reject a target which only has an exclude block.
+
+    Not part of TARGET_FIELDS, which also validates partial targets while editing.
+    """
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+        raise probatio.Invalid("an exclude block requires a target to exclude from")
+    return value
+
+
 ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(ATTR_ENTITY_ID): entity_ids,
@@ -1544,7 +1555,8 @@ SERVICE_SCHEMA = probatio.All(
             ),
             probatio.Optional(CONF_ENTITY_ID): comp_entity_ids,
             probatio.Optional(CONF_TARGET): probatio.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                probatio.All(_TARGET_SERVICE_FIELDS_TEMPLATED, exclude_requires_target),
+                dynamic_template,
             ),
             probatio.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.

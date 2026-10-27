@@ -33,7 +33,7 @@ from homeassistant.components.anthropic.const import (
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
-    ConfigSubentryData,
+    ConfigSubentryDataWithId,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import Context, HomeAssistant
@@ -238,10 +238,8 @@ async def test_reconfigure_deprecated_model_repair(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: deprecated_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: deprecated_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -305,14 +303,12 @@ async def test_reconfigure_clears_model_repair(
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: replacement_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: replacement_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -394,13 +390,10 @@ async def test_model_repair_retained_for_other_subentries(
     result = await healthy_entry.start_subentry_reconfigure_flow(
         hass, healthy_subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id}
     )
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["reason"] == "reconfigure_successful"
@@ -415,10 +408,8 @@ async def test_model_repair_retained_for_other_subentries(
             hass, subentry.subentry_id
         )
         result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_RECOMMENDED: False}
-        )
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+            result["flow_id"],
+            {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id},
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
@@ -987,28 +978,29 @@ async def test_migration_from_v2_1_to_v2_2(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+    subentries_data: list[ConfigSubentryDataWithId] = [
+        {
+            "data": options,
+            "subentry_id": "mock_id_1",
+            "subentry_type": "conversation",
+            "title": "Claude",
+            "unique_id": None,
+        },
+        {
+            "data": options,
+            "subentry_id": "mock_id_2",
+            "subentry_type": "conversation",
+            "title": "Claude 2",
+            "unique_id": None,
+        },
+    ]
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_key": "1234"},
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
-        subentries_data=[
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_1",
-                subentry_type="conversation",
-                title="Claude",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_2",
-                subentry_type="conversation",
-                title="Claude 2",
-                unique_id=None,
-            ),
-        ],
+        subentries_data=subentries_data,
         title="Claude",
     )
     mock_config_entry.add_to_hass(hass)

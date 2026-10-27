@@ -244,7 +244,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 options={CONF_INVERT_POSITION: False},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={

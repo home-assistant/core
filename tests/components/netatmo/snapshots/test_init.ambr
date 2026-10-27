@@ -52,7 +52,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -75,14 +75,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:30:d5:d4')]>,
   })
 # ---
 # name: test_devices[netatmo-0009999993]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -105,14 +105,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:30:d5:d4')]>,
   })
 # ---
 # name: test_devices[netatmo-00:11:22:33:00:11:45:fe]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -135,14 +135,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
 # name: test_devices[netatmo-1002003001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'corridor',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -165,14 +165,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:00:a1:4c:da]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -195,14 +195,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:01:01:01:a1]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -225,14 +225,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#0]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -255,14 +255,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#1]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -285,14 +285,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#2]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -315,14 +315,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#3]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -345,14 +345,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#4]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -375,14 +375,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#5]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -405,14 +405,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#6]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -435,14 +435,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#7]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -465,14 +465,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e#8]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -495,14 +495,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:16:0e]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -525,14 +525,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:86:99]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -555,14 +555,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:f1:62')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:f1:62]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -585,14 +585,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:00:fa:d0]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -615,14 +615,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:03:1b:e4]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -645,14 +645,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:10:b9:0e]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -675,14 +675,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:10:f1:66]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -705,14 +705,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:20:f5:44]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -735,14 +735,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:25:cf:a8]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -772,7 +772,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -802,7 +802,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -832,7 +832,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -862,7 +862,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -885,14 +885,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:3e:c5:46]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -922,7 +922,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -945,14 +945,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:1c:42]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -975,14 +975,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:44:92]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -1005,14 +1005,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:60:40]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -1035,14 +1035,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:7e:18]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -1065,14 +1065,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:bb:26]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -1095,14 +1095,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-12:34:56:80:c1:ea]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -1125,14 +1125,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
 # name: test_devices[netatmo-222452125]
   DeviceRegistryEntrySnapshot({
     'area_id': 'bureau',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1155,14 +1155,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-2746182631]
   DeviceRegistryEntrySnapshot({
     'area_id': 'livingroom',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1185,14 +1185,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-2833524037]
   DeviceRegistryEntrySnapshot({
     'area_id': 'entrada',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1215,14 +1215,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-2940411577]
   DeviceRegistryEntrySnapshot({
     'area_id': 'cocina',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1245,14 +1245,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
 # name: test_devices[netatmo-91763b24c43d3e344f424e8b]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -1282,7 +1282,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -1312,7 +1312,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1342,7 +1342,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1372,7 +1372,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
