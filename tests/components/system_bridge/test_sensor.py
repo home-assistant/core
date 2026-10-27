@@ -136,6 +136,45 @@ async def test_sensor_battery_empty(
 
 
 @pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("sensor.hostname_battery_state", id="system"),
+        pytest.param("sensor.hostname_mouse_battery_state", id="device"),
+    ],
+)
+async def test_sensor_battery_state_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_id: str,
+) -> None:
+    """Test an unknown battery state is reported as unknown, not as an option."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        battery=replace(
+            FIXTURE_BATTERY,
+            state=BatteryState.UNKNOWN,
+            batteries=[
+                replace(battery, state=BatteryState.UNKNOWN)
+                for battery in FIXTURE_BATTERY.batteries
+            ],
+        ),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+    assert BatteryState.UNKNOWN not in state.attributes["options"]
+
+
+@pytest.mark.usefixtures("mock_version")
 async def test_sensor_memory_free_uses_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

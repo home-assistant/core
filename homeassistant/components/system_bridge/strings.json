@@ -60,8 +60,7 @@
           "discharging": "[%key:common::state::discharging%]",
           "empty": "[%key:common::state::empty%]",
           "full": "[%key:common::state::full%]",
-          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]",
-          "unknown": "[%key:component::system_bridge::entity::sensor::battery_state::state::unknown%]"
+          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]"
         }
       },
       "battery_power": {
@@ -74,8 +73,7 @@
           "discharging": "[%key:common::state::discharging%]",
           "empty": "[%key:common::state::empty%]",
           "full": "[%key:common::state::full%]",
-          "not_charging": "Not charging",
-          "unknown": "Unknown"
+          "not_charging": "Not charging"
         }
       },
       "battery_time_remaining": {

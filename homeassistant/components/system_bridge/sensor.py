@@ -54,6 +54,10 @@ PIXELS: Final = "px"
 
 PARALLEL_UPDATES = 0
 
+BATTERY_STATE_OPTIONS: Final = [
+    state.value for state in BatteryState if state is not BatteryState.UNKNOWN
+]
+
 
 @dataclass(frozen=True)
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
@@ -67,6 +71,13 @@ def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
     if (battery_time := data.battery.time_remaining) is not None:
         return dt_util.utcnow() + timedelta(seconds=battery_time)
     return None
+
+
+def battery_state(state: BatteryState | None) -> str | None:
+    """Return the battery state, or None when it is unknown."""
+    if state is None or state is BatteryState.UNKNOWN:
+        return None
+    return state
 
 
 def with_battery(func) -> Callable:
@@ -89,9 +100,9 @@ def battery_info_percentage(battery: BatteryInfo) -> float | None:
 
 
 @with_battery
-def battery_info_state(battery: BatteryInfo) -> str:
+def battery_info_state(battery: BatteryInfo) -> str | None:
     """Return the battery state."""
-    return battery.state
+    return battery_state(battery.state)
 
 
 def battery_info_sensor_types(
@@ -120,7 +131,7 @@ def battery_info_sensor_types(
             translation_placeholders=placeholders,
             entity_registry_enabled_default=enabled_default,
             device_class=SensorDeviceClass.ENUM,
-            options=[state.value for state in BatteryState],
+            options=BATTERY_STATE_OPTIONS,
             value=lambda data, k=name: battery_info_state(data, k),
         ),
     ]
@@ -649,8 +660,8 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="battery_state",
         translation_key="battery_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[state.value for state in BatteryState],
-        value=lambda data: data.battery.state,
+        options=BATTERY_STATE_OPTIONS,
+        value=lambda data: battery_state(data.battery.state),
     ),
     SystemBridgeSensorEntityDescription(
         key="battery_power",
