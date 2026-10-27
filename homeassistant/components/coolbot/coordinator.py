@@ -1,5 +1,6 @@
 """Keeps a live connection to the CoolBot cloud and publishes state to entities."""
 
+import asyncio
 from datetime import datetime
 import logging
 from typing import override
@@ -53,6 +54,10 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: a listener behind that publishes from a socket no longer in use.
         self._remove_listener: CALLBACK_TYPE | None = None
         self._cancel_maintenance: CALLBACK_TYPE | None = None
+        #: The pass in flight, held so teardown can stop it: a pass that is
+        #: reconnecting would otherwise install a client after teardown closed
+        #: the last one, and nothing would ever close it.
+        self._maintenance_task: asyncio.Task[None] | None = None
         #: Last known name and reporting state per device, keyed by unique id;
         #: absent until a device first reports. The name is kept so a device
         #: that drops out of the profile can still be named in a log line.
@@ -74,7 +79,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             raise self._connection_error(err) from err
 
         self._cancel_maintenance = async_track_time_interval(
-            self.hass, self._async_maintain, MAINTENANCE_INTERVAL
+            self.hass, self._schedule_maintenance, MAINTENANCE_INTERVAL
         )
         # Registered on the entry, not left to unload alone: a first refresh
         # that fails never assigns runtime_data, so the unload path cannot
@@ -147,7 +152,16 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         await self._async_shutdown_client()
         await self._async_connect()
 
-    async def _async_maintain(self, _now: datetime) -> None:
+    @callback
+    def _schedule_maintenance(self, _now: datetime) -> None:
+        """Start a maintenance pass, unless the last one is still running."""
+        if self._maintenance_task is not None and not self._maintenance_task.done():
+            return
+        self._maintenance_task = self.config_entry.async_create_task(
+            self.hass, self._async_maintain(), "coolbot maintenance"
+        )
+
+    async def _async_maintain(self) -> None:
         """Hold the connection open and re-examine what has gone quiet.
 
         No readings are fetched here. They arrive by push; this keeps the socket
@@ -328,6 +342,13 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         if self._cancel_maintenance is not None:
             self._cancel_maintenance()
             self._cancel_maintenance = None
+        if self._maintenance_task is not None:
+            # Stopped and awaited before the client is closed, so a pass
+            # cannot reconnect behind the close. Cancelling one mid-connect is
+            # safe: _async_connect closes a client it has not handed over.
+            task, self._maintenance_task = self._maintenance_task, None
+            task.cancel()
+            await asyncio.wait((task,))
         await self._async_shutdown_client()
 
     async def _async_shutdown_client(self) -> None:

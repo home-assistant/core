@@ -18,13 +18,29 @@ from homeassistant.components.coolbot.const import (
     PROFILE_REFRESH_INTERVAL,
 )
 from homeassistant.components.coolbot.coordinator import device_is_fresh
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import push, setup_integration
 from .conftest import make_device
+
+ROOM_TEMPERATURE = "sensor.walk_in_cooler_room_temperature"
+
+
+async def _request_update(hass: HomeAssistant) -> None:
+    """Ask for a refresh the way a user or automation does."""
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ROOM_TEMPERATURE},
+        blocking=True,
+    )
 
 
 async def _tick(hass: HomeAssistant) -> None:
@@ -89,6 +105,68 @@ async def test_unloading_removes_the_listener(
     assert not mock_client.listeners
 
 
+async def test_unloading_mid_reconnect_leaves_no_socket_open(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A maintenance pass caught reconnecting by an unload installs nothing.
+
+    Without teardown stopping the pass, the reconnect would finish after the
+    unload and leave an open client and listener that nothing closes.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    connecting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_connect() -> None:
+        connecting.set()
+        await release.wait()
+
+    mock_client.connected = False
+    mock_client.async_connect.side_effect = blocked_connect
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+    )
+    await connecting.wait()
+    mock_client.async_close.reset_mock()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not mock_client.listeners
+    mock_client.async_close.assert_awaited()
+
+
+async def test_a_slow_maintenance_pass_is_not_overlapped(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A tick that lands while a pass is still running does not start another."""
+    assert await setup_integration(hass, mock_config_entry)
+
+    pinging = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_ping() -> None:
+        pinging.set()
+        await release.wait()
+
+    mock_client.async_ping.side_effect = slow_ping
+    mock_client.async_ping.reset_mock()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+    )
+    await pinging.wait()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + 2 * MAINTENANCE_INTERVAL + timedelta(seconds=2)
+    )
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_client.async_ping.await_count == 1
+
+
 async def test_a_refresh_that_cannot_reconnect_fails(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -101,7 +179,7 @@ async def test_a_refresh_that_cannot_reconnect_fails(
 
     mock_client.connected = False
     mock_client.async_connect.side_effect = CoolbotError("unreachable")
-    await mock_config_entry.runtime_data.async_refresh()
+    await _request_update(hass)
 
     assert not mock_config_entry.runtime_data.last_update_success
 
@@ -114,7 +192,7 @@ async def test_a_refresh_rejected_by_the_service_fails(
 
     mock_client.connected = False
     mock_client.async_connect.side_effect = CoolbotAuthError("rejected")
-    await mock_config_entry.runtime_data.async_refresh()
+    await _request_update(hass)
 
     assert not mock_config_entry.runtime_data.last_update_success
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

@@ -111,6 +111,12 @@ async def test_user_flow_rejects_account_with_no_devices(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_devices"}
 
+    mock_client.async_get_devices.return_value = [make_device()]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_aborts_on_duplicate_account(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
