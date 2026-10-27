@@ -29,12 +29,12 @@
       },
       "user": {
         "data": {
-          "auto_revert_power_limit": "Revert the AC power limit if Home Assistant stops",
+          "auto_revert_power_limit": "Revert the power and battery limits if Home Assistant stops",
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_port": "Modbus port"
         },
         "data_description": {
-          "auto_revert_power_limit": "The inverter drops the AC power limit an hour after it last received it, and returns to its own settings. Home Assistant sends the limit again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. Battery setpoints are not affected - the inverter supports no timeout for them.",
+          "auto_revert_power_limit": "The inverter drops the AC power limit and the battery charge and discharge limits an hour after it last received them, and returns to its own settings. Home Assistant sends active limits again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. The battery minimum reserve and grid charging are not affected.",
           "host": "The IP address or hostname of your Fronius device.",
           "modbus_port": "Port of the device's Modbus TCP interface. Only used when Modbus is enabled on the device's web interface."
         },
