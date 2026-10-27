@@ -189,3 +189,13 @@ async def test_remove_config_entry_device(
         await async_remove_config_entry_device(hass, config_entry, device_entry)
         is expected_result
     )
+
+
+async def test_remove_config_entry_device_without_runtime_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a device cannot be removed when runtime data is unavailable."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    device_entry = SimpleNamespace(identifiers={(DOMAIN, "old_blind")})
+
+    assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
