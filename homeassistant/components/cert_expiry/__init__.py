@@ -1,7 +1,7 @@
 """The cert_expiry component."""
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
 from .coordinator import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
@@ -25,7 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
         await coordinator.async_refresh()
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async_at_started(hass, _async_finish_startup)
+    if hass.state is CoreState.running:
+        await _async_finish_startup(hass)
+    else:
+        async_at_started(hass, _async_finish_startup)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> None:
