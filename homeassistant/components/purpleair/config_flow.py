@@ -219,7 +219,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._flow_data[CONF_API_KEY],
                 location[CONF_LATITUDE],
                 location[CONF_LONGITUDE],
-                location[CONF_RADIUS] / 1000,
+                location.get(CONF_RADIUS, DEFAULT_DISTANCE) / 1000,
             )
 
             if not validation.errors:
