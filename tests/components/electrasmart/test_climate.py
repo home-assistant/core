@@ -1,13 +1,13 @@
 """Tests for the Electra Smart climate entity."""
 
 import logging
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.api import ElectraApiError
 from electrasmart.device import OperationMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -272,6 +272,112 @@ async def test_update_is_skipped_right_after_a_command(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_api.get_last_telemtry.assert_not_awaited()
+
+
+async def _async_setup_two_devices(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    second_device: Mock,
+) -> None:
+    """Set up the integration with a second AC on the account."""
+    mock_api.devices.append(second_device)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_every_ac_is_polled_once_per_cycle(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    second_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Each AC of the account is fetched once per poll, not once per entity."""
+    await _async_setup_two_devices(hass, config_entry, mock_api, second_device)
+
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert mock_api.get_last_telemtry.await_count == 2
+    assert {
+        call.args[0].mac for call in mock_api.get_last_telemtry.await_args_list
+    } == {mock_device.mac, second_device.mac}
+
+
+async def test_a_command_only_pauses_the_polls_of_that_ac(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    second_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Commanding one AC does not stop the other one from being polled."""
+    await _async_setup_two_devices(hass, config_entry, mock_api, second_device)
+
+    freezer.tick(SCAN_INTERVAL_SEC - 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    # The poll lands inside the window where the API still serves the state
+    # from before the command, so only the other AC is fetched.
+    freezer.tick(3)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        call.args[0].mac for call in mock_api.get_last_telemtry.await_args_list
+    ] == [second_device.mac]
+
+    # Once the window has passed, both ACs are polled again.
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert mock_api.get_last_telemtry.await_count == 3
+    assert {
+        call.args[0].mac for call in mock_api.get_last_telemtry.await_args_list
+    } == {mock_device.mac, second_device.mac}
+
+
+async def test_failures_are_counted_per_ac(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    mock_device: Mock,
+    second_device: Mock,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An AC that fails to answer is counted on its own."""
+    await _async_setup_two_devices(hass, config_entry, mock_api, second_device)
+
+    async def _get_telemetry(device: Mock) -> None:
+        """Fail for one AC only."""
+        if device is mock_device:
+            raise ElectraApiError("Failed to retrieve telemetry")
+
+    mock_api.get_last_telemtry = AsyncMock(side_effect=_get_telemetry)
+
+    await async_advance_to_next_poll(hass, freezer)
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert "Failed to get Living Room (a8032ab12345) state" in caplog.text
+    assert "try #2 since last success" in caplog.text
+
+    # The other AC answering in between does not reset the count.
+    await async_advance_to_next_poll(hass, freezer)
+
+    assert "try #3 since last success" in caplog.text
+    assert "Failed to get Bedroom" not in caplog.text
 
 
 @pytest.mark.parametrize(

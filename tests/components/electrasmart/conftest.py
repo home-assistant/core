@@ -17,11 +17,10 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 
-@pytest.fixture(name="mock_device")
-def mock_device_fixture() -> Mock:
+def _mock_device(mac: str, name: str) -> Mock:
     """Return a mocked Electra AC device."""
     device = Mock(
-        mac="a8032ab12345",
+        mac=mac,
         model="Electra A/C",
         manufactor="Electra",
         features=[Feature.V_SWING, Feature.H_SWING],
@@ -44,8 +43,20 @@ def mock_device_fixture() -> Mock:
         set_vertical_swing=Mock(return_value=None),
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
-    device.name = "Living Room"
+    device.name = name
     return device
+
+
+@pytest.fixture(name="mock_device")
+def mock_device_fixture() -> Mock:
+    """Return a mocked Electra AC device."""
+    return _mock_device("a8032ab12345", "Living Room")
+
+
+@pytest.fixture(name="second_device")
+def second_device_fixture() -> Mock:
+    """Return a second mocked AC on the same account."""
+    return _mock_device("a8032ab67890", "Bedroom")
 
 
 @pytest.fixture(name="mock_api")
