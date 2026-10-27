@@ -30,7 +30,6 @@ from homeassistant.helpers import (
 RECEIVER_DATA = {"device": "/dev/ttyUSB0", "baud": 57600}
 TEMPERATURE_SENSOR = {
     "id": 1,
-    "type": "temperature",
     "name": "Outdoor",
 }
 SENSORS = {
@@ -68,7 +67,9 @@ def test_sensor_entity_key(
 
 def test_sensor_subentries_empty_name_uses_sensor_id() -> None:
     """Test an empty friendly name falls back to the generated subentry title."""
-    subentries = sensor_subentries({"1_temperature": {"id": 1, "name": ""}})
+    subentries = sensor_subentries(
+        {"1_temperature": {"id": 1, "type": "temperature", "name": ""}}
+    )
 
     assert subentries[0]["title"] == "LaCrosse sensor 1"
 
@@ -132,7 +133,10 @@ async def test_user_flow(
         pytest.param(
             {"shared_temperature": {"id": 3, "type": "temperature"}},
             (4, 5),
-            ({"temperature": 4}, {"temperature": 5}),
+            (
+                {"temperature": 4, "humidity": 4, "battery": 4},
+                {"temperature": 5, "humidity": 5, "battery": 5},
+            ),
             id="same-friendly-name",
         ),
         pytest.param(
@@ -142,7 +146,7 @@ async def test_user_flow(
                 "shared_temperature_3": {"id": 6, "type": "temperature"},
             },
             (4,),
-            ({"temperature": 4},),
+            ({"temperature": 4, "humidity": 4, "battery": 4},),
             id="colliding-suffixed-keys",
         ),
     ],
@@ -332,7 +336,11 @@ async def test_import_flow(
         subentry for subentry in entry.subentries.values() if subentry.unique_id == "34"
     )
     assert heating.data[CONF_YAML_IMPORTED] is True
-    assert set(heating.data["sensors"]) == {"heating", "heating_temperature"}
+    assert set(heating.data["sensors"]) == {
+        "heating",
+        "heating_temperature",
+        "34_battery",
+    }
     assert heating.data["sensors"]["heating"]["name"] == "heating"
     assert heating.data["sensors"]["heating_temperature"]["name"] == "Heating"
     assert issue_registry.async_get_issue(
@@ -396,6 +404,7 @@ async def test_update_sensor(
         config_entry_id=config_entry.entry_id,
         config_subentry_id=subentry.subentry_id,
         identifiers={(DOMAIN, f"/dev/ttyUSB0_{sensor_id}")},
+        name=subentry.title,
     )
     device_registry.async_update_device(device.id, name_by_user="My sensor")
     entity = entity_registry.async_get_or_create(
@@ -406,71 +415,53 @@ async def test_update_sensor(
         config_subentry_id=subentry.subentry_id,
         device_id=device.id,
     )
-    entity_registry.async_update_entity(entity.entity_id, name="My temperature")
+    entity_registry.async_update_entity(
+        entity.entity_id,
+        name="My temperature",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    original_sensors = subentry.data["sensors"]
+    original_title = subentry.title
     result = await config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert {key.schema for key in result["data_schema"].schema} == {"id"}
     suggestions = {
         key.schema: key.description["suggested_value"]
         for key in result["data_schema"].schema
         if key.description and "suggested_value" in key.description
     }
     assert suggestions["id"] == sensor_id
-    assert (
-        suggestions["type"]
-        == {
-            1: "temperature_humidity",
-            2: "temperature",
-        }[sensor_id]
-    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            "id": 7,
-            "type": {
-                1: "temperature_humidity_battery",
-                2: "temperature_battery",
-            }[sensor_id],
-        },
+        {"id": 7},
     )
     assert result["reason"] == "reconfigure_successful"
     assert subentry.unique_id == "7"
     assert all(
         "unique_id" not in sensor for sensor in subentry.data["sensors"].values()
     )
-    assert "name" not in subentry.data["sensors"][f"{sensor_id}_temperature"]
-    assert subentry.data["sensors"][f"{sensor_id}_temperature"]["id"] == 7
+    assert subentry.title == original_title
+    assert subentry.data["sensors"] == {
+        key: {**sensor, "id": 7} for key, sensor in original_sensors.items()
+    }
     updated_device = device_registry.async_get(device.id)
     assert updated_device.identifiers == {(DOMAIN, "/dev/ttyUSB0_7")}
     assert updated_device.name_by_user == "My sensor"
+    assert updated_device.name == original_title
     assert updated_device.model == "Sensor ID 7"
     assert entity_registry.async_get(entity.entity_id).name == "My temperature"
+    assert (
+        entity_registry.async_get(entity.entity_id).disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
 
 
-@pytest.mark.parametrize(
-    ("user_input", "error"),
-    [
-        pytest.param(
-            {**TEMPERATURE_SENSOR, "id": 2}, "sensor_already_configured", id="duplicate"
-        ),
-        pytest.param(
-            {
-                **TEMPERATURE_SENSOR,
-                "id": 2,
-                "type": "humidity",
-            },
-            "sensor_already_configured",
-            id="duplicate-different-type",
-        ),
-    ],
-)
 async def test_update_sensor_validation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    user_input: dict[str, object],
-    error: str,
 ) -> None:
     """Test invalid updates leave the subentry unchanged and allow recovery."""
     subentry = config_entry.subentries["sensor_1"]
@@ -479,22 +470,22 @@ async def test_update_sensor_validation(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], {"id": 2}
     )
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": "sensor_already_configured"}
     assert subentry.data == original
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], TEMPERATURE_SENSOR
+        result["flow_id"], {"id": 1}
     )
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_update_sensor_remove_type(
+async def test_update_sensor_preserves_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test deselecting a type removes its entity registry entry."""
+    """Test updating the ID leaves every entity registry entry unchanged."""
     temperature = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -510,12 +501,13 @@ async def test_update_sensor_remove_type(
         config_subentry_id="sensor_1",
     )
     result = await config_entry.start_subentry_reconfigure_flow(hass, "sensor_1")
+    original = config_entry.subentries["sensor_1"].data["sensors"]
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], TEMPERATURE_SENSOR
+        result["flow_id"], {"id": 7}
     )
     assert result["reason"] == "reconfigure_successful"
-    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {"1_temperature"}
-    assert entity_registry.async_get(humidity.entity_id) is None
+    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == set(original)
+    assert entity_registry.async_get(humidity.entity_id) == humidity
     assert entity_registry.async_get(temperature.entity_id) == temperature
 
 
@@ -526,17 +518,16 @@ async def test_update_sensor_remove_type(
         pytest.param(2, 7, id="unnamed-sensor-id-changes"),
     ],
 )
-@pytest.mark.parametrize("name", ["Renamed", ""])
 async def test_update_sensor_preserves_entity_keys(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     sensor_id: int,
     new_id: int,
-    name: str,
 ) -> None:
     """Test retained keys remain stable when the sensor ID changes."""
     subentry = config_entry.subentries[f"sensor_{sensor_id}"]
+    original = subentry.data["sensors"]
     entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -549,34 +540,20 @@ async def test_update_sensor_preserves_entity_keys(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            **TEMPERATURE_SENSOR,
-            "id": new_id,
-            "name": name,
-            "type": "temperature_battery",
-        },
+        {"id": new_id},
     )
 
     assert result["reason"] == "reconfigure_successful"
     assert subentry.data["sensors"] == {
-        f"{sensor_id}_temperature": {
-            "id": new_id,
-            "type": "temperature",
-            "name": name,
-        },
-        f"sensor_{sensor_id}_battery": {
-            "id": new_id,
-            "type": "battery",
-            "name": name,
-        },
+        key: {**sensor, "id": new_id} for key, sensor in original.items()
     }
     assert entity_registry.async_get(entity.entity_id) == entity
 
 
-async def test_update_imported_sensor_uses_unused_entity_key(
+async def test_imported_sensor_uses_unused_entity_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test adding a type to an imported sensor preserves its retained keys."""
+    """Test completing an imported sensor avoids existing YAML entity keys."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=RECEIVER_DATA,
@@ -586,7 +563,7 @@ async def test_update_imported_sensor_uses_unused_entity_key(
     imported_sensors = {
         "temperature": {"id": 1, "type": "temperature"},
         "humidity": {"id": 1, "type": "battery"},
-        "sensor_1_humidity": {"id": 2, "type": "temperature"},
+        "1_humidity": {"id": 2, "type": "temperature"},
     }
     for subentry_data in sensor_subentries(imported_sensors):
         hass.config_entries.async_add_subentry(
@@ -604,21 +581,20 @@ async def test_update_imported_sensor_uses_unused_entity_key(
     result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "type": "temperature_humidity_battery"},
+        {"id": 7},
     )
 
     assert result["reason"] == "reconfigure_successful"
     assert subentry.data["sensors"] == {
         "temperature": {
-            "id": 1,
+            "id": 7,
             "type": "temperature",
-            "name": "Outdoor",
         },
-        "humidity": {"id": 1, "type": "battery", "name": "Outdoor"},
-        "sensor_1_humidity_2": {
-            "id": 1,
+        "humidity": {"id": 7, "type": "battery"},
+        "1_humidity_2": {
+            "id": 7,
             "type": "humidity",
-            "name": "Outdoor",
+            "disabled_by_default": True,
         },
     }
 
@@ -627,14 +603,14 @@ async def test_update_sensor_new_type_unique_key(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test added sensor types do not reuse another subentry's entity key."""
+    """Test updating a sensor does not modify another sensor's configuration."""
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "sensor"),
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "id": 3, "type": "temperature_battery"},
+        {**TEMPERATURE_SENSOR, "id": 3},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     other_subentry = next(
@@ -643,57 +619,22 @@ async def test_update_sensor_new_type_unique_key(
         if subentry.unique_id == "3"
     )
     original_data = dict(other_subentry.data)
+    original_keys = set(config_entry.subentries["sensor_1"].data["sensors"])
 
     result = await config_entry.start_subentry_reconfigure_flow(hass, "sensor_1")
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            **TEMPERATURE_SENSOR,
-            "id": 7,
-            "name": "Renamed",
-            "type": "temperature_battery",
-        },
+        {"id": 7},
     )
 
     assert result["reason"] == "reconfigure_successful"
-    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == {
-        "1_temperature",
-        "sensor_1_battery",
-    }
+    assert set(config_entry.subentries["sensor_1"].data["sensors"]) == original_keys
     assert other_subentry.data == original_data
 
 
-@pytest.mark.parametrize(
-    ("sensor_type", "expected_types"),
-    [
-        pytest.param("temperature", {"temperature"}, id="temperature"),
-        pytest.param("humidity", {"humidity"}, id="humidity"),
-        pytest.param("battery", {"battery"}, id="battery"),
-        pytest.param(
-            "temperature_humidity",
-            {"temperature", "humidity"},
-            id="temperature-humidity",
-        ),
-        pytest.param(
-            "temperature_battery",
-            {"temperature", "battery"},
-            id="temperature-battery",
-        ),
-        pytest.param(
-            "humidity_battery", {"humidity", "battery"}, id="humidity-battery"
-        ),
-        pytest.param(
-            "temperature_humidity_battery",
-            {"temperature", "humidity", "battery"},
-            id="temperature-humidity-battery",
-        ),
-    ],
-)
 async def test_add_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    sensor_type: str,
-    expected_types: set[str],
 ) -> None:
     """Test Add Sensor creates a device subentry under the selected hub."""
     original = dict(config_entry.subentries)
@@ -706,20 +647,10 @@ async def test_add_sensor(
     fields = probatio.to_field_list(
         result["data_schema"], custom_serializer=cv.custom_serializer
     )
-    type_field = next(field for field in fields if field["name"] == "type")
-    assert type_field["selector"]["select"]["mode"] == "dropdown"
-    assert set(type_field["selector"]["select"]["options"]) == {
-        "temperature",
-        "humidity",
-        "battery",
-        "temperature_humidity",
-        "temperature_battery",
-        "humidity_battery",
-        "temperature_humidity_battery",
-    }
+    assert {field["name"] for field in fields} == {"id", "name"}
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {**TEMPERATURE_SENSOR, "id": 3, "type": sensor_type},
+        {**TEMPERATURE_SENSOR, "id": 3},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.data == RECEIVER_DATA
@@ -731,7 +662,7 @@ async def test_add_sensor(
     )
     assert subentry.unique_id == "3"
     assert subentry.title == "Outdoor"
-    assert set(subentry.data["sensors"]) == expected_types
+    assert set(subentry.data["sensors"]) == {"temperature", "humidity", "battery"}
     assert all(
         sensor["type"] == key for key, sensor in subentry.data["sensors"].items()
     )
@@ -763,7 +694,6 @@ async def test_add_multiple_sensors_to_imported_entry_keeps_type_keys(
                 **TEMPERATURE_SENSOR,
                 "id": sensor_id,
                 "name": "Outdoor",
-                "type": "temperature_humidity_battery",
             },
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -782,25 +712,9 @@ async def test_add_multiple_sensors_to_imported_entry_keeps_type_keys(
     )
 
 
-@pytest.mark.parametrize(
-    ("user_input", "error"),
-    [
-        pytest.param(TEMPERATURE_SENSOR, "sensor_already_configured", id="duplicate"),
-        pytest.param(
-            {
-                **TEMPERATURE_SENSOR,
-                "type": "humidity",
-            },
-            "sensor_already_configured",
-            id="duplicate-different-type",
-        ),
-    ],
-)
 async def test_add_sensor_validation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    user_input: dict[str, object],
-    error: str,
 ) -> None:
     """Test adding a sensor rejects invalid input and permits recovery."""
     result = await hass.config_entries.subentries.async_init(
@@ -808,9 +722,9 @@ async def test_add_sensor_validation(
         context={"source": config_entries.SOURCE_USER},
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], TEMPERATURE_SENSOR
     )
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": "sensor_already_configured"}
     assert len(config_entry.subentries) == 2
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {**TEMPERATURE_SENSOR, "id": 3}

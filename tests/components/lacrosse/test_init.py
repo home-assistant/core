@@ -190,7 +190,7 @@ async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
         result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"id": 7, "type": "temperature"},
+            {"id": 7},
         )
         assert result["reason"] == "reconfigure_successful"
         assert subentry.unique_id == "7"
@@ -199,6 +199,72 @@ async def test_sensor_entity_id_survives_sensor_id_change_and_reload(
         await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id).unique_id == unique_id
+
+
+@pytest.mark.parametrize(
+    ("sensor_input", "expected_name"),
+    [
+        pytest.param({"id": 1}, "LaCrosse sensor 1", id="generated-name"),
+        pytest.param({"id": 1, "name": "Outdoor"}, "Outdoor", id="custom-name"),
+    ],
+)
+async def test_ui_sensor_reconfigure_preserves_names_and_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: DeviceRegistry,
+    sensor_input: dict[str, int | str],
+    expected_name: str,
+) -> None:
+    """Test ID changes preserve names and disabled settings after reload."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, "sensor"), context={"source": SOURCE_USER}
+        )
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"], sensor_input
+        )
+        await hass.async_block_till_done()
+        subentry = next(iter(entry.subentries.values()))
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "/dev/ttyUSB0_1"), entry.entry_id
+        )
+        assert device is not None
+        assert device.name == expected_name
+        entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        assert len(entities) == 3
+        entity_registry.async_update_entity(
+            entities[0].entity_id,
+            name="My measurement",
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+        original = {
+            entity.entity_id: (entity.unique_id, entity.name, entity.disabled_by)
+            for entity in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+        }
+        original_sensors = subentry.data["sensors"]
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"id": 7}
+        )
+        assert result["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done()
+
+    assert subentry.title == expected_name
+    assert subentry.data["sensors"] == {
+        key: {**sensor, "id": 7} for key, sensor in original_sensors.items()
+    }
+    updated_device = device_registry.async_get(device.id)
+    assert updated_device.name == expected_name
+    assert updated_device.identifiers == {(DOMAIN, "/dev/ttyUSB0_7")}
+    assert {
+        entity.entity_id: (entity.unique_id, entity.name, entity.disabled_by)
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == original
 
 
 @pytest.mark.parametrize(
@@ -264,7 +330,6 @@ async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
                 result["flow_id"],
                 {
                     "id": sensor_id,
-                    "type": "temperature_humidity_battery",
                     "name": "Outdoor",
                 },
             )
@@ -272,7 +337,11 @@ async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
             await hass.async_block_till_done()
 
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    expected_unique_ids = {f"{entry.entry_id}_battery"}
+    expected_unique_ids = {
+        f"{entry.entry_id}_battery",
+        f"{entry.entry_id}_1_temperature",
+        f"{entry.entry_id}_1_humidity",
+    }
     for subentry in entry.subentries.values():
         if subentry.data.get(CONF_YAML_IMPORTED):
             continue
@@ -282,7 +351,7 @@ async def test_ui_sensors_on_yaml_entry_use_subentry_entity_ids(
         )
 
     assert {entity.unique_id for entity in entities} == expected_unique_ids
-    assert len(entities) == 7
+    assert len(entities) == 9
     assert entity_registry.async_get("sensor.battery") is not None
 
 
@@ -343,7 +412,7 @@ async def test_add_sensor_to_running_hub(
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"id": 2, "type": "temperature_humidity_battery"},
+            {"id": 2},
         )
         await hass.async_block_till_done()
         subentry = next(

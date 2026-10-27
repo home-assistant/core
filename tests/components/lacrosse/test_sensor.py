@@ -16,6 +16,67 @@ from homeassistant.components.lacrosse.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+
+@pytest.mark.parametrize(
+    "sensor_types",
+    [
+        pytest.param(("temperature",), id="temperature-only"),
+        pytest.param(("humidity",), id="humidity-only"),
+        pytest.param(("battery",), id="battery-only"),
+        pytest.param(("temperature", "humidity"), id="temperature-humidity"),
+        pytest.param(("temperature", "battery"), id="temperature-battery"),
+        pytest.param(("humidity", "battery"), id="humidity-battery"),
+        pytest.param(("temperature", "humidity", "battery"), id="all-types"),
+    ],
+)
+async def test_import_creates_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_types: tuple[str, ...],
+) -> None:
+    """Test missing YAML measurements are registered but disabled."""
+    with patch("homeassistant.components.lacrosse.pylacrosse.LaCrosse"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                "device": "/dev/ttyUSB0",
+                "baud": 57600,
+                "sensors": {
+                    f"outdoor_{sensor_type}": {
+                        "id": 1,
+                        "type": sensor_type,
+                        "name": "Outdoor",
+                        "expire_after": 60,
+                    }
+                    for sensor_type in sensor_types
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    entry = result["result"]
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entities) == 3
+    assert {entity.original_name for entity in entities} == {
+        "Temperature",
+        "Humidity",
+        "Battery",
+    }
+    for sensor_type in sensor_types:
+        entity = entity_registry.async_get(f"sensor.outdoor_{sensor_type}")
+        assert entity is not None
+        assert entity.disabled_by is None
+        assert hass.states.get(entity.entity_id) is not None
+    disabled = [entity for entity in entities if entity.disabled_by is not None]
+    assert len(disabled) == 3 - len(sensor_types)
+    assert all(
+        entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        for entity in disabled
+    )
+    assert all(hass.states.get(entity.entity_id) is None for entity in disabled)
 
 
 async def test_setup_platform_imports_yaml_configuration(hass: HomeAssistant) -> None:

@@ -40,6 +40,7 @@ from . import LaCrosseConfigEntry
 from .const import (
     CONF_BAUD,
     CONF_DATARATE,
+    CONF_DISABLED_BY_DEFAULT,
     CONF_EXPIRE_AFTER,
     CONF_FREQUENCY,
     CONF_JEELINK_LED,
@@ -181,6 +182,9 @@ class LaCrosseSensor(SensorEntity):
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._config = config
+        self._attr_entity_registry_enabled_default = not config.get(
+            CONF_DISABLED_BY_DEFAULT, False
+        )
         self._expire_after = expire_after
         self._expiration_trigger: CALLBACK_TYPE | None = None
         self._attr_name = name
