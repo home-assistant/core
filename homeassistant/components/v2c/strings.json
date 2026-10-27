@@ -159,6 +159,11 @@
       }
     }
   },
+  "exceptions": {
+    "set_contracted_power_failed": {
+      "message": "Failed to set the charger contracted power."
+    }
+  },
   "issues": {
     "deprecated_sensor": {
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
@@ -179,6 +184,22 @@
           "pv_available": "The V2C Trydan EVSE photovoltaic installation option is enabled."
         }
       }
+    }
+  },
+  "services": {
+    "set_contracted_power": {
+      "description": "Set the charger contracted power or PV-exclusive grid balance, depending on its dynamic power mode.",
+      "fields": {
+        "device_id": {
+          "description": "The V2C charger to configure.",
+          "name": "Charger"
+        },
+        "power": {
+          "description": "The contracted power or PV-exclusive grid balance in watts.",
+          "name": "Power"
+        }
+      },
+      "name": "Set contracted power"
     }
   }
 }
