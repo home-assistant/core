@@ -258,7 +258,9 @@ async def test_climate_battery_sensor(
 
 
 async def test_setpoint_end_time_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
 ) -> None:
     """Test room setpoint end time sensor."""
     with selected_platforms([Platform.CLIMATE, Platform.SENSOR]):
@@ -266,5 +268,7 @@ async def test_setpoint_end_time_sensor(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.parents_bedroom_setpoint_end_time")
+
     assert state is not None
     assert state.state == "unknown"
+    assert state.attributes["device_class"] == "timestamp"
