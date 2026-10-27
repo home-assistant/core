@@ -193,12 +193,13 @@ class MatterEntity(Entity):
         )
         # mark endpoint postfix if the device has the primary
         # attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
+        needs_disambiguation = not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
-        ):
+        )
+        if needs_disambiguation:
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.
         # For primary entities (no postfix), suppress the translated name,
@@ -213,13 +214,20 @@ class MatterEntity(Entity):
         # tags (position/action) are preferred over a Custom tag's free-text
         # label, which often just repeats the entity's own generic name
         # (e.g. a "button 1" label on an entity already named "Button").
+        # Semantic tags only replace a postfix that disambiguation already
+        # requires: a tag on an endpoint's own primary cluster (e.g. a Common
+        # Number tag on the root endpoint) is not reason enough to add one.
         if name_modifier := self._get_name_modifier():
             self._name_postfix = name_modifier
-        elif self._has_translatable_semantic_tag_name_modifier():
+        elif (
+            needs_disambiguation and self._has_translatable_semantic_tag_name_modifier()
+        ):
             # the translated word is only known once platform translations
             # are available, so defer the lookup to `name`
             self._name_postfix_needs_translation = True
-        elif name_modifier := self._find_untranslated_semantic_tag_name_modifier():
+        elif needs_disambiguation and (
+            name_modifier := self._find_untranslated_semantic_tag_name_modifier()
+        ):
             self._name_postfix = name_modifier
 
         # make sure to update the attributes once

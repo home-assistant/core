@@ -5914,7 +5914,7 @@
     'state': '2025-01-01T13:55:01+00:00',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_active_current_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5930,7 +5930,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_active_current_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5938,7 +5938,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Active current (0)',
+    'object_id_base': 'Active current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5949,7 +5949,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Active current (0)',
+    'original_name': 'Active current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5959,23 +5959,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_active_current_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Active current (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Active current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_active_current_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_boot_reason_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5999,7 +5999,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_boot_reason_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_boot_reason',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6007,12 +6007,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Boot reason (0)',
+    'object_id_base': 'Boot reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Boot reason (0)',
+    'original_name': 'Boot reason',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6022,11 +6022,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_boot_reason_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_boot_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Boot reason (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Boot reason',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'unspecified',
         'power_on_reboot',
@@ -6038,7 +6038,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_boot_reason_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_boot_reason',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6151,7 +6151,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_energy_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6167,7 +6167,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_energy_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6175,7 +6175,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Energy (0)',
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -6186,7 +6186,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy (0)',
+    'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6196,23 +6196,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_energy_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Energy (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_energy_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_reboot_count_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_reboot_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6228,7 +6228,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_reboot_count_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_reboot_count',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6236,12 +6236,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reboot count (0)',
+    'object_id_base': 'Reboot count',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reboot count (0)',
+    'original_name': 'Reboot count',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6251,21 +6251,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_reboot_count_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_reboot_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Reboot count (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Reboot count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_reboot_count_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_reboot_count',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_target_opening_position_left-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6279,7 +6279,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_target_opening_position_left',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_target_opening_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6287,12 +6287,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Target opening position (Left)',
+    'object_id_base': 'Target opening position',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Target opening position (Left)',
+    'original_name': 'Target opening position',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6302,21 +6302,21 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_target_opening_position_left-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Target opening position (Left)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Target opening position',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_target_opening_position_left',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_target_opening_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_channel_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_channel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6330,7 +6330,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_channel_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_channel',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6338,12 +6338,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thread channel (0)',
+    'object_id_base': 'Thread channel',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thread channel (0)',
+    'original_name': 'Thread channel',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6353,20 +6353,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_channel_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread channel (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread channel',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_channel_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_channel',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_network_name_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_network_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6380,7 +6380,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_network_name_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_network_name',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6388,12 +6388,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thread network name (0)',
+    'object_id_base': 'Thread network name',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Thread network name (0)',
+    'original_name': 'Thread network name',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6403,20 +6403,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_network_name_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_network_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread network name (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread network name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_network_name_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_network_name',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MyHome',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_routing_role_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_routing_role-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6441,7 +6441,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_routing_role_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_routing_role',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6449,12 +6449,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Thread routing role (0)',
+    'object_id_base': 'Thread routing role',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Thread routing role (0)',
+    'original_name': 'Thread routing role',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6464,11 +6464,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_routing_role_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_thread_routing_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread routing role (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Thread routing role',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'unspecified',
         'unassigned',
@@ -6481,14 +6481,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_routing_role_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_thread_routing_role',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'reed',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_uptime_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6502,7 +6502,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_uptime_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_uptime',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6510,12 +6510,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Uptime (0)',
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
-    'original_name': 'Uptime (0)',
+    'original_name': 'Uptime',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6525,21 +6525,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_uptime_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Uptime (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Uptime',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_uptime_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-01-01T13:52:43+00:00',
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_voltage_0-entry]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6555,7 +6555,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_voltage_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6563,7 +6563,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Voltage (0)',
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6574,7 +6574,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage (0)',
+    'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6584,16 +6584,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_voltage_0-state]
+# name: test_sensors[aqara_shutter_switch_h2][sensor.aqara_shutter_switch_h2_eu_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Voltage (0)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Shutter Switch H2 EU Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_voltage_0',
+    'entity_id': 'sensor.aqara_shutter_switch_h2_eu_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29008,7 +29008,7 @@
     'state': 'unspecified',
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_current_phase_top-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29028,7 +29028,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_current_phase_top',
+    'entity_id': 'sensor.mock_oven_current_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29036,12 +29036,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current phase (Top)',
+    'object_id_base': 'Current phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Current phase (Top)',
+    'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29051,11 +29051,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_current_phase_top-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Current phase (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Current phase',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'pre-heating',
         'pre-heated',
@@ -29063,14 +29063,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_current_phase_top',
+    'entity_id': 'sensor.mock_oven_current_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'pre-heating',
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_operational_state_top-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -29090,7 +29090,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_operational_state_top',
+    'entity_id': 'sensor.mock_oven_operational_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29098,12 +29098,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Operational state (Top)',
+    'object_id_base': 'Operational state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Operational state (Top)',
+    'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29113,11 +29113,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_oven][sensor.mock_oven_operational_state_top-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Operational state (Top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Operational state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stopped',
         'running',
@@ -29125,7 +29125,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_operational_state_top',
+    'entity_id': 'sensor.mock_oven_operational_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
