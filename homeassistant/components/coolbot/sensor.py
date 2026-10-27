@@ -21,7 +21,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -102,15 +102,32 @@ async def async_setup_entry(
 ) -> None:
     """Create one set of sensors per real CoolBot on the account."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        CoolbotSensor(coordinator, device, description)
-        for device in coordinator.data.values()
-        # Empty device slots are skipped entirely. The cloud serves stale pin
-        # values for unused slots, so creating entities for them would publish
-        # a believable temperature for hardware that does not exist.
-        if device.is_provisioned
-        for description in SENSORS
-    )
+    added: set[str] = set()
+
+    @callback
+    def _add_new_devices() -> None:
+        # Runs on every update, not just setup: a cooler held back until its
+        # MAC replays, or added to the account later, appears in the data
+        # after the platform has loaded.
+        new = [
+            device
+            for device in coordinator.data.values()
+            # Empty device slots are skipped entirely. The cloud serves stale
+            # pin values for unused slots, so creating entities for them would
+            # publish a believable temperature for hardware that does not exist.
+            if device.is_provisioned and device.unique_id not in added
+        ]
+        if not new:
+            return
+        added.update(device.unique_id for device in new)
+        async_add_entities(
+            CoolbotSensor(coordinator, device, description)
+            for device in new
+            for description in SENSORS
+        )
+
+    _add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_devices))
 
 
 class CoolbotSensor(CoordinatorEntity[CoolbotCoordinator], SensorEntity):

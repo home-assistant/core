@@ -565,6 +565,14 @@ async def test_a_device_waits_for_its_mac_identity(
     assert not mock_config_entry.runtime_data.data
     assert hass.states.get("sensor.walk_in_cooler_room_temperature") is None
 
+    # Once the MAC replays, the cooler gets its sensors without a reload.
+    mock_client.async_get_devices.return_value = [make_device()]
+    await push(hass, mock_client)
+    assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
+    assert hass.states.get("sensor.walk_in_cooler_room_temperature").state != (
+        "unavailable"
+    )
+
 
 async def test_startup_replay_is_not_logged_as_an_outage(
     hass: HomeAssistant,
