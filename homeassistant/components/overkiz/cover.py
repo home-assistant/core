@@ -37,7 +37,7 @@ from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
 from .const import DOMAIN, LOGGER
-from .coordinator import OverkizDataUpdateCoordinator
+from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
 # Special position values reported by some Overkiz devices
@@ -1010,11 +1010,12 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
     def is_running(self, command: OverkizCommand) -> bool:
         """Return if the given commands are currently running."""
+        device_command = OverkizDeviceCommand(
+            device_url=self.device.device_url, command_name=command
+        )
         return any(
-            execution.get("device_url") == self.device.device_url
-            and execution.get("command_name") == command
-            for executions in self.coordinator.executions.values()
-            for execution in executions
+            device_command in device_commands
+            for device_commands in self.coordinator.executions.values()
         )
 
     @property

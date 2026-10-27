@@ -38,6 +38,7 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
             "long_double_press",
             "long_triple_press",
             "hold_press",
+            "hold_release",
         ],
         device_class=EventDeviceClass.BUTTON,
     ),

@@ -2,28 +2,26 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, Platform
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import discovery_signal
+from .coordinator import FroniusCoordinatorBase, FroniusModbusSettingsUpdateCoordinator
 from .entity import (
     FroniusEntity,
     FroniusEntityDescription,
     ModbusComponentFn,
     ModbusValues,
+    async_add_entities_for_seen_keys,
 )
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
-    from .coordinator import (
-        FroniusCoordinatorBase,
-        FroniusModbusSettingsUpdateCoordinator,
-    )
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
@@ -51,6 +49,9 @@ def _modbus_value(key: str) -> Callable[[ModbusValues], float | None]:
     return lambda values: values.get(key)
 
 
+# The battery rates are signed: a negative one turns the direction around, so
+# a discharge limit of -100% forces charging at full power - the registers as
+# Fronius documents them and other controllers write them.
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
         key="ac_power_limit",
@@ -71,7 +72,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="charge_limit",
         enable_field="charge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
@@ -83,7 +84,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
@@ -108,24 +109,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius number entities based on a config entry."""
-    solar_net = config_entry.runtime_data
-    for coordinator in solar_net.modbus_settings_coordinators:
-        coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.NUMBER, ModbusSetpointNumber
-        )
 
     @callback
-    def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
-        """Add the entities of a coordinator found after setup."""
-        if Platform.NUMBER not in coordinator.valid_descriptions:
-            return
-        coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.NUMBER, ModbusSetpointNumber
-        )
+    def async_add_coordinator_entities(
+        coordinator: FroniusCoordinatorBase[Any],
+    ) -> None:
+        """Add the entities of a coordinator, also one found after setup."""
+        if isinstance(coordinator, FroniusModbusSettingsUpdateCoordinator):
+            async_add_entities_for_seen_keys(
+                coordinator,
+                MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
+                ModbusSetpointNumber,
+                async_add_entities,
+            )
 
+    for coordinator in config_entry.runtime_data.coordinators:
+        async_add_coordinator_entities(coordinator)
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, discovery_signal(config_entry.entry_id), async_add_new_entities
+            hass,
+            discovery_signal(config_entry.entry_id),
+            async_add_coordinator_entities,
         )
     )
 
