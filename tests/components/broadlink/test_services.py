@@ -12,7 +12,7 @@ from pytest_homeassistant.common import MockUser, async_fire_time_changed
 
 from homeassistant.auth.const import GROUP_ID_USER
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.components.broadlink.services import SERVICE_LIST_COMMANDS
+from homeassistant.components.broadlink.services import BroadlinkService
 from homeassistant.components.broadlink.updater import BroadlinkRMUpdateManager
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
@@ -58,7 +58,7 @@ async def list_commands(
     """Call the action on one or more remotes."""
     return await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_COMMANDS,
+        BroadlinkService.LIST_COMMANDS,
         {},
         target={"entity_id": entity_id},
         blocking=True,
@@ -102,7 +102,7 @@ async def test_action_is_registered_without_devices(hass: HomeAssistant) -> None
     assert await async_setup_component(hass, DOMAIN, {})
 
     assert (
-        hass.services.supports_response(DOMAIN, SERVICE_LIST_COMMANDS)
+        hass.services.supports_response(DOMAIN, BroadlinkService.LIST_COMMANDS)
         is SupportsResponse.ONLY
     )
 
