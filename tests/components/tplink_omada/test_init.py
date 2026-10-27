@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from functools import partial
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -281,6 +282,44 @@ async def test_failed_poll_keeps_devices(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
+
+
+async def test_registration_failure_is_logged_and_retried(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a transient switch fetch failure is logged and registration retries."""
+    mock_config_entry.add_to_hass(hass)
+
+    site_client = mock_omada_client.get_site_client.return_value
+    original_get_switch = site_client.get_switch.return_value
+    fail_switch_fetch = True
+
+    async def _get_switch(device: OmadaListDevice) -> object:
+        if fail_switch_fetch:
+            raise OmadaClientException("switch fetch failed")
+        return original_get_switch
+
+    site_client.get_switch = AsyncMock(side_effect=_get_switch)
+
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.tplink_omada.controller"
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Failed to register entities for Omada device" in caplog.text
+    assert "switch fetch failed" in caplog.text
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+
+    # The failed device was left unprocessed, so the next update retries.
+    fail_switch_fetch = False
+    await _async_poll_devices(hass, freezer)
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
 
 
 async def _get_devices_without(
