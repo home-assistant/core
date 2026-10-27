@@ -107,8 +107,6 @@ def async_get_chat_log(
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
-    # A turn changes the stored chat log in place, so a conversation handles
-    # one turn at a time.
     if chat_log := all_chat_logs.get(session.conversation_id):
         if chat_log.turn_active:
             raise ConversationBusyError(session.conversation_id)
