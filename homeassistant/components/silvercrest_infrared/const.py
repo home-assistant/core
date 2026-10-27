@@ -17,6 +17,7 @@ class SilverCrestIrDeviceType(StrEnum):
     SSVS85A1 = "ssvs85a1"
     SSVS85B2 = "ssvs85b2"
     STVD45A1 = "stvd45a1"
+    STVL50A1 = "stvl50a1"
     STVL50B1 = "stvl50b1"
     STVL50C1 = "stvl50c1"
     SV60A1 = "sv60a1"
@@ -29,6 +30,7 @@ DEVICE_NAMES = {
     SilverCrestIrDeviceType.SSVF45B1: "Pedestal fan SSVF 45 B1",
     SilverCrestIrDeviceType.SSVF45C1: "Pedestal fan SSVF 45 C1",
     SilverCrestIrDeviceType.SSVS85A1: "Misting pedestal fan SSVS 85 A1",
+    SilverCrestIrDeviceType.SSVS85B2: "Misting pedestal fan SSVS 85 B2",
     SilverCrestIrDeviceType.STVD45A1: "Tower fan STVD 45 A1",
     SilverCrestIrDeviceType.STVL50B1: "Tower fan STVL 50 B1",
     SilverCrestIrDeviceType.STVL50C1: "Tower fan STVL 50 C1",
