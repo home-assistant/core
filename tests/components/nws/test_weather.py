@@ -652,3 +652,45 @@ async def test_detailed_forecast_service_no_data(
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize("forecast_type", ["hourly", "twice_daily"])
+@pytest.mark.usefixtures("mock_simple_nws", "no_sensor")
+async def test_forecast_subscription_single_event_per_update(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    forecast_type: str,
+) -> None:
+    """Test a forecast refresh is pushed to subscribers once, not once per listener."""
+    client = await hass_ws_client(hass)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": forecast_type,
+            "entity_id": "weather.nws_35_75_abc",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+
+    freezer.tick(nws.DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+
+    # A duplicate forecast event would arrive before the pong
+    await client.send_json_auto_id({"type": "ping"})
+    msg = await client.receive_json()
+    assert msg["type"] == "pong"
