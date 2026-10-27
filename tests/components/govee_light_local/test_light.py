@@ -803,7 +803,7 @@ async def test_partial_bind_is_retried(
 ) -> None:
     """Test addresses that failed to bind are retried once per REBIND_INTERVAL.
 
-    Walks a single timeline: the first retry still fails and the throttle
+    Walks a single timeline: the first retry still fails and the interval
     holds across the next poll, the second retry brings the adapter back,
     and nothing is retried once every address is bound.
     """
@@ -832,7 +832,7 @@ async def test_partial_bind_is_retried(
     await setup_light(hass, mock_govee_api)
     caplog.clear()
 
-    # A regular poll before REBIND_INTERVAL has elapsed must not retry.
+    # Nothing is retried before REBIND_INTERVAL has elapsed.
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
@@ -845,7 +845,7 @@ async def test_partial_bind_is_retried(
     assert mock_govee_api.rebind_failed.await_count == 1
     assert "Listening on port 4002" not in caplog.text
 
-    # The throttle holds across the following poll.
+    # The next poll does not retry outside the interval.
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()

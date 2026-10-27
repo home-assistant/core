@@ -11,7 +11,6 @@ from govee_local_api import GoveeController, GoveeDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DISCOVERY_INTERVAL_DEFAULT,
@@ -19,7 +18,6 @@ from .const import (
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     DOMAIN,
-    REBIND_INTERVAL,
     SCAN_INTERVAL,
 )
 
@@ -78,7 +76,6 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             update_enabled=False,
         )
-        self._next_rebind: datetime = dt_util.utcnow() + REBIND_INTERVAL
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
@@ -134,14 +131,11 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
         return self._controller.devices
 
-    async def _async_rebind_failed_addresses(self) -> None:
-        """Retry the addresses that did not bind, at most once per REBIND_INTERVAL."""
-        if not self._controller.bind_failures:
+    async def async_rebind_failed_addresses(self, _now: datetime) -> None:
+        """Retry the addresses that did not bind."""
+        # Losing every endpoint is handled by the update, which reloads the entry.
+        if not self._controller.bind_failures or not self._controller.protocols:
             return
-        now = dt_util.utcnow()
-        if now < self._next_rebind:
-            return
-        self._next_rebind = now + REBIND_INTERVAL
         if await self._controller.rebind_failed():
             log_bound_addresses(self._controller)
 
@@ -153,6 +147,5 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="no_live_endpoints"
             )
-        await self._async_rebind_failed_addresses()
         self._controller.send_update_message()
         return self.devices
