@@ -156,6 +156,9 @@
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
     },
+    "homes_unavailable": {
+      "message": "Could not fetch the homes from the Netatmo API."
+    },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
     }

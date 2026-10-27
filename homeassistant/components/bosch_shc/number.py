@@ -22,6 +22,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfPower,
     UnitOfTemperature,
@@ -81,6 +82,12 @@ type _TemperatureOffsetDevice = SHCThermostat | SHCWallThermostat | SHCRoomTherm
 
 def _offset_set_value_fn(device: _TemperatureOffsetDevice, value: float) -> None:
     device.offset = value
+
+
+def _led_brightness_set_value_fn(
+    device: SHCSmartPlug | SHCSmartPlugCompact, value: float
+) -> None:
+    device.led_brightness = round(value)
 
 
 IMPULSE_LENGTH = "impulse_length"
@@ -152,6 +159,18 @@ NUMBER_TYPES: dict[str, SHCNumberEntityDescription] = {
         min_value_fn=lambda device: float(device.min_offset),
         max_value_fn=lambda device: float(device.max_offset),
         step_fn=lambda device: step if (step := device.step_size) > 0 else 0.5,
+    ),
+    "led_brightness": SHCNumberEntityDescription[SHCSmartPlug | SHCSmartPlugCompact](
+        key="led_brightness",
+        translation_key="led_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        min_value_fn=lambda device: float(device.led_brightness_min or 0),
+        max_value_fn=lambda device: float(device.led_brightness_max or 100),
+        step_fn=lambda device: float(device.led_brightness_step or 1),
+        mode=NumberMode.SLIDER,
+        value_fn=lambda device: device.led_brightness,
+        set_value_fn=_led_brightness_set_value_fn,
     ),
 }
 
@@ -261,6 +280,23 @@ async def async_setup_entry(
         )
         if isinstance(device, SHCThermostat | SHCWallThermostat | SHCRoomThermostat2)
         and device.supports_temperature_offset
+    )
+
+    entities.extend(
+        SHCNumber(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=NUMBER_TYPES["led_brightness"],
+        )
+        for plug in (
+            *session.device_helper.smart_plugs,
+            *session.device_helper.smart_plugs_compact,
+        )
+        if isinstance(plug, SHCSmartPlug | SHCSmartPlugCompact)
+        and plug.supports_led_brightness
+        and plug.led_brightness is not None
     )
 
     async_add_entities(entities)

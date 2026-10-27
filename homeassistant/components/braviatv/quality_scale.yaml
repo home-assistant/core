@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register any custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not subscribe to any events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      async_source_find and async_play_media raise ValueError for an unknown source
+      or invalid media type; it should be ServiceValidationError.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Connection errors map to the off state, because the TV drops off the network
+      in standby/eco mode. Other API errors raise UpdateFailed.
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      coordinator.py, media_player.py and remote.py are below 95%.
+      There are no tests for the button, media_player and remote platforms.
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: done
+  discovery-update-info:
+    status: todo
+    comment: |
+      The SSDP step uses the UPnP UDN as unique ID while entries use the CID or MAC,
+      so the host is never updated when the IP address changes.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration does not provide any noisy or less popular entities.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: The ValueError raised for an unknown source or invalid media type is not translated.
+  icon-translations:
+    status: exempt
+    comment: The integration does not provide any custom icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration does not have anything to repair.
+  stale-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

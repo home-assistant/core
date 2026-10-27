@@ -157,6 +157,10 @@ async def _async_is_blocked_host(
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
 
+# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
+# release download redirects carry a ~9 KiB Content-Security-Policy header.
+MAXIMUM_HEADER_SIZE = 65536
+
 
 class HassAsyncDNSResolver(AsyncDualMDNSResolver):
     """Home Assistant AsyncDNSResolver.
@@ -289,6 +293,9 @@ def _async_create_clientsession(
         _ssrf_redirect_middleware,
         *kwargs.pop("middlewares", ()),
     )
+
+    kwargs.setdefault("max_line_size", MAXIMUM_HEADER_SIZE)
+    kwargs.setdefault("max_field_size", MAXIMUM_HEADER_SIZE)
 
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),

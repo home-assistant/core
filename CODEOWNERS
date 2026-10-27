@@ -723,8 +723,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_tasks/ @allenporter
 /tests/components/google_tasks/ @allenporter
-/homeassistant/components/google_travel_time/ @eifinger
-/tests/components/google_travel_time/ @eifinger
+/homeassistant/components/google_travel_time/ @eifinger @tronikos
+/tests/components/google_travel_time/ @eifinger @tronikos
 /homeassistant/components/google_weather/ @tronikos
 /tests/components/google_weather/ @tronikos
 /homeassistant/components/google_wifi/ @EReaso
@@ -886,8 +886,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
-/homeassistant/components/icloud/ @Quentame @nzapponi
-/tests/components/icloud/ @Quentame @nzapponi
+/homeassistant/components/icloud/ @Quentame @nzapponi @timlaing
+/tests/components/icloud/ @Quentame @nzapponi @timlaing
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
 /homeassistant/components/idrive_e2/ @patrickvorgers
@@ -1338,6 +1338,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/nintendo_parental_controls/ @pantherale0
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/noaa_tides/ @jdelaney72
+/tests/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
 /homeassistant/components/nordpool/ @gjohansson-ST
@@ -2273,8 +2274,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
 /tests/components/zone/ @home-assistant/core
-/homeassistant/components/zoneminder/ @rohankapoorcom @nabbi
-/tests/components/zoneminder/ @rohankapoorcom @nabbi
+/homeassistant/components/zoneminder/ @SteveGilvarry @nabbi @rohankapoorcom
+/tests/components/zoneminder/ @SteveGilvarry @nabbi @rohankapoorcom
 /homeassistant/components/zonneplan/ @erwindouna
 /tests/components/zonneplan/ @erwindouna
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
