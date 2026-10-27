@@ -2,6 +2,7 @@
 
 from kasa import Feature
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -27,8 +28,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -273,6 +272,7 @@ async def test_button_exists_with_deprecation(
     assert (entity is None) == entity_disabled
     assert (hass.states.get(entity_id) is None) == entity_disabled
 
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (
-        issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+        issue is not None and issue.config_entry_id == config_entry.entry_id
     ) == entity_has_automations

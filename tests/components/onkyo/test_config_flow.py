@@ -4,6 +4,7 @@ from contextlib import AbstractContextManager, nullcontext
 
 from aioonkyo import ReceiverInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.onkyo.const import (
@@ -24,8 +25,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from . import RECEIVER_INFO, RECEIVER_INFO_2, mock_discovery, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 def _receiver_display_name(receiver_info: ReceiverInfo) -> str:

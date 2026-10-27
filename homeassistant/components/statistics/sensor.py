@@ -4,6 +4,7 @@ from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
+from itertools import pairwise
 import logging
 import math
 import statistics
@@ -63,6 +64,10 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Samples expiring within this window are purged together in one update,
+# so bursts of samples do not each cause a separate state write.
+PURGE_COALESCE_WINDOW_SECONDS = 1.0
+
 # Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
 STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
@@ -120,9 +125,14 @@ def _stat_average_linear(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += 0.5 * (states[i] + states[i - 1]) * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (state, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += 0.5 * (state + previous_state) * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -134,9 +144,14 @@ def _stat_average_step(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += states[i - 1] * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += previous_state * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -373,10 +388,15 @@ def _stat_binary_average_step(
         return 100.0 * int(states[0] is True)
     if len(states) >= 2:
         on_seconds: float = 0
-        for i in range(1, len(states)):
-            if states[i - 1] is True:
-                on_seconds += ages[i] - ages[i - 1]
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            if previous_state is True:
+                on_seconds += age - previous_age
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_binary_mean(states, ages, percentile)
         return 100 / age_range_seconds * on_seconds
     return None
 
@@ -976,8 +996,16 @@ class StatisticsSensor(SensorEntity):
                 return None
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
-            # in the future when the oldest state will expire.
-            return self.ages[0] + self._samples_max_age
+            # in the future when the oldest state will expire. Samples expiring
+            # shortly after it are included, so they are purged in one update.
+            # The purge is only ever delayed, never done early.
+            window_end = self.ages[0] + PURGE_COALESCE_WINDOW_SECONDS
+            last_age = self.ages[0]
+            for age in self.ages:
+                if age > window_end:
+                    break
+                last_age = max(last_age, age)
+            return last_age + self._samples_max_age
         return None
 
     async def async_update(self) -> None:

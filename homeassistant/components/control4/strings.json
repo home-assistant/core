@@ -34,13 +34,9 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Seconds between updates"
-        }
-      }
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Error authenticating with the Control4 account API, incorrect username or password"
     }
   }
 }

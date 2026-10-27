@@ -11,6 +11,7 @@ from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.llm import (
     API,
     LLM_API_ASSIST,
+    LLM_API_HOME_ASSISTANT,
     APIInstance,
     LLMContext,
     Tool,
@@ -34,6 +35,11 @@ TOOL_PREFIX_BREAKS_IN_HA_VERSION = "2027.3"
 DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = HassKey(
     "llm_platforms"
 )
+
+__all__ = [
+    "DOMAIN",
+    "LLMTools",
+]
 
 
 @dataclass(slots=True)
@@ -63,6 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _process_llm_tools_platform
     )
     async_register_api(hass, AssistAPI(hass))
+    async_register_api(hass, HomeAssistantAPI(hass))
     async_setup_ws_api(hass)
     return True
 
@@ -131,14 +138,18 @@ def _async_report_tool_issues(
 
 
 class AssistAPI(API):
-    """API exposing Assist API to LLMs."""
+    """API exposing Assist API to LLMs.
+
+    The assist API controls and reads entities exposed by the user to an assistant.
+    Its scope is bounded by entity exposure.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the class."""
         super().__init__(
             hass=hass,
             id=LLM_API_ASSIST,
-            name="Assist",
+            name="Device control",
         )
 
     @override
@@ -146,6 +157,36 @@ class AssistAPI(API):
         """Return the instance of the API."""
         llm_tools = await async_get_tools(self.hass, llm_context, self.id)
 
+        return APIInstance(
+            api=self,
+            api_prompt=llm_tools.prompt or "",
+            llm_context=llm_context,
+            tools=llm_tools.tools,
+            custom_serializer=selector_serializer,
+        )
+
+
+class HomeAssistantAPI(API):
+    """API exposing Home Assistant API to LLMs.
+
+    The Home Assistant API manages Home Assistant itself (e.g. registries, system logs,
+    automations, and config entries). It is not bounded by entity exposure and is
+    restricted to admin users.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the class."""
+        super().__init__(
+            hass=hass,
+            id=LLM_API_HOME_ASSISTANT,
+            name="Home Assistant",
+            requires_admin=True,
+        )
+
+    @override
+    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
+        """Return the instance of the API."""
+        llm_tools = await async_get_tools(self.hass, llm_context, self.id)
         return APIInstance(
             api=self,
             api_prompt=llm_tools.prompt or "",

@@ -1,6 +1,10 @@
 {
   "domain": "fireservicerota",
   "name": "FireServiceRota",
+  "categories": [
+    "messaging_notifications.push_notifications",
+    "productivity_information.calendars_todos"
+  ],
   "codeowners": ["@cyberjunky"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fireservicerota",

@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REMOVED,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ulid import ulid_now
@@ -41,6 +41,7 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
+LLM_API_HOME_ASSISTANT = "homeassistant"
 
 TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
 
@@ -117,12 +118,31 @@ async def async_get_api(
     else:
         api = MergedAPI([apis[key] for key in api_id])
 
+    return await async_get_authorized_api_instance(api, llm_context)
+
+
+async def async_get_authorized_api_instance(
+    api: API, llm_context: LLMContext
+) -> APIInstance:
+    """Get an API instance, requiring an admin user if the API requires it."""
+    if api.requires_admin and (
+        not llm_context.context
+        or not llm_context.context.user_id
+        or not (user := await api.hass.auth.async_get_user(llm_context.context.user_id))
+        or not user.is_admin
+    ):
+        raise Unauthorized(context=llm_context.context)
+
     return await api.async_get_api_instance(llm_context)
 
 
 @callback
 def async_get_apis(hass: HomeAssistant) -> list[API]:
-    """Get all the LLM APIs."""
+    """Get all registered LLM APIs.
+
+    This is intended for discovery (e.g. config flows and UI listing).
+    To obtain an API instance with permission checks applied, use `async_get_api`.
+    """
     return list(_async_get_apis(hass).values())
 
 
@@ -144,6 +164,9 @@ class LLMContext:
 
     device_id: str | None
     """Device that is making the request."""
+
+    agent_id: str | None = None
+    """Conversation agent or AI task entity that is handling the LLM request."""
 
 
 @dataclass(slots=True)
@@ -180,7 +203,11 @@ class ToolAnnotations:
 
 
 class Tool:
-    """LLM Tool base class."""
+    """LLM Tool base class.
+
+    Tools may implement equality to allow merged APIs to deduplicate
+    interchangeable instances with the same name.
+    """
 
     name: str
     title: str | None = None
@@ -301,10 +328,15 @@ class API(ABC):
     hass: HomeAssistant
     id: str
     name: str
+    requires_admin: bool = False
 
     @abstractmethod
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Return the instance of the API."""
+        """Return the instance of the API.
+
+        This is used internally by `async_get_api`. Callers should use `async_get_api`
+        rather than calling this directly to ensure permission checks are enforced.
+        """
         raise NotImplementedError
 
 
@@ -466,6 +498,7 @@ class MergedAPI(API):
             hass=hass,
             id="|".join(unicode_slug.slugify(api.id) for api in llm_apis),
             name="Merged LLM API",
+            requires_admin=any(api.requires_admin for api in llm_apis),
         )
         self.llm_apis = llm_apis
 
@@ -477,18 +510,42 @@ class MergedAPI(API):
             await llm_api.async_get_api_instance(llm_context)
             for llm_api in self.llm_apis
         ]
-        prompt_parts = []
-        tools: list[Tool] = []
+        tools_by_name: dict[str, list[tuple[str, Tool]]] = {}
         for api_instance in llm_apis:
-            namespace = unicode_slug.slugify(api_instance.api.name)
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            for tool in api_instance.tools:
+                entries = tools_by_name.setdefault(tool.name, [])
+                if all(candidate != tool for _, candidate in entries):
+                    entries.append((namespace, tool))
+
+        tools = [
+            tool if len(entries) == 1 else NamespacedTool(namespace, tool)
+            for entries in tools_by_name.values()
+            for namespace, tool in entries
+        ]
+
+        if len({tool.name for tool in tools}) != len(tools):
+            raise ValueError("Merged tool names must be unique")
+
+        prompt_parts = []
+        for api_instance in llm_apis:
+            namespace = unicode_slug.slugify(api_instance.api.id)
+            tool_names = []
+            for tool in api_instance.tools:
+                entries = tools_by_name[tool.name]
+                if len(entries) == 1:
+                    tool_names.append(tool.name)
+                else:
+                    tool_namespace = next(
+                        ns for ns, candidate in entries if candidate == tool
+                    )
+                    tool_names.append(f"{tool_namespace}__{tool.name}")
             prompt_parts.append(
-                f'Follow these instructions for tools from "{namespace}":\n'
+                f'Follow these instructions for tools from "{namespace}" '
+                f"({', '.join(tool_names)}):\n"
             )
             prompt_parts.append(api_instance.api_prompt)
             prompt_parts.append("\n\n")
-            tools.extend(
-                [NamespacedTool(namespace, tool) for tool in api_instance.tools]
-            )
 
         return APIInstance(
             api=self,
@@ -655,7 +712,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
 
     if isinstance(schema, selector.TargetSelector):
         return probatio.to_openapi(
-            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+            cv.TARGET_ID_FIELDS, custom_serializer=selector_serializer
         )
 
     if isinstance(schema, selector.TemplateSelector):

@@ -121,7 +121,7 @@
         "aiohttp_cors",
         "aiohttp-asyncmdnsresolver",
         "yarl",
-        "httpx",
+        "httpx2",
         "requests",
         "urllib3",
         "certifi",

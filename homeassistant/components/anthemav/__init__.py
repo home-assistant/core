@@ -29,7 +29,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> None:
     """Set up Anthem A/V Receivers from a config entry."""
 
     @callback
@@ -75,15 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    avr = entry.runtime_data
-    _LOGGER.debug("Close avr connection")
-    avr.close()
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        avr = entry.runtime_data
+        _LOGGER.debug("Close avr connection")
+        avr.close()

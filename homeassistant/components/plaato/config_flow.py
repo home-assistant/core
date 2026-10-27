@@ -12,16 +12,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
-from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CLOUDHOOK,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
-    DEFAULT_SCAN_INTERVAL,
     DOCS_URL,
     DOMAIN,
     PLACEHOLDER_DEVICE_NAME,
@@ -204,30 +202,7 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
         if use_webhook:
             return await self.async_step_webhook()
 
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=home-assistant-config-flow-polling-field
-                    probatio.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): cv.positive_int
-                }
-            ),
-        )
+        return self.async_abort(reason="no_options")
 
     async def async_step_webhook(
         self, user_input: dict[str, Any] | None = None

@@ -112,8 +112,8 @@ class LcnClimate(LcnEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement."""
         # Config schema only allows for:
         # UnitOfTemperature.CELSIUS and
         # UnitOfTemperature.FAHRENHEIT
@@ -160,7 +160,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             ):
                 return
             self._is_on = False
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
             self.async_write_ha_state()
 
     @override
@@ -173,7 +173,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self.setpoint, temperature, self.unit
         ):
             return
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
@@ -196,13 +196,13 @@ class LcnClimate(LcnEntity, ClimateEntity):
             return
         self._attr_available = True
         if input_obj.get_var() is self.variable:
-            self._attr_current_temperature = float(
+            self._attr_native_current_temperature = float(
                 input_obj.get_value().to_var_unit(self.unit)
             )
         elif input_obj.get_var() is self.setpoint:
             self._is_on = not input_obj.get_value().is_locked_regulator()
             if self._is_on:
-                self._attr_target_temperature = float(
+                self._attr_native_target_temperature = float(
                     input_obj.get_value().to_var_unit(self.unit)
                 )
 

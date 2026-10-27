@@ -1,6 +1,7 @@
 {
   "domain": "hp_ilo",
   "name": "HP Integrated Lights-Out (ILO)",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/hp_ilo",
   "iot_class": "local_polling",

@@ -1,6 +1,7 @@
 {
   "domain": "eafm",
   "name": "Environment Agency Flood Gauges",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@Jc2k"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/eafm",

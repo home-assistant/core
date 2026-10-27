@@ -1,5 +1,6 @@
 ---
 name: quality-scale-reviewer
+run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
@@ -10,8 +11,9 @@ description: >
   to check from the rules index, the PR diff, and `quality_scale.yaml`, then
   applies the repository's `ha-quality-scale-verify` skill to each selected
   rule and posts each violation as an inline review comment on the offending
-  changed line. Pull requests above the size limit are not reviewed; a comment
-  states that.
+  changed line, or a short comment when no rule is violated. Pull requests
+  above the size limit, or arriving after the workflow's daily AI-credit budget
+  is used up, are not reviewed; a comment states that.
 intent: >
   Pull requests that break a quality scale rule their integration claims to
   satisfy receive an inline review comment naming the rule on the offending
@@ -63,8 +65,15 @@ safe-outputs:
     max: 15
     target: "${{ needs.prepare.outputs.pr_number }}"
     commit-id: "${{ needs.prepare.outputs.head_sha }}"
+  add-comment:
+    max: 1
+    target: "${{ needs.prepare.outputs.pr_number }}"
+    # Re-runs (reopen, manual dispatch) minimize the previous run's comment.
+    hide-older-comments: true
   needs:
     - prepare
+  # The conclusion job comments on the pull request when the credit budget skips a run.
+  report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
     # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
@@ -107,7 +116,7 @@ jobs:
               '[.[] | select(.state == "open" and .base.repo.full_name == $base and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
           COUNT=$(jq 'length' <<< "${MATCHES}")
           if [ "${COUNT}" -ne 1 ]; then
-            echo "Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
+            echo "::notice title=Quality scale review skipped::Expected one open, non-draft pull request for ${HEAD_REPO}@${HEAD_SHA}, found ${COUNT}: ${MATCHES}"
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
@@ -149,6 +158,9 @@ jobs:
             echo "pr_number=${PR_NUMBER}"
             echo "head_sha=$(jq -r '.head_sha' "${RESULTS}")"
           } >> "${GITHUB_OUTPUT}"
+          if [ "$(jq -r '.skip' "${RESULTS}")" = "true" ]; then
+            echo "::notice title=Quality scale review skipped::PR #${PR_NUMBER} $(jq -r '.skip_reason' "${RESULTS}")"
+          fi
       - name: Comment that the pull request is too long to review
         if: steps.prepare.outputs.too_long == 'true'
         env:
@@ -175,6 +187,28 @@ jobs:
           path: deterministic
           if-no-files-found: error
           retention-days: 7
+  # The activation job evaluates the daily AI-credit budget but may not write,
+  # so the notice is posted from the conclusion job, which runs when the budget
+  # is exceeded and the agent is skipped.
+  conclusion:
+    pre-steps:
+      - name: Comment that the review was skipped by the daily AI-credit budget
+        if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          MARKER='<!-- quality-scale-reviewer-credit-budget -->'
+          if gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate --jq '.[].body' \
+              | grep -F "${MARKER}" >/dev/null; then
+            echo "Comment already posted on PR #${PR_NUMBER}"
+            exit 0
+          fi
+          gh pr comment "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --body "${MARKER}
+          ## Quality scale review
+
+          ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
@@ -187,17 +221,12 @@ steps:
       path: /tmp/gh-aw/agent
   - name: Check out the pull request head
     env:
-      PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
       HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
     run: |
       set -euo pipefail
       BASE_SHA=$(git rev-parse HEAD)
-      git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
-      # The prepared diff describes HEAD_SHA; a newer push requires its own workflow run to be reviewed.
-      if [ "$(git rev-parse FETCH_HEAD)" != "${HEAD_SHA}" ]; then
-        echo "PR #${PR_NUMBER} head moved since preparation, aborting"
-        exit 1
-      fi
+      # The prepared diff describes HEAD_SHA, so review it even if the PR head moved since.
+      git fetch --depth=1 origin "${HEAD_SHA}"
       git checkout --detach "${HEAD_SHA}"
       # Agent configuration must come from the trusted default branch, not from the PR.
       # Copilot CLI loads instructions from Markdown files in many locations, so every .md is reset.
@@ -226,7 +255,7 @@ Check the changed lines of this pull request against the Integration Quality
 Scale rules that each touched integration declares as `done` or `exempt` in
 its `quality_scale.yaml`. Post an inline review comment on each changed line
 that violates a rule, naming the rule and explaining why it is violated. When
-no rule is violated, call `noop`.
+no rule is violated, post a short comment saying so (Step 7).
 
 If this PR sets a rule to `done` or `exempt` ("newly claimed rules"), verify
 that the integration satisfies the rule, or that the exemption is justified.
@@ -245,8 +274,9 @@ Read these files instead of calling GitHub for the same data:
   before selecting rules.
 - `/tmp/gh-aw/agent/rules/<rule>.md`: the full documentation of every rule.
   Read a rule's file only after selecting that rule in Step 4.
-- `/tmp/gh-aw/agent/pr-diff.patch`: the full unified diff. Navigate it with
-  `grep` and hunk headers rather than reading it whole.
+- `/tmp/gh-aw/agent/pr-diff.patch`: the unified diff, without test snapshot
+  (`.ambr`) files. Navigate it with `grep` and hunk headers rather than
+  reading it whole.
 - `/tmp/gh-aw/agent/pr-meta.json`: number, title, body, head SHA, base
   branch, and change counts.
 - `/tmp/gh-aw/agent/domains.txt`: integration domains touched by the PR that
@@ -292,15 +322,14 @@ Also skip rules whose evidence lives outside this repository: every `docs-*`
 rule (documentation repository) and `dependency-transparency` (covered by the
 "Check requirements" workflow).
 
-If no rule is selected, call `noop` with the reason.
+If no rule is selected, go to Step 7.
 
 ## Step 5: Check each selected rule
 
 Apply the `ha-quality-scale-verify` skill to each selected rule, one rule at
-a time; use parallel subagents when several rules are selected. Read the
-full documentation of a selected rule only now, from
-`/tmp/gh-aw/agent/rules/<rule>.md`, wherever the skill's step 1 says to fetch
-it.
+a time, without delegating to subagents. Read the full documentation of a
+selected rule only now, from `/tmp/gh-aw/agent/rules/<rule>.md`, wherever the
+skill's step 1 says to fetch it.
 
 Scope the skill to the diff: where the skill says to analyze the
 integration's codebase, analyze only the files and lines changed in
@@ -308,6 +337,10 @@ integration's codebase, analyze only the files and lines changed in
 cannot be judged without them. The exception is a newly claimed rule, which is
 verified against the integration as a whole because a PR that claims a rule
 must satisfy it.
+
+A Python environment is not available. For rules where running tests or scripts is
+desirable, judge statically from the code and tests instead. If the static evidence is
+insufficient for a confident verdict, do not report a finding.
 
 A finding is reportable only when all of the following hold:
 
@@ -340,7 +373,7 @@ Use this format and keep the visible part to one or two sentences:
 
 - Evidence: `<path>:<line>` and the relevant code.
 - Recommendation: <concrete change that achieves compliance>.
-- Rule: https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/<rule>
+- Rule: https://contributors.home-assistant.io/core/quality-scale/rules/<rule>
 
 </details>
 ```
@@ -350,7 +383,16 @@ drop findings, keep lower tiers first: Bronze, then Silver, Gold, Platinum.
 
 ## Step 7: No violations
 
-When every selected rule passes or no rule was selected, call `noop` with a
-one-line reason that names the domains and the number of rules checked, for
-example
-`Checked 6 done/exempt rules for peblar; none violated by the changed lines`.
+When every selected rule passes or no rule was selected, post one comment with
+`add_comment`. Keep it to the heading and one line that names the reviewed
+commit, the domains, and the number of rules checked:
+
+```markdown
+## Quality scale review
+
+✅ No issues found at ${{ needs.prepare.outputs.head_sha }}. Checked 6 `done`/`exempt` rules for `peblar`; none are violated by the changed lines.
+```
+
+When no rule was selected, use
+`✅ No issues found at ${{ needs.prepare.outputs.head_sha }}. No `done`/`exempt` rule for `peblar` concerns the changed lines.`
+instead. Do not post this comment when you posted a finding.

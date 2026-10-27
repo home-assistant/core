@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
-from . import DOMAIN, ScriptIntentHandler
+from .const import DOMAIN
+from .helpers import ScriptIntentHandler
 
 
 @callback

@@ -1,9 +1,12 @@
 """Test the LIFX sensor platform."""
 
+from unittest.mock import patch
+
 from lifx import Connectivity, FirmwareInfo, ThreadInfo, ThreadRoutingRole, WifiInfo
 import pytest
 
 from homeassistant.components import lifx
+from homeassistant.components.lifx.sensor import LIFXRssiSensor
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -121,6 +124,40 @@ async def test_thread_rssi_sensor(
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SIGNAL_STRENGTH
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert device.fetch_radio_info is False
+
+
+async def test_rssi_sensor_entity_id_changes_in_place(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the RSSI sensor keeps reporting under its new entity_id after a rename."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        lifx.DOMAIN,
+        f"{SERIAL}_rssi",
+        disabled_by=None,
+        suggested_object_id="my_group_my_bulb_rssi",
+    )
+    device = create_mock_light()
+    device.state.wifi_info = WifiInfo(0.000001, device.state.host_firmware)
+    entry = await async_setup_lifx_entry(hass, device)
+
+    # An in-place rename does not add the entity to hass again
+    with patch.object(LIFXRssiSensor, "async_added_to_hass") as added:
+        entity_registry.async_update_entity(
+            "sensor.my_group_my_bulb_rssi", new_entity_id="sensor.renamed_rssi"
+        )
+        await hass.async_block_till_done()
+    added.assert_not_called()
+
+    assert device.fetch_radio_info is True
+    await async_trigger_update(hass)
+    state = hass.states.get("sensor.renamed_rssi")
+    assert state
+    assert state.state == "-60"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert device.fetch_radio_info is False

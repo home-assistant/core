@@ -8,11 +8,10 @@ from nhc.light import NHCLight
 from nhc.scene import NHCScene
 from nhc.thermostat import NHCThermostat
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.niko_home_control.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -20,7 +19,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.niko_home_control.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

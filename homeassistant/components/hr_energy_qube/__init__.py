@@ -12,7 +12,7 @@ from .coordinator import QubeCoordinator
 type QubeConfigEntry = ConfigEntry[QubeCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> None:
     """Set up Qube Heat Pump from a config entry."""
     client = QubeClient(entry.data[CONF_HOST], entry.data[CONF_PORT])
     coordinator = QubeCoordinator(hass, client, entry)
@@ -21,11 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.client.close()

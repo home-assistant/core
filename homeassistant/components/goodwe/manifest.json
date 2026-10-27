@@ -1,6 +1,7 @@
 {
   "domain": "goodwe",
   "name": "GoodWe Inverter",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@mletenay", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/goodwe",

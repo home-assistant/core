@@ -142,7 +142,8 @@ def async_get_chat_log(
             )
         return
 
-    if is_new_log:
+    # Parallel first turns share the session, so register the cleanup once.
+    if session.conversation_id not in all_chat_logs:
 
         @callback
         def do_cleanup() -> None:
@@ -276,7 +277,7 @@ class AssistantContent:
             "agent_id": self.agent_id,
             "created": self.created,
         }
-        if self.content:
+        if self.content is not None:
             result["content"] = self.content
         if self.thinking_content:
             result["thinking_content"] = self.thinking_content
@@ -360,6 +361,7 @@ class ChatLog:
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
+    _llm_api_key: tuple[Any, ...] | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
@@ -522,8 +524,10 @@ class ChatLog:
 
         The keys content and tool_calls will be concatenated
         if they appear multiple times.
+
+        An explicit empty content string is preserved as a silent response.
         """
-        current_content = ""
+        current_content: str | None = None
         current_thinking_content = ""
         current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
@@ -536,8 +540,8 @@ class ChatLog:
             if "role" not in delta:
                 # ToolResultContentDeltaDict will always have a role
                 assistant_delta = cast(AssistantContentDeltaDict, delta)
-                if delta_content := assistant_delta.get("content"):
-                    current_content += delta_content
+                if (delta_content := assistant_delta.get("content")) is not None:
+                    current_content = (current_content or "") + delta_content
                 if delta_thinking_content := assistant_delta.get("thinking_content"):
                     current_thinking_content += delta_thinking_content
                 if delta_native := assistant_delta.get("native"):
@@ -571,14 +575,14 @@ class ChatLog:
             # Starting a new message
             # Yield the previous message if it has content
             if (
-                current_content
+                current_content is not None
                 or current_thinking_content
                 or current_tool_calls
                 or current_native
             ):
                 content: AssistantContent | ToolResultContent = AssistantContent(
                     agent_id=agent_id,
-                    content=current_content or None,
+                    content=current_content,
                     thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
                     native=current_native,
@@ -590,13 +594,13 @@ class ChatLog:
                     yield tool_result
                     if self.delta_listener:
                         self.delta_listener(self, tool_result.as_dict())
-                current_content = ""
+                current_content = None
                 current_thinking_content = ""
                 current_native = None
                 current_tool_calls = []
 
             if delta["role"] == "assistant":
-                current_content = delta.get("content") or ""
+                current_content = delta.get("content")
                 current_thinking_content = delta.get("thinking_content") or ""
                 current_tool_calls = delta.get("tool_calls") or []
                 current_native = delta.get("native")
@@ -635,14 +639,14 @@ class ChatLog:
                 )
 
         if (
-            current_content
+            current_content is not None
             or current_thinking_content
             or current_tool_calls
             or current_native
         ):
             content = AssistantContent(
                 agent_id=agent_id,
-                content=current_content or None,
+                content=current_content,
                 thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
                 native=current_native,
@@ -712,11 +716,39 @@ class ChatLog:
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
+        if isinstance(user_llm_hass_api, llm.API):
+            api_ids: tuple[str, ...] = (user_llm_hass_api.id,)
+        elif isinstance(user_llm_hass_api, str):
+            api_ids = (user_llm_hass_api,)
+        else:
+            api_ids = tuple(user_llm_hass_api or ())
+        llm_api_key = (
+            llm_context.agent_id,
+            llm_context.context.user_id if llm_context.context else None,
+            llm_context.device_id,
+            api_ids,
+        )
+
+        if (
+            user_llm_hass_api
+            and self.llm_api is not None
+            and llm_context.agent_id is not None
+            and llm_api_key == self._llm_api_key
+            and user_extra_system_prompt in (None, self.extra_system_prompt)
+        ):
+            # Keep the system prompt and tools static between turns, so LLM
+            # providers can cache them. Tool calls use the context of this turn.
+            self.llm_api.llm_context = llm_context
+            self.llm_input_provided_index = len(self.content)
+            self.async_trace({"messages": self.content, "tools": self.llm_api.tools})
+            return
 
         if not user_llm_hass_api:
             pass
         elif isinstance(user_llm_hass_api, llm.API):
-            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+            llm_api = await llm.async_get_authorized_api_instance(
+                user_llm_hass_api, llm_context
+            )
         else:
             try:
                 llm_api = await llm.async_get_api(
@@ -791,6 +823,7 @@ class ChatLog:
 
         self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
+        self._llm_api_key = llm_api_key
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
         _async_notify_subscribers(
