@@ -1,5 +1,6 @@
 """Tests for TP-Link Omada integration init."""
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -25,6 +26,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     POLL_CLIENTS,
     OmadaCoordinator,
+    OmadaGatewayCoordinator,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -117,6 +119,36 @@ async def test_coordinator_update_failure_is_translated(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "api_error"
+
+
+async def test_gateway_invalidate_discards_inflight_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test a refresh started before removal cannot restore stale gateway data."""
+    coordinator = OmadaGatewayCoordinator(
+        hass, mock_config_entry, mock_omada_site_client, "54-AF-97-00-00-02"
+    )
+    refresh_started = asyncio.Event()
+    finish_refresh = asyncio.Event()
+    gateway = mock_omada_site_client.get_gateway.return_value
+
+    async def _get_gateway(mac: str) -> object:
+        refresh_started.set()
+        await finish_refresh.wait()
+        return gateway
+
+    mock_omada_site_client.get_gateway = AsyncMock(side_effect=_get_gateway)
+
+    refresh_task = asyncio.create_task(coordinator.async_refresh())
+    await refresh_started.wait()
+    coordinator.invalidate()
+    finish_refresh.set()
+    await refresh_task
+
+    assert coordinator.data == {}
+    assert coordinator.last_update_success is False
 
 
 async def test_automatic_missing_device_cleanup(

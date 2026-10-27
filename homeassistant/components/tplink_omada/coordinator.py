@@ -192,10 +192,24 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
+        self._generation = 0
 
     def invalidate(self) -> None:
-        """Drop cached gateway data so a returning gateway is refetched."""
+        """Drop cached data and reject refreshes started before the removal."""
+        self._generation += 1
         self.data = {}
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaGateway]:
+        """Fetch gateway data, discarding a result from before an invalidation."""
+        generation = self._generation
+        data = await super()._async_update_data()
+        if generation != self._generation:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            )
+        return data
 
     @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
