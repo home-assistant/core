@@ -62,6 +62,8 @@ SUPERVISOR_DEFAULT_PORT: Final = 80
 # My to be able to check url and version info.
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
+# Largest legitimate unauthenticated request (login flow, token) is a few KB
+MAX_UNAUTHENTICATED_BODY_SIZE: Final = 64 * 1024
 
 ATTR_CONFIG = "config"
 

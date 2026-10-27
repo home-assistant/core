@@ -4,6 +4,7 @@ import itertools as it
 
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
+    VoiceActivityTimeout,
     VoiceCommandSegmenter,
     chunk_samples,
 )
@@ -250,3 +251,49 @@ def test_speech_thresholds() -> None:
     # Now that same probability is considered silence.
     # Finishes command.
     assert not segmenter.process(_ONE_SECOND, 0.3)
+
+
+def test_negative_probability_is_not_speech_or_silence() -> None:
+    """MicroVAD warm-up (-1) must not count as speech or as silence."""
+    segmenter = VoiceCommandSegmenter(
+        speech_seconds=0.3,
+        reset_seconds=0.5,
+        silence_seconds=0.5,
+        command_seconds=0.3,
+    )
+
+    # Not enough speech to start a command.
+    assert segmenter.process(0.2, 1.0)
+    assert not segmenter.in_command
+
+    # Longer than the silence reset window, and not speech.
+    assert segmenter.process(0.5, -1.0)
+    assert not segmenter.in_command
+
+    # Saved speech progress still reaches the start threshold.
+    assert segmenter.process(0.1, 1.0)
+    assert segmenter.in_command
+
+    # Partial silence must not finish the command.
+    assert segmenter.process(0.4, 0.0)
+    assert segmenter.in_command
+
+    # Warm-up must not finish it either, and must not reset the silence timer.
+    assert segmenter.process(0.5, -1.0)
+    assert segmenter.in_command
+
+    assert not segmenter.process(0.1, 0.0)
+    assert not segmenter.in_command
+
+
+def test_negative_probability_is_not_speech_or_silence_for_timeout() -> None:
+    """MicroVAD warm-up (-1) must not count as speech or as silence."""
+    timeout = VoiceActivityTimeout(silence_seconds=1.0, reset_seconds=0.5)
+
+    assert timeout.process(0.4, 0.0)
+    # Not enough speech to reset the silence timer.
+    assert timeout.process(0.4, 1.0)
+    # Longer than the remaining reset window, and not silence.
+    assert timeout.process(0.2, -1.0)
+    assert timeout.process(0.5, 0.0)
+    assert not timeout.process(0.1, 0.0)

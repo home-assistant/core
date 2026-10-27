@@ -184,8 +184,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             except SmlightAuthError:
                 return await self.async_step_auth()
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={"host": self._device_name},

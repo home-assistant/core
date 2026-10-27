@@ -1,0 +1,210 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: >-
+      (1) Actions are registered in async_setup, but raise a plain ValueError
+      unless exactly one entry is loaded. Get the entry with
+      service.async_get_config_entry(hass, DOMAIN, None) to raise translated
+      ServiceValidationErrors instead.
+      (2) Replace the leftover YAML CONFIG_SCHEMA with
+      cv.config_entry_only_config_schema.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: >-
+      config_flow.py branch coverage is missing for async_step_reconfigure with
+      the unchanged host, where the duplicate check is skipped.
+  config-flow:
+    status: todo
+    comment: >-
+      (1) The host field description says "Hostname or IP address", but the flow
+      only accepts IP addresses. Accept hostnames or correct the description.
+      (2) config_entry.data["name"] and the config.abort strings in strings.json
+      are leftovers of the removed YAML import. Remove the name with a migration
+      that keeps custom names from the YAML era (e.g. PR 134841), and remove the
+      unused abort strings.
+  dependency-transparency: done
+  docs-actions:
+    status: todo
+    comment: >-
+      The profile field of source/_actions/vallox.set_profile does not list the
+      auto profile.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
+  docs-high-level-description:
+    status: todo
+    comment: >-
+      The introduction does not describe Vallox or its ventilation units, and
+      links to the library instead of the Vallox website.
+  docs-installation-instructions:
+    status: todo
+    comment: >-
+      The page uses the config flow include, but lists no prerequisites:
+      connecting the unit to the local network and finding its IP address.
+  docs-removal-instructions:
+    status: todo
+    comment: >-
+      No removal section yet. Adding remove_device_service include is enough.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: todo
+    comment: >-
+      Duplicates are only detected by host, so the same unit added again under
+      a new IP address is not caught. Use the unit's UUID as the config entry
+      unique ID, and set it on existing entries.
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: >-
+      (1) The number, switch and date entities let ValloxApiException through,
+      for example when the unit is unreachable, instead of raising
+      HomeAssistantError.
+      (2) The fan raises a plain ValueError when the profile does not support
+      setting the fan speed, which should be a ServiceValidationError.
+      (3) The custom actions raise a plain ValueError unless exactly one entry
+      is loaded, which is covered by action-setup.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters:
+    status: todo
+    comment: >-
+      The page does not describe the Host field. Add a configuration_basic
+      block that says it takes the unit's IP address and where to find it.
+  entity-unavailable:
+    status: todo
+    comment: >-
+      The binary sensor compares its value with == 1, so it reports off instead
+      of unknown when the value is missing from the data.
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: >-
+      No platform sets PARALLEL_UPDATES.
+      (1) The read-only sensor and binary_sensor platforms can use 0.
+      (2) The fan, number, switch and date platforms send commands to the unit,
+      so an upper limit should be defined.
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require authentication.
+  test-coverage:
+    status: todo
+    comment: >-
+      (1) coordinator.py is at 90%: the UpdateFailed path is not tested, and no
+      test expects SETUP_RETRY when the unit is offline.
+      (2) The fan's power-setting failure and unsupported-profile fan speed
+      error paths are not tested.
+      (3) No test explicitly unloads the entry.
+      (4) The config flow tests patch the library inline instead of using
+      shared mock_client and mock_setup_entry fixtures, and the user-step
+      error tests could be one parametrized test.
+
+  # Gold
+  devices:
+    status: todo
+    comment: >-
+      The device has no serial number. The unit reports it in the
+      A_CYC_SERIAL_NUMBER_MSW and A_CYC_SERIAL_NUMBER_LSW registers, but the
+      library does not expose it yet.
+  diagnostics:
+    status: todo
+    comment: There is no diagnostics.py yet.
+  discovery-update-info:
+    status: todo
+    comment: >-
+      Blocked on discovery, and on the config entry unique ID from
+      unique-config-entry.
+  discovery:
+    status: todo
+    comment: >-
+      (1) Units do not announce themselves over mDNS, but can be discovered over
+      DHCP by MAC prefix. Vallox Oy's registered prefix is B0:57:06, but a
+      ValloPlus 350 MV was seen with the unregistered B0:57:A6.
+      (2) Needs the config entry unique ID from unique-config-entry to
+      recognize units that are already set up.
+  docs-data-update:
+    status: todo
+    comment: The page has no data updates section.
+  docs-examples:
+    status: todo
+    comment: The page has no automation examples.
+  docs-known-limitations:
+    status: todo
+    comment: The page has no known limitations section.
+  docs-supported-devices:
+    status: todo
+    comment: >-
+      The page links to the library README instead of listing the supported
+      and unsupported units itself.
+  docs-supported-functions:
+    status: todo
+    comment: >-
+      The Platforms section describes each platform in one sentence, but does
+      not list the individual entities.
+  docs-troubleshooting:
+    status: todo
+    comment: The page has no troubleshooting section.
+  docs-use-cases:
+    status: todo
+    comment: The page has no use cases section.
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry has a single, fixed device.
+  entity-category:
+    status: todo
+    comment: >-
+      All sensors are diagnostic, including primary measurements like the air
+      temperatures, humidity and CO2, which should have no category.
+  entity-device-class:
+    status: todo
+    comment: >-
+      (1) The current profile and cell state sensors report hard-coded English
+      strings. They should use the enum device class with translated states.
+      Note: Will be a breaking change.
+      (2) The post-heater binary sensor has no device class; running fits.
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: >-
+      (1) The fan raises HomeAssistantError with hard-coded English messages.
+      (2) The coordinator raises UpdateFailed with a hard-coded English message.
+      (3) The exceptions to be added for action-exceptions need translations
+      as well.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: >-
+      The reconfigure step does not check that the new host is the same unit.
+      Needs the config entry unique ID from unique-config-entry for
+      _abort_if_unique_id_mismatch.
+  repair-issues:
+    status: exempt
+    comment: This integration has no situations that need a repair issue.
+  stale-devices:
+    status: exempt
+    comment: Each config entry has a single, fixed device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: >-
+      The library fetches the data model from the unit over HTTP with its own
+      aiohttp ClientSession, and Vallox() does not accept a session to pass in.
+  strict-typing: done
