@@ -914,6 +914,42 @@ async def test_hmip_binary_sensor_unknown_device_type(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_hmip_binary_sensor_second_channel(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a second channel of the same type gets its own unique id."""
+    device_data = json.loads(FIXTURE_DATA)["devices"]["3014F711000000000000BB11"]
+    channel = dict(device_data["functionalChannels"]["1"], index=2)
+    device_data["functionalChannels"]["2"] = channel
+    device_data.update(id="3014F711000000000000TWO2", label="Two motion channels")
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Two motion channels"], extra_devices=[device_data]
+    )
+
+    assert sorted(
+        entry.unique_id
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.endswith("_motion")
+    ) == ["3014F711000000000000TWO2_1_motion", "3014F711000000000000TWO2_2_motion"]
+
+
+async def test_hmip_smoke_detector_unknown_device_type(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test a smoke sensor without a known alarm type is unknown, not off."""
+    device_data = json.loads(FIXTURE_DATA)["devices"]["3014F7110000000000000018"]
+    device_data.update(
+        id="3014F711000000000000UNKN", label="Unknown smoke", type="NEW_SMOKE"
+    )
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Unknown smoke"], extra_devices=[device_data]
+    )
+
+    assert hass.states.get("binary_sensor.unknown_smoke_smoke").state == STATE_UNKNOWN
+
+
 async def test_hmip_binary_sensor_unique_ids(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,

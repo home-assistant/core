@@ -21,6 +21,7 @@ from homematicip.device import (
     RotaryHandleSensor,
     ShutterContact,
     ShutterContactMagnetic,
+    SmokeDetector,
     TiltVibrationSensor,
     WeatherSensor,
     WeatherSensorPlus,
@@ -124,8 +125,9 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
             key="smoke",
             device_class=BinarySensorDeviceClass.SMOKE,
             device_value_fn=lambda device: (
-                getattr(device, "smokeDetectorAlarmType", None)
-                == SmokeDetectorAlarmType.PRIMARY_ALARM
+                device.smokeDetectorAlarmType == SmokeDetectorAlarmType.PRIMARY_ALARM
+                if isinstance(device, SmokeDetector)
+                else None
             ),
             unique_id_channel=1,
         ),
@@ -187,14 +189,21 @@ def _create_simple_binary_sensors(
     device: BaseDevice,
 ) -> list[HomematicipGenericEntity]:
     """Create the described binary sensors for the channels of a device."""
-    entities: list[HomematicipGenericEntity] = [
-        HomematicipSimpleBinarySensor(hap, device, channel, description)
-        for channel in device.functionalChannels
+    entities: list[HomematicipGenericEntity] = []
+    keys: set[str] = set()
+    for channel in sorted(device.functionalChannels, key=lambda ch: ch.index):
         for description in SIMPLE_BINARY_SENSOR_DESCRIPTIONS.get(
             channel.functionalChannelType, ()
-        )
-        if description.exists_fn(channel)
-    ]
+        ):
+            if not description.exists_fn(channel):
+                continue
+            # a second channel with the fixed channel would repeat its unique id
+            entities.append(
+                HomematicipSimpleBinarySensor(
+                    hap, device, channel, description, description.key not in keys
+                )
+            )
+            keys.add(description.key)
 
     if getattr(device, "lowBat", None) is not None and (
         base_channel := next(
@@ -299,6 +308,7 @@ class HomematicipSimpleBinarySensor(HomematicipGenericEntity, BinarySensorEntity
         device: BaseDevice,
         channel: FunctionalChannel,
         description: HmipBinarySensorDescription,
+        keep_unique_id_channel: bool = True,
     ) -> None:
         """Initialize the described binary sensor."""
         super().__init__(
@@ -310,14 +320,17 @@ class HomematicipSimpleBinarySensor(HomematicipGenericEntity, BinarySensorEntity
             use_description_name=True,
         )
         self.entity_description = description
+        self._unique_id_channel = (
+            description.unique_id_channel if keep_unique_id_channel else None
+        )
 
     @property
     @override
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if (channel := self.entity_description.unique_id_channel) is None:
+        if self._unique_id_channel is None:
             return super().unique_id
-        return f"{self._device.id}_{channel}_{self._feature_id}"
+        return f"{self._device.id}_{self._unique_id_channel}_{self._feature_id}"
 
     @property
     @override
