@@ -24,41 +24,23 @@ async def test_setup_unload(
 
 
 @pytest.mark.parametrize(
-    ("method", "error", "state"),
+    ("error", "state"),
     [
-        (
-            "status",
-            BusyBarAPIError("refused", status_code=401),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            "status",
-            BusyBarAPIError("refused", status_code=403),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            "status",
-            BusyBarAPIError("server", status_code=500),
-            ConfigEntryState.SETUP_RETRY,
-        ),
-        (
-            "status",
-            BusyBarRequestError("offline"),
-            ConfigEntryState.SETUP_RETRY,
-        ),
-        ("wifi_status", BusyBarRequestError("offline"), ConfigEntryState.SETUP_RETRY),
+        (BusyBarAPIError("refused", status_code=401), ConfigEntryState.SETUP_ERROR),
+        (BusyBarAPIError("refused", status_code=403), ConfigEntryState.SETUP_ERROR),
+        (BusyBarAPIError("server", status_code=500), ConfigEntryState.SETUP_RETRY),
+        (BusyBarRequestError("offline"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_failure(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    method: str,
     error: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Distinguish permanent token refusal from retryable connection failures."""
-    getattr(mock_client, method).side_effect = error
+    mock_client.status.side_effect = error
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is state

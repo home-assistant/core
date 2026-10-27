@@ -98,7 +98,8 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_USER:
                     device = await client.status_device()
                     await self.async_set_unique_id(
-                        (device.usb_mac or "").replace(":", "").lower()
+                        (device.usb_mac or "").replace(":", "").lower(),
+                        raise_on_progress=False,
                     )
                 self._abort_if_unique_id_configured()
                 issued = await client.access_token_mint(
