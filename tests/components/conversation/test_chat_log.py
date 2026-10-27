@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import ExitStack
 import contextvars
 from datetime import timedelta
 from pathlib import Path
@@ -17,6 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.conversation import (
     AssistantContent,
     AssistantContentDeltaDict,
+    ConversationBusyError,
     ConversationInput,
     ConverseError,
     ToolResultContent,
@@ -29,6 +31,10 @@ from homeassistant.components.conversation.chat_log import (
     ChatLog,
     ChatLogEventType,
     async_subscribe_chat_logs,
+)
+from homeassistant.components.conversation.trace import (
+    ConversationTraceEventType,
+    async_conversation_trace,
 )
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import Context, HomeAssistant
@@ -279,37 +285,238 @@ async def test_unknown_llm_api(
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
-async def test_new_chat_log_parallel_turns_cleanup(
+async def test_concurrent_turn_busy(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
-    """Test the cleanup after parallel first turns of a new conversation."""
+    """Test a second turn of a conversation raises while the first is open."""
+
+    async def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            pass
+
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+        pytest.raises(ConversationBusyError),
+    ):
+        # A new context runs the request like a separate task would.
+        await asyncio.create_task(run_turn(), context=contextvars.Context())
+
+    with (
+        pytest.raises(ValueError),
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input),
+    ):
+        raise ValueError
+
+    # The failed turn has ended, so the next turn may start.
+    await run_turn()
+
+
+async def test_turn_without_reply(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a user message without an assistant reply gets a placeholder reply."""
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        pass
+
+    assert hass.data[DATA_CHAT_LOGS]["koala"] is chat_log
+    assert [(item.role, item.content) for item in chat_log.content[1:]] == [
+        ("user", "Hello"),
+        ("assistant", "(no response)"),
+    ]
+    assert chat_log.content[-1].agent_id == "mock-agent-id"
+
+
+async def test_trace_keeps_messages_of_its_turn(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a later turn does not change the messages in the trace of a turn."""
+    with (
+        async_conversation_trace() as conversation_trace,
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=None,
+            user_llm_prompt=None,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi")
+        )
+
+    with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi again")
+        )
+
+    detail, turn = conversation_trace.as_dict()["events"]
+    assert [message["role"] for message in detail["data"]["messages"]] == [
+        "system",
+        "user",
+    ]
+    assert turn["event_type"] == ConversationTraceEventType.TURN_CONTENT
+    assert [content["role"] for content in turn["data"]["content"]] == [
+        "user",
+        "assistant",
+    ]
+
+
+@pytest.mark.parametrize(
+    "layers",
+    [
+        pytest.param(["raises", "chat_log"], id="turn"),
+        pytest.param(["raises", "chat_log", "chat_log"], id="nested_turn"),
+    ],
+)
+async def test_failed_turn_stored(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput, layers: list[str]
+) -> None:
+    """Test a failed turn stays in the history with its error once."""
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        ExitStack() as stack,
+    ):
+        for layer in layers:
+            stack.enter_context(
+                pytest.raises(HomeAssistantError)
+                if layer == "raises"
+                else async_get_chat_log(hass, session, mock_conversation_input)
+            )
+        raise HomeAssistantError("Provider is down")
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert [(item.role, item.content) for item in content] == [
+        ("system", ""),
+        ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+    assert content[-1].agent_id == "mock-agent-id"
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_turn_tool_call_result(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a failed turn gets an error result for a tool call without one."""
+
+    async def failing_tool() -> llm.ToolResult:
+        raise ValueError("Tool is broken")
 
     async def run_turn() -> None:
         with (
             chat_session.async_get_chat_session(hass, "koala", context=None) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
-            chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api="assist",
             )
+            async for _ in chat_log.async_add_assistant_content(
+                AssistantContent(
+                    agent_id="mock-agent-id",
+                    content=None,
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id", tool_name="test_tool", tool_args={}
+                        )
+                    ],
+                ),
+                tool_call_tasks={
+                    "mock-tool-call-id": hass.async_create_task(failing_tool())
+                },
+            ):
+                pass
 
-    with (
-        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-    ):
-        # A new context runs the request like a separate task would.
-        await asyncio.create_task(run_turn(), context=contextvars.Context())
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(agent_id="mock-agent-id", content="Hello")
-        )
+    with pytest.raises(ValueError):
+        await run_turn()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2,
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id="mock-tool-call-id",
+        tool_name="test_tool",
+        result=llm.ToolResult(
+            data={"error": "ValueError", "error_text": "Tool is broken"},
+            error=True,
+        ),
+    )
+    assert content[-1].content == "Error: Tool is broken"
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_failed_turn_trigger_sentence_result(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a failed turn gets an error result for an open sentence trigger."""
+    trigger_call = llm.ToolInput(
+        tool_name="trigger_sentence", tool_args={}, external=True
+    )
+    provider_call = llm.ToolInput(tool_name="web_search", tool_args={}, external=True)
+
+    def run_turn() -> None:
+        with (
+            chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
+                    agent_id="mock-agent-id",
+                    content=None,
+                    tool_calls=[trigger_call, provider_call],
+                )
+            )
+            raise HomeAssistantError("Automation failed")
+
+    with pytest.raises(HomeAssistantError):
+        run_turn()
+
+    content = hass.data[DATA_CHAT_LOGS]["koala"].content
+    # The provider tool is left to the provider.
+    assert content[-2] == ToolResultContent(
+        agent_id="mock-agent-id",
+        tool_call_id=trigger_call.id,
+        tool_name="trigger_sentence",
+        result=llm.ToolResult(
+            data={"error": "HomeAssistantError", "error_text": "Automation failed"},
+            error=True,
+        ),
+    )
+    assert content[-1].content == "Error: Automation failed"
+
+
+async def test_streamed_reply_sent_to_subscribers(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test subscribers get a streamed reply."""
+    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
+    async_subscribe_chat_logs(
+        hass, lambda _conversation_id, event, data: events.append((event, data))
     )
 
-    assert "koala" not in hass.data[DATA_CHAT_LOGS]
-    assert "koala" not in hass.data[chat_session.DATA_CHAT_SESSION]
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        yield {"content": "Hi"}
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        async for _ in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            pass
+
+    event, data = events[-1]
+    assert event == ChatLogEventType.CONTENT_ADDED
+    assert data["content"]["content"] == "Hi"
 
 
 class AdminAPI(llm.API):
