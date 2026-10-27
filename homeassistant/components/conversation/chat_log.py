@@ -145,62 +145,42 @@ def async_get_chat_log(
     finally:
         chat_log.turn_active = False
         current_chat_log.reset(token)
-        _async_end_turn(
-            hass, session, chat_log, last_message, turn_start, is_new_log=is_new_log
-        )
+        chat_log.delta_listener = None
 
+        if chat_log.content[-1] is last_message:
+            LOGGER.debug(
+                "Chat Log opened but no assistant message was added, removing the turn"
+            )
+            del chat_log.content[turn_start:]
+            if is_new_log:
+                all_chat_logs.pop(session.conversation_id)
+                _async_notify_subscribers(
+                    hass,
+                    session.conversation_id,
+                    ChatLogEventType.DELETED,
+                    {},
+                )
+        elif is_new_log:
 
-@callback
-def _async_end_turn(
-    hass: HomeAssistant,
-    session: chat_session.ChatSession,
-    chat_log: ChatLog,
-    last_message: Content,
-    turn_start: int,
-    *,
-    is_new_log: bool,
-) -> None:
-    """End a turn, and remove it when it added no assistant message."""
-    chat_log.delta_listener = None
+            @callback
+            def do_cleanup() -> None:
+                """Handle cleanup."""
+                all_chat_logs.pop(session.conversation_id)
+                _async_notify_subscribers(
+                    hass,
+                    session.conversation_id,
+                    ChatLogEventType.DELETED,
+                    {},
+                )
 
-    if chat_log.content[-1] is last_message:
-        LOGGER.debug(
-            "Chat Log opened but no assistant message was added, removing the turn"
-        )
-        del chat_log.content[turn_start:]
-        if is_new_log:
-            hass.data[DATA_CHAT_LOGS].pop(session.conversation_id)
+            session.async_on_cleanup(do_cleanup)
+        else:
             _async_notify_subscribers(
                 hass,
                 session.conversation_id,
-                ChatLogEventType.DELETED,
-                {},
+                ChatLogEventType.UPDATED,
+                {"chat_log": chat_log.as_dict()},
             )
-        return
-
-    if is_new_log:
-        all_chat_logs = hass.data[DATA_CHAT_LOGS]
-
-        @callback
-        def do_cleanup() -> None:
-            """Handle cleanup."""
-            all_chat_logs.pop(session.conversation_id)
-            _async_notify_subscribers(
-                hass,
-                session.conversation_id,
-                ChatLogEventType.DELETED,
-                {},
-            )
-
-        session.async_on_cleanup(do_cleanup)
-        return
-
-    _async_notify_subscribers(
-        hass,
-        session.conversation_id,
-        ChatLogEventType.UPDATED,
-        {"chat_log": chat_log.as_dict()},
-    )
 
 
 class ConverseError(HomeAssistantError):
