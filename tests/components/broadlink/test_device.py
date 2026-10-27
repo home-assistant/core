@@ -426,21 +426,23 @@ async def test_device_update_listener(
 async def test_device_setup_rediscovery_by_mac(hass: HomeAssistant) -> None:
     """Test device setup recovers when IP shifted via MAC rediscovery."""
     device = get_device("Office")
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = [
+        blke.NetworkTimeoutError(-4000, "Timeout"),
+        None,
+        None,
+    ]
     new_ip = "192.168.1.99"
 
     with (
-        patch.object(
-            device.mock_api,
-            "auth",
-            side_effect=[blke.NetworkTimeoutError(-4000, "Timeout"), None, None],
-        ),
         patch(
             "homeassistant.components.broadlink.helpers.async_find_device_by_mac",
-            return_value=(new_ip, device.mock_api),
+            return_value=(new_ip, mock_api),
         ) as mock_find,
+        patch(DEVICE_FACTORY, return_value=mock_api),
         patch.object(hass.config_entries, "async_forward_entry_setups"),
     ):
-        mock_setup = await device.setup_entry(hass)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.LOADED
     assert mock_setup.entry.data["host"] == new_ip

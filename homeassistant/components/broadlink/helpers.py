@@ -20,21 +20,28 @@ _LOGGER = logging.getLogger(__name__)
 
 _DISCOVERY_LOCK = asyncio.Lock()
 _DISCOVERED_CACHE: dict[str, tuple[str, blk.Device]] = {}
-_CACHE_TIMESTAMP: float = 0.0
+_SUBNET_LAST_SCANNED: dict[str, float] = {}
 _CACHE_TTL: float = 30.0
 
+RFC1918_NETWORKS = (
+    ipaddress.IPv4Network("10.0.0.0/8"),
+    ipaddress.IPv4Network("172.16.0.0/12"),
+    ipaddress.IPv4Network("192.168.0.0/16"),
+)
 
-def _get_subnet_hosts(fallback_ip: str | None) -> list[str]:
-    """Return list of host IP addresses to probe on the private local subnet."""
+
+def _get_subnet_network(fallback_ip: str | None) -> ipaddress.IPv4Network | None:
+    """Return IPv4 /24 network if fallback_ip belongs to an RFC 1918 private range."""
     if fallback_ip:
         try:
             ip_obj = ipaddress.ip_address(fallback_ip)
-            if isinstance(ip_obj, ipaddress.IPv4Address) and ip_obj.is_private:
-                net = ipaddress.ip_network(f"{fallback_ip}/24", strict=False)
-                return [str(h) for h in net.hosts()]
+            if isinstance(ip_obj, ipaddress.IPv4Address) and any(
+                ip_obj in net for net in RFC1918_NETWORKS
+            ):
+                return ipaddress.ip_network(f"{fallback_ip}/24", strict=False)
         except ValueError:
             pass
-    return [str(h) for h in ipaddress.ip_network("192.168.1.0/24").hosts()]
+    return None
 
 
 async def async_find_device_by_mac(
@@ -44,33 +51,51 @@ async def async_find_device_by_mac(
 ) -> tuple[str, blk.Device] | None:
     """Find a Broadlink device by its MAC address across the local subnet.
 
-    Probes private subnet addresses concurrently with bounded concurrency
+    Probes private RFC 1918 subnet addresses concurrently with bounded concurrency
     and short-term caching to prevent broadcast storms.
     """
-    global _CACHE_TIMESTAMP
-
     if isinstance(target_mac, bytes):
         target_mac_clean = target_mac.hex().lower()
     else:
         target_mac_clean = str(target_mac).lower().replace(":", "")
 
-    # Check cache first
-    now = time.monotonic()
-    if now - _CACHE_TIMESTAMP < _CACHE_TTL and target_mac_clean in _DISCOVERED_CACHE:
+    network = _get_subnet_network(fallback_ip)
+    if network is None:
         _LOGGER.debug(
-            "Found cached Broadlink MAC %s at %s",
+            "Skipping MAC rediscovery for %s: invalid or non-RFC1918 fallback IP %s",
             target_mac_clean,
-            _DISCOVERED_CACHE[target_mac_clean][0],
+            fallback_ip,
         )
+        return None
+
+    subnet_key = str(network)
+    now = time.monotonic()
+
+    # Check positive cache
+    if target_mac_clean in _DISCOVERED_CACHE:
         return _DISCOVERED_CACHE[target_mac_clean]
 
-    async with _DISCOVERY_LOCK:
-        # Double check cache after acquiring lock
-        now = time.monotonic()
-        if now - _CACHE_TIMESTAMP < _CACHE_TTL and target_mac_clean in _DISCOVERED_CACHE:
-            return _DISCOVERED_CACHE[target_mac_clean]
+    # Check negative cache (recent scan completed without finding target)
+    if now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL:
+        return None
 
-        hosts = _get_subnet_hosts(fallback_ip)
+    async with _DISCOVERY_LOCK:
+        now = time.monotonic()
+        # Double check cache after acquiring lock
+        if target_mac_clean in _DISCOVERED_CACHE:
+            return _DISCOVERED_CACHE[target_mac_clean]
+        if now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL:
+            return None
+
+        # Discard previous discoveries for this subnet before fresh scan
+        for mac, (ip_str, _) in list(_DISCOVERED_CACHE.items()):
+            try:
+                if ipaddress.ip_address(ip_str) in network:
+                    _DISCOVERED_CACHE.pop(mac, None)
+            except ValueError:
+                pass
+
+        hosts = [str(h) for h in network.hosts()]
         semaphore = asyncio.Semaphore(32)
 
         async def probe(ip: str) -> None:
@@ -86,9 +111,9 @@ async def async_find_device_by_mac(
         for attempt in range(2):
             tasks = [asyncio.create_task(probe(ip)) for ip in hosts]
             await asyncio.gather(*tasks, return_exceptions=True)
-            _CACHE_TIMESTAMP = time.monotonic()
 
             if target_mac_clean in _DISCOVERED_CACHE:
+                _SUBNET_LAST_SCANNED[subnet_key] = time.monotonic()
                 found = _DISCOVERED_CACHE[target_mac_clean]
                 _LOGGER.info(
                     "Resolved Broadlink MAC %s to active IP %s (attempt %d)",
@@ -99,6 +124,9 @@ async def async_find_device_by_mac(
                 return found
             if attempt == 0:
                 await asyncio.sleep(0.2)
+
+        # Record scan completion timestamp (cached miss)
+        _SUBNET_LAST_SCANNED[subnet_key] = time.monotonic()
 
     return None
 

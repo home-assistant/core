@@ -85,8 +85,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             (DOMAIN, entry.unique_id), entry.entry_id
         )
         assert device_entry
-        device_registry.async_update_device(device_entry.id, name=entry.title)
-        await hass.config_entries.async_reload(entry.entry_id)
+        if device_entry.name != entry.title:
+            device_registry.async_update_device(device_entry.id, name=entry.title)
+            await hass.config_entries.async_reload(entry.entry_id)
 
     async def _async_get_firmware_version(self) -> int | None:
         """Get firmware version."""
@@ -128,8 +129,14 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             if await self._async_rediscover_by_mac():
                 try:
                     self.fw_version = await self._async_get_firmware_version()
+                except AuthenticationError:
+                    if hasattr(self, "api") and self.api:
+                        await self.api.aclose()
+                    await self._async_handle_auth_error()
+                    return False
                 except Exception as retry_err:
-                    await self.api.aclose()
+                    if hasattr(self, "api") and self.api:
+                        await self.api.aclose()
                     raise ConfigEntryNotReady(
                         translation_domain=DOMAIN,
                         translation_key="connect_failed",
@@ -164,6 +171,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
             await api.aclose()
+            if hasattr(self, "api") and self.api and self.api is not api:
+                await self.api.aclose()
             raise
 
         self.update_manager = update_manager
@@ -223,6 +232,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         except (NetworkTimeoutError, OSError):
             if await self._async_rediscover_by_mac():
                 if await self.async_auth():
+                    func_name = getattr(function, "__name__", None)
+                    if func_name and hasattr(self.api, func_name):
+                        return await getattr(self.api, func_name)(*args, **kwargs)
                     return await function(*args, **kwargs)
             raise
         except (AuthorizationError, ConnectionClosedError):
