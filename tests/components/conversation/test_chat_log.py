@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import ExitStack
 import contextvars
 from datetime import timedelta
 from pathlib import Path
@@ -399,15 +400,30 @@ async def test_trace_keeps_messages_of_its_turn(
     ]
 
 
+@pytest.mark.parametrize(
+    "layers",
+    [
+        pytest.param(["raises", "chat_log"], id="turn"),
+        pytest.param(["raises", "chat_log", "chat_log"], id="nested_turn"),
+        # Like an agent in an Assist pipeline, which handles its error before
+        # the outer turn ends.
+        pytest.param(["chat_log", "raises", "chat_log"], id="nested_turn_handled"),
+    ],
+)
 async def test_failed_turn_stored(
-    hass: HomeAssistant, mock_conversation_input: ConversationInput
+    hass: HomeAssistant, mock_conversation_input: ConversationInput, layers: list[str]
 ) -> None:
-    """Test a failed turn stays in the history with its error."""
+    """Test a failed turn stays in the history with its error once."""
     with (
-        pytest.raises(HomeAssistantError),
         chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input),
+        ExitStack() as stack,
     ):
+        for layer in layers:
+            stack.enter_context(
+                pytest.raises(HomeAssistantError)
+                if layer == "raises"
+                else async_get_chat_log(hass, session, mock_conversation_input)
+            )
         raise HomeAssistantError("Provider is down")
 
     content = hass.data[DATA_CHAT_LOGS]["koala"].content
@@ -508,48 +524,6 @@ async def test_failed_turn_trigger_sentence_result(
         ),
     )
     assert content[-1].content == "Error: Automation failed"
-
-
-async def test_failed_nested_turn_stored(
-    hass: HomeAssistant, mock_conversation_input: ConversationInput
-) -> None:
-    """Test an error that the caller handles inside the turn is stored."""
-    # Like the agent in an Assist pipeline, the nested turn reuses the open
-    # chat log, and the error is handled before the outer turn ends.
-    with (
-        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input),
-        pytest.raises(HomeAssistantError),
-        async_get_chat_log(hass, session, mock_conversation_input),
-    ):
-        raise HomeAssistantError("Provider is down")
-
-    content = hass.data[DATA_CHAT_LOGS]["koala"].content
-    assert [(item.role, item.content) for item in content] == [
-        ("system", ""),
-        ("user", "Hello"),
-        ("assistant", "Error: Provider is down"),
-    ]
-
-
-async def test_failed_nested_turn_error_added_once(
-    hass: HomeAssistant, mock_conversation_input: ConversationInput
-) -> None:
-    """Test an error that ends a nested and an outer turn is added once."""
-    with (
-        pytest.raises(HomeAssistantError),
-        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input),
-        async_get_chat_log(hass, session, mock_conversation_input),
-    ):
-        raise HomeAssistantError("Provider is down")
-
-    content = hass.data[DATA_CHAT_LOGS]["koala"].content
-    assert [(item.role, item.content) for item in content] == [
-        ("system", ""),
-        ("user", "Hello"),
-        ("assistant", "Error: Provider is down"),
-    ]
 
 
 class AdminAPI(llm.API):
