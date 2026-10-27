@@ -59,7 +59,6 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_PREFIX: user_input[CONF_PREFIX],
                         CONF_RATE: user_input[CONF_RATE],
-                        CONF_RESEND_UNCHANGED: user_input[CONF_RESEND_UNCHANGED],
                     },
                 )
         return self.async_show_form(
@@ -70,9 +69,6 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     probatio.Required(CONF_PREFIX, default=DEFAULT_PREFIX): str,
                     probatio.Required(CONF_RATE, default=DEFAULT_RATE): int,
-                    probatio.Required(
-                        CONF_RESEND_UNCHANGED, default=DEFAULT_RESEND_UNCHANGED
-                    ): bool,
                 }
             ),
             errors=errors,

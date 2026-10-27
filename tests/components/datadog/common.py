@@ -10,7 +10,6 @@ MOCK_DATA = {
 MOCK_OPTIONS = {
     "prefix": "hass",
     "rate": 1,
-    "resend_unchanged": False,
 }
 
 MOCK_CONFIG = {**MOCK_DATA, **MOCK_OPTIONS}
