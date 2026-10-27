@@ -11,6 +11,7 @@ from pyoverkiz.models import Event, ServerConfig, Setup
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.overkiz.config_flow import OverkizConfigFlow
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -108,6 +109,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=OverkizConfigFlow.MINOR_VERSION,
     )
 
 
@@ -132,6 +134,7 @@ def mock_rexel_config_entry() -> MockConfigEntry:
             "hub": "rexel",
             "gateway_id": TEST_GATEWAY_ID,
         },
+        minor_version=OverkizConfigFlow.MINOR_VERSION,
     )
 
 
@@ -148,6 +151,7 @@ def mock_rexel_local_config_entry() -> MockConfigEntry:
             "hub": "rexel",
             "api_type": "local",
         },
+        minor_version=OverkizConfigFlow.MINOR_VERSION,
     )
 
 
