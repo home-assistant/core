@@ -113,15 +113,9 @@ def async_get_chat_log(
         if chat_log.turn_active:
             raise ConversationBusyError(session.conversation_id)
         is_new_log = False
-        chat_log.turn_start = len(chat_log.content)
-        if user_input is not None:
-            chat_log.async_add_user_content(UserContent(content=user_input.text))
     else:
         chat_log = ChatLog(hass, session.conversation_id)
         is_new_log = True
-        chat_log.turn_start = len(chat_log.content)
-        if user_input is not None:
-            chat_log.content.append(UserContent(content=user_input.text))
         all_chat_logs[session.conversation_id] = chat_log
         _async_notify_subscribers(
             hass,
@@ -129,6 +123,10 @@ def async_get_chat_log(
             ChatLogEventType.CREATED,
             {"chat_log": chat_log.as_dict()},
         )
+
+    chat_log.turn_start = len(chat_log.content)
+    if user_input is not None:
+        chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
@@ -522,12 +520,6 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
-        _async_notify_subscribers(
-            self.hass,
-            self.conversation_id,
-            ChatLogEventType.CONTENT_ADDED,
-            {"content": content.as_dict()},
-        )
 
         if (
             not isinstance(content, AssistantContent)

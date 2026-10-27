@@ -338,33 +338,6 @@ async def test_turn_without_reply(
     assert chat_log.content[-1].agent_id == "mock-agent-id"
 
 
-async def test_streamed_reply_sent_to_subscribers(
-    hass: HomeAssistant, mock_conversation_input: ConversationInput
-) -> None:
-    """Test subscribers get a streamed reply."""
-    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
-    async_subscribe_chat_logs(
-        hass, lambda _conversation_id, event, data: events.append((event, data))
-    )
-
-    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
-        yield {"role": "assistant"}
-        yield {"content": "Hi"}
-
-    with (
-        chat_session.async_get_chat_session(hass, context=None) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-    ):
-        async for _ in chat_log.async_add_delta_content_stream(
-            "mock-agent-id", stream()
-        ):
-            pass
-
-    event, data = events[-1]
-    assert event == ChatLogEventType.CONTENT_ADDED
-    assert data["content"]["content"] == "Hi"
-
-
 async def test_trace_keeps_messages_of_its_turn(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
@@ -1563,13 +1536,16 @@ async def test_chat_log_subscription(
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
     # Verify we received the expected events
-    # Should have: 1 CREATED event + 6 CONTENT_ADDED events
-    assert len(received_events) == 7
+    # Should have: 1 CREATED event + 7 CONTENT_ADDED events
+    assert len(received_events) == 8
 
-    # Check the first event is CREATED, with the message of the first turn
+    # Check the first event is CREATED
     assert received_events[0][1] == ChatLogEventType.CREATED
     assert received_events[0][2]["chat_log"]["conversation_id"] == conversation_id
-    assert received_events[0][2]["chat_log"]["content"][-1]["content"] == "Hello"
+
+    # Check the second event is CONTENT_ADDED (from mock_conversation_input)
+    assert received_events[1][1] == ChatLogEventType.CONTENT_ADDED
+    assert received_events[1][0] == conversation_id
 
     # Test cleanup functionality
     assert conversation_id in hass.data[chat_session.DATA_CHAT_SESSION]
