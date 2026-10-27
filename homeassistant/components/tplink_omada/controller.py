@@ -149,8 +149,8 @@ class OmadaSiteController:
         for processed in self._device_entity_registrations:
             processed.discard(mac)
 
-    async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
-        """Remove a device entry and drop its cached coordinator state."""
+    async def async_forget_device(self, mac: str) -> None:
+        """Drop cached registration and coordinator state for a device."""
         self._forget_device_registration(mac)
         gateway_coordinator = self._gateway_coordinator
         if gateway_coordinator is not None and gateway_coordinator.mac == mac:
@@ -158,6 +158,10 @@ class OmadaSiteController:
         coordinator = self._switch_port_coordinators.pop(mac, None)
         if coordinator is not None:
             await coordinator.async_shutdown()
+
+    async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
+        """Remove a device entry and drop its cached coordinator state."""
+        await self.async_forget_device(mac)
         dr.async_get(self._hass).async_remove_device(device_entry.id)
 
     async def async_get_gateway(self, mac: str) -> OmadaGateway | None:

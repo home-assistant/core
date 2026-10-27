@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -22,6 +23,10 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
+from homeassistant.components.tplink_omada import (
+    OmadaConfigEntry,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     POLL_CLIENTS,
@@ -141,14 +146,14 @@ async def test_gateway_invalidate_discards_inflight_refresh(
 
     mock_omada_site_client.get_gateway = AsyncMock(side_effect=_get_gateway)
 
-    refresh_task = asyncio.create_task(coordinator.async_refresh())
+    refresh_task = asyncio.create_task(coordinator._async_update_data())
     await refresh_started.wait()
     coordinator.invalidate()
     finish_refresh.set()
-    await refresh_task
+    with pytest.raises(UpdateFailed):
+        await refresh_task
 
     assert coordinator.data == {}
-    assert coordinator.last_update_success is False
 
 
 async def test_automatic_missing_device_cleanup(
@@ -186,6 +191,31 @@ async def test_automatic_missing_device_cleanup(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "54-AF-97-00-00-01"), mock_config_entry.entry_id
     )
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test users can remove a site device but not the controller."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = cast(OmadaConfigEntry, mock_config_entry)
+
+    switch_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "54-AF-97-00-00-01"), mock_config_entry.entry_id
+    )
+    controller_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00-11-22-33-44-55"), mock_config_entry.entry_id
+    )
+    assert switch_device is not None
+    assert controller_device is not None
+
+    assert await async_remove_config_entry_device(hass, entry, switch_device)
+    assert not await async_remove_config_entry_device(hass, entry, controller_device)
 
 
 async def test_startup_cleanup_runs_before_platform_setup(

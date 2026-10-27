@@ -15,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -88,6 +89,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: OmadaConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a device from the registry and drop its cached state."""
+    mac = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    controller = config_entry.runtime_data
+    controller_status = controller.controller_status_coordinator.data
+    if mac is None or (controller_status is not None and mac == controller_status.mac):
+        return False
+    await controller.async_forget_device(mac)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
