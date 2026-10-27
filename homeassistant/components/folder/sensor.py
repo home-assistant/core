@@ -46,20 +46,26 @@ def get_size(files_list: list[str]) -> int:
     return sum(size_list)
 
 
-def setup_platform(
+def get_files_and_size(folder_path: str, filter_term: str) -> tuple[list[str], int]:
+    """Return the filtered list of files and their total size in bytes."""
+    files_list = get_files_list(folder_path, filter_term)
+    return files_list, get_size(files_list)
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the folder sensor."""
     path: str = config[CONF_FOLDER_PATHS]
 
-    if not hass.config.is_allowed_path(path):
+    if not await hass.async_add_executor_job(hass.config.is_allowed_path, path):
         _LOGGER.error("Folder %s is not valid or allowed", path)
     else:
         folder = Folder(path, config[CONF_FILTER])
-        add_entities([folder], True)
+        async_add_entities([folder], True)
 
 
 class Folder(SensorEntity):
@@ -76,11 +82,12 @@ class Folder(SensorEntity):
         self._filter_term = filter_term
         self._attr_name = os.path.split(os.path.split(folder_path)[0])[1]
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the sensor."""
-        files_list = get_files_list(self._folder_path, self._filter_term)
+        files_list, size = await self.hass.async_add_executor_job(
+            get_files_and_size, self._folder_path, self._filter_term
+        )
         number_of_files = len(files_list)
-        size = get_size(files_list)
 
         self._attr_native_value = round(size / 1e6, 2)
         self._attr_extra_state_attributes = {

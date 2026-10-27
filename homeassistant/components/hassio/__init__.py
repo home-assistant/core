@@ -1,10 +1,12 @@
 """Support for Hass.io."""
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial
 import logging
 import os
 import struct
+from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -16,7 +18,7 @@ from aiohasupervisor.models import (
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
-from homeassistant.components import frontend
+from homeassistant.components import frontend, network
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.onboarding import async_is_onboarded
@@ -32,6 +34,8 @@ from homeassistant.helpers import (
     system_state,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,12 +62,16 @@ from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
+    ATTR_UPDATE_KEY,
+    ATTR_WS_EVENT,
     DATA_AUTO_UPDATE,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    EVENT_SUPERVISOR_EVENT,
+    EVENT_SUPERVISOR_UPDATE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
@@ -72,6 +80,7 @@ from .const import (
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
     STATS_COORDINATOR,
+    UPDATE_KEY_NETWORK,
 )
 from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
@@ -141,6 +150,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+NETWORK_RELOAD_COOLDOWN = 10
 
 
 DEPRECATION_URL = (
@@ -492,6 +503,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 event_callback=_mirror_host_reboot_required,
                 key=ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
             )
+        )
+    )
+
+    network_reload_debouncer = Debouncer[Coroutine[Any, Any, None]](
+        hass,
+        _LOGGER,
+        cooldown=NETWORK_RELOAD_COOLDOWN,
+        immediate=True,
+        function=partial(network.async_reload_adapters, hass),
+        background=True,
+    )
+    entry.async_on_unload(network_reload_debouncer.async_shutdown)
+
+    @callback
+    def _async_handle_supervisor_network_event(event: dict[str, Any]) -> None:
+        """Handle supervisor network update events."""
+        if (
+            event.get(ATTR_WS_EVENT) != EVENT_SUPERVISOR_UPDATE
+            or event.get(ATTR_UPDATE_KEY) != UPDATE_KEY_NETWORK
+        ):
+            return
+
+        network_reload_debouncer.async_schedule_call()
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, _async_handle_supervisor_network_event
         )
     )
 

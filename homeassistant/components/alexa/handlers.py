@@ -2,9 +2,13 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from datetime import datetime
+import ipaddress
 import logging
 import math
 from typing import Any
+
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -12,11 +16,7 @@ from homeassistant.components import (
     camera,
     cover,
     fan,
-    input_button,
-    input_number,
     media_player,
-    timer,
-    vacuum,
     valve,
 )
 from homeassistant.components.alarm_control_panel import (
@@ -52,8 +52,15 @@ from homeassistant.components.humidifier import (
     HumidifierService,
     HumidifierServiceArgument,
 )
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberService,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import (
     LightEntityCapabilityAttribute,
     LightEntityStateAttribute,
@@ -79,7 +86,7 @@ from homeassistant.components.remote import (
     RemoteService,
     RemoteServiceArgument,
 )
-from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
+from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN, TimerService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     VacuumEntityCapabilityAttribute,
@@ -108,10 +115,13 @@ from homeassistant.const import (
     EntityStateAttribute,
     UnitOfTemperature,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import network
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     TemperatureDeltaConverter,
@@ -124,12 +134,14 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
+    DOMAIN,
     PRESET_MODE_NA,
     Cause,
     Inputs,
 )
-from .entities import async_get_entities
+from .entities import async_get_camera_entity, async_get_entities
 from .errors import (
+    AlexaEndpointUnreachableError,
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
@@ -143,6 +155,23 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
 TO_REDACT_SERVICE_DATA = {ATTR_CODE}
+
+# Alexa expects the SDP answer within 6 seconds, including the Home Assistant
+# Cloud round trip, and does not support trickle ICE. Negotiation and candidate
+# gathering therefore share one overall deadline.
+RTC_ANSWER_TIMEOUT = 5
+RTC_CANDIDATE_GATHERING_TIMEOUT = 1.5
+
+# Alexa does not send SessionDisconnected when an Echo loses power or its network
+# connection, so sessions are closed after a maximum duration.
+RTC_MAX_SESSION_DURATION = 3600
+DATA_RTC_SESSIONS: HassKey[dict[str, ha.CALLBACK_TYPE]] = HassKey(
+    f"{DOMAIN}_rtc_sessions"
+)
+
+DATA_RTC_PENDING_DISCONNECTS: HassKey[dict[str, bool]] = HassKey(
+    f"{DOMAIN}_rtc_pending_disconnects"
+)
 
 MIN_MAX_TEMP: dict[str, dict[str, str]] = {
     CLIMATE_DOMAIN: {
@@ -262,7 +291,7 @@ async def async_api_turn_on(
 
     service = SERVICE_TURN_ON
     if domain == COVER_DOMAIN:
-        service = CoverService.OPEN_COVER
+        service = CoverService.OPEN
     elif domain == CLIMATE_DOMAIN:
         service = ClimateService.TURN_ON
     elif domain == FAN_DOMAIN:
@@ -272,14 +301,9 @@ async def async_api_turn_on(
     elif domain == REMOTE_DOMAIN:
         service = RemoteService.TURN_ON
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_ON
-            and supported & vacuum.VacuumEntityFeature.START
-        ):
-            service = VacuumService.START
+        service = VacuumService.START
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service = TimerService.START
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -317,7 +341,7 @@ async def async_api_turn_off(
 
     service = SERVICE_TURN_OFF
     if entity.domain == COVER_DOMAIN:
-        service = CoverService.CLOSE_COVER
+        service = CoverService.CLOSE
     elif domain == CLIMATE_DOMAIN:
         service = ClimateService.TURN_OFF
     elif domain == FAN_DOMAIN:
@@ -327,14 +351,9 @@ async def async_api_turn_off(
     elif domain == HUMIDIFIER_DOMAIN:
         service = HumidifierService.TURN_OFF
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-        if (
-            not supported & vacuum.VacuumEntityFeature.TURN_OFF
-            and supported & vacuum.VacuumEntityFeature.RETURN_HOME
-        ):
-            service = VacuumService.RETURN_TO_BASE
+        service = VacuumService.RETURN_TO_BASE
     elif domain == TIMER_DOMAIN:
-        service = timer.SERVICE_CANCEL
+        service = TimerService.CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
         supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
@@ -544,7 +563,7 @@ async def async_api_activate(
     if domain == BUTTON_DOMAIN:
         service = ButtonService.PRESS
     elif domain == INPUT_BUTTON_DOMAIN:
-        service = input_button.SERVICE_PRESS
+        service = InputButtonService.PRESS
 
     await _async_call_service(
         hass,
@@ -936,8 +955,8 @@ async def async_api_stop(
             EntityStateAttribute.SUPPORTED_FEATURES, 0
         )
         feature_services: dict[int, str] = {
-            cover.CoverEntityFeature.STOP.value: CoverService.STOP_COVER,
-            cover.CoverEntityFeature.STOP_TILT.value: CoverService.STOP_COVER_TILT,
+            cover.CoverEntityFeature.STOP.value: CoverService.STOP,
+            cover.CoverEntityFeature.STOP_TILT.value: CoverService.STOP_TILT,
         }
         await asyncio.gather(
             *(
@@ -1315,11 +1334,11 @@ async def async_api_arm(
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 
     if arm_state == "ARMED_AWAY":
-        service = AlarmControlPanelService.ALARM_ARM_AWAY
+        service = AlarmControlPanelService.ARM_AWAY
     elif arm_state == "ARMED_NIGHT":
-        service = AlarmControlPanelService.ALARM_ARM_NIGHT
+        service = AlarmControlPanelService.ARM_NIGHT
     elif arm_state == "ARMED_STAY":
-        service = AlarmControlPanelService.ALARM_ARM_HOME
+        service = AlarmControlPanelService.ARM_HOME
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
@@ -1373,7 +1392,7 @@ async def async_api_disarm(
         hass,
         directive,
         entity.domain,
-        AlarmControlPanelService.ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         data,
         blocking=True,
         context=context,
@@ -1482,20 +1501,20 @@ async def async_api_set_mode(
         position = mode.split(".")[1]
 
         if position == cover.CoverState.CLOSED:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         elif position == cover.CoverState.OPEN:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         elif position == "custom":
-            service = CoverService.STOP_COVER
+            service = CoverService.STOP
 
     # Valve position state
     elif instance == f"{VALVE_DOMAIN}.state":
         position = mode.split(".")[1]
 
         if position == valve.STATE_CLOSED:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         elif position == valve.STATE_OPEN:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
 
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
@@ -1557,7 +1576,7 @@ async def async_api_toggle_on(
             FanServiceArgument.OSCILLATING: True,
         }
     elif instance == f"{VALVE_DOMAIN}.stop":
-        service = ValveService.STOP_VALVE
+        service = ValveService.STOP
         data = {
             ATTR_ENTITY_ID: entity.entity_id,
         }
@@ -1640,22 +1659,22 @@ async def async_api_set_range(
     if instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         else:
-            service = CoverService.SET_COVER_POSITION
+            service = CoverService.SET_POSITION
             data[CoverServiceArgument.POSITION] = range_value
 
     # Cover Tilt
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
-            service = CoverService.CLOSE_COVER_TILT
+            service = CoverService.CLOSE_TILT
         elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
-            service = CoverService.OPEN_COVER_TILT
+            service = CoverService.OPEN_TILT
         else:
-            service = CoverService.SET_COVER_TILT_POSITION
+            service = CoverService.SET_TILT_POSITION
             data[CoverServiceArgument.TILT_POSITION] = range_value
 
     # Fan Speed
@@ -1676,12 +1695,14 @@ async def async_api_set_range(
         data[HumidifierServiceArgument.HUMIDITY] = range_value
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_value = float(range_value)
-        service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
-        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+        service = InputNumberService.SET_VALUE
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
+        data[InputNumberServiceArgument.VALUE] = min(
+            max_value, max(min_value, range_value)
+        )
 
     # Input Number Value
     elif instance == f"{NUMBER_DOMAIN}.{NumberServiceArgument.VALUE}":
@@ -1709,11 +1730,11 @@ async def async_api_set_range(
     elif instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
         range_value = int(range_value)
         if supported & valve.ValveEntityFeature.CLOSE and range_value == 0:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         elif supported & valve.ValveEntityFeature.OPEN and range_value == 100:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
         else:
-            service = ValveService.SET_VALVE_POSITION
+            service = ValveService.SET_POSITION
             data[ValveServiceArgument.POSITION] = range_value
 
     else:
@@ -1756,7 +1777,7 @@ async def async_api_adjust_range(
     # Cover Position
     if instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = CoverService.SET_COVER_POSITION
+        service = CoverService.SET_POSITION
         if (
             current := entity.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
         ) is None:
@@ -1764,25 +1785,25 @@ async def async_api_adjust_range(
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
-            service = CoverService.OPEN_COVER
+            service = CoverService.OPEN
         elif position == 0:
-            service = CoverService.CLOSE_COVER
+            service = CoverService.CLOSE
         else:
             data[CoverServiceArgument.POSITION] = position
 
     # Cover Tilt
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = CoverService.SET_COVER_TILT_POSITION
+        service = CoverService.SET_TILT_POSITION
         current = entity.attributes.get(CoverEntityStateAttribute.CURRENT_TILT_POSITION)
         if current is None:
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
-            service = CoverService.OPEN_COVER_TILT
+            service = CoverService.OPEN_TILT
         elif tilt_position == 0:
-            service = CoverService.CLOSE_COVER_TILT
+            service = CoverService.CLOSE_TILT
         else:
             data[CoverServiceArgument.TILT_POSITION] = tilt_position
 
@@ -1833,13 +1854,13 @@ async def async_api_adjust_range(
             data[HumidifierServiceArgument.HUMIDITY] = percentage
 
     # Input Number Value
-    elif instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+    elif instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
         range_delta = float(range_delta)
-        service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[input_number.ATTR_MIN])
-        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        service = InputNumberService.SET_VALUE
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         current = float(entity.state)
-        data[input_number.ATTR_VALUE] = response_value = min(
+        data[InputNumberServiceArgument.VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 
@@ -1874,7 +1895,7 @@ async def async_api_adjust_range(
     # Valve Position
     elif instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
-        service = ValveService.SET_VALVE_POSITION
+        service = ValveService.SET_POSITION
         if (
             current := entity.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
         ) is None:
@@ -1882,9 +1903,9 @@ async def async_api_adjust_range(
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
-            service = ValveService.OPEN_VALVE
+            service = ValveService.OPEN
         elif position == 0:
-            service = ValveService.CLOSE_VALVE
+            service = ValveService.CLOSE
         else:
             data[ValveServiceArgument.POSITION] = position
 
@@ -2124,7 +2145,7 @@ async def async_api_hold(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_PAUSE
+        service: str = TimerService.PAUSE
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.PAUSE
@@ -2151,7 +2172,7 @@ async def async_api_resume(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == TIMER_DOMAIN:
-        service = timer.SERVICE_START
+        service: str = TimerService.START
 
     elif entity.domain == VACUUM_DOMAIN:
         service = VacuumService.START
@@ -2208,4 +2229,274 @@ async def async_api_initialize_camera_stream(
     }
     return directive.response(
         name="Response", namespace="Alexa.CameraStreamController", payload=payload
+    )
+
+
+def _is_ipv4_candidate(candidate: str) -> bool:
+    """Return if the ICE candidate has an IPv4 address."""
+    parts = candidate.split()
+    try:
+        return ipaddress.ip_address(parts[4]).version == 4
+    except IndexError, ValueError:
+        return False
+
+
+def _embed_candidates(sdp: str, candidates: list[RTCIceCandidateInit]) -> str:
+    """Add gathered ICE candidates to the media sections of an SDP answer."""
+    lines = sdp.replace("\r\n", "\n").rstrip("\n").split("\n")
+    media_starts = [idx for idx, line in enumerate(lines) if line.startswith("m=")]
+    if not media_starts:
+        return sdp
+
+    mids: dict[str, int] = {}
+    for section, start in enumerate(media_starts):
+        end = media_starts[section + 1] if section + 1 < len(media_starts) else None
+        for line in lines[start:end]:
+            if line.startswith("a=mid:"):
+                mids[line.removeprefix("a=mid:")] = section
+
+    extra_lines: dict[int, list[str]] = {}
+    for candidate in candidates:
+        if not _is_ipv4_candidate(candidate.candidate):
+            _LOGGER.debug("Skipping non-IPv4 candidate %s", candidate.candidate)
+            continue
+        if candidate.sdp_mid is not None and candidate.sdp_mid in mids:
+            section = mids[candidate.sdp_mid]
+        elif (
+            candidate.sdp_m_line_index is not None
+            and candidate.sdp_m_line_index < len(media_starts)
+        ):
+            section = candidate.sdp_m_line_index
+        else:
+            _LOGGER.debug(
+                "Adding candidate %s to the first media section", candidate.candidate
+            )
+            section = 0
+        extra_lines.setdefault(section, []).append(f"a={candidate.candidate}")
+
+    result: list[str] = lines[: media_starts[0]]
+    for section, start in enumerate(media_starts):
+        end = media_starts[section + 1] if section + 1 < len(media_starts) else None
+        section_lines = [
+            line
+            for line in lines[start:end]
+            if line != "a=end-of-candidates"
+            and (
+                not line.startswith("a=candidate:")
+                or _is_ipv4_candidate(line.removeprefix("a="))
+            )
+        ]
+        result.extend(section_lines)
+        result.extend(extra_lines.get(section, []))
+        result.append("a=end-of-candidates")
+
+    return "\r\n".join(result) + "\r\n"
+
+
+async def _async_get_webrtc_answer(
+    hass: ha.HomeAssistant, camera_entity: camera.Camera, offer: str, session_id: str
+) -> str:
+    """Negotiate a WebRTC session and return a complete SDP answer."""
+    answer_future: asyncio.Future[str] = hass.loop.create_future()
+    gathering_done = asyncio.Event()
+    candidates: list[RTCIceCandidateInit] = []
+    error: str | None = None
+
+    @ha.callback
+    def send_message(message: camera.WebRTCMessage) -> None:
+        """Collect the answer and candidates from the camera.
+
+        Messages arriving after the answer is returned are ignored, since Alexa
+        does not support trickle ICE.
+        """
+        nonlocal error
+        match message:
+            case camera.WebRTCAnswer():
+                if not answer_future.done():
+                    answer_future.set_result(message.answer)
+            case camera.WebRTCCandidate(candidate=RTCIceCandidateInit() as candidate):
+                if candidate.candidate:
+                    candidates.append(candidate)
+                else:
+                    gathering_done.set()
+            case camera.WebRTCCandidate(candidate=candidate):
+                candidates.append(RTCIceCandidateInit(candidate.candidate))
+            case camera.WebRTCError():
+                error = message.message
+                gathering_done.set()
+                if not answer_future.done():
+                    answer_future.set_exception(HomeAssistantError(message.message))
+
+    deadline = hass.loop.time() + RTC_ANSWER_TIMEOUT
+    try:
+        async with asyncio.timeout_at(deadline):
+            await camera_entity.async_handle_async_webrtc_offer(
+                offer, session_id, send_message
+            )
+            answer = await answer_future
+    except TimeoutError as err:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: camera did not answer in time"
+        ) from err
+    except HomeAssistantError as err:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            f"Failed to negotiate WebRTC session: {err}"
+        ) from err
+
+    try:
+        async with asyncio.timeout_at(
+            min(deadline, hass.loop.time() + RTC_CANDIDATE_GATHERING_TIMEOUT)
+        ):
+            await gathering_done.wait()
+    except TimeoutError:
+        _LOGGER.debug(
+            "ICE candidate gathering for WebRTC session %s did not complete in time",
+            session_id,
+        )
+
+    if error is not None:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            f"Failed to negotiate WebRTC session: {error}"
+        )
+
+    answer = _embed_candidates(answer, candidates)
+    ipv4_candidates = [
+        line.removeprefix("a=")
+        for line in answer.split("\r\n")
+        if line.startswith("a=candidate:")
+    ]
+    if not ipv4_candidates:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: no IPv4 ICE candidates available"
+        )
+    _LOGGER.debug(
+        "WebRTC answer for session %s includes ICE candidates: %s",
+        session_id,
+        ipv4_candidates,
+    )
+    return answer
+
+
+def _get_webrtc_camera(hass: ha.HomeAssistant, entity_id: str) -> camera.Camera:
+    """Return the camera entity if it supports WebRTC."""
+    try:
+        camera_entity = camera.get_camera_from_entity_id(hass, entity_id)
+    except HomeAssistantError as err:
+        raise AlexaEndpointUnreachableError(str(err)) from err
+
+    if (
+        camera.StreamType.WEB_RTC
+        not in camera_entity.camera_capabilities.frontend_stream_types
+    ):
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    return camera_entity
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "InitiateSessionWithOffer"))
+async def async_api_initiate_session_with_offer(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process an InitiateSessionWithOffer request."""
+    camera_entity = _get_webrtc_camera(hass, directive.entity.entity_id)
+    session_id: str = directive.payload["sessionId"]
+    offer: str = directive.payload["offer"]["value"]
+    _LOGGER.debug(
+        "Starting WebRTC session %s for %s", session_id, camera_entity.entity_id
+    )
+
+    # The provider may only register the session late during negotiation, so
+    # a disconnect is recorded and handled once negotiation completes.
+    pending_disconnects = hass.data.setdefault(DATA_RTC_PENDING_DISCONNECTS, {})
+    pending_disconnects[session_id] = False
+    start = hass.loop.time()
+    try:
+        answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
+    except asyncio.CancelledError:
+        camera_entity.close_webrtc_session(session_id)
+        raise
+    finally:
+        disconnected = pending_disconnects.pop(session_id, False)
+
+    if disconnected:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "WebRTC session was disconnected during negotiation"
+        )
+    _LOGGER.debug(
+        "Generated WebRTC answer for session %s in %.2f s",
+        session_id,
+        hass.loop.time() - start,
+    )
+
+    @ha.callback
+    def async_expire_session(_now: datetime) -> None:
+        """Close the session when Alexa did not disconnect it in time."""
+        hass.data[DATA_RTC_SESSIONS].pop(session_id, None)
+        _LOGGER.debug(
+            "WebRTC session %s for %s expired", session_id, camera_entity.entity_id
+        )
+        camera_entity.close_webrtc_session(session_id)
+
+    hass.data.setdefault(DATA_RTC_SESSIONS, {})[session_id] = async_call_later(
+        hass, RTC_MAX_SESSION_DURATION, async_expire_session
+    )
+
+    return directive.response(
+        name="AnswerGeneratedForSession",
+        namespace="Alexa.RTCSessionController",
+        payload={"answer": {"format": "SDP", "value": answer}},
+    )
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "SessionConnected"))
+async def async_api_rtc_session_connected(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a SessionConnected request."""
+    session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug("WebRTC session %s connected for %s", session_id, directive.entity_id)
+    return directive.response(
+        name="SessionConnected",
+        namespace="Alexa.RTCSessionController",
+        payload={"sessionId": session_id},
+    )
+
+
+@HANDLERS.register(("Alexa.RTCSessionController", "SessionDisconnected"))
+async def async_api_rtc_session_disconnected(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
+    """Process a SessionDisconnected request."""
+    session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug(
+        "WebRTC session %s disconnected for %s", session_id, directive.entity_id
+    )
+    pending_disconnects = hass.data.get(DATA_RTC_PENDING_DISCONNECTS, {})
+    if session_id in pending_disconnects:
+        pending_disconnects[session_id] = True
+    if cancel_expiry := hass.data.get(DATA_RTC_SESSIONS, {}).pop(session_id, None):
+        cancel_expiry()
+    if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):
+        camera_entity.close_webrtc_session(session_id)
+    else:
+        _LOGGER.debug("Cannot close WebRTC session %s: camera not found", session_id)
+
+    return directive.response(
+        name="SessionDisconnected",
+        namespace="Alexa.RTCSessionController",
+        payload={"sessionId": session_id},
     )

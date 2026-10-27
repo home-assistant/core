@@ -193,3 +193,137 @@ def test_integration_category_icons_invalid_strings(
     icons.validate_icon_file(config, integration)
 
     assert integration.errors == []
+
+
+INTEGRATION_CONNECTIVITY_STRINGS = {
+    "integration_connectivity": {
+        "cloud": {
+            "name": "Cloud",
+            "description": "Services on the internet, like a manufacturer's cloud.",
+        },
+        "zigbee": {
+            "name": "Zigbee",
+            "description": "Zigbee devices, through a Zigbee radio or a bridge.",
+        },
+    },
+}
+
+INTEGRATION_CONNECTIVITY_ICONS = {
+    "integration_connectivity": {
+        "cloud": {"default": "mdi:cloud"},
+        "zigbee": {"default": "mdi:zigbee"},
+    },
+}
+
+
+def test_integration_connectivity_icons(config: Config, tmp_path: Path) -> None:
+    """Test valid connectivity icons pass."""
+    integration = _write_integration(
+        config,
+        tmp_path / "homeassistant",
+        INTEGRATION_CONNECTIVITY_ICONS,
+        json.dumps(INTEGRATION_CONNECTIVITY_STRINGS),
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert integration.errors == []
+
+
+def test_integration_connectivity_icons_only_for_homeassistant(
+    config: Config, tmp_path: Path
+) -> None:
+    """Test other integrations can't define connectivity icons."""
+    integration = _write_integration(
+        config,
+        tmp_path / "test_integration",
+        INTEGRATION_CONNECTIVITY_ICONS,
+        json.dumps(INTEGRATION_CONNECTIVITY_STRINGS),
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert len(integration.errors) == 1
+    assert "integration_connectivity" in integration.errors[0].error
+
+
+@pytest.mark.parametrize(
+    ("icon_data", "expected_errors"),
+    [
+        (
+            {"integration_connectivity": {"cloud": {"default": "mdi:cloud"}}},
+            ["Connectivity `zigbee` has no icon"],
+        ),
+        (
+            {
+                "integration_connectivity": {
+                    **INTEGRATION_CONNECTIVITY_ICONS["integration_connectivity"],
+                    "x10": {"default": "mdi:power-plug"},
+                }
+            },
+            ["Icon for unknown connectivity `x10`"],
+        ),
+    ],
+)
+def test_integration_connectivity_icons_mismatch(
+    config: Config,
+    tmp_path: Path,
+    icon_data: dict[str, Any],
+    expected_errors: list[str],
+) -> None:
+    """Test connectivity values and icons have to match."""
+    integration = _write_integration(
+        config,
+        tmp_path / "homeassistant",
+        icon_data,
+        json.dumps(INTEGRATION_CONNECTIVITY_STRINGS),
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert [error.error for error in integration.errors] == expected_errors
+
+
+@pytest.mark.parametrize(
+    "integration_connectivity",
+    [
+        {"zigbee": {}},
+        {"zigbee": {"default": "zigbee"}},
+        {"Zigbee": {"default": "mdi:zigbee"}},
+    ],
+)
+def test_integration_connectivity_icons_invalid(
+    config: Config, tmp_path: Path, integration_connectivity: dict[str, Any]
+) -> None:
+    """Test invalid connectivity icons are rejected."""
+    integration = _write_integration(
+        config,
+        tmp_path / "homeassistant",
+        {"integration_connectivity": integration_connectivity},
+        json.dumps(INTEGRATION_CONNECTIVITY_STRINGS),
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert len(integration.errors) == 1
+    assert integration.errors[0].error.startswith("Invalid icons.json")
+
+
+@pytest.mark.parametrize(
+    "strings",
+    [
+        pytest.param("{", id="invalid_json"),
+        pytest.param("[]", id="not_an_object"),
+    ],
+)
+def test_integration_connectivity_icons_invalid_strings(
+    config: Config, tmp_path: Path, strings: str
+) -> None:
+    """Test invalid strings skip the comparison, other plugins report them."""
+    integration = _write_integration(
+        config, tmp_path / "homeassistant", INTEGRATION_CONNECTIVITY_ICONS, strings
+    )
+
+    icons.validate_icon_file(config, integration)
+
+    assert integration.errors == []
