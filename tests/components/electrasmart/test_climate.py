@@ -5,9 +5,12 @@ from unittest.mock import AsyncMock, Mock
 
 from electrasmart.api import ElectraApiError
 from electrasmart.device import OperationMode
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -25,7 +28,11 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.electrasmart.const import PRESET_NONE, PRESET_SHABAT
+from homeassistant.components.electrasmart.const import (
+    PRESET_NONE,
+    PRESET_SHABAT,
+    SCAN_INTERVAL_SEC,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -35,7 +42,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import async_update_entity
+
+from . import async_advance_to_next_poll
 
 ENTITY_ID = "climate.living_room"
 
@@ -219,23 +227,49 @@ async def test_rejected_command_raises(hass: HomeAssistant, mock_api: Mock) -> N
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_update_polls_the_cloud(hass: HomeAssistant, mock_api: Mock) -> None:
-    """A scheduled update asks the API for the latest telemetry."""
-    await async_update_entity(hass, ENTITY_ID)
+async def test_state_comes_from_the_telemetry_fetched_during_setup(
+    hass: HomeAssistant,
+) -> None:
+    """The entity reports a state right after setup, without waiting for a poll."""
+    state = hass.states.get(ENTITY_ID)
+
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 24
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_update_polls_the_cloud(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The coordinator asks the API for the latest telemetry on its schedule."""
+    await async_advance_to_next_poll(hass, freezer)
 
     mock_api.get_last_telemtry.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("setup_integration")
 async def test_update_is_skipped_right_after_a_command(
-    hass: HomeAssistant, mock_api: Mock
+    hass: HomeAssistant,
+    mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A command is not followed by a poll, as the API lags behind it."""
+    freezer.tick(SCAN_INTERVAL_SEC - 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     await hass.services.async_call(
         CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
-    await async_update_entity(hass, ENTITY_ID)
+    # The scheduled poll now lands inside the window where the API still
+    # serves the state from before the command.
+    freezer.tick(3)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_api.get_last_telemtry.assert_not_awaited()
 
@@ -253,6 +287,7 @@ async def test_update_is_skipped_right_after_a_command(
 async def test_swing_mode_reflects_the_device(
     hass: HomeAssistant,
     mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
     horizontal: bool,
     vertical: bool,
     expected: str,
@@ -261,7 +296,7 @@ async def test_swing_mode_reflects_the_device(
     mock_device.is_horizontal_swing = Mock(return_value=horizontal)
     mock_device.is_vertical_swing = Mock(return_value=vertical)
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == expected
 
@@ -270,6 +305,7 @@ async def test_swing_mode_reflects_the_device(
 async def test_unavailable_device_warns_once_and_recovers(
     hass: HomeAssistant,
     mock_device: Mock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """An offline AC is unavailable, and the warning is logged once per outage."""
@@ -280,18 +316,18 @@ async def test_unavailable_device_warns_once_and_recovers(
     )
     mock_device.is_disconnected = Mock(return_value=True)
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert caplog.text.count(warning) == 1
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert caplog.text.count(warning) == 1
 
     mock_device.is_disconnected = Mock(return_value=False)
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
     assert "is now available" in caplog.text
@@ -301,6 +337,7 @@ async def test_unavailable_device_warns_once_and_recovers(
 async def test_update_failure_keeps_the_old_state(
     hass: HomeAssistant,
     mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A failed poll keeps the last known state and logs the failure."""
@@ -308,9 +345,9 @@ async def test_update_failure_keeps_the_old_state(
         side_effect=ElectraApiError("Failed to retrieve telemetry")
     )
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
-    assert "Failed to get climate.living_room state" in caplog.text
+    assert "Failed to get Living Room (a8032ab12345) state" in caplog.text
     assert "Failed to retrieve telemetry" in caplog.text
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22
 
@@ -319,26 +356,27 @@ async def test_update_failure_keeps_the_old_state(
 async def test_failed_updates_are_counted_until_the_next_success(
     hass: HomeAssistant,
     mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Consecutive failures are counted, and a successful poll resets the count."""
     failure = AsyncMock(side_effect=ElectraApiError("Failed to retrieve telemetry"))
     mock_api.get_last_telemtry = failure
 
-    await async_update_entity(hass, ENTITY_ID)
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert "try #2 since last success" in caplog.text
 
     caplog.clear()
     mock_api.get_last_telemtry = AsyncMock()
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert "Failed to get" not in caplog.text
 
     mock_api.get_last_telemtry = failure
 
-    await async_update_entity(hass, ENTITY_ID)
+    await async_advance_to_next_poll(hass, freezer)
 
     assert "try #1 since last success" in caplog.text
