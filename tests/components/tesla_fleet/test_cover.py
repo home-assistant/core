@@ -74,6 +74,13 @@ async def test_cover_offline(
     await setup_platform(hass, normal_config_entry, [Platform.COVER])
     state = hass.states.get("cover.test_windows")
     assert state.state == STATE_UNKNOWN
+    # no data from the vehicle yet: the doors are unknown, not open
+    for entity_id in (
+        "cover.test_frunk",
+        "cover.test_trunk",
+        "cover.test_charge_port_door",
+    ):
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

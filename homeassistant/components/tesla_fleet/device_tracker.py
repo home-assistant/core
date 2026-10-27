@@ -66,6 +66,8 @@ class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
+        if not self.coordinator.updated_once:
+            return  # vehicle asleep since start: keep the restored location
         self._attr_latitude = self.get("drive_state_latitude")
         self._attr_longitude = self.get("drive_state_longitude")
         self._attr_available = not (

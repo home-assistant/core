@@ -118,7 +118,7 @@ class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = not self._value
+        self._attr_is_closed = None if self._value is None else not self._value
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -154,7 +154,7 @@ class TeslaFleetFrontTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = self._value == CLOSED
+        self._attr_is_closed = None if self._value is None else self._value == CLOSED
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -184,7 +184,7 @@ class TeslaFleetRearTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
     @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = self._value == CLOSED
+        self._attr_is_closed = None if self._value is None else self._value == CLOSED
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:

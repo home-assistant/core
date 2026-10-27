@@ -22,6 +22,7 @@ from . import assert_entities, assert_entities_alt, setup_platform
 from .const import (
     ENERGY_HISTORY,
     ENERGY_HISTORY_OVERNIGHT,
+    VEHICLE_ASLEEP,
     VEHICLE_DATA,
     VEHICLE_DATA_ALT,
 )
@@ -86,6 +87,31 @@ async def test_sensors_restore(
         assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
 
     assert hass.states.get(entity_id).state == restored
+
+
+async def test_sensors_restore_kept_while_asleep(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_state: AsyncMock,
+) -> None:
+    """Test a restored sensor keeps its value through polls while the vehicle sleeps."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    assert hass.states.get("sensor.test_battery_level").state == "77"
+
+    mock_vehicle_state.return_value = VEHICLE_ASLEEP
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
+    assert hass.states.get("sensor.test_battery_level").state == "77"
+
+    # The next poll only learns the vehicle is still asleep: the value stays
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_battery_level").state == "77"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -551,7 +551,9 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_value = float(new_value)
             self._attr_native_value = new_value
-        else:
+        elif self.coordinator.updated_once:
+            # Only once the car itself has sent data since start: before that
+            # (asleep) the value restored in async_added_to_hass stays.
             self._attr_native_value = None
 
 
