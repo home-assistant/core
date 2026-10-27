@@ -111,11 +111,16 @@ def async_get_chat_log(
         if chat_log.turn_active:
             raise ConversationBusyError(session.conversation_id)
         is_new_log = False
+        turn_start = len(chat_log.content)
+        if user_input is not None:
+            chat_log.async_add_user_content(UserContent(content=user_input.text))
     else:
         chat_log = ChatLog(hass, session.conversation_id)
-        all_chat_logs[session.conversation_id] = chat_log
         is_new_log = True
-        # Fire CREATED event for new chat logs before any content is added
+        turn_start = len(chat_log.content)
+        if user_input is not None:
+            chat_log.content.append(UserContent(content=user_input.text))
+        all_chat_logs[session.conversation_id] = chat_log
         _async_notify_subscribers(
             hass,
             session.conversation_id,
@@ -126,10 +131,6 @@ def async_get_chat_log(
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
 
-    turn_start = len(chat_log.content)
-    if user_input is not None:
-        chat_log.async_add_user_content(UserContent(content=user_input.text))
-
     last_message = chat_log.content[-1]
 
     token = current_chat_log.set(chat_log)
@@ -137,8 +138,6 @@ def async_get_chat_log(
     try:
         yield chat_log
     except (Exception, asyncio.CancelledError) as err:
-        # Keep what the turn did, like tool calls that ran, so the user can
-        # continue the conversation.
         chat_log.async_add_error(
             (user_input.agent_id if user_input else None) or DOMAIN, err
         )

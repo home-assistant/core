@@ -1521,16 +1521,13 @@ async def test_chat_log_subscription(
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
     # Verify we received the expected events
-    # Should have: 1 CREATED event + 7 CONTENT_ADDED events
-    assert len(received_events) == 8
+    # Should have: 1 CREATED event + 6 CONTENT_ADDED events
+    assert len(received_events) == 7
 
-    # Check the first event is CREATED
+    # Check the first event is CREATED, with the message of the first turn
     assert received_events[0][1] == ChatLogEventType.CREATED
     assert received_events[0][2]["chat_log"]["conversation_id"] == conversation_id
-
-    # Check the second event is CONTENT_ADDED (from mock_conversation_input)
-    assert received_events[1][1] == ChatLogEventType.CONTENT_ADDED
-    assert received_events[1][0] == conversation_id
+    assert received_events[0][2]["chat_log"]["content"][-1]["content"] == "Hello"
 
     # Test cleanup functionality
     assert conversation_id in hass.data[chat_session.DATA_CHAT_SESSION]
