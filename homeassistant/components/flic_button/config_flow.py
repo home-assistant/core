@@ -91,7 +91,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_supports_options_flow(cls, config_entry: FlicButtonConfigEntry) -> bool:
         """Only show options for Twist devices."""
-        return config_entry.data.get(CONF_DEVICE_TYPE) == DeviceType.TWIST.value
+        return config_entry.data.get(CONF_DEVICE_TYPE) == DeviceType.TWIST.value  # type: ignore[no-any-return]
 
     @staticmethod
     @callback
@@ -253,7 +253,8 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle pairing step."""
-        assert self._discovery_info is not None
+        if TYPE_CHECKING:
+            assert self._discovery_info is not None
 
         errors: dict[str, str] = {}
 
