@@ -787,6 +787,8 @@ async def test_pruning_stale_restored_clients(
         ]
     ],
 )
+# Loaded devices, so only the clients_all guard can prevent the pruning
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 async def test_no_pruning_when_clients_all_fails(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -846,12 +848,12 @@ async def test_no_pruning_when_clients_all_fails(
 @pytest.mark.parametrize(
     ("device_payload", "unlisted_pruned"),
     [
-        ([SWITCH_1], True),
-        # Device list did not load, a network device would look unlisted
-        ([], False),
+        pytest.param([SWITCH_1], True, id="devices_loaded"),
+        # A listed network device would look unlisted
+        pytest.param([], False, id="devices_not_loaded"),
     ],
 )
-async def test_pruning_unlisted_client_devices(
+async def test_pruning_unlisted_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -859,7 +861,7 @@ async def test_pruning_unlisted_client_devices(
     config_entry_factory: ConfigEntryFactoryType,
     unlisted_pruned: bool,
 ) -> None:
-    """Prune client devices without a tracker whose client is no longer listed."""
+    """Prune devices the controller no longer lists, keep the listed ones."""
     devices: dict[str, dr.DeviceEntry] = {
         mac: device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
@@ -872,6 +874,7 @@ async def test_pruning_unlisted_client_devices(
             "00:00:00:00:00:08",  # Unlisted, only a disabled link speed sensor
             "00:00:00:00:00:09",  # Unlisted, but selected by the user
             SWITCH_1["mac"],  # Network device
+            "00:00:00:00:01:02",  # Network device removed from the controller
         )
     }
     link_speed = entity_registry.async_get_or_create(
@@ -882,6 +885,13 @@ async def test_pruning_unlisted_client_devices(
         device_id=devices["00:00:00:00:00:08"].id,
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
+    removed_device_tracker = entity_registry.async_get_or_create(
+        TRACKER_DOMAIN,
+        DOMAIN,
+        "00:00:00:00:01:02",
+        config_entry=config_entry,
+        device_id=devices["00:00:00:00:01:02"].id,
+    )
     service = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "wlan_id")},
@@ -889,9 +899,10 @@ async def test_pruning_unlisted_client_devices(
 
     await config_entry_factory()
 
-    for mac in ("00:00:00:00:00:07", "00:00:00:00:00:08"):
+    for mac in ("00:00:00:00:00:07", "00:00:00:00:00:08", "00:00:00:00:01:02"):
         assert (device_registry.async_get(devices[mac].id) is None) is unlisted_pruned
-    assert (entity_registry.async_get(link_speed.entity_id) is None) is unlisted_pruned
+    for entity in (link_speed, removed_device_tracker):
+        assert (entity_registry.async_get(entity.entity_id) is None) is unlisted_pruned
 
     for mac in (
         WIRED_CLIENT_1["mac"],
@@ -915,6 +926,7 @@ async def test_pruning_unlisted_client_devices(
 @pytest.mark.parametrize(
     "clients_all_payload",
     [
+        # Network devices are usually not in clients_all
         pytest.param(
             [
                 {
@@ -926,6 +938,7 @@ async def test_pruning_unlisted_client_devices(
             ],
             id="unlisted",
         ),
+        # Record from when the network device was seen as a client
         pytest.param(
             [
                 {
@@ -936,6 +949,19 @@ async def test_pruning_unlisted_client_devices(
                 }
             ],
             id="stale",
+        ),
+        # A DHCP reservation for the network device has no last_seen
+        pytest.param(
+            [
+                {
+                    "fixed_ip": "10.0.1.2",
+                    "is_wired": True,
+                    "mac": SWITCH_1["mac"],
+                    "name": "Switch reservation",
+                    "use_fixedip": True,
+                }
+            ],
+            id="dhcp_reservation",
         ),
     ],
 )
