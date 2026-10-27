@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from rainbowminer_api_client import RainbowMinerAuthError, RainbowMinerConnectionError
 
@@ -48,29 +49,30 @@ async def test_setup_with_auth(
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_retry_on_connection_error(
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        pytest.param(
+            RainbowMinerConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_RETRY,
+            id="connection_error",
+        ),
+        pytest.param(
+            RainbowMinerAuthError("Unauthorized"),
+            ConfigEntryState.SETUP_ERROR,
+            id="invalid_auth",
+        ),
+    ],
+)
+async def test_setup_errors(
     hass: HomeAssistant,
     mock_rainbowminer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup retries when the version request fails."""
-    mock_rainbowminer_client.get_version.side_effect = RainbowMinerConnectionError(
-        "Connection refused"
-    )
+    """Test setup fails when the version request fails."""
+    mock_rainbowminer_client.get_version.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_error_on_invalid_auth(
-    hass: HomeAssistant,
-    mock_rainbowminer_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup fails on invalid auth."""
-    mock_rainbowminer_client.get_version.side_effect = RainbowMinerAuthError(
-        "Unauthorized"
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state

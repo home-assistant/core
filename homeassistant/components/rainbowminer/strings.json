@@ -34,37 +34,37 @@
         "name": "Daily earnings"
       },
       "daily_earnings_mbtc": {
-        "name": "Daily earnings (mBTC)"
+        "name": "Daily bitcoin earnings"
       },
       "estimated_daily_profit": {
         "name": "Estimated daily profit"
       },
       "estimated_daily_profit_mbtc": {
-        "name": "Estimated daily profit (mBTC)"
+        "name": "Estimated daily bitcoin profit"
       },
       "hourly_earnings": {
         "name": "Hourly earnings"
       },
       "hourly_earnings_mbtc": {
-        "name": "Hourly earnings (mBTC)"
+        "name": "Hourly bitcoin earnings"
       },
       "total_earnings": {
         "name": "Total earnings"
       },
       "total_earnings_mbtc": {
-        "name": "Total earnings (mBTC)"
+        "name": "Total bitcoin earnings"
       },
       "unpaid_balance": {
         "name": "Unpaid balance"
       },
       "unpaid_balance_mbtc": {
-        "name": "Unpaid balance (mBTC)"
+        "name": "Unpaid bitcoin balance"
       },
       "weekly_earnings": {
         "name": "Weekly earnings"
       },
       "weekly_earnings_mbtc": {
-        "name": "Weekly earnings (mBTC)"
+        "name": "Weekly bitcoin earnings"
       }
     }
   }

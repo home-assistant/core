@@ -79,27 +79,27 @@ async def test_mbtc_sensors(
     earnings_1d_btc_sum = sum(b.Earnings_1d_BTC for b in VALID_BALANCES)
     earnings_1h_btc_sum = sum(b.Earnings_1h_BTC for b in VALID_BALANCES)
 
-    state = hass.states.get("sensor.rainbowminer_total_earnings_mbtc")
+    state = hass.states.get("sensor.rainbowminer_total_bitcoin_earnings")
     assert state is not None
     assert state.state == str(round(earnings_btc_sum * 1000, 10))
 
-    state = hass.states.get("sensor.rainbowminer_unpaid_balance_mbtc")
+    state = hass.states.get("sensor.rainbowminer_unpaid_bitcoin_balance")
     assert state is not None
     assert state.state == str(round(total_btc_sum * 1000, 10))
 
-    state = hass.states.get("sensor.rainbowminer_estimated_daily_profit_mbtc")
+    state = hass.states.get("sensor.rainbowminer_estimated_daily_bitcoin_profit")
     assert state is not None
     assert state.state == str(VALID_CURRENT_PROFIT.AllProfitBTC * 1000)
 
-    state = hass.states.get("sensor.rainbowminer_weekly_earnings_mbtc")
+    state = hass.states.get("sensor.rainbowminer_weekly_bitcoin_earnings")
     assert state is not None
     assert state.state == str(round(earnings_1w_btc_sum * 1000, 10))
 
-    state = hass.states.get("sensor.rainbowminer_daily_earnings_mbtc")
+    state = hass.states.get("sensor.rainbowminer_daily_bitcoin_earnings")
     assert state is not None
     assert state.state == str(round(earnings_1d_btc_sum * 1000, 10))
 
-    state = hass.states.get("sensor.rainbowminer_hourly_earnings_mbtc")
+    state = hass.states.get("sensor.rainbowminer_hourly_bitcoin_earnings")
     assert state is not None
     assert state.state == str(round(earnings_1h_btc_sum * 1000, 10))
 
@@ -194,11 +194,11 @@ async def test_mbtc_sensors_unavailable_without_balances(
     mock_rainbowminer_client.get_balances.return_value = []
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.rainbowminer_total_earnings_mbtc")
+    state = hass.states.get("sensor.rainbowminer_total_bitcoin_earnings")
     assert state is not None
     assert state.state == "unknown"
 
-    state = hass.states.get("sensor.rainbowminer_unpaid_balance_mbtc")
+    state = hass.states.get("sensor.rainbowminer_unpaid_bitcoin_balance")
     assert state is not None
     assert state.state == "unknown"
 
