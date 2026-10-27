@@ -24,18 +24,6 @@ APPLIANCES_WITH_PROGRAMS = (
     "WasherDryer",
 )
 
-APPLIANCES_WITH_PROGRAM_TIMES = (
-    "CoffeeMaker",
-    "CookProcessor",
-    "Dishwasher",
-    "Dryer",
-    "Microwave",
-    "Hood",
-    "Oven",
-    "Washer",
-    "WasherDryer",
-)
-
 UNIT_MAP = {
     "seconds": UnitOfTime.SECONDS,
     "ml": UnitOfVolume.MILLILITERS,

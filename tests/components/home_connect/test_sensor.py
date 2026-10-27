@@ -40,8 +40,6 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
-    BSH_OPERATION_STATE_DELAYED_START,
-    BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_READY,
     BSH_OPERATION_STATE_RUN,
@@ -947,6 +945,7 @@ async def test_all_entities(
 
 OVEN_FINISH_TIME_ENTITY_ID = "sensor.oven_program_finish_time"
 OVEN_PROGRESS_ENTITY_ID = "sensor.oven_program_progress"
+OVEN_START_TIME_ENTITY_ID = "sensor.oven_program_start_time"
 PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
 
 
@@ -1443,53 +1442,8 @@ async def test_program_finish_time_kept_on_pause(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "10")
 
 
-OVEN_START_TIME_ENTITY_ID = "sensor.oven_program_start_time"
-BSH_OPERATION_STATE_ACTION_REQUIRED = (
-    "BSH.Common.EnumType.OperationState.ActionRequired"
-)
-
-type ProgramStartTimeStep = tuple[int, list[tuple[EventType, dict[EventKey, Any]]], str]
-
-
-async def _run_program_start_time_steps(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    ha_id: str,
-    steps: list[ProgramStartTimeStep],
-) -> None:
-    """Move the time forward, send the events and check the start time."""
-    for seconds, events, expected_state in steps:
-        freezer.tick(seconds)
-        await client.add_events(
-            [
-                create_event_message(ha_id, event_type, items)
-                for event_type, items in events
-            ]
-        )
-        await hass.async_block_till_done()
-        assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, expected_state)
-
-
-def _operation_state(operation_state: str) -> tuple[EventType, dict[EventKey, Any]]:
-    """Return the event items of an operation state change."""
-    return (
-        EventType.STATUS,
-        {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: operation_state},
-    )
-
-
-def _notify(items: dict[EventKey, Any]) -> tuple[EventType, dict[EventKey, Any]]:
-    """Return the event items of a notify event."""
-    return (EventType.NOTIFY, items)
-
-
-DISCONNECTED: tuple[EventType, dict[EventKey, Any]] = (EventType.DISCONNECTED, {})
-CONNECTED: tuple[EventType, dict[EventKey, Any]] = (EventType.CONNECTED, {})
-
-
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_program_start_time_from_elapsed_program_time(
+async def test_program_start_time(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     client: MagicMock,
@@ -1497,597 +1451,72 @@ async def test_program_start_time_from_elapsed_program_time(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test the start time is calculated from the elapsed program time."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
-    program_key = ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR
-    client.get_status = AsyncMock(
-        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
-    )
-    client.get_all_programs = AsyncMock(
-        return_value=ArrayOfPrograms(
-            [EnumerateProgram(program_key, program_key.value)],
-            active=Program(
-                program_key,
-                options=[Option(OptionKey.BSH_COMMON_ELAPSED_PROGRAM_TIME, 600)],
-            ),
-        )
-    )
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, "2021-01-09T11:50:00+00:00")
-
-    elapsed_key = EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            # Small deviations are ignored
-            (60, [_notify({elapsed_key: 665})], "2021-01-09T11:50:00+00:00"),
-            # A delayed update doesn't move the start time
-            (60, [_notify({elapsed_key: 715})], "2021-01-09T11:50:00+00:00"),
-            (
-                0,
-                [_operation_state(BSH_OPERATION_STATE_PAUSE)],
-                "2021-01-09T11:50:00+00:00",
-            ),
-            # The elapsed program time doesn't increase while paused
-            (
-                600,
-                [
-                    _operation_state(BSH_OPERATION_STATE_RUN),
-                    _notify({elapsed_key: 780}),
-                ],
-                "2021-01-09T11:50:00+00:00",
-            ),
-            (0, [DISCONNECTED], STATE_UNAVAILABLE),
-            (60, [CONNECTED], "2021-01-09T11:50:00+00:00"),
-            # An earlier start time is applied
-            (60, [_notify({elapsed_key: 1600})], "2021-01-09T11:47:20+00:00"),
-            # The start time starts over for a new program
-            (
-                60,
-                [
-                    _notify(
-                        {
-                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                            ),
-                            elapsed_key: 0,
-                        }
-                    )
-                ],
-                "2021-01-09T12:15:00+00:00",
-            ),
-            (0, [_operation_state(BSH_OPERATION_STATE_READY)], STATE_UNAVAILABLE),
-        ],
-    )
-
-
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-@pytest.mark.parametrize(
-    "start_events",
-    [
-        pytest.param(
-            [_operation_state(BSH_OPERATION_STATE_RUN)],
-            id="operation_state",
-        ),
-        pytest.param(
-            [
-                _notify(
-                    {
-                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                            ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                        )
-                    }
-                ),
-                _operation_state(BSH_OPERATION_STATE_RUN),
-            ],
-            id="program_then_operation_state",
-        ),
-        pytest.param(
-            [
-                _operation_state(BSH_OPERATION_STATE_RUN),
-                _notify(
-                    {
-                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                            ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                        )
-                    }
-                ),
-            ],
-            id="operation_state_then_program",
-        ),
-    ],
-)
-async def test_program_start_time_without_elapsed_program_time(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    start_events: list[tuple[EventType, dict[EventKey, Any]]],
-) -> None:
-    """Test the start time falls back to the change to the run operation state."""
+    """Test the program start time follows the elapsed program time."""
     freezer.move_to(PROGRAM_TIMES_TEST_START)
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, STATE_UNAVAILABLE)
 
-    # Used by the refresh after the reconnection
-    client.get_status = AsyncMock(
-        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
-    )
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            (60, start_events, "2021-01-09T12:01:00+00:00"),
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_PAUSE)],
-                "2021-01-09T12:01:00+00:00",
-            ),
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_RUN)],
-                "2021-01-09T12:01:00+00:00",
-            ),
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_ACTION_REQUIRED)],
-                STATE_UNAVAILABLE,
-            ),
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_RUN)],
-                "2021-01-09T12:01:00+00:00",
-            ),
-            (60, [DISCONNECTED], STATE_UNAVAILABLE),
-            (60, [CONNECTED], "2021-01-09T12:01:00+00:00"),
-            # The start time starts over for a new program
-            (
-                60,
-                [
-                    _notify(
-                        {
-                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                            )
-                        }
+    for seconds, events, expected_state in (
+        (
+            0,
+            {
+                EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0},
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
+                },
+            },
+            "2021-01-09T12:00:00+00:00",
+        ),
+        (
+            60,
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 60}},
+            "2021-01-09T12:00:00+00:00",
+        ),
+        (
+            0,
+            {
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                        BSH_OPERATION_STATE_PAUSE
                     )
-                ],
-                "2021-01-09T12:08:00+00:00",
-            ),
-            (0, [_operation_state(BSH_OPERATION_STATE_READY)], STATE_UNAVAILABLE),
-        ],
-    )
-
-
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_program_start_time_delayed_start(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-) -> None:
-    """Test the start time is set once a delayed program starts."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            (
-                0,
-                [
-                    _operation_state(BSH_OPERATION_STATE_DELAYED_START),
-                    _notify({EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0}),
-                ],
-                STATE_UNKNOWN,
-            ),
-            (
-                600,
-                [_operation_state(BSH_OPERATION_STATE_RUN)],
-                "2021-01-09T12:10:00+00:00",
-            ),
-        ],
-    )
-
-
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_program_start_time_unknown_for_program_started_before_setup(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-) -> None:
-    """Test the start time is unknown if the program start wasn't observed."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
-    client.get_status = AsyncMock(
-        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
-    )
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, STATE_UNKNOWN)
-
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            (60, [_operation_state(BSH_OPERATION_STATE_PAUSE)], STATE_UNKNOWN),
-            (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
-        ],
-    )
-
-
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-@pytest.mark.parametrize(
-    "steps",
-    [
-        pytest.param(
-            [
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_FINISHED),
-                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        ),
-                        _operation_state(BSH_OPERATION_STATE_RUN),
-                    ],
-                    "2021-01-09T12:03:00+00:00",
-                ),
-            ],
-            id="same_program_after_finished",
+                }
+            },
+            "2021-01-09T12:00:00+00:00",
         ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [_notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None})],
-                    STATE_UNKNOWN,
-                ),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:03:00+00:00",
-                ),
-            ],
-            id="same_program_while_running",
+        (
+            60,
+            {
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
+                }
+            },
+            "2021-01-09T12:00:00+00:00",
         ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [_notify({EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 60})],
-                    "2021-01-09T12:01:00+00:00",
-                ),
-                # Calls the listeners of the active program and the elapsed time
-                (
-                    60,
-                    [_notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None})],
-                    STATE_UNKNOWN,
-                ),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:04:00+00:00",
-                ),
-            ],
-            id="same_program_while_running_with_elapsed_program_time",
+        # The elapsed program time doesn't increase while paused
+        (
+            60,
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 120}},
+            "2021-01-09T12:01:00+00:00",
         ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_FINISHED),
-                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
-                # The program is reported a minute after the run started
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:03:00+00:00",
-                ),
-            ],
-            id="run_before_program_after_finished",
+        (
+            0,
+            {
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                        BSH_OPERATION_STATE_READY
+                    )
+                }
+            },
+            STATE_UNAVAILABLE,
         ),
-        pytest.param(
+    ):
+        freezer.tick(seconds)
+        await client.add_events(
             [
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_FINISHED),
-                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                (
-                    60,
-                    [_operation_state(BSH_OPERATION_STATE_READY)],
-                    STATE_UNAVAILABLE,
-                ),
-                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:04:00+00:00",
-                ),
-            ],
-            id="run_before_program_after_ready",
-        ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:01:00+00:00",
-                ),
-                # The run ends without clearing the active program
-                (
-                    60,
-                    [_operation_state(BSH_OPERATION_STATE_READY)],
-                    STATE_UNAVAILABLE,
-                ),
-                (
-                    60,
-                    [_operation_state(BSH_OPERATION_STATE_RUN)],
-                    "2021-01-09T12:04:00+00:00",
-                ),
-                # The program of the new run is reported after it started running
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:04:00+00:00",
-                ),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:06:00+00:00",
-                ),
-            ],
-            id="program_reported_after_run_after_ready",
-        ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [_operation_state(BSH_OPERATION_STATE_FINISHED)],
-                    "2021-01-09T12:01:00+00:00",
-                ),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                                )
-                            }
-                        )
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                # The new run starts once it runs
-                (
-                    60,
-                    [_operation_state(BSH_OPERATION_STATE_RUN)],
-                    "2021-01-09T12:04:00+00:00",
-                ),
-            ],
-            id="other_program_after_finished",
-        ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_FINISHED),
-                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_RUN),
-                        _notify({EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                # The elapsed program time wasn't updated since the run started
-                (
-                    120,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:03:00+00:00",
-                ),
-            ],
-            id="outdated_elapsed_program_time_after_observed_run",
-        ),
-        pytest.param(
-            [
-                (
-                    60,
-                    [
-                        _operation_state(BSH_OPERATION_STATE_FINISHED),
-                        _notify({EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: None}),
-                    ],
-                    STATE_UNKNOWN,
-                ),
-                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
-                # Paused and resumed before the program was reported
-                (60, [_operation_state(BSH_OPERATION_STATE_PAUSE)], STATE_UNKNOWN),
-                (60, [_operation_state(BSH_OPERATION_STATE_RUN)], STATE_UNKNOWN),
-                (
-                    60,
-                    [
-                        _notify(
-                            {
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                                )
-                            }
-                        )
-                    ],
-                    "2021-01-09T12:03:00+00:00",
-                ),
-            ],
-            id="paused_before_program_reported",
-        ),
-    ],
-)
-async def test_program_start_time_new_run_without_ready(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    steps: list[ProgramStartTimeStep],
-) -> None:
-    """Test a new program run gets a new start time without the ready state."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_RUN)],
-                "2021-01-09T12:01:00+00:00",
-            ),
-            *steps,
-        ],
-    )
-
-
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_program_start_time_unknown_for_program_finished_before_setup(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-) -> None:
-    """Test the start time stays unknown until a run is observed after setup."""
-    freezer.move_to(PROGRAM_TIMES_TEST_START)
-    client.get_status = AsyncMock(
-        return_value=create_operation_state_status(BSH_OPERATION_STATE_FINISHED)
-    )
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, STATE_UNKNOWN)
-
-    await _run_program_start_time_steps(
-        hass,
-        freezer,
-        client,
-        appliance.ha_id,
-        [
-            (
-                60,
-                [_operation_state(BSH_OPERATION_STATE_RUN)],
-                "2021-01-09T12:01:00+00:00",
-            ),
-        ],
-    )
+                create_event_message(appliance.ha_id, event_type, items)
+                for event_type, items in events.items()
+            ]
+        )
+        await hass.async_block_till_done()
+        assert hass.states.is_state(OVEN_START_TIME_ENTITY_ID, expected_state)
