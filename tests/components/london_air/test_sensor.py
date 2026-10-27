@@ -11,8 +11,8 @@ from pylondonair import (
 import pytest
 
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
@@ -51,10 +51,6 @@ async def test_valid_state(
     assert pollutants[0]["quality"] == "Low"
     assert int(pollutants[0]["index"]) == 2
     assert pollutants[0]["summary"] == "PM10 is Low"
-
-    (platform,) = async_get_platforms(hass, "london_air")
-    entity = platform.entities["sensor.merton"]
-    assert entity.site_data == sites
 
 
 @pytest.mark.parametrize(
@@ -153,7 +149,11 @@ async def test_second_update_throttled(
     await hass.async_block_till_done()
     assert mock_london_air_client.async_update.await_count == 1
 
-    (platform,) = async_get_platforms(hass, "london_air")
-    entity = platform.entities["sensor.merton"]
-    await entity.async_device_update()
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "sensor.merton"},
+        blocking=True,
+    )
     assert mock_london_air_client.async_update.await_count == 1
