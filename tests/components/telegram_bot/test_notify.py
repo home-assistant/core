@@ -6,6 +6,7 @@ import pytest
 from pytest_homeassistant.common import async_capture_events
 from telegram import Chat, Message
 from telegram.constants import ChatType, ParseMode
+from telegram.request import BaseRequest
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -59,7 +60,7 @@ async def test_send_message(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=None,
-            read_timeout=None,
+            read_timeout=BaseRequest.DEFAULT_NONE,
             message_thread_id=None,
         )
 
