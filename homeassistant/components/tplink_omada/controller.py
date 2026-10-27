@@ -26,6 +26,7 @@ class OmadaSiteController:
     """Controller for the Omada SDN site."""
 
     _gateway_coordinator: OmadaGatewayCoordinator | None = None
+    _vpn_policies_coordinator: OmadaVpnPoliciesCoordinator | None = None
 
     def __init__(
         self,
@@ -53,9 +54,6 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
-        self._vpn_policies_coordinator = OmadaVpnPoliciesCoordinator(
-            hass, config_entry, omada_client
-        )
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -70,9 +68,12 @@ class OmadaSiteController:
                 self._hass, self._config_entry, self._omada_client, gateway.mac
             )
             await self._gateway_coordinator.async_config_entry_first_refresh()
+            self._vpn_policies_coordinator = OmadaVpnPoliciesCoordinator(
+                self._hass, self._config_entry, self._omada_client
+            )
+            await self._vpn_policies_coordinator.async_config_entry_first_refresh()
 
         await self.clients_coordinator.async_config_entry_first_refresh()
-        await self._vpn_policies_coordinator.async_config_entry_first_refresh()
 
     async def async_register_device_entities(
         self,
@@ -164,6 +165,6 @@ class OmadaSiteController:
         return self._clients_coordinator
 
     @property
-    def vpn_policies_coordinator(self) -> OmadaVpnPoliciesCoordinator:
-        """Gets the coordinator for site's VPN policies."""
+    def vpn_policies_coordinator(self) -> OmadaVpnPoliciesCoordinator | None:
+        """Gets the coordinator for site's VPN policies, or None if there is no gateway."""
         return self._vpn_policies_coordinator

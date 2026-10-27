@@ -257,11 +257,6 @@ class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
         """Poll the site's current VPN policies."""
         return {p.unique_id: p for p in await self.omada_client.get_vpn_policies()}
 
-    async def set_vpn_policy_enabled(self, policy_id: str, enabled: bool) -> None:
-        """Enable or disable a VPN policy, then refresh the current state."""
-        await self.omada_client.set_vpn_policy_enabled(policy_id, enabled)
-        await self.async_request_refresh()
-
 
 class FirmwareUpdateStatus(NamedTuple):
     """Firmware update information for Omada SDN devices."""

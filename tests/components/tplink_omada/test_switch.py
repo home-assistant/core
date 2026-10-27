@@ -478,36 +478,12 @@ async def test_vpn_switches(
 
 
 @pytest.mark.parametrize(
-    (
-        "entity_id",
-        "service",
-        "policy_id",
-        "enabled",
-        "server_enabled",
-        "site_to_site_enabled",
-        "expected_state",
-    ),
+    ("entity_id", "service", "policy_id", "enabled"),
     [
         pytest.param(
-            VPN_SERVER_ENTITY_ID,
-            "turn_off",
-            "vpn-server-1",
-            False,
-            False,
-            False,
-            "off",
-            id="turn_off",
+            VPN_SERVER_ENTITY_ID, "turn_off", "vpn-server-1", False, id="turn_off"
         ),
-        pytest.param(
-            VPN_S2S_ENTITY_ID,
-            "turn_on",
-            "vpn-s2s-1",
-            True,
-            True,
-            True,
-            "on",
-            id="turn_on",
-        ),
+        pytest.param(VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, id="turn_on"),
     ],
 )
 async def test_vpn_switch_toggle(
@@ -518,14 +494,10 @@ async def test_vpn_switch_toggle(
     service: str,
     policy_id: str,
     enabled: bool,
-    server_enabled: bool,
-    site_to_site_enabled: bool,
-    expected_state: str,
 ) -> None:
     """Test enabling and disabling a VPN policy."""
     mock_omada_site_client.get_vpn_policies.return_value = _build_vpn_policies(
-        server_enabled=server_enabled,
-        site_to_site_enabled=site_to_site_enabled,
+        server_enabled=enabled, site_to_site_enabled=enabled
     )
 
     await call_service(hass, service, entity_id)
@@ -535,7 +507,48 @@ async def test_vpn_switch_toggle(
 
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity and entity.state == expected_state
+    assert entity and entity.state == service.removeprefix("turn_")
+
+
+async def test_vpn_switch_optimistic_state(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a toggle within the refresh cooldown still shows the requested state."""
+    mock_omada_site_client.get_vpn_policies.return_value = _build_vpn_policies(
+        server_enabled=False, site_to_site_enabled=False
+    )
+    await call_service(hass, "turn_off", VPN_SERVER_ENTITY_ID)
+    # The refresh after this call is debounced, so the state must be set optimistically
+    await call_service(hass, "turn_on", VPN_SERVER_ENTITY_ID)
+
+    entity = hass.states.get(VPN_SERVER_ENTITY_ID)
+    assert entity and entity.state == "on"
+
+
+async def test_vpn_switch_renamed(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a VPN switch picks up a policy renamed on the controller."""
+    mock_omada_site_client.get_vpn_policies.return_value = [
+        OmadaVpnPolicy(
+            OmadaVpnCategory.SERVER,
+            {
+                "id": "vpn-server-1",
+                "name": "Remote Staff",
+                "status": True,
+                "vpnType": 3,
+            },
+        )
+    ]
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(VPN_SERVER_ENTITY_ID)
+    assert entity and entity.attributes["friendly_name"] == "Test Router Remote Staff"
 
 
 async def test_vpn_switch_added_dynamically(
