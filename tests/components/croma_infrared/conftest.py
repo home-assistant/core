@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from infrared_protocols.codes.croma.tv import CromaTVCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
@@ -11,7 +12,6 @@ from pytest_homeassistant.components.infrared import (
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.croma_infrared import PLATFORMS
-from homeassistant.components.croma_infrared.codes import CromaTVCode
 from homeassistant.components.croma_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,

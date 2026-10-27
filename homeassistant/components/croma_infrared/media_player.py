@@ -2,6 +2,8 @@
 
 from typing import override
 
+from infrared_protocols.codes.croma.tv import CromaTVCode
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -14,7 +16,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .codes import CromaTVCode
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN
 from .entity import CromaIrEntity
 

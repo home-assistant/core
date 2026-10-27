@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from infrared_protocols.codes.croma.tv import CromaTVCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 from pytest_homeassistant.common import (
@@ -15,7 +16,6 @@ from pytest_homeassistant.components.common import (
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.croma_infrared.codes import CromaTVCode
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_MUTED,
