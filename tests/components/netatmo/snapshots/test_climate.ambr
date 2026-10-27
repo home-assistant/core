@@ -135,6 +135,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cocina',
+      'heating_power_request': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -307,6 +308,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Entrada',
+      'heating_power_request': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
