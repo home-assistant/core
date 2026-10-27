@@ -246,6 +246,28 @@
       "purity_rating": {
         "name": "Purity rating"
       },
+      "siren_battery": {
+        "name": "Siren battery"
+      },
+      "siren_main_power": {
+        "name": "Siren power source",
+        "state": {
+          "battery": "Battery",
+          "solar": "Solar",
+          "unknown": "Unknown",
+          "v12": "12 V",
+          "v230": "230 V"
+        }
+      },
+      "siren_solar_charging": {
+        "name": "Siren solar charging",
+        "state": {
+          "bad": "Bad",
+          "good": "Good",
+          "medium": "Medium",
+          "unknown": "Unknown"
+        }
+      },
       "temperature_rating": {
         "name": "Temperature rating"
       },
