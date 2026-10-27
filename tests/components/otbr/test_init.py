@@ -1,4 +1,4 @@
-"""Test the Open Thread Border Router integration."""
+"""Test the OpenThread Border Router integration."""
 
 import asyncio
 from typing import Any
@@ -383,7 +383,7 @@ async def test_update_unique_id(
         domain=otbr.DOMAIN,
         options={},
         source=source,
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=unique_id,
     )
     config_entry.add_to_hass(hass)
