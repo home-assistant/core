@@ -358,6 +358,30 @@ async def test_registration_failure_is_logged_and_retried(
     assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
 
 
+async def test_switch_port_refresh_failure_is_retried(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed switch port refresh defers registration to the next update."""
+    site_client = mock_omada_client.get_site_client.return_value
+    original_get_switch_ports = site_client.get_switch_ports
+    site_client.get_switch_ports = AsyncMock(side_effect=OmadaClientException)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+
+    # The failed refresh left the switch unprocessed, so the next update retries.
+    site_client.get_switch_ports = original_get_switch_ports
+    await _async_poll_devices(hass, freezer)
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
+
+
 async def _get_devices_without(
     hass: HomeAssistant, excluded_mac: str
 ) -> list[OmadaListDevice]:
