@@ -37,6 +37,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
     MINOR_VERSION,
@@ -47,6 +48,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_light import LIGHT_ON_OFF
+
+from tests.components.usb import patch_scanned_serial_ports
+from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
 DATA_RADIO_TYPE = "ezsp"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
@@ -70,7 +74,7 @@ def config_entry_v1(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize("config", [{}, {DOMAIN: {}}])
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_no_baudrate(
     hass: HomeAssistant, config_entry_v1, config
 ) -> None:
@@ -85,7 +89,7 @@ async def test_migration_from_v1_no_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_with_baudrate(
     hass: HomeAssistant, config_entry_v1
 ) -> None:
@@ -102,7 +106,7 @@ async def test_migration_from_v1_with_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_wrong_baudrate(
     hass: HomeAssistant, config_entry_v1
 ) -> None:
@@ -151,7 +155,7 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
         ("socket://[::1]", "socket://[::1]:6638"),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_v5_explicit_socket_port(
     old_path: str,
     new_path: str,
@@ -188,7 +192,7 @@ async def test_migration_v5_explicit_socket_port(
         pytest.param(1, 0, ConfigEntryState.MIGRATION_ERROR, id="major_blocked"),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_version_downgrade_guard(
     version_delta: int,
     minor_delta: int,
@@ -230,7 +234,7 @@ async def test_migration_version_downgrade_guard(
         ("deconz", 115200, None, 115200, None),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_baudrate_and_flow_control(
     radio_type: str,
     old_baudrate: int,
@@ -457,6 +461,63 @@ async def test_device_path_migration_to_unique_path(
         config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         == "/dev/serial/by-id/coordinator-symlink"
     )
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_device_path_follows_moved_radio(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A radio found at a new path at setup is followed there."""
+    config_entry.add_to_hass(hass)
+
+    old_path = (
+        "/dev/serial/by-id/"
+        "usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231214135603-if00"
+    )
+    new_path = (
+        "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT?port_udev_id="
+        "usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231214135603-if00"
+    )
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {**config_entry.data[CONF_DEVICE], CONF_DEVICE_PATH: old_path},
+        },
+    )
+
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch_scanned_serial_ports(
+            return_value=[
+                USBDevice(
+                    device=new_path,
+                    vid="1A86",
+                    pid="55D4",
+                    serial_number="20231214135603",
+                    manufacturer="ITEAD",
+                    description="SONOFF Zigbee 3.0 USB Dongle Plus V2",
+                )
+            ]
+        ),
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert f"Following ZHA device path from {old_path} to {new_path}" in caplog.text
+    assert config_entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: new_path,
+        CONF_BAUDRATE: 115200,
+        CONF_FLOW_CONTROL: "hardware",
+    }
     assert config_entry.state is ConfigEntryState.LOADED
 
 

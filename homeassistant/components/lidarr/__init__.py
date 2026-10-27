@@ -50,15 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> No
         coordinator = getattr(data, field.name)
         await coordinator.async_config_entry_first_refresh()
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            configuration_url=entry.data[CONF_URL],
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer=DEFAULT_NAME,
-            sw_version=data.status.data,
-        ),
+        configuration_url=entry.data[CONF_URL],
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer=DEFAULT_NAME,
+        sw_version=data.status.data,
     )
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -210,6 +210,7 @@ def execute_stmt_lambda_element(
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
     orm_rows: bool = True,
+    stream: bool = False,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -221,6 +222,11 @@ def execute_stmt_lambda_element(
     when selecting non-ranged rows (ie selecting
     specific entities) since they are usually faster
     with .all().
+
+    If stream is True the result is returned without building a list of
+    rows, so rows can be consumed one at a time and freed right away, which
+    avoids promoting large result sets into the oldest garbage collector
+    generation. Errors raised while consuming the rows are not retried.
     """
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
@@ -229,6 +235,8 @@ def execute_stmt_lambda_element(
                 executed = session.execute(stmt)
             else:
                 executed = session.connection().execute(stmt)
+            if stream:
+                return executed
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
@@ -1003,6 +1011,107 @@ PERIOD_SCHEMA = probatio.Schema(
 )
 
 
+_HOUR = timedelta(hours=1)
+_OFFSET_CHANGE_SCAN_STEP = timedelta(days=1)
+
+
+def _utc_offset_change(low: datetime, high: datetime) -> datetime:
+    """Return when the local UTC offset changes between two UTC times.
+
+    Assumes a single change, after low and no later than high.
+    """
+    offset = dt_util.as_local(high).utcoffset()
+    while high - low > timedelta(seconds=1):
+        middle = low + (high - low) / 2
+        if dt_util.as_local(middle).utcoffset() == offset:
+            high = middle
+        else:
+            low = middle
+    # Offset changes happen on whole seconds
+    return high.replace(microsecond=0)
+
+
+def _start_of_local_hour(utc_time: datetime) -> datetime:
+    """Return the start of the local calendar hour containing a UTC time.
+
+    A calendar hour starts at the top of a local hour or at a UTC offset change,
+    so DST changes of half an hour give half-hour calendar hours.
+    """
+    local_time = dt_util.as_local(utc_time)
+    start = utc_time - timedelta(
+        minutes=local_time.minute,
+        seconds=local_time.second,
+        microseconds=local_time.microsecond,
+    )
+    if dt_util.as_local(start).utcoffset() != local_time.utcoffset():
+        return _utc_offset_change(start, utc_time)
+    return start
+
+
+def _local_hours_later(start: datetime, hours: int) -> datetime:
+    """Return the start of the local calendar hour a number of hours later.
+
+    Jumps whole hours in UTC while the UTC offset is unchanged and only searches
+    for offset changes, which are assumed to be more than a day apart.
+    """
+    while True:
+        local_start = dt_util.as_local(start)
+        offset = local_start.utcoffset()
+        next_top = (
+            start
+            - timedelta(
+                minutes=local_start.minute,
+                seconds=local_start.second,
+                microseconds=local_start.microsecond,
+            )
+            + _HOUR
+        )
+        target = next_top + (hours - 1) * _HOUR
+        low = start
+        while low < target:
+            high = min(low + _OFFSET_CHANGE_SCAN_STEP, target)
+            if dt_util.as_local(high).utcoffset() != offset:
+                break
+            low = high
+        else:
+            return target
+        start = _utc_offset_change(low, high)
+        # Skip the hours that started before the offset change, and the change
+        hours -= max(0, -((next_top - start) // _HOUR)) + 1
+        if not hours:
+            return start
+
+
+def _local_hours_earlier(start: datetime, hours: int) -> datetime:
+    """Return the start of the local calendar hour a number of hours earlier.
+
+    Jumps whole hours in UTC while the UTC offset is unchanged and only searches
+    for offset changes, which are assumed to be more than a day apart.
+    """
+    while True:
+        high = start - timedelta(microseconds=1)
+        local_high = dt_util.as_local(high)
+        offset = local_high.utcoffset()
+        last_top = high - timedelta(
+            minutes=local_high.minute,
+            seconds=local_high.second,
+            microseconds=local_high.microsecond,
+        )
+        target = last_top - (hours - 1) * _HOUR
+        while high > target:
+            low = max(high - _OFFSET_CHANGE_SCAN_STEP, target)
+            if dt_util.as_local(low).utcoffset() != offset:
+                break
+            high = low
+        else:
+            return target
+        start = _utc_offset_change(low, high)
+        # Skip the hours that started after the offset change, and the change
+        hours -= max(0, -((start - last_top) // _HOUR)) + 1
+        if not hours:
+            return start
+
+
 def resolve_period(
     period_def: StatisticPeriod,
 ) -> tuple[datetime | None, datetime | None]:
@@ -1015,9 +1124,12 @@ def resolve_period(
         start_of_day = dt_util.start_of_local_day()
         cal_offset = period_def["calendar"].get("offset", 0)
         if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=cal_offset)
-            end_time = start_time + timedelta(hours=1)
+            start_time = _start_of_local_hour(dt_util.utcnow())
+            if cal_offset > 0:
+                start_time = _local_hours_later(start_time, cal_offset)
+            elif cal_offset < 0:
+                start_time = _local_hours_earlier(start_time, -cal_offset)
+            end_time = _local_hours_later(start_time, 1)
         elif calendar_period == "day":
             start_time = start_of_day
             start_time += timedelta(days=cal_offset)

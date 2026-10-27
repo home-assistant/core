@@ -28,7 +28,7 @@ async def test_get_config_entry_diagnostics(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dsmr_reader.async_setup_entry", return_value=True
+        "homeassistant.components.dsmr_reader.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

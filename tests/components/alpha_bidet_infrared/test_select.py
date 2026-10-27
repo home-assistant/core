@@ -6,7 +6,7 @@ from infrared_protocols.codes.alpha_bidet.jx2 import AlphaBidetJX2LevelCode
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
-    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
 from pytest_homeassistant.components.common import (
@@ -20,9 +20,15 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import async_get as async_get_restore_state
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
@@ -84,8 +90,12 @@ async def test_select_option_sends_absolute_level(
 
 
 @pytest.mark.parametrize(
-    ("restored_state", "expected_state"),
-    [("medium", "medium"), ("bogus", STATE_UNKNOWN)],
+    ("restored_state", "restored_option", "expected_state"),
+    [
+        pytest.param("medium", "medium", "medium", id="available"),
+        pytest.param(STATE_UNAVAILABLE, "medium", "medium", id="unavailable"),
+        pytest.param("bogus", "bogus", STATE_UNKNOWN, id="unknown_option"),
+    ],
 )
 async def test_state_restored_on_restart(
     hass: HomeAssistant,
@@ -93,10 +103,19 @@ async def test_state_restored_on_restart(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
     restored_state: str,
+    restored_option: str,
     expected_state: str,
 ) -> None:
-    """Test the assumed level is restored after a restart, ignoring unknown ones."""
-    mock_restore_cache(hass, [State(WATER_TEMPERATURE_ENTITY_ID, restored_state)])
+    """Test the last level sent is restored, even if the select was unavailable."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(WATER_TEMPERATURE_ENTITY_ID, restored_state),
+                {"current_option": restored_option},
+            )
+        ],
+    )
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.alpha_bidet_infrared.PLATFORMS", platforms):
@@ -106,6 +125,30 @@ async def test_state_restored_on_restart(
     state = hass.states.get(WATER_TEMPERATURE_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_option_stored_while_unavailable(hass: HomeAssistant) -> None:
+    """Test the last level sent is stored while the emitter is unavailable."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: WATER_TEMPERATURE_ENTITY_ID, ATTR_OPTION: "medium"},
+        blocking=True,
+    )
+    hass.states.async_set(MOCK_INFRARED_EMITTER_ENTITY_ID, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(WATER_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    stored = {
+        stored.state.entity_id: stored
+        for stored in async_get_restore_state(hass).async_get_stored_states()
+    }
+    extra_data = stored[WATER_TEMPERATURE_ENTITY_ID].extra_data
+    assert extra_data is not None
+    assert extra_data.as_dict() == {"current_option": "medium"}
 
 
 @pytest.mark.usefixtures("init_integration")

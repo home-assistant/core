@@ -30,7 +30,7 @@ CLIENT_SECRET = "5678"
 def mock_setup_entry() -> Generator[Mock]:
     """Fixture to mock out integration setup."""
     with patch(
-        "homeassistant.components.google_photos.async_setup_entry", return_value=True
+        "homeassistant.components.google_photos.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

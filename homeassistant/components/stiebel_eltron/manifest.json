@@ -18,5 +18,5 @@
   "iot_class": "local_polling",
   "loggers": ["pystiebeleltron"],
   "quality_scale": "silver",
-  "requirements": ["pystiebeleltron==0.9.2"]
+  "requirements": ["pystiebeleltron==0.10.0"]
 }

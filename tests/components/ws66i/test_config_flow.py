@@ -31,7 +31,7 @@ CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 def _patch_success() -> Generator[None]:
     with (
         patch("homeassistant.components.ws66i.config_flow.get_ws66i"),
-        patch("homeassistant.components.ws66i.async_setup_entry", return_value=True),
+        patch("homeassistant.components.ws66i.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_ws66i,
         patch(
             "homeassistant.components.ws66i.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         ws66i_instance = mock_ws66i.return_value

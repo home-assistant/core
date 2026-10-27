@@ -167,25 +167,9 @@
       "description": "Starts or resumes a vacuum cleaner's cleaning task.",
       "name": "Start vacuum cleaner"
     },
-    "start_pause": {
-      "description": "Starts, pauses, or resumes a vacuum cleaner's cleaning task.",
-      "name": "Start/pause vacuum cleaner"
-    },
     "stop": {
       "description": "Stops a vacuum cleaner's current task.",
       "name": "Stop vacuum cleaner"
-    },
-    "toggle": {
-      "description": "Toggles a vacuum cleaner on/off.",
-      "name": "Toggle vacuum cleaner"
-    },
-    "turn_off": {
-      "description": "Turns off a vacuum cleaner.",
-      "name": "Turn off vacuum cleaner"
-    },
-    "turn_on": {
-      "description": "Turns on a vacuum cleaner.",
-      "name": "Turn on vacuum cleaner"
     }
   },
   "title": "Vacuum",
