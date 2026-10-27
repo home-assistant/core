@@ -14,7 +14,8 @@ Exchange the authorization code retrieved from the login flow for tokens.
 {
     "client_id": "https://hassbian.local:8123/",
     "grant_type": "authorization_code",
-    "code": "411ee2f916e648d691e937ae9344681e"
+    "code": "411ee2f916e648d691e937ae9344681e",
+    "code_verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 }
 
 Return value will be the access and refresh tokens. The access token will have
@@ -123,34 +124,35 @@ that link accounts with other cloud providers using LocalOAuth2Implementation
 as part of a config flow.
 """
 
-import asyncio
+import base64
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+import hashlib
+import hmac
 from http import HTTPStatus
 from logging import getLogger
-from typing import Any, cast
+import re
+from typing import Any, Protocol, cast
 import uuid
 
 from aiohttp import web
 from multidict import MultiDictProxy
-import voluptuous as vol
+import probatio
 
-from homeassistant.auth import InvalidAuthError
+from homeassistant.auth import DuplicateCredentialsError, InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
-    RefreshToken,
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import (
-    async_sign_path,
-    async_user_not_allowed_do_auth,
-)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import log_invalid_auth
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
@@ -162,12 +164,40 @@ from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 
-type StoreResultType = Callable[[str, Credentials], str]
-type RetrieveResultType = Callable[[str, str], Credentials | None]
+__all__ = [
+    "DOMAIN",
+    "create_auth_code",
+]
+
+
+@dataclass(slots=True)
+class AuthCodeEntry:
+    """Entry stored in the auth code store."""
+
+    created: datetime
+    credentials: Credentials
+    code_challenge: str | None = None
+    code_challenge_method: str | None = None
+
+
+class StoreResultType(Protocol):
+    """Protocol for storing auth flow results."""
+
+    def __call__(
+        self,
+        client_id: str,
+        result: Credentials,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+    ) -> str:
+        """Store flow result and return a code to retrieve it."""
+
+
+type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-DELETE_CURRENT_TOKEN_DELAY = 2
+AUTH_CODE_EXPIRATION = timedelta(minutes=10)
 
 
 def create_auth_code(
@@ -209,6 +239,7 @@ class RevokeTokenView(HomeAssistantView):
     name = "api:auth:revocation"
     requires_auth = False
     cors_allowed = True
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     async def post(self, request: web.Request) -> web.Response:
         """Revoke a token."""
@@ -231,6 +262,19 @@ class RevokeTokenView(HomeAssistantView):
         return web.Response(status=HTTPStatus.OK)
 
 
+# RFC 7636 4.1: code_verifier is 43-128 unreserved characters.
+_CODE_VERIFIER_RE = re.compile(r"^[A-Za-z0-9._~-]{43,128}\Z")
+
+
+def _verify_code_verifier(code_verifier: str, code_challenge: str) -> bool:
+    """Verify code_verifier against code_challenge per RFC 7636 (S256)."""
+    if not _CODE_VERIFIER_RE.match(code_verifier):
+        return False
+    hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    computed_challenge = base64.urlsafe_b64encode(hashed).decode("ascii").rstrip("=")
+    return hmac.compare_digest(computed_challenge, code_challenge)
+
+
 class TokenView(HomeAssistantView):
     """View to issue tokens."""
 
@@ -238,6 +282,7 @@ class TokenView(HomeAssistantView):
     name = "api:auth:token"
     requires_auth = False
     cors_allowed = True
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     def __init__(self, retrieve_auth: RetrieveResultType) -> None:
         """Initialize the token view."""
@@ -248,6 +293,14 @@ class TokenView(HomeAssistantView):
         """Grant a token."""
         hass = request.app[KEY_HASS]
         data = cast(MultiDictProxy[str], await request.post())
+
+        # RFC 6749 3.2: parameters must not be included more than once.
+        if len(data) != len(set(data)) or any(
+            not isinstance(value, str) for value in data.values()
+        ):
+            return self.json(
+                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
 
         grant_type = data.get("grant_type")
 
@@ -278,7 +331,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
-        if client_id is None or not indieauth.verify_client_id(client_id):
+        if client_id is None or not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -290,15 +345,50 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        credential = self._retrieve_auth(client_id, code)
+        entry = self._retrieve_auth(client_id, code)
 
-        if credential is None or not isinstance(credential, Credentials):
+        if entry is None or await _async_credentials_removed(hass, entry.credentials):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        user = await hass.auth.async_get_or_create_user(credential)
+        if entry.code_challenge is not None:
+            if not (code_verifier := data.get("code_verifier")):
+                return self.json(
+                    {
+                        "error": "invalid_request",
+                        "error_description": "Code verifier required",
+                    },
+                    status_code=HTTPStatus.BAD_REQUEST,
+                )
+            if not _verify_code_verifier(code_verifier, entry.code_challenge):
+                return self.json(
+                    {
+                        "error": "invalid_grant",
+                        "error_description": "Invalid code verifier",
+                    },
+                    status_code=HTTPStatus.BAD_REQUEST,
+                )
+        elif "code_verifier" in data:
+            return self.json(
+                {
+                    "error": "invalid_request",
+                    "error_description": (
+                        "Code verifier provided but no code challenge was present"
+                    ),
+                },
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+        credential = entry.credentials
+        try:
+            user = await hass.auth.async_get_or_create_user(credential)
+        except DuplicateCredentialsError:
+            return self.json(
+                {"error": "invalid_grant", "error_description": "Sign in again"},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
 
         if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
@@ -346,7 +436,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle refresh token request."""
         client_id = data.get("client_id")
-        if client_id is not None and not indieauth.verify_client_id(client_id):
+        if client_id is not None and not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -415,18 +507,22 @@ class LinkUserView(HomeAssistantView):
         """Initialize the link user view."""
         self._retrieve_credentials = retrieve_credentials
 
-    @RequestDataValidator(vol.Schema({"code": str, "client_id": str}))
+    @RequestDataValidator(probatio.Schema({"code": str, "client_id": str}))
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Link a user."""
         hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
 
-        credentials = self._retrieve_credentials(data["client_id"], data["code"])
+        entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if credentials is None:
+        if (
+            entry is None
+            or entry.code_challenge is not None
+            or await _async_credentials_removed(hass, entry.credentials)
+        ):
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)
         if linked_user != user and linked_user is not None:
             return self.json_message(
                 "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
@@ -434,51 +530,73 @@ class LinkUserView(HomeAssistantView):
 
         # No-op if credential is already linked to the user it will be linked to
         if linked_user != user:
-            await hass.auth.async_link_user(user, credentials)
+            await hass.auth.async_link_user(user, entry.credentials)
         return self.json_message("User linked")
+
+
+async def _async_credentials_removed(
+    hass: HomeAssistant, credentials: Credentials
+) -> bool:
+    """Return if the credentials were removed after their code was issued."""
+    return (
+        not credentials.is_new
+        and await hass.auth.async_get_user_by_credentials(credentials) is None
+    )
 
 
 @callback
 def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     """Create an in memory store."""
-    temp_results: dict[tuple[str, str], tuple[datetime, Credentials]] = {}
+    temp_results: dict[tuple[str, str], AuthCodeEntry] = {}
 
     @callback
-    def store_result(client_id: str, result: Credentials) -> str:
+    def store_result(
+        client_id: str,
+        result: Credentials,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+    ) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
             raise TypeError("result has to be a Credentials instance")
 
+        now = dt_util.utcnow()
+        for key, entry in list(temp_results.items()):
+            if now - entry.created >= AUTH_CODE_EXPIRATION:
+                del temp_results[key]
+
         code = uuid.uuid4().hex
-        temp_results[(client_id, code)] = (
-            dt_util.utcnow(),
-            result,
+        temp_results[(client_id, code)] = AuthCodeEntry(
+            created=now,
+            credentials=result,
+            code_challenge=code_challenge,
+            code_challenge_method=code_challenge_method,
         )
         return code
 
     @callback
-    def retrieve_result(client_id: str, code: str) -> Credentials | None:
+    def retrieve_result(client_id: str, code: str) -> AuthCodeEntry | None:
         """Retrieve flow result."""
         key = (client_id, code)
 
         if key not in temp_results:
             return None
 
-        created, result = temp_results.pop(key)
+        entry = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
-        if dt_util.utcnow() - created < timedelta(minutes=10):
-            return result
+        if dt_util.utcnow() - entry.created < AUTH_CODE_EXPIRATION:
+            return entry
 
         return None
 
     return store_result, retrieve_result
 
 
-@websocket_api.websocket_command({vol.Required("type"): "auth/current_user"})
+@websocket_api.websocket_command({probatio.Required("type"): "auth/current_user"})
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_current_user(
@@ -518,10 +636,10 @@ async def websocket_current_user(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/long_lived_access_token",
-        vol.Required("lifespan"): int,  # days
-        vol.Required("client_name"): str,
-        vol.Optional("client_icon"): str,
+        probatio.Required("type"): "auth/long_lived_access_token",
+        probatio.Required("lifespan"): int,  # days
+        probatio.Required("client_name"): str,
+        probatio.Optional("client_icon"): str,
     }
 )
 @websocket_api.ws_require_user()
@@ -547,7 +665,7 @@ async def websocket_create_long_lived_access_token(
     connection.send_result(msg["id"], access_token)
 
 
-@websocket_api.websocket_command({vol.Required("type"): "auth/refresh_tokens"})
+@websocket_api.websocket_command({probatio.Required("type"): "auth/refresh_tokens"})
 @websocket_api.ws_require_user()
 @callback
 def websocket_refresh_tokens(
@@ -589,8 +707,8 @@ def websocket_refresh_tokens(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/delete_refresh_token",
-        vol.Required("refresh_token_id"): str,
+        probatio.Required("type"): "auth/delete_refresh_token",
+        probatio.Required("refresh_token_id"): str,
     }
 )
 @websocket_api.ws_require_user()
@@ -612,9 +730,9 @@ def websocket_delete_refresh_token(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/delete_all_refresh_tokens",
-        vol.Optional("token_type"): cv.string,
-        vol.Optional("delete_current_token", default=True): bool,
+        probatio.Required("type"): "auth/delete_all_refresh_tokens",
+        probatio.Optional("token_type"): cv.string,
+        probatio.Optional("delete_current_token", default=True): bool,
     }
 )
 @websocket_api.ws_require_user()
@@ -622,71 +740,39 @@ def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""
-    current_refresh_token: RefreshToken | None = None
     remove_failed = False
     token_type = msg.get("token_type")
     delete_current_token = msg.get("delete_current_token")
-    limit_token_types = token_type is not None
 
-    for token in list(connection.user.refresh_tokens.values()):
-        if token.id == connection.refresh_token_id:
-            # Skip the current refresh token as it has revoke_callback,
-            # which cancels/closes the connection.
-            # It will be removed after sending the result.
-            current_refresh_token = token
-            continue
-        if limit_token_types and token_type != token.token_type:
-            continue
-        try:
-            hass.auth.async_remove_refresh_token(token)
-        except Exception:
-            getLogger(__name__).exception("Error during refresh token removal")
-            remove_failed = True
+    # Removing the current token closes the connection, which then waits for
+    # the result to be sent.
+    with connection.async_defer_auth_close():
+        for token in list(connection.user.refresh_tokens.values()):
+            if token.id == connection.refresh_token_id and not delete_current_token:
+                continue
+            if token_type is not None and token_type != token.token_type:
+                continue
+            try:
+                hass.auth.async_remove_refresh_token(token)
+            except Exception:
+                getLogger(__name__).exception("Error during refresh token removal")
+                remove_failed = True
 
-    if remove_failed:
-        connection.send_error(
-            msg["id"], "token_removing_error", "During removal, an error was raised."
-        )
-    else:
-        connection.send_result(msg["id"], {})
-
-    async def _delete_current_token_soon(current_refresh_token: RefreshToken) -> None:
-        """Delete the current token after a delay.
-
-        We do not want to delete the current token immediately as it will
-        close the connection.
-
-        This is implemented as a tracked task to ensure the token
-        is still deleted if Home Assistant is shut down during
-        the delay.
-
-        It should not be refactored to use a call_later as that
-        would not be tracked and the token would not be deleted
-        if Home Assistant was shut down during the delay.
-        """
-        try:
-            await asyncio.sleep(DELETE_CURRENT_TOKEN_DELAY)
-        finally:
-            # If the task is cancelled because we are shutting down, delete
-            # the token right away.
-            hass.auth.async_remove_refresh_token(current_refresh_token)
-
-    if (
-        delete_current_token
-        and current_refresh_token
-        and (not limit_token_types or current_refresh_token.token_type == token_type)
-    ):
-        # Deleting the token will close the connection so we need
-        # to do it with a delay in a tracked task to ensure it still
-        # happens if Home Assistant is shutting down.
-        hass.async_create_task(_delete_current_token_soon(current_refresh_token))
+        if remove_failed:
+            connection.send_error(
+                msg["id"],
+                "token_removing_error",
+                "During removal, an error was raised.",
+            )
+        else:
+            connection.send_result(msg["id"], {})
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/sign_path",
-        vol.Required("path"): str,
-        vol.Optional("expires", default=30): int,
+        probatio.Required("type"): "auth/sign_path",
+        probatio.Required("path"): str,
+        probatio.Optional("expires", default=30): int,
     }
 )
 @websocket_api.ws_require_user()
@@ -712,9 +798,9 @@ def websocket_sign_path(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "auth/refresh_token_set_expiry",
-        vol.Required("refresh_token_id"): str,
-        vol.Required("enable_expiry"): bool,
+        probatio.Required("type"): "auth/refresh_token_set_expiry",
+        probatio.Required("refresh_token_id"): str,
+        probatio.Required("enable_expiry"): bool,
     }
 )
 @websocket_api.ws_require_user()

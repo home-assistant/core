@@ -9,8 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FullyKioskConfigEntry
-from .coordinator import FullyKioskDataUpdateCoordinator
+from .coordinator import FullyKioskConfigEntry, FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
@@ -34,6 +33,7 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         """Initialize the camera."""
         FullyKioskEntity.__init__(self, coordinator)
         Camera.__init__(self)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

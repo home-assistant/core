@@ -12,7 +12,7 @@ from datetime import datetime
 import functools as ft
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import (
@@ -56,6 +56,10 @@ STATE_CONFIGURED = "configured"
 type ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 def _report_deprecation() -> None:
@@ -198,12 +202,14 @@ class Configurator:
         self._requests: dict[
             str, tuple[str, list[dict[str, str]], ConfiguratorCallback | None]
         ] = {}
+        # Deprecated integration, to be removed in 2027.10
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_admin_service(
             hass,
             DOMAIN,
             SERVICE_CONFIGURE,
             self.async_handle_service_call,
-            schema=vol.Schema({}, extra=vol.ALLOW_EXTRA),
+            schema=probatio.Schema({}, extra=probatio.ALLOW_EXTRA),
         )
 
     @async_callback

@@ -1,6 +1,7 @@
 {
   "domain": "radarr",
   "name": "Radarr",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/radarr",

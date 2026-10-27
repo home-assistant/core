@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import DEGREE, EntityCategory, UnitOfSpeed
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -29,7 +29,6 @@ class ScorpionTrackSensorEntityDescription(SensorEntityDescription):
     """Describe a ScorpionTrack sensor."""
 
     value_fn: Callable[[ScorpionTrackVehicle], StateType | datetime]
-    available_fn: Callable[[ScorpionTrackVehicle], bool] = lambda _: True
     suggested_unit_fn: Callable[[ScorpionTrackShare], str] | None = None
 
 
@@ -50,7 +49,6 @@ SENSORS: tuple[ScorpionTrackSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda vehicle: vehicle.position.speed_kmh,
-        available_fn=lambda vehicle: vehicle.position.speed_kmh is not None,
         suggested_unit_fn=lambda share: (
             UnitOfSpeed.MILES_PER_HOUR
             if share.uses_miles
@@ -74,11 +72,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up ScorpionTrack sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        ScorpionTrackSensor(coordinator, vehicle.id, entity_description)
-        for vehicle in coordinator.data.vehicles
-        for entity_description in SENSORS
-    )
+    known_vehicles: set[int] = set()
+
+    @callback
+    def async_add_new_vehicles() -> None:
+        """Add sensors for vehicles newly included in the share."""
+        known_vehicles.intersection_update(coordinator.vehicles_by_id)
+        new_vehicles = coordinator.vehicles_by_id.keys() - known_vehicles
+        if not new_vehicles:
+            return
+        known_vehicles.update(new_vehicles)
+        async_add_entities(
+            ScorpionTrackSensor(coordinator, vehicle_id, entity_description)
+            for vehicle_id in new_vehicles
+            for entity_description in SENSORS
+        )
+
+    async_add_new_vehicles()
+    entry.async_on_unload(coordinator.async_add_listener(async_add_new_vehicles))
 
 
 class ScorpionTrackSensor(ScorpionTrackEntity, SensorEntity):
@@ -102,14 +113,6 @@ class ScorpionTrackSensor(ScorpionTrackEntity, SensorEntity):
             self._attr_suggested_unit_of_measurement = suggested_unit_fn(
                 coordinator.data
             )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.get_vehicle()
-        )
 
     @property
     @override

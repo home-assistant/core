@@ -19,7 +19,9 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -63,7 +65,9 @@ CONDITION_MAP = {
 
 HOURLY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
     ATTR_FORECAST_CONDITION: "significantWeatherCode",
+    ATTR_FORECAST_HUMIDITY: "screenRelativeHumidity",
     ATTR_FORECAST_NATIVE_APPARENT_TEMP: "feelsLikeTemperature",
+    ATTR_FORECAST_NATIVE_DEW_POINT: "screenDewPointTemperature",
     ATTR_FORECAST_NATIVE_PRESSURE: "mslp",
     ATTR_FORECAST_NATIVE_TEMP: "screenTemperature",
     ATTR_FORECAST_PRECIPITATION: "totalPrecipAmount",
@@ -76,6 +80,7 @@ HOURLY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
 
 DAILY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
     ATTR_FORECAST_CONDITION: "daySignificantWeatherCode",
+    ATTR_FORECAST_HUMIDITY: "middayRelativeHumidity",
     ATTR_FORECAST_NATIVE_APPARENT_TEMP: "dayMaxFeelsLikeTemp",
     ATTR_FORECAST_NATIVE_PRESSURE: "middayMslp",
     ATTR_FORECAST_NATIVE_TEMP: "dayMaxScreenTemperature",
@@ -89,6 +94,7 @@ DAILY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
 
 DAY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
     ATTR_FORECAST_CONDITION: "daySignificantWeatherCode",
+    ATTR_FORECAST_HUMIDITY: "middayRelativeHumidity",
     ATTR_FORECAST_NATIVE_APPARENT_TEMP: "dayMaxFeelsLikeTemp",
     ATTR_FORECAST_NATIVE_PRESSURE: "middayMslp",
     ATTR_FORECAST_NATIVE_TEMP: "dayUpperBoundMaxTemp",
@@ -102,6 +108,7 @@ DAY_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
 
 NIGHT_FORECAST_ATTRIBUTE_MAP: dict[str, str] = {
     ATTR_FORECAST_CONDITION: "nightSignificantWeatherCode",
+    ATTR_FORECAST_HUMIDITY: "midnightRelativeHumidity",
     ATTR_FORECAST_NATIVE_APPARENT_TEMP: "nightMinFeelsLikeTemp",
     ATTR_FORECAST_NATIVE_PRESSURE: "midnightMslp",
     ATTR_FORECAST_NATIVE_TEMP: "nightUpperBoundMinTemp",

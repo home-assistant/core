@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.homematic.const import (
     ATTR_INTERFACE,
@@ -12,8 +13,6 @@ from homeassistant.components.homematic.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 DOMAIN = "homematic"
 BASE_CONFIG = {DOMAIN: {"hosts": {"ccu2": {"host": "127.0.0.1"}}}}

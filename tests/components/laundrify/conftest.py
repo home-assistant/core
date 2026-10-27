@@ -4,15 +4,14 @@ from unittest.mock import AsyncMock, patch
 
 from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.laundrify.const import DOMAIN, MANUFACTURER
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
-
-from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="mock_device")

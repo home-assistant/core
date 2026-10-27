@@ -4,10 +4,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_UPDATE_INTERVAL,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
 )
 from homeassistant.components.geo_location import (
     ATTR_SOURCE,
@@ -26,12 +29,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 from .conftest import URL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG_LEGACY = {
     GEO_LOCATION_DOMAIN: [
@@ -145,3 +147,23 @@ async def test_entity_lifecycle(
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 0
+
+
+async def test_signals_disconnected_on_unload(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test entity signal listeners are disconnected when the entry unloads."""
+    config_entry.add_to_hass(hass)
+    mock_entry = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry]
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    signals = (SIGNAL_DELETE_ENTITY.format("1234"), SIGNAL_UPDATE_ENTITY.format("1234"))
+    assert all(signal in hass.data[DATA_DISPATCHER] for signal in signals)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not any(signal in hass.data[DATA_DISPATCHER] for signal in signals)

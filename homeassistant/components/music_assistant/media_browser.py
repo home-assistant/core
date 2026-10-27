@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.enums import MediaType as MASSMediaType
 from music_assistant_models.media_items import MediaItemType, SearchResults
 
@@ -108,6 +109,13 @@ SEARCHABLE_MASS_MEDIA_TYPES = [
 
 # an artist holds nothing else we can search or browse
 ARTIST_MASS_MEDIA_TYPES = [MASSMediaType.ALBUM, MASSMediaType.TRACK]
+
+# the items that async_search_media can search inside
+SEARCH_WITHIN_MASS_MEDIA_TYPES = (
+    MASSMediaType.ALBUM,
+    MASSMediaType.ARTIST,
+    MASSMediaType.PLAYLIST,
+)
 
 MEDIA_CONTENT_TYPE_FLAC = "audio/flac"
 THUMB_SIZE = 200
@@ -474,6 +482,7 @@ def build_item(
         title=title,
         can_play=True,
         can_expand=can_expand,
+        can_search=item.media_type in SEARCH_WITHIN_MASS_MEDIA_TYPES,
         thumbnail=img_url,
     )
 
@@ -528,6 +537,7 @@ async def _search_within_artist(
     search_query: str,
     limit: int,
     media_types: list[MASSMediaType],
+    user: LinkedUser | None = None,
 ) -> SearchResults:
     """Search for content within an artist's catalog."""
     artist = await mass.music.get_item_by_uri(artist_uri)
@@ -536,6 +546,7 @@ async def _search_within_artist(
         search_query,
         media_types=media_types,
         limit=limit,
+        user=user,
     )
 
 
@@ -674,6 +685,7 @@ def _get_media_class_for_type(media_type: str) -> MediaClass | None:
 async def async_search_media(
     mass: MusicAssistantClient,
     query: SearchMediaQuery,
+    user: LinkedUser | None = None,
 ) -> SearchMedia:
     """Search media."""
     try:
@@ -700,13 +712,13 @@ async def async_search_media(
             if "artist/" in query.media_content_id:
                 # For artists, we already run a search, so save the results
                 search_results = await _search_within_artist(
-                    mass, query.media_content_id, search_query, limit, media_types
+                    mass, query.media_content_id, search_query, limit, media_types, user
                 )
 
         # Execute search using the Music Assistant API if we haven't already done so
         if search_results is None:
             search_results = await mass.music.search(
-                search_query, media_types=media_types, limit=limit
+                search_query, media_types=media_types, limit=limit, user=user
             )
 
         # Process the search results

@@ -2,7 +2,7 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -75,7 +75,7 @@ def _resolve_device_id(hass: HomeAssistant, device_id: str, domain: str) -> str:
 async def async_validate_device_automation_config(
     hass: HomeAssistant,
     config: ConfigType,
-    automation_schema: vol.Schema,
+    automation_schema: probatio.Schema,
     automation_type: DeviceAutomationType,
 ) -> ConfigType:
     """Validate config."""
@@ -105,7 +105,7 @@ async def async_validate_device_automation_config(
     if entity_id := validated_config.get(CONF_ENTITY_ID):
         try:
             er.async_validate_entity_id(er.async_get(hass), entity_id)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise InvalidDeviceAutomationConfig(
                 f"Unknown entity '{entity_id}'"
             ) from err
@@ -130,24 +130,17 @@ async def async_validate_device_automation_config(
         )
 
     # Find a config entry with the same domain as the device automation
-    device_config_entry = None
-    for entry_id in device.config_entries:
-        if (
-            not (entry := hass.config_entries.async_get_entry(entry_id))
-            or entry.domain != validated_config[CONF_DOMAIN]
-        ):
-            continue
-        device_config_entry = entry
-        break
-
-    if not device_config_entry:
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=validated_config[CONF_DOMAIN]
+    )
+    if not config_entry:
         # There's no config entry with the same domain as the device automation
         raise InvalidDeviceAutomationConfig(
             f"Device '{validated_config[CONF_DEVICE_ID]}' has no config entry from "
             f"domain '{validated_config[CONF_DOMAIN]}'"
         )
 
-    if not await hass.config_entries.async_wait_component(device_config_entry):
+    if not await hass.config_entries.async_wait_component(config_entry):
         # The component could not be loaded, skip the dynamic validation
         return validated_config
 

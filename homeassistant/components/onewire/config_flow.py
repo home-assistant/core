@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aio_ownet.exceptions import OWServerConnectionError
 from aio_ownet.proxy import OWServerStatelessProxy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -32,10 +32,10 @@ from .const import (
 )
 from .onewirehub import OneWireConfigEntry
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -230,13 +230,13 @@ class OnewireOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="device_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         INPUT_ENTRY_CLEAR_OPTIONS,
                         default=False,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         INPUT_ENTRY_DEVICE_SELECTION,
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
@@ -257,14 +257,14 @@ class OnewireOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(data=self.options)
 
         self.current_device, onewire_id = self.devices_to_configure.popitem()
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     OPTION_ENTRY_SENSOR_PRECISION,
                     default=self._get_current_setting(
                         onewire_id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
                     ),
-                ): vol.In(PRECISION_MAPPING_FAMILY_28),
+                ): probatio.In(PRECISION_MAPPING_FAMILY_28),
             }
         )
 

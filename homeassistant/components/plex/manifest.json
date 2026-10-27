@@ -1,6 +1,7 @@
 {
   "domain": "plex",
   "name": "Plex Media Server",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@jjlawren"],
   "config_flow": true,
   "dependencies": ["http"],
@@ -9,7 +10,7 @@
   "iot_class": "local_push",
   "loggers": ["plexapi", "plexwebsocket"],
   "requirements": [
-    "PlexAPI==4.15.16",
+    "PlexAPI==4.18.2",
     "plexauth==0.0.6",
     "plexwebsocket==0.0.14"
   ],

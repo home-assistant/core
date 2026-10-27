@@ -26,8 +26,9 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
+from .const import DEFAULT_TIMEOUT
 from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -38,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GlancesConfigEntry
-) -> bool:
+) -> None:
     """Set up Glances from config entry."""
     try:
         api = await get_api(hass, dict(config_entry.data))
@@ -55,17 +56,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
-    httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
+    # The shared httpx client cannot be used because its 5-second timeout
+    # is too short for slow Glances hosts.
+    httpx_client = create_async_httpx_client(
+        hass, verify_ssl=entry_data[CONF_VERIFY_SSL], timeout=DEFAULT_TIMEOUT
+    )
     for version in (4, 3):
         api = Glances(
             host=entry_data[CONF_HOST],

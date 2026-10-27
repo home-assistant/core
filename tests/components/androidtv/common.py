@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.androidtv.const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -17,8 +19,6 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PO
 from homeassistant.util import slugify
 
 from . import patchers
-
-from tests.common import MockConfigEntry
 
 ADB_PATCH_KEY = "patch_key"
 TEST_ENTITY_NAME = "entity_name"

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import DEMO_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

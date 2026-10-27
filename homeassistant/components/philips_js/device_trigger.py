@@ -1,6 +1,6 @@
 """Provides device automations for control of device."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
@@ -19,7 +19,7 @@ from .helpers import async_get_turn_on_trigger
 TRIGGER_TYPES = {TRIGGER_TYPE_TURN_ON}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 

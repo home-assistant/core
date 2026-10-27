@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import jwt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
@@ -42,7 +42,7 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         return await self.async_step_user()
 

@@ -99,7 +99,9 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         # set HVAC capabilities
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
-        self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.temperature_unit]
+        self._attr_native_temperature_unit = HVAC_UNIT_SB_TO_HASS[
+            device.temperature_unit
+        ]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
         self._attr_supported_features = (
@@ -127,8 +129,8 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             else HVAC_MODE_SB_TO_HASS[coordinator_device.mode]
         )
         self._attr_fan_mode = FAN_SB_TO_HASS[coordinator_device.fan]
-        self._attr_current_temperature = coordinator_device.temperature
-        self._attr_target_temperature = coordinator_device.target_temperature
+        self._attr_native_current_temperature = coordinator_device.temperature
+        self._attr_native_target_temperature = coordinator_device.target_temperature
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -169,7 +171,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         if fan is None:
             fan = FAN_HASS_TO_SB[self.fan_mode]
         if target_temperature is None:
-            target_temperature = int(self.target_temperature or 0)
+            target_temperature = int(self.native_target_temperature or 0)
 
         state: dict[str, int | str] = {
             ApiAttribute.POWER: power,

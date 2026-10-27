@@ -1,12 +1,23 @@
 """Platform providing event entities for UniFi Protect."""
 
+from abc import abstractmethod
+from collections.abc import Callable, Iterable
 import dataclasses
-import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import ModelType, SmartDetectObjectType
+from uiprotect.data import (
+    Bootstrap,
+    EventType,
+    Fob,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    PublicCamera,
+    PublicDeviceModel,
+    SmartDetectObjectType,
+)
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
+from uiprotect.data.types import EventButtonType
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -15,10 +26,10 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
-from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
@@ -34,14 +45,13 @@ from .const import (
     KEYRINGS_USER_STATUS,
     VEHICLE_EVENT_DELAY_SECONDS,
 )
-from .data import (
-    EventType,
-    ProtectAdoptableDeviceModel,
-    ProtectData,
-    ProtectDeviceType,
-    UFPConfigEntry,
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
+from .entity import (
+    EventEntityMixin,
+    ProtectDeviceEntity,
+    ProtectEventMixin,
+    _async_capability_supported,
 )
-from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
 PARALLEL_UPDATES = 0
 
@@ -92,6 +102,9 @@ _SMART_DETECT_EVENT_TYPES = (
     EventType.SMART_DETECT_LINE,
     EventType.SMART_DETECT_LOITER,
 )
+# The event types uiprotect keeps in the camera's last smart detect event; a
+# line crossing inside a zone can leave it on the line event.
+_VEHICLE_EVENT_TYPES = (EventType.SMART_DETECT, EventType.SMART_DETECT_LINE)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -102,26 +115,17 @@ class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
     include_event_source: bool = False
 
 
-class ProtectDevicePublicEventEntity(
-    EventEntityMixin, ProtectDeviceEntity, EventEntity
-):
-    """Base for entities driven by the public events WS.
+class ProtectFireOnceMixin(EventEntity):
+    """Dedup mixin for entities fired from the public events WS.
 
     A detection type can surface at the event start, on a later update, or only
-    as the event ends, and every non-eviction change is dispatched — so firing is
-    deduped per ``(event id, object type, event source)``.
-
-    Availability follows the public API (device present and connected) plus the
-    events websocket, which is the only channel these entities fire from.
+    as the event ends, and every non-eviction change is dispatched, so firing is
+    deduped per ``(event id, surfaced type, Protect event type)``.
     """
 
-    _ufp_uses_public = True
-    _ufp_requires_events_ws = True
-
-    entity_description: ProtectEventEntityDescription
-    # A camera can run two overlapping events of the same category whose
-    # dispatches interleave, so dedup tracks fired object/source pairs per
-    # recent event id (bounded), not just the current one.
+    # A device can run two overlapping events of the same category whose
+    # dispatches interleave, so dedup tracks fired type pairs per recent event
+    # id (bounded), not just the current one.
     _fired: dict[str, frozenset[tuple[str, EventType]]] | None = None
 
     @callback
@@ -148,20 +152,89 @@ class ProtectDevicePublicEventEntity(
         self.async_write_ha_state()
 
 
+class ProtectPublicEventSubscriberEntity(ProtectDeviceEntity):
+    """Base for entities fired from public events keyed by the device id.
+
+    A re-adopted device gets a new id. In hybrid mode the private and public
+    objects learn it independently, so both ids are subscribed while they differ.
+    """
+
+    _public_event_unsubs: list[CALLBACK_TYPE] | None = None
+    _public_event_device_ids: frozenset[str] = frozenset()
+
+    @abstractmethod
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        """Return the public event types and their callbacks."""
+
+    @callback
+    def _async_subscribe_public_events(self) -> None:
+        device_ids = frozenset(
+            obj.id for obj in (self.device, self._ufp_public_obj) if obj is not None
+        )
+        if device_ids == self._public_event_device_ids:
+            return
+        self._async_unsubscribe_public_events()
+        self._public_event_device_ids = device_ids
+        self._public_event_unsubs = [
+            self.data.async_subscribe_public_event(
+                device_id, event_type, update_callback
+            )
+            for device_id in device_ids
+            for event_type, update_callback in self._async_public_event_subscriptions()
+        ]
+
+    @callback
+    def _async_unsubscribe_public_events(self) -> None:
+        for unsub in self._public_event_unsubs or ():
+            unsub()
+        self._public_event_unsubs = None
+        self._public_event_device_ids = frozenset()
+
+    @callback
+    @override
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if self._public_event_unsubs is not None:
+            self._async_subscribe_public_events()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the public events of this device."""
+        await super().async_added_to_hass()
+        self._async_subscribe_public_events()
+        self.async_on_remove(self._async_unsubscribe_public_events)
+
+
+class ProtectDevicePublicEventEntity(
+    ProtectFireOnceMixin,
+    EventEntityMixin,
+    ProtectPublicEventSubscriberEntity,
+    EventEntity,
+):
+    """Base for entities driven by the public events WS.
+
+    Availability follows the public API (device present and connected) plus the
+    events websocket, which is the only channel these entities fire from.
+    """
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    entity_description: ProtectEventEntityDescription
+
+
 class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
     """A UniFi Protect doorbell ring event entity driven by the public events WS."""
 
     entity_description: ProtectEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public ring events for this doorbell."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public_event(
-                self.device.id, EventType.RING, self._async_ring_event
-            )
-        )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return ((EventType.RING, self._async_ring_event),)
 
     @callback
     def _async_ring_event(self, event: ProtectEvent) -> None:
@@ -402,7 +475,7 @@ class ProtectDeviceVehicleEventEntity(
         # Process vehicle detection events with thumbnails
         if (
             event
-            and event.type is EventType.SMART_DETECT
+            and event.type in _VEHICLE_EVENT_TYPES
             and (thumbnails := self._get_vehicle_thumbnails(event))
         ):
             # Skip if same event with same data (no changes)
@@ -447,15 +520,13 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
     entity_description: ProtectEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public smart-detect events for this camera."""
-        await super().async_added_to_hass()
-        for event_type in _SMART_DETECT_EVENT_TYPES:
-            self.async_on_remove(
-                self.data.async_subscribe_public_event(
-                    self.device.id, event_type, self._async_smart_detect_event
-                )
-            )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_smart_detect_event)
+            for event_type in _SMART_DETECT_EVENT_TYPES
+        )
 
     @callback
     def _async_smart_detect_event(self, event: ProtectEvent) -> None:
@@ -472,29 +543,18 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
             )
 
 
-_CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
-
-# Friendly event-type slugs where the raw enum value is unclear or prefixed;
-# unlisted types fall back to a snake_case slug so new ones still auto-surface.
+# Event types that differ from the library slug; unlisted types use the
+# library slug so new ones still auto-surface.
 _EVENT_TYPE_OVERRIDES = {
-    SmartDetectObjectType.SMOKE: "smoke",
     SmartDetectObjectType.CMONX: "co",
-    SmartDetectObjectType.SIREN: "siren",
-    SmartDetectObjectType.BABY_CRY: "baby_cry",
     SmartDetectObjectType.SPEAK: "speaking",
-    SmartDetectObjectType.BARK: "bark",
     SmartDetectObjectType.BURGLAR: "car_alarm",
-    SmartDetectObjectType.CAR_HORN: "car_horn",
-    SmartDetectObjectType.GLASS_BREAK: "glass_break",
 }
 
 
 def _event_type(detected: SmartDetectObjectType) -> str:
     """Stable snake_case event type for a detection (HA translation-key rules)."""
-    return (
-        _EVENT_TYPE_OVERRIDES.get(detected)
-        or _CAMEL_BOUNDARY.sub("_", detected.value).lower()
-    )
+    return _EVENT_TYPE_OVERRIDES.get(detected) or detected.slug
 
 
 _SMART_OBJECT_EVENT_TYPES = [
@@ -518,17 +578,13 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
     entity_description: ProtectDetectionEventEntityDescription
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to the category's public detection events."""
-        await super().async_added_to_hass()
-        for event_type in self.entity_description.ufp_public_event_types:
-            self.async_on_remove(
-                self.data.async_subscribe_public_event(
-                    self.device.id,
-                    event_type,
-                    self._async_detection_event,
-                )
-            )
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_detection_event)
+            for event_type in self.entity_description.ufp_public_event_types
+        )
 
     @callback
     def _async_detection_event(self, event: ProtectEvent) -> None:
@@ -563,6 +619,63 @@ class ProtectDeviceMotionEventEntity(ProtectDeviceDetectionEventEntity):
     @override
     def _async_detection_event(self, event: ProtectEvent) -> None:
         self._fire_once(event, EventType.MOTION.value, {ATTR_EVENT_ID: event.id})
+
+
+# Real hardware reports an empty ``feature_flags.buttons``, so the whole
+# vocabulary is declared. Sourced from the enum matched against
+# ``metadata.button`` below so the two cannot drift apart.
+_FOB_EVENT_TYPES: list[str] = [
+    button.name.lower()
+    for button in EventButtonType
+    if button is not EventButtonType.UNKNOWN
+]
+
+
+_FOB_EVENT_DESCRIPTION = EventEntityDescription(
+    key="keyfob",
+    translation_key="keyfob",
+    event_types=_FOB_EVENT_TYPES,
+)
+
+
+class ProtectFobButtonEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
+    """A UniFi Protect key fob button-press event entity.
+
+    Each fob exposes one event entity that fires the pressed button (from a
+    public ``sensorButtonPressed`` event's ``metadata.button``) as its event
+    type.
+    """
+
+    _ufp_uses_public = True
+    # Presses arrive only on the events websocket, so its health gates
+    # availability on top of the devices websocket.
+    _ufp_requires_events_ws = True
+
+    def __init__(self, data: ProtectData, fob: Fob) -> None:
+        """Initialize the key fob button event entity."""
+        super().__init__(data, fob, _FOB_EVENT_DESCRIPTION)
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        # A press arrives as a ``sensorButtonPressed`` event whose ``device`` is
+        # the fob and whose ``metadata.button`` is the pressed button.
+        return ((EventType.SENSOR_BUTTON_PRESSED, self._async_button_event),)
+
+    @callback
+    def _async_button_event(self, event: ProtectEvent) -> None:
+        if (metadata := event.metadata) is None or (button := metadata.button) is None:
+            return
+        # Skip a button added by newer firmware that coerces to
+        # ``EventButtonType.UNKNOWN`` (not among the declared event types).
+        if (button_type := button.name.lower()) not in self.event_types:
+            return
+        # A press is dispatched on every non-eviction change to its event, so
+        # the same press can arrive more than once.
+        self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
@@ -604,7 +717,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="package",
         translation_key="package",
-        ufp_required_field="can_detect_package",
+        ufp_capability=SmartDetectObjectType.PACKAGE,
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         event_types=[EVENT_TYPE_PACKAGE_DETECTED],
         entity_class=ProtectDeviceSmartDetectEventEntity,
@@ -620,7 +733,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectDetectionEventEntityDescription(
         key="smart_detection",
         translation_key="smart_detection",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_types",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
         include_event_source=True,
@@ -647,6 +760,22 @@ def _async_event_entities(
         for device in (data.get_cameras() if ufp_device is None else [ufp_device])
         for description in EVENT_DESCRIPTIONS
         if description.has_required(device)
+        and _async_capability_supported(None, device, description)
+    ]
+
+
+@callback
+def _async_public_event_entities(
+    data: ProtectData, camera: PublicCamera
+) -> list[ProtectDeviceEntity]:
+    # NFC, fingerprint and vehicle read their events from the private bootstrap;
+    # the doorbell ring drops out on the missing public is_doorbell flag.
+    return [
+        description.entity_class(data, camera, description)
+        for description in EVENT_DESCRIPTIONS
+        if issubclass(description.entity_class, ProtectDevicePublicEventEntity)
+        and description.has_required_public(camera)
+        and _async_capability_supported(camera, None, description)
     ]
 
 
@@ -657,6 +786,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up event entities for UniFi Protect integration."""
     data = entry.runtime_data
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities([ProtectFobButtonEventEntity(data, device)])
+        elif isinstance(device, PublicCamera):
+            async_add_entities(_async_public_event_entities(data, device))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    # The public bootstrap is primed only with an API key and supported NVR
+    # firmware; without it there are no fobs to expose.
+    api = data.api
+    if api.has_public_bootstrap:
+        async_add_entities(
+            ProtectFobButtonEventEntity(data, fob)
+            for fob in api.public_bootstrap.fobs.values()
+        )
+
+    if api.is_public_only:
+        async_add_entities(
+            entity
+            for public, _ in data.get_public_cameras()
+            if public is not None
+            for entity in _async_public_event_entities(data, public)
+        )
+        return
+
+    # Everything below is driven by the private bootstrap, which public-only
+    # entries do not have.
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

@@ -14,7 +14,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import backup  # noqa: F401
 from .agent import (
     BackupAgent,
-    BackupAgentError,
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
     OnProgressCallback,
@@ -26,11 +25,9 @@ from .http import async_register_http_views
 from .manager import (
     AddonErrorData,
     BackupManager,
-    BackupManagerError,
     BackupPlatformEvent,
     BackupPlatformProtocol,
     BackupReaderWriter,
-    BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
     CreateBackupStage,
@@ -45,12 +42,21 @@ from .manager import (
     UploadBackupEvent,
     WrittenBackup,
 )
-from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
+from .models import (
+    AddonInfo,
+    AgentBackup,
+    BackupAgentError,
+    BackupManagerError,
+    BackupNotFound,
+    BackupReaderWriterError,
+    Folder,
+)
 from .services import async_setup_services
 from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
+    "DOMAIN",
     "AddonErrorData",
     "AddonInfo",
     "AgentBackup",
@@ -99,9 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         reader_writer = CoreBackupReaderWriter(hass)
     else:
         # pylint: disable-next=home-assistant-component-root-import
-        from homeassistant.components.hassio.backup import (  # noqa: PLC0415
-            SupervisorBackupReaderWriter,
-        )
+        from homeassistant.components.hassio.backup import SupervisorBackupReaderWriter  # noqa: PLC0415
 
         reader_writer = SupervisorBackupReaderWriter(hass)
 
@@ -122,7 +126,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> None:
     """Set up a config entry."""
     backup_manager: BackupManager = hass.data[DATA_MANAGER]
     coordinator = BackupDataUpdateCoordinator(hass, entry, backup_manager)
@@ -134,12 +138,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback

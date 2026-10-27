@@ -13,7 +13,7 @@ from .coordinator import KacoConfigEntry, KacoDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KacoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KacoConfigEntry) -> None:
     """Set up KACO Modbus from a config entry."""
     # Shared with any other integration on this gateway, and closed when the
     # last entry holding a unit on it unloads.
@@ -29,9 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: KacoConfigEntry) -> bool
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: KacoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KacoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
