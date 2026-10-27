@@ -246,6 +246,10 @@ bitstring<5
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
+# https://github.com/home-assistant/core/issues/185645
+pycares>=5.2.1
+
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0
 
