@@ -3499,11 +3499,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
@@ -6144,6 +6144,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "libresync": {
+      "name": "LibreSync",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.speakers_audio"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "lichess": {
       "name": "Lichess",
       "integration_type": "service",
@@ -7904,7 +7913,7 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "nyt_games": {
@@ -8616,6 +8625,15 @@
             "lighting.bulbs_lamps"
           ],
           "name": "Philips Hue BLE"
+        },
+        "philips_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "name": "Philips Infrared"
         },
         "philips_js": {
           "integration_type": "device",
@@ -10071,7 +10089,7 @@
       "iot_class": "cloud_polling"
     },
     "serial": {
-      "name": "Serial",
+      "name": "Raw Serial",
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
@@ -10645,6 +10663,16 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "soma": {
       "name": "Soma Connect",
@@ -12551,7 +12579,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"

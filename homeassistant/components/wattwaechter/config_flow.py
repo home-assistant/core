@@ -1,4 +1,4 @@
-"""Config flow for the WattWächter Plus integration."""
+"""Config flow for the WattWächter integration."""
 
 from collections.abc import Mapping
 import logging
@@ -47,7 +47,7 @@ def _device_id_from_discovery(properties: Mapping[str, Any]) -> str:
 
 
 class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for WattWächter Plus."""
+    """Handle a config flow for WattWächter."""
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -165,7 +165,6 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={

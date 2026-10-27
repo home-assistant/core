@@ -8,7 +8,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('music_assistant', 'dashboard:fully_kiosk_hallway')]>,
     'disabled_by': None,
@@ -61,7 +61,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('music_assistant', 'dashboard:chromecast_kitchen')]>,
     'disabled_by': None,
@@ -117,7 +117,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('music_assistant', 'dashboard:unmapped_player_display')]>,
     'disabled_by': None,
