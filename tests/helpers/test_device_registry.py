@@ -3410,40 +3410,65 @@ async def test_async_get_include_composite_devices(
         device_registry.async_get("unknown_id", include_composite_devices=False) is None
     )
 
-    # include_main_devices=False, include_child_devices=False resolves only a composite
+    # include_main_devices=False, include_child_devices=False and an explicit
+    # include_composite_devices=True resolves only a composite
     assert (
         device_registry.async_get(
-            old_id, include_main_devices=False, include_child_devices=False
+            old_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         == composite
     )
     # a registered main device, a child device and an unknown id resolve to None
     assert (
         device_registry.async_get(
-            device_1.id, include_main_devices=False, include_child_devices=False
+            device_1.id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is None
     )
     assert (
         device_registry.async_get(
-            child_device.id, include_main_devices=False, include_child_devices=False
+            child_device.id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is None
     )
     assert (
         device_registry.async_get(
-            "unknown_id", include_main_devices=False, include_child_devices=False
+            "unknown_id",
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is None
     )
 
-    # include_main_devices=False, include_composite_devices=False resolves only a child:
-    # a composite id resolves to None, a child device still resolves
+    # include_main_devices=False resolves only a child: composites follow main
+    # devices unless opted in, so a composite id resolves to None with the flag
+    # omitted or False, and a child device still resolves
+    assert device_registry.async_get(old_id, include_main_devices=False) is None
     assert (
         device_registry.async_get(
             old_id, include_main_devices=False, include_composite_devices=False
         )
         is None
+    )
+    assert (
+        device_registry.async_get(
+            old_id, include_main_devices=False, include_child_devices=False
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        == child_device
     )
     assert (
         device_registry.async_get(

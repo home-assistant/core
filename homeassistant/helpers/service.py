@@ -397,7 +397,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     if data_ent_id == ENTITY_MATCH_ALL:
         excluded = target_helpers.async_extract_excluded_entity_ids(
-            service_call.hass, target_selection
+            service_call.hass, target_selection, expand_group
         )
         return [
             entity
@@ -1487,8 +1487,8 @@ def async_get_device_and_config_entry(
     domain: str,
     device_id: str,
     *,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[device_registry.AnyDeviceEntry, ConfigEntry]: ...
 
 
@@ -1511,10 +1511,7 @@ def async_get_device_and_config_entry(
     as does a composite-device id, because both the splits of a composite and the
     restored composite itself are main devices.
     """
-    device: device_registry.AnyDeviceEntry | None
-    config_entry: ConfigEntry | None
-    # The flags are plain bools here, which matches none of the Literal overloads
-    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(  # type: ignore[call-overload]
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
         hass,
         device_id,
         domain=domain,
