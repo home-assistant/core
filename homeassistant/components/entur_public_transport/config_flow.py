@@ -180,13 +180,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 except EnturApiError:
                     self._quays = ()
                     self._quay_discovery_failed = True
-                    if (
-                        self._selected_place.stop_id == self._existing_stop_id
-                        and self._existing_platform_mode == PLATFORM_MODE_SELECTED
-                    ):
-                        return self._show_reconfigure_form(
-                            errors={"base": "cannot_connect"}
-                        )
                 return await self.async_step_select_routes()
 
         return self.async_show_form(
@@ -913,3 +906,4 @@ def _stop_is_configured(
         and subentry.data.get(CONF_STOP_ID) == stop_id
         for subentry in entry.subentries.values()
     )
+

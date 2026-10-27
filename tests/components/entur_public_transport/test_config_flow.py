@@ -188,7 +188,7 @@ async def test_user_flow_rejects_short_query(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "query_too_short"}
 
 
-async def test_user_flow_accepts_manual_route_without_api_routes(
+async def test_user_flow_accepts_manual_route_when_quay_discovery_fails(
     hass: HomeAssistant,
 ) -> None:
     """Test adding a manual line ID when route discovery is empty."""
@@ -213,7 +213,7 @@ async def test_user_flow_accepts_manual_route_without_api_routes(
         ),
         patch(
             "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
-            return_value=(),
+            side_effect=EnturApiError,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1501,3 +1501,4 @@ async def test_config_flow_defensive_paths(hass: HomeAssistant) -> None:
         PLATFORM_MODE_ALL,
         [],
     )
+
