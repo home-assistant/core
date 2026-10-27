@@ -124,9 +124,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
     ),
-    # Needs override since io:ScreenReceiverUnoIOComponent only reports
-    # core:TargetClosureState and ignores setClosure. setDeployment values are
-    # echoed into TargetClosureState, so both are inverted.
+    # Needs override since PositionableScreenUno only reports TargetClosureState
+    # and ignores setClosure
     # uiClass is ExteriorScreen
     OverkizCoverDescription(
         key=UIWidget.POSITIONABLE_SCREEN_UNO,
@@ -824,7 +823,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            # TargetClosure can be 124 too (always when it is the position source)
+            # TargetClosureState may be 124 as well, e.g. when it is the position
+            # state itself (PositionableScreenUno)
             if (
                 fallback_state := self.device.states.get(
                     OverkizState.CORE_TARGET_CLOSURE
