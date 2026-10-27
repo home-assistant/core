@@ -83,7 +83,6 @@ class DevoloScannerEntity(
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
-        self._attr_name = mac
 
     @property
     @override

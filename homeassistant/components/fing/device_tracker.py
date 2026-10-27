@@ -6,7 +6,8 @@ from fing_agent_api.models import Device
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -74,7 +75,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
 
         self._attr_mac_address = self._device.mac
         self._attr_unique_id = f"{agent_id}-{self._attr_mac_address}"
-        self._attr_name = self._device.name
+        self._attr_device_info = DeviceInfo(name=self._device.name)
         self._attr_icon = get_icon_from_type(self._device.type)
 
     @property
@@ -110,7 +111,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             current_device_ip != new_device_ip
             or self._device.active != new_device.active
             or self._device.type != new_device.type
-            or self._attr_name != new_device.name
+            or self._device.name != new_device.name
             or self._attr_icon != get_icon_from_type(new_device.type)
         )
 
@@ -123,11 +124,17 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             updated_device_data
         ):
             self._device = updated_device_data
-            self._attr_name = updated_device_data.name
             self._attr_icon = get_icon_from_type(updated_device_data.type)
             er.async_get(self.hass).async_update_entity(
                 entity_id=self.entity_id,
-                original_name=self._attr_name,
                 original_icon=self._attr_icon,
             )
+            if (
+                (new_name := updated_device_data.name) is not None
+                and (device_entry := self.device_entry) is not None
+                and device_entry.name != new_name
+            ):
+                dr.async_get(self.hass).async_update_device(
+                    device_entry.id, name=new_name
+                )
             self.async_write_ha_state()

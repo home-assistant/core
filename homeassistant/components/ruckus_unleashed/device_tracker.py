@@ -5,7 +5,8 @@ from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -92,25 +93,18 @@ def restore_entities(
 class RuckusDevice(CoordinatorEntity, ScannerEntity):
     """Representation of a Ruckus client."""
 
-    def __init__(self, coordinator, mac, name) -> None:
+    def __init__(self, coordinator, mac, name: str | None) -> None:
         """Initialize a Ruckus client."""
         super().__init__(coordinator)
         self._mac = mac
-        self._name = name
+        if name:
+            self._attr_device_info = DeviceInfo(name=name)
 
     @property
     @override
     def mac_address(self) -> str:
         """Return a mac address."""
         return self._mac
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name."""
-        if not self.is_connected:
-            return self._name
-        return self.coordinator.data[KEY_SYS_CLIENTS][self._mac][API_CLIENT_HOSTNAME]
 
     @property
     @override
@@ -125,3 +119,20 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._mac in self.coordinator.data[KEY_SYS_CLIENTS]
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Rename the device when the hostname of a connected client changes."""
+        if (
+            self.is_connected
+            and (
+                hostname := self.coordinator.data[KEY_SYS_CLIENTS][self._mac][
+                    API_CLIENT_HOSTNAME
+                ]
+            )
+            and (device := self.device_entry)
+            and device.name != hostname
+        ):
+            dr.async_get(self.hass).async_update_device(device.id, name=hostname)
+        super()._handle_coordinator_update()

@@ -6,6 +6,7 @@ from tplink_omada_client.clients import OmadaWirelessClient
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -59,7 +60,7 @@ class OmadaClientScannerEntity(
         super().__init__(coordinator)
         self._site_id = site_id
         self._client_id = client_id
-        self._attr_name = display_name
+        self._attr_device_info = DeviceInfo(name=display_name)
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)

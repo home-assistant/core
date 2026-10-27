@@ -10,7 +10,8 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -51,7 +52,8 @@ async def async_setup_entry(
                     KeeneticTracker(
                         Device(
                             mac=mac,
-                            # restore the original name as set by the router before
+                            # None for a tracker named by its device, which then
+                            # keeps its name
                             name=entity_entry.original_name,
                             ip=None,
                             interface=None,
@@ -88,6 +90,8 @@ class KeeneticTracker(ScannerEntity):
         """Initialize the tracked device."""
         self._device = device
         self._router = router
+        if device.name:
+            self._attr_device_info = DeviceInfo(name=device.name)
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )
@@ -101,12 +105,6 @@ class KeeneticTracker(ScannerEntity):
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.name or self._device.mac
 
     @property
     @override
@@ -145,7 +143,9 @@ class KeeneticTracker(ScannerEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
-        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
+        _LOGGER.debug(
+            "New network device tracker %s (%s)", self.entity_id, self.unique_id
+        )
 
         @callback
         def update_device() -> None:
@@ -158,6 +158,14 @@ class KeeneticTracker(ScannerEntity):
             if new_device:
                 self._device = new_device
                 self._last_seen = dt_util.utcnow()
+                if (
+                    new_device.name
+                    and (device_entry := self.device_entry)
+                    and device_entry.name != new_device.name
+                ):
+                    dr.async_get(self.hass).async_update_device(
+                        device_entry.id, name=new_device.name
+                    )
 
             self.async_write_ha_state()
 
