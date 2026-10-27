@@ -21,6 +21,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "tonewinner",
     "upb",
     "velbus",
+    "visonic",
     "zha",
 ]
 

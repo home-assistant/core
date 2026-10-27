@@ -84,7 +84,6 @@ from .schemas import (
     DEVICE_SCHEMA,
     ETHERNET_SCHEMA,
     POWERLINK_SCHEMA,
-    SERIAL_SCHEMA,
 )
 from .visonic_types import DeviceType
 
@@ -98,6 +97,10 @@ MAP_DEVICE_TO_CONFIG_STEP = {
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 ENTRY_ID: Final = "entry_id"
+
+SERIAL_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_DEVICE): selector.SerialPortSelector()}
+)
 
 
 def _normalize_cloud_server(value: str) -> str:

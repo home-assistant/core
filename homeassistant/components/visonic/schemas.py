@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import (
     CONF_ARM_CODE_AUTO,
@@ -69,12 +68,6 @@ ETHERNET_SCHEMA = probatio.Schema(
     }
 )
 
-SERIAL_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_DEVICE): SerialPortSelector(),
-    }
-)
-
 CLOUD_SCHEMA = probatio.Schema(
     {
         probatio.Required(
@@ -125,8 +118,12 @@ CONNECTION_SCHEMA = probatio.TaggedUnion(
             },
             extra=probatio.ALLOW_EXTRA,
         ),
-        DeviceType.SERIAL: SERIAL_SCHEMA.extend(
-            {**_CONNECTION_IDENTITY, **_POWERLINK_CONFIG},
+        DeviceType.SERIAL: probatio.Schema(
+            {
+                **_CONNECTION_IDENTITY,
+                **_POWERLINK_CONFIG,
+                probatio.Required(CONF_DEVICE): str,
+            },
             extra=probatio.ALLOW_EXTRA,
         ),
         DeviceType.CLOUD: CLOUD_SCHEMA.extend(

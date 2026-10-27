@@ -1931,7 +1931,7 @@ async def test_list_serial_integrations(
     assert response["success"]
     result = response["result"]
     assert result == sorted(result)
-    assert {"dsmr", "zha"} <= set(result)
+    assert {"dsmr", "visonic", "zha"} <= set(result)
     assert not {"alarmdecoder", "bluetooth", "esphome", "rfxtrx", "zwave_js"} & set(
         result
     )

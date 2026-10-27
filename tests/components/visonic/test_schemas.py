@@ -3,6 +3,7 @@
 from probatio import Invalid, MultipleInvalid, to_field_list
 import pytest
 
+from homeassistant.components.visonic.config_flow import SERIAL_SCHEMA
 from homeassistant.components.visonic.const import (
     CONF_CLOUD_APP_ID,
     CONF_DOWNLOAD_CODE,
@@ -20,7 +21,6 @@ from homeassistant.components.visonic.schemas import (
     CONNECTION_SCHEMA,
     ETHERNET_SCHEMA,
     POWERLINK_SCHEMA,
-    SERIAL_SCHEMA,
 )
 from homeassistant.components.visonic.visonic_types import DeviceType
 from homeassistant.const import (
