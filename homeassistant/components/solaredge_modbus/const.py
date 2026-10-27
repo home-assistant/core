@@ -69,7 +69,12 @@ SETTINGS_SCAN_INTERVAL: Final = timedelta(minutes=5)
 ATTACHMENT_SCAN_INTERVAL: Final = timedelta(minutes=15)
 
 # A sleeping SolarEdge inverter resets now and then, dropping the link and
-# refusing a new one for about a minute. Polls that fail within this long of
-# reading it asleep, and start within this long of the first of them, are that
-# reset and not an error.
+# refusing a new one for about a minute. Polls that fail after reading it
+# asleep, the first of them starting within this long of that read and the rest
+# within this long of the first, are that reset and not an error.
 SLEEP_OUTAGE_GRACE: Final = timedelta(seconds=90)
+
+# The inverter resets a few times a night, hours apart. An outage that begins
+# within this long of the last one taken for a reset is a failing link, and an
+# error like any other.
+SLEEP_RESET_MIN_GAP: Final = timedelta(minutes=30)

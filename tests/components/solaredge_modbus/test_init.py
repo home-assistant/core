@@ -36,6 +36,7 @@ from homeassistant.components.solaredge_modbus.const import (
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     SLEEP_OUTAGE_GRACE,
+    SLEEP_RESET_MIN_GAP,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -73,6 +74,9 @@ INVERTER_STATUS_REGISTER = 40107
 # Failed readings polls a reset may take without an error, counted from the
 # first one's start. The next one starts right at the end of the window.
 POLLS_IN_GRACE = int(SLEEP_OUTAGE_GRACE / SCAN_INTERVAL)
+
+# Readings polls from the start of one reset to the earliest start of the next.
+POLLS_BETWEEN_RESETS = int(SLEEP_RESET_MIN_GAP / SCAN_INTERVAL)
 
 # Readings polls per settings poll, which runs far less often.
 POLLS_PER_SETTINGS_POLL = int(SETTINGS_SCAN_INTERVAL / SCAN_INTERVAL)
@@ -733,6 +737,37 @@ async def test_failed_poll_counts_from_its_start(
     assert _records(caplog, logging.ERROR) == []
 
 
+async def test_later_failed_poll_counts_from_its_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The timeout of a later failed poll does not use up the window either.
+
+    The last poll of the reset starts inside the window and only ends past it.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+    await _tick_polls(hass, freezer, POLLS_IN_GRACE - 1)
+
+    async def wait_out_the_timeout(address: int, count: int) -> list[int]:
+        """Let the first read of the poll hang until the connection times out."""
+        freezer.tick(CONNECT_TIMEOUT)
+        raise ModbusTimeoutError("timed out")
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", wait_out_the_timeout):
+        await _tick_polls(hass, freezer, 1)
+
+    state = hass.states.get(POWER_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR) == []
+
+
 async def test_sleeping_inverter_gone_past_the_grace_is_an_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -772,25 +807,39 @@ async def test_sleeping_inverter_gone_past_the_grace_is_an_error(
     )
 
 
+@pytest.mark.parametrize(
+    ("answered_polls", "errors"),
+    [
+        pytest.param(POLLS_BETWEEN_RESETS - POLLS_IN_GRACE, 0, id="apart"),
+        pytest.param(POLLS_BETWEEN_RESETS - POLLS_IN_GRACE - 1, 1, id="too_soon"),
+    ],
+)
 async def test_each_reset_gets_its_own_window(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    answered_polls: int,
+    errors: int,
 ) -> None:
-    """A poll that answers in between ends one reset, and the next starts over."""
+    """A poll that answers in between ends one reset, and the next starts over.
+
+    That is, if it comes long enough after the first. A link that drops again
+    sooner is failing, and keeping it quiet would hide that all night.
+    """
     mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
     await _setup(hass, mock_config_entry)
 
     mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
     await _tick_polls(hass, freezer, POLLS_IN_GRACE)
     mock_modbus_unit.fail_requests(None)
-    await _tick_polls(hass, freezer, 1)
+    await _tick_polls(hass, freezer, answered_polls)
     mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
     await _tick_polls(hass, freezer, POLLS_IN_GRACE)
 
-    assert _records(caplog, logging.ERROR) == []
+    assert _errors_from(caplog, READINGS_ERROR) == errors
+    assert len(_records(caplog, logging.ERROR)) == errors
 
 
 async def test_each_coordinator_counts_its_own_outage(
@@ -898,6 +947,73 @@ async def test_sleeping_read_after_the_outage_began_excuses_nothing(
 
 
 @pytest.mark.parametrize(
+    "wait",
+    [
+        pytest.param(SCAN_INTERVAL, id="short"),
+        pytest.param(SLEEP_OUTAGE_GRACE + SCAN_INTERVAL, id="past_the_window"),
+    ],
+)
+async def test_sleeping_read_while_the_settings_poll_waits_counts(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    wait: timedelta,
+) -> None:
+    """A readings poll that finishes while a settings poll waits still counts.
+
+    The two coordinators share the link, so a settings poll can start, wait
+    while the readings poll reads the inverter asleep, and only then find the
+    link gone. That is a reset beginning, and the sleeping read came before it,
+    however long the settings poll was kept waiting.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    read_holding_registers = mock_modbus_unit.read_holding_registers
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def hold_the_settings(address: int, count: int) -> list[int]:
+        """Keep the settings poll waiting, then let it find the link gone."""
+        if _is_control_read(address, count):
+            waiting.set()
+            await release.wait()
+        return await read_holding_registers(address, count)
+
+    with patch.object(mock_modbus_unit, "read_holding_registers", hold_the_settings):
+        settings = asyncio.create_task(
+            hass.services.async_call(
+                HOMEASSISTANT_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: ACTIVE_POWER_LIMIT_ENTITY},
+                blocking=True,
+            )
+        )
+        await waiting.wait()
+
+        # The readings poll runs meanwhile and reads the inverter asleep.
+        freezer.tick(wait)
+        await hass.services.async_call(
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: POWER_ENTITY},
+            blocking=True,
+        )
+
+        mock_modbus_unit.fail_requests(ModbusConnectionError("could not connect"))
+        release.set()
+        await settings
+
+    state = hass.states.get(ACTIVE_POWER_LIMIT_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR) == []
+
+
+@pytest.mark.parametrize(
     ("answered_polls", "errors"),
     [
         pytest.param(POLLS_PER_SETTINGS_POLL - 1, 0, id="reset"),
@@ -951,6 +1067,33 @@ async def test_sleep_is_only_taken_from_a_fresh_read(
 
     # This poll starts right at the end of the window from the setup's read.
     mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, 1)
+
+    assert _errors_from(caplog, READINGS_ERROR) == 1
+
+
+async def test_awake_read_clears_the_sleep(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Once the inverter is read awake, its earlier sleep excuses nothing.
+
+    The poll after that reads it asleep again and loses the link before it gets
+    to record that, so nothing recorded vouches for the sleep.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.STARTING
+    await _tick_polls(hass, freezer, 1)
+
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    mock_modbus_unit.fail_read(
+        METER_MODEL_REGISTER, ModbusConnectionError("connection lost")
+    )
     await _tick_polls(hass, freezer, 1)
 
     assert _errors_from(caplog, READINGS_ERROR) == 1
@@ -1010,6 +1153,33 @@ async def test_no_reset_after_another_inverter_answered(
     assert not any(
         message.endswith("recovered") for message in _records(caplog, logging.INFO)
     )
+
+
+async def test_another_inverters_sleep_excuses_nothing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Another inverter read asleep on the address says nothing about this one.
+
+    The settings poll still counts from this inverter's last sleeping read,
+    which is long past by the time it finds the link dead.
+    """
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _setup(hass, mock_config_entry)
+
+    await async_seed_unit(
+        hass, mock_modbus_unit, serial_registers=[20308, 18501, 21041, 12851]
+    )
+    mock_modbus_unit.holding[INVERTER_STATUS_REGISTER] = InverterStatus.SLEEPING
+    await _tick_polls(hass, freezer, POLLS_PER_SETTINGS_POLL - 1)
+
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("link died"))
+    await _tick_polls(hass, freezer, 1)
+
+    assert _errors_from(caplog, SETTINGS_ERROR) == 1
 
 
 async def test_retry_dying_still_counts_the_first_answer(

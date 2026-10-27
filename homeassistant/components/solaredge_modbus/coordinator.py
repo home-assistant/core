@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     SLEEP_OUTAGE_GRACE,
+    SLEEP_RESET_MIN_GAP,
     SUBSYSTEM_ADVANCED_POWER_CONTROL,
     SUBSYSTEM_COMMON,
     SUBSYSTEM_INVERTER,
@@ -91,8 +92,13 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._sleep = sleep
         self._poll = poll
         self._silent: set[str] = set()
-        # When this coordinator's current run of failed polls began.
-        self._outage_since: float | None = None
+        # When this coordinator's current run of failed polls began, counted
+        # from the first one's start, and when that first one failed. The two
+        # differ by however long the poll waited, for the link or for the other
+        # coordinator's requests.
+        self._outage: tuple[float, float] | None = None
+        # When the last outage taken for a reset began, as in _outage.
+        self._last_reset: float | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -113,7 +119,7 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             report = await self._poll()
         except SolarEdgeConnectionError as err:
             return self._failed_poll(err, started)
-        self._outage_since = None
+        self._outage = None
 
         # A sub-system that just fell silent gets a second chance: SolarEdge
         # answers a single request late often enough that one blip should not
@@ -164,8 +170,9 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
         Only a fresh read counts, so a status kept from an earlier poll leaves
         the last one standing, and the window bounds how old that can be. It is
-        stamped when the poll is done, the last moment the link is known to
-        work, so a slow poll and its retry do not use up the window either.
+        stamped when the poll is done, so a slow poll and its retry do not use
+        up the window either. If the retry died, the link may be gone by then
+        already, which moves the window by no more than that retry took.
         """
         if SUBSYSTEM_INVERTER in report.updated:
             asleep = self.solaredge.inverter.status is InverterStatus.SLEEPING
@@ -180,25 +187,38 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         inverter was read asleep shortly before the failures began, and they
         have not gone on for longer than a reset takes, that is all it takes:
         the entities go unavailable without an error. A sleeping read after
-        they began proves the link worked meanwhile, so it excuses nothing.
-        Nor is a poll that read the inverter awake before the link died: it
-        never got to record that, but the status it read is there. Anything
-        else is an error as before, and once it is, so is every failure until
-        a poll succeeds. The first refresh has nothing to mark failed, and
-        setup must see it.
+        the first failure proves the link worked meanwhile, so it excuses
+        nothing, but one between that poll's start and its failure is fine:
+        the other coordinator's poll can finish while this one waits. Nor is a
+        poll that read the inverter awake before the link died: it never got
+        to record that, but the status it read is there. Nor is an outage that
+        began soon after the last one taken for a reset: the inverter resets
+        a few times a night, hours apart, so a link that keeps dropping in
+        between is failing. Anything else is an error as before, and once it
+        is, so is every failure until a poll succeeds. The first refresh has
+        nothing to mark failed, and setup must see it.
         """
-        if self._outage_since is None:
-            self._outage_since = started
+        if self._outage is None:
+            self._outage = (started, self.hass.loop.time())
+        outage_since, outage_failed_at = self._outage
         asleep_at = self._sleep.asleep_at
         grace = SLEEP_OUTAGE_GRACE.total_seconds()
+        last_reset = self._last_reset
         if (
             self.data is not None
             and self.last_update_success
             and asleep_at is not None
             and self.solaredge.inverter.status is InverterStatus.SLEEPING
-            and 0 <= self._outage_since - asleep_at < grace
-            and started - self._outage_since < grace
+            and asleep_at <= outage_failed_at
+            and outage_since - asleep_at < grace
+            and started - outage_since < grace
+            and (
+                last_reset is None
+                or last_reset == outage_since
+                or outage_since - last_reset >= SLEEP_RESET_MIN_GAP.total_seconds()
+            )
         ):
+            self._last_reset = outage_since
             LOGGER.debug(
                 "%s: nothing answered the sleeping inverter's poll (%s)",
                 self.name,
