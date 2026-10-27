@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/',
       'connections': set({
       }),
@@ -32,7 +32,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/dashboard',
       'connections': set({
       }),
@@ -60,7 +60,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ff31facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -116,7 +116,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -144,7 +144,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -172,7 +172,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -200,7 +200,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/stacks/webstack',
       'connections': set({
       }),
@@ -228,7 +228,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/stacks/dashy',
       'connections': set({
       }),
@@ -256,7 +256,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/containers/cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
       'connections': set({
       }),
@@ -284,7 +284,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/dashy_config',
       'connections': set({
       }),
@@ -312,7 +312,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/db_data',
       'connections': set({
       }),
@@ -340,7 +340,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://127.0.0.1:9000/#!/1/docker/volumes/myvolume',
       'connections': set({
       }),

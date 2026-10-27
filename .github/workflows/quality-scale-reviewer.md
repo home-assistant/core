@@ -72,6 +72,8 @@ safe-outputs:
     hide-older-comments: true
   needs:
     - prepare
+  # The conclusion job comments on the pull request when the credit budget skips a run.
+  report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
     # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
@@ -325,10 +327,9 @@ If no rule is selected, go to Step 7.
 ## Step 5: Check each selected rule
 
 Apply the `ha-quality-scale-verify` skill to each selected rule, one rule at
-a time; use parallel subagents when several rules are selected. Read the
-full documentation of a selected rule only now, from
-`/tmp/gh-aw/agent/rules/<rule>.md`, wherever the skill's step 1 says to fetch
-it.
+a time, without delegating to subagents. Read the full documentation of a
+selected rule only now, from `/tmp/gh-aw/agent/rules/<rule>.md`, wherever the
+skill's step 1 says to fetch it.
 
 Scope the skill to the diff: where the skill says to analyze the
 integration's codebase, analyze only the files and lines changed in

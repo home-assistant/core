@@ -137,8 +137,8 @@ pandas==2.3.3
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
-Brotli>=1.2.0
+# Brotli 1.2.1 fixes CVE
+Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.14.1
