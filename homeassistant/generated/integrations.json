@@ -1933,7 +1933,7 @@
         "hubs_protocols.smart_home_hubs"
       ],
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "cookidoo": {
       "name": "Cookidoo",
