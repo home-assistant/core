@@ -651,7 +651,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.17.1"
+required-version = ">=0.17.3"
 extend-exclude = [
   # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
   "tests/components/marketplace/fixtures/proxy",
