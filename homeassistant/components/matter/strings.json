@@ -257,6 +257,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "music_sync_sensitivity": {
+        "name": "Music sync sensitivity"
+      },
       "occupied_setback": {
         "name": "Occupied setback"
       },
@@ -359,6 +362,15 @@
       },
       "mode": {
         "name": "Mode"
+      },
+      "music_sync_effect": {
+        "name": "Music sync effect",
+        "state": {
+          "dash": "Dash",
+          "flash": "Flash",
+          "pulse": "Pulse",
+          "stretch": "Stretch"
+        }
       },
       "power_level": {
         "name": "Power level (W)"
@@ -734,6 +746,9 @@
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "music_sync": {
+        "name": "Music sync"
       },
       "one_touch_locking": {
         "name": "One-touch locking"
