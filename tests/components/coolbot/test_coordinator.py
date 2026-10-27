@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pycoolbot import CoolbotAuthError, CoolbotError
@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import push, setup_integration
-from .conftest import make_device
+from .conftest import make_client, make_device
 
 ROOM_TEMPERATURE = "sensor.walk_in_cooler_room_temperature"
 
@@ -165,6 +165,80 @@ async def test_a_slow_maintenance_pass_is_not_overlapped(
     await hass.async_block_till_done()
 
     assert mock_client.async_ping.await_count == 1
+
+
+class _BlockedClients:
+    """Hand out a fresh client per connect, each held until released."""
+
+    def __init__(self) -> None:
+        self.created: list[AsyncMock] = []
+        self.connecting = asyncio.Event()
+        self.release = asyncio.Event()
+
+    def __call__(self, *args: object, **kwargs: object) -> AsyncMock:
+        client = make_client()
+
+        async def blocked_connect() -> None:
+            self.connecting.set()
+            await self.release.wait()
+
+        client.async_connect.side_effect = blocked_connect
+        self.created.append(client)
+        return client
+
+
+async def test_overlapping_reconnects_open_one_client(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Maintenance and a refresh that both find the socket down share a reconnect.
+
+    Two connects would leave whichever client the other replaced open, with its
+    listener still attached, after the entry is unloaded.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+    mock_client.connected = False
+    clients = _BlockedClients()
+
+    with patch("homeassistant.components.coolbot.coordinator.CoolbotClient", clients):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+        )
+        await clients.connecting.wait()
+        hass.async_create_task(_request_update(hass))
+        for _ in range(20):
+            await asyncio.sleep(0)
+        clients.release.set()
+        await hass.async_block_till_done()
+
+    assert len(clients.created) == 1
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for client in clients.created:
+        client.async_close.assert_awaited()
+        assert not client.listeners
+
+
+async def test_unloading_mid_refresh_reconnect_leaves_no_socket_open(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A refresh caught reconnecting by an unload closes the client it opened."""
+    assert await setup_integration(hass, mock_config_entry)
+    mock_client.connected = False
+    clients = _BlockedClients()
+
+    with patch("homeassistant.components.coolbot.coordinator.CoolbotClient", clients):
+        hass.async_create_task(_request_update(hass))
+        await clients.connecting.wait()
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        clients.release.set()
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    (client,) = clients.created
+    client.async_close.assert_awaited()
+    assert not client.listeners
 
 
 async def test_a_refresh_that_cannot_reconnect_fails(

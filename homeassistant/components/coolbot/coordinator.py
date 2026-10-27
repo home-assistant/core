@@ -58,6 +58,13 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: reconnecting would otherwise install a client after teardown closed
         #: the last one, and nothing would ever close it.
         self._maintenance_task: asyncio.Task[None] | None = None
+        #: Held across a reconnect: maintenance and an explicit refresh can both
+        #: find the socket down, and two connects would orphan whichever client
+        #: the other replaced, socket and listener alike.
+        self._connect_lock = asyncio.Lock()
+        #: Set by teardown, so a connect still in flight closes its own client
+        #: instead of handing over a socket that nothing will close.
+        self._closed = False
         #: Last known name and reporting state per device, keyed by unique id;
         #: absent until a device first reports. The name is kept so a device
         #: that drops out of the profile can still be named in a log line.
@@ -100,16 +107,18 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             self.config_entry.data[CONF_PASSWORD],
             session=session,
         )
-        connected = False
+        handed_over = False
         try:
             await client.async_connect()
-            connected = True
+            handed_over = not self._closed
         finally:
-            if not connected:
+            if not handed_over:
                 # Nothing else holds this client yet, and its socket is already
                 # open, so every way of leaving without it has to close it here,
-                # cancellation included.
+                # cancellation and a teardown that ran meanwhile included.
                 await client.async_close()
+        if not handed_over:
+            raise CoolbotError("Unloaded while connecting")
 
         # Connecting reads the profile, so the clock starts here.
         self._profile_read_at = dt_util.utcnow()
@@ -146,11 +155,12 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     async def _async_ensure_connected(self) -> None:
         """Reconnect if the socket has gone."""
-        if self._client is not None and self._client.connected:
-            return
-        _LOGGER.debug("Socket is down, reconnecting")
-        await self._async_shutdown_client()
-        await self._async_connect()
+        async with self._connect_lock:
+            if self._client is not None and self._client.connected:
+                return
+            _LOGGER.debug("Socket is down, reconnecting")
+            await self._async_shutdown_client()
+            await self._async_connect()
 
     @callback
     def _schedule_maintenance(self, _now: datetime) -> None:
@@ -339,6 +349,7 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
 
     async def _async_teardown(self) -> None:
         """Release everything setup acquired. Safe to call more than once."""
+        self._closed = True
         if self._cancel_maintenance is not None:
             self._cancel_maintenance()
             self._cancel_maintenance = None

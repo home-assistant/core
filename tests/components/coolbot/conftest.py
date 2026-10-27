@@ -45,9 +45,8 @@ def make_device(
     return CoolbotDevice(**fields)
 
 
-@pytest.fixture
-def mock_client() -> Generator[AsyncMock]:
-    """Return a CoolbotClient double, patched into both call sites.
+def make_client() -> AsyncMock:
+    """Return a connected CoolbotClient double.
 
     Readings are set through ``async_get_devices.return_value``; the real
     ``get_devices`` is the synchronous accessor the async one delegates to, so
@@ -76,7 +75,13 @@ def mock_client() -> Generator[AsyncMock]:
 
     client.add_listener = MagicMock(side_effect=add_listener)
     client.listeners = listeners
+    return client
 
+
+@pytest.fixture
+def mock_client() -> Generator[AsyncMock]:
+    """Return a CoolbotClient double, patched into both call sites."""
+    client = make_client()
     with (
         patch(
             "homeassistant.components.coolbot.config_flow.CoolbotClient",
