@@ -802,35 +802,22 @@ async def test_zha_group_regrown_with_disabled_device(
     assert regrown_entry.disabled_by is None
 
 
-async def test_zha_group_entity_migrated_from_coordinator_device(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[Any, Any, None]],
-    zigpy_app_controller_with_group: ControllerApplication,
+def _add_legacy_group_entity(
+    app_controller: ControllerApplication,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an existing group entity moves from the coordinator to the group device.
-
-    Before group devices existed, group entities were registered against the
-    coordinator device. Upgrading must keep the entity id and move the entry,
-    not orphan it or create a duplicate.
-    """
-    config_entry.add_to_hass(hass)
+    name: str | None,
+) -> tuple[dr.DeviceEntry, er.RegistryEntry]:
+    """Register a group entity the way older versions did, on the coordinator."""
     coordinator_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={
-            (
-                zha_const.DOMAIN,
-                str(zigpy_app_controller_with_group.state.node_info.ieee),
-            )
-        },
+        identifiers={(zha_const.DOMAIN, str(app_controller.state.node_info.ieee))},
     )
-    legacy_unique_id = f"switch_zha_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}"
     legacy_entry = entity_registry.async_get_or_create(
         "switch",
         zha_const.DOMAIN,
-        legacy_unique_id,
+        f"switch_zha_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}",
         config_entry=config_entry,
         device_id=coordinator_device.id,
         original_name="Test Group",
@@ -838,13 +825,55 @@ async def test_zha_group_entity_migrated_from_coordinator_device(
         # coordinator device name, not from the group name
         suggested_object_id="coordinator_manufacturer_coordinator_model_test_group",
     )
-    assert legacy_entry.device_id == coordinator_device.id
+    entity_registry.async_update_entity(
+        legacy_entry.entity_id, name=name, icon="mdi:test"
+    )
+    return coordinator_device, legacy_entry
+
+
+@pytest.mark.parametrize(
+    ("custom_name", "device_name_by_user", "friendly_name"),
+    [
+        pytest.param(
+            "My kitchen group", "My kitchen group", "My kitchen group", id="renamed"
+        ),
+        pytest.param(
+            FIXTURE_GRP_WITH_ENTITIES_NAME,
+            None,
+            FIXTURE_GRP_WITH_ENTITIES_NAME,
+            id="named_like_group",
+        ),
+        pytest.param(None, None, FIXTURE_GRP_WITH_ENTITIES_NAME, id="not_renamed"),
+    ],
+)
+async def test_zha_group_entity_migrated_from_coordinator_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    custom_name: str | None,
+    device_name_by_user: str | None,
+    friendly_name: str,
+) -> None:
+    """Test an existing group entity moves from the coordinator to the group device.
+
+    Before group devices existed, group entities were registered against the
+    coordinator device. Upgrading must keep the entity id and move the entry,
+    not orphan it or create a duplicate, and a custom name the user gave the
+    entity becomes the name of the group device.
+    """
+    config_entry.add_to_hass(hass)
+    coordinator_device, legacy_entry = _add_legacy_group_entity(
+        zigpy_app_controller_with_group,
+        config_entry,
+        device_registry,
+        entity_registry,
+        custom_name,
+    )
     assert legacy_entry.entity_id == (
         "switch.coordinator_manufacturer_coordinator_model_test_group"
-    )
-    # user customisation that must survive the move
-    entity_registry.async_update_entity(
-        legacy_entry.entity_id, name="My kitchen group", icon="mdi:test"
     )
 
     await setup_zha()
@@ -852,19 +881,24 @@ async def test_zha_group_entity_migrated_from_coordinator_device(
     gateway_proxy = get_zha_gateway_proxy(hass)
     group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
     assert group_proxy.device_id is not None
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device is not None
+    assert device.name_by_user == device_name_by_user
 
     migrated_entry = entity_registry.async_get(legacy_entry.entity_id)
     assert migrated_entry is not None
-    # same entity id, now pointing at the group device
-    assert migrated_entry.entity_id == legacy_entry.entity_id
+    # same entity id, now pointing at the group device as its main entity
     assert migrated_entry.device_id == group_proxy.device_id
-    # and the user's customisation is untouched
-    assert migrated_entry.name == "My kitchen group"
+    assert migrated_entry.name is None
+    # and the user's other customisations are untouched
     assert migrated_entry.icon == "mdi:test"
+    state = hass.states.get(legacy_entry.entity_id)
+    assert state is not None
+    assert state.name == friendly_name
     # and no duplicate was created for the same unique id
     assert (
         entity_registry.async_get_entity_id(
-            "switch", zha_const.DOMAIN, legacy_unique_id
+            "switch", zha_const.DOMAIN, legacy_entry.unique_id
         )
         == legacy_entry.entity_id
     )
@@ -876,6 +910,106 @@ async def test_zha_group_entity_migrated_from_coordinator_device(
         )
         if "_zha_group_0x" in entry.unique_id
     ]
+
+
+async def test_zha_group_entity_name_migrated_only_once(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a name given to the entity after the move is kept later on.
+
+    The group device is created again when the group regrows after shrinking,
+    and when the config entry is reloaded the existing device is found again.
+    """
+    config_entry.add_to_hass(hass)
+    _, legacy_entry = _add_legacy_group_entity(
+        zigpy_app_controller_with_group,
+        config_entry,
+        device_registry,
+        entity_registry,
+        "My kitchen group",
+    )
+    await setup_zha()
+
+    entity_registry.async_update_entity(legacy_entry.entity_id, name="Lights")
+
+    group = zigpy_app_controller_with_group.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
+    member = next(iter(group.values()))
+    group.remove_member(member)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    group.add_member(member)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = entity_registry.async_get(legacy_entry.entity_id)
+    assert entry is not None
+    assert entry.name == "Lights"
+    assert entry.device_id is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.name_by_user == "My kitchen group"
+
+
+async def test_zha_group_entity_name_not_migrated_with_several_entities(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no name moves to the device of a group with several group entities."""
+    app_controller = zigpy_app_controller_with_group
+    group = app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
+    for ieee in ("01:2d:6f:00:0a:90:69:f1", "01:2d:6f:00:0a:90:69:f2"):
+        light = zigpy_device_mock(
+            {
+                1: {
+                    SIG_EP_INPUT: [
+                        general.OnOff.cluster_id,
+                        general.LevelControl.cluster_id,
+                        general.Basic.cluster_id,
+                        general.Groups.cluster_id,
+                    ],
+                    SIG_EP_OUTPUT: [],
+                    SIG_EP_TYPE: zha.DeviceType.DIMMABLE_LIGHT,
+                    SIG_EP_PROFILE: zha.PROFILE_ID,
+                }
+            },
+            ieee=ieee,
+        )
+        app_controller.devices[light.ieee] = light
+        group.add_member(light.endpoints[1], suppress_event=True)
+
+    config_entry.add_to_hass(hass)
+    _, legacy_entry = _add_legacy_group_entity(
+        app_controller,
+        config_entry,
+        device_registry,
+        entity_registry,
+        "My kitchen group",
+    )
+    await setup_zha()
+
+    group_proxy = get_zha_gateway_proxy(hass).group_proxies[
+        FIXTURE_GRP_WITH_ENTITIES_ID
+    ]
+    assert len(group_proxy.group.group_entities) == 2
+    assert group_proxy.device_id is not None
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device is not None
+    assert device.name_by_user is None
+    entry = entity_registry.async_get(legacy_entry.entity_id)
+    assert entry is not None
+    assert entry.device_id == group_proxy.device_id
+    assert entry.name == "My kitchen group"
 
 
 @pytest.mark.parametrize(

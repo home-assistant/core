@@ -1127,7 +1127,43 @@ class ZHAGatewayProxy(EventBase):
                 device_info=zha_group_proxy.device_info,
             )
             zha_group_proxy.device_id = device_registry_device.id
+            self._migrate_legacy_group_entity_name(
+                zha_group_proxy, device_registry_device
+            )
         return zha_group_proxy
+
+    def _migrate_legacy_group_entity_name(
+        self, zha_group_proxy: ZHAGroupProxy, device: dr.DeviceEntry
+    ) -> None:
+        """Move the custom name of a group's only entity to its new group device.
+
+        Group entities used to be registered on the coordinator device, so users
+        could only name the entity. On its group device the entity is the main
+        entity, named after the device. Group entity entries are removed along
+        with the group device, so an entry that exists when the group device is
+        created is one registered before group devices existed.
+        """
+        group = zha_group_proxy.group
+        if len(group.group_entities) != 1:
+            return
+
+        [(unique_id, group_entity)] = group.group_entities.items()
+        entity_registry = er.async_get(self.hass)
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                group_entity.PLATFORM, DOMAIN, unique_id
+            )
+        ) is None:
+            return
+        entry = entity_registry.async_get(entity_id)
+        if entry is None or not entry.name:
+            return
+
+        if entry.name != group.name:
+            dr.async_get(self.hass).async_update_device(
+                device.id, name_by_user=entry.name
+            )
+        entity_registry.async_update_entity(entity_id, name=None)
 
     def _create_entity_metadata(
         self, proxy_object: ZHADeviceProxy | ZHAGroupProxy
