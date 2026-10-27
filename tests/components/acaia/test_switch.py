@@ -185,6 +185,67 @@ async def test_turning_on_while_connected_does_not_reconnect(
     mock_scale.connect.assert_not_called()
 
 
+def _switch_call(hass: HomeAssistant, service: str) -> asyncio.Task[None]:
+    """Start a switch service call without waiting for it to finish."""
+    return hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    )
+
+
+async def _yield() -> None:
+    """Let started tasks run until they block."""
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+
+def _block_connect(mock_scale: MagicMock) -> tuple[asyncio.Event, asyncio.Event]:
+    """Make connect() block until released, returning (started, release)."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _connect(**kwargs: bool) -> None:
+        started.set()
+        await release.wait()
+        mock_scale.connected = True
+
+    mock_scale.connect.side_effect = _connect
+    return started, release
+
+
+def _block_disconnect(mock_scale: MagicMock) -> tuple[asyncio.Event, asyncio.Event]:
+    """Make disconnect() block until released, returning (started, release)."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _disconnect() -> None:
+        started.set()
+        await release.wait()
+        mock_scale.connected = False
+
+    mock_scale.disconnect.side_effect = _disconnect
+    return started, release
+
+
+async def _start_pending_poll_connect(
+    hass: HomeAssistant, mock_scale: MagicMock, freezer: FrozenDateTimeFactory
+) -> asyncio.Event:
+    """Start a polling reconnect that blocks in connect(), returning its release."""
+    mock_scale.connected = False
+    mock_scale.connect.reset_mock()
+    connect_started, release_connect = _block_connect(mock_scale)
+
+    async def _disconnect() -> None:
+        mock_scale.connected = False
+
+    mock_scale.disconnect.side_effect = _disconnect
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await connect_started.wait()
+    return release_connect
+
+
 async def test_turning_off_during_pending_connect_disconnects(
     hass: HomeAssistant,
     mock_scale: MagicMock,
@@ -194,30 +255,14 @@ async def test_turning_off_during_pending_connect_disconnects(
     """Test turning off while a reconnect is in flight leaves the scale disconnected."""
 
     await setup_integration(hass, mock_config_entry)
-    mock_scale.connected = False
-    connect_started = asyncio.Event()
-    release_connect = asyncio.Event()
+    release_connect = await _start_pending_poll_connect(hass, mock_scale, freezer)
 
-    async def _blocked_connect(**kwargs: bool) -> None:
-        connect_started.set()
-        await release_connect.wait()
-        mock_scale.connected = True
-
-    mock_scale.connect.side_effect = _blocked_connect
-
-    freezer.tick(timedelta(seconds=15))
-    async_fire_time_changed(hass)
-    await connect_started.wait()
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
+    turn_off = _switch_call(hass, SERVICE_TURN_OFF)
+    await _yield()
     mock_scale.disconnect.assert_not_called()
 
     release_connect.set()
+    await turn_off
     await hass.async_block_till_done()
 
     mock_scale.disconnect.assert_called_once()
@@ -236,41 +281,15 @@ async def test_turning_on_during_pending_connect_does_not_connect_twice(
     """Test an off/on toggle while a reconnect is in flight waits for it."""
 
     await setup_integration(hass, mock_config_entry)
-    mock_scale.connected = False
-    mock_scale.connect.reset_mock()
-    connect_started = asyncio.Event()
-    release_connect = asyncio.Event()
+    release_connect = await _start_pending_poll_connect(hass, mock_scale, freezer)
 
-    async def _blocked_connect(**kwargs: bool) -> None:
-        connect_started.set()
-        await release_connect.wait()
-        mock_scale.connected = True
-
-    mock_scale.connect.side_effect = _blocked_connect
-
-    freezer.tick(timedelta(seconds=15))
-    async_fire_time_changed(hass)
-    await connect_started.wait()
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    turn_on = hass.async_create_task(
-        hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
-            blocking=True,
-        )
-    )
-    for _ in range(5):
-        await asyncio.sleep(0)
+    turn_off = _switch_call(hass, SERVICE_TURN_OFF)
+    turn_on = _switch_call(hass, SERVICE_TURN_ON)
+    await _yield()
     assert mock_scale.connect.call_count == 1
 
     release_connect.set()
+    await turn_off
     await turn_on
     await hass.async_block_till_done()
 
@@ -290,51 +309,17 @@ async def test_off_on_off_during_pending_connect_does_not_reconnect(
     """Test a turn-on queued behind a pending connect is dropped once turned off."""
 
     await setup_integration(hass, mock_config_entry)
-    mock_scale.connected = False
-    mock_scale.connect.reset_mock()
-    connect_started = asyncio.Event()
-    release_connect = asyncio.Event()
+    release_connect = await _start_pending_poll_connect(hass, mock_scale, freezer)
 
-    async def _blocked_connect(**kwargs: bool) -> None:
-        connect_started.set()
-        await release_connect.wait()
-        mock_scale.connected = True
-
-    async def _disconnect() -> None:
-        mock_scale.connected = False
-
-    mock_scale.connect.side_effect = _blocked_connect
-    mock_scale.disconnect.side_effect = _disconnect
-
-    freezer.tick(timedelta(seconds=15))
-    async_fire_time_changed(hass)
-    await connect_started.wait()
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    turn_on = hass.async_create_task(
-        hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
-            blocking=True,
-        )
-    )
-    for _ in range(5):
-        await asyncio.sleep(0)
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
+    calls = [
+        _switch_call(hass, service)
+        for service in (SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ]
+    await _yield()
 
     release_connect.set()
-    await turn_on
+    for call in calls:
+        await call
     await hass.async_block_till_done()
 
     mock_scale.connect.assert_called_once()
@@ -343,3 +328,62 @@ async def test_off_on_off_during_pending_connect_does_not_reconnect(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_OFF
+
+
+async def test_turning_on_during_pending_disconnect_reconnects(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning on while turning off is still disconnecting reconnects."""
+
+    await setup_integration(hass, mock_config_entry)
+    mock_scale.connect.reset_mock()
+    mock_scale.connect.side_effect = None
+    disconnect_started, release_disconnect = _block_disconnect(mock_scale)
+
+    turn_off = _switch_call(hass, SERVICE_TURN_OFF)
+    await disconnect_started.wait()
+    turn_on = _switch_call(hass, SERVICE_TURN_ON)
+    await _yield()
+    mock_scale.connect.assert_not_called()
+
+    release_disconnect.set()
+    await turn_off
+    await turn_on
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_called_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_turning_on_during_pending_idle_disconnect_reconnects(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test turning on while an idle disconnect is in progress reconnects."""
+
+    await setup_integration(hass, mock_config_entry)
+    await mock_config_entry.runtime_data.async_set_idle_timeout(5)
+    mock_scale.connect.reset_mock()
+    disconnect_started, release_disconnect = _block_disconnect(mock_scale)
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await disconnect_started.wait()
+    turn_on = _switch_call(hass, SERVICE_TURN_ON)
+    await _yield()
+    mock_scale.connect.assert_not_called()
+
+    release_disconnect.set()
+    await turn_on
+    await hass.async_block_till_done()
+
+    mock_scale.connect.assert_called_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON

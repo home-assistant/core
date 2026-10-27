@@ -76,7 +76,8 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         self._idle_disconnected = False
         self._asleep_after_idle = False
 
-        # Polling and the switch both connect, and connect() must not overlap.
+        # Polling, the switch and the idle timeout all connect or disconnect the
+        # scale, and those transitions must not overlap.
         self._connect_lock = asyncio.Lock()
 
         # The scale keeps advertising after an idle disconnect until its own
@@ -110,9 +111,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         )
         if keep_connected:
             self._clear_idle_disconnect()
-            await self._async_ensure_connected()
-        elif self._scale.connected:
-            await self._scale.disconnect()
+        await self._async_sync_connection()
 
     async def async_set_idle_timeout(self, idle_timeout: int) -> None:
         """Set the minutes without a weight change before disconnecting."""
@@ -164,7 +163,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             return
 
         if not self._scale.connected:
-            await self._async_ensure_connected()
+            await self._async_sync_connection()
             return
 
         if self.idle_timeout and dt_util.utcnow() - self._last_activity >= timedelta(
@@ -176,14 +175,24 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 self.idle_timeout,
             )
             self._idle_disconnected = True
-            await self._scale.disconnect()
+            await self._async_sync_connection()
 
-    async def _async_ensure_connected(self) -> None:
-        """Connect to the scale and set up its background tasks if needed."""
+    def _should_connect(self) -> bool:
+        """Return whether the scale should currently be connected."""
+        return self.keep_connected and not self._idle_disconnected
 
+    async def _async_sync_connection(self) -> None:
+        """Connect or disconnect the scale to match the connection preferences."""
+
+        # The preferences may have changed while waiting for the lock or for an
+        # earlier transition, so they are rechecked here and after connect().
         async with self._connect_lock:
-            # keep_connected may have been turned off while waiting for the lock.
-            if self._scale.connected or not self.keep_connected:
+            if not self._should_connect():
+                if self._scale.connected:
+                    await self._scale.disconnect()
+                return
+
+            if self._scale.connected:
                 return
 
             try:
@@ -197,8 +206,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 self._scale.device_disconnected_handler(notify=False)
                 return
 
-            # keep_connected may have been turned off while connect() was pending.
-            if not self.keep_connected:
+            if not self._should_connect():
                 await self._scale.disconnect()
                 return
 
