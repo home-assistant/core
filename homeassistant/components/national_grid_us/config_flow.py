@@ -163,36 +163,45 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, username: str, password: str
     ) -> list[dict[str, str]]:
         """Fetch linked accounts, enriched with their service address."""
-        session = async_create_clientsession(self.hass, cookie_jar=create_cookie_jar())
+        # The library does not close injected sessions, so opt out of Home
+        # Assistant's shutdown-time cleanup and detach the session when the
+        # flow ends; otherwise repeated login attempts leak sessions.
+        session = async_create_clientsession(
+            self.hass, auto_cleanup=False, cookie_jar=create_cookie_jar()
+        )
         client = NationalGridClient(
             config=NationalGridConfig(username=username, password=password),
             session=session,
         )
-        async with client:
-            accounts = await client.get_linked_accounts()
-            result: list[dict[str, str]] = []
-            for account in accounts:
-                account_id = str(account["billingAccountId"])
-                entry = {"billingAccountId": account_id}
-                # The service address is only used to label the account in the
-                # selection step, so a failed lookup degrades to the bare ID.
-                try:
-                    billing = await client.get_billing_account(account_id)
-                except (
-                    CannotConnectError,
-                    RetryExhaustedError,
-                    NationalGridError,
-                    ValueError,
-                ) as err:
-                    _LOGGER.debug(
-                        "Could not fetch service address for account %s: %s",
-                        account_id,
-                        err,
-                    )
-                else:
-                    if address := billing.get("serviceAddress", {}).get(
-                        "serviceAddressCompressed"
-                    ):
-                        entry["service_address"] = address
-                result.append(entry)
-            return result
+        try:
+            async with client:
+                accounts = await client.get_linked_accounts()
+                result: list[dict[str, str]] = []
+                for account in accounts:
+                    account_id = str(account["billingAccountId"])
+                    entry = {"billingAccountId": account_id}
+                    # The service address is only used to label the account in
+                    # the selection step, so a failed lookup degrades to the
+                    # bare ID.
+                    try:
+                        billing = await client.get_billing_account(account_id)
+                    except (
+                        CannotConnectError,
+                        RetryExhaustedError,
+                        NationalGridError,
+                        ValueError,
+                    ) as err:
+                        _LOGGER.debug(
+                            "Could not fetch service address for account %s: %s",
+                            account_id,
+                            err,
+                        )
+                    else:
+                        if address := billing.get("serviceAddress", {}).get(
+                            "serviceAddressCompressed"
+                        ):
+                            entry["service_address"] = address
+                    result.append(entry)
+                return result
+        finally:
+            session.detach()
