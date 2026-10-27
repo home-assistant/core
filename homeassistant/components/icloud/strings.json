@@ -57,6 +57,43 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "activation_lock": {
+        "name": "Activation lock"
+      },
+      "locating": {
+        "name": "Locating"
+      },
+      "location_accurate": {
+        "name": "Location accurate"
+      },
+      "location_current": {
+        "name": "Location current"
+      },
+      "location_services": {
+        "name": "Location services"
+      },
+      "lost_mode": {
+        "name": "Lost mode"
+      },
+      "low_power_mode": {
+        "name": "Low power mode"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "remote_lock": {
+        "name": "Remote lock"
+      },
+      "wipe_in_progress": {
+        "name": "Wipe in progress"
+      }
+    },
+    "button": {
+      "play_sound": {
+        "name": "Play sound"
+      }
+    },
     "sensor": {
       "altitude": {
         "name": "Altitude"

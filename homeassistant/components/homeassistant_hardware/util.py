@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, cast
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
+from pygbl import parse_firmware_image
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -507,10 +508,7 @@ async def async_flash_silabs_firmware(
     This function is meant to be used within a firmware update context.
     """
 
-    firmware_module = await async_import_module(hass, FIRMWARE_MODULE)
-    fw_image = await hass.async_add_executor_job(
-        firmware_module.parse_firmware_image, fw_data
-    )
+    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
     flasher = flasher_cls(device=device)
 
