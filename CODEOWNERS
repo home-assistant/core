@@ -863,8 +863,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
 /homeassistant/components/humidity/ @home-assistant/core
 /tests/components/humidity/ @home-assistant/core
-/homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
-/tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
+/homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444
+/tests/components/hunterdouglas_powerview/ @bdraco @kingy444
 /homeassistant/components/husqvarna_automower/ @Thomas55555
 /tests/components/husqvarna_automower/ @Thomas55555
 /homeassistant/components/husqvarna_automower_ble/ @alistair23
@@ -1827,6 +1827,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/solarman/ @solarmanpv
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
+/homeassistant/components/solyx_energy_cloud/ @MartinaeyNL
+/tests/components/solyx_energy_cloud/ @MartinaeyNL
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
 /homeassistant/components/somfy_mylink/ @sslivins
