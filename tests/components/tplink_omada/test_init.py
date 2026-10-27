@@ -262,54 +262,40 @@ async def test_empty_device_update_keeps_devices(
     assert hass.states.get(sensor_entity_id).state not in {"unknown", "unavailable"}
 
 
-async def test_cleanup_resumes_after_empty_startup_response(
+async def test_cleanup_removes_startup_stale_device_after_empty_startup(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test cleanup resumes once a populated poll follows an empty startup."""
+    """Test a stale entry is removed once a populated poll follows an empty startup."""
+    mock_config_entry.add_to_hass(hass)
+
+    stale_mac = "99:99:99:99:99:99"
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, stale_mac)},
+        manufacturer="TP-Link",
+        model="Test",
+        name="Old Device",
+    )
+
     site_client = mock_omada_client.get_site_client.return_value
     original_get_devices = site_client.get_devices
     site_client.get_devices = AsyncMock(return_value=[])
 
-    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    switch_mac = "54-AF-97-00-00-01"
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, switch_mac), mock_config_entry.entry_id
-        )
-        is None
-    )
+    # The empty startup list skipped the sweep, so the stale entry survives.
+    assert device_registry.async_get(stale_device.id) is not None
 
-    # The controller recovers; the first populated poll seeds the device list.
+    # The first populated poll sweeps, because nothing was seeded yet.
     site_client.get_devices = original_get_devices
     await _async_poll_devices(hass, freezer)
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, switch_mac), mock_config_entry.entry_id
-    )
 
-    # The next populated poll sees the switch missing and removes it.
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, switch_mac)
-    )
-    await _async_poll_devices(hass, freezer)
-
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, switch_mac), mock_config_entry.entry_id
-        )
-        is None
-    )
-    assert (
-        entity_registry.async_get_entity_id("update", DOMAIN, f"{switch_mac}_firmware")
-        is None
-    )
+    assert device_registry.async_get(stale_device.id) is None
 
 
 async def test_failed_poll_keeps_devices(

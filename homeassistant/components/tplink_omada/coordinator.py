@@ -228,6 +228,13 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
             return self.data or {}
 
         current_devices = set(devices)
+        if not self._previous_devices:
+            # The startup sweep was skipped because the first list was empty.
+            # Sweep before listeners register entities, so stale entries release
+            # their entity IDs.
+            await async_cleanup_devices(
+                self.hass, self.config_entry.runtime_data, devices
+            )
         removed_devices = self._previous_devices - current_devices
         self._previous_devices = current_devices
         if removed_devices:
@@ -350,9 +357,11 @@ async def async_remove_devices(
 async def async_cleanup_devices(
     hass: HomeAssistant,
     controller: OmadaSiteController,
+    devices: dict[str, OmadaListDevice] | None = None,
 ) -> None:
-    """Remove registry entries for devices missing from the startup list."""
-    devices = controller.devices_coordinator.data
+    """Remove registry entries for devices missing from the controller list."""
+    if devices is None:
+        devices = controller.devices_coordinator.data
     if not devices:
         return
 
