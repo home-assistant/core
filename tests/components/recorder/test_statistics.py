@@ -1678,6 +1678,59 @@ async def test_statistics_during_period_stream_error_falls_back(
     assert "Error reading statistics, retrying" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("units", "change_whole", "change_from_second", "row_changes"),
+    [
+        pytest.param(None, 30.0, 20.0, [10.0, 10.0, 10.0], id="celsius"),
+        pytest.param(
+            {"temperature": "°F"}, 54.0, 36.0, [18.0, 18.0, 18.0], id="fahrenheit"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_change_converted_without_offset(
+    hass: HomeAssistant,
+    units: dict[str, str] | None,
+    change_whole: float,
+    change_from_second: float,
+    row_changes: list[float],
+) -> None:
+    """Test a change is converted as a difference, without the converter offset."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        hours=5
+    )
+    end = start + timedelta(hours=3)
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": True,
+            "mean_type": StatisticMeanType.NONE,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": "sensor.test",
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        [
+            {"start": start + timedelta(hours=i), "sum": 10.0 * (i + 1)}
+            for i in range(3)
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    assert statistics.statistic_during_period(
+        hass, None, end, "sensor.test", {"change"}, units
+    ) == {"change": change_whole}
+    assert statistics.statistic_during_period(
+        hass, start + timedelta(hours=1), end, "sensor.test", {"change"}, units
+    ) == {"change": change_from_second}
+    # The first row has no earlier statistic and starts from a sum of 0
+    stats = statistics_during_period(
+        hass, start, end, {"sensor.test"}, "hour", units, {"change"}
+    )
+    assert [row["change"] for row in stats["sensor.test"]] == row_changes
+
+
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_statistics_during_period_last_reset_not_converted(
     hass: HomeAssistant,
