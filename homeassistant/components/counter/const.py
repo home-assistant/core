@@ -19,7 +19,6 @@ CONF_STEP = "step"
 
 DATA_COMPONENT: HassKey[EntityComponent[Counter]] = HassKey(DOMAIN)
 
-VALUE: Final = "value"
 
 SERVICE_DECREMENT: Final = "decrement"
 SERVICE_INCREMENT: Final = "increment"
@@ -35,3 +34,18 @@ class CounterEntityStateAttribute(StrEnum):
     STEP = "step"
     MINIMUM = "minimum"
     MAXIMUM = "maximum"
+
+
+class CounterService(StrEnum):
+    """Store keys for counter services."""
+
+    DECREMENT = "decrement"
+    INCREMENT = "increment"
+    RESET = "reset"
+    SET_VALUE = "set_value"
+
+
+class CounterServiceArgument(StrEnum):
+    """Store keys for counter service arguments."""
+
+    VALUE = "value"

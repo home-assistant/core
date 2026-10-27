@@ -1,4 +1,4 @@
-"""Test fixtures for the Open Thread Border Router integration."""
+"""Test fixtures for the OpenThread Border Router integration."""
 
 from collections.abc import Generator
 from http import HTTPStatus
@@ -114,12 +114,12 @@ async def otbr_config_entry_multipan_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> str:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -135,12 +135,12 @@ async def otbr_config_entry_thread_fixture(
     get_extended_address: AsyncMock,
     get_coprocessor_version: AsyncMock,
 ) -> None:
-    """Mock Open Thread Border Router config entry."""
+    """Mock OpenThread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_THREAD,
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)

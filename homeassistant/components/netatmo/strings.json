@@ -122,6 +122,9 @@
       "rf_strength": {
         "name": "RF strength"
       },
+      "setpoint_end_time": {
+        "name": "Setpoint end time"
+      },
       "sum_rain_1": {
         "name": "Precipitation last hour"
       },
@@ -155,6 +158,9 @@
   "exceptions": {
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
+    },
+    "homes_unavailable": {
+      "message": "Could not fetch the homes from the Netatmo API."
     },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
