@@ -65,8 +65,8 @@
         "reconfigure": {
           "data": {
             "expire_after": "Mark unavailable after (seconds)",
-            "friendly_name": "Name",
             "id": "Sensor ID",
+            "name": "Name",
             "type": "Measurements"
           },
           "data_description": {
@@ -77,8 +77,8 @@
         "user": {
           "data": {
             "expire_after": "Mark unavailable after (seconds)",
-            "friendly_name": "Name",
             "id": "Sensor ID",
+            "name": "Name",
             "type": "Measurements"
           },
           "title": "Add sensor"

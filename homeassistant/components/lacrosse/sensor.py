@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEVICE,
-    CONF_FRIENDLY_NAME,
     CONF_ID,
     CONF_NAME,
     CONF_SENSORS,
@@ -151,11 +150,8 @@ def _add_sensors(
 
 def sensor_device_name(config: ConfigType) -> str:
     """Return the configured or default sensor device name."""
-    if (
-        isinstance(friendly_name := config.get(CONF_FRIENDLY_NAME), str)
-        and friendly_name.strip()
-    ):
-        return friendly_name
+    if isinstance(name := config.get(CONF_NAME), str) and name.strip():
+        return name
     return f"LaCrosse sensor {config[CONF_ID]}"
 
 
