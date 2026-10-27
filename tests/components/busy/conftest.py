@@ -36,16 +36,11 @@ def mock_client() -> Generator[AsyncMock]:
     client.wifi_status.return_value = types.StatusResponse(
         state=types.WifiState.CONNECTED, ssid="Home", rssi=-48
     )
+    module = "homeassistant.components.busy"
     with (
-        patch(
-            "homeassistant.components.busy.config_flow.AsyncBusyBar",
-            return_value=client,
-        ),
-        patch("homeassistant.components.busy.AsyncBusyBar", return_value=client),
-        patch(
-            "homeassistant.components.busy.coordinator.AsyncBusyBar",
-            return_value=client,
-        ),
+        patch(f"{module}.config_flow.AsyncBusyBar", return_value=client),
+        patch(f"{module}.AsyncBusyBar", return_value=client),
+        patch(f"{module}.coordinator.AsyncBusyBar", return_value=client),
     ):
         yield client
 

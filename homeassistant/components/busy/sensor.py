@@ -32,18 +32,14 @@ class BusySensorEntityDescription(SensorEntityDescription):
 SENSORS = (
     BusySensorEntityDescription(
         key="battery",
-        value_fn=lambda data: (
-            data.status.power.battery_charge if data.status.power else None
-        ),
+        value_fn=lambda d: d.status.power.battery_charge if d.status.power else None,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BusySensorEntityDescription(
         key="wifi_signal",
-        value_fn=lambda data: (
-            data.wifi.rssi if data.wifi.state == WifiState.CONNECTED else None
-        ),
+        value_fn=lambda d: d.wifi.rssi if d.wifi.state == WifiState.CONNECTED else None,
         translation_key="wifi_signal",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -52,9 +48,7 @@ SENSORS = (
     BusySensorEntityDescription(
         key="wifi_ssid",
         translation_key="wifi_ssid",
-        value_fn=lambda data: (
-            data.wifi.ssid if data.wifi.state == WifiState.CONNECTED else None
-        ),
+        value_fn=lambda d: d.wifi.ssid if d.wifi.state == WifiState.CONNECTED else None,
     ),
 )
 

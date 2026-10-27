@@ -28,31 +28,48 @@ async def test_sensors(
         ("busy", init_integration.unique_id), init_integration.entry_id
     )
     assert device is not None
-    assert (device.manufacturer, device.model, device.serial_number) == (
-        "BUSY",
-        "BUSY Bar",
-        "BUSY123",
-    )
+    assert (device.manufacturer, device.model) == ("BUSY", "BUSY Bar")
+    assert device.serial_number == "BUSY123"
     assert device.sw_version == "1.0"
     assert device.hw_version == "BB.1"
     assert device.configuration_url == "http://192.168.50.20"
 
 
+@pytest.mark.parametrize(
+    ("error", "access_mode", "access_error"),
+    [
+        (BusyBarRequestError("offline"), "enabled", None),
+        (BusyBarAPIError("disabled", status_code=403), "disabled", None),
+        (BusyBarAPIError("unknown", status_code=403), None, None),
+        (
+            BusyBarAPIError("bad", status_code=403),
+            "key",
+            BusyBarRequestError("lost"),
+        ),
+    ],
+)
 async def test_poll_failure_and_recovery(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    access_mode: str | None,
+    access_error: Exception | None,
 ) -> None:
-    """Share two requests per poll and recover without reloading."""
-    mock_client.wifi_status.side_effect = BusyBarRequestError("offline")
+    """Recover after a temporary network or HTTP API outage."""
+    mock_client.wifi_status.side_effect = error
+    mock_client.access.return_value.mode = access_mode
+    mock_client.access.side_effect = access_error
     freezer.tick(30)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.busy_bar_battery").state == "unavailable"
     assert "Error fetching BUSY Bar data" in caplog.text
     mock_client.wifi_status.side_effect = None
+    mock_client.access.side_effect = None
+    mock_client.access.return_value.mode = "key"
     freezer.tick(30)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -77,9 +94,7 @@ async def test_missing_readings(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.busy_bar_battery").state == "unknown"
-    assert hass.states.get("sensor.busy_bar_wi_fi_signal").state == "unknown"
-    assert hass.states.get("sensor.busy_bar_wi_fi_network").state == "unknown"
+    assert {state.state for state in hass.states.async_all("sensor")} == {"unknown"}
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -91,6 +106,7 @@ async def test_token_revoked(
     status_code: int,
 ) -> None:
     """Stop polling after the access token is rejected."""
+    mock_client.access.return_value.mode = "key"
     mock_client.status.side_effect = BusyBarAPIError("revoked", status_code=status_code)
     freezer.tick(30)
     async_fire_time_changed(hass)
