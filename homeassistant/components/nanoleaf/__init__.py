@@ -47,9 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
 
     if supports_touch := nanoleaf.model in TOUCH_MODELS:
         device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get_or_create_device(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(identifiers={(DOMAIN, nanoleaf.serial_no)}),
+            identifiers={(DOMAIN, nanoleaf.serial_no)},
         )
 
         async def touch_event_callback(event: TouchEvent) -> None:

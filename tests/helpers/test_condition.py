@@ -16,6 +16,7 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     mock_integration,
@@ -46,6 +47,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
@@ -63,7 +65,9 @@ from homeassistant.helpers import (
     area_registry as ar,
     condition,
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
     recorder as recorder_helper,
     trace,
@@ -6738,6 +6742,134 @@ async def test_state_condition_primary_entities_only_with_duration(
     assert test.async_check() is True
 
 
+async def test_condition_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a condition target consisting of only an exclude block is rejected."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_condition_config(
+            hass,
+            {
+                CONF_CONDITION: "test",
+                CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+            },
+        )
+
+
+_INCLUDED_ENTITY_ID = "test.included"
+_EXCLUDED_ENTITY_ID = "test.excluded"
+
+
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param({CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID}, id="exclude_entity"),
+        pytest.param({ATTR_LABEL_ID: "excluded"}, id="exclude_label"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("behavior", "included_state", "excluded_state", "expected"),
+    [
+        pytest.param(BEHAVIOR_ALL, STATE_ON, STATE_OFF, True, id="all"),
+        pytest.param(BEHAVIOR_ANY, STATE_OFF, STATE_ON, False, id="any"),
+    ],
+)
+async def test_state_condition_target_exclude(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+    exclude: dict[str, str],
+    behavior: str,
+    included_state: str,
+    excluded_state: str,
+    expected: bool,
+) -> None:
+    """Test entities matched by the exclude block are ignored by the condition."""
+    label = label_registry.async_create("Targeted")
+    excluded_label = label_registry.async_create("Excluded")
+    for object_id, labels in (
+        ("included", {label.label_id}),
+        ("excluded", {label.label_id, excluded_label.label_id}),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels=labels)
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={ATTR_LABEL_ID: label.label_id, CONF_EXCLUDE: exclude},
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior},
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, included_state)
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, excluded_state)
+    await hass.async_block_till_done()
+    assert test.async_check() is expected
+
+
+async def test_state_condition_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a registry change of the excluded entities is taken into account."""
+    excluded_label = label_registry.async_create("Excluded")
+    for object_id in ("included", "excluded"):
+        entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+
+    test = await _setup_state_condition(
+        hass,
+        target_config={
+            CONF_ENTITY_ID: [_INCLUDED_ENTITY_ID, _EXCLUDED_ENTITY_ID],
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    assert test.async_check() is False
+
+    entity_registry.async_update_entity(
+        _EXCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+    assert test.async_check() is True
+
+    entity_registry.async_update_entity(_EXCLUDED_ENTITY_ID, labels=set())
+    await hass.async_block_till_done()
+    assert test.async_check() is False
+
+
 async def test_async_from_config_calls_async_setup_on_checker(
     hass: HomeAssistant,
 ) -> None:
@@ -7232,6 +7364,168 @@ async def test_track_changes_target_registry_update(
 
     entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
     await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+def _add_night_label(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, labels={"night"})
+
+
+def _remove_night_label(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, labels=set())
+
+
+def _move_entity_to_bedroom(hass: HomeAssistant, entity_id: str) -> None:
+    # An entity of a device needs a name of its own to have an area of its own
+    er.async_get(hass).async_update_entity(
+        entity_id, area_id="bedroom", name="Bedroom light"
+    )
+
+
+def _move_device_to_bedroom(hass: HomeAssistant, entity_id: str) -> None:
+    device_id = er.async_get(hass).entities[entity_id].device_id
+    assert device_id is not None
+    dr.async_get(hass).async_update_device(device_id, area_id="bedroom")
+
+
+def _unlink_device(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, device_id=None)
+
+
+def _move_kitchen_upstairs(hass: HomeAssistant, entity_id: str) -> None:
+    ar.async_get(hass).async_update("kitchen", floor_id="upstairs")
+
+
+@pytest.mark.parametrize(
+    ("exclude", "initial_labels", "registry_update"),
+    [
+        pytest.param(
+            lambda device_id: {"label_id": "night"},
+            set(),
+            _add_night_label,
+            id="label_added",
+        ),
+        pytest.param(
+            lambda device_id: {"label_id": "night"},
+            {"night"},
+            _remove_night_label,
+            id="label_removed",
+        ),
+        pytest.param(
+            lambda device_id: {"area_id": "bedroom"},
+            set(),
+            _move_entity_to_bedroom,
+            id="area_entity",
+        ),
+        pytest.param(
+            lambda device_id: {"area_id": "bedroom"},
+            set(),
+            _move_device_to_bedroom,
+            id="area_device",
+        ),
+        pytest.param(
+            lambda device_id: {"device_id": device_id},
+            set(),
+            _unlink_device,
+            id="device",
+        ),
+        pytest.param(
+            lambda device_id: {"floor_id": "upstairs"},
+            set(),
+            _move_kitchen_upstairs,
+            id="floor",
+        ),
+    ],
+)
+async def test_track_changes_target_exclude_registry_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+    exclude: Callable[[str], dict[str, Any]],
+    initial_labels: set[str],
+    registry_update: Callable[[HomeAssistant, str], None],
+) -> None:
+    """Test a registry change of an excluded entity id target is reported."""
+    floor_registry.async_create("Upstairs")
+    area_registry.async_create("Kitchen")
+    area_registry.async_create("Bedroom")
+    label_registry.async_create("Night")
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "kitchen")},
+    )
+    device_registry.async_update_device(device.id, area_id="kitchen")
+    light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "kitchen",
+        device_id=device.id,
+        suggested_object_id="kitchen",
+    )
+    entity_registry.async_update_entity(light.entity_id, labels=initial_labels)
+    hass.states.async_set(light.entity_id, "on")
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {
+                "condition": "light.is_on",
+                "target": {
+                    "entity_id": light.entity_id,
+                    "exclude": exclude(device.id),
+                },
+                "options": {"behavior": "all"},
+            }
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+    action.assert_not_called()
+
+    registry_update(hass, light.entity_id)
+    await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+async def test_track_changes_target_exclude_entity_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test excluded entity ids are not tracked and need no registry tracking."""
+    init_count = hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED, 0)
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {
+                "condition": "light.is_on",
+                "target": {
+                    "entity_id": ["light.kitchen", "light.hallway"],
+                    "exclude": {"entity_id": "light.hallway"},
+                },
+            }
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+
+    assert (
+        hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED, 0)
+        == init_count
+    )
+
+    hass.states.async_set("light.hallway", "on")
+    action.assert_not_called()
+
+    hass.states.async_set("light.kitchen", "on")
     action.assert_called_once()
 
     unsub()

@@ -288,6 +288,9 @@
     }
   },
   "exceptions": {
+    "app_not_running": {
+      "message": "The {app} app is not running yet."
+    },
     "dashboard_display_not_available": {
       "message": "The display {display} is not available."
     },
@@ -494,7 +497,7 @@
           "name": "Start item"
         },
         "username": {
-          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured. Defaults to the Home Assistant user that made the request, when the username matches a Music Assistant user.",
+          "description": "Music Assistant username used for the play media request. This affects the playlog entry and takes the user's provider filters into account. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
           "name": "Username"
         }
       },
@@ -532,7 +535,7 @@
           "name": "Search name"
         },
         "username": {
-          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters.",
+          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
           "name": "Username"
         }
       },

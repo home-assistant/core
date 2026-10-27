@@ -14,7 +14,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.co2signal import config_flow
 from homeassistant.components.co2signal.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -76,8 +81,10 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "latitude": 12.3,
-                "longitude": 45.6,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 12.3,
+                    CONF_LONGITUDE: 45.6,
+                }
             },
         )
         await hass.async_block_till_done()
