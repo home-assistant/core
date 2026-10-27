@@ -224,7 +224,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                     self.native_target_temperature,
                     self._comfort_setpoint,
                     self._reduced_setpoint,
-                    self.min_temp,
+                    self._protection_setpoint,
                 )
             ):
                 raise ServiceValidationError(
