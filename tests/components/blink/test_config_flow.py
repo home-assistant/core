@@ -357,6 +357,53 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort when the account is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="blink@example.com",
+        data={"username": "blink@example.com", "password": "example"},
+    ).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("homeassistant.components.blink.config_flow.Blink.start") as mock_start:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "blink@example.com", "password": "example"}
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+    mock_start.assert_not_called()
+
+
+async def test_form_already_in_progress(hass: HomeAssistant) -> None:
+    """Test we abort when a setup for the same account is in progress."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.blink.config_flow.Blink.start",
+        side_effect=BlinkTwoFARequiredError,
+    ):
+        await hass.config_entries.flow.async_configure(
+            first["flow_id"], {"username": "blink@example.com", "password": "example"}
+        )
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch("homeassistant.components.blink.config_flow.Blink.start") as mock_start:
+        result = await hass.config_entries.flow.async_configure(
+            second["flow_id"], {"username": "blink@example.com", "password": "example"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    mock_start.assert_not_called()
+
+
 async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
     """Test reauth shows the user form."""
     mock_entry = MockConfigEntry(
