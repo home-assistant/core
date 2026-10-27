@@ -163,13 +163,8 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                     )
                                 else:
                                     # The audio task may also have finished in this round
-                                    if audio_task in pending:
-                                        await audio_task
-                                        pending.remove(audio_task)
-
-                                    queued_audio: list[tuple[bytes, int]] | None = None
-                                    if (chunk_info := audio_task.result()) is not None:
-                                        queued_audio = [chunk_info]
+                                    pending.discard(audio_task)
+                                    chunk_info = await audio_task
 
                                     return wake_word.DetectionResult(
                                         wake_word_id=detection.name or "",
@@ -177,7 +172,11 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                             detection.name or ""
                                         ),
                                         timestamp=detection.timestamp,
-                                        queued_audio=queued_audio,
+                                        queued_audio=(
+                                            [chunk_info]
+                                            if chunk_info is not None
+                                            else None
+                                        ),
                                     )
 
                             # Next event
