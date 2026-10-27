@@ -137,10 +137,10 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
         logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
         exception: the library stops the stream for good, so entities stop
-        claiming values nothing will refresh and reauth starts. Clearing that
-        flag on a reconnect rather than on any later event is defensive: aioabrp
-        returns from its run loop once it has dispatched ``AUTH_FAILED``, so
-        today nothing follows it at all.
+        claiming values nothing will refresh. Clearing that flag on a reconnect
+        rather than on any later event is defensive: aioabrp returns from its
+        run loop once it has dispatched ``AUTH_FAILED``, so today nothing
+        follows it at all.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
@@ -163,7 +163,6 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
             if event.state is ConnectionState.AUTH_FAILED:
                 self.stream_auth_failed = True
                 self.async_update_listeners()
-                self.config_entry.async_start_reauth(self.hass)
             elif event.state is ConnectionState.CONNECTED and self.stream_auth_failed:
                 self.stream_auth_failed = False
                 self.async_update_listeners()

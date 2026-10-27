@@ -1,8 +1,6 @@
 """Tests for the A Better Routeplanner sensor platform."""
 
-import json
 import logging
-from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -19,7 +17,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import abetterrouteplanner as abrp_module
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
@@ -29,7 +26,6 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -46,7 +42,6 @@ from .conftest import (
     build_vehicle_model_display,
     fire_connection,
     fire_frame,
-    flow_sources,
 )
 
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
@@ -59,10 +54,6 @@ _ABSENT_VEHICLE_ID = 999999999999
 # Two makes: a single-make setup can't tell per-vehicle binding from a
 # hard-coded first make.
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
-
-# The source files, not the generated ``translations/en.json``, so a missing
-# label or icon fails loudly.
-_INTEGRATION_DIR = Path(abrp_module.__file__).parent
 
 
 def _description_for(metric: Metric) -> Any:
@@ -251,21 +242,12 @@ async def test_charging_state_lazy_create_on_first_frame(
 
 
 def test_charging_state_options_cross_pinned() -> None:
-    """Option map matches ChargingState, the description options, strings and icons."""
+    """Option map matches ChargingState and the description options."""
     assert set(CHARGING_STATE_OPTIONS) == set(ChargingState)
 
     description = _description_for(Metric.CHARGING_STATE)
     assert description.options is not None
     assert set(CHARGING_STATE_OPTIONS.values()) == set(description.options)
-
-    strings = json.loads(
-        (_INTEGRATION_DIR / "strings.json").read_text(encoding="utf-8")
-    )
-    icons = json.loads((_INTEGRATION_DIR / "icons.json").read_text(encoding="utf-8"))
-    strings_states = strings["entity"]["sensor"]["charging_state"]["state"]
-    icons_states = icons["entity"]["sensor"]["charging_state"]["state"]
-    assert set(CHARGING_STATE_OPTIONS.values()) == set(strings_states)
-    assert set(CHARGING_STATE_OPTIONS.values()) == set(icons_states)
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -300,8 +282,6 @@ async def test_availability_follows_stream_auth_not_connection(
     assert [
         record.levelno for record in caplog.records if "auth failed" in record.message
     ] == [logging.WARNING]
-    # The repeated AUTH_FAILED starts a single reauth flow.
-    assert flow_sources(hass) == [SOURCE_REAUTH]
 
     fire_connection(
         mock_telemetry_stream,

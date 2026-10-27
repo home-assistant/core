@@ -6,9 +6,7 @@ retries), so only the OAuth2 helper's own terminal verdict —
 ``OAuth2TokenRequestReauthError`` — maps to ``AbrpAuthError``. Everything else,
 including the helper's transient errors, propagates unchanged so the library's
 backoff gets its chance. ``ConfigEntryAuthFailed`` is deliberately not raised
-here: it is inert inside the library's background task. Reauth still starts,
-from the OAuth2 session on a rejected refresh and from the coordinator on the
-stream's ``AUTH_FAILED``.
+here: it is inert inside the library's background task.
 """
 
 from typing import cast, override
