@@ -30,7 +30,6 @@ from tests.helpers.template.helpers import render, render_to_info
         (datetime(2024, 1, 1, 0, 0, 0), True),
     ],
 )
-
 def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
     """Test is datetime."""
     assert render(hass, "{{ value is datetime }}", {"value": value}) == expected
@@ -53,7 +52,6 @@ def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
         (timedelta(hours=1, minutes=30), True),
     ],
 )
-
 def test_is_timedelta(hass: HomeAssistant, value, expected) -> None:
     """Test is timedelta."""
     assert render(hass, "{{ value is timedelta }}", {"value": value}) == expected
