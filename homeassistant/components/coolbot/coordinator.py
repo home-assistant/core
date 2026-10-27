@@ -137,6 +137,18 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         self.async_set_updated_data(self._build(self._client.get_devices()))
 
     @override
+    @callback
+    def async_set_updated_data(self, data: dict[str, CoolbotDevice]) -> None:
+        """Publish data, logging a recovery the way a refresh does.
+
+        Maintenance and pushes publish here rather than through a refresh,
+        so without this a failure would be logged but its end would not.
+        """
+        if not self.last_update_success:
+            self.logger.info("Fetching %s data recovered", self.name)
+        super().async_set_updated_data(data)
+
+    @override
     async def _async_update_data(self) -> dict[str, CoolbotDevice]:
         """Build the current state.
 

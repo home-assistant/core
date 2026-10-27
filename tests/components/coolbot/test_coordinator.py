@@ -418,6 +418,31 @@ async def test_failed_maintenance_marks_data_stale_then_recovers(
     assert mock_config_entry.runtime_data.last_update_success
 
 
+async def test_recovery_after_a_failed_maintenance_pass_is_logged(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The end of an outage is logged, not just its start."""
+    assert await setup_integration(hass, mock_config_entry)
+
+    mock_client.async_ping.side_effect = CoolbotError("socket lost")
+    await _tick(hass)
+    assert "Error requesting coolbot data" in caplog.text
+    assert "Fetching coolbot data recovered" not in caplog.text
+
+    mock_client.async_ping.side_effect = None
+    mock_client.connected = False  # the old socket is gone
+    await _tick(hass)
+    assert caplog.text.count("Fetching coolbot data recovered") == 1
+
+    # Healthy passes and pushes after the recovery stay quiet.
+    await _tick(hass)
+    await push(hass, mock_client)
+    assert caplog.text.count("Fetching coolbot data recovered") == 1
+
+
 async def test_auth_failure_during_maintenance_closes_the_socket(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
