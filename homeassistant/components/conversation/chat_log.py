@@ -110,7 +110,14 @@ def async_get_chat_log(
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
 
-    # Fire CREATED event for new chat logs before any content is added
+    if user_input is not None:
+        user_content = UserContent(content=user_input.text)
+        if is_new_log:
+            chat_log.content.append(user_content)
+        else:
+            chat_log.async_add_user_content(user_content)
+
+    # Fire CREATED event for new chat logs with the message of the first turn
     if is_new_log:
         _async_notify_subscribers(
             hass,
@@ -118,9 +125,6 @@ def async_get_chat_log(
             ChatLogEventType.CREATED,
             {"chat_log": chat_log.as_dict()},
         )
-
-    if user_input is not None:
-        chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     last_message = chat_log.content[-1]
 
