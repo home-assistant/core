@@ -19,6 +19,7 @@ DOMAINS_AND_TYPES = {
     Platform.LIGHT: {"LB1", "LB2"},
     Platform.RADIO_FREQUENCY: {"RM4PRO", "RMPRO"},
     Platform.REMOTE: {"RM4MINI", "RM4PRO", "RM5PLUS", "RMMINI", "RMMINIB", "RMPRO"},
+    Platform.SELECT: {"HYS"},
     Platform.SENSOR: {
         "A1",
         "A2",
@@ -49,6 +50,7 @@ DOMAINS_AND_TYPES = {
         "SP4",
         "SP4B",
     },
+    Platform.TIME: {"HYS"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
