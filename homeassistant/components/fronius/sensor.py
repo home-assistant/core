@@ -219,6 +219,14 @@ _METER_LOCATION_OPTIONS: Final[dict[MeterLocation, str]] = {
     MeterLocation.EXTERNAL_GENERATOR_WITH_BATTERY: "external_battery",
     MeterLocation.SUBLOAD: "subload",
 }
+_OHMPILOT_STATE_OPTIONS: Final[dict[OhmpilotState, str]] = {
+    OhmpilotState.UP_AND_RUNNING: "up_and_running",
+    OhmpilotState.KEEP_MINIMUM_TEMPERATURE: "keep_minimum_temperature",
+    OhmpilotState.LEGIONELLA_PROTECTION: "legionella_protection",
+    OhmpilotState.CRITICAL_FAULT: "critical_fault",
+    OhmpilotState.FAULT: "fault",
+    OhmpilotState.BOOST_MODE: "boost_mode",
+}
 
 
 def _positive(value: float | None) -> float | None:
@@ -841,12 +849,12 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription[OhmpilotData]]
     FroniusSensorEntityDescription(
         key="state_message",
         value_fn=lambda data: (
-            None if (state := data.state) is None else state.name.lower()
+            None if (state := data.state) is None else _OHMPILOT_STATE_OPTIONS[state]
         ),
         exists_fn=lambda data: data.state_code is not None,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=[state.name.lower() for state in OhmpilotState],
+        options=list(_OHMPILOT_STATE_OPTIONS.values()),
     ),
 ]
 
