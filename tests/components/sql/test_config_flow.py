@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
@@ -250,6 +251,41 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=DATA_CONFIG,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_flow_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
+    """Test the db url is validated with psycopg2 for driverless PostgreSQL URLs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError("error_message"),
+    ) as create_engine_mock:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_NAME: "Get Value",
+                CONF_DB_URL: "postgresql://user:pass@host/db",
+            },
+        )
+
+    assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
+        "postgresql+psycopg2://user:pass@host/db"
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

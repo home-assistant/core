@@ -22,7 +22,7 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
-from sqlalchemy import lambda_stmt, text
+from sqlalchemy import lambda_stmt, make_url, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -46,7 +46,10 @@ from homeassistant.components.recorder.util import (
     MIN_VERSION_SQLITE,
     RETRYABLE_MYSQL_ERRORS,
     database_job_retry_wrapper,
+    dburl_to_path,
     end_incomplete_runs,
+    get_engine_db_url,
+    is_file_sqlite_url,
     is_second_sunday,
     resolve_period,
     retryable_database_job,
@@ -120,6 +123,102 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
     assert e_mock.call_count == 2
 
 
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param(
+            "postgresql://user:pass@host/db",
+            "postgresql+psycopg2://user:pass@host/db",
+            id="postgresql",
+        ),
+        pytest.param(
+            "postgresql://user:pass@host:5432/db?sslmode=require",
+            "postgresql+psycopg2://user:pass@host:5432/db?sslmode=require",
+            id="postgresql_port_query",
+        ),
+    ],
+)
+def test_get_engine_db_url(db_url: str, expected: str) -> None:
+    """Test a PostgreSQL URL without a driver uses psycopg2."""
+    assert get_engine_db_url(db_url) == make_url(expected)
+
+
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
+        pytest.param(
+            "mysql+pymysql://user:pass@host:3306/db?charset=utf8mb4",
+            id="mysql_pymysql",
+        ),
+        pytest.param("mariadb://user:pass@[::1]:3306/db", id="mariadb_ipv6"),
+        pytest.param(
+            "postgresql+psycopg2://us%40er:pa%40ss@host/db", id="postgresql_psycopg2"
+        ),
+        pytest.param(
+            "postgresql+psycopg://user:pa/ss@host:5432/db", id="postgresql_psycopg"
+        ),
+        pytest.param("sqlite:////config/home-assistant_v2.db?timeout=0.1", id="sqlite"),
+        pytest.param(
+            "sqlite:////config/ha%20copy/home-assistant_v2.db", id="sqlite_percent"
+        ),
+        pytest.param("sqlite://", id="sqlite_memory"),
+    ],
+)
+def test_get_engine_db_url_unchanged(db_url: str) -> None:
+    """Test the URL is used as SQLAlchemy parses it when there is no driver to pin."""
+    assert get_engine_db_url(db_url) == make_url(db_url)
+
+
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param("sqlite:////config/home-assistant_v2.db", True, id="absolute"),
+        pytest.param("sqlite:///home-assistant_v2.db", True, id="relative"),
+        pytest.param("sqlite+pysqlite:////config/db.db", True, id="pysqlite"),
+        pytest.param("sqlite:////config/db.db?timeout=0.1", True, id="query"),
+        pytest.param("sqlite://", False, id="memory"),
+        pytest.param("sqlite:///:memory:", False, id="memory_database"),
+        pytest.param(
+            "sqlite:///file::memory:?cache=shared&uri=true", False, id="memory_uri"
+        ),
+        pytest.param("mysql://user:pass@host/db", False, id="mysql"),
+        pytest.param("postgresql://user:pass@host/db", False, id="postgresql"),
+    ],
+)
+def test_is_file_sqlite_url(db_url: str, expected: bool) -> None:
+    """Test detecting SQLite databases stored in a file."""
+    assert is_file_sqlite_url(make_url(db_url)) is expected
+
+
+@pytest.mark.parametrize(
+    ("db_url", "expected"),
+    [
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db",
+            "/config/home-assistant_v2.db",
+            id="absolute",
+        ),
+        pytest.param(
+            "sqlite:///home-assistant_v2.db", "home-assistant_v2.db", id="relative"
+        ),
+        pytest.param(
+            "sqlite:////config/home-assistant_v2.db?timeout=0.1",
+            "/config/home-assistant_v2.db",
+            id="query",
+        ),
+        pytest.param(
+            "sqlite+pysqlite:////config/home-assistant_v2.db",
+            "/config/home-assistant_v2.db",
+            id="pysqlite",
+        ),
+    ],
+)
+def test_dburl_to_path(db_url: str, expected: str) -> None:
+    """Test the path is the file the engine opens."""
+    assert dburl_to_path(db_url) == expected
+
+
 def test_validate_or_move_away_sqlite_database(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -127,7 +226,7 @@ def test_validate_or_move_away_sqlite_database(
     test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
     test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
+    dburl = f"{SQLITE_URL_PREFIX}/{test_db_file}"
 
     assert util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True

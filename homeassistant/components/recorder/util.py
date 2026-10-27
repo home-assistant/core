@@ -17,8 +17,8 @@ from awesomeversion import (
 )
 import ciso8601
 import probatio
-from sqlalchemy import inspect, text
-from sqlalchemy.engine import Result, Row
+from sqlalchemy import inspect, make_url, text
+from sqlalchemy.engine import URL, Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
@@ -40,7 +40,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -274,6 +274,26 @@ def execute_select(
     raise RuntimeError  # pragma: no cover
 
 
+def get_engine_db_url(db_url: str) -> URL:
+    """Return the SQLAlchemy URL to create a database engine for db_url.
+
+    A PostgreSQL URL without a driver uses psycopg2, which Home Assistant
+    installations ship, instead of SQLAlchemy's default driver, which is
+    psycopg 3 from SQLAlchemy 2.1.
+    """
+    url = make_url(db_url)
+    if url.drivername == "postgresql":
+        url = url.set(drivername="postgresql+psycopg2")
+    return url
+
+
+def is_file_sqlite_url(url: URL) -> bool:
+    """Return if the URL is for a SQLite database stored in a file."""
+    if url.get_backend_name() != "sqlite" or not url.database:
+        return False
+    return ":memory:" not in url.database
+
+
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
     dbpath = dburl_to_path(dburl)
@@ -291,7 +311,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl.removeprefix(SQLITE_URL_PREFIX)
+    return make_url(dburl).database or ""
 
 
 def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:

@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import probatio
+from sqlalchemy import URL, make_url
+from sqlalchemy.exc import ArgumentError
 
 from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
@@ -33,13 +35,13 @@ from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,
     INTEGRATION_PLATFORM_METHODS,
-    SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .core import Recorder
 from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
+from .util import get_engine_db_url, is_file_sqlite_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +86,7 @@ __all__ = [
     "DOMAIN",
     "Recorder",
     "SupportedDialect",
+    "get_engine_db_url",
     "get_instance",
     "is_entity_recorded",
 ]
@@ -91,11 +94,16 @@ __all__ = [
 
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
+    try:
+        url = make_url(db_url)
+    except (ArgumentError, ValueError) as err:
+        raise probatio.Invalid("Invalid database URL") from err
     # Don't allow on-memory sqlite databases
     if (
-        db_url == SQLITE_URL_PREFIX
-        or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
-    ) and not ALLOW_IN_MEMORY_DB:
+        url.get_backend_name() == "sqlite"
+        and not is_file_sqlite_url(url)
+        and not ALLOW_IN_MEMORY_DB
+    ):
         raise probatio.Invalid("In-memory SQLite database is not supported")
 
     return db_url
@@ -202,4 +210,6 @@ async def _async_setup_integration_platform(
 
 def get_default_url(hass: HomeAssistant) -> str:
     """Return the default URL."""
-    return DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+    return URL.create(
+        "sqlite", database=hass.config.path(DEFAULT_DB_FILE)
+    ).render_as_string()
