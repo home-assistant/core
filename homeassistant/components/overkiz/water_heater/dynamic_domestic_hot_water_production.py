@@ -137,7 +137,6 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
         commands: list[Command] = []
 
-        # Boost can only be activated while hot water production is on.
         if not self._is_on:
             commands.append(Command(name=OverkizCommand.ON))
 
