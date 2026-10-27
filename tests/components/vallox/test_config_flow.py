@@ -54,7 +54,7 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
-     # Verify recovery without starting a new flow (rule config-flow-test-coverage).
+    # Verify recovery without starting a new flow (rule config-flow-test-coverage).
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: TEST_HOST}
     )
@@ -91,7 +91,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: error}
 
-     # Verify recovery without starting a new flow (rule config-flow-test-coverage).
+    # Verify recovery without starting a new flow (rule config-flow-test-coverage).
     mock_vallox_client.fetch_metric_data.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: TEST_HOST}
@@ -184,7 +184,7 @@ async def test_reconfigure_invalid_host(
     assert result["errors"] == {CONF_HOST: "invalid_host"}
     assert mock_config_entry.data[CONF_HOST] == TEST_HOST
 
-     # Verify recovery without starting a new flow (rule config-flow-test-coverage).
+    # Verify recovery without starting a new flow (rule config-flow-test-coverage).
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: OTHER_HOST}
     )
@@ -223,7 +223,7 @@ async def test_reconfigure_errors(
     assert result["errors"] == {CONF_HOST: error}
     assert mock_config_entry.data[CONF_HOST] == TEST_HOST
 
-     # Verify recovery without starting a new flow (rule config-flow-test-coverage).
+    # Verify recovery without starting a new flow (rule config-flow-test-coverage).
     mock_vallox_client.fetch_metric_data.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: OTHER_HOST}
