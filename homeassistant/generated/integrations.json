@@ -8499,6 +8499,9 @@
     "papouch": {
       "name": "Papouch",
       "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
