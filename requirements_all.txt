@@ -1115,7 +1115,7 @@ fritzconnection[qr]==1.15.1
 fronius-modbus==0.2.0
 
 # homeassistant.components.fronius
-fronius-solarapi==0.1.0
+fronius-solarapi==0.1.1
 
 # homeassistant.components.fumis
 fumis==0.4.2
@@ -1278,7 +1278,7 @@ ha-iotawattpy==0.3.0
 ha-philipsjs==3.3.0
 
 # homeassistant.components.homeassistant_hardware
-ha-silabs-firmware-client==0.3.0
+ha-silabs-firmware-client==0.4.0
 
 # homeassistant.components.xthings_cloud
 ha-xthings-cloud==1.0.5
@@ -1439,7 +1439,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==10.4.1
+infrared-protocols==10.5.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.7.1
@@ -2326,6 +2326,9 @@ pyfttt==0.3
 
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
+
+# homeassistant.components.homeassistant_hardware
+pygbl==1.2.0
 
 # homeassistant.components.geosphere_austria_warnings
 pygeosphere-warnings==0.1.1
@@ -3410,7 +3413,7 @@ unifi-discovery==1.5.0
 unifi_ap==0.0.2
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==1.1.0
+universal-silabs-flasher==1.2.0
 
 # homeassistant.components.upb
 upb-lib==0.7.2

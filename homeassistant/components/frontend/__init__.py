@@ -727,6 +727,7 @@ class ManifestJSONView(HomeAssistantView):
                 "entity",
                 "entity_component",
                 "integration_category",
+                "integration_connectivity",
                 "services",
                 "triggers",
             }

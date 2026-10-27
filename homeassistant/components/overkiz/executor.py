@@ -71,10 +71,11 @@ class OverkizExecutor:
         if not commands:
             return
 
+        actions = [Action(device_url=self.device.device_url, commands=commands)]
+
         try:
             exec_id = await self.coordinator.client.execute_action_group(
-                label="Home Assistant",
-                actions=[Action(device_url=self.device.device_url, commands=commands)],
+                label="Home Assistant", actions=actions
             )
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
@@ -87,14 +88,8 @@ class OverkizExecutor:
             raise HomeAssistantError("Failed to connect") from exception
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
-        # to register it here. The action queue can merge concurrent action
-        # groups under one exec_id, so accumulate rather than overwrite.
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": commands[-1].name,
-            }
-        )
+        # to register it here.
+        self.coordinator.register_execution(exec_id, actions)
         if refresh_afterwards:
             self.coordinator.async_execution_started()
 
@@ -110,10 +105,12 @@ class OverkizExecutor:
             (
                 exec_id
                 # Reverse dictionary to cancel the last added execution
-                for exec_id, executions in reversed(self.coordinator.executions.items())
-                for execution in executions
-                if execution.get("device_url") == self.device.device_url
-                and execution.get("command_name") in commands_to_cancel
+                for exec_id, device_commands in reversed(
+                    self.coordinator.executions.items()
+                )
+                for device_command in device_commands
+                if device_command.device_url == self.device.device_url
+                and device_command.command_name in commands_to_cancel
             ),
             None,
         )

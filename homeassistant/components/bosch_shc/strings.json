@@ -152,6 +152,22 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
+      "smart_sensitivity_comfort_level": {
+        "name": "Sensitivity for other cases",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "smart_sensitivity_security_level": {
+        "name": "Sensitivity for alarm system",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
       "smoke_sensitivity": {
         "name": "Smoke sensitivity",
         "state": {
