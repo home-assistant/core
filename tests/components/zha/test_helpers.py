@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -912,6 +913,51 @@ async def test_zha_group_entity_migrated_from_coordinator_device(
     ]
 
 
+@pytest.mark.parametrize(
+    "custom_name", [pytest.param(None, id="no_name"), pytest.param("Lights", id="name")]
+)
+async def test_zha_group_entity_area_migrated_to_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    config_entry: MockConfigEntry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    custom_name: str | None,
+) -> None:
+    """Test the area of an existing group entity moves to its group device.
+
+    As the device's main entity, it could not keep an area of its own.
+    """
+    config_entry.add_to_hass(hass)
+    _, legacy_entry = _add_legacy_group_entity(
+        zigpy_app_controller_with_group,
+        config_entry,
+        device_registry,
+        entity_registry,
+        custom_name,
+    )
+    area = area_registry.async_create("Kitchen")
+    entity_registry.async_update_entity(legacy_entry.entity_id, area_id=area.id)
+
+    await setup_zha()
+
+    entry = entity_registry.async_get(legacy_entry.entity_id)
+    assert entry is not None
+    assert entry.area_id is None
+    assert entry.device_id is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.area_id == area.id
+    assert not [
+        issue_id
+        for _, issue_id in issue_registry.issues
+        if issue_id.startswith("entity_own_area_without_own_name")
+    ]
+
+
 async def test_zha_group_entity_name_migrated_only_once(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
@@ -956,17 +1002,11 @@ async def test_zha_group_entity_name_migrated_only_once(
     assert device.name_by_user == "My kitchen group"
 
 
-async def test_zha_group_entity_name_not_migrated_with_several_entities(
-    hass: HomeAssistant,
-    setup_zha: Callable[..., Coroutine[Any, Any, None]],
-    zigpy_app_controller_with_group: ControllerApplication,
+def _add_light_members(
+    app_controller: ControllerApplication,
     zigpy_device_mock: Callable[..., zigpy.device.Device],
-    config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test no name moves to the device of a group with several group entities."""
-    app_controller = zigpy_app_controller_with_group
+    """Add two lights to the group, so it also gets a light group entity."""
     group = app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
     for ieee in ("01:2d:6f:00:0a:90:69:f1", "01:2d:6f:00:0a:90:69:f2"):
         light = zigpy_device_mock(
@@ -987,6 +1027,96 @@ async def test_zha_group_entity_name_not_migrated_with_several_entities(
         )
         app_controller.devices[light.ieee] = light
         group.add_member(light.endpoints[1], suppress_event=True)
+
+
+@pytest.mark.parametrize(
+    ("light_area", "device_area"),
+    [
+        pytest.param("Kitchen", "Kitchen", id="same_area"),
+        pytest.param("Office", None, id="different_areas"),
+    ],
+)
+async def test_zha_group_entity_areas_migrated_with_several_entities(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    config_entry: MockConfigEntry,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    light_area: str,
+    device_area: str | None,
+) -> None:
+    """Test group entity areas only move to the device when they agree.
+
+    Entities that keep an area of their own without a name of their own are
+    reported by core as a repair issue.
+    """
+    _add_light_members(zigpy_app_controller_with_group, zigpy_device_mock)
+    config_entry.add_to_hass(hass)
+    coordinator_device, switch_entry = _add_legacy_group_entity(
+        zigpy_app_controller_with_group,
+        config_entry,
+        device_registry,
+        entity_registry,
+        None,
+    )
+    light_entry = entity_registry.async_get_or_create(
+        "light",
+        zha_const.DOMAIN,
+        f"light_zha_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}",
+        config_entry=config_entry,
+        device_id=coordinator_device.id,
+        original_name="Test Group",
+    )
+    areas = {
+        name: area_registry.async_create(name).id for name in ("Kitchen", "Office")
+    }
+    entity_registry.async_update_entity(
+        switch_entry.entity_id, area_id=areas["Kitchen"]
+    )
+    entity_registry.async_update_entity(
+        light_entry.entity_id, area_id=areas[light_area]
+    )
+
+    await setup_zha()
+
+    group_proxy = get_zha_gateway_proxy(hass).group_proxies[
+        FIXTURE_GRP_WITH_ENTITIES_ID
+    ]
+    assert group_proxy.device_id is not None
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device is not None
+    expected_device_area = None if device_area is None else areas[device_area]
+    assert device.area_id == expected_device_area
+    for entry, area_name in ((switch_entry, "Kitchen"), (light_entry, light_area)):
+        migrated_entry = entity_registry.async_get(entry.entity_id)
+        assert migrated_entry is not None
+        assert migrated_entry.area_id == (
+            None if expected_device_area is not None else areas[area_name]
+        )
+    own_area_issues = [
+        issue_id
+        for _, issue_id in issue_registry.issues
+        if issue_id.startswith("entity_own_area_without_own_name")
+    ]
+    assert len(own_area_issues) == (0 if expected_device_area is not None else 2)
+
+
+async def test_zha_group_entity_name_not_migrated_with_several_entities(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no name moves to the device of a group with several group entities."""
+    app_controller = zigpy_app_controller_with_group
+    _add_light_members(app_controller, zigpy_device_mock)
 
     config_entry.add_to_hass(hass)
     _, legacy_entry = _add_legacy_group_entity(

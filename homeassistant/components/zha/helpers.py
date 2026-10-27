@@ -1127,43 +1127,62 @@ class ZHAGatewayProxy(EventBase):
                 device_info=zha_group_proxy.device_info,
             )
             zha_group_proxy.device_id = device_registry_device.id
-            self._migrate_legacy_group_entity_name(
-                zha_group_proxy, device_registry_device
-            )
+            self._migrate_legacy_group_entities(zha_group_proxy, device_registry_device)
         return zha_group_proxy
 
-    def _migrate_legacy_group_entity_name(
+    def _migrate_legacy_group_entities(
         self, zha_group_proxy: ZHAGroupProxy, device: dr.DeviceEntry
     ) -> None:
-        """Move the custom name of a group's only entity to its new group device.
+        """Move the area and name of a group's existing entities to its new device.
 
         Group entities used to be registered on the coordinator device, so users
-        could only name the entity. On its group device the entity is the main
-        entity, named after the device. Group entity entries are removed along
-        with the group device, so an entry that exists when the group device is
-        created is one registered before group devices existed.
+        could only set an area or a name on the entities. Their area moves to the
+        group device when they agree on one, and the custom name of a group's
+        only entity becomes the device name, making it the device's main entity.
+        ZHA removes a group's entity entries along with its device (when the
+        group shrinks or is removed, and in the startup sweeps), so an entry that
+        exists when the group device is created predates group devices.
         """
         group = zha_group_proxy.group
-        if len(group.group_entities) != 1:
-            return
-
-        [(unique_id, group_entity)] = group.group_entities.items()
         entity_registry = er.async_get(self.hass)
-        if (
-            entity_id := entity_registry.async_get_entity_id(
-                group_entity.PLATFORM, DOMAIN, unique_id
+        entries = [
+            entry
+            for unique_id, group_entity in group.group_entities.items()
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    group_entity.PLATFORM, DOMAIN, unique_id
+                )
             )
-        ) is None:
-            return
-        entry = entity_registry.async_get(entity_id)
-        if entry is None or not entry.name:
+            is not None
+            and (entry := entity_registry.async_get(entity_id)) is not None
+        ]
+        if not entries:
             return
 
-        if entry.name != group.name:
-            dr.async_get(self.hass).async_update_device(
-                device.id, name_by_user=entry.name
-            )
-        entity_registry.async_update_entity(entity_id, name=None)
+        device_registry = dr.async_get(self.hass)
+        area_id = device.area_id
+        if (
+            area_id is None
+            and len(areas := {entry.area_id for entry in entries if entry.area_id}) == 1
+        ):
+            area_id = areas.pop()
+            device_registry.async_update_device(device.id, area_id=area_id)
+
+        move_name = len(group.group_entities) == 1
+        for entry in entries:
+            changes: dict[str, Any] = {}
+            if entry.area_id is not None and entry.area_id == area_id:
+                changes["area_id"] = None
+            if move_name and entry.name:
+                if entry.name != group.name:
+                    device_registry.async_update_device(
+                        device.id, name_by_user=entry.name
+                    )
+                changes["name"] = None
+            if changes:
+                # One update, as clearing only the name would leave an entity with an
+                # area of its own but no name of its own, which the registry rejects
+                entity_registry.async_update_entity(entry.entity_id, **changes)
 
     def _create_entity_metadata(
         self, proxy_object: ZHADeviceProxy | ZHAGroupProxy
