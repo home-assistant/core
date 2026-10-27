@@ -7,6 +7,11 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.acaia import coordinator as acaia_coordinator
@@ -22,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "number.kitchen_lunar_ddeeff_idle_disconnect_timeout"
 SWITCH_ENTITY_ID = "switch.kitchen_lunar_ddeeff_keep_connected"
@@ -248,3 +251,24 @@ async def test_turning_on_keep_connected_reconnects(
     )
 
     mock_scale.connect.assert_called_once()
+
+
+async def test_fractional_idle_timeout_rounds_up(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a fractional idle timeout rounds up instead of disabling it."""
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 0.5},
+        blocking=True,
+    )
+
+    assert mock_config_entry.options[CONF_IDLE_TIMEOUT] == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "1"

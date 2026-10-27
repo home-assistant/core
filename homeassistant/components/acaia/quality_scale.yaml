@@ -41,8 +41,10 @@ rules:
     status: exempt
     comment: |
       Button actions only enqueue commands; aioacaia writes them in a background task,
-      and entities are unavailable while the scale is disconnected, so there is no
-      failure to raise from the action.
+      and buttons are unavailable while the scale is disconnected, so there is no
+      failure to raise from them. The keep connected switch and idle timeout number
+      only store connection preferences. Turning keep connected on while the scale is
+      off is expected, and polling keeps retrying the connection until it is back.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

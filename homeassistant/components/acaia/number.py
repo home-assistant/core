@@ -1,5 +1,6 @@
 """Number platform for Acaia scales."""
 
+import math
 from typing import override
 
 from homeassistant.components.number import (
@@ -59,5 +60,6 @@ class AcaiaIdleTimeoutNumber(AcaiaEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the idle timeout."""
-        await self.coordinator.async_set_idle_timeout(int(value))
+        # Round fractions up so a value like 0.5 never disables the timeout.
+        await self.coordinator.async_set_idle_timeout(math.ceil(value))
         self.async_write_ha_state()

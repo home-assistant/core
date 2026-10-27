@@ -1,5 +1,6 @@
 """Coordinator for Acaia integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -74,6 +75,9 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         self._last_activity = dt_util.utcnow()
         self._idle_disconnected = False
         self._asleep_after_idle = False
+
+        # Polling and the switch both connect, and connect() must not overlap.
+        self._connect_lock = asyncio.Lock()
 
         # The scale keeps advertising after an idle disconnect until its own
         # auto-off timer fires, so reconnecting on any advertisement would wake
@@ -177,40 +181,46 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
     async def _async_ensure_connected(self) -> None:
         """Connect to the scale and set up its background tasks if needed."""
 
-        if self._scale.connected:
-            return
+        async with self._connect_lock:
+            if self._scale.connected:
+                return
 
-        try:
-            await self._scale.connect(setup_tasks=False)
-        except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
-            _LOGGER.debug(
-                "Could not connect to scale: %s, Error: %s",
-                self.config_entry.data[CONF_ADDRESS],
-                ex,
-            )
-            self._scale.device_disconnected_handler(notify=False)
-            return
-
-        # keep_connected may have been turned off while connect() was pending.
-        if not self.keep_connected:
-            await self._scale.disconnect()
-            return
-
-        self._last_activity = dt_util.utcnow()
-
-        # connected, set up background tasks
-        if not self._scale.heartbeat_task or self._scale.heartbeat_task.done():
-            self._scale.heartbeat_task = self.config_entry.async_create_background_task(
-                hass=self.hass,
-                target=self._scale.send_heartbeats(),
-                name="acaia_heartbeat_task",
-            )
-
-        if not self._scale.process_queue_task or self._scale.process_queue_task.done():
-            self._scale.process_queue_task = (
-                self.config_entry.async_create_background_task(
-                    hass=self.hass,
-                    target=self._scale.process_queue(),
-                    name="acaia_process_queue_task",
+            try:
+                await self._scale.connect(setup_tasks=False)
+            except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
+                _LOGGER.debug(
+                    "Could not connect to scale: %s, Error: %s",
+                    self.config_entry.data[CONF_ADDRESS],
+                    ex,
                 )
-            )
+                self._scale.device_disconnected_handler(notify=False)
+                return
+
+            # keep_connected may have been turned off while connect() was pending.
+            if not self.keep_connected:
+                await self._scale.disconnect()
+                return
+
+            self._last_activity = dt_util.utcnow()
+
+            # connected, set up background tasks
+            if not self._scale.heartbeat_task or self._scale.heartbeat_task.done():
+                self._scale.heartbeat_task = (
+                    self.config_entry.async_create_background_task(
+                        hass=self.hass,
+                        target=self._scale.send_heartbeats(),
+                        name="acaia_heartbeat_task",
+                    )
+                )
+
+            if (
+                not self._scale.process_queue_task
+                or self._scale.process_queue_task.done()
+            ):
+                self._scale.process_queue_task = (
+                    self.config_entry.async_create_background_task(
+                        hass=self.hass,
+                        target=self._scale.process_queue(),
+                        name="acaia_process_queue_task",
+                    )
+                )
