@@ -960,3 +960,78 @@ async def test_sensor_renamed_while_ha_was_stopped_takes_over_entity_id(
         )
         == entity_id
     )
+
+
+async def test_renamed_sensors_of_identical_devices_keep_their_entity_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test same-named sensors of identical devices don't swap entity ids."""
+    device_name = "Samsung SSD 990 EVO Plus 2TB"
+    device_ids = ("nvme-0", "nvme-1")
+    initial_data = mock_lhm_client.get_data.return_value.sensor_data
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            **initial_data,
+            **{
+                f"{device_id}-level-100": _sensor(
+                    f"{device_id}-level-100",
+                    "Available Spare Level",
+                    device_id,
+                    device_name,
+                )
+                for device_id in device_ids
+            },
+        },
+    )
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        main_device_ids_and_names=MappingProxyType(
+            {
+                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
+                **{
+                    DeviceId(device_id): DeviceName(device_name)
+                    for device_id in device_ids
+                },
+            }
+        ),
+    )
+    await init_integration(hass, mock_config_entry)
+
+    entity_ids = {
+        device_id: entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{device_id}-level-100"
+        )
+        for device_id in device_ids
+    }
+    # the identical names make the second device's entity id the suffixed one
+    assert entity_ids["nvme-1"] == f"{entity_ids['nvme-0']}_2"
+
+    # LHM reports the devices in reverse order this time
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            **initial_data,
+            **{
+                f"{device_id}-level-25": _sensor(
+                    f"{device_id}-level-25",
+                    "Available Spare Level",
+                    device_id,
+                    device_name,
+                )
+                for device_id in reversed(device_ids)
+            },
+        },
+    )
+    await _async_poll(hass, freezer)
+
+    assert {
+        device_id: entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{device_id}-level-25"
+        )
+        for device_id in device_ids
+    } == entity_ids

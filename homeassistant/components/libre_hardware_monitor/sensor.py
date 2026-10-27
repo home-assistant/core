@@ -81,8 +81,8 @@ async def async_setup_entry(
     def _async_remove_replaced_sensor(
         sensor_data: Mapping[str, LibreHardwareMonitorSensorData],
         new_sensor: LibreHardwareMonitorSensorData,
-    ) -> None:
-        """Remove a sensor that is replaced by a new sensor id to preserve the entity id.
+    ) -> str | None:
+        """Remove the sensor a new sensor id replaces and return its entity id.
 
         LHM updates can change sensor ids, e.g. when a sensor moves to another
         index. The replaced sensor has the same name on the same device and is no
@@ -94,7 +94,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
             )
         ):
-            return
+            return None
 
         for registry_entry in er.async_entries_for_device(
             entity_registry, device.id, include_disabled_entities=True
@@ -112,6 +112,9 @@ async def async_setup_entry(
                 replaced_sensor_id,
             )
             _async_remove_sensor(replaced_sensor_id, registry_entry.entity_id)
+            return registry_entry.entity_id
+
+        return None
 
     @callback
     def _async_handle_sensor_changes() -> None:
@@ -123,16 +126,21 @@ async def async_setup_entry(
         if new_sensor_ids := [
             sensor_id for sensor_id in sensor_data if sensor_id not in added_sensor_ids
         ]:
+            new_entities: list[LibreHardwareMonitorSensor] = []
             for sensor_id in new_sensor_ids:
                 _LOGGER.debug("New sensor detected, adding: %s", sensor_id)
-                _async_remove_replaced_sensor(sensor_data, sensor_data[sensor_id])
-            added_sensor_ids.update(new_sensor_ids)
-            async_add_entities(
-                LibreHardwareMonitorSensor(
+                entity = LibreHardwareMonitorSensor(
                     lhm_coordinator, config_entry.entry_id, sensor_data[sensor_id]
                 )
-                for sensor_id in new_sensor_ids
-            )
+                if replaced_entity_id := _async_remove_replaced_sensor(
+                    sensor_data, sensor_data[sensor_id]
+                ):
+                    # Pin entity id as identical devices have same-named sensors,
+                    # otherwise they could swap ids depending on report order
+                    entity.entity_id = replaced_entity_id
+                new_entities.append(entity)
+            added_sensor_ids.update(new_sensor_ids)
+            async_add_entities(new_entities)
 
         # Check if we have a registered entity that is no longer reported by LHM
         registry_entries = {
