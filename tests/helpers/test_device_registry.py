@@ -8582,8 +8582,8 @@ async def test_connections_validator() -> None:
         )
 
 
-@pytest.mark.usefixtures("hass")
 async def test_suggested_area_fails(
+    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
