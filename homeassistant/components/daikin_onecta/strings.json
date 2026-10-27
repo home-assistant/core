@@ -93,6 +93,9 @@
     "fan_mode_unavailable": {
       "message": "The requested fan mode is unavailable for {device}"
     },
+    "invalid_response": {
+      "message": "Daikin API returned an invalid response"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },

@@ -14,6 +14,7 @@ from daikin_onecta import (
     OnectaAuthenticationError,
     OnectaConnectionError,
     OnectaRateLimitError,
+    OnectaResponseError,
 )
 from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
@@ -35,7 +36,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -568,43 +568,33 @@ class TestOnectaDataUpdateCoordinator:
         command.assert_awaited_once()
         assert coordinator._polling_backoff_until is None
 
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_successful_write_reschedules_poll_after_cooldown(
-        self,
-        hass: HomeAssistant,
-        config_entry: MockConfigEntry,
-        freezer: FrozenDateTimeFactory,
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Poll after the write cooldown instead of the previous backoff deadline."""
-        await _async_setup_fixture(hass, config_entry, "minimal_data")
-        coordinator = config_entry.runtime_data
-        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
-        coordinator._polling_backoff_until = dt_util.utcnow() + timedelta(minutes=6)
-
-        # A scheduled poll observes the backoff and sets its next timer to the
-        # remaining time.
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator._polling_backoff_until = now + timedelta(minutes=5)
         coordinator.update_interval = timedelta(minutes=5)
-        coordinator._schedule_refresh()
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.update_interval == timedelta(minutes=1)
+        coordinator._listeners[1] = (MagicMock(), None)
+        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
 
         command = AsyncMock()
-        assert await coordinator.async_execute_command(lambda _client: command())
+        with patch.object(coordinator, "_schedule_refresh") as schedule_refresh:
+            assert await coordinator.async_execute_command(lambda _client: command())
+            schedule_refresh.assert_called_once_with()
         assert coordinator.update_interval == timedelta(seconds=30)
 
-        coordinator.client.get_gateway_devices.reset_mock()
-        freezer.tick(timedelta(seconds=29))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        coordinator.client.get_gateway_devices.assert_not_awaited()
+        mock_utcnow.return_value = now + timedelta(seconds=29)
+        await coordinator._async_update_data_from_cloud()
+        coordinator._async_get_cloud_devices.assert_not_awaited()
 
-        # Coordinator timers are intentionally staggered by a fraction of a
-        # second, so advance just past the cooldown boundary.
-        freezer.tick(timedelta(seconds=2))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        coordinator.client.get_gateway_devices.assert_awaited_once()
+        mock_utcnow.return_value = now + timedelta(seconds=31)
+        await coordinator._async_update_data_from_cloud()
+        coordinator._async_get_cloud_devices.assert_awaited_once_with(
+            cooldown=timedelta(seconds=30)
+        )
 
     async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
         """Turn a Daikin HTTP error into a translatable polling failure."""
@@ -623,6 +613,23 @@ class TestOnectaDataUpdateCoordinator:
 
         assert exc_info.value.translation_key == "api_error"
         assert exc_info.value.translation_placeholders == {"status": "500"}
+
+    async def test_response_error_uses_invalid_response_message(self, coordinator):
+        """Explain malformed successful API responses without an HTTP error status."""
+        coordinator._last_patch_call = None
+        response_error = OnectaResponseError(
+            200,
+            "Invalid JSON",
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+        coordinator._async_get_cloud_devices = AsyncMock(side_effect=response_error)
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.translation_key == "invalid_response"
+        assert exc_info.value.__cause__ is response_error
 
     @pytest.mark.parametrize("status", [401, 403])
     async def test_unauthorized_api_error_requires_authentication(

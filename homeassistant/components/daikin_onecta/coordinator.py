@@ -14,6 +14,7 @@ from daikin_onecta.exceptions import (
     OnectaAuthenticationError,
     OnectaConnectionError,
     OnectaRateLimitError,
+    OnectaResponseError,
 )
 from daikin_onecta.models import GatewayDevice
 
@@ -243,6 +244,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
+                ) from err
+            except OnectaResponseError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_response",
                 ) from err
             except OnectaApiError as err:
                 raise UpdateFailed(
