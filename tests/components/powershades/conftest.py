@@ -88,4 +88,5 @@ def mock_config_entry() -> MockConfigEntry:
             "mac": "d8:3a:f5:11:22:33",
         },
         unique_id=str(TEST_SERIAL),
+        entry_id="01JPOWERSHADESTESTENTRY000",
     )
