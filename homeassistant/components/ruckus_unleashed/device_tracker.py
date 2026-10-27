@@ -97,8 +97,9 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
         """Initialize a Ruckus client."""
         super().__init__(coordinator)
         self._mac = mac
-        if name:
-            self._attr_device_info = DeviceInfo(name=name)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}, name=name or mac
+        )
 
     @property
     @override

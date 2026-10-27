@@ -1,6 +1,5 @@
 """Provide functionality to keep track of devices."""
 
-from dataclasses import replace
 import logging
 from typing import TYPE_CHECKING, Any, final, override
 
@@ -32,6 +31,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.loader import async_suggest_report_issue
 
 from .const import (  # noqa: F401
@@ -575,40 +575,11 @@ class ScannerEntity(
         """Return unique ID of the entity."""
         return self.mac_address
 
-    @property
-    @override
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info of the tracked device.
-
-        The tracked device is identified by its MAC address. The integration's
-        device info adds to it, and the hostname or MAC address names it if the
-        integration does not.
-        """
-        if (
-            self.mac_address is None
-            or self.unique_id is None
-            or self.platform.config_entry is None
-        ):
-            return None
-        connections = {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
-        if not isinstance(device_info := super().device_info, DeviceInfo):
-            device_info = DeviceInfo()
-        changes: dict[str, Any] = {
-            "connections": connections | device_info.get("connections", set())
-        }
-        if (
-            device_info.get("name") is None
-            and device_info.get("translation_key") is None
-            and (name := self._async_fallback_device_name(connections)) is not None
-        ):
-            changes["name"] = name
-        return replace(device_info, **changes)
-
     @callback
     def _async_fallback_device_name(
         self, connections: set[tuple[str, str]]
     ) -> str | None:
-        """Return the device name if the integration does not name the device.
+        """Return the name of the tracked device for its default device info.
 
         The MAC address only names a new device, so it does not replace a name
         given by the integration's other entities or before the tracked device
@@ -625,10 +596,43 @@ class ScannerEntity(
             return None
         return self.mac_address
 
+    @callback
+    def _async_set_default_device_info(self) -> None:
+        """Describe the tracked device for an integration which does not.
+
+        To be removed in HA Core 2027.5, integrations should provide device info
+        with the MAC address of the tracked device.
+        """
+        if TYPE_CHECKING:
+            assert self.mac_address is not None
+        connections = {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        if (name := self._async_fallback_device_name(connections)) is None:
+            self._attr_device_info = DeviceInfo(connections=connections)
+        else:
+            self._attr_device_info = DeviceInfo(connections=connections, name=name)
+        # An integration overriding device_info is not affected
+        if self.device_info is None:
+            return
+        report_usage(
+            "does not provide device info for its ScannerEntity device tracker, "
+            "it should provide device info with the MAC address of the tracked "
+            "device in its connections",
+            breaks_in_ha_version="2027.5.0",
+            core_integration_behavior=ReportBehavior.ERROR,
+            integration_domain=self.platform.platform_name,
+        )
+
     @override
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass."""
         await super().async_prepare_to_add_to_hass()
+        if (
+            self.device_info is None
+            and self.mac_address
+            and self.unique_id
+            and self.platform.config_entry is not None
+        ):
+            self._async_set_default_device_info()
         if (
             self.mac_address
             and self.unique_id

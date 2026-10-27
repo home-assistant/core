@@ -75,7 +75,10 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
 
         self._attr_mac_address = self._device.mac
         self._attr_unique_id = f"{agent_id}-{self._attr_mac_address}"
-        self._attr_device_info = DeviceInfo(name=self._device.name)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac)},
+            name=self._device.name or self._device.mac,
+        )
         self._attr_icon = get_icon_from_type(self._device.type)
 
     @property

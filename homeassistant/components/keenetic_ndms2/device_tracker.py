@@ -90,8 +90,10 @@ class KeeneticTracker(ScannerEntity):
         """Initialize the tracked device."""
         self._device = device
         self._router = router
-        if device.name:
-            self._attr_device_info = DeviceInfo(name=device.name)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            name=device.name or device.mac,
+        )
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )

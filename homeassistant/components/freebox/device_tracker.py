@@ -5,7 +5,7 @@ from typing import Any, override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -65,7 +65,8 @@ class FreeboxDevice(ScannerEntity):
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
         self._attr_device_info = DeviceInfo(
-            name=device["primary_name"].strip() or DEFAULT_DEVICE_NAME
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            name=device["primary_name"].strip() or DEFAULT_DEVICE_NAME,
         )
         self._attr_icon = icon_for_freebox_device(device)
         self._active = False

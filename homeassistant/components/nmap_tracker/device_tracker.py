@@ -63,8 +63,10 @@ class NmapTrackerEntity(ScannerEntity):
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
         self._active = active
-        if name := self._device.name:
-            self._attr_device_info = DeviceInfo(name=name)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+            name=self._device.name or mac_address,
+        )
 
     @property
     def _device(self) -> NmapDevice:
