@@ -20,7 +20,6 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
-from .coordinator import async_cleanup_devices
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,12 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     entry.runtime_data = controller
 
+    # The first refresh sweeps stale registry entries before platforms create
+    # entities, so replaced devices do not push new entities onto suffixed IDs.
     await controller.initialize_first_refresh()
-
-    # Sweep before platforms create entities, so a device that was replaced
-    # while Home Assistant was stopped does not push the new entities onto
-    # suffixed entity IDs that the stale entries still occupy.
-    await async_cleanup_devices(hass, controller)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -102,14 +102,14 @@ class OmadaSiteController:
                 device
                 for device in self._devices_coordinator.data.values()
                 if device_filter(device)
-                and dr.format_mac(device.mac) not in processed_devices
+                and device.mac not in processed_devices
             ]
 
             if not devices_to_process:
                 return
 
             for device in devices_to_process:
-                mac = dr.format_mac(device.mac)
+                mac = device.mac
                 # The device list was built before this loop, so recheck: a
                 # concurrent task may have reserved the device in the meantime.
                 if mac in processed_devices:
@@ -146,19 +146,14 @@ class OmadaSiteController:
 
     def _forget_device_registration(self, mac: str) -> None:
         """Drop a device from the registration state so it can be added again."""
-        mac = dr.format_mac(mac)
         for processed in self._device_entity_registrations:
             processed.discard(mac)
 
     async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
         """Remove a device entry and drop its cached coordinator state."""
-        mac = dr.format_mac(mac)
         self._forget_device_registration(mac)
         gateway_coordinator = self._gateway_coordinator
-        if (
-            gateway_coordinator is not None
-            and dr.format_mac(gateway_coordinator.mac) == mac
-        ):
+        if gateway_coordinator is not None and gateway_coordinator.mac == mac:
             gateway_coordinator.invalidate()
         coordinator = self._switch_port_coordinators.pop(mac, None)
         if coordinator is not None:
@@ -175,26 +170,14 @@ class OmadaSiteController:
         coordinator = self._gateway_coordinator
         if coordinator is None:
             return None
-        target = dr.format_mac(mac)
 
-        def _cached_gateway() -> OmadaGateway | None:
-            """Find the gateway even when the MAC formatting differs."""
-            return next(
-                (
-                    gateway
-                    for key, gateway in (coordinator.data or {}).items()
-                    if dr.format_mac(key) == target
-                ),
-                None,
-            )
-
-        gateway = _cached_gateway()
+        gateway = (coordinator.data or {}).get(mac)
         if gateway is not None:
             return gateway
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
             return None
-        return _cached_gateway()
+        return (coordinator.data or {}).get(mac)
 
     @property
     def controller_client(self) -> OmadaClient:
@@ -210,7 +193,7 @@ class OmadaSiteController:
         self, switch: OmadaSwitch
     ) -> OmadaSwitchPortCoordinator:
         """Get coordinator for network port information of a given switch."""
-        mac = dr.format_mac(switch.mac)
+        mac = switch.mac
         if mac not in self._switch_port_coordinators:
             self._switch_port_coordinators[mac] = OmadaSwitchPortCoordinator(
                 self._hass, self._config_entry, self._omada_client, switch

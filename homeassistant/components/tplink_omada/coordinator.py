@@ -215,7 +215,6 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
-        self._previous_devices: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, OmadaListDevice]:
@@ -227,20 +226,7 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
             # removed and entities keep their data.
             return self.data or {}
 
-        current_devices = set(devices)
-        if not self._previous_devices:
-            # The startup sweep was skipped because the first list was empty.
-            # Sweep before listeners register entities, so stale entries release
-            # their entity IDs.
-            await async_cleanup_devices(
-                self.hass, self.config_entry.runtime_data, devices
-            )
-        removed_devices = self._previous_devices - current_devices
-        self._previous_devices = current_devices
-        if removed_devices:
-            await async_remove_devices(
-                self.hass, self.config_entry.runtime_data, removed_devices
-            )
+        await async_cleanup_devices(self.hass, self.config_entry.runtime_data, devices)
         return devices
 
     @override
@@ -335,23 +321,6 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
-
-
-async def async_remove_devices(
-    hass: HomeAssistant,
-    controller: OmadaSiteController,
-    macs: set[str],
-) -> None:
-    """Remove registry entries for the given device MACs."""
-    device_registry = dr.async_get(hass)
-    entry_id = controller.devices_coordinator.config_entry.entry_id
-    for mac in macs:
-        device_entry = device_registry.async_get_device_by_identifier(
-            (DOMAIN, mac), entry_id
-        )
-        if device_entry is not None:
-            _LOGGER.debug("Removing stale Omada device %s from entry %s", mac, entry_id)
-            await controller.async_remove_device(mac, device_entry)
 
 
 async def async_cleanup_devices(
