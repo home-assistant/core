@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from copy import deepcopy
 from datetime import timedelta
 import logging
 from typing import Any
@@ -3372,6 +3373,143 @@ async def test_automation_trigger_variables(
     # Verify this available during trigger variables rendering
     assert calls[1].data.get("this_trigger_variables") == "automation.automation_1"
     assert "Error rendering variables" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("condition_config", "enabled_calls", "disabled_calls"),
+    [
+        pytest.param(
+            {
+                "condition": "state",
+                "entity_id": "binary_sensor.test",
+                "state": "on",
+                "enabled": "{{ enable_condition }}",
+            },
+            0,
+            1,
+            id="state",
+        ),
+        pytest.param(
+            {
+                "condition": "and",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "binary_sensor.test",
+                        "state": "on",
+                        "enabled": "{{ enable_condition }}",
+                    }
+                ],
+            },
+            0,
+            1,
+            id="and",
+        ),
+        pytest.param(
+            {
+                "condition": "or",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "binary_sensor.test",
+                        "state": "off",
+                        "enabled": "{{ enable_condition }}",
+                    }
+                ],
+            },
+            1,
+            0,
+            id="or",
+        ),
+        pytest.param(
+            {
+                "condition": "not",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "binary_sensor.test",
+                        "state": "off",
+                        "enabled": "{{ enable_condition }}",
+                    }
+                ],
+            },
+            0,
+            1,
+            id="not",
+        ),
+    ],
+)
+async def test_condition_enabled_trigger_variables_reload(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    condition_config: ConfigType,
+    enabled_calls: int,
+    disabled_calls: int,
+) -> None:
+    """Condition enabled templates receive trigger variables, also after reload."""
+    config = {
+        automation.DOMAIN: {
+            "id": "enabled_condition",
+            "alias": "Enabled condition",
+            "trigger_variables": {
+                "threshold": 25,
+                "enable_condition": "{{ threshold < 50 }}",
+                "this_id": "{{ this.entity_id if this is not none else 'initial' }}",
+            },
+            "triggers": [{"trigger": "event", "event_type": "test_event"}],
+            "conditions": [condition_config],
+            "actions": [{"action": "test.automation"}],
+        }
+    }
+    hass.states.async_set("binary_sensor.test", "off")
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.states.get("automation.enabled_condition") is not None
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == enabled_calls
+
+    config = deepcopy(config)
+    config[automation.DOMAIN]["trigger_variables"]["threshold"] = 75
+    with patch(
+        "homeassistant.config.load_yaml_config_file", autospec=True, return_value=config
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == enabled_calls + disabled_calls
+    assert "is undefined" not in caplog.text
+
+
+async def test_condition_enabled_template_error_blocks_actions(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Errors in enabled templates do not cause conditions to be skipped."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"divisor": 0},
+                "triggers": [{"trigger": "event", "event_type": "test_event"}],
+                "conditions": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ false }}",
+                        "enabled": "{{ 1 / divisor }}",
+                    }
+                ],
+                "actions": [{"action": "test.automation"}],
+            }
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert not calls
+    assert "Error rendering condition enabled template" in caplog.text
 
 
 async def test_automation_bad_trigger_variables(

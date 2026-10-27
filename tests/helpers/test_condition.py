@@ -2796,6 +2796,96 @@ async def test_disabled_condition(
     assert test.async_check() is None
 
 
+@pytest.mark.parametrize(
+    "condition_config",
+    [
+        pytest.param(
+            {"condition": "state", "entity_id": "light.test", "state": "on"},
+            id="legacy",
+        ),
+        pytest.param(
+            {"condition": "light.is_on", "target": {"entity_id": "light.test"}},
+            id="platform",
+        ),
+    ],
+)
+async def test_condition_enabled_template_run_variables(
+    hass: HomeAssistant, condition_config: ConfigType
+) -> None:
+    """Enabled is rendered for each check, without duplicating the trace."""
+    config = cv.CONDITION_SCHEMA(
+        {**condition_config, "enabled": "{{ enable_condition }}"}
+    )
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    hass.states.async_set("light.test", "off")
+
+    assert test.async_check(variables={"enable_condition": False}) is None
+    trace.trace_get(clear=True)
+    assert test.async_check(variables={"enable_condition": True}) is False
+    assert len(trace.trace_get(clear=False)[""]) == 1
+    assert test.async_check(variables={"enable_condition": False}) is None
+
+    hass.states.async_set("light.test", "on")
+    assert test.async_check(variables={"enable_condition": True}) is True
+
+
+async def test_condition_enabled_template_tracks_changes(hass: HomeAssistant) -> None:
+    """An enabled wrapper forwards subscriptions and child cleanup."""
+    config = cv.CONDITION_SCHEMA(
+        {
+            "condition": "state",
+            "entity_id": "light.test",
+            "state": "on",
+            "enabled": "{{ enable_condition }}",
+        }
+    )
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    changed = Mock()
+    unsubscribe = await test.async_track_changes(changed)
+
+    hass.states.async_set("light.test", "on")
+    await hass.async_block_till_done()
+    changed.assert_called_once_with()
+
+    unsubscribe()
+    test.async_unload()
+    hass.states.async_set("light.test", "off")
+    await hass.async_block_till_done()
+    changed.assert_called_once_with()
+
+
+async def test_condition_enabled_template_child_lifecycle(hass: HomeAssistant) -> None:
+    """Template enabled conditions set up and unload their child once."""
+    await _setup_mock_integration(hass)
+    config = cv.CONDITION_SCHEMA(
+        {"condition": "test", "enabled": "{{ enable_condition }}"}
+    )
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    test._checker.async_setup.assert_awaited_once()
+    test.async_unload()
+    test._checker.async_unload.assert_called_once()
+
+
+async def test_condition_enabled_template_error(hass: HomeAssistant) -> None:
+    """A failed enabled template raises instead of disabling the condition."""
+    config = cv.CONDITION_SCHEMA(
+        {
+            "condition": "state",
+            "entity_id": "light.test",
+            "state": "on",
+            "enabled": "{{ 1 / divisor }}",
+        }
+    )
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    with pytest.raises(ConditionError, match="Error rendering condition enabled"):
+        test.async_check(variables={"divisor": 0})
+
+
 async def test_condition_enabled_template_limited(hass: HomeAssistant) -> None:
     """Test conditions enabled template raises for non-limited template uses."""
     config = {
@@ -2807,8 +2897,9 @@ async def test_condition_enabled_template_limited(hass: HomeAssistant) -> None:
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
 
-    with pytest.raises(HomeAssistantError):
-        await condition.async_from_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    with pytest.raises(ConditionError, match="not supported in limited templates"):
+        test.async_check()
 
 
 async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> None:
@@ -7131,6 +7222,11 @@ _TEMPLATE_CONDITION = {"condition": "template", "value_template": "{{ true }}"}
         pytest.param(_TEMPLATE_CONDITION, True, id="template"),
         pytest.param(
             {**_TEMPLATE_CONDITION, "enabled": False}, False, id="disabled_template"
+        ),
+        pytest.param(
+            {**_STATE_CONDITION, "enabled": "{{ enable_condition }}"},
+            True,
+            id="enabled_template",
         ),
         pytest.param(
             {"condition": "and", "conditions": [_STATE_CONDITION, _STATE_CONDITION]},
