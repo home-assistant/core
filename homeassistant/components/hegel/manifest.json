@@ -1,6 +1,7 @@
 {
   "domain": "hegel",
   "name": "Hegel Amplifier",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@boazca"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hegel/",

@@ -18,13 +18,10 @@ from . import PortainerConfigEntry
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
+    PortainerCoordinatorData,
     PortainerStackData,
 )
-from .entity import (
-    PortainerContainerEntity,
-    PortainerCoordinatorData,
-    PortainerStackEntity,
-)
+from .entity import PortainerContainerEntity, PortainerStackEntity
 from .util import async_add_entities_by_subentry
 
 

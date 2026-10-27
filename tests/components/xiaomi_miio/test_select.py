@@ -8,6 +8,7 @@ from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     PtcLevel,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

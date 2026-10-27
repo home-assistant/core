@@ -1,6 +1,7 @@
 {
   "domain": "harbor",
   "name": "Harbor Sleep",
+  "categories": ["health_wellbeing", "security_safety.cameras"],
   "codeowners": ["@Lash-L", "@afgarcia86"],
   "config_flow": true,
   "dhcp": [

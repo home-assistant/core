@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -24,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .const import TeslemetryClimateSide
@@ -257,7 +257,7 @@ class TeslemetryVehiclePollingClimateEntity(
 
 
 class TeslemetryStreamingClimateEntity(
-    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreEntity
+    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreClimate
 ):
     """Teslemetry steering wheel climate control."""
 
@@ -311,14 +311,15 @@ class TeslemetryStreamingClimateEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
-            )
-            self._attr_native_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-            )
             self._attr_preset_mode = state.attributes.get(
                 ClimateEntityStateAttribute.PRESET_MODE
+            )
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
+            )
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(
@@ -511,7 +512,7 @@ class TeslemetryVehiclePollingCabinOverheatProtectionEntity(
 class TeslemetryStreamingCabinOverheatProtectionEntity(
     TeslemetryVehicleStreamEntity,
     TeslemetryCabinOverheatProtectionEntity,
-    RestoreEntity,
+    RestoreClimate,
 ):
     """Vehicle Cabin Overheat Protection."""
 
@@ -552,11 +553,12 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
             )
-            self._attr_native_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(

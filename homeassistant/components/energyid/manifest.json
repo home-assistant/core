@@ -1,6 +1,7 @@
 {
   "domain": "energyid",
   "name": "EnergyID",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@JrtPec", "@Molier"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energyid",

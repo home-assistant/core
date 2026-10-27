@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.harbor.const import (
     CONF_CERT_PEM,
@@ -15,8 +16,6 @@ from homeassistant.components.harbor.const import (
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 SERIAL = "1234567890"
 CERT_PEM = "-----BEGIN CERTIFICATE-----\nMIIBdummy\n-----END CERTIFICATE-----"
@@ -89,7 +88,7 @@ def mock_connect_timeout() -> Generator[None]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.harbor.async_setup_entry", return_value=True
+        "homeassistant.components.harbor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

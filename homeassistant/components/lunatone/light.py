@@ -1,10 +1,10 @@
 """Platform for Lunatone light integration."""
 
+import contextlib
 from typing import Any, override
 
 import aiohttp
 from lunatone_rest_api_client import DALIBroadcast
-from lunatone_rest_api_client.models import LineStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,7 +18,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
@@ -89,40 +88,37 @@ class LunatoneLight(
         super().__init__(coordinator)
         self._line_id = line_id
         self._device_id = device_id
-        self._config_entry_unique_id = config_entry_unique_id
         self._device = self.coordinator.data[line_id][device_id]
 
-        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
+        unique_id = f"{config_entry_unique_id}-device{device_id}"
 
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        assert self.unique_id
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
             name=self._device.data.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (
-                    DOMAIN,
-                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
-                ),
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
         )
+        with contextlib.suppress(ValueError):
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, f"{config_entry_unique_id}-line{line_id}"),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            )
+
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
 
     @property
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._device is not None
+        return super().available and self._device_id in self.coordinator.data.get(
+            self._line_id, {}
+        )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self._device is not None and self._device.is_on
+        return self._device.is_on
 
     @property
     @override
@@ -187,7 +183,8 @@ class LunatoneLight(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data[self._line_id][self._device_id]
+        with contextlib.suppress(KeyError):
+            self._device = self.coordinator.data[self._line_id][self._device_id]
         self.async_write_ha_state()
 
     @override
@@ -269,7 +266,7 @@ class LunatoneLineBroadcastLight(
         self._broadcast = broadcast
 
         line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
+        self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
         self._attr_unique_id = line_unique_id
 
     @override
@@ -294,8 +291,7 @@ class LunatoneLineBroadcastLight(
             super().available
             and self._coordinator_info.last_update_success
             and line_id is not None
-            and str(line_id) in info_data.lines
-            and info_data.lines[str(line_id)].line_status == LineStatus.OK
+            and info_data.is_line_status_ok(line_id)
         )
 
     @property

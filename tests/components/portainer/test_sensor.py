@@ -9,6 +9,13 @@ from pyportainer.models.docker import DockerContainerStats, EndpointStatus
 from pyportainer.models.docker_inspect import DockerInspect
 from pyportainer.models.portainer import Endpoint
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -22,14 +29,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    load_json_value_fixture,
-    snapshot_platform,
-)
 
 CPU_USAGE_ENTITY_ID = "sensor.focused_einstein_cpu_usage_total"
 

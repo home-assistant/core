@@ -4,13 +4,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pytrafikverket.models import FerryStopModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensor(

@@ -3,17 +3,16 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hanna.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.hanna.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.hanna.async_setup_entry", return_value=None):
         yield
 
 

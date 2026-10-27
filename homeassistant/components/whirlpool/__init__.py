@@ -26,7 +26,7 @@ PLATFORMS = [
 type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> None:
     """Set up Whirlpool Sixth Sense from a config entry."""
     session = async_get_clientsession(hass)
     region = REGIONS_CONF_MAP[entry.data.get(CONF_REGION, "EU")]
@@ -61,10 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
     entry.runtime_data = appliances_manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

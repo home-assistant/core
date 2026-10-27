@@ -8,6 +8,7 @@ from aiohue.errors import Unauthorized
 from aiohue.v1 import HueBridgeV1
 from aiohue.v2 import HueBridgeV2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.hue import bridge, migration
 from homeassistant.components.hue.const import (
@@ -24,8 +25,6 @@ from homeassistant.util.json import JsonArrayType
 from .conftest import create_config_entry, replace_resources, setup_platform
 from .const import FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
 from .test_light_v1 import LIGHT_RESPONSE
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 async def test_bridge_setup_v1(

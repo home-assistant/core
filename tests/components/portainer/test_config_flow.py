@@ -9,6 +9,7 @@ from pyportainer.exceptions import (
 )
 from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.portainer.const import (
     CONF_ENDPOINT_ID,
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 MOCK_USER_SETUP = {
     CONF_URL: "https://127.0.0.1:9000/",

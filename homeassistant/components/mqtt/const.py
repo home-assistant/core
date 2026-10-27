@@ -269,6 +269,8 @@ CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
 CONF_SERIAL_NUMBER = "serial_number"
+CONF_CHILD_DEVICE = "child_device"
+CONF_CHILD_DEVICES = "child_devices"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
@@ -375,6 +377,7 @@ DEFAULT_WILL = {
 }
 
 DOMAIN = "mqtt"
+INVALID_PLATFORM_CONFIG_ISSUE_PREFIX = "invalid_platform_config_"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"

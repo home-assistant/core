@@ -25,7 +25,7 @@ from uiprotect.data import (
     WSAction,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicCamera, PublicLight
+from uiprotect.data.public_devices import PublicCamera, PublicChime, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -48,6 +48,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_CHIMES,
     DISPATCH_PUBLIC_ADD,
     DISPATCH_RELAYS,
     DOMAIN,
@@ -85,7 +86,12 @@ def _async_dispatch_id(entry: UFPConfigEntry, dispatch: str) -> str:
 # Device families the public API alone provides; the private bootstrap has no
 # store for them, so hybrid has no adopt path either and their add always goes
 # through the public add signal.
-_PUBLIC_ONLY_MODELS = {ModelType.FOB, ModelType.RELAY, ModelType.SIREN}
+_PUBLIC_ONLY_MODELS = {
+    ModelType.FOB,
+    ModelType.LINK_STATION,
+    ModelType.RELAY,
+    ModelType.SIREN,
+}
 
 
 def _pair_public_private[
@@ -157,10 +163,16 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.chime_signal = _async_dispatch_id(entry, DISPATCH_CHIMES)
         self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
+
+    @property
+    def hass(self) -> HomeAssistant:
+        """Return the Home Assistant instance."""
+        return self._hass
 
     @property
     def disable_stream(self) -> bool:
@@ -306,6 +318,7 @@ class ProtectData:
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_public_resync(self._async_public_resync_done),
         ]
         if api.is_public_only:
             # No private session: the private websocket and the private poll
@@ -435,6 +448,24 @@ class ProtectData:
                 and new_obj.id in self.api.public_bootstrap.relays
             ):
                 async_dispatcher_send(self._hass, self.relay_signal, new_obj)
+            # Only an added chime or a pairing change can add ring volumes.
+            if isinstance(new_obj, PublicChime) and (
+                message.action is WSAction.ADD
+                or "ringSettings" in message.changed_data
+                or "cameraIds" in message.changed_data
+            ):
+                async_dispatcher_send(self._hass, self.chime_signal, new_obj)
+            # Ring volumes skip a paired camera until it is known.
+            if new_obj.model is ModelType.CAMERA and message.action is WSAction.ADD:
+                self._async_offer_chimes()
+
+    @callback
+    def _async_offer_chimes(self) -> None:
+        """Offer every public chime so its missing ring volumes are added."""
+        if not self.api.has_public_bootstrap:
+            return
+        for chime in list(self.api.public_bootstrap.chimes.values()):
+            async_dispatcher_send(self._hass, self.chime_signal, chime)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -513,42 +544,22 @@ class ProtectData:
             return
         self.last_public_update_success = success
         self._async_process_public_updates()
-        if success:
-            # The library resyncs its public bootstrap on reconnect, but the
-            # resync applies silently and races this callback, so the re-read
-            # above may see the pre-disconnect cache. Refresh again behind a
-            # guaranteed-fresh snapshot (``update_public`` is serialized) so a
-            # change from the disconnect gap cannot stay stale.
-            self._entry.async_create_background_task(
-                self._hass,
-                self._async_resignal_after_public_resync(),
-                "unifiprotect public reconnect refresh",
-            )
 
-    async def _async_resignal_after_public_resync(self) -> None:
-        """Re-signal public entities once a fresh public snapshot is applied."""
-        try:
-            await self.async_update_public()
-        except NotAuthorized:
-            # A revoked API key cannot self-recover.
-            self._entry.async_start_reauth(self._hass)
-            return
-        except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-            # Retried on the next reconnect, but this now gates discovery of
-            # devices that appeared during the gap, so make it visible.
-            _LOGGER.warning("Public refresh after reconnect failed: %s", err)
-            return
+    @callback
+    def _async_public_resync_done(self, success: bool) -> None:
+        """Re-signal public entities once the library's reconnect resync has finished.
+
+        Added and removed devices arrive as frames, field changes apply silently.
+        Re-offer cameras, relays and chimes because their entity sets derive from
+        fields.
+        """
         self._async_process_public_updates()
-        # A device that appeared during the gap gets no add frame, so re-offer
-        # everything. Platforms and dispatch helpers drop what they already know.
-        if self.api.has_public_bootstrap:
-            for public in list(self.api.public_bootstrap.cameras.values()):
-                async_dispatcher_send(self._hass, self.channels_signal, public)
-            for device in list(self.api.public_bootstrap.all_devices()):
-                if isinstance(device, PublicDeviceModel):
-                    self._async_dispatch_new_public_device(device)
-            for relay in list(self.api.public_bootstrap.relays.values()):
-                async_dispatcher_send(self._hass, self.relay_signal, relay)
+        public_bootstrap = self.api.public_bootstrap
+        for public in list(public_bootstrap.cameras.values()):
+            async_dispatcher_send(self._hass, self.channels_signal, public)
+        for relay in list(public_bootstrap.relays.values()):
+            async_dispatcher_send(self._hass, self.relay_signal, relay)
+        self._async_offer_chimes()
 
     @callback
     def _async_signal_public_doorbell_settings(self) -> None:
@@ -647,6 +658,8 @@ class ProtectData:
                 return
             self._auth_failures = 0
             self._async_process_public_updates()
+            # The refresh replaces cached objects without device frames.
+            self._async_offer_chimes()
             return
         try:
             await self.api.update()
@@ -853,10 +866,21 @@ class ProtectData:
             return None
         # Migrated entities target dedicated public device models, which all
         # inherit from PublicDeviceModel (carrying mac/state).
-        return cast(
-            "PublicDeviceModel | None",
-            api.public_bootstrap.get(device.model, device.id),
-        )
+        public_bootstrap = api.public_bootstrap
+        if (public := public_bootstrap.get(device.model, device.id)) is None and (
+            store := public_bootstrap.store_for(device.model)
+        ):
+            # A device re-adopted while the websocket was down is only known
+            # under its new id after the resync.
+            public = next(
+                (
+                    obj
+                    for obj in store.values()
+                    if getattr(obj, "mac", None) == device.mac
+                ),
+                None,
+            )
+        return cast("PublicDeviceModel | None", public)
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:

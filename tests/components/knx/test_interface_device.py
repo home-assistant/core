@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.telegram import IndividualAddress
 
@@ -13,9 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(

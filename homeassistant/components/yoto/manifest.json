@@ -1,6 +1,7 @@
 {
   "domain": "yoto",
   "name": "Yoto",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@cdnninja", "@piitaya"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

@@ -9,6 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The LiteLLM API key or virtual key to use for the proxy."
+        },
+        "description": "The API key for the LiteLLM proxy at {url} is no longer valid. Enter a new API key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

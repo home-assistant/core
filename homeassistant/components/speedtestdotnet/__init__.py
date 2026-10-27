@@ -17,7 +17,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: SpeedTestConfigEntry
-) -> bool:
+) -> None:
     """Set up the Speedtest.net component."""
     try:
         api = await hass.async_add_executor_job(
@@ -41,11 +41,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SpeedTestConfigEntry
-) -> bool:
+) -> None:
     """Unload SpeedTest Entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

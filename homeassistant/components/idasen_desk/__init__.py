@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> None:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
@@ -61,14 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        await coordinator.async_disconnect()
-        bluetooth.async_rediscover_address(hass, coordinator.address)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.async_disconnect()
+    bluetooth.async_rediscover_address(hass, coordinator.address)
