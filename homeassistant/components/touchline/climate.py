@@ -115,8 +115,13 @@ class Touchline(ClimateEntity):
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
         try:
-            self.unit.set_operation_mode(preset.mode)
-            self.unit.set_week_program(preset.program)
+            if not (
+                self.unit.set_operation_mode(preset.mode)
+                and self.unit.set_week_program(preset.program)
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="error_set_preset"
+                )
         except (OSError, ConnectionError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_preset"
@@ -131,8 +136,13 @@ class Touchline(ClimateEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         try:
-            self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            self.unit.set_target_temperature(self._attr_target_temperature)
+            self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+            if not self.unit.set_target_temperature(
+                self._attr_native_target_temperature
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="error_set_temperature"
+                )
         except (OSError, ConnectionError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_temperature"
