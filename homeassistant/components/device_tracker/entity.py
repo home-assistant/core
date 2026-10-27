@@ -31,7 +31,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.loader import async_suggest_report_issue
 
 from .const import (  # noqa: F401
@@ -610,17 +609,6 @@ class ScannerEntity(
             self._attr_device_info = DeviceInfo(connections=connections)
         else:
             self._attr_device_info = DeviceInfo(connections=connections, name=name)
-        # An integration overriding device_info is not affected
-        if self.device_info is None:
-            return
-        report_usage(
-            "does not provide device info for its ScannerEntity device tracker, "
-            "it should provide device info with the MAC address of the tracked "
-            "device in its connections",
-            breaks_in_ha_version="2027.5.0",
-            core_integration_behavior=ReportBehavior.ERROR,
-            integration_domain=self.platform.platform_name,
-        )
 
     @override
     async def async_prepare_to_add_to_hass(self) -> None:
