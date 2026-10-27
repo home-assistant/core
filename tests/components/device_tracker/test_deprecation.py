@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import help_test_all, import_and_test_deprecated_alias
 
 from homeassistant.components.device_tracker import (
     BaseTrackerEntity,
@@ -12,8 +13,6 @@ from homeassistant.components.device_tracker import (
     TrackerEntityDescription,
     config_entry,
 )
-
-from tests.common import help_test_all, import_and_test_deprecated_alias
 
 
 def test_all() -> None:

@@ -4,6 +4,11 @@ from unittest.mock import MagicMock
 
 from peblar import PeblarAuthenticationError, PeblarConnectionError, PeblarError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -19,12 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
 
 
 @pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)

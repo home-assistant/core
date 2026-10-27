@@ -330,6 +330,15 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "alpha_bidet_infrared": {
+      "name": "Alpha Bidet Infrared",
+      "integration_type": "device",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -572,6 +581,16 @@
         "energy.energy_prices"
       ],
       "supported_by": "energyzero"
+    },
+    "any_list": {
+      "name": "AnyList",
+      "integration_type": "service",
+      "categories": [
+        "productivity_information.shopping_groceries",
+        "productivity_information.calendars_todos"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "aosmith": {
       "name": "A. O. Smith",
@@ -1150,12 +1169,13 @@
     },
     "bitcoin": {
       "name": "Bitcoin",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "finance"
       ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "bitvis": {
       "name": "Bitvis Power Hub",
@@ -1273,6 +1293,15 @@
       ],
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "bluetti_modbus": {
+      "name": "BLUETTI Modbus",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "bond": {
       "name": "Bond",
@@ -1606,6 +1635,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "chirpstack": {
+      "name": "ChirpStack",
+      "integration_type": "hub",
+      "categories": [
+        "hubs_protocols.wireless_protocols"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "cielo_home": {
       "name": "Cielo Home",
       "integration_type": "hub",
@@ -1647,6 +1685,16 @@
             "messaging_notifications.chat_apps"
           ],
           "name": "Cisco Webex Teams"
+        },
+        "meraki": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.network_presence",
+            "computers_network.routers_network"
+          ],
+          "name": "Meraki"
         }
       }
     },
@@ -2560,6 +2608,15 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecosmart": {
+      "name": "ecosmart",
+      "integration_type": "service",
+      "categories": [
+        "energy.energy_prices"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ecospar": {
       "name": "EcoSpar",
       "integration_type": "virtual",
@@ -3372,7 +3429,7 @@
       "categories": [
         "water.pools_spas"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "flo": {
@@ -3394,7 +3451,7 @@
       "iot_class": "cloud_push"
     },
     "flow_it": {
-      "name": "Flow-it",
+      "name": "AriaQ",
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
@@ -3465,6 +3522,15 @@
         "sensors.air_quality"
       ],
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "foreca": {
+      "name": "Foreca",
+      "integration_type": "service",
+      "categories": [
+        "weather_alerts.forecasts"
+      ],
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "forecast_solar": {
@@ -4526,13 +4592,27 @@
       ]
     },
     "helty": {
-      "name": "Helty Flow",
-      "integration_type": "device",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Helty",
+      "integrations": {
+        "helty": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow"
+        },
+        "helty_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow Cloud"
+        }
+      }
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -4825,11 +4905,22 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hp_printer": {
+      "name": "HP Printer",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hr_energy_qube": {
       "name": "Qube heat pump",
       "integration_type": "hub",
       "categories": [
-        "climate.heat_pumps_air_conditioning"
+        "climate.heat_pumps_air_conditioning",
+        "climate.thermostats_heating",
+        "climate.water_heaters"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5523,14 +5614,28 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "kaco_modbus": {
-      "name": "KACO Modbus",
-      "integration_type": "device",
-      "categories": [
-        "energy.solar_batteries"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+    "kaco": {
+      "name": "KACO new energy",
+      "integrations": {
+        "kaco_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO Modbus"
+        },
+        "kaco_rs485": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO RS485"
+        }
+      }
     },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
@@ -6642,16 +6747,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "meraki": {
-      "name": "Meraki",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.network_presence",
-        "computers_network.routers_network"
-      ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
@@ -6867,6 +6962,16 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "mijn_farmad_apotheek": {
+      "name": "Mijn Farmad Apotheek",
+      "integration_type": "service",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",
@@ -6927,7 +7032,7 @@
         "melcloud_home": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "cloud_push",
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
@@ -7894,6 +7999,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "okok_scale": {
+      "name": "OKOK Scale",
+      "integration_type": "device",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "olimpia_splendid": {
       "name": "Olimpia Splendid",
       "integration_type": "virtual",
@@ -8158,7 +8272,7 @@
         },
         "ubus": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
@@ -8250,7 +8364,7 @@
       "iot_class": "local_polling"
     },
     "otbr": {
-      "name": "Open Thread Border Router",
+      "name": "OpenThread Border Router",
       "integration_type": "service",
       "categories": [
         "hubs_protocols.wireless_protocols"
@@ -9852,6 +9966,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sensecap_lorawan": {
+      "name": "SenseCAP",
+      "integration_type": "hub",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "sensereo": {
       "name": "Sensereo",
       "iot_standards": [
@@ -9947,7 +10071,7 @@
       "iot_class": "cloud_polling"
     },
     "serial": {
-      "name": "Serial",
+      "name": "Raw Serial",
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
@@ -10172,12 +10296,21 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "skoda": {
+      "name": "\u0160koda",
+      "integration_type": "device",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sky": {
       "name": "Sky",
       "integrations": {
         "sky_hub": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence",
@@ -10652,6 +10785,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "splunk": {
       "name": "Splunk",
       "integration_type": "service",
@@ -10734,14 +10876,28 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "steam_online": {
+    "steam": {
       "name": "Steam",
-      "integration_type": "service",
-      "categories": [
-        "media_entertainment.gaming"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "steam_online": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "Steam"
+        },
+        "steamvr_base_station": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "SteamVR Base Station"
+        }
+      }
     },
     "steamist": {
       "name": "Steamist",
@@ -11158,28 +11314,14 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "telegram": {
-      "name": "Telegram",
-      "integrations": {
-        "telegram": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram"
-        },
-        "telegram_bot": {
-          "integration_type": "service",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram bot"
-        }
-      }
+    "telegram_bot": {
+      "name": "Telegram bot",
+      "integration_type": "service",
+      "categories": [
+        "messaging_notifications.chat_apps"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "teleinfo": {
       "name": "Teleinfo",
@@ -11340,13 +11482,27 @@
     },
     "thethingsnetwork": {
       "name": "The Things Network",
-      "integration_type": "hub",
-      "categories": [
-        "hubs_protocols.wireless_protocols",
-        "diy_makers.web_data_connectors"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "thethingsnetwork_lorawan": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "categories": [
+            "hubs_protocols.wireless_protocols"
+          ],
+          "name": "The Things Network"
+        },
+        "thethingsnetwork": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "hubs_protocols.wireless_protocols",
+            "diy_makers.web_data_connectors"
+          ],
+          "name": "The Things Network (Cloud Storage)"
+        }
+      }
     },
     "thingspeak": {
       "name": "ThingSpeak",

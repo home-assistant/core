@@ -3,6 +3,7 @@
 from datetime import datetime
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
@@ -56,8 +57,6 @@ from homeassistant.util.unit_conversion import (
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import MockWeatherTest, create_entity
-
-from tests.typing import WebSocketGenerator
 
 
 class MockWeatherEntity(WeatherEntity):

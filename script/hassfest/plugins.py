@@ -37,6 +37,7 @@ CORE_PLUGINS = [
     "device_classes",
     "docker",
     "integration_categories",
+    "integration_connectivity",
     "mdi_icons",
     "mypy_config",
     "metadata",

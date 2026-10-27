@@ -5,17 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylutron import OccupancyGroup
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.lutron.async_setup_entry", return_value=True
+        "homeassistant.components.lutron.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -10,6 +10,7 @@ from openai import APIConnectionError, PermissionDeniedError
 from openai.types.decision import Decision
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
@@ -30,8 +31,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir, s
 from homeassistant.util.json import JsonValueType
 
 from . import create_image_gen_call_item, create_message_item, create_reasoning_item
-
-from tests.common import MockConfigEntry
 
 QUESTIONS: dict[str, ai_task.EvaluationQuestion] = {
     "delivered": {"type": "noul", "instructions": "Has the package arrived?"},

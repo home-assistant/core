@@ -5,10 +5,12 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
 from pytest_homeassistant.components.recorder.common import (
     async_wait_recording_done,
     get_patched_live_version,
 )
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -23,9 +25,6 @@ from homeassistant.components.recorder.statistics import async_add_external_stat
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
@@ -88,7 +87,7 @@ async def test_duplicate_statistics_handle_integrity_error(
     ]
 
     with (
-        patch.object(statistics, "_statistics_exists", return_value=False),
+        patch.object(statistics, "_statistic_ids_by_start", return_value={}),
         patch.object(
             statistics, "_insert_statistics", wraps=statistics._insert_statistics
         ) as insert_statistics_mock,

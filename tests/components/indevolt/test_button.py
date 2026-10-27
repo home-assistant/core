@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from indevolt_api import IndevoltConfig, IndevoltEnergyMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID_GEN2 = "button.cms_sf2000_enable_standby_mode"
 ENTITY_ID_GEN1 = "button.bk1600_enable_standby_mode"

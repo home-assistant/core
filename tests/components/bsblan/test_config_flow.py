@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 # ZeroconfServiceInfo fixtures for different discovery scenarios
 

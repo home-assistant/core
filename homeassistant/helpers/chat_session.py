@@ -10,17 +10,21 @@ import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     HassJob,
     HassJobType,
     HomeAssistant,
     callback,
 )
+from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now, ulid_to_bytes
 
+from . import frame
 from .event import async_call_later
+from .typing import UNDEFINED, UndefinedType
 
 DATA_CHAT_SESSION: HassKey[dict[str, ChatSession]] = HassKey("chat_session")
 DATA_CHAT_SESSION_CLEANUP: HassKey[SessionCleanup] = HassKey("chat_session_cleanup")
@@ -39,6 +43,9 @@ class ChatSession:
 
     conversation_id: str
     last_updated: datetime = field(default_factory=dt_util.utcnow)
+    user_id: str | UndefinedType | None = UNDEFINED
+    # Requests that use the session. The cleanup skips a session in use.
+    in_use: int = 0
     _cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
 
     @callback
@@ -99,7 +106,7 @@ class SessionCleanup:
         # We mutate original object because current commands could be
         # yielding session based on it.
         for conversation_id, session in list(all_sessions.items()):
-            if session.last_updated + CONVERSATION_TIMEOUT < now:
+            if not session.in_use and session.last_updated + CONVERSATION_TIMEOUT < now:
                 LOGGER.debug("Cleaning up session %s", conversation_id)
                 del all_sessions[conversation_id]
                 session.async_cleanup()
@@ -113,13 +120,38 @@ class SessionCleanup:
 def async_get_chat_session(
     hass: HomeAssistant,
     conversation_id: str | None = None,
+    *,
+    context: Context | UndefinedType | None = UNDEFINED,
 ) -> Generator[ChatSession]:
-    """Return a chat session."""
+    """Return a chat session.
+
+    The user of the first context becomes the owner of the conversation, and
+    the context of another user raises Unauthorized. Pass None as context when
+    the caller does not act for a user, like a satellite that starts a
+    conversation.
+    """
+    if context is UNDEFINED:
+        frame.report_usage(
+            "calls async_get_chat_session without a context",
+            breaks_in_ha_version="2027.5",
+        )
+        context = None
+
     if session := current_session.get():
         # If a session is already active and it's the requested conversation ID,
         # return that. We won't update the last updated time in this case.
         if session.conversation_id == conversation_id:
-            yield session
+            if context is not None:
+                if session.user_id is UNDEFINED:
+                    session.user_id = context.user_id
+                elif session.user_id != context.user_id:
+                    raise Unauthorized(context=context)
+            # A task that inherits the session can outlive the caller.
+            session.in_use += 1
+            try:
+                yield session
+            finally:
+                session.in_use -= 1
             return
 
         # If it's not the same conversation ID, we will create a new session
@@ -153,12 +185,22 @@ def async_get_chat_session(
     if session is None:
         LOGGER.debug("Creating new session %s", conversation_id)
         session = ChatSession(conversation_id)
+        # Store the session right away, so parallel requests share it.
+        all_sessions[conversation_id] = session
 
+    if context is not None:
+        if session.user_id is UNDEFINED:
+            session.user_id = context.user_id
+        elif session.user_id != context.user_id:
+            raise Unauthorized(context=context)
+
+    session.in_use += 1
     token = current_session.set(session)
     try:
         yield session
     finally:
         current_session.reset(token)
+        session.in_use -= 1
         session.last_updated = dt_util.utcnow()
         all_sessions[conversation_id] = session
         hass.data[DATA_CHAT_SESSION_CLEANUP].schedule()

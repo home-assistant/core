@@ -4,6 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
@@ -27,12 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    assert_platform_setup_creates_issue,
-    assert_setup_component,
-    get_fixture_path,
-)
 
 TEST_OBJECT_ID = "test_compensation"
 TEST_ENTITY_ID = "sensor.test_compensation"

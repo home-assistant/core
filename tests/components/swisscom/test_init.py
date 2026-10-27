@@ -3,13 +3,12 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from swisscom_internet_box import SwisscomAuthError, SwisscomConnectionError
 
 from homeassistant.components.swisscom.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_auth_error_starts_reauth(

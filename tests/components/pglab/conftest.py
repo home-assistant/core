@@ -1,11 +1,14 @@
 """Common fixtures for the PG LAB Electronics tests."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_device_registry,
+    mock_registry,
+)
 
 from homeassistant.components.pglab.const import DISCOVERY_TOPIC, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 

@@ -17,7 +17,6 @@ authors = [
 # Dependency pins are synchronized by script.gen_requirements_all.
 dependencies = [
   "homeassistant",
-  "aiohasupervisor==0.7.0",
   "bleak-retry-connector==4.7.1",
   "freezegun==1.5.5",
   "paho-mqtt==2.1.0",
@@ -32,16 +31,20 @@ dependencies = [
   "syrupy==6.1.1",
 ]
 
+[project.entry-points.pytest11]
+pytest_homeassistant = "pytest_homeassistant.bootstrap"
+
 [project.optional-dependencies]
 bluetooth = [
+  "aiohasupervisor==0.8.1",
   "aiousbwatcher==1.1.2",
   "bluetooth-adapters==2.4.0",
   "bluetooth-auto-recovery==1.6.4",
   "bluetooth-data-tools==1.29.24",
   "habluetooth==7.1.2",
-  "serialx==1.14.0",
+  "serialx==1.15.0",
 ]
-infrared = ["infrared-protocols==10.3.0"]
+infrared = ["infrared-protocols==10.5.0"]
 radio-frequency = ["rf-protocols==4.3.0"]
 
 [project.urls]

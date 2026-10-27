@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from ollama import Message, ResponseError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation, ollama
@@ -24,7 +25,6 @@ from homeassistant.helpers import (
     llm,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
@@ -377,6 +377,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -461,6 +462,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 

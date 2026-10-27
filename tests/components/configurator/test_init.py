@@ -5,14 +5,13 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
 
 from homeassistant.components import configurator
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

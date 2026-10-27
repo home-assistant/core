@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -19,9 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import SERVER_UUIDS
-
-from tests.common import MockConfigEntry
+from .conftest import HOST, SERVER_UUIDS
 
 # Use the same UUIDs defined in the conftest
 TEST_UUID = SERVER_UUIDS[0]
@@ -548,3 +547,75 @@ async def test_options_flow(
         CONF_BROWSE_LIMIT: 500,
         CONF_VOLUME_STEP: 5,
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_server: AsyncMock
+) -> None:
+    """Test reauthentication updates the credentials."""
+    mock_config_entry.add_to_hass(hass)
+    mock_server.async_query.return_value = {"uuid": TEST_UUID}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "admin"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_server: AsyncMock
+) -> None:
+    """Test reauthentication shows an error for bad credentials and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    mock_server.async_query.return_value = False
+    mock_server.http_status = HTTPStatus.UNAUTHORIZED
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "wrong"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_server.async_query.return_value = {"uuid": TEST_UUID}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "right"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "right"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_server: AsyncMock
+) -> None:
+    """Test reauthentication aborts when the host now serves a different LMS."""
+    mock_config_entry.add_to_hass(hass)
+    mock_server.async_query.return_value = {"uuid": SERVER_UUIDS[1]}
+    mock_server.http_status = HTTPStatus.OK
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert CONF_PASSWORD not in mock_config_entry.data
