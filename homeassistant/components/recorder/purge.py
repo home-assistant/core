@@ -35,6 +35,7 @@ from .queries import (
     find_legacy_detached_states_and_attributes_to_purge,
     find_legacy_event_state_and_attributes_and_data_ids_to_purge,
     find_legacy_row,
+    find_newest_states_to_purge,
     find_short_term_statistics_to_purge,
     find_states_to_purge,
     find_statistics_runs_to_purge,
@@ -206,12 +207,45 @@ def _purge_states_and_attributes_ids(
         _purge_state_ids(instance, session, state_ids)
         attributes_ids_batch = attributes_ids_batch | attributes_ids
 
+    if not has_remaining_state_ids_to_purge:
+        attributes_ids_batch |= _purge_newest_states_of_removed_entities(
+            instance, session, purge_before
+        )
+
     _purge_unused_attributes_ids(instance, session, attributes_ids_batch)
     _LOGGER.debug(
         "After purging states and attributes_ids remaining=%s",
         has_remaining_state_ids_to_purge,
     )
     return has_remaining_state_ids_to_purge
+
+
+def _purge_newest_states_of_removed_entities(
+    instance: Recorder, session: Session, purge_before: datetime
+) -> set[int]:
+    """Purge the newest state of entities that are no longer recorded.
+
+    The current state of an entity that is still recorded is kept so the
+    next state change can link its old_state_id to it, which the logbook
+    needs to show that change.
+
+    Returns the attributes_ids of the purged states.
+    """
+    committed_state_ids = instance.states_manager.committed_state_ids()
+    state_ids: set[int] = set()
+    attributes_ids: set[int] = set()
+    for state_id, attributes_id in session.execute(
+        find_newest_states_to_purge(purge_before.timestamp())
+    ).all():
+        if state_id in committed_state_ids:
+            continue
+        state_ids.add(state_id)
+        if attributes_id:
+            attributes_ids.add(attributes_id)
+    _LOGGER.debug("Selected %s newest state ids to remove", len(state_ids))
+    for state_ids_chunk in chunked_or_all(state_ids, instance.max_bind_vars):
+        _purge_state_ids(instance, session, set(state_ids_chunk))
+    return attributes_ids
 
 
 def _purge_events_and_data_ids(

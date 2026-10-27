@@ -47,6 +47,14 @@ class StatesManager:
         """
         return self._last_committed_id.pop(entity_id, None)
 
+    def committed_state_ids(self) -> set[int]:
+        """Return the state_ids of the last committed state of each entity.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        return set(self._last_committed_id.values())
+
     def add_pending(self, entity_id: str, state: States) -> None:
         """Add a pending state.
 

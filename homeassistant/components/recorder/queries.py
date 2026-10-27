@@ -4,8 +4,9 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from sqlalchemy import and_, delete, func, lambda_stmt, select, update
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.selectable import Exists, Select
 
 from .db_schema import (
     EventData,
@@ -20,6 +21,8 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+NEWER_STATE = aliased(States, name="newer_state")
 
 
 def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
@@ -283,13 +286,45 @@ def find_events_to_purge(
 def find_states_to_purge(
     purge_before: float, max_bind_vars: int
 ) -> StatementLambdaElement:
-    """Find states to purge."""
+    """Find states to purge, skipping the newest state of each entity."""
     return lambda_stmt(
         lambda: (
             select(States.state_id, States.attributes_id)
             .filter(States.last_updated_ts < purge_before)
+            .filter(States.metadata_id.is_(None) | _newer_state_exists())
             .limit(max_bind_vars)
         )
+    )
+
+
+def find_newest_states_to_purge(purge_before: float) -> StatementLambdaElement:
+    """Find the newest state of each entity if it is older than purge_before.
+
+    The result is bounded by the number of rows in states_meta.
+    """
+    return lambda_stmt(
+        lambda: (
+            select(States.state_id, States.attributes_id)
+            .filter(States.last_updated_ts < purge_before)
+            .filter(States.metadata_id.is_not(None))
+            .filter(~_newer_state_exists())
+        )
+    )
+
+
+def _newer_state_exists() -> Exists:
+    """Match states that have a newer state for the same entity."""
+    return (
+        select(NEWER_STATE.state_id)
+        .where(
+            NEWER_STATE.metadata_id == States.metadata_id,
+            (NEWER_STATE.last_updated_ts > States.last_updated_ts)
+            | (
+                (NEWER_STATE.last_updated_ts == States.last_updated_ts)
+                & (NEWER_STATE.state_id > States.state_id)
+            ),
+        )
+        .exists()
     )
 
 

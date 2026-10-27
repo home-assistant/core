@@ -203,21 +203,23 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     # states_manager.oldest_ts is not updated until after the purge is complete
     assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
+    # The current state of test.recorder2 is kept
     with session_scope(hass=hass) as session:
-        assert states.count() == 0
-        assert state_attributes.count() == 0
+        assert states.count() == 1
+        assert states[0].state == "dontpurgeme_5"
+        assert state_attributes.count() == 1
 
-    assert "test.recorder2" not in recorder_mock.states_manager._last_committed_id
+    assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
 
-    # make sure we start with 6 states
+    # make sure the new states link to the kept state
     with session_scope(hass=hass) as session:
         states = session.query(States)
-        assert states.count() == 6
-        assert states[0].old_state_id is None
-        assert states[5].old_state_id == states[4].state_id
+        assert states.count() == 7
+        assert states[1].old_state_id == states[0].state_id
+        assert states[6].old_state_id == states[5].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
@@ -2417,3 +2419,30 @@ async def test_purge_entities_keep_days(
     )
     assert len(states["sensor.keep"]) == 2
     assert "sensor.purge" not in states
+
+
+async def test_purge_keeps_current_state_of_recorded_entities(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge keeps the current state of entities that are still recorded."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("binary_sensor.idle", "off")
+        hass.states.async_set("binary_sensor.removed", "off")
+        hass.states.async_remove("binary_sensor.removed")
+        await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    hass.states.async_set("binary_sensor.idle", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        assert session.query(StatesMeta.entity_id).all() == [("binary_sensor.idle",)]
+        off_state, on_state = session.query(States).order_by(States.state_id)
+        assert off_state.state == "off"
+        assert on_state.state == "on"
+        # The logbook only shows state changes that link to the previous state
+        assert on_state.old_state_id == off_state.state_id

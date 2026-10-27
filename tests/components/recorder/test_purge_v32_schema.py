@@ -142,23 +142,25 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     )
     assert not finished
 
+    # The current state of test.recorder2 is kept
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 0
-        assert state_attributes.count() == 0
+        assert states.count() == 1
+        assert states[0].state == "dontpurgeme_5"
+        assert state_attributes.count() == 1
 
-        assert "test.recorder2" not in recorder_mock.states_manager._last_committed_id
+        assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
 
-    # make sure we start with 6 states
+    # make sure the new states link to the kept state
     with session_scope(hass=hass) as session:
         states = session.query(States)
-        assert states.count() == 6
-        assert states[0].old_state_id is None
-        assert states[5].old_state_id == states[4].state_id
+        assert states.count() == 7
+        assert states[1].old_state_id == states[0].state_id
+        assert states[6].old_state_id == states[5].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
