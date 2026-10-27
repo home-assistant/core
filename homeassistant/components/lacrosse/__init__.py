@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_BAUD,
@@ -51,20 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> 
 async def async_reload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
     """Reload the receiver when its configuration or sensor subentries change."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    entry: LaCrosseConfigEntry,
-    device_entry: dr.AnyDeviceEntry,
-) -> bool:
-    """Remove a sensor's configuration through its device page."""
-    if (
-        subentry_id := device_entry.config_subentry_id
-    ) is None or subentry_id not in entry.subentries:
-        return False
-    hass.config_entries.async_remove_subentry(entry, subentry_id)
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LaCrosseConfigEntry) -> None:
