@@ -594,6 +594,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
+homeassistant.components.steamvr_base_station.*
 homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
