@@ -190,6 +190,23 @@ TEST_DEVICE_AQM = AmazonDevice(
     communication_settings={},
     voice_control_supported=False,
     features={
+        "toggle": {
+            "11": AmazonDeviceFeature(
+                properties=["toggleState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name="Enable LED Indicator",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ToggleConfiguration",
+                    "friendlyName": {"value": {"text": "Enable LED Indicator"}},
+                },
+                sensor_keys={"toggleState": "aqm_led"},
+            )
+        },
         "range": {
             "4": AmazonDeviceFeature(
                 properties=["rangeValue"],
@@ -263,7 +280,7 @@ TEST_DEVICE_AQM = AmazonDevice(
                 raw_configuration={},
                 sensor_keys={"rangeValue": "Air Quality"},
             ),
-        }
+        },
     },
     unsupported_features={},
 )
@@ -384,6 +401,17 @@ TEST_DEVICE_AQM_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="range",
         property_name="rangeValue",
         instance="9",
+    ),
+    "aqm_led": AmazonDeviceSensor(
+        name="aqm_led",
+        value="ON",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="toggle",
+        property_name="toggleState",
+        instance="11",
     ),
 }
 
