@@ -15,6 +15,7 @@ from uiprotect.exceptions import ClientError
 from uiprotect.utils import normalize_mac
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
@@ -58,7 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
-SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
@@ -67,16 +67,6 @@ SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
 ATTR_TRIGGER_ID = "trigger_id"
-
-ALL_GLOBAL_SERVICES = [
-    SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_SET_CHIME_PAIRED,
-    SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_GET_USER_KEYRING_INFO,
-    SERVICE_PTZ_GOTO_PRESET,
-    SERVICE_TRIGGER_ALARM_WEBHOOK,
-]
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {
@@ -296,6 +286,13 @@ def _async_get_public_chime(
     raise _async_device_not_available(hass, device_id, macs[0] if macs else device_id)
 
 
+# The deprecated doorbell binary sensor stays accepted until it is removed.
+_DOORBELL_ENTITY_CLASSES = {
+    (Platform.BINARY_SENSOR, BinarySensorDeviceClass.OCCUPANCY),
+    (Platform.EVENT, EventDeviceClass.DOORBELL),
+}
+
+
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
     chime_device_id: str = call.data[ATTR_DEVICE_ID]
@@ -314,9 +311,8 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
         assert doorbell_sensor is not None
         if (
             doorbell_sensor.platform != DOMAIN
-            or doorbell_sensor.domain != Platform.BINARY_SENSOR
-            or doorbell_sensor.original_device_class
-            != BinarySensorDeviceClass.OCCUPANCY
+            or (doorbell_sensor.domain, doorbell_sensor.original_device_class)
+            not in _DOORBELL_ENTITY_CLASSES
         ):
             continue
         doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)

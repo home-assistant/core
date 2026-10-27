@@ -13,13 +13,14 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitcoin.const import DOMAIN
-from homeassistant.components.bitcoin.sensor import SCAN_INTERVAL
+from homeassistant.components.bitcoin.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CURRENCY,
     CONF_DISPLAY_OPTIONS,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -99,6 +100,59 @@ async def test_one_fetch_per_cycle(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_statistics.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_exchangerates")
+async def test_unavailable_while_blockchain_unreachable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_statistics: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensors go unavailable during an outage and come back after it."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_statistics.side_effect = OSError("boom")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_EXCHANGE_RATE).state == STATE_UNAVAILABLE
+    # An outage costs one request per cycle, not one per sensor.
+    assert mock_statistics.call_count == 2
+
+    mock_statistics.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_EXCHANGE_RATE).state == "79600.7"
+
+
+@pytest.mark.usefixtures("mock_statistics")
+async def test_exchange_rate_falls_back_when_currency_disappears(
+    hass: HomeAssistant,
+    mock_exchangerates: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a currency that stops being quoted while running falls back to USD."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Bitcoin", data={CONF_CURRENCY: "EUR"})
+    await setup_integration(hass, entry)
+    state = hass.states.get(ENTITY_EXCHANGE_RATE)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
+
+    mock_exchangerates.return_value = {
+        "USD": Currency(79618.09, 79622.5, 79613.7, "$", 79600.7)
+    }
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_EXCHANGE_RATE)
+    assert state.state == "79600.7"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "USD"
+    assert "Unexpected error" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
