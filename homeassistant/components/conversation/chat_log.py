@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -77,6 +77,8 @@ def async_get_chat_log(
     chat_log_delta_listener: Callable[[ChatLog, dict], None] | None = None,
 ) -> Generator[ChatLog]:
     """Return chat log for a specific chat session."""
+    agent_id = (user_input.agent_id if user_input else None) or DOMAIN
+
     # If a chat log is already active and it's the requested conversation ID,
     # return that. We won't update the last updated time in this case.
     if (
@@ -92,7 +94,10 @@ def async_get_chat_log(
         ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
-        yield chat_log
+        try:
+            yield chat_log
+        finally:
+            chat_log.async_trace_turn()
         return
 
     all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
@@ -100,18 +105,14 @@ def async_get_chat_log(
         all_chat_logs = {}
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
-    is_new_log = session.conversation_id not in all_chat_logs
-
     if chat_log := all_chat_logs.get(session.conversation_id):
-        chat_log = replace(chat_log, content=chat_log.content.copy())
+        if chat_log.turn_active:
+            raise ConversationBusyError(session.conversation_id)
+        is_new_log = False
     else:
         chat_log = ChatLog(hass, session.conversation_id)
-
-    if chat_log_delta_listener:
-        chat_log.delta_listener = chat_log_delta_listener
-
-    # Fire CREATED event for new chat logs before any content is added
-    if is_new_log:
+        is_new_log = True
+        all_chat_logs[session.conversation_id] = chat_log
         _async_notify_subscribers(
             hass,
             session.conversation_id,
@@ -119,35 +120,41 @@ def async_get_chat_log(
             {"chat_log": chat_log.as_dict()},
         )
 
+    chat_log.turn_start = len(chat_log.content)
     if user_input is not None:
         chat_log.async_add_user_content(UserContent(content=user_input.text))
+
+    if chat_log_delta_listener:
+        chat_log.delta_listener = chat_log_delta_listener
 
     last_message = chat_log.content[-1]
 
     token = current_chat_log.set(chat_log)
-    yield chat_log
-    current_chat_log.reset(token)
+    chat_log.turn_active = True
+    try:
+        yield chat_log
+    except (Exception, asyncio.CancelledError) as err:
+        chat_log.async_add_error(agent_id, err)
+        raise
+    finally:
+        chat_log.turn_active = False
+        current_chat_log.reset(token)
+        chat_log.delta_listener = None
 
-    if chat_log.content[-1] is last_message:
-        LOGGER.debug(
-            "Chat Log opened but no assistant message was added, ignoring update"
-        )
-        # If this was a new log but nothing was added, fire DELETED to clean up
-        if is_new_log:
+        if chat_log.content[-1] is last_message and user_input is not None:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id=agent_id, content="(no response)")
+            )
+        chat_log.async_trace_turn()
+
+        if not is_new_log:
             _async_notify_subscribers(
                 hass,
                 session.conversation_id,
-                ChatLogEventType.DELETED,
-                {},
+                ChatLogEventType.UPDATED,
+                {"chat_log": chat_log.as_dict()},
             )
-        return
-
-    # Parallel first turns share the session, so register the cleanup once.
-    if session.conversation_id not in all_chat_logs:
-
-        @callback
-        def do_cleanup() -> None:
-            """Handle cleanup."""
+        elif chat_log.content[-1] is last_message:
             all_chat_logs.pop(session.conversation_id)
             _async_notify_subscribers(
                 hass,
@@ -155,23 +162,20 @@ def async_get_chat_log(
                 ChatLogEventType.DELETED,
                 {},
             )
+        else:
 
-        session.async_on_cleanup(do_cleanup)
+            @callback
+            def do_cleanup() -> None:
+                """Handle cleanup."""
+                all_chat_logs.pop(session.conversation_id)
+                _async_notify_subscribers(
+                    hass,
+                    session.conversation_id,
+                    ChatLogEventType.DELETED,
+                    {},
+                )
 
-    if chat_log_delta_listener:
-        chat_log.delta_listener = None
-
-    all_chat_logs[session.conversation_id] = chat_log
-
-    # For new logs, CREATED was already fired before content was added
-    # For existing logs, fire UPDATED
-    if not is_new_log:
-        _async_notify_subscribers(
-            hass,
-            session.conversation_id,
-            ChatLogEventType.UPDATED,
-            {"chat_log": chat_log.as_dict()},
-        )
+            session.async_on_cleanup(do_cleanup)
 
 
 class ConverseError(HomeAssistantError):
@@ -194,6 +198,15 @@ class ConverseError(HomeAssistantError):
             response=self.response,
             conversation_id=self.conversation_id,
         )
+
+
+class ConversationBusyError(HomeAssistantError):
+    """Error when another turn of the conversation is in progress."""
+
+    def __init__(self, conversation_id: str) -> None:
+        """Initialize the error."""
+        super().__init__("This conversation is busy with another message")
+        self.conversation_id = conversation_id
 
 
 @dataclass(frozen=True)
@@ -365,6 +378,8 @@ class ChatLog:
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
+    turn_active: bool = field(default=False, init=False, repr=False)
+    turn_start: int = field(default=0, init=False, repr=False)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -413,6 +428,43 @@ class ChatLog:
         )
 
     @callback
+    def async_add_error(self, agent_id: str, error: BaseException) -> None:
+        """Add the error that ended a turn as assistant content."""
+        error_text = str(error) or type(error).__name__
+        # LLM providers refuse a tool call without a result.
+        answered: set[str] = set()
+        index = len(self.content) - 1
+        while isinstance(content := self.content[index], ToolResultContent):
+            answered.add(content.tool_call_id)
+            index -= 1
+        if isinstance(content, AssistantContent) and content.tool_calls:
+            for tool_call in content.tool_calls:
+                if tool_call.id in answered or (
+                    # The provider handles its own tools, but sentence
+                    # triggers are sent to it as a regular tool call.
+                    tool_call.external and tool_call.tool_name != "trigger_sentence"
+                ):
+                    continue
+                self.async_add_assistant_content_without_tools(
+                    ToolResultContent(
+                        agent_id=content.agent_id,
+                        tool_call_id=tool_call.id,
+                        tool_name=tool_call.tool_name,
+                        result=llm.ToolResult(
+                            data={
+                                "error": type(error).__name__,
+                                "error_text": error_text,
+                            },
+                            error=True,
+                        ),
+                    )
+                )
+
+        self.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id=agent_id, content=f"Error: {error_text}")
+        )
+
+    @callback
     def async_add_assistant_content_without_tools(
         self, content: AssistantContent | ToolResultContent
     ) -> None:
@@ -452,6 +504,12 @@ class ChatLog:
         """
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
+        _async_notify_subscribers(
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
+        )
 
         if (
             not isinstance(content, AssistantContent)
@@ -740,7 +798,9 @@ class ChatLog:
             # providers can cache them. Tool calls use the context of this turn.
             self.llm_api.llm_context = llm_context
             self.llm_input_provided_index = len(self.content)
-            self.async_trace({"messages": self.content, "tools": self.llm_api.tools})
+            self.async_trace(
+                {"messages": list(self.content), "tools": self.llm_api.tools}
+            )
             return
 
         if not user_llm_hass_api:
@@ -838,9 +898,16 @@ class ChatLog:
 
         self.async_trace(
             {
-                "messages": self.content,
+                "messages": list(self.content),
                 "tools": self.llm_api.tools if self.llm_api else None,
             }
+        )
+
+    def async_trace_turn(self) -> None:
+        """Add the content of the current turn to the conversation trace."""
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.TURN_CONTENT,
+            {"content": self.content[self.turn_start :]},
         )
 
     def async_trace(self, agent_details: dict[str, Any]) -> None:
