@@ -154,14 +154,7 @@ def async_get_chat_log(
             )
             no_reply = False
 
-        if not is_new_log:
-            _async_notify_subscribers(
-                hass,
-                session.conversation_id,
-                ChatLogEventType.UPDATED,
-                {"chat_log": chat_log.as_dict()},
-            )
-        elif no_reply:
+        if is_new_log and no_reply:
             all_chat_logs.pop(session.conversation_id)
             _async_notify_subscribers(
                 hass,
@@ -170,19 +163,27 @@ def async_get_chat_log(
                 {},
             )
         else:
+            # Subscribers get no CONTENT_ADDED event for streamed content.
+            _async_notify_subscribers(
+                hass,
+                session.conversation_id,
+                ChatLogEventType.UPDATED,
+                {"chat_log": chat_log.as_dict()},
+            )
+            if is_new_log:
 
-            @callback
-            def do_cleanup() -> None:
-                """Handle cleanup."""
-                all_chat_logs.pop(session.conversation_id)
-                _async_notify_subscribers(
-                    hass,
-                    session.conversation_id,
-                    ChatLogEventType.DELETED,
-                    {},
-                )
+                @callback
+                def do_cleanup() -> None:
+                    """Handle cleanup."""
+                    all_chat_logs.pop(session.conversation_id)
+                    _async_notify_subscribers(
+                        hass,
+                        session.conversation_id,
+                        ChatLogEventType.DELETED,
+                        {},
+                    )
 
-            session.async_on_cleanup(do_cleanup)
+                session.async_on_cleanup(do_cleanup)
 
 
 class ConverseError(HomeAssistantError):

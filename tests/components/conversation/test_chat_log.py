@@ -333,6 +333,33 @@ async def test_turn_without_reply(
     assert chat_log.content[-1].agent_id == "mock-agent-id"
 
 
+async def test_streamed_first_reply_sent_to_subscribers(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test subscribers get the streamed reply of the first turn."""
+    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
+    async_subscribe_chat_logs(
+        hass, lambda _conversation_id, event, data: events.append((event, data))
+    )
+
+    async def stream() -> AsyncGenerator[AssistantContentDeltaDict]:
+        yield {"role": "assistant"}
+        yield {"content": "Hi"}
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        async for _ in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            pass
+
+    event, data = events[-1]
+    assert event == ChatLogEventType.UPDATED
+    assert data["chat_log"]["content"][-1]["content"] == "Hi"
+
+
 async def test_failed_turn_stored(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
@@ -1523,8 +1550,9 @@ async def test_chat_log_subscription(
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
     # Verify we received the expected events
-    # Should have: 1 CREATED event + 6 CONTENT_ADDED events
-    assert len(received_events) == 7
+    # Should have: 1 CREATED event + 6 CONTENT_ADDED events + 1 UPDATED event
+    assert len(received_events) == 8
+    assert received_events[-1][1] == ChatLogEventType.UPDATED
 
     # Check the first event is CREATED, with the message of the first turn
     assert received_events[0][1] == ChatLogEventType.CREATED
