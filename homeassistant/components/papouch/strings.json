@@ -11,7 +11,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to the device.",
-      "invalid_auth": "The password you provided is invalid, try a different one.",
+      "invalid_auth": "The admin password you provided is invalid, try a different one.",
       "invalid_ip_format": "Invalid IPv4 address format."
     },
     "flow_title": "{name}",
@@ -19,7 +19,7 @@
       "user": {
         "data": {
           "ip_address": "IPv4 address",
-          "password": "Password (optional)",
+          "password": "Admin password (optional)",
           "port": "HTTP Port"
         },
         "data_description": {
@@ -79,7 +79,7 @@
       "message": "Failed to connect to device {name} ({location})."
     },
     "invalid_auth": {
-      "message": "Invalid password of device {name} ({location})"
+      "message": "Invalid admin password of device {name} ({location})"
     },
     "unsupported_device": {
       "message": "Device {name} ({location}) is unsupported."
