@@ -528,8 +528,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         return self.data
 
+    @callback
     @override
-    async def _async_refresh_finished(self) -> None:
+    def _async_refresh_finished(self) -> None:
         """Called when a refresh is finished.
 
         If the last update was successful but the appliance was disconnected
