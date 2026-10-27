@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_TARGET,
     CONF_ZONE,
-    STATE_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
@@ -42,12 +41,7 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    ENTITY_ID_HOME,
-    async_is_improved_presence_detection_enabled,
-    in_zone,
-    zone_relation,
-)
+from . import async_is_improved_presence_detection_enabled, in_zone, zone_relation
 from .const import DOMAIN, ZoneRelation
 from .helpers import get_in_zones_attribute
 
@@ -67,8 +61,8 @@ def zone(
     """Test if zone-condition matches.
 
     If improved presence detection is enabled and the entity's accuracy circle
-    only partly overlaps the zone, previous_match is returned, except for
-    legacy device trackers, which are matched by their state.
+    only partly overlaps the zone, previous_match is returned. Legacy device
+    trackers always use the default overlap test.
 
     Async friendly.
     """
@@ -119,19 +113,18 @@ def zone(
         )
 
     radius = entity.attributes.get(ATTR_GPS_ACCURACY)
-    if not async_is_improved_presence_detection_enabled(hass):
+    # Legacy device trackers, which don't report in_zones, don't support
+    # improved presence detection
+    if (
+        entity.domain == DEVICE_TRACKER_DOMAIN
+        or not async_is_improved_presence_detection_enabled(hass)
+    ):
         return in_zone(zone_ent, latitude, longitude, radius)
 
     relation = zone_relation(zone_ent, latitude, longitude, radius)
-    if relation is not ZoneRelation.OVERLAPPING:
-        return relation is ZoneRelation.CONTAINED
-    # A legacy device tracker resolves ambiguous locations itself and reports
-    # the result as its state
-    if entity.domain == DEVICE_TRACKER_DOMAIN:
-        return entity.state == zone_ent.name or (
-            entity.state == STATE_HOME and zone_ent.entity_id == ENTITY_ID_HOME
-        )
-    return previous_match
+    if relation is ZoneRelation.OVERLAPPING:
+        return previous_match
+    return relation is ZoneRelation.CONTAINED
 
 
 class ZoneCondition(Condition):

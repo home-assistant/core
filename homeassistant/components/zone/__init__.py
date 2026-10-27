@@ -208,6 +208,8 @@ def async_in_zones(
     longitude: float,
     radius: float = 0,
     previous_in_zones: Collection[str] = (),
+    *,
+    force_overlap: bool = False,
 ) -> tuple[State | None, list[str]]:
     """Find zones which contain the given latitude and longitude.
 
@@ -220,7 +222,8 @@ def async_in_zones(
     By default, a zone contains the location if the accuracy circle overlaps
     the zone. If improved presence detection is enabled, a zone contains the
     location if the accuracy circle is fully contained in the zone, or if it
-    overlaps the zone and the zone is in previous_in_zones.
+    overlaps the zone and the zone is in previous_in_zones. If force_overlap is
+    set, the default is used regardless of improved presence detection.
 
     This method must be run in the event loop.
     """
@@ -228,7 +231,9 @@ def async_in_zones(
     min_dist: float = sys.maxsize
     active_zone: State | None = None
     zones: list[tuple[str, float, float]] = []
-    containment = async_is_improved_presence_detection_enabled(hass)
+    containment = not force_overlap and async_is_improved_presence_detection_enabled(
+        hass
+    )
 
     # This can be called before async_setup by device tracker
     zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
@@ -343,13 +348,22 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
 
 
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+    hass: HomeAssistant,
+    latitude: float,
+    longitude: float,
+    radius: float = 0,
+    *,
+    force_overlap: bool = False,
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
+    See async_in_zones for force_overlap.
+
     This method must be run in the event loop.
     """
-    return async_in_zones(hass, latitude, longitude, radius)[0]
+    return async_in_zones(
+        hass, latitude, longitude, radius, force_overlap=force_overlap
+    )[0]
 
 
 @callback

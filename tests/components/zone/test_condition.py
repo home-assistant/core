@@ -333,45 +333,41 @@ async def test_zone_condition_falls_back_to_coordinates(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    ("improved_presence_detection", "state", "zone_entity_id", "expected"),
+    ("attributes", "expected"),
     [
-        pytest.param(False, "home", "zone.home", True, id="overlap-home"),
-        pytest.param(False, "not_home", "zone.home", True, id="overlap-not_home"),
-        pytest.param(True, "home", "zone.home", True, id="containment-home"),
-        pytest.param(True, "not_home", "zone.home", False, id="containment-not_home"),
-        pytest.param(True, "Work", "zone.work", True, id="containment-zone_name"),
         pytest.param(
-            True, "not_home", "zone.work", False, id="containment-not_in_zone"
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 5},
+            True,
+            id="contained",
+        ),
+        pytest.param(
+            {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
+            True,
+            id="overlapping",
+        ),
+        pytest.param(
+            {"latitude": 50.0, "longitude": 50.0, "gps_accuracy": 50},
+            False,
+            id="separated",
         ),
     ],
-    indirect=["improved_presence_detection"],
 )
 @pytest.mark.usefixtures("improved_presence_detection")
 async def test_zone_condition_legacy_device_tracker(
-    hass: HomeAssistant, state: str, zone_entity_id: str, expected: bool
+    hass: HomeAssistant, attributes: dict[str, Any], expected: bool
 ) -> None:
-    """Test a legacy device tracker resolves ambiguous locations by its state.
+    """Test a legacy device tracker always uses the default overlap test.
 
     Legacy device trackers report no in_zones attribute.
     """
     hass.states.async_set(
         "zone.home",
         "zoning",
-        {"friendly_name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
     )
-    hass.states.async_set(
-        "zone.work",
-        "zoning",
-        {"friendly_name": "Work", "latitude": 2.1, "longitude": 1.1, "radius": 10},
-    )
-    # The accuracy circle overlaps the zones without being contained
-    hass.states.async_set(
-        "device_tracker.phone",
-        state,
-        {"latitude": 2.1, "longitude": 1.1, "gps_accuracy": 50},
-    )
+    hass.states.async_set("device_tracker.phone", "not_home", attributes)
 
-    assert zone_condition.zone(hass, zone_entity_id, "device_tracker.phone") is expected
+    assert zone_condition.zone(hass, "zone.home", "device_tracker.phone") is expected
 
 
 @pytest.mark.parametrize(

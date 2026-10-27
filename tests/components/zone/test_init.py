@@ -488,6 +488,27 @@ async def test_async_in_zones_previous_in_zones(
     assert [z.entity_id for z in (active_zone,) if z] == expected_in_zones
 
 
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_async_in_zones_force_overlap(hass: HomeAssistant) -> None:
+    """Test force_overlap uses the default overlap test with both methods."""
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {"zone": [{"name": "Test", "latitude": 0, "longitude": 0, "radius": 1000}]},
+    )
+
+    # The accuracy circle only overlaps the zone
+    active_zone, in_zones = zone.async_in_zones(
+        hass, 0.018, 0, 1500, force_overlap=True
+    )
+    assert active_zone.entity_id == "zone.test"
+    assert in_zones == ["zone.test"]
+    assert (
+        zone.async_active_zone(hass, 0.018, 0, 1500, force_overlap=True).entity_id
+        == "zone.test"
+    )
+
+
 async def test_core_config_update(hass: HomeAssistant) -> None:
     """Test updating core config will update home zone."""
     assert await setup.async_setup_component(hass, "zone", {})
