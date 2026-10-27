@@ -97,9 +97,12 @@ async def test_import_flow_accepts_multicharacter_route_id_string(
     line = SimpleNamespace(id="A1", route="Route A1")
     timetable = SimpleNamespace(id="stop_1234", name="Central Station")
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch("homeassistant.components.bizkaibus.async_setup_entry", return_value=None),
+    ):
         _mock_api(
             mock_api_class,
             lines=[line],
