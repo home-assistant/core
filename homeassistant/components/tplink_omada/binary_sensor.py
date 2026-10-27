@@ -41,14 +41,14 @@ async def async_setup_entry(
     """Set up binary sensors."""
     controller = config_entry.runtime_data
 
-    async def _create_gateway_port_entities(device: OmadaListDevice) -> None:
+    async def _create_gateway_port_entities(device: OmadaListDevice) -> bool:
         gateway_coordinator = controller.gateway_coordinator
         if gateway_coordinator is None:
-            return
+            return False
 
         gateway = await controller.async_get_gateway(device.mac)
         if gateway is None:
-            return
+            return False
 
         entities: list[Entity] = [
             OmadaGatewayPortBinarySensor(
@@ -59,6 +59,7 @@ async def async_setup_entry(
             if desc.exists_func(p)
         ]
         async_add_entities(entities)
+        return True
 
     await controller.async_register_device_entities(
         lambda device: (

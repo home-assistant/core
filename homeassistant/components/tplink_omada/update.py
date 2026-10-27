@@ -50,9 +50,10 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_register_device(device: OmadaListDevice) -> None:
+    async def _async_register_device(device: OmadaListDevice) -> bool:
         """Create the firmware update entity for a device."""
         async_add_entities([OmadaDeviceUpdate(coordinator, device)])
+        return True
 
     await controller.async_register_device_entities(
         lambda device: True, _async_register_device
@@ -218,12 +219,20 @@ class OmadaDeviceUpdate(
 
         self._attr_unique_id = f"{device.mac}_firmware"
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Seed the initial state from the coordinator."""
-        await super().async_added_to_hass()
         if self.coordinator.data and self._mac in self.coordinator.data:
-            self._handle_coordinator_update()
+            self._update_attrs()
+
+    def _update_attrs(self) -> None:
+        """Set the version and progress attributes from the coordinator."""
+        status = self.coordinator.data[self._mac]
+
+        if status.firmware and status.device.need_upgrade:
+            self._attr_installed_version = status.firmware.current_version
+            self._attr_latest_version = status.firmware.latest_version
+        else:
+            self._attr_installed_version = status.device.firmware_version
+            self._attr_latest_version = status.device.firmware_version
+        self._attr_in_progress = status.device.fw_download
 
     @override
     def release_notes(self) -> str | None:
@@ -259,14 +268,5 @@ class OmadaDeviceUpdate(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        status = self.coordinator.data[self._mac]
-
-        if status.firmware and status.device.need_upgrade:
-            self._attr_installed_version = status.firmware.current_version
-            self._attr_latest_version = status.firmware.latest_version
-        else:
-            self._attr_installed_version = status.device.firmware_version
-            self._attr_latest_version = status.device.firmware_version
-        self._attr_in_progress = status.device.fw_download
-
+        self._update_attrs()
         self.async_write_ha_state()

@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaGateway, OmadaListDevice, OmadaSwitch
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
 
-from .const import DOMAIN
 from .coordinator import (
     OmadaClientsCoordinator,
     OmadaControllerStatusCoordinator,
@@ -79,7 +78,7 @@ class OmadaSiteController:
     async def async_register_device_entities(
         self,
         device_filter: Callable[[OmadaListDevice], bool],
-        entity_callback: Callable[[OmadaListDevice], Awaitable[None]],
+        entity_callback: Callable[[OmadaListDevice], Awaitable[bool]],
     ) -> None:
         """Register entities for devices matching the given filter.
 
@@ -88,7 +87,8 @@ class OmadaSiteController:
 
         Args:
             device_filter: Function that returns True if a device should be processed.
-            entity_callback: Given a discovered Omada device, creates entities for that device.
+            entity_callback: Given a discovered Omada device, creates entities and
+                returns True, or returns False when the device is not ready yet.
         """
         # Track which devices have been processed already. A device removed by
         # cleanup is dropped from these sets so it is registered again when it
@@ -118,14 +118,20 @@ class OmadaSiteController:
                 # registrations do not process it twice.
                 processed_devices.add(mac)
                 try:
-                    await entity_callback(device)
-                except Exception:
-                    # Leave the device unprocessed so the next device-list
-                    # update retries instead of skipping it forever.
+                    registered = await entity_callback(device)
+                except OmadaClientException as ex:
+                    # Expected transient failures are retried on the next update.
                     processed_devices.discard(mac)
-                    _LOGGER.exception(
-                        "Failed to register entities for Omada device %s", mac
+                    _LOGGER.debug(
+                        "Failed to register entities for Omada device %s: %s",
+                        mac,
+                        ex,
                     )
+                    continue
+                if not registered:
+                    # The device is not ready (for example no data for it yet);
+                    # leave it unprocessed so a later update retries.
+                    processed_devices.discard(mac)
 
         @callback
         def _handle_devices_update() -> None:
@@ -160,11 +166,11 @@ class OmadaSiteController:
         dr.async_get(self._hass).async_remove_device(device_entry.id)
 
     async def async_get_gateway(self, mac: str) -> OmadaGateway | None:
-        """Return gateway data, refreshing first when the cache was dropped.
+        """Return gateway data, refreshing when the cache does not have it.
 
-        Raises HomeAssistantError when a required refresh fails, so registration
-        retries on the next device-list update instead of rebuilding entities
-        from stale port data.
+        Returns None when the data is unavailable; registration then retries on
+        the next device-list update instead of rebuilding entities from stale
+        port data.
         """
         coordinator = self._gateway_coordinator
         if coordinator is None:
@@ -187,10 +193,7 @@ class OmadaSiteController:
             return gateway
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="gateway_unavailable",
-            )
+            return None
         return _cached_gateway()
 
     @property

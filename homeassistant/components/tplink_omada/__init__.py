@@ -1,7 +1,5 @@
 """The TP-Link Omada integration."""
 
-import asyncio
-from datetime import datetime, timedelta
 import logging
 
 from tplink_omada_client import OmadaSite
@@ -14,10 +12,9 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -82,28 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     entry.runtime_data = controller
 
-    _cleanup_task: asyncio.Task[None] | None = None
-
-    async def _async_cleanup_task() -> None:
-        if entry.pref_disable_polling:
-            # Cleanup decisions need fresh data, so skip the run entirely
-            # instead of polling the controller while polling is disabled.
-            return
-        # Refresh the coordinator so cleanup doesn't use stale data.
-        await controller.devices_coordinator.async_refresh()
-        await async_cleanup_devices(hass, controller)
-
-    @callback
-    def _schedule_cleanup(_now: datetime | None = None) -> None:
-        nonlocal _cleanup_task
-        if _cleanup_task is not None and not _cleanup_task.done():
-            return
-        _cleanup_task = entry.async_create_background_task(
-            hass,
-            _async_cleanup_task(),
-            "tplink_omada cleanup",
-        )
-
     await controller.initialize_first_refresh()
 
     # Sweep before platforms create entities, so a device that was replaced
@@ -112,16 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
     await async_cleanup_devices(hass, controller)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    @callback
-    def _cancel_cleanup() -> None:
-        if _cleanup_task is not None and not _cleanup_task.done():
-            _cleanup_task.cancel()
-
-    entry.async_on_unload(_cancel_cleanup)
-    entry.async_on_unload(
-        async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
