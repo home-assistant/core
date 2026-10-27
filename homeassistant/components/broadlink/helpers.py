@@ -69,21 +69,21 @@ async def async_find_device_by_mac(
 
     subnet_key = str(network)
     now = time.monotonic()
+    subnet_fresh = now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL
 
-    # Check positive cache
-    if target_mac_clean in _DISCOVERED_CACHE:
-        return _DISCOVERED_CACHE[target_mac_clean]
-
-    # Check negative cache (recent scan completed without finding target)
-    if now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL:
+    # Check cached results if subnet scan is still fresh
+    if subnet_fresh:
+        if target_mac_clean in _DISCOVERED_CACHE:
+            return _DISCOVERED_CACHE[target_mac_clean]
         return None
 
     async with _DISCOVERY_LOCK:
         now = time.monotonic()
         # Double check cache after acquiring lock
-        if target_mac_clean in _DISCOVERED_CACHE:
-            return _DISCOVERED_CACHE[target_mac_clean]
-        if now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL:
+        subnet_fresh = now - _SUBNET_LAST_SCANNED.get(subnet_key, 0.0) < _CACHE_TTL
+        if subnet_fresh:
+            if target_mac_clean in _DISCOVERED_CACHE:
+                return _DISCOVERED_CACHE[target_mac_clean]
             return None
 
         # Discard previous discoveries for this subnet before fresh scan

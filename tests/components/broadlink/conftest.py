@@ -13,8 +13,11 @@ def mock_heartbeat():
 
 
 @pytest.fixture(autouse=True)
-def mock_rediscovery():
+def mock_rediscovery(request: pytest.FixtureRequest):
     """Mock broadlink rediscovery."""
+    if "no_mock_rediscovery" in request.keywords:
+        yield
+        return
     with patch(
         "homeassistant.components.broadlink.helpers.async_find_device_by_mac",
         return_value=None,
