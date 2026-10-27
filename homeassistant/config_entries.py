@@ -3147,7 +3147,7 @@ class ConfigEntries:
     @callback
     def async_update_issues(self) -> None:
         """Update unique id collision issues."""
-        with ir.async_begin_issues_refresh(
+        with ir.async_refresh_issues(
             self.hass,
             HOMEASSISTANT_DOMAIN,
             issue_id_pattern=f"{ISSUE_UNIQUE_ID_COLLISION}_",

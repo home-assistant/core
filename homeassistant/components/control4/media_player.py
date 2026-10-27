@@ -1,6 +1,6 @@
 """Platform for Control4 Rooms Media Players."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import enum
 import logging
 from typing import Any, override
@@ -15,8 +15,9 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
@@ -176,7 +177,19 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class Control4Room(Control4Entity, MediaPlayerEntity):
+@dataclass
+class _RoomExtraStoredData(ExtraStoredData):
+    """Extra stored data for a Control4 room."""
+
+    last_source_id: int | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return asdict(self)
+
+
+class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     """Control4 Room entity."""
 
     _attr_has_entity_name = True
@@ -205,6 +218,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
         self._sources = sources
+        self._last_source_id: int | None = None
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
@@ -212,9 +226,43 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.VOLUME_MUTE
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.TURN_ON
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last source, then let the current one take over."""
+        await super().async_added_to_hass()
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            last_source_id = extra_data.as_dict().get("last_source_id")
+            if last_source_id in self._sources:
+                self._last_source_id = last_source_id
+        self._remember_playing_source()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Remember the playing source before writing the new state."""
+        self._remember_playing_source()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _remember_playing_source(self) -> None:
+        """Remember the source the room is playing.
+
+        The director resets the room's source variables when the room is turned
+        off, so the last source has to be kept here to start it again. Rooms
+        that do not report media info are tracked by their current video device.
+        """
+        for source_id in (
+            self._get_current_playing_device_id(),
+            self._get_current_video_device_id(),
+        ):
+            if source_id in self._sources:
+                self._last_source_id = source_id
+                return
 
     def _create_api_object(self) -> C4Room:
         """Create a pyControl4 device object.
@@ -276,7 +324,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
     @property
     @override
     def state(self) -> MediaPlayerState:
-        """Return whether this room is on or idle."""
+        """Return whether this room is on or off."""
 
         if source_state := self._get_current_source_state():
             return source_state
@@ -284,7 +332,13 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         if self.coordinator.data[self._idx][CONTROL4_POWER_STATE]:
             return MediaPlayerState.ON
 
-        return MediaPlayerState.IDLE
+        return MediaPlayerState.OFF
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> _RoomExtraStoredData:
+        """Return the source the room starts with when turned on."""
+        return _RoomExtraStoredData(self._last_source_id)
 
     @property
     @override
@@ -349,20 +403,51 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
+    async def _async_post_source(self, source: _RoomSource) -> None:
+        """Post a source selection to the director, audio or video."""
+        if _SourceType.VIDEO not in source.source_type:
+            await self._create_api_object().set_audio_source(source.idx)
+        else:
+            await self._create_api_object().set_video_and_audio_source(source.idx)
+
     @override
     async def async_select_source(self, source: str) -> None:
         """Select a new source."""
         for avail_source in self._sources.values():
             if avail_source.name == source:
-                audio_only = _SourceType.VIDEO not in avail_source.source_type
-                if audio_only:
-                    await self._create_api_object().set_audio_source(avail_source.idx)
-                else:
-                    await self._create_api_object().set_video_and_audio_source(
-                        avail_source.idx
-                    )
+                await self._async_post_source(avail_source)
                 break
 
+        await self.coordinator.async_request_refresh()
+
+    def _get_source_to_turn_on(self) -> _RoomSource:
+        """Get the source to start a room with.
+
+        Use the last source the room played, or for a room that has not
+        played anything yet, the first video source, or else the first source.
+        """
+        if self._last_source_id in self._sources:
+            return self._sources[self._last_source_id]
+        first_video_source = next(
+            (
+                source
+                for source in self._sources.values()
+                if _SourceType.VIDEO in source.source_type
+            ),
+            None,
+        )
+        return first_video_source or next(iter(self._sources.values()))
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the room on.
+
+        Control4 has no "room on" command: a room is started by selecting a
+        source, which is what the Control4 app does when a source is chosen.
+        The source is posted by id rather than looked up by name, so
+        duplicate source names can never start the wrong device.
+        """
+        await self._async_post_source(self._get_source_to_turn_on())
         await self.coordinator.async_request_refresh()
 
     @override

@@ -41,8 +41,32 @@
   },
   "entity": {
     "sensor": {
+      "ac_current": {
+        "name": "AC current"
+      },
       "ac_power": {
         "name": "AC power"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "dc_power": {
+        "name": "DC power"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "frequency": {
+        "name": "Grid frequency"
       },
       "lifetime_energy": {
         "name": "Total energy produced"
@@ -59,6 +83,15 @@
           "starting": "Starting up",
           "throttled": "Throttled"
         }
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
       }
     }
   },

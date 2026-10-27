@@ -594,7 +594,7 @@ class _DefaultPipelineProcessor:
             await conversation.async_prepare_intents(self.host.hass, language)
         await conversation.async_prepare_agent(self.host.hass, agent_id, language)
 
-    async def recognize_intent(
+    async def recognize_intent(  # noqa: C901
         self,
         intent_input: str,
         conversation_id: str,
@@ -831,6 +831,14 @@ class _DefaultPipelineProcessor:
                     speech = conversation_result.response.speech.get("plain", {}).get(
                         "speech", ""
                     )
+                    # Agents that do not use the chat log only answer in their result.
+                    if chat_log.content[-1].role == "user" and speech:
+                        chat_log.async_add_assistant_content_without_tools(
+                            conversation.AssistantContent(
+                                agent_id=agent_id,
+                                content=speech,
+                            )
+                        )
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
@@ -847,6 +855,11 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except conversation.ConversationBusyError as src_error:
+            raise IntentRecognitionError(
+                code="intent-busy",
+                message=str(src_error),
+            ) from src_error
         except Unauthorized as src_error:
             raise IntentRecognitionError(
                 code="intent-unauthorized",

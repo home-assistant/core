@@ -16,6 +16,7 @@ from aioesphomeapi import (
     APIVersion,
     DeviceCapabilities,
     DeviceInfo as EsphomeDeviceInfo,
+    DeviceRelation,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
@@ -279,7 +280,6 @@ class ESPHomeManager:
         "_dashboard_key_sync_warned",
         "_log_level",
         "cli",
-        "device_id",
         "domain_data",
         "entry",
         "entry_data",
@@ -306,7 +306,6 @@ class ESPHomeManager:
         self.password = password
         self.entry = entry
         self.cli = cli
-        self.device_id: str | None = None
         self.domain_data = domain_data
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
@@ -350,7 +349,7 @@ class ESPHomeManager:
                 return
 
         if service.is_event:
-            device_id = self.device_id
+            device_id = self.entry_data.main_device_entry_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != DOMAIN:
@@ -796,12 +795,7 @@ class ESPHomeManager:
                 device_info.name,
                 device_mac,
             )
-        # Build device_id_to_name mapping for efficient lookup
-        entry_data.device_id_to_name = {
-            sub_device.device_id: sub_device.name or device_info.name
-            for sub_device in device_info.devices
-        }
-        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
+        _async_setup_device_registry(hass, entry, entry_data)
 
         entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
@@ -812,9 +806,16 @@ class ESPHomeManager:
         _setup_services(hass, entry_data, services)
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
+            if TYPE_CHECKING:
+                assert entry_data.main_device_entry_id is not None
             entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
-                    hass, self.entry, entry_data, cli, device_info, self.device_id
+                    hass,
+                    self.entry,
+                    entry_data,
+                    cli,
+                    device_info,
+                    entry_data.main_device_entry_id,
                 )
             )
         else:
@@ -1289,6 +1290,17 @@ class ESPHomeManager:
             restore_states=bool(entry.unique_id)
         )
         if entry.unique_id:
+            # Restored entities on child devices need the main device as parent,
+            # but a never connected entry should not get a blank device
+            if infos:
+                entry_data.main_device_entry_id = (
+                    dr.async_get(hass)
+                    .async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)},
+                    )
+                    .id
+                )
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
@@ -1352,33 +1364,13 @@ def async_get_manufacturer_model(device_info: EsphomeDeviceInfo) -> tuple[str, s
 @callback
 def _async_setup_device_registry(
     hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
-) -> str:
+) -> None:
     """Set up device registry feature for a particular config entry."""
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
 
     device_registry = dr.async_get(hass)
-    # Build sets of valid device identifiers and connections
-    valid_connections = {
-        (dr.CONNECTION_NETWORK_MAC, format_mac(device_info.mac_address))
-    }
-    valid_identifiers = {
-        (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
-        for sub_device in device_info.devices
-    }
-
-    # Remove devices that no longer exist
-    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        # Skip devices we want to keep
-        if (
-            device.connections & valid_connections
-            or device.identifiers & valid_identifiers
-        ):
-            continue
-        # Remove everything else
-        device_registry.async_remove_device(device.id)
-
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
@@ -1402,13 +1394,12 @@ def _async_setup_device_registry(
         )
 
     suggested_area: str | None = None
-    if device_info.area and device_info.area.name:
+    if device_info.area.name:
         # Prefer device_info.area over suggested_area when area name is not empty
         suggested_area = device_info.area.name
     elif device_info.suggested_area:
         suggested_area = device_info.suggested_area
 
-    # Create/update main device
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
@@ -1419,37 +1410,97 @@ def _async_setup_device_registry(
         sw_version=sw_version,
         suggested_area=suggested_area,
     )
+    entry_data.main_device_entry_id = device_entry.id
 
-    # Handle sub devices
-    # Find available areas from device_info
     areas_by_id = {area.area_id: area for area in device_info.areas}
-    # Add the main device's area if it exists
-    if device_info.area:
-        areas_by_id[device_info.area.area_id] = device_info.area
-    # Create/update sub devices that should exist
+    valid_identifiers: set[tuple[str, str]] = set()
     for sub_device in device_info.devices:
-        # Determine the area for this sub device
+        if sub_device.device_id not in entry_data.sub_device_ids:
+            # Unsupported relation to the main device, reported with the entities
+            continue
+
         sub_device_suggested_area: str | None = None
-        if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
-            sub_device_suggested_area = areas_by_id[sub_device.area_id].name
+        if (area := areas_by_id.get(sub_device.area_id)) is not None:
+            sub_device_suggested_area = area.name
 
-        sub_device_entry = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
-            name=sub_device.name or device_entry.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=sub_device_suggested_area,
+        identifier = (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
+        valid_identifiers.add(identifier)
+
+        # A sub device whose relation changed is removed and restored from the
+        # deleted one as a device of the other kind, keeping its id. Its
+        # entities are detached meanwhile so they are not removed with it
+        entity_ids: list[str] = []
+        sub_device_entry: dr.AnyDeviceEntry
+        if sub_device.relation is DeviceRelation.VIA:
+            if (
+                child_device := device_registry.async_get_child_device_by_identifier(
+                    identifier, entry.entry_id
+                )
+            ) is not None:
+                entity_ids = _async_detach_entities(hass, child_device.id)
+                device_registry.async_remove_device(child_device.id)
+            sub_device_entry = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={identifier},
+                name=sub_device.name or device_entry.name,
+                manufacturer=manufacturer,
+                model=model,
+                sw_version=sw_version,
+                suggested_area=sub_device_suggested_area,
+                via_device_id=device_entry.id,
+            )
+        else:
+            if (
+                via_device := device_registry.async_get_device_by_identifier(
+                    identifier, entry.entry_id
+                )
+            ) is not None:
+                entity_ids = _async_detach_entities(hass, via_device.id)
+                device_registry.async_remove_device(via_device.id)
+            sub_device_entry = device_registry.async_get_or_create_child(
+                config_entry_id=entry.entry_id,
+                identifiers={identifier},
+                name=sub_device.name or device_entry.name,
+                parent_device_id=device_entry.id,
+                suggested_area=sub_device_suggested_area,
+            )
+
+        _async_attach_entities(hass, entity_ids, sub_device_entry.id)
+
+    # Remove the sub devices that no longer exist
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.id != device_entry.id and not device.identifiers & valid_identifiers:
+            device_registry.async_remove_device(device.id)
+    for child_device_entry in dr.async_child_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not child_device_entry.identifiers & valid_identifiers:
+            device_registry.async_remove_device(child_device_entry.id)
+
+
+@callback
+def _async_detach_entities(hass: HomeAssistant, device_id: str) -> list[str]:
+    """Detach the entities of a device so they survive its removal."""
+    ent_reg = er.async_get(hass)
+    entity_ids = [
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_device(
+            ent_reg, device_id, include_disabled_entities=True
         )
+    ]
+    for entity_id in entity_ids:
+        ent_reg.async_update_entity(entity_id, device_id=None)
+    return entity_ids
 
-        # Update the sub device to set via_device_id
-        device_registry.async_update_device(
-            sub_device_entry.id,
-            via_device_id=device_entry.id,
-        )
 
-    return device_entry.id
+@callback
+def _async_attach_entities(
+    hass: HomeAssistant, entity_ids: list[str], device_id: str
+) -> None:
+    """Attach entities to a device."""
+    ent_reg = er.async_get(hass)
+    for entity_id in entity_ids:
+        ent_reg.async_update_entity(entity_id, device_id=device_id)
 
 
 class ServiceMetadata(NamedTuple):
@@ -1750,16 +1801,38 @@ async def async_replace_device(
     assert entry is not None
     hass.config_entries.async_update_entry(entry, unique_id=new_mac)
 
-    dev_reg = dr.async_get(hass)
-    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-        dev_reg.async_update_device(
-            device.id,
-            new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
-        )
-
-    ent_reg = er.async_get(hass)
     upper_mac = new_mac.upper()
     old_upper_mac = old_mac.upper()
+
+    def swap_mac(identifiers: set[tuple[str, str]]) -> set[tuple[str, str]] | None:
+        """Return the identifiers with the mac replaced, or None if none carries it."""
+        swapped = {
+            (domain, upper_mac + identifier[len(old_upper_mac) :])
+            if identifier.startswith(old_upper_mac)
+            else (domain, identifier)
+            for domain, identifier in identifiers
+        }
+        return swapped if swapped != identifiers else None
+
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if (dr.CONNECTION_NETWORK_MAC, old_mac) in device.connections:
+            dev_reg.async_update_device(
+                device.id,
+                new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
+            )
+        elif (new_identifiers := swap_mac(device.identifiers)) is not None:
+            # A sub device reached via the main device
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+    for child_device in dr.async_child_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    ):
+        if (new_identifiers := swap_mac(child_device.identifiers)) is not None:
+            dev_reg.async_update_child_device(
+                child_device.id, new_identifiers=new_identifiers
+            )
+
+    ent_reg = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
         # The mac is the leading segment of the unique id in every format,
         # so swap the prefix without parsing the rest.
