@@ -9,6 +9,7 @@ from jellyfin_apiclient_python.exceptions import HTTPException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
@@ -64,6 +65,11 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
                 )
             )
         except HTTPException as err:
+            if err.status == "Unauthorized":
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

@@ -1,7 +1,6 @@
 """Tests for the Jellyfin sensor platform."""
 
 from datetime import timedelta
-import logging
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -72,14 +72,11 @@ async def test_server_offline(
     state = hass.states.get("sensor.jellyfin_server_active_clients")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert [
-        record.getMessage()
-        for record in caplog.records
-        if record.levelno >= logging.ERROR
-    ] == [
-        "Error fetching jellyfin data: Unable to fetch sessions from the "
-        "Jellyfin server: ServerUnreachable"
-    ]
+    assert (
+        "Unable to fetch sessions from the Jellyfin server: ServerUnreachable"
+        in caplog.text
+    )
+    assert "Unexpected error fetching jellyfin data" not in caplog.text
 
     mock_api.sessions.side_effect = None
     freezer.tick(timedelta(seconds=10))
@@ -89,3 +86,22 @@ async def test_server_offline(
     state = hass.states.get("sensor.jellyfin_server_active_clients")
     assert state
     assert state.state == "5"
+
+
+async def test_server_unauthorized(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a rejected token starts reauthentication."""
+    mock_api.sessions.side_effect = HTTPException("Unauthorized", "token revoked")
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == init_integration.entry_id

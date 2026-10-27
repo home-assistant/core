@@ -42,6 +42,9 @@
     }
   },
   "exceptions": {
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "update_failed": {
       "message": "Unable to fetch sessions from the Jellyfin server: {error}"
     }
