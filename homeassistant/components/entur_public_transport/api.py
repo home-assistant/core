@@ -1,6 +1,12 @@
 """Thin Home Assistant adapter and presentation helpers for Entur discovery."""
 
-from enturclient import EnturDiscoveryClient, EnturQuay, EnturRoute, EnturStopPlace
+from enturclient import (
+    EnturDiscoveryClient,
+    EnturPublicTransportData,
+    EnturQuay,
+    EnturRoute,
+    EnturStopPlace,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -37,6 +43,20 @@ async def async_get_stop_quays(
 ) -> tuple[EnturQuay, ...]:
     """Return active quays/platforms belonging to a stop place."""
     return await _client(hass).async_get_stop_quays(stop_id)
+
+
+async def async_get_expanded_stop_quays(
+    hass: HomeAssistant, stop_id: str, line_whitelist: list[str]
+) -> tuple[str, ...]:
+    """Return the quays that sensor setup will create for a stop place."""
+    data = EnturPublicTransportData(
+        ENTUR_CLIENT_NAME,
+        stops=[stop_id],
+        line_whitelist=line_whitelist,
+        web_session=async_get_clientsession(hass),
+    )
+    await data.expand_all_quays()
+    return tuple(data.quays)
 
 
 def line_id_label(line_id: str) -> str:

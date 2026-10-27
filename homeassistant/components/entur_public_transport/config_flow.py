@@ -1,5 +1,6 @@
 """Config flow for the Entur public transport integration."""
 
+from contextlib import suppress
 from typing import Any, override
 
 from enturclient import EnturApiError
@@ -31,6 +32,7 @@ from .api import (
     EnturQuay,
     EnturRoute,
     EnturStopPlace,
+    async_get_expanded_stop_quays,
     async_get_stop_place,
     async_get_stop_quays,
     async_get_stop_routes,
@@ -178,6 +180,13 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 except EnturApiError:
                     self._quays = ()
                     self._quay_discovery_failed = True
+                    if (
+                        self._selected_place.stop_id == self._existing_stop_id
+                        and self._existing_platform_mode == PLATFORM_MODE_SELECTED
+                    ):
+                        return self._show_reconfigure_form(
+                            errors={"base": "cannot_connect"}
+                        )
                 return await self.async_step_select_routes()
 
         return self.async_show_form(
@@ -730,21 +739,27 @@ class EnturStopPlaceSubentryFlow(ConfigSubentryFlow):
                     line_whitelist,
                     self._selected_route_labels,
                 )
+                current_quay_ids = None
+                if not self._quay_discovery_failed:
+                    if self._selected_platform_mode == PLATFORM_MODE_ALL:
+                        with suppress(EnturApiError):
+                            current_quay_ids = list(
+                                await async_get_expanded_stop_quays(
+                                    self.hass,
+                                    self._selected_place.stop_id,
+                                    line_whitelist,
+                                )
+                            )
+                    else:
+                        current_quay_ids = self._selected_quay_ids
+
                 _async_reconcile_subentry_entities(
                     self.hass,
                     entry,
                     subentry,
                     self._selected_place.stop_id,
                     self._selected_platform_mode,
-                    (
-                        None
-                        if self._quay_discovery_failed
-                        else (
-                            [quay.quay_id for quay in self._quays]
-                            if self._selected_platform_mode == PLATFORM_MODE_ALL
-                            else self._selected_quay_ids
-                        )
-                    ),
+                    current_quay_ids,
                 )
                 if (
                     subentry.data == data

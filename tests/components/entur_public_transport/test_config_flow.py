@@ -873,8 +873,90 @@ async def test_replace_same_stop_preserves_quays_when_discovery_fails(
     assert registry.async_get_entity_id("sensor", DOMAIN, quay_id) is not None
 
 
+async def test_replace_same_selected_platforms_stops_on_discovery_failure(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Do not offer an empty selector when same-stop quay discovery fails."""
+    stop_id = "NSR:StopPlace:548"
+    quay_id = "NSR:Quay:1"
+    place = EnturStopPlace(
+        stop_id=stop_id,
+        name="Bergen busstasjon",
+        display_name="Bergen busstasjon, Bergen",
+        locality="Bergen",
+        transport_modes=("bus",),
+        role="parent",
+        stop_place_types=("busStation",),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            {
+                "subentry_id": "stop-subentry",
+                "subentry_type": "stop_place",
+                "title": "🚌 Bergen busstasjon · all routes",
+                "unique_id": stop_id,
+                "data": {
+                    CONF_STOP_ID: stop_id,
+                    CONF_STOP_PLACE_NAME: place.name,
+                    CONF_WHITELIST_LINES: [],
+                    CONF_ROUTE_LABELS: {},
+                    CONF_PLATFORM_MODE: PLATFORM_MODE_SELECTED,
+                    CONF_QUAY_IDS: [quay_id],
+                    CONF_SHOW_ON_MAP: False,
+                    CONF_STOP_PLACE_TYPES: ["busStation"],
+                    CONF_STOP_PLACE_METADATA_VERSION: STOP_PLACE_METADATA_VERSION,
+                },
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    registry = entity_registry
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        quay_id,
+        config_entry=entry,
+        config_subentry_id="stop-subentry",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_search_stop_places",
+            return_value=(place,),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_routes",
+            return_value=(),
+        ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
+            side_effect=EnturApiError,
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, "stop-subentry")
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={CONF_RECONFIGURE_ACTION: RECONFIGURE_ACTION_REPLACE},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_QUERY: "Bergen"}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_STOP_ID: stop_id}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert entry.subentries["stop-subentry"].data[CONF_QUAY_IDS] == [quay_id]
+    assert registry.async_get_entity_id("sensor", DOMAIN, quay_id) is not None
+
+
 async def test_reconfigure_unchanged_subentry_schedules_reload_for_new_quays(
     hass: HomeAssistant,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Reload when discovery changes but the all-platform subentry stays equal."""
     stop_id = "NSR:StopPlace:548"
@@ -899,13 +981,13 @@ async def test_reconfigure_unchanged_subentry_schedules_reload_for_new_quays(
             {
                 "subentry_id": "stop-subentry",
                 "subentry_type": "stop_place",
-                "title": "🚌 Bergen busstasjon · all routes",
+                "title": f"🚌 Bergen busstasjon · {route.selection_label}",
                 "unique_id": stop_id,
                 "data": {
                     CONF_STOP_ID: stop_id,
                     CONF_STOP_PLACE_NAME: place.name,
-                    CONF_WHITELIST_LINES: [],
-                    CONF_ROUTE_LABELS: {},
+                    CONF_WHITELIST_LINES: [route.line_id],
+                    CONF_ROUTE_LABELS: {route.line_id: route.selection_label},
                     CONF_PLATFORM_MODE: PLATFORM_MODE_ALL,
                     CONF_QUAY_IDS: [],
                     CONF_SHOW_ON_MAP: False,
@@ -928,10 +1010,22 @@ async def test_reconfigure_unchanged_subentry_schedules_reload_for_new_quays(
         ),
         patch(
             "homeassistant.components.entur_public_transport.config_flow.async_get_stop_quays",
-            return_value=(quay,),
+            return_value=(quay, EnturQuay("NSR:Quay:2", "Other platform", "B")),
         ),
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.async_get_expanded_stop_quays",
+            return_value=(quay.quay_id,),
+        ) as get_expanded_quays,
         patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload,
     ):
+        for unique_id in (stop_id, quay.quay_id, "NSR:Quay:2"):
+            entity_registry.async_get_or_create(
+                "sensor",
+                DOMAIN,
+                unique_id,
+                config_entry=entry,
+                config_subentry_id="stop-subentry",
+            )
         result = await entry.start_subentry_reconfigure_flow(hass, "stop-subentry")
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
@@ -940,7 +1034,7 @@ async def test_reconfigure_unchanged_subentry_schedules_reload_for_new_quays(
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             user_input={
-                CONF_WHITELIST_LINES: [],
+                CONF_WHITELIST_LINES: [route.line_id],
                 CONF_MANUAL_WHITELIST_LINES: "",
             },
         )
@@ -957,6 +1051,9 @@ async def test_reconfigure_unchanged_subentry_schedules_reload_for_new_quays(
 
     assert result["reason"] == "reconfigure_successful"
     schedule_reload.assert_called_once_with(entry.entry_id)
+    get_expanded_quays.assert_awaited_once_with(hass, stop_id, [route.line_id])
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, quay.quay_id)
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "NSR:Quay:2") is None
 
 
 async def test_user_flow_handles_api_error(hass: HomeAssistant) -> None:
