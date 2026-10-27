@@ -6,16 +6,16 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PapouchBaseCoordinator
+from .coordinator import PapouchNetworkDataUpdateCoordinator
 
 
-class PapouchEntity(CoordinatorEntity[PapouchBaseCoordinator]):
+class PapouchEntity(CoordinatorEntity[PapouchNetworkDataUpdateCoordinator]):
     """Common class for all Papouch entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: PapouchBaseCoordinator, device: PapouchDevice
+        self, coordinator: PapouchNetworkDataUpdateCoordinator, device: PapouchDevice
     ) -> None:
         """Initialize the base entity."""
         super().__init__(coordinator)

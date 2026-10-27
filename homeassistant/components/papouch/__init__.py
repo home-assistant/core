@@ -11,7 +11,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platf
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_WEB_PORT, DOMAIN, UNKNOWN_LOCATION, UNKNOWN_NAME
 from .coordinator import PapouchNetworkDataUpdateCoordinator
@@ -19,7 +18,6 @@ from .coordinator import PapouchNetworkDataUpdateCoordinator
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
 
 type PapouchConfigEntry = ConfigEntry[PapouchNetworkDataUpdateCoordinator]
@@ -29,8 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     """Set up Papouch device from a config entry."""
 
     session = async_get_clientsession(hass)
-    password = entry.data.get(CONF_PASSWORD, "")
+    password = entry.data.get(CONF_PASSWORD)
     web_port = entry.data.get(CONF_PORT, DEFAULT_WEB_PORT)
+
+    # aiopapouch library expects an empty string instead of None for unauthenticated devices
     api_client = PapouchHTTPClient(
         entry.data[CONF_IP_ADDRESS], session, password=password or "", web_port=web_port
     )

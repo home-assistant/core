@@ -3,12 +3,11 @@
 import ipaddress
 from typing import Any, override
 
-import aiohttp
 from aiopapouch import PapouchHTTPClient
 from aiopapouch.exceptions import (
     DeviceAuthError,
     DeviceConnectionError,
-    DeviceLogicError,
+    DeviceParseError,
 )
 import probatio as prob
 
@@ -32,9 +31,13 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_ip: str | None = None
 
     async def _test_connection(
-        self, ip_address: str, password: str = "", web_port: int = DEFAULT_WEB_PORT
+        self,
+        ip_address: str,
+        password: str | None = None,
+        web_port: int = DEFAULT_WEB_PORT,
     ) -> tuple[dict[str, str], int | None]:
         """Test the connection and return any errors and the device mode."""
+
         try:
             ipaddress.ip_address(ip_address)
         except ValueError:
@@ -42,19 +45,16 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         client = PapouchHTTPClient(
-            ip_address, session, password=password, web_port=web_port
+            ip_address, session, password=password or "", web_port=web_port
         )
 
         try:
-            await client.fetch_info()
             mode_device = await client.get_device_mode()
         except DeviceAuthError:
             return {"base": "invalid_auth"}, None
-        except (
-            aiohttp.ClientError,
-            DeviceConnectionError,
-            TimeoutError,
-        ):
+        except DeviceConnectionError, DeviceParseError:
+            # sometimes when there is no connection the client can receive
+            # invalid XML -> we need to catch DeviceParseError too
             return {"base": "cannot_connect"}, None
 
         return {}, mode_device
@@ -63,18 +63,15 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Process user input, test connection, and determine the next routing step."""
+
         self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
 
         ip_address = user_input[CONF_IP_ADDRESS]
-
         password = user_input.get(CONF_PASSWORD)
-        if password == "":
-            password = None
-
         web_port = int(user_input[CONF_PORT])
 
         errors, mode_device = await self._test_connection(
-            user_input[CONF_IP_ADDRESS], password or "", web_port
+            user_input[CONF_IP_ADDRESS], password, web_port
         )
 
         if errors:
@@ -102,7 +99,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             mac_address = await client.get_device_mac()
         except DeviceAuthError:
             errors["base"] = "invalid_auth"
-        except aiohttp.ClientError, DeviceLogicError:
+        except DeviceConnectionError, DeviceParseError:
+            # sometimes when there is no connection the client can receive
+            # invalid XML -> we need to catch DeviceParseError too
             errors["base"] = "cannot_connect"
 
         if errors:
@@ -120,14 +119,19 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return {}, self.async_create_entry(
-            title=f"{title_name} - {user_input[CONF_IP_ADDRESS]}", data=data
+            title=f"{title_name} - {user_input[CONF_IP_ADDRESS]} - {mac_address}",
+            data=data,
         )
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the first step in config flow."""
+        """Handle the first step in config flow.
+
+        Note that WEB port is a variable in the devices,
+        so the user should be able to change it.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:

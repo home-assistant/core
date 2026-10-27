@@ -2,11 +2,7 @@
 
 from unittest.mock import patch
 
-from aiopapouch.exceptions import (
-    DeviceAuthError,
-    DeviceConnectionError,
-    DeviceLogicError,
-)
+from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 import pytest
 
 from homeassistant import data_entry_flow
@@ -69,7 +65,7 @@ async def test_user_success(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Quido (Lab) - 192.168.1.50"
+    assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
     assert result2["data"]["device_name"] == "Quido (Lab)"
@@ -94,8 +90,8 @@ async def test_invalid_ip_format(hass: HomeAssistant) -> None:
 
 async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> None:
     """Test handling of connection errors during first step."""
-    mock_fetch, _, _, _ = mock_api_client
-    mock_fetch.side_effect = DeviceConnectionError
+    _, mock_mode, _, _ = mock_api_client
+    mock_mode.side_effect = DeviceConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -112,8 +108,8 @@ async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> No
 
 async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
     """Test handling of authentication errors during first step."""
-    mock_fetch, _, _, _ = mock_api_client
-    mock_fetch.side_effect = DeviceAuthError
+    _, mock_mode, _, _ = mock_api_client
+    mock_mode.side_effect = DeviceAuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -170,7 +166,7 @@ async def test_user_mac_auth_error(
 ) -> None:
     """Test auth error gracefully failing when retrieving MAC address."""
     _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = DeviceAuthError("Bad password")
+    mock_mac.side_effect = DeviceAuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -194,7 +190,7 @@ async def test_user_mac_connection_error(
 ) -> None:
     """Test manual flow aborts if getting MAC address fails due to logic/connection error."""
     _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = DeviceLogicError("No MAC found")
+    mock_mac.side_effect = DeviceConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -246,7 +242,7 @@ async def test_user_success_no_password(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Quido (Lab) - 192.168.1.50"
+    assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] is None
     assert result2["data"]["device_name"] == "Quido (Lab)"
@@ -272,4 +268,4 @@ async def test_user_success_empty_string_password(
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["data"]["password"] is None
+    assert result2["data"]["password"] == ""

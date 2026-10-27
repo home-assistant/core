@@ -1,6 +1,5 @@
 """Sensor platform for the Papouch integration."""
 
-from dataclasses import dataclass
 import logging
 from typing import cast, override
 
@@ -16,83 +15,75 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PapouchConfigEntry
-from .coordinator import PapouchBaseCoordinator
+from . import PapouchConfigEntry, PapouchNetworkDataUpdateCoordinator
 from .entity import PapouchEntity
 
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass(frozen=True, kw_only=True)
-class PapouchSensorEntityDescription(SensorEntityDescription):
-    """Description class of the Papouch sensor."""
-
-    data_key: str = ""
-    value_key: str = ""
-    item_id: str = ""
-    translation_placeholders: dict[str, str] | None = None
-
-
-SENSOR_TYPES: tuple[PapouchSensorEntityDescription, ...] = (
-    PapouchSensorEntityDescription(
+# native_unit_of_measurement is omitted in these static descriptions
+# because aiopapouch (device) provides units dynamically per sensor
+# it is assigned at runtime in PapouchSensor.__init__
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="dew_point",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="wind_direction",
         device_class=SensorDeviceClass.WIND_DIRECTION,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
-        key="wind_direction_text",  # e.g. N, E, ...
+    SensorEntityDescription(
+        key="wind_direction_text",  # e.g. string sent by device
+        # we cannot use SensorDeviceClass.ENUM here because the device
+        # sends non-standardized strings instead of a fixed list of options
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="wind_speed",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="rain",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="precipitation_intensity",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="counter",
         state_class=SensorStateClass.TOTAL,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PapouchSensorEntityDescription(
+    SensorEntityDescription(
         key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -128,31 +119,19 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities = []
 
-    for device in coordinator.get_devices():
-        for sensor_data in device.get_supported_sensors():
-            data_type = cast(str, sensor_data.get("data_type"))
-            base_desc = SENSOR_MAP.get(data_type)
+    device = coordinator.get_device()
 
-            if not base_desc:
-                _LOGGER.warning("Unknown sensor type '%s'. Skipping entity", data_type)
-                continue
+    for sensor_data in device.get_supported_sensors():
+        data_type = cast(str, sensor_data.get("data_type"))
+        description = SENSOR_MAP.get(data_type)
 
-            name_val = sensor_data.get("name")
-            translation_key, placeholders = _get_translation_config(data_type, name_val)
+        if not description:
+            _LOGGER.warning("Unknown sensor type '%s'. Skipping entity", data_type)
+            continue
 
-            description = PapouchSensorEntityDescription(
-                key=sensor_data["value_key"],
-                data_key=sensor_data["type"],
-                value_key=sensor_data["value_key"],
-                item_id=str(sensor_data["item_id"]),
-                device_class=base_desc.device_class,
-                state_class=base_desc.state_class,
-                native_unit_of_measurement=sensor_data.get("unit"),
-                translation_key=translation_key,
-                translation_placeholders=placeholders,
-                entity_category=base_desc.entity_category,
-            )
-            entities.append(PapouchSensor(coordinator, device, description))
+        entities.append(
+            PapouchSensor(coordinator, device, description, sensor_data, data_type)
+        )
 
     async_add_entities(entities)
 
@@ -160,22 +139,37 @@ async def async_setup_entry(
 class PapouchSensor(PapouchEntity, SensorEntity):
     """Representation of a generic Papouch sensor."""
 
-    entity_description: PapouchSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
-        coordinator: PapouchBaseCoordinator,
+        coordinator: PapouchNetworkDataUpdateCoordinator,
         device: PapouchDevice,
-        description: PapouchSensorEntityDescription,
+        description: SensorEntityDescription,
+        sensor_data: dict,
+        data_type: str,
     ) -> None:
         """Initialize the sensor."""
 
         super().__init__(coordinator, device)
         self.entity_description = description
-        self._attr_unique_id = f"{self.device.conf.identifier}_{description.data_key}_{description.value_key}"
 
-        if description.translation_placeholders:
-            self._attr_translation_placeholders = description.translation_placeholders
+        self.data_key = sensor_data["type"]
+        self.value_key = sensor_data["value_key"]
+        self.item_id = str(sensor_data["item_id"])
+
+        self._attr_unique_id = (
+            f"{self.device.conf.identifier}_{self.data_key}_{self.value_key}"
+        )
+        self._attr_native_unit_of_measurement = sensor_data.get("unit")
+
+        translation_key, placeholders = _get_translation_config(
+            data_type, sensor_data.get("name")
+        )
+        if translation_key:
+            self._attr_translation_key = translation_key
+        if placeholders:
+            self._attr_translation_placeholders = placeholders
 
     @property
     @override
@@ -184,16 +178,14 @@ class PapouchSensor(PapouchEntity, SensorEntity):
 
         device_data = self.coordinator.data[self.device.conf.identifier]
 
-        value = device_data.get(self.entity_description.data_key, {}).get(
-            self.entity_description.value_key
-        )
+        value = device_data.get(self.data_key, {}).get(self.value_key)
         return cast("float | int | None", value)
 
     @override
     @callback
     def _handle_coordinator_update(self) -> None:
         for sensor_data in self.device.get_supported_sensors():
-            if sensor_data.get("value_key") == self.entity_description.value_key:
+            if sensor_data.get("value_key") == self.value_key:
                 if "unit" in sensor_data:
                     self._attr_native_unit_of_measurement = sensor_data["unit"]
                 break

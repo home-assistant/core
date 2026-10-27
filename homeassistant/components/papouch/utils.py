@@ -9,13 +9,13 @@ from .const import DEFAULT_WEB_PORT
 async def _get_device_name(
     session: aiohttp.ClientSession,
     ip_address: str,
-    password: str = "",
+    password: str | None = None,
     web_port: int = DEFAULT_WEB_PORT,
 ) -> str:
     """Fetch the real device name and location directly from the device. Doesn't raise."""
 
     client = PapouchHTTPClient(
-        ip_address, session, password=password, web_port=web_port
+        ip_address, session, password=password or "", web_port=web_port
     )
 
     try:
