@@ -447,6 +447,6 @@ async def test_switch_led_cannot_set_feature(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "cannot_set_feature"
+    assert exc_info.value.translation_key == "cannot_set_feature_with_error"
     assert (state := hass.states.get(LED_ENTITY_ID))
     assert state.state == STATE_ON
