@@ -421,6 +421,11 @@ class TemplateEntity(AbstractTemplateEntity):
 
         if entity_id and entity_id == self.entity_id:
             self._self_ref_update_count += 1
+            _LOGGER.debug(
+                "self-update %d/%d",
+                self._self_ref_update_count,
+                len(self._template_attrs),
+            )
         else:
             self._self_ref_update_count = 0
 
