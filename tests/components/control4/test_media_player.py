@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -165,16 +165,8 @@ async def test_media_player_turn_on_restarts_last_source(
     mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 100}}
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("media_player.living_room")
-    assert state is not None
-    assert state.attributes["last_source_id"] == 100
-
     mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
     await _async_refresh(hass, freezer)
-
-    state = hass.states.get("media_player.living_room")
-    assert state is not None
-    assert state.attributes["last_source_id"] == 101
 
     mock_room_off_variables[1]["POWER_STATE"] = False
     mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {}
@@ -184,7 +176,6 @@ async def test_media_player_turn_on_restarts_last_source(
     state = hass.states.get("media_player.living_room")
     assert state is not None
     assert state.state == MediaPlayerState.OFF
-    assert state.attributes["last_source_id"] == 101
 
     await hass.services.async_call(
         "media_player",
@@ -212,10 +203,6 @@ async def test_media_player_last_source_falls_back_to_video_device(
     mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 101
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("media_player.living_room")
-    assert state is not None
-    assert state.attributes["last_source_id"] == 101
-
     await hass.services.async_call(
         "media_player",
         "turn_on",
@@ -237,15 +224,11 @@ async def test_media_player_turn_on_restores_last_source(
     mock_c4_room: MagicMock,
 ) -> None:
     """Test that the last source is restored and used after a restart."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        [State("media_player.living_room", "off", {"last_source_id": 101})],
+        [(State("media_player.living_room", "off"), {"last_source_id": 101})],
     )
     await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("media_player.living_room")
-    assert state is not None
-    assert state.attributes["last_source_id"] == 101
 
     await hass.services.async_call(
         "media_player",
@@ -266,15 +249,11 @@ async def test_media_player_turn_on_ignores_restored_unknown_source(
     mock_c4_room: MagicMock,
 ) -> None:
     """Test that a restored source the room no longer has is ignored."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        [State("media_player.living_room", "off", {"last_source_id": 999})],
+        [(State("media_player.living_room", "off"), {"last_source_id": 999})],
     )
     await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("media_player.living_room")
-    assert state is not None
-    assert state.attributes["last_source_id"] is None
 
     await hass.services.async_call(
         "media_player",

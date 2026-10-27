@@ -1,6 +1,6 @@
 """Platform for Control4 Rooms Media Players."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import enum
 import logging
 from typing import Any, override
@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
@@ -37,8 +37,6 @@ CONTROL4_STOPPED = "STOPPED"
 CONTROL4_MEDIA_INFO = "CURRENT MEDIA INFO"
 
 CONTROL4_PARENT_ID = "parentId"
-
-ATTR_LAST_SOURCE_ID = "last_source_id"
 
 VARIABLES_OF_INTEREST = {
     CONTROL4_POWER_STATE,
@@ -179,6 +177,18 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
+@dataclass
+class _RoomExtraStoredData(ExtraStoredData):
+    """Extra stored data for a Control4 room."""
+
+    last_source_id: int | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return asdict(self)
+
+
 class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     """Control4 Room entity."""
 
@@ -225,8 +235,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore the last source, then let the current one take over."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) is not None:
-            last_source_id = last_state.attributes.get(ATTR_LAST_SOURCE_ID)
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            last_source_id = extra_data.as_dict().get("last_source_id")
             if last_source_id in self._sources:
                 self._last_source_id = last_source_id
         self._remember_playing_source()
@@ -326,9 +336,9 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, int | None]:
-        """Return the id of the source the room starts with when turned on."""
-        return {ATTR_LAST_SOURCE_ID: self._last_source_id}
+    def extra_restore_state_data(self) -> _RoomExtraStoredData:
+        """Return the source the room starts with when turned on."""
+        return _RoomExtraStoredData(self._last_source_id)
 
     @property
     @override

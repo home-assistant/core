@@ -46,7 +46,6 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
-      'last_source_id': 100,
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
       ]),
