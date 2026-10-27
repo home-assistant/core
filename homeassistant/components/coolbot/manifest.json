@@ -9,5 +9,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pycoolbot"],
   "quality_scale": "bronze",
-  "requirements": ["pycoolbot==0.2.0"]
+  "requirements": ["pycoolbot==0.2.1"]
 }
