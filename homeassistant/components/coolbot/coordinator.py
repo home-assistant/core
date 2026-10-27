@@ -178,24 +178,40 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         usable and republishes so that a cooler which has stopped reporting is
         noticed, since silence produces no callback to notice it by.
         """
+        client: CoolbotClient | None = None
         try:
             await self._async_ensure_connected()
-            assert self._client is not None
-            await self._client.async_ping()
-            await self._async_reread_profile_if_due()
-            devices = self._client.get_devices()
+            client = self._client
+            assert client is not None
+            await client.async_ping()
+            await self._async_reread_profile_if_due(client)
+            devices = client.get_devices()
         except CoolbotAuthError as err:
+            if self._superseded(client):
+                return
             # The socket must not be left open while the credentials are wrong.
             await self._async_shutdown_client()
             self.async_set_update_error(self._auth_error(err))
             return
         except CoolbotError as err:
+            if self._superseded(client):
+                return
             # Dropped so the next pass reconnects from scratch.
             await self._async_shutdown_client()
             self.async_set_update_error(self._connection_error(err))
             return
 
+        if self._superseded(client):
+            return
         self.async_set_updated_data(self._build(devices))
+
+    def _superseded(self, client: CoolbotClient | None) -> bool:
+        """Whether a refresh replaced this pass's client while it waited on it.
+
+        The outcome then belongs to a socket already closed, and acting on it
+        would close the healthy replacement or publish what it has outdated.
+        """
+        return client is not None and client is not self._client
 
     def _auth_error(self, err: CoolbotError) -> ConfigEntryError:
         """Wrap a rejected login.
@@ -243,21 +259,20 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         self._apply_late_device_details(data)
         return data
 
-    async def _async_reread_profile_if_due(self) -> None:
+    async def _async_reread_profile_if_due(self, client: CoolbotClient) -> None:
         """Re-read the account profile from time to time.
 
         The client reads it while connecting and then serves the device list
         from it, so without this a cooler added to or removed from the account
         would go unnoticed until the socket happened to reconnect.
         """
-        assert self._client is not None
         now = dt_util.utcnow()
         if (
             self._profile_read_at is not None
             and now - self._profile_read_at < PROFILE_REFRESH_INTERVAL
         ):
             return
-        await self._client.async_refresh_profile()
+        await client.async_refresh_profile()
         self._profile_read_at = now
 
     def _apply_late_device_details(self, data: dict[str, CoolbotDevice]) -> None:

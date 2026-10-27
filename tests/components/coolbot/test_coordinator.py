@@ -241,6 +241,55 @@ async def test_unloading_mid_refresh_reconnect_leaves_no_socket_open(
     assert not client.listeners
 
 
+@pytest.mark.parametrize(
+    "outcome",
+    [CoolbotError("dropped"), CoolbotAuthError("rejected"), None],
+    ids=["connection_error", "auth_error", "success"],
+)
+async def test_a_superseded_maintenance_pass_leaves_the_replacement_alone(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    outcome: Exception | None,
+) -> None:
+    """A pass still waiting on a client a refresh has replaced changes nothing.
+
+    Its result belongs to a socket already closed: acting on a failure would
+    close the healthy replacement and mark recovered sensors unavailable.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    pinging = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_ping() -> None:
+        pinging.set()
+        await release.wait()
+        if outcome is not None:
+            raise outcome
+
+    mock_client.async_ping.side_effect = slow_ping
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+    )
+    await pinging.wait()
+
+    mock_client.connected = False
+    replacement = make_client()
+    with patch(
+        "homeassistant.components.coolbot.coordinator.CoolbotClient",
+        return_value=replacement,
+    ):
+        await _request_update(hass)
+    release.set()
+    await hass.async_block_till_done()
+
+    replacement.async_close.assert_not_awaited()
+    assert replacement.listeners
+    assert hass.states.get(ROOM_TEMPERATURE).state != "unavailable"
+    assert mock_config_entry.runtime_data.last_update_success
+
+
 async def test_a_refresh_that_cannot_reconnect_fails(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
