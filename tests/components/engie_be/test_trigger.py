@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
-from aioengiebelgium import EngieBeCommunicationError
+from aioengiebelgium import EngieBeClient, EngieBeCommunicationError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -26,13 +26,17 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     BAN,
+    BAN_2,
     BRUSSELS_TIME_ZONE,
     automation_calls,
+    build_config_entry,
     build_contracts,
     build_epex_payload,
     build_epex_payload_with_gap,
     build_epex_payload_with_negative_current,
     build_epex_payload_without_tomorrow,
+    build_relations,
+    configure_client,
     household_device_id,
     setup_dynamic_entry,
     setup_entry,
@@ -593,3 +597,80 @@ async def test_trigger_invalid_threshold(
                 }
             ],
         )
+
+
+async def test_trigger_fires_per_contract(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a trigger with several contracts fires once for each contract."""
+    freezer.move_to(_brussels(3, 13, 45))
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_epex_prices.side_effect = build_epex_payload_with_negative_current
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    device_ids = [
+        household_device_id(device_registry, mock_config_entry, ban)
+        for ban in (BAN, BAN_2)
+    ]
+    await _async_setup_trigger_automation(
+        hass, "epex_hour_price_became_negative", {"device_id": device_ids}
+    )
+
+    await _async_move_to(hass, freezer, _brussels(3, 14, 0))
+
+    assert sorted(
+        call.data["device_id"] for call in automation_calls(service_calls)
+    ) == sorted(device_ids)
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_reload_keeps_other_entry_baseline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    mock_auth_flow: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test reloading one entry leaves the trigger of another entry working."""
+    other_entry = build_config_entry("other-subject", "other-access-token")
+    other_client = create_autospec(EngieBeClient, instance=True)
+    configure_client(other_client, mock_auth_flow)
+    other_client.async_get_customer_account_relations.return_value = build_relations(
+        BAN_2
+    )
+    clients = {
+        "access-token": mock_engie_client.return_value,
+        "other-access-token": other_client,
+    }
+    mock_engie_client.side_effect = lambda **kwargs: clients[kwargs["access_token"]]
+    for client in clients.values():
+        client.async_get_energy_contracts.return_value = build_contracts(dynamic=True)
+    await setup_entry(hass, mock_config_entry)
+    await setup_entry(hass, other_entry)
+    device_ids = [
+        household_device_id(device_registry, mock_config_entry, BAN),
+        household_device_id(device_registry, other_entry, BAN_2),
+    ]
+    await _async_setup_trigger_automation(
+        hass,
+        "epex_current_quarter_hour_crossed_threshold",
+        {"device_id": device_ids, "above": 0.156},
+    )
+
+    await _async_move_to(hass, freezer, _brussels(3, 14, 30))
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _async_move_to(hass, freezer, _brussels(3, 14, 45))
+
+    assert sorted(
+        call.data["device_id"] for call in automation_calls(service_calls)
+    ) == sorted(device_ids)

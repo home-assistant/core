@@ -322,3 +322,51 @@ async def test_condition_invalid_threshold(hass: HomeAssistant) -> None:
                 }
             ],
         )
+
+
+@pytest.mark.parametrize(
+    ("dynamic_bans", "selected_bans", "expected"),
+    [
+        pytest.param({BAN, BAN_2}, (BAN, BAN_2), True, id="both_dynamic"),
+        pytest.param({BAN}, (BAN, BAN_2), False, id="fixed_last"),
+        pytest.param({BAN}, (BAN_2, BAN), False, id="fixed_first"),
+    ],
+)
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_condition_requires_every_contract(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    dynamic_bans: set[str],
+    selected_bans: tuple[str, ...],
+    expected: bool,
+) -> None:
+    """Test a condition with several contracts passes only when every one passes."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+
+    def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        return build_contracts(dynamic=queried_ban in dynamic_bans)
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    await setup_entry(hass, mock_config_entry)
+
+    assert (
+        await _async_condition_passes(
+            hass,
+            service_calls,
+            "epex_hour_price_is_in_range",
+            {
+                "device_id": [
+                    household_device_id(device_registry, mock_config_entry, ban)
+                    for ban in selected_bans
+                ],
+                "above": -1,
+            },
+        )
+        is expected
+    )
