@@ -16,19 +16,19 @@
       mode: box
       unit_of_measurement: EUR/kWh
 
-epex_hour_became_negative:
+epex_hour_price_became_negative:
   fields:
     device_id: *device
 
-epex_hour_no_longer_negative:
+epex_hour_price_no_longer_negative:
   fields:
     device_id: *device
 
-epex_quarter_hour_became_negative:
+epex_quarter_hour_price_became_negative:
   fields:
     device_id: *device
 
-epex_quarter_hour_no_longer_negative:
+epex_quarter_hour_price_no_longer_negative:
   fields:
     device_id: *device
 

@@ -113,20 +113,18 @@ async def test_negative_condition(
 @pytest.mark.parametrize(
     ("condition_key", "options", "expected"),
     [
+        pytest.param("epex_hour_price_is_in_range", {"above": 0.14}, True, id="above"),
         pytest.param(
-            "epex_hour_price_meets_threshold", {"above": 0.14}, True, id="above"
+            "epex_hour_price_is_in_range", {"below": 0.14}, False, id="not_below"
         ),
         pytest.param(
-            "epex_hour_price_meets_threshold", {"below": 0.14}, False, id="not_below"
-        ),
-        pytest.param(
-            "epex_quarter_hour_price_meets_threshold",
+            "epex_quarter_hour_price_is_in_range",
             {"above": 0.155, "below": 0.16},
             True,
             id="range",
         ),
         pytest.param(
-            "epex_quarter_hour_price_meets_threshold",
+            "epex_quarter_hour_price_is_in_range",
             {"above": 0.16},
             False,
             id="not_above",
@@ -227,7 +225,7 @@ async def test_condition_per_household_tariff(
         await _async_condition_passes(
             hass,
             service_calls,
-            "epex_hour_price_meets_threshold",
+            "epex_hour_price_is_in_range",
             {"device_id": device.id, "above": -1},
         )
         is expected
@@ -255,7 +253,7 @@ async def test_condition_without_entities(
         assert await _async_condition_passes(
             hass,
             service_calls,
-            "epex_hour_price_meets_threshold",
+            "epex_hour_price_is_in_range",
             {"device_id": device_id, "above": -1},
         )
 
@@ -275,7 +273,7 @@ async def test_condition_without_dynamic_tariff(
     assert not await _async_condition_passes(
         hass,
         service_calls,
-        "epex_hour_price_meets_threshold",
+        "epex_hour_price_is_in_range",
         {"device_id": device_id, "above": -1},
     )
 
@@ -319,7 +317,7 @@ async def test_condition_invalid_threshold(hass: HomeAssistant) -> None:
             hass,
             [
                 {
-                    "condition": f"{DOMAIN}.epex_hour_price_meets_threshold",
+                    "condition": f"{DOMAIN}.epex_hour_price_is_in_range",
                     "options": {"device_id": "device"},
                 }
             ],

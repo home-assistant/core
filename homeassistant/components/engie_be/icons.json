@@ -1,16 +1,16 @@
 {
   "conditions": {
+    "epex_hour_price_is_in_range": {
+      "condition": "mdi:cash-check"
+    },
     "epex_hour_price_is_negative": {
       "condition": "mdi:cash-off"
     },
-    "epex_hour_price_meets_threshold": {
+    "epex_quarter_hour_price_is_in_range": {
       "condition": "mdi:cash-check"
     },
     "epex_quarter_hour_price_is_negative": {
       "condition": "mdi:cash-off"
-    },
-    "epex_quarter_hour_price_meets_threshold": {
-      "condition": "mdi:cash-check"
     }
   },
   "entity": {
@@ -209,10 +209,10 @@
     "epex_current_quarter_hour_crossed_threshold": {
       "trigger": "mdi:cash-clock"
     },
-    "epex_hour_became_negative": {
+    "epex_hour_price_became_negative": {
       "trigger": "mdi:cash-off"
     },
-    "epex_hour_no_longer_negative": {
+    "epex_hour_price_no_longer_negative": {
       "trigger": "mdi:cash-check"
     },
     "epex_next_hour_crossed_threshold": {
@@ -221,10 +221,10 @@
     "epex_next_quarter_hour_crossed_threshold": {
       "trigger": "mdi:cash-fast"
     },
-    "epex_quarter_hour_became_negative": {
+    "epex_quarter_hour_price_became_negative": {
       "trigger": "mdi:cash-off"
     },
-    "epex_quarter_hour_no_longer_negative": {
+    "epex_quarter_hour_price_no_longer_negative": {
       "trigger": "mdi:cash-check"
     },
     "epex_tomorrow_prices_published": {

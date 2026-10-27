@@ -9,9 +9,14 @@ from aioengiebelgium import EngieBeCommunicationError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import automation
+from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
@@ -51,7 +56,10 @@ async def _async_setup_trigger_automation(
                 "trigger": {"trigger": f"{DOMAIN}.{trigger_key}", "options": options},
                 "action": {
                     "action": "test.automation",
-                    "data": {"device_id": "{{ trigger.device_id }}"},
+                    "data": {
+                        "device_id": "{{ trigger.device_id }}",
+                        "price": "{{ trigger.price | default(none) }}",
+                    },
                 },
             }
         },
@@ -90,16 +98,34 @@ _NEGATIVE_MOMENTS = [
 
 
 @pytest.mark.parametrize(
-    ("trigger_key", "expected_counts"),
+    ("trigger_key", "expected_counts", "expected_price", "expected_source"),
     [
-        pytest.param("epex_hour_became_negative", [1, 1, 1], id="hour_became"),
-        pytest.param("epex_hour_no_longer_negative", [0, 0, 1], id="hour_no_longer"),
         pytest.param(
-            "epex_quarter_hour_became_negative", [1, 1, 1], id="quarter_hour_became"
+            "epex_hour_price_became_negative",
+            [1, 1, 1],
+            -0.05,
+            "hourly EPEX price became negative",
+            id="hour_became",
         ),
         pytest.param(
-            "epex_quarter_hour_no_longer_negative",
+            "epex_hour_price_no_longer_negative",
+            [0, 0, 1],
+            0.16,
+            "hourly EPEX price no longer negative",
+            id="hour_no_longer",
+        ),
+        pytest.param(
+            "epex_quarter_hour_price_became_negative",
+            [1, 1, 1],
+            -0.05,
+            "quarter-hourly EPEX price became negative",
+            id="quarter_hour_became",
+        ),
+        pytest.param(
+            "epex_quarter_hour_price_no_longer_negative",
             [0, 1, 1],
+            0.1525,
+            "quarter-hourly EPEX price no longer negative",
             id="quarter_hour_no_longer",
         ),
     ],
@@ -113,6 +139,8 @@ async def test_negative_trigger(
     service_calls: list[ServiceCall],
     trigger_key: str,
     expected_counts: list[int],
+    expected_price: float,
+    expected_source: str,
 ) -> None:
     """Test the negative price triggers fire on their own edge and granularity."""
     freezer.move_to(_brussels(3, 13, 45))
@@ -122,12 +150,19 @@ async def test_negative_trigger(
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     device_id = household_device_id(device_registry, mock_config_entry)
     await _async_setup_trigger_automation(hass, trigger_key, {"device_id": device_id})
+    events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
 
     assert (
         await _async_count_calls_along(hass, freezer, service_calls, _NEGATIVE_MOMENTS)
         == expected_counts
     )
-    assert automation_calls(service_calls)[0].data == {"device_id": device_id}
+    assert automation_calls(service_calls)[0].data == {
+        "device_id": device_id,
+        "price": pytest.approx(expected_price),
+    }
+    assert events[0].data[ATTR_SOURCE] == (
+        f"{expected_source} for Main street 1, 1000 Brussels"
+    )
 
 
 _THRESHOLD_MOMENTS = [
@@ -383,7 +418,7 @@ async def test_trigger_after_failed_fetch(
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     device_id = household_device_id(device_registry, mock_config_entry)
     await _async_setup_trigger_automation(
-        hass, "epex_hour_became_negative", {"device_id": device_id}
+        hass, "epex_hour_price_became_negative", {"device_id": device_id}
     )
 
     assert (
@@ -397,7 +432,7 @@ async def test_trigger_after_failed_fetch(
 @pytest.mark.parametrize(
     ("trigger_key", "options"),
     [
-        pytest.param("epex_hour_became_negative", {}, id="negative"),
+        pytest.param("epex_hour_price_became_negative", {}, id="negative"),
         pytest.param(
             "epex_current_hour_crossed_threshold", {"above": 0.14}, id="threshold"
         ),
@@ -508,7 +543,7 @@ async def test_trigger_invalid_device(
             hass,
             [
                 {
-                    "platform": f"{DOMAIN}.epex_hour_became_negative",
+                    "platform": f"{DOMAIN}.epex_hour_price_became_negative",
                     "options": {"device_id": device_id},
                 }
             ],
@@ -522,6 +557,8 @@ async def test_trigger_invalid_device(
         pytest.param(
             {"above": 0.2, "below": 0.1}, "Above must be lower than below", id="empty"
         ),
+        pytest.param({"above": 6}, "value must be at most 5", id="too_high"),
+        pytest.param({"below": -2}, "value must be at least -1", id="too_low"),
     ],
 )
 async def test_trigger_invalid_threshold(

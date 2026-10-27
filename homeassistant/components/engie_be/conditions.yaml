@@ -24,13 +24,13 @@ epex_quarter_hour_price_is_negative:
   fields:
     device_id: *device
 
-epex_hour_price_meets_threshold:
+epex_hour_price_is_in_range:
   fields:
     device_id: *device
     above: *price
     below: *price
 
-epex_quarter_hour_price_meets_threshold:
+epex_quarter_hour_price_is_in_range:
   fields:
     device_id: *device
     above: *price

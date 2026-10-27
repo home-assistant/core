@@ -106,13 +106,13 @@ class EpexQuarterHourPriceIsNegativeCondition(_EpexNegativeCondition):
     _granularity = EpexGranularity.QUARTER_HOURLY
 
 
-class EpexHourPriceMeetsThresholdCondition(_EpexThresholdCondition):
+class EpexHourPriceIsInRangeCondition(_EpexThresholdCondition):
     """Condition that passes while the hourly EPEX price is in a range."""
 
     _granularity = EpexGranularity.HOURLY
 
 
-class EpexQuarterHourPriceMeetsThresholdCondition(_EpexThresholdCondition):
+class EpexQuarterHourPriceIsInRangeCondition(_EpexThresholdCondition):
     """Condition that passes while the quarter-hourly EPEX price is in a range."""
 
     _granularity = EpexGranularity.QUARTER_HOURLY
@@ -120,11 +120,9 @@ class EpexQuarterHourPriceMeetsThresholdCondition(_EpexThresholdCondition):
 
 CONDITIONS: dict[str, type[Condition]] = {
     "epex_hour_price_is_negative": EpexHourPriceIsNegativeCondition,
-    "epex_hour_price_meets_threshold": EpexHourPriceMeetsThresholdCondition,
+    "epex_hour_price_is_in_range": EpexHourPriceIsInRangeCondition,
     "epex_quarter_hour_price_is_negative": EpexQuarterHourPriceIsNegativeCondition,
-    "epex_quarter_hour_price_meets_threshold": (
-        EpexQuarterHourPriceMeetsThresholdCondition
-    ),
+    "epex_quarter_hour_price_is_in_range": (EpexQuarterHourPriceIsInRangeCondition),
 }
 
 

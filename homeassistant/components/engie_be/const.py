@@ -19,3 +19,5 @@ CONTRACTS_RETRY_INTERVAL = timedelta(minutes=5)
 
 PRICES_SCAN_INTERVAL = timedelta(hours=1)
 EPEX_SCAN_INTERVAL = timedelta(hours=1)
+
+ATTR_PRICE = "price"
