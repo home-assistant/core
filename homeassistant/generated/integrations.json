@@ -3499,11 +3499,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
