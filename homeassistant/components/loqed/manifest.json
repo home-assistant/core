@@ -2,6 +2,7 @@
   "domain": "loqed",
   "name": "LOQED Touch Smart Lock",
   "after_dependencies": ["cloud"],
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@mikewoudenberg"],
   "config_flow": true,
   "dependencies": ["webhook"],

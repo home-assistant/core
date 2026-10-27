@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock
 
 from aioamazondevices.structures import AmazonDevice
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

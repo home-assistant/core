@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.nam.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

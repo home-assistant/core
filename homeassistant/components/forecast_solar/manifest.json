@@ -1,6 +1,7 @@
 {
   "domain": "forecast_solar",
   "name": "Forecast.Solar",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@klaasnicolaas", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/forecast_solar",

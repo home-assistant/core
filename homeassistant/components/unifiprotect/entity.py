@@ -48,6 +48,7 @@ from .const import (
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType
+from .migrate import async_is_new_private_only_entity
 from .utils import _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -222,6 +223,11 @@ def _async_device_entities(
                 continue
 
             if not _async_capability_supported(public, device, description):
+                continue
+
+            if async_is_new_private_only_entity(
+                data.hass, device.model, device.mac, description.key
+            ):
                 continue
 
             entities.append(
@@ -548,12 +554,13 @@ class ProtectDeviceEntity(BaseProtectEntity):
         )
 
 
-class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
+class ProtectPublicChannelEntity[ChannelT, ChannelIdT = int](ProtectDeviceEntity):
     """Base for an entity tracking one channel of a public device.
 
-    Alarm hub zones and relay inputs and outputs are channels of their device.
-    The entity goes unavailable while its channel cannot be read, on top of the
-    device's availability.
+    Alarm hub zones, relay inputs and outputs and chime ring settings are
+    channels of their device. The entity goes unavailable while its channel
+    cannot be read, on top of the device's availability. In hybrid the device
+    can be the private one; the channel is read from its public mirror.
     """
 
     _ufp_uses_public = True
@@ -561,9 +568,9 @@ class ProtectPublicChannelEntity[ChannelT](ProtectDeviceEntity):
     def __init__(
         self,
         data: ProtectData,
-        device: PublicDeviceModel,
+        device: ProtectDeviceType,
         description: EntityDescription,
-        channel_id: int,
+        channel_id: ChannelIdT,
     ) -> None:
         """Initialize the channel entity."""
         self._channel_id = channel_id
@@ -765,12 +772,6 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
         return None
-
-    def has_matching_smart(self, event: Event) -> bool:
-        """Determine if the detection type is a match."""
-        return (
-            not (obj_type := self.ufp_obj_type) or obj_type in event.smart_detect_types
-        )
 
     @override
     def __post_init__(self) -> None:

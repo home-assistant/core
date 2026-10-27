@@ -8,7 +8,6 @@ from homeassistant.components.bluetooth import (
     async_address_reachability_diagnostics,
     async_ble_device_from_address,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -28,7 +27,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Set up Eurotronic Comet Blue from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -93,8 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eurotronic Comet Blue integration."""
@@ -102,6 +99,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

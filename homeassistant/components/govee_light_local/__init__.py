@@ -26,7 +26,7 @@ TRANSIENT_BIND_ERRNOS = frozenset(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
     """Set up Govee light local from a config entry."""
 
     listening_addresses = await async_get_listening_addresses(hass)
@@ -84,12 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:

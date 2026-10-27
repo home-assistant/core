@@ -1,6 +1,7 @@
 {
   "domain": "enphase_envoy",
   "name": "Enphase Envoy",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@bdraco", "@cgarwood", "@catsmanac"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",
@@ -8,7 +9,7 @@
   "iot_class": "local_polling",
   "loggers": ["pyenphase"],
   "quality_scale": "platinum",
-  "requirements": ["pyenphase==4.0.6"],
+  "requirements": ["pyenphase==4.4.0"],
   "zeroconf": [
     {
       "type": "_enphase-envoy._tcp.local."

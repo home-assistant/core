@@ -29,6 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, OumanDevice
@@ -97,8 +98,8 @@ class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
     def device_info(self, device: OumanDevice) -> DeviceInfo:
         """Return the device info for a logical device."""
         device_info = self._device_info[device]
-        if device is not OumanDevice.MAIN and "via_device_id" not in device_info:
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+        if device is not OumanDevice.MAIN and device_info.via_device_id is UNDEFINED:
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 self.hass,
                 self._main_device_identifier,
                 config_entry_id=self.config_entry.entry_id,
@@ -166,8 +167,8 @@ class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
             if circuit_name := self.data.values.get(endpoint):
                 assert isinstance(circuit_name, str)
                 device_info = self._device_info[device]
-                device_info["translation_key"] = "heating_circuit_with_name"
-                device_info["translation_placeholders"] = {
+                device_info.translation_key = "heating_circuit_with_name"
+                device_info.translation_placeholders = {
                     "circuit_number": circuit_number,
                     "circuit_name": circuit_name,
                 }

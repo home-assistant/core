@@ -1,4 +1,30 @@
 {
+  "exceptions": {
+    "attachments_not_supported": {
+      "message": "AI Task entity {entity_id} does not support attachments."
+    },
+    "entity_not_found": {
+      "message": "AI Task entity {entity_id} not found."
+    },
+    "evaluate_missing_input": {
+      "message": "Evaluation requires state or attachments."
+    },
+    "evaluate_not_supported": {
+      "message": "AI Task entity {entity_id} does not support evaluation."
+    },
+    "generate_data_not_supported": {
+      "message": "AI Task entity {entity_id} does not support generating data."
+    },
+    "generate_image_not_supported": {
+      "message": "AI Task entity {entity_id} does not support generating images."
+    },
+    "local_attachments_only": {
+      "message": "Only local attachments are currently supported."
+    },
+    "no_entity": {
+      "message": "No entity_id provided and no preferred entity set."
+    }
+  },
   "services": {
     "clear_images": {
       "description": "Deletes AI generated images.",
@@ -9,6 +35,32 @@
         }
       },
       "name": "Clear images"
+    },
+    "evaluate": {
+      "description": "Evaluates questions against supplied state and attachments.",
+      "fields": {
+        "attachments": {
+          "description": "Files to evaluate together with the state. Supported types depend on the selected entity.",
+          "name": "Attachments"
+        },
+        "entity_id": {
+          "description": "Entity to run the task on. If omitted, uses the preferred evaluation entity.",
+          "name": "Entity ID"
+        },
+        "questions": {
+          "description": "Named questions with a type (noul, choice, or score), instructions, and criteria for choice and score questions.",
+          "name": "Questions"
+        },
+        "state": {
+          "description": "Text or JSON data to evaluate. Optional when attachments are supplied.",
+          "name": "State"
+        },
+        "task_name": {
+          "description": "Name of the task.",
+          "name": "Task name"
+        }
+      },
+      "name": "Evaluate"
     },
     "generate_data": {
       "description": "Uses AI to run a task that generates data.",

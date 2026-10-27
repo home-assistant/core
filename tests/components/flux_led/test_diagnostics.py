@@ -1,5 +1,8 @@
 """Test flux_led diagnostics."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -10,9 +13,6 @@ from . import (
     _patch_discovery,
     _patch_wifibulb,
 )
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

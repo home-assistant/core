@@ -65,7 +65,7 @@ async def call_c4_api_retry(func, *func_args):
     ) from exc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Set up Control4 from a config entry."""
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -144,12 +144,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def get_items_of_category(

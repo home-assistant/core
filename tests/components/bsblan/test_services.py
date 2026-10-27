@@ -16,6 +16,7 @@ from bsblan import (
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.bsblan.services import (
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
@@ -694,8 +693,7 @@ async def test_sync_time_service(
     assert mock_bsblan.time.called
 
     # Verify set_time() was called with current HA time
-    current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
-    mock_bsblan.set_time.assert_called_once_with(current_time_str)
+    mock_bsblan.set_time.assert_called_once_with(dt_util.now())
 
 
 async def test_sync_time_service_no_update_when_same(

@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_ALIASES,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
@@ -26,13 +26,10 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_QUERY_RECEIVED,
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
 from .services import async_setup_services
-
-from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
@@ -56,6 +53,12 @@ GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "CONF_ROOM_HINT",
+    "DOMAIN",
+    "SOURCE_CLOUD",
+]
 
 
 def _check_report_state(data):
@@ -104,8 +107,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     hass.data[DATA_CONFIG] = yaml_config[DOMAIN]
 
-    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
-        async_setup_services(hass)
+    async_setup_services(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -118,7 +120,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Set up from a config entry."""
 
     config: ConfigType = hass.data[DATA_CONFIG].copy()
@@ -151,9 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     hass.http.register_view(GoogleAssistantView(google_config))
 
-    if google_config.should_report_state:
-        google_config.async_enable_report_state()
+    google_config.async_update_report_state()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True

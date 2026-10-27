@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.sharkiq import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG, ENTRY_ID, UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_sign_in_failed(hass: HomeAssistant) -> None:

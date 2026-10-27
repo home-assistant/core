@@ -9,6 +9,7 @@ from unittest.mock import patch
 from evohomeasync2 import exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -31,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
@@ -201,7 +200,7 @@ async def test_ctl_invalid_system_mode(
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidSystemModeError("Unsupported mode: xxx"),
+            side_effect=evo_exc.InvalidModeRequestError("Unsupported mode: xxx"),
         ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -215,6 +214,31 @@ async def test_ctl_invalid_system_mode(
         )
 
     assert exc_info.value.translation_key == "invalid_system_mode"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_ctl_authentication_failed(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test an authentication failure is raised, rather than only logged."""
+
+    # AuthenticationFailedError is a subclass of ApiCallFailedError, which is only logged
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=evo_exc.AuthenticationFailedError("Authentication failed"),
+        ),
+        pytest.raises(evo_exc.AuthenticationFailedError),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

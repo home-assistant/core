@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
@@ -16,7 +17,6 @@ from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
