@@ -61,7 +61,6 @@ class TasmotaUpdateEntity(
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_has_entity_name = True
-    _attr_name = "Firmware"
     _attr_title = "Tasmota firmware"
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
