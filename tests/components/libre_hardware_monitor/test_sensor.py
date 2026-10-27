@@ -1035,3 +1035,59 @@ async def test_renamed_sensors_of_identical_devices_keep_their_entity_ids(
         )
         for device_id in device_ids
     } == entity_ids
+
+
+async def test_new_identical_device_does_not_take_replaced_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new sensor can't take the entity id a renamed sensor just freed."""
+    device_name = "Samsung SSD 990 EVO Plus 2TB"
+    initial_data = mock_lhm_client.get_data.return_value.sensor_data
+    old_sensor = _sensor(
+        "nvme-0-level-100", "Available Spare Level", "nvme-0", device_name
+    )
+    _set_sensor_data(
+        mock_lhm_client, {**initial_data, old_sensor.sensor_id: old_sensor}
+    )
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{old_sensor.sensor_id}"
+    )
+    assert entity_id
+
+    # an identical drive is added in the update that renames the sensor
+    #  and LHM reports it first, before the existing drive
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            **initial_data,
+            **{
+                f"{device_id}-level-25": _sensor(
+                    f"{device_id}-level-25",
+                    "Available Spare Level",
+                    device_id,
+                    device_name,
+                )
+                for device_id in ("nvme-1", "nvme-0")
+            },
+        },
+    )
+    await _async_poll(hass, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_nvme-0-level-25"
+        )
+        == entity_id
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_nvme-1-level-25"
+        )
+        == f"{entity_id}_2"
+    )

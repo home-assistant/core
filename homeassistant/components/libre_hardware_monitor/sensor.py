@@ -126,6 +126,7 @@ async def async_setup_entry(
         if new_sensor_ids := [
             sensor_id for sensor_id in sensor_data if sensor_id not in added_sensor_ids
         ]:
+            replaced_entities: list[LibreHardwareMonitorSensor] = []
             new_entities: list[LibreHardwareMonitorSensor] = []
             for sensor_id in new_sensor_ids:
                 _LOGGER.debug("New sensor detected, adding: %s", sensor_id)
@@ -138,9 +139,12 @@ async def async_setup_entry(
                     # Pin entity id as identical devices have same-named sensors,
                     # otherwise they could swap ids depending on report order
                     entity.entity_id = replaced_entity_id
-                new_entities.append(entity)
+                    replaced_entities.append(entity)
+                else:
+                    new_entities.append(entity)
             added_sensor_ids.update(new_sensor_ids)
-            async_add_entities(new_entities)
+            # Add the replacements first, so new sensors don't reserve those entity ids
+            async_add_entities(replaced_entities + new_entities)
 
         # Check if we have a registered entity that is no longer reported by LHM
         registry_entries = {
