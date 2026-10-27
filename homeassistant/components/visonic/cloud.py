@@ -13,7 +13,12 @@ from pyvisonicalarm.alarm import AlarmSystem
 from pyvisonicalarm.classes import Partition
 from pyvisonicalarm.core import API
 from pyvisonicalarm.devices import Device, PanelDevice
-from pyvisonicalarm.exceptions import Error, SessionTokenError, UnauthorizedError
+from pyvisonicalarm.exceptions import (
+    Error,
+    SessionTokenError,
+    UnauthorizedError,
+    UserAuthRequiredError,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -240,12 +245,12 @@ class VisonicCloudConnection(VisonicConnection):
                         elif process_token is not None:
                             acs = await self.wait_for_process_status(process_token)
                         break
-                    except UnauthorizedError, SessionTokenError:
+                    except UnauthorizedError, SessionTokenError, UserAuthRequiredError:
                         if renewed:
                             raise
                         renewed = True
                         await self._async_panel_reconnect()
-            except (UnauthorizedError, SessionTokenError) as err:
+            except (UnauthorizedError, SessionTokenError, UserAuthRequiredError) as err:
                 raise HomeAssistantError(
                     f"Unable to communicate with Visonic panel {self.settings.panel_id}"
                 ) from err
@@ -369,7 +374,7 @@ class VisonicCloudConnection(VisonicConnection):
         try:
             try:
                 return await self._async_read_state_snapshot()
-            except UnauthorizedError, SessionTokenError:
+            except UnauthorizedError, SessionTokenError, UserAuthRequiredError:
                 LOGGER.debug("Visonic session expired, re-authenticating")
                 await self._async_panel_reconnect()
                 return await self._async_read_state_snapshot()

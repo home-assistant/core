@@ -24,6 +24,7 @@ from pyvisonicalarm.exceptions import (
     SessionTokenError,
     UnauthorizedError,
     UndefinedBadRequestError,
+    UserAuthRequiredError,
     WrongUsernameOrPasswordError,
 )
 
@@ -316,6 +317,7 @@ async def test_command_authentication_failure(
     [
         pytest.param(UnauthorizedError(), id="unauthorized"),
         pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
     ],
 )
 async def test_command_renews_session_before_submission(
@@ -358,6 +360,7 @@ async def test_command_renews_session_before_submission(
     [
         pytest.param(UnauthorizedError(), id="unauthorized"),
         pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
     ],
 )
 async def test_command_renews_confirmation_without_resubmission(
@@ -404,6 +407,7 @@ async def test_command_renews_confirmation_without_resubmission(
     [
         pytest.param(UnauthorizedError(), id="unauthorized"),
         pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
     ],
 )
 async def test_command_session_renewal_is_bounded(
@@ -1044,6 +1048,7 @@ async def test_snapshot_stays_disconnected_after_reconnect(
     [
         pytest.param(UnauthorizedError(), id="unauthorized"),
         pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1080,6 +1085,7 @@ async def test_snapshot_reauthenticates_after_expired_session(
     [
         pytest.param(UnauthorizedError(), id="unauthorized"),
         pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
     ],
 )
 async def test_expired_session_preserves_rejected_credentials(
@@ -1101,6 +1107,9 @@ async def test_expired_session_preserves_rejected_credentials(
     ("error", "exception_type"),
     [
         pytest.param(SessionTokenError(), UpdateFailed, id="session-expired-again"),
+        pytest.param(
+            UserAuthRequiredError(), UpdateFailed, id="user-auth-required-again"
+        ),
         pytest.param(
             UnauthorizedError(), VisonicAuthException, id="unauthorized-again"
         ),
