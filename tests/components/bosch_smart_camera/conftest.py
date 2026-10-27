@@ -1,4 +1,4 @@
-"""Fixtures for the Bosch Smart Home Camera tests."""
+"""Fixtures for the Bosch Smart Camera tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -12,7 +12,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.components.bosch_smart_camera.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -47,12 +47,12 @@ def mock_list_cameras() -> Generator[AsyncMock]:
     """Mock the camera list of the library."""
     with (
         patch(
-            "homeassistant.components.bosch_shc_camera.coordinator.list_cameras",
+            "homeassistant.components.bosch_smart_camera.coordinator.list_cameras",
             autospec=True,
             return_value=list(CAMERAS),
         ) as mock,
         patch(
-            "homeassistant.components.bosch_shc_camera.config_flow.list_cameras",
+            "homeassistant.components.bosch_smart_camera.config_flow.list_cameras",
             new=mock,
         ),
     ):

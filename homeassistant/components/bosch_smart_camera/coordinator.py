@@ -1,4 +1,4 @@
-"""Coordinator for the Bosch Smart Home Camera integration."""
+"""Coordinator for the Bosch Smart Camera integration."""
 
 import asyncio
 from collections import defaultdict

@@ -1,4 +1,4 @@
-"""Application credentials platform for Bosch Smart Home Camera."""
+"""Application credentials platform for Bosch Smart Camera."""
 
 import base64
 from typing import override
@@ -47,7 +47,7 @@ class BoschCameraOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     @override
     def name(self) -> str:
         """Name of the implementation, used as the config entry title."""
-        return "Bosch Smart Home Camera"
+        return "Bosch Smart Camera"
 
     @property
     @override

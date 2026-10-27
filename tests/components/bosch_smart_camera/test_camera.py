@@ -1,4 +1,4 @@
-"""Test the Bosch Smart Home Camera setup, coordinator and camera platform."""
+"""Test the Bosch Smart Camera setup, coordinator and camera platform."""
 
 import asyncio
 from collections.abc import Generator
@@ -17,8 +17,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.bosch_shc_camera.const import DOMAIN
-from homeassistant.components.bosch_shc_camera.coordinator import (
+from homeassistant.components.bosch_smart_camera.const import DOMAIN
+from homeassistant.components.bosch_smart_camera.coordinator import (
     SCAN_INTERVAL,
     SNAPSHOT_TTL,
 )
@@ -84,7 +84,7 @@ async def test_unknown_model_uses_hardware_version(
 def mock_latest_image() -> Generator[AsyncMock]:
     """Mock the latest event image of the library."""
     with patch(
-        "homeassistant.components.bosch_shc_camera.coordinator.get_latest_event_image",
+        "homeassistant.components.bosch_smart_camera.coordinator.get_latest_event_image",
         autospec=True,
         return_value=b"jpeg-1",
     ) as mock:
@@ -214,7 +214,7 @@ async def test_camera_image_errors(
     assert mock_latest_image.await_count == 2
 
 
-@patch("homeassistant.components.bosch_shc_camera.coordinator.SNAPSHOT_TTL", 3600)
+@patch("homeassistant.components.bosch_smart_camera.coordinator.SNAPSHOT_TTL", 3600)
 async def test_removed_camera_forgets_its_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

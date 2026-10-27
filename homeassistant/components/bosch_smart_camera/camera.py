@@ -1,4 +1,4 @@
-"""Camera platform for the Bosch Smart Home Camera integration."""
+"""Camera platform for the Bosch Smart Camera integration."""
 
 from typing import override
 

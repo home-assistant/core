@@ -1,4 +1,4 @@
-"""Config flow for Bosch Smart Home Camera."""
+"""Config flow for Bosch Smart Camera."""
 
 import logging
 from typing import Any, override

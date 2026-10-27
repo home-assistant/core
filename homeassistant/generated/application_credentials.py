@@ -6,7 +6,7 @@ To update, run python3 -m script.hassfest
 APPLICATION_CREDENTIALS = [
     "aladdin_connect",
     "august",
-    "bosch_shc_camera",
+    "bosch_smart_camera",
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",

@@ -1,4 +1,4 @@
-"""Test the Bosch Smart Home Camera config flow."""
+"""Test the Bosch Smart Camera config flow."""
 
 import base64
 from http import HTTPStatus
@@ -19,13 +19,13 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
 )
-from homeassistant.components.bosch_shc_camera.application_credentials import (
+from homeassistant.components.bosch_smart_camera.application_credentials import (
     OAUTH2_AUTHORIZE,
     OAUTH2_CLIENT_ID,
     OAUTH2_SCOPES,
     OAUTH2_TOKEN,
 )
-from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.components.bosch_smart_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -95,7 +95,7 @@ async def test_full_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Bosch Smart Home Camera"
+    assert result["title"] == "Bosch Smart Camera"
     assert result["data"]["auth_implementation"] == DOMAIN
     assert result["data"]["token"]["access_token"] == _fake_access_token(
         {"sub": ACCOUNT_ID}

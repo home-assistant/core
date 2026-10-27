@@ -1,4 +1,4 @@
-"""Tests for the Bosch Smart Home Camera integration."""
+"""Tests for the Bosch Smart Camera integration."""
 
 from pytest_homeassistant.common import MockConfigEntry
 
