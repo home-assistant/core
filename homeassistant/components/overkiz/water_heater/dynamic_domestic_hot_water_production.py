@@ -53,6 +53,14 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
             self._attr_operation_list.append(STATE_PERFORMANCE)
 
     @property
+    def _is_on(self) -> bool:
+        """Return true if hot water production is on."""
+        return (
+            self.device.states.get_value(OverkizState.CORE_ON_OFF)
+            == OverkizCommandParam.ON
+        )
+
+    @property
     def _is_boost_on(self) -> bool:
         """Return true if the boost option is activated."""
         return OverkizCommandParam.BOOST in cast(
@@ -64,7 +72,7 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        # The current bounds follow the limits configured on the installation.
+        # Bound attributes are static (0-60); these states hold the real limits.
         if (
             min_temp := self.device.states.get_value(
                 OverkizState.CORE_TARGET_TEMPERATURE_CURRENT_LOWER_BOUND
@@ -131,20 +139,15 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
         commands: list[Command] = []
 
         # Boost can only be activated while hot water production is on.
-        if self.current_operation == STATE_OFF:
+        if not self._is_on:
             commands.append(Command(name=OverkizCommand.ON))
 
-        if operation_mode == STATE_PERFORMANCE and not self._is_boost_on:
+        if (boost := operation_mode == STATE_PERFORMANCE) != self._is_boost_on:
             commands.append(
                 Command(
-                    name=OverkizCommand.ACTIVATE_OPTION,
-                    parameters=[OverkizCommandParam.BOOST],
-                )
-            )
-        elif operation_mode == STATE_ON and self._is_boost_on:
-            commands.append(
-                Command(
-                    name=OverkizCommand.DEACTIVATE_OPTION,
+                    name=OverkizCommand.ACTIVATE_OPTION
+                    if boost
+                    else OverkizCommand.DEACTIVATE_OPTION,
                     parameters=[OverkizCommandParam.BOOST],
                 )
             )

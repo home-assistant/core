@@ -59,6 +59,13 @@ DHW_DYNAMIC = FixtureDevice(
     "water_heater.my_house_domestic_hot_water",
 )
 
+DHW_DYNAMIC_OFF = {"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"}
+DHW_DYNAMIC_BOOST = {
+    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
+    "type": 10,
+    "value": ["boost"],
+}
+
 SNAPSHOT_FIXTURES = [
     DHW_CE_FLAT_C2,
     DHW_DYNAMIC,
@@ -649,29 +656,19 @@ async def test_dynamic_turn_on_off(
     ("device_states", "expected_operation"),
     [
         pytest.param(
-            [{"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"}],
+            [DHW_DYNAMIC_OFF],
             STATE_OFF,
             id="off",
         ),
         pytest.param(
-            [
-                {
-                    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
-                    "type": 10,
-                    "value": ["boost"],
-                }
-            ],
+            [DHW_DYNAMIC_BOOST],
             STATE_PERFORMANCE,
             id="boost",
         ),
         pytest.param(
             [
-                {"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"},
-                {
-                    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
-                    "type": 10,
-                    "value": ["boost"],
-                },
+                DHW_DYNAMIC_OFF,
+                DHW_DYNAMIC_BOOST,
             ],
             STATE_OFF,
             id="off_with_boost",
@@ -710,37 +707,25 @@ async def test_dynamic_current_operation(
             id="performance_from_on",
         ),
         pytest.param(
-            [{"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"}],
+            [DHW_DYNAMIC_OFF],
             STATE_PERFORMANCE,
             [("on", None), ("activateOption", ["boost"])],
             id="performance_from_off",
         ),
         pytest.param(
-            [
-                {
-                    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
-                    "type": 10,
-                    "value": ["boost"],
-                }
-            ],
+            [DHW_DYNAMIC_BOOST],
             STATE_ON,
             [("deactivateOption", ["boost"])],
             id="on_from_boost",
         ),
         pytest.param(
-            [{"name": OverkizState.CORE_ON_OFF, "type": 3, "value": "off"}],
+            [DHW_DYNAMIC_OFF],
             STATE_ON,
             [("on", None)],
             id="on_from_off",
         ),
         pytest.param(
-            [
-                {
-                    "name": OverkizState.CORE_ACTIVATED_OPTIONS,
-                    "type": 10,
-                    "value": ["boost"],
-                }
-            ],
+            [DHW_DYNAMIC_BOOST],
             STATE_OFF,
             [("off", None)],
             id="off_from_boost",
@@ -775,3 +760,39 @@ async def test_dynamic_set_operation_mode(
     assert_commands_call(
         mock_client, device_url=DHW_DYNAMIC.device_url, commands=expected_commands
     )
+
+
+@pytest.mark.parametrize(
+    ("device_states", "operation_mode"),
+    [
+        pytest.param([], STATE_ON, id="on_from_on"),
+        pytest.param(
+            [DHW_DYNAMIC_BOOST], STATE_PERFORMANCE, id="performance_from_boost"
+        ),
+    ],
+)
+async def test_dynamic_set_operation_mode_unchanged(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    operation_mode: str,
+) -> None:
+    """Test selecting the current operation mode sends no execution."""
+    await setup_overkiz_integration(fixture=DHW_DYNAMIC.fixture)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_state_changed_event(DHW_DYNAMIC.device_url, device_states)],
+    )
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_DYNAMIC.entity_id, ATTR_OPERATION_MODE: operation_mode},
+        blocking=True,
+    )
+
+    mock_client.execute_action_group.assert_not_called()
