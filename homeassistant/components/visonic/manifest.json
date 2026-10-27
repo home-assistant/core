@@ -11,7 +11,7 @@
   "loggers": ["pyvisonic", "pyvisonicalarm"],
   "quality_scale": "bronze",
   "requirements": [
-    "serialx==1.15.0",
+    "serialx==1.15.1",
     "pyvisonic==4.1.1",
     "pyvisonicalarm==0.4.1"
   ]

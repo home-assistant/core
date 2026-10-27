@@ -192,11 +192,11 @@ class VisonicCloudConnection(VisonicConnection):
     @override
     def get_panel_pin_code(self, code: str | None) -> tuple[bool, str | None]:
         """Get code code."""
-        if self.cloud_alarm is not None:
-            if not code or (
-                PIN_REGEX.fullmatch(code) and code == self.cloud_alarm.get_user_code()
-            ):
-                return True, self.cloud_alarm.get_user_code()
+        if self.cloud_alarm is not None and (
+            not code
+            or (PIN_REGEX.fullmatch(code) and code == self.cloud_alarm.get_user_code())
+        ):
+            return True, self.cloud_alarm.get_user_code()
         return False, None
 
     @override

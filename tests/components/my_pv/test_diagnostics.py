@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the my-PV integration."""
+"""Test the my-PV diagnostics."""
 
 from unittest.mock import AsyncMock, Mock
 
@@ -13,6 +13,8 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 
 @pytest.mark.usefixtures("mock_my_pv_client")
 async def test_diagnostics(
@@ -22,9 +24,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
@@ -39,9 +39,7 @@ async def test_diagnostics_disconnected(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test diagnostics when the device disconnected after setup."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     # Reading values from a disconnected device raises an error
     mock_my_pv_client.connected = False
