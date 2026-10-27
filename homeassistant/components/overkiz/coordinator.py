@@ -121,9 +121,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
+            # retry_after replaces the update interval rather than extending it.
             raise UpdateFailed(
                 "Too many requests, try again later.",
-                retry_after=RATE_LIMIT_RETRY_AFTER.total_seconds(),
+                retry_after=max(
+                    RATE_LIMIT_RETRY_AFTER, self._default_update_interval
+                ).total_seconds(),
             ) from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
