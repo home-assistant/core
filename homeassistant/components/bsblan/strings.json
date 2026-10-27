@@ -153,6 +153,9 @@
     "set_heating_schedule_failed": {
       "message": "Failed to set heating schedule: {error}"
     },
+    "set_hot_water_temperature_when_off": {
+      "message": "The target temperature cannot be changed while the water heater is off."
+    },
     "set_operation_mode_error": {
       "message": "An error occurred while setting the operation mode"
     },

@@ -649,6 +649,61 @@ async def test_set_temperature_rejects_setpoint_order(
     mock_bsblan.set_hot_water.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "temperature",
+    [
+        pytest.param(5.1, id="target"),
+        pytest.param(50, id="nominal"),
+        pytest.param(35, id="reduced"),
+    ],
+)
+async def test_set_temperature_when_off_keeps_known_setpoint(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Test a scene replaying a known setpoint while off writes nothing."""
+    mock_bsblan.hot_water_state.return_value.operating_mode = MagicMock(value=0)
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(value=5.0)
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_not_called()
+
+
+async def test_set_temperature_when_off_rejected(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a new target temperature is refused while the water heater is off."""
+    mock_bsblan.hot_water_state.return_value.operating_mode = MagicMock(value=0)
+    mock_bsblan.hot_water_state.return_value.dhw_current_setpoint = MagicMock(value=5.0)
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_SET_TEMPERATURE,
+            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 45},
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "set_hot_water_temperature_when_off"
+    mock_bsblan.set_hot_water.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_dhw_config_none")
 async def test_set_temperature_without_dhw_config(
     hass: HomeAssistant,
