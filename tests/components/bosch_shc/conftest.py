@@ -784,16 +784,19 @@ class FakeLatestMotionService:
     def __init__(self) -> None:
         """Initialize the fake service's callback registry."""
         self._event_callbacks: dict[str, Any] = {}
+        self.callbacks: dict[Any, Any] = {}
 
     def register_event(self, event: str, callback: Any) -> None:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
-        """No-op: SHCEntity subscribes to every device service's generic callback."""
+        """Record the generic callback SHCEntity subscribes per service."""
+        self.callbacks[entity] = callback
 
     def unsubscribe_callback(self, entity: Any) -> None:
-        """No-op counterpart to subscribe_callback."""
+        """Drop the recorded callback."""
+        self.callbacks.pop(entity, None)
 
 
 class FakeAlarmService:

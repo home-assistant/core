@@ -271,9 +271,11 @@ async def test_motion_detector2_temperature_push_update(
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
 
-    callback = _MD2_PUSH_DEVICE.subscribe_callback.call_args.args[1]
+    service_callback = next(
+        iter(_MD2_PUSH_DEVICE.device_services[0].callbacks.values())
+    )
     _MD2_PUSH_DEVICE.temperature = 19.0
-    await hass.async_add_executor_job(callback)
+    await hass.async_add_executor_job(service_callback)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
