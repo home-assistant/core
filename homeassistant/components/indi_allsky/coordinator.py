@@ -334,6 +334,16 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 sensor.temp_unit if has_declared_temp_unit else old_temp_unit
             )
 
+            if new_temp_unit != old_temp_unit:
+                for key, val in sensor.sensors.items():
+                    entry = merged_sensors.get(key)
+                    if (
+                        isinstance(entry, dict)
+                        and entry.get("unit") in ("°C", "°F", "K")
+                        and (not isinstance(val, dict) or "unit" not in val)
+                    ):
+                        merged_sensors[key] = {**entry, "unit": new_temp_unit}
+
             def _retain_temp(
                 new_val: float | None, old_val: float | None
             ) -> float | None:
