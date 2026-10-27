@@ -339,6 +339,7 @@ async def test_cloud_service_reuses_configured_code(
         await hass.async_block_till_done()
         cloud = cast(VisonicCloudConnection, entry.runtime_data.coordinator.connection)
         cloud.cloud_alarm = cloud_alarm
+        cloud.login_success = True
         assert cloud.settings.code == "1234"
         state = hass.states.get("alarm_control_panel.visonic_alarm_p3")
         assert state is not None
@@ -427,6 +428,7 @@ async def test_cloud_reconfigure_uses_normal_arming(
         cloud_alarm = MagicMock(spec=AlarmSystem)
         cloud_alarm.get_user_code.return_value = "1234"
         cloud.cloud_alarm = cloud_alarm
+        cloud.login_success = True
         cloud_command = getattr(cloud_alarm, command)
         cloud_command.return_value = "process-token"
         state = hass.states.get("alarm_control_panel.visonic_alarm_p3")

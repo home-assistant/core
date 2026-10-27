@@ -217,52 +217,51 @@ class VisonicCloudConnection(VisonicConnection):
         self, command: AlarmPanelCommand, code: str | None
     ) -> CommandResult:
         """Renew an expired session once without replaying an accepted command."""
-        is_valid, _ = self.get_panel_pin_code(code=code)
-        if not is_valid:
-            return CommandResult(
-                AlarmCommandStatus.FAIL_INVALID_CODE,
-            )
-
         acs = AlarmCommandStatus.FAIL_INVALID_RETURN
-        if self.cloud_alarm is not None:
-            submitted = False
-            renewed = False
-            process_token = None
-            user_settings_allowed = True
-            LOGGER.debug("Sending panel command %s", str(command.name))
-            try:
-                while True:
-                    try:
-                        if not submitted:
-                            (
-                                user_settings_allowed,
-                                process_token,
-                            ) = await self._async_submit_command(command)
-                            submitted = True
-                        if not user_settings_allowed:
-                            acs = AlarmCommandStatus.FAIL_USER_CONFIG_PREVENTED
-                        elif process_token is not None:
-                            acs = await self.wait_for_process_status(process_token)
-                        break
-                    except UnauthorizedError, SessionTokenError, UserAuthRequiredError:
-                        if renewed:
-                            raise
-                        renewed = True
-                        await self._async_panel_reconnect()
-            except (UnauthorizedError, SessionTokenError, UserAuthRequiredError) as err:
-                raise HomeAssistantError(
-                    f"Unable to communicate with Visonic panel {self.settings.panel_id}"
-                ) from err
-            except CLOUD_AUTH_ERRORS as ex:
-                raise VisonicAuthException(
-                    "Cloud Authentication Error - panel connection failure"
-                ) from ex
-            except VisonicAuthException:
-                raise
-            except (Error, VisonicException) as err:
-                raise HomeAssistantError(
-                    f"Unable to communicate with Visonic panel {self.settings.panel_id}"
-                ) from err
+        submitted = False
+        renewed = False
+        process_token = None
+        user_settings_allowed = True
+        LOGGER.debug("Sending panel command %s", str(command.name))
+        try:
+            if self.cloud_alarm is None or not self.login_success:
+                renewed = True
+                await self._async_panel_reconnect()
+            is_valid, _ = self.get_panel_pin_code(code=code)
+            if not is_valid:
+                return CommandResult(AlarmCommandStatus.FAIL_INVALID_CODE)
+            while True:
+                try:
+                    if not submitted:
+                        (
+                            user_settings_allowed,
+                            process_token,
+                        ) = await self._async_submit_command(command)
+                        submitted = True
+                    if not user_settings_allowed:
+                        acs = AlarmCommandStatus.FAIL_USER_CONFIG_PREVENTED
+                    elif process_token is not None:
+                        acs = await self.wait_for_process_status(process_token)
+                    break
+                except UnauthorizedError, SessionTokenError, UserAuthRequiredError:
+                    if renewed:
+                        raise
+                    renewed = True
+                    await self._async_panel_reconnect()
+        except (UnauthorizedError, SessionTokenError, UserAuthRequiredError) as err:
+            raise HomeAssistantError(
+                f"Unable to communicate with Visonic panel {self.settings.panel_id}"
+            ) from err
+        except CLOUD_AUTH_ERRORS as ex:
+            raise VisonicAuthException(
+                "Cloud Authentication Error - panel connection failure"
+            ) from ex
+        except VisonicAuthException:
+            raise
+        except (Error, VisonicException) as err:
+            raise HomeAssistantError(
+                f"Unable to communicate with Visonic panel {self.settings.panel_id}"
+            ) from err
 
         # schedule an update in 5 seconds time (if nothing else changes in between)
         self.callbacks.state_changed(5.0)

@@ -104,7 +104,9 @@ STATUS_DATA = {
 
 
 @pytest.fixture
-async def cloud(hass: HomeAssistant) -> AsyncGenerator[VisonicCloudConnection]:
+async def cloud(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> AsyncGenerator[VisonicCloudConnection]:
     """Create a cloud helper with settings and event callbacks only."""
     settings = VisonicCloudSettings(
         hostname="",
@@ -129,8 +131,9 @@ async def cloud(hass: HomeAssistant) -> AsyncGenerator[VisonicCloudConnection]:
         callbacks,
         async_get_clientsession(hass),
     )
-    connection.cloud_alarm = connected_cloud_alarm()
-    connection.login_success = True
+    state = getattr(request, "param", "connected")
+    connection.cloud_alarm = None if state == "missing" else connected_cloud_alarm()
+    connection.login_success = state == "connected"
     yield connection
     await connection.async_panel_stop()
 
@@ -1330,16 +1333,142 @@ async def test_command_denied_by_remote_options(
     assert result.status is AlarmCommandStatus.FAIL_USER_CONFIG_PREVENTED
 
 
-async def test_command_without_cloud_session(
+@pytest.mark.parametrize("cloud", ["missing", "logged-out"], indirect=True)
+@pytest.mark.parametrize("code", [None, "1234"])
+@pytest.mark.parametrize(
+    ("command", "method"),
+    [
+        pytest.param(AlarmPanelCommand.ARM_AWAY, "arm_away", id="arm"),
+        pytest.param(AlarmPanelCommand.DISARM, "disarm", id="disarm"),
+    ],
+)
+async def test_command_restores_session_before_pin_validation(
     cloud: VisonicCloudConnection,
+    code: str | None,
+    command: AlarmPanelCommand,
+    method: str,
 ) -> None:
-    """Return the default failure when a command has no cloud session."""
-    cloud.cloud_alarm = None
-    cloud.get_panel_pin_code = MagicMock(return_value=(True, "1234"))
+    """A later command reconnects even when background polling is disabled."""
+    replacement = connected_cloud_alarm()
+    getattr(replacement, method).return_value = "accepted-token"
+    replacement.get_process_status.return_value = [Process({"status": "succeeded"})]
 
-    result = await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+    async def connect() -> bool:
+        assert cloud._session_lock.locked()
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
 
-    assert result.status is AlarmCommandStatus.FAIL_INVALID_RETURN
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+    ):
+        result = await cloud.send_command(command, code)
+
+    assert result.status is AlarmCommandStatus.SUCCESS
+    login.assert_awaited_once_with()
+    getattr(replacement, method).assert_awaited_once_with()
+    replacement.get_process_status.assert_awaited_once_with("accepted-token")
+
+
+@pytest.mark.parametrize("cloud", ["missing", "logged-out"], indirect=True)
+@pytest.mark.parametrize("code", ["9999", "1234\n"])
+async def test_command_rejects_invalid_pin_after_session_restore(
+    cloud: VisonicCloudConnection, code: str
+) -> None:
+    """Restoring a session cannot bypass command PIN validation."""
+    replacement = connected_cloud_alarm()
+
+    async def connect() -> bool:
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with patch.object(cloud, "_async_panel_connect", side_effect=connect) as login:
+        result = await cloud.send_command(AlarmPanelCommand.ARM_AWAY, code)
+
+    assert result.status is AlarmCommandStatus.FAIL_INVALID_CODE
+    login.assert_awaited_once_with()
+    replacement.arm_away.assert_not_awaited()
+
+
+@pytest.mark.parametrize("cloud", ["missing", "logged-out"], indirect=True)
+@pytest.mark.parametrize(
+    ("error", "expected_type"),
+    [
+        pytest.param(
+            WrongUsernameOrPasswordError(), VisonicAuthException, id="credentials"
+        ),
+        pytest.param(InvalidUserCodeError(), VisonicAuthException, id="panel-code"),
+        pytest.param(
+            ConnectionTimeoutError(), HomeAssistantError, id="library-timeout"
+        ),
+        pytest.param(TimeoutError(), HomeAssistantError, id="timeout"),
+        pytest.param(OSError(), HomeAssistantError, id="connection"),
+    ],
+)
+async def test_command_session_restore_failure(
+    cloud: VisonicCloudConnection,
+    error: Exception,
+    expected_type: type[HomeAssistantError],
+) -> None:
+    """Initial session recovery preserves authentication and communication errors."""
+    with (
+        patch.object(cloud, "authenticate", side_effect=error) as authenticate,
+        pytest.raises(expected_type) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert type(raised.value) is expected_type
+    authenticate.assert_awaited_once_with()
+    assert cloud.cloud_alarm is None
+    assert not cloud.login_success
+
+
+@pytest.mark.parametrize("cloud", ["missing", "logged-out"], indirect=True)
+@pytest.mark.parametrize(
+    ("method", "confirmation_calls"),
+    [
+        pytest.param("arm_away", 0, id="submission"),
+        pytest.param("get_process_status", 1, id="confirmation"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(UnauthorizedError(), id="unauthorized"),
+        pytest.param(SessionTokenError(), id="session-token"),
+        pytest.param(UserAuthRequiredError(), id="user-auth-required"),
+    ],
+)
+async def test_command_initial_reconnect_uses_renewal_limit(
+    cloud: VisonicCloudConnection,
+    method: str,
+    confirmation_calls: int,
+    error: Error,
+) -> None:
+    """A fresh session rejected during submission or confirmation cannot renew again."""
+    replacement = connected_cloud_alarm()
+    replacement.arm_away.return_value = "accepted-token"
+    getattr(replacement, method).side_effect = error
+
+    async def connect() -> bool:
+        cloud.cloud_alarm = replacement
+        cloud.login_success = True
+        return True
+
+    with (
+        patch.object(cloud, "_async_panel_connect", side_effect=connect) as login,
+        patch("homeassistant.components.visonic.cloud.asyncio.sleep"),
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+
+    assert type(raised.value) is HomeAssistantError
+    login.assert_awaited_once_with()
+    replacement.arm_away.assert_awaited_once_with()
+    assert replacement.get_process_status.await_count == confirmation_calls
+    cloud.callbacks.state_changed.assert_not_called()
 
 
 async def test_command_without_process_token(
@@ -1567,7 +1696,8 @@ async def test_send_command_arm_away_success(
     coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
 
     coordinator.get_panel_pin_code = MagicMock(return_value=(True, "1234"))
-    coordinator.cloud_alarm = MagicMock()
+    coordinator.cloud_alarm = connected_cloud_alarm()
+    coordinator.login_success = True
     coordinator.cloud_alarm.arm_away = AsyncMock(return_value="token")
     coordinator.wait_for_process_status = AsyncMock(
         return_value=AlarmCommandStatus.SUCCESS
@@ -1598,7 +1728,8 @@ async def test_send_command_disarm_success(
     coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
 
     coordinator.get_panel_pin_code = MagicMock(return_value=(True, "1234"))
-    coordinator.cloud_alarm = MagicMock()
+    coordinator.cloud_alarm = connected_cloud_alarm()
+    coordinator.login_success = True
     coordinator.cloud_alarm.disarm = AsyncMock(return_value="token")
     coordinator.wait_for_process_status = AsyncMock(
         return_value=AlarmCommandStatus.SUCCESS
@@ -1627,7 +1758,8 @@ async def test_send_command_remote_arm_disabled(
     coordinator: VisonicCloudConnection = entry.runtime_data.coordinator.connection
 
     coordinator.get_panel_pin_code = MagicMock(return_value=(True, "1234"))
-    coordinator.cloud_alarm = MagicMock()
+    coordinator.cloud_alarm = connected_cloud_alarm()
+    coordinator.login_success = True
     coordinator.callbacks.state_changed = MagicMock()
 
     result = await coordinator.send_command(
@@ -1668,7 +1800,8 @@ async def test_send_commands_success(
 
     coordinator.get_panel_pin_code = MagicMock(return_value=(True, "1234"))
 
-    coordinator.cloud_alarm = MagicMock()
+    coordinator.cloud_alarm = connected_cloud_alarm()
+    coordinator.login_success = True
     panel_command = AsyncMock(return_value="token")
     setattr(coordinator.cloud_alarm, method, panel_command)
 
