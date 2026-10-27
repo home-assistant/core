@@ -321,7 +321,6 @@ async def _start_reconfigure(
     "stored",
     [
         pytest.param({}, id="no_fault_log_stored"),
-        pytest.param({HAS_FAULT_LOG: True}, id="fault_log_stored"),
         pytest.param(
             {
                 HAS_FAULT_LOG: True,

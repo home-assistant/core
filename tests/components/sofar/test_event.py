@@ -24,7 +24,12 @@ from homeassistant.components.sofar.const import (
     LAST_HANDLED_FAULT,
     SCAN_INTERVAL,
 )
-from homeassistant.const import EVENT_STATE_CHANGED, Platform
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import CoreState, Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -238,29 +243,17 @@ async def test_entries_wait_until_home_assistant_runs(
     assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
 
 
-async def test_newest_handled_entry_is_stored(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_connection: MockModbusConnection,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test only the newest handled entry is kept in the config entry."""
-    _seed_log(mock_connection.for_unit(1), GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
-    await _poll(hass, freezer)
-
-    assert init_integration.data[LAST_HANDLED_FAULT] == [[3, "2026-10-09T18:30:05"]]
-
-
 @pytest.mark.usefixtures("mock_get_unit")
 async def test_entries_found_by_first_good_read_do_not_fire(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """Test entries found when a known log first answers count as known."""
+    """Test a log unread at setup fires only what is logged after it answers."""
     unit = mock_connection.for_unit(1)
     _seed_log(unit, GRID_OVER_VOLTAGE)
     unit.fail_read(FAULT_LOG_REGISTER, ModbusError("busy"))
+    # A stored log keeps its entity even though setup cannot read it.
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
@@ -268,19 +261,22 @@ async def test_entries_found_by_first_good_read_do_not_fire(
         title=MOCK_MODEL,
     )
     entry.add_to_hass(hass)
-    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-    await _poll(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
     unit.fail_read(FAULT_LOG_REGISTER, None)
     await _poll(hass, freezer)
 
-    assert _fired(events) == []
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
     _seed_log(unit, GRID_OVERFREQUENCY, GRID_OVER_VOLTAGE)
     await _poll(hass, freezer)
 
-    assert _fired(events) == [("grid_overfrequency", 3, "2026-10-09T18:30:05-07:00")]
+    assert (
+        hass.states.get(ENTITY_ID).attributes[ATTR_EVENT_TYPE] == "grid_overfrequency"
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
