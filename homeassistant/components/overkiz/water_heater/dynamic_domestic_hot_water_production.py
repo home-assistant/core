@@ -72,7 +72,6 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        # Bound attributes are static (0-60); these states hold the real limits.
         if (
             min_temp := self.device.states.get_value(
                 OverkizState.CORE_TARGET_TEMPERATURE_CURRENT_LOWER_BOUND
