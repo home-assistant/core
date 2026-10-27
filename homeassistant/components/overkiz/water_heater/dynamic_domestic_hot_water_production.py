@@ -113,14 +113,13 @@ class DynamicDomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     @override
     def current_operation(self) -> str | None:
         """Return current operation."""
-        on_off = self.device.states.get_value(OverkizState.CORE_ON_OFF)
-        if on_off is None:
-            return None
-        if on_off == OverkizCommandParam.OFF:
-            return STATE_OFF
-        if self._is_boost_on:
-            return STATE_PERFORMANCE
-        return STATE_ON
+        match self.device.states.get_value(OverkizState.CORE_ON_OFF):
+            case OverkizCommandParam.OFF:
+                return STATE_OFF
+            case OverkizCommandParam.ON:
+                return STATE_PERFORMANCE if self._is_boost_on else STATE_ON
+            case _:
+                return None
 
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
