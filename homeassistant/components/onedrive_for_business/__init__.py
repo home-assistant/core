@@ -153,7 +153,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             )
         if entry.unique_id != drive_id:
             async_get_manager(hass).async_rename_agent(
-                f"{DOMAIN}.{entry.unique_id}", f"{DOMAIN}.{drive_id}"
+                f"{DOMAIN}.{entry.unique_id}",
+                f"{DOMAIN}.{drive_id}",
+                # No other config entry has the drive ID, checked above
+                overwrite_orphaned_settings=True,
             )
         hass.config_entries.async_update_entry(
             entry, unique_id=drive_id, minor_version=2
