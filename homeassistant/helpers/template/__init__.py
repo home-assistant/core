@@ -838,9 +838,19 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
-def _dict(*args: Any, **kwargs: Any) -> dict[Any, Any]:
-    """Build a dict without giving templates the dict type."""
-    return dict(*args, **kwargs)
+class _TemplateDict:
+    """The dict global of templates, without the methods that change a dict."""
+
+    copy = staticmethod(dict.copy)
+    fromkeys = staticmethod(dict.fromkeys)
+    get = staticmethod(dict.get)
+    items = staticmethod(dict.items)
+    keys = staticmethod(dict.keys)
+    values = staticmethod(dict.values)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> dict[Any, Any]:
+        """Build a dict."""
+        return dict(*args, **kwargs)
 
 
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
@@ -868,7 +878,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         )
         # The dict type would also give templates its unbound methods, such as
         # dict.update, which change the dict passed to them.
-        self.globals["dict"] = _dict
+        self.globals["dict"] = _TemplateDict()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension(AreaExtension)

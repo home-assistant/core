@@ -3,6 +3,7 @@
 from datetime import datetime
 from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -561,13 +562,33 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
     ],
 )
 def test_dict_methods_not_available(hass: HomeAssistant, template_str: str) -> None:
-    """Test the methods of the dict type are not available to templates."""
+    """Test the methods of the dict type that change a dict are not available."""
     hass.states.async_set("sensor.test", "on", {"a": 1})
 
     with pytest.raises(TemplateError):
         template.Template(template_str, hass).async_render()
 
     assert hass.states.get("sensor.test").attributes == {"a": 1}
+
+
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        ("{{ dict.copy(states.sensor.test.attributes) }}", {"a": 1}),
+        ("{{ dict.fromkeys(['a', 'b'], 0) }}", {"a": 0, "b": 0}),
+        ("{{ dict.get(states.sensor.test.attributes, 'a') }}", 1),
+        ("{{ dict.items(states.sensor.test.attributes) | list }}", [("a", 1)]),
+        ("{{ dict.keys(states.sensor.test.attributes) | list }}", ["a"]),
+        ("{{ dict.values(states.sensor.test.attributes) | list }}", [1]),
+    ],
+)
+def test_dict_reading_methods(
+    hass: HomeAssistant, template_str: str, expected: Any
+) -> None:
+    """Test the methods of the dict type that read a dict are available."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    assert template.Template(template_str, hass).async_render() == expected
 
 
 def test_dict_function(hass: HomeAssistant) -> None:
