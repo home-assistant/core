@@ -121,5 +121,11 @@
     "unload_failed": {
       "message": "Failed to unload the device"
     }
+  },
+  "services": {
+    "list_commands": {
+      "description": "Lists the names of the devices and commands learned by a remote. This doesn't send anything and doesn't return the IR or RF codes.",
+      "name": "List commands"
+    }
   }
 }
