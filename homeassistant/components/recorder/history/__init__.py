@@ -1,8 +1,10 @@
 """Provide pre-made queries on top of the recorder component."""
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
+from functools import partial
 from itertools import groupby
+import logging
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, cast
 
@@ -18,7 +20,9 @@ from sqlalchemy import (
     select,
     union_all,
 )
+from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
@@ -41,13 +45,15 @@ from ..models import (
     extract_metadata_ids,
     row_to_compressed_state,
 )
-from ..util import execute_stmt_lambda_element
+from ..util import _rollback_read_only_session, execute_stmt_lambda_element
 from .const import (
     LAST_CHANGED_KEY,
     NEED_ATTRIBUTE_DOMAINS,
     SIGNIFICANT_DOMAINS,
     STATE_KEY,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 # These are the APIs of this package
 __all__ = [
@@ -292,22 +298,24 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    rows: list[Row] = []
     if TYPE_CHECKING:
         assert instance.database_engine is not None
     slow_dependent_subquery = instance.database_engine.optimizer.slow_dependent_subquery
-    if include_start_time_state and slow_dependent_subquery:
-        # https://github.com/home-assistant/core/issues/137178
-        # If we include the start time state we need to limit the
-        # number of metadata_ids we query for at a time to avoid
-        # hitting limits in the MySQL optimizer that prevent
-        # the start time state query from using an index-only optimization
-        # to find the start time state.
-        iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY)
-    else:
-        iter_metadata_ids = (metadata_ids,)
-    for metadata_ids_chunk in iter_metadata_ids:
-        stmt = _generate_significant_states_with_session_stmt(
+    to_dict = partial(
+        _sorted_states_to_dict,
+        start_time_ts=start_time_ts if include_start_time_state else None,
+        entity_ids=entity_ids,
+        entity_id_to_metadata_id=entity_id_to_metadata_id,
+        minimal_response=minimal_response,
+        compressed_state_format=compressed_state_format,
+        no_attributes=no_attributes,
+        field_indices=_row_field_indices(
+            no_attributes, not significant_changes_only, False
+        ),
+    )
+
+    def _stmt(metadata_ids_chunk: list[int]) -> StatementLambdaElement:
+        return _generate_significant_states_with_session_stmt(
             start_time_ts,
             end_time_ts,
             single_metadata_id,
@@ -319,29 +327,53 @@ def get_significant_states_with_session(
             oldest_ts,
             slow_dependent_subquery,
         )
-        row_chunk = cast(
+
+    if not (include_start_time_state and slow_dependent_subquery):
+        return _streamed_states_to_dict(session, _stmt(metadata_ids), to_dict)
+    # https://github.com/home-assistant/core/issues/137178
+    # If we include the start time state we need to limit the
+    # number of metadata_ids we query for at a time to avoid
+    # hitting limits in the MySQL optimizer that prevent
+    # the start time state query from using an index-only optimization
+    # to find the start time state.
+    rows: list[Row] = []
+    for metadata_ids_chunk in chunked_or_all(
+        metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY
+    ):
+        rows += cast(
             list[Row],
-            execute_stmt_lambda_element(session, stmt, orm_rows=False),
+            execute_stmt_lambda_element(
+                session, _stmt(metadata_ids_chunk), orm_rows=False
+            ),
         )
-        if rows:
-            rows += row_chunk
-        else:
-            # If we have no rows yet, we can just assign the chunk
-            # as this is the common case since its rare that
-            # we exceed the MAX_IDS_FOR_INDEXED_GROUP_BY limit
-            rows = row_chunk
-    return _sorted_states_to_dict(
-        rows,
-        start_time_ts if include_start_time_state else None,
-        entity_ids,
-        entity_id_to_metadata_id,
-        minimal_response,
-        compressed_state_format,
-        no_attributes=no_attributes,
-        field_indices=_row_field_indices(
-            no_attributes, not significant_changes_only, False
-        ),
+    return to_dict(rows)
+
+
+def _streamed_states_to_dict[_T](
+    session: Session,
+    stmt: StatementLambdaElement,
+    to_dict: Callable[[Iterable[Row]], _T],
+) -> _T:
+    """Convert the rows of a statement while they are read from the database.
+
+    Rows are not kept in a list, so they are freed as soon as they are converted.
+    """
+    rows = cast(
+        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
     )
+    try:
+        return to_dict(rows)
+    except SQLAlchemyError as err:
+        # Streamed rows are read outside the retry loop of
+        # execute_stmt_lambda_element, fall back to reading all rows at once
+        _LOGGER.error("Error reading states, retrying: %s", err)
+        _rollback_read_only_session(session)
+        return to_dict(
+            cast(
+                Sequence[Row],
+                execute_stmt_lambda_element(session, stmt, orm_rows=False),
+            )
+        )
 
 
 def _generate_significant_states_with_session_stmt(
@@ -533,14 +565,18 @@ def state_changes_during_period(
         )
         return cast(
             dict[str, list[State]],
-            _sorted_states_to_dict(
-                execute_stmt_lambda_element(session, stmt, orm_rows=False),
-                start_time_ts if include_start_time_state else None,
-                entity_ids,
-                entity_id_to_metadata_id,
-                descending=descending,
-                no_attributes=no_attributes,
-                field_indices=_row_field_indices(no_attributes, False, True),
+            _streamed_states_to_dict(
+                session,
+                stmt,
+                partial(
+                    _sorted_states_to_dict,
+                    start_time_ts=start_time_ts if include_start_time_state else None,
+                    entity_ids=entity_ids,
+                    entity_id_to_metadata_id=entity_id_to_metadata_id,
+                    descending=descending,
+                    no_attributes=no_attributes,
+                    field_indices=_row_field_indices(no_attributes, False, True),
+                ),
             ),
         )
 
