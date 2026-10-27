@@ -260,8 +260,11 @@ async def test_subentry_flow_target(hass: HomeAssistant) -> None:
     assert result["unique_id"] == TARGET
 
 
-async def test_subentry_flow_invalid_target(hass: HomeAssistant) -> None:
-    """Test a non-numeric target ID is rejected before contacting Discord."""
+@pytest.mark.parametrize("invalid_id", ["not-a-number", "²"])
+async def test_subentry_flow_invalid_target(
+    hass: HomeAssistant, invalid_id: str
+) -> None:
+    """Test a non-decimal target ID is rejected before contacting Discord."""
     entry = create_entry(hass)
 
     result = await hass.config_entries.subentries.async_init(
@@ -270,7 +273,7 @@ async def test_subentry_flow_invalid_target(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TARGET_ID: "not-a-number"},
+        user_input={CONF_TARGET_ID: invalid_id},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_target"}

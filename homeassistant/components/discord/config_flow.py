@@ -123,7 +123,8 @@ class TargetSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             target_id = user_input[CONF_TARGET_ID]
-            if not target_id.isdigit():
+            # isdecimal (not isdigit) rejects superscripts like "²" that int() can't parse.
+            if not target_id.isdecimal():
                 errors["base"] = "invalid_target"
             elif any(
                 subentry.unique_id == target_id
