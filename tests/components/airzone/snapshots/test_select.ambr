@@ -897,7 +897,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_1:2')]>,
     'disabled_by': None,
