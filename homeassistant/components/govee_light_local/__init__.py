@@ -43,6 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     )
 
     async def await_cleanup() -> None:
+        # Wait for a running rebind, so cleanup() does not race a bind in flight.
+        await coordinator.async_wait_rebind()
         cleanup_complete_event = coordinator.cleanup()
         with suppress(TimeoutError):
             await asyncio.wait_for(cleanup_complete_event.wait(), 1)

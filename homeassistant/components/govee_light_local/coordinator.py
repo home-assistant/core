@@ -76,6 +76,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             update_enabled=False,
         )
+        self._rebind_lock = asyncio.Lock()
 
     async def start(self) -> None:
         """Start the Govee coordinator."""
@@ -133,11 +134,17 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
     async def async_rebind_failed_addresses(self, _now: datetime) -> None:
         """Retry the addresses that did not bind."""
-        # Losing every endpoint is handled by the update, which reloads the entry.
-        if not self._controller.bind_failures or not self._controller.protocols:
-            return
-        if await self._controller.rebind_failed():
-            log_bound_addresses(self._controller)
+        async with self._rebind_lock:
+            # Losing every endpoint is handled by the update, which reloads the entry.
+            if not self._controller.bind_failures or not self._controller.protocols:
+                return
+            if await self._controller.rebind_failed():
+                log_bound_addresses(self._controller)
+
+    async def async_wait_rebind(self) -> None:
+        """Wait for an in-flight rebind to finish."""
+        async with self._rebind_lock:
+            pass
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:

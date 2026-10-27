@@ -1,5 +1,6 @@
 """Test Govee light local."""
 
+import asyncio
 from errno import EACCES, EADDRINUSE, EADDRNOTAVAIL, EAFNOSUPPORT, ENETDOWN
 from ipaddress import IPv4Network
 import logging
@@ -882,6 +883,52 @@ async def test_full_bind_is_never_retried(
     await hass.async_block_till_done()
 
     mock_govee_api.rebind_failed.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_unload_waits_for_in_flight_rebind(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading lets a running rebind finish before the controller is cleaned up."""
+
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+    events: list[str] = []
+    rebind_started = asyncio.Event()
+    rebind_unblocked = asyncio.Event()
+
+    async def rebind_failed() -> list[str]:
+        rebind_started.set()
+        await rebind_unblocked.wait()
+        events.append("rebind_done")
+        return []
+
+    mock_govee_api.rebind_failed.side_effect = rebind_failed
+    mock_govee_api.cleanup.side_effect = lambda: (
+        events.append("cleanup") or mock_govee_api.cleanup.return_value
+    )
+
+    _entry, _ = await setup_light(hass, mock_govee_api)
+
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await rebind_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(_entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    # Unload is waiting on the rebind, so the controller is still untouched.
+    assert events == []
+
+    rebind_unblocked.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert events == ["rebind_done", "cleanup"]
 
 
 @pytest.mark.parametrize(
