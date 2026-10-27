@@ -25,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
         await coordinator.async_refresh()
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # When already started, async_at_started would run the forward in a task
+    # that setup doesn't await, which isn't allowed
     if hass.state is CoreState.running:
         await _async_finish_startup(hass)
     else:
