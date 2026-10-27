@@ -817,6 +817,29 @@ async def test_restore_scene_in_off(
     mock_bsblan.thermostat.assert_not_called()
 
 
+async def test_restore_scene_in_off_after_protection_change(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an off scene accepts a protection setpoint changed after startup."""
+    mock_bsblan.state.return_value = _circuit_state(0, "20.0")
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    mock_bsblan.static_values.return_value = StaticState.model_validate(
+        {"heating_protective_setpoint": _temp_param("10.0")}
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    await async_reproduce_state(
+        hass, [HassState(ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 10.0})]
+    )
+
+    mock_bsblan.thermostat.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_reduced_setpoint")
 async def test_restore_scene_in_permanent_reduced(
     hass: HomeAssistant,

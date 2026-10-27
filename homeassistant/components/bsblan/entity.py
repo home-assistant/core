@@ -126,6 +126,13 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
             return None
         return first_temperature(config.temp_reduced_setpoint)
 
+    @property
+    def _protection_setpoint(self) -> float | None:
+        """Return the protection setpoint."""
+        if (config := self._circuit_config) is None:
+            return None
+        return first_temperature(config.heating_protective_setpoint)
+
     def _validate_setpoint(self, temperature: float, setpoint: Setpoint) -> None:
         """Keep the reduced setpoint at or below the comfort setpoint."""
         if setpoint is Setpoint.REDUCED:
