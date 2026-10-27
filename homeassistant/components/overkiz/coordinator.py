@@ -306,7 +306,8 @@ async def on_execution_registered(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    coordinator.executions.setdefault(event.exec_id, set())
+    # Also covers executions started outside Home Assistant (e.g. the TaHoma app)
+    coordinator.register_execution(event.exec_id, event.actions)
 
     if not coordinator.is_stateless:
         coordinator.update_interval = UPDATE_INTERVAL_EXECUTION

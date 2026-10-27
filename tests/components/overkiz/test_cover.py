@@ -50,6 +50,7 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
+    execution_registered_event,
     execution_state_changed_event,
 )
 
@@ -609,6 +610,58 @@ async def test_merged_action_groups_keep_per_device_tracking(
 
     assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
     assert hass.states.get(GARAGE.entity_id).state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("command_name", "expected_state"),
+    [
+        pytest.param("open", CoverState.OPENING, id="open"),
+        pytest.param("close", CoverState.CLOSING, id="close"),
+    ],
+)
+async def test_external_execution_tracks_movement(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    command_name: str,
+    expected_state: CoverState,
+) -> None:
+    """Test that an execution started outside Home Assistant reports movement."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_registered_event(
+                exec_id="app-exec",
+                device_url=SHUTTER.device_url,
+                command_name=command_name,
+                label="Shutter - TaHoma PC",
+                source="mobile:pc",
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == expected_state
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="app-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
