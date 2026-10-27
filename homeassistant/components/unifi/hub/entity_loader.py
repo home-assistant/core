@@ -198,6 +198,13 @@ class UnifiEntityLoader:
             if mac in api.clients or mac in always_restore:
                 continue
 
+            # An adopted network device shares the MAC, so only its old client
+            # tracker goes, not the device
+            if mac in api.devices:
+                entity_registry.async_remove(entry.entity_id)
+                pruned += 1
+                continue
+
             if (client := api.clients_all.get(mac)) is None:
                 if not prune_unlisted:
                     continue

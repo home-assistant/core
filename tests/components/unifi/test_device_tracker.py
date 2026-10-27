@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     snapshot_platform,
 )
@@ -896,6 +897,68 @@ async def test_pruning_unlisted_client_devices(
     ):
         assert device_registry.async_get(devices[mac].id)
     assert device_registry.async_get(service.id)
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        pytest.param(
+            [
+                {
+                    "hostname": "listed",
+                    "is_wired": True,
+                    "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+                    "mac": "00:00:00:00:00:05",
+                }
+            ],
+            id="unlisted",
+        ),
+        pytest.param(
+            [
+                {
+                    "hostname": "stale",
+                    "is_wired": True,
+                    "last_seen": 1562600145,
+                    "mac": SWITCH_1["mac"],
+                }
+            ],
+            id="stale",
+        ),
+    ],
+)
+async def test_pruning_keeps_network_device_with_client_tracker(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Remove a client tracker left on a network device but keep the device."""
+    # Tracker from when the network device was seen as a client
+    client_tracker = entity_registry.async_get_or_create(
+        TRACKER_DOMAIN,
+        DOMAIN,
+        f"site_id-{SWITCH_1['mac']}",
+        config_entry=config_entry,
+    )
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, SWITCH_1["mac"])},
+    )
+    # A removed device is restored with the same id when set up again, so
+    # check for the removal itself
+    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    await config_entry_factory()
+
+    assert entity_registry.async_get(client_tracker.entity_id) is None
+    assert not [
+        event
+        for event in events
+        if event.data["action"] == "remove" and event.data["device_id"] == device.id
+    ]
 
 
 @pytest.mark.parametrize(
