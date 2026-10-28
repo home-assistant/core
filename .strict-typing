@@ -41,6 +41,7 @@ homeassistant.util.unit_system
 # --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
+homeassistant.components.abrp.*
 homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acmeda.*
@@ -229,6 +230,7 @@ homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit.*
 homeassistant.components.flexit_bacnet.*
+homeassistant.components.flic_button.*
 homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*

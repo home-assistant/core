@@ -26,6 +26,7 @@ FLOWS = {
     ],
     "integration": [
         "abode",
+        "abrp",
         "acaia",
         "accuweather",
         "acmeda",
@@ -255,6 +256,7 @@ FLOWS = {
         "fjaraskupan",
         "flexit",
         "flexit_bacnet",
+        "flic_button",
         "flo",
         "flow_it",
         "flume",
