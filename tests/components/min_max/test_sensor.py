@@ -7,8 +7,7 @@ import pytest
 from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.min_max.sensor import MinMaxEntityStateAttribute
+from homeassistant.components.min_max.const import DOMAIN, MinMaxEntityStateAttribute
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
