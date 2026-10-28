@@ -185,39 +185,74 @@ def test_arc_functions(hass: HomeAssistant) -> None:
     assert render(hass, "{{ atan2('invalid', 1, 1) }}") == 1
 
 
-def test_degrees_radians(hass: HomeAssistant) -> None:
-    """Test conversions between degrees and radians."""
-    tests = [
-        (0.0, 0.0),
-        (math.pi / 2, 90.0),
-        (math.pi, 180.0),
-        (math.pi * 1.5, 270.0),
-        (math.pi / 3, 60.0),
-    ]
+@pytest.mark.parametrize(
+    ("radians", "degrees"),
+    [
+        pytest.param(0.0, 0.0, id="zero"),
+        pytest.param(math.pi / 2, 90.0, id="quarter circle"),
+        pytest.param(math.pi, 180.0, id="half circle"),
+        pytest.param(math.pi * 1.5, 270.0, id="three-quarter circle"),
+        pytest.param(math.pi / 3, 60.0, id="sixth circle"),
+    ],
+)
+def test_degrees(hass: HomeAssistant, radians: float, degrees: float) -> None:
+    """Test conversions from radians to degrees."""
 
-    for rad, deg in tests:
-        assert render(hass, f"{{{{ {rad} | degrees | round(3) }}}}") == deg
-        assert render(hass, f"{{{{ degrees({rad}) | round(3) }}}}") == deg
+    assert render(hass, f"{{{{ {radians} | degrees | round(3) }}}}") == round(
+        degrees, 3
+    )
+    assert render(hass, f"{{{{ degrees({radians}) | round(3) }}}}") == round(degrees, 3)
 
-        assert render(hass, f"{{{{ {deg} | radians | round(3) }}}}") == round(rad, 3)
-        assert render(hass, f"{{{{ radians({deg}) | round(3) }}}}") == round(rad, 3)
 
-    # Test handling of invalid input
+def test_degrees_invalid(hass: HomeAssistant) -> None:
+    """Test invalid inputs when converting from radians to degrees."""
+
     with pytest.raises(TemplateError):
         render(hass, "{{ 'duck' | degrees }}")
-    with pytest.raises(TemplateError):
-        render(hass, "{{ 'duck' | radians }}")
 
-    # Test handling of default return value
+
+def test_degrees_default(hass: HomeAssistant) -> None:
+    """Test default argument when converting from radians to degrees."""
+
     assert render(hass, "{{ 'no_number' | degrees(1) }}") == 1
     assert render(hass, "{{ 'no_number' | degrees(default=1) }}") == 1
     assert render(hass, "{{ degrees('no_number', 1) }}") == 1
     assert render(hass, "{{ degrees('no_number', default=1) }}") == 1
 
-    assert render(hass, "{{ 'no_number' | radians(1) }}") == 1
-    assert render(hass, "{{ 'no_number' | radians(default=1) }}") == 1
-    assert render(hass, "{{ radians('no_number', 1) }}") == 1
-    assert render(hass, "{{ radians('no_number', default=1) }}") == 1
+
+@pytest.mark.parametrize(
+    ("degrees", "radians"),
+    [
+        pytest.param(0.0, 0.0, id="zero"),
+        pytest.param(90.0, math.pi / 2, id="quarter circle"),
+        pytest.param(180.0, math.pi, id="half circle"),
+        pytest.param(270.0, math.pi * 1.5, id="three-quarter circle"),
+        pytest.param(60.0, math.pi / 3, id="sixth circle"),
+    ],
+)
+def test_radians(hass: HomeAssistant, degrees: float, radians: float) -> None:
+    """Test conversions from degrees to radians."""
+
+    assert render(hass, f"{{{{ {degrees} | radians | round(3) }}}}") == round(
+        radians, 3
+    )
+    assert render(hass, f"{{{{ radians({degrees}) | round(3) }}}}") == round(radians, 3)
+
+
+def test_radians_invalid(hass: HomeAssistant) -> None:
+    """Test invalid inputs when converting from degrees to radians."""
+
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'duck' | radians }}")
+
+
+def test_radians_default(hass: HomeAssistant) -> None:
+    """Test default argument when converting from degrees to radians."""
+
+    assert render(hass, "{{ 'no_number' | degrees(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | degrees(default=1) }}") == 1
+    assert render(hass, "{{ degrees('no_number', 1) }}") == 1
+    assert render(hass, "{{ degrees('no_number', default=1) }}") == 1
 
 
 def test_average(hass: HomeAssistant) -> None:
