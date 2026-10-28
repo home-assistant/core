@@ -21,6 +21,8 @@ POSITIONAL = {
     "DeprecatedEntityAttr": 1,
     "DeprecatedEntityProperty": 1,
 }
+# Enums with deprecated members, declared as deprecated={"NAME": (replacement, version)}.
+ENUM_METACLASS = "EnumWithDeprecatedMembers"
 # Repair issue registry calls and the positional index of their issue_id.
 ISSUE_CALLS = {"async_create_issue": 2, "create_issue": 2, "async_get_or_create": 1}
 _VERSION_MATCH = re.compile(r"^(\d{4})\.(\d{1,2})(?:\.\d+)?$")
@@ -139,6 +141,19 @@ def find_values(tree: ast.Module) -> list[tuple[ast.expr, ast.Call | None]]:
                 and len(node.args) > index
             ):
                 values.append((node.args[index], node))
+        elif isinstance(node, ast.ClassDef) and any(
+            keyword.arg == "metaclass"
+            and isinstance(keyword.value, ast.Name)
+            and keyword.value.id == ENUM_METACLASS
+            for keyword in node.keywords
+        ):
+            values.extend(
+                (value.elts[1], None)
+                for keyword in node.keywords
+                if keyword.arg == "deprecated" and isinstance(keyword.value, ast.Dict)
+                for value in keyword.value.values
+                if isinstance(value, ast.Tuple) and len(value.elts) == 2
+            )
         elif isinstance(node, ast.Dict):
             values.extend(
                 (value, None)
@@ -369,17 +384,30 @@ def _deprecation_order(
 
 def scan(root: Path, current: tuple[int, int]) -> dict[str, Any]:
     """Find the deprecations under root/homeassistant that are due at current."""
+    files = [
+        (path, path.relative_to(root).as_posix())
+        for path in sorted((root / "homeassistant").rglob("*.py"))
+    ]
+    markers = (KEY, ENUM_METACLASS, *POSITIONAL)
+    candidates = set()
+    for path, rel in files:
+        text = path.read_text()
+        if any(marker in text for marker in markers):
+            candidates.add(rel)
+    # Constants and callers are only resolved within an integration or module,
+    # so only those with a candidate file need to be parsed.
+    areas = {area_of(rel)[0] for rel in candidates}
     trees: dict[str, tuple[str, ast.Module]] = {}
     area_files: dict[str, list[tuple[str, str, ast.Module]]] = {}
     constants = Constants()
-    for path in sorted((root / "homeassistant").rglob("*.py")):
+    for path, rel in files:
+        if (name := area_of(rel)[0]) not in areas:
+            continue
         text = path.read_text()
         tree = ast.parse(text)
-        rel = path.relative_to(root).as_posix()
-        name = area_of(rel)[0]
         constants.add(rel, module_constants(tree))
         area_files.setdefault(name, []).append((rel, text, tree))
-        if KEY in text or any(cls in text for cls in POSITIONAL):
+        if rel in candidates:
             trees[rel] = (text, tree)
 
     deprecations: dict[tuple[str, str, str | None], Deprecation] = {}

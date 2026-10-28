@@ -360,6 +360,34 @@ def test_scan_generic_entity_descriptor(tmp_path: Path) -> None:
     ] == [("deprecation-cleanup/iota-2026.1", [2, 4])]
 
 
+def test_scan_enum_with_deprecated_members(tmp_path: Path) -> None:
+    """Test the versions of deprecated enum members are found."""
+    write_repo(
+        tmp_path,
+        {
+            "homeassistant/components/kappa/const.py": """
+                class KappaState(
+                    StrEnum,
+                    metaclass=EnumWithDeprecatedMembers,
+                    deprecated={
+                        "STANDBY": ("KappaState.OFF", "2026.1.0"),
+                        "PAUSED": ("KappaState.IDLE", "2099.1.0"),
+                    },
+                ):
+                    OFF = "off"
+
+                class Other(Base, deprecated={"OLD": ("NEW", "2026.1.0")}):
+                    OLD = "old"
+            """,
+        },
+    )
+    result = find.scan(tmp_path, (2026, 1))
+    assert [
+        (deprecation["branch"], [item["line"] for item in deprecation["items"]])
+        for deprecation in result["deprecations"]
+    ] == [("deprecation-cleanup/kappa-2026.1", [5])]
+
+
 def test_scan_same_constant_name(tmp_path: Path) -> None:
     """Test constants with the same name in several files are not mixed up."""
     result = find.scan(write_repo(tmp_path, SAME_NAME_FILES), (2099, 1))
