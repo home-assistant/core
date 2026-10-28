@@ -22,6 +22,17 @@
       }
     }
   },
+  "exceptions": {
+    "delete_event_error": {
+      "message": "Error while deleting event: {error}"
+    },
+    "load_file_error": {
+      "message": "Failed to load file {path}: {error}"
+    },
+    "update_event_error": {
+      "message": "Error while updating event: {error}"
+    }
+  },
   "selector": {
     "import": {
       "options": {
