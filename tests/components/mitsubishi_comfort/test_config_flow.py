@@ -96,14 +96,7 @@ async def test_reauth_merges_local_credentials(
         credentials_at_setup.append(entry.data[CONF_CREDENTIALS])
 
     mock_setup_entry.side_effect = capture_setup
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: "new-password"}
@@ -130,14 +123,7 @@ async def test_reauth_wrong_account(
     mock_config_entry.add_to_hass(hass)
     mock_cloud_account.user_id = "another-account"
     original = dict(mock_config_entry.data)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "other@example.com", CONF_PASSWORD: "password"},

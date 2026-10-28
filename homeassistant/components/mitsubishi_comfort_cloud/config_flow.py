@@ -35,6 +35,12 @@ class MitsubishiComfortCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate the account and discover supported cloud devices."""
+        return await self._async_handle_credentials(user_input, "user")
+
+    async def _async_handle_credentials(
+        self, user_input: dict[str, Any] | None, step_id: str
+    ) -> ConfigFlowResult:
+        """Validate credentials for setup or reauthentication."""
         errors: dict[str, str] = {}
         if user_input is not None:
             account = MitsubishiCloudAccount(
@@ -70,7 +76,7 @@ class MitsubishiComfortCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=user_input,
                     )
         return self.async_show_form(
-            step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "user",
+            step_id=step_id,
             data_schema=USER_SCHEMA,
             errors=errors,
         )
@@ -85,4 +91,4 @@ class MitsubishiComfortCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the credentials for the existing account."""
-        return await self.async_step_user(user_input)
+        return await self._async_handle_credentials(user_input, "reauth_confirm")

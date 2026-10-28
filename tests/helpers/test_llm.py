@@ -1337,6 +1337,7 @@ async def test_selector_serializer(
 
     assert selector_serializer(cv.string) == {"type": "string"}
     assert selector_serializer(cv.boolean) == {"type": "boolean"}
+    assert selector_serializer(cv.service) == {"type": "string"}
     assert selector_serializer(intent.non_empty_string) == {"type": "string"}
 
     assert selector_serializer(selector.ActionSelector()) == {"type": "string"}

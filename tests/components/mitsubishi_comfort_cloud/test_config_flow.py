@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mitsubishi_comfort_cloud.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -69,7 +69,10 @@ async def test_errors(
     """Login and discovery failures leave a retryable form."""
     getattr(mock_cloud_account, method).side_effect = error
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
@@ -78,6 +81,7 @@ async def test_errors(
         result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == mock_cloud_account.user_id
 
 
 @pytest.mark.parametrize(
@@ -95,12 +99,22 @@ async def test_no_devices(
     hass: HomeAssistant, mock_cloud_account: AsyncMock, zones: list[dict]
 ) -> None:
     """Only supported indoor units permit setup."""
+    supported_zones = mock_cloud_account.get_zones.return_value
     mock_cloud_account.get_zones.return_value = zones
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_devices"}
+    mock_cloud_account.get_zones.return_value = supported_zones
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == mock_cloud_account.user_id
 
 
 async def test_already_configured(
@@ -109,21 +123,30 @@ async def test_already_configured(
     """Reject duplicate cloud accounts."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_local_account_does_not_block_cloud(hass: HomeAssistant) -> None:
+async def test_local_account_does_not_block_cloud(
+    hass: HomeAssistant, mock_cloud_account: AsyncMock
+) -> None:
     """The same account can be explicitly configured for both integrations."""
     MockConfigEntry(
         domain="mitsubishi_comfort", unique_id="user-12345", data=USER_INPUT
     ).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == mock_cloud_account.user_id
 
 
 async def test_reauth(
@@ -160,11 +183,7 @@ async def test_reauth_wrong_account(
 ) -> None:
     """Reauthentication cannot replace the account."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     mock_cloud_account.user_id = "other-user"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT

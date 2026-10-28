@@ -2,21 +2,26 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from mitsubishi_comfort import CloudIndoorUnit, DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mitsubishi_comfort_cloud.const import DOMAIN
+from homeassistant.components.mitsubishi_comfort_cloud.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_SERIAL, MOCK_SITE
 
@@ -128,6 +133,7 @@ async def test_offline_device(
 )
 async def test_partial_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
     error: Exception,
@@ -135,6 +141,7 @@ async def test_partial_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """One failed unit does not hide working units on the account."""
+    assert await async_setup_component(hass, "homeassistant", {})
     mock_cloud_account.get_zones.return_value.append(
         {"name": "Bedroom", "adapter": {"deviceSerial": "SECOND"}}
     )
@@ -153,12 +160,23 @@ async def test_partial_failure(
     ] == reauth_steps
     assert caplog.text.count("Error fetching initial data for Bedroom:") == 1
     mock_cloud_account.get_device_details.side_effect = error
-    await mock_config_entry.runtime_data["SECOND"].async_refresh()
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "climate.bedroom"},
+        blocking=True,
+    )
     assert caplog.text.count("Error fetching initial data for Bedroom:") == 1
     assert "Error fetching mitsubishi_comfort_cloud_SECOND data" not in caplog.text
     assert "Authentication failed while fetching" not in caplog.text
     mock_cloud_account.get_device_details.side_effect = None
-    await mock_config_entry.runtime_data["SECOND"].async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "climate.bedroom"},
+        blocking=True,
+    )
     assert hass.states.get("climate.bedroom").state == "cool"
 
 
@@ -233,6 +251,7 @@ async def test_local_data_does_not_switch_transport(
 
 async def test_cloud_reauth_leaves_local_entry_running(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
     entity_registry: er.EntityRegistry,
@@ -284,7 +303,8 @@ async def test_cloud_reauth_leaves_local_entry_running(
         mock_cloud_account.get_device_details.side_effect = AuthenticationError(
             "expired"
         )
-        await mock_config_entry.runtime_data[MOCK_SERIAL].async_refresh()
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert hass.states.get("climate.living_room_2").state == STATE_UNAVAILABLE
         assert hass.states.get("climate.living_room").state == "cool"

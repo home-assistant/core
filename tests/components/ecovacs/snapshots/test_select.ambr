@@ -12,7 +12,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000009')]>,
     'disabled_by': None,
@@ -71,7 +71,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000009')]>,
     'disabled_by': None,
@@ -117,6 +117,65 @@
     'state': 'auto',
   })
 # ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_efficiency_mode:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'energy_efficient_mode',
+        'standard_mode',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000009')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.x8_pro_omni_efficiency_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Efficiency mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Efficiency mode',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'efficiency_mode',
+    'unique_id': 'E1234567890000000009_efficiency_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_efficiency_mode:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Efficiency mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'energy_efficient_mode',
+        'standard_mode',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.x8_pro_omni_efficiency_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard_mode',
+  })
+# ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -132,7 +191,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000009')]>,
     'disabled_by': None,
@@ -193,7 +252,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -252,7 +311,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -312,7 +371,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000001')]>,
     'disabled_by': None,
@@ -372,7 +431,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -433,7 +492,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', '8516fbb1-17f1-4194-0000003')]>,
     'disabled_by': None,
@@ -494,7 +553,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,
@@ -555,7 +614,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('ecovacs', 'E1234567890000000001')]>,
     'disabled_by': None,

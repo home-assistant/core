@@ -110,6 +110,7 @@ async def test_cloud_command_failure(
 
 async def test_cloud_poll_authentication_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
 ) -> None:
@@ -119,7 +120,8 @@ async def test_cloud_poll_authentication_failure(
     await hass.async_block_till_done()
 
     mock_cloud_account.get_device_details.side_effect = AuthenticationError("expired")
-    await mock_config_entry.runtime_data[MOCK_SERIAL].async_refresh()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
