@@ -330,7 +330,11 @@ class MatterCover(MatterEntity, CoverEntity):
         commands = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.AcceptedCommandList
         )
-        if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
+        if (
+            not self._tilt_only
+            and clusters.WindowCovering.Commands.GoToLiftPercentage.command_id
+            in commands
+        ):
             supported_features |= CoverEntityFeature.SET_POSITION
         # Some devices report GoToTiltPercentage in AcceptedCommandList even
         # without tilt support, so also require the FeatureMap Tilt bit.

@@ -1009,7 +1009,7 @@ async def test_cover_tilt_only_ignores_lift_position(
     freezer: FrozenDateTimeFactory,
     lift_position: int | None,
 ) -> None:
-    """Test a lift position reported by a tilt-only cover is ignored."""
+    """Test the lift axis reported by a non-conformant tilt-only cover is ignored."""
     # fully closed tilt
     for attribute_id, value in ((14, lift_position), (12, 10000), (15, 10000)):
         await set_node_attribute_and_notify(
@@ -1039,6 +1039,7 @@ async def test_cover_tilt_only_ignores_lift_position(
     assert state
     assert state.state == CoverState.CLOSED
     assert "current_position" not in state.attributes
+    assert not state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
