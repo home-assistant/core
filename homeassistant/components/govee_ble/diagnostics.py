@@ -1,6 +1,6 @@
 """Diagnostics support for the Govee Bluetooth integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from govee_ble import DeviceKey, GoveeBluetoothDeviceData
 
@@ -44,7 +44,8 @@ async def async_get_config_entry_diagnostics(
         "parsed_advertisement": None,
     }
     address = entry.unique_id
-    assert address is not None
+    if TYPE_CHECKING:
+        assert address is not None
     if not (
         service_info := bluetooth.async_last_service_info(
             hass, address, connectable=False
