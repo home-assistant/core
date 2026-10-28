@@ -7399,7 +7399,8 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries",
-        "climate.water_heaters"
+        "climate.water_heaters",
+        "climate.thermostats_heating"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
