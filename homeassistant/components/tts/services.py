@@ -9,6 +9,7 @@ from .const import (
     DATA_COMPONENT,
     DATA_TTS_MANAGER,
     DEFAULT_CACHE,
+    DEFAULT_PREGENERATE,
     DOMAIN,
     TextToSpeechService,
     TextToSpeechServiceArgument,
@@ -34,6 +35,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Required(TextToSpeechServiceArgument.MESSAGE): cv.string,
             probatio.Optional(
                 TextToSpeechServiceArgument.CACHE, default=DEFAULT_CACHE
+            ): cv.boolean,
+            probatio.Optional(
+                TextToSpeechServiceArgument.PREGENERATE, default=DEFAULT_PREGENERATE
             ): cv.boolean,
             probatio.Optional(TextToSpeechServiceArgument.LANGUAGE): cv.string,
             probatio.Optional(TextToSpeechServiceArgument.OPTIONS): dict,
