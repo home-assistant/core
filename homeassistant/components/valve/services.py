@@ -18,21 +18,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        ValveService.OPEN_VALVE,
+        ValveService.OPEN,
         None,
         "async_handle_open_valve",
         [ValveEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        ValveService.CLOSE_VALVE,
+        ValveService.CLOSE,
         None,
         "async_handle_close_valve",
         [ValveEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
-        ValveService.SET_VALVE_POSITION,
+        ValveService.SET_POSITION,
         {
             probatio.Required(ValveServiceArgument.POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
@@ -43,7 +43,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        ValveService.STOP_VALVE, None, "async_stop_valve", [ValveEntityFeature.STOP]
+        ValveService.STOP, None, "async_stop_valve", [ValveEntityFeature.STOP]
     )
 
     component.async_register_entity_service(

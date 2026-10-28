@@ -1,6 +1,12 @@
 """The met component."""
 
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -57,7 +63,7 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MetWeatherConfigEntry
 ) -> None:
     """Migrate old config entry."""
-    if config_entry.minor_version < 2:
+    if config_entry.version == 1 and config_entry.minor_version < 2:
         data = dict(config_entry.data)
         data.pop(CONF_NAME, None)
 
@@ -65,4 +71,20 @@ async def async_migrate_entry(
             config_entry,
             data=data,
             minor_version=2,
+        )
+    if config_entry.version < 2:
+        data = dict(config_entry.data)
+        long = data.pop(CONF_LONGITUDE, None)
+        lat = data.pop(CONF_LATITUDE, None)
+        if (
+            not data.get(CONF_TRACK_HOME, False)
+            and long is not None
+            and lat is not None
+        ):
+            data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            version=2,
+            minor_version=1,
         )

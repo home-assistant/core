@@ -19,6 +19,7 @@ import pydantic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
 from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -432,6 +433,43 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
 
 
+async def test_server_icons(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mcp_protocol: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Advertise a frontend icon that can be fetched without authentication."""
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    mcp_url = str(
+        client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
+    )
+    base_url = str(URL(mcp_url).origin())
+    hass.config.internal_url = base_url
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        assert session.server_info is not None
+        assert session.server_info.icons == [
+            mcp.types.Icon(
+                src=f"{base_url}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ]
+
+        async with (
+            aiohttp.ClientSession() as icon_client,
+            icon_client.get(
+                session.server_info.icons[0].src, allow_redirects=False
+            ) as response,
+        ):
+            assert response.status == HTTPStatus.OK
+            assert response.content_type == "image/png"
+            assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
+
+
 @pytest.mark.parametrize(
     ("mcp_request", "result_type"),
     [
@@ -714,8 +752,58 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "device-control__homeassistant__GetLiveContext" in tool_names
-    assert "test-api__test_tool" in tool_names
+    assert "homeassistant__GetLiveContext" in tool_names
+    assert "assist__homeassistant__GetLiveContext" not in tool_names
+    assert "device-control__homeassistant__GetLiveContext" not in tool_names
+    assert "test_tool" in tool_names
+    assert [tool.name for tool in result.tools].count("llm__GetDateTime") == 1
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+async def test_mcp_merged_live_context(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Call live context with its unchanged name in a merged API."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="homeassistant__GetLiveContext", arguments={"domain": "light"}
+        )
+
+    assert not result.is_error
+    assert "Kitchen Light" in result.content[0].text
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_merged_read_only_blocks_write_tools(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Merged write tools are excluded by the read-only tool filter."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.is_error
+    assert 'Tool "intent__HassTurnOn" not found' in result.content[0].text
+    assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("setup_integration")

@@ -11,20 +11,32 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.portainer import PortainerSystemStatus
+from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import CONF_ENDPOINT_ID, DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from .coordinator import PortainerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
@@ -42,7 +54,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 async def _validate_input(
     hass: HomeAssistant, data: dict[str, Any]
-) -> PortainerSystemStatus:
+) -> tuple[PortainerSystemStatus, list[Endpoint]]:
     """Validate the user input allows us to connect."""
 
     client = Portainer(
@@ -52,6 +64,7 @@ async def _validate_input(
     )
     try:
         system_status = await client.portainer_system_status()
+        endpoints = await client.get_endpoints()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
     except PortainerConnectionError as err:
@@ -60,13 +73,23 @@ async def _validate_input(
         raise PortainerTimeout from err
 
     _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
-    return system_status
+    return system_status, endpoints
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
     VERSION = 5
+    MINOR_VERSION = 2
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {SUBENTRY_TYPE_ENVIRONMENT: EnvironmentSubentryFlowHandler}
 
     @override
     async def async_step_user(
@@ -76,7 +99,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                system_status = await _validate_input(self.hass, user_input)
+                system_status, endpoints = await _validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -90,7 +113,17 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(system_status.instance_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_URL], data=user_input
+                    title=user_input[CONF_URL],
+                    data=user_input,
+                    subentries=[
+                        ConfigSubentryData(
+                            data={},
+                            subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                            title=endpoint.name or f"Endpoint {endpoint.id}",
+                            unique_id=str(endpoint.id),
+                        )
+                        for endpoint in endpoints
+                    ],
                 )
 
         return self.async_show_form(
@@ -159,7 +192,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                system_status = await _validate_input(
+                system_status, _ = await _validate_input(
                     self.hass,
                     data={
                         **reconf_entry.data,
@@ -194,6 +227,67 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or suggested_values,
             ),
             errors=errors,
+        )
+
+
+class EnvironmentSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for adding a Portainer environment."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add an environment as a subentry."""
+        entry: PortainerConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_not_loaded")
+
+        try:
+            endpoints = await entry.runtime_data.portainer.get_endpoints()
+        except PortainerConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except PortainerTimeoutError:
+            return self.async_abort(reason="timeout_connect")
+        except PortainerAuthenticationError:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        configured_endpoint_ids = {
+            subentry.unique_id for subentry in entry.subentries.values()
+        }
+        available_endpoints = {
+            str(endpoint.id): endpoint.name or f"Endpoint {endpoint.id}"
+            for endpoint in endpoints
+            if str(endpoint.id) not in configured_endpoint_ids
+        }
+        if not available_endpoints:
+            return self.async_abort(reason="no_new_environments")
+
+        if user_input is not None:
+            endpoint_id = user_input[CONF_ENDPOINT_ID]
+            if endpoint_id not in available_endpoints:
+                return self.async_abort(reason="no_new_environments")
+            return self.async_create_entry(
+                title=available_endpoints[endpoint_id],
+                data={},
+                unique_id=endpoint_id,
+            )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_ENDPOINT_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=endpoint_id, label=name)
+                                for endpoint_id, name in available_endpoints.items()
+                            ]
+                        )
+                    )
+                }
+            ),
         )
 
 

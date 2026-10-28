@@ -189,6 +189,56 @@ async def test_state_changes_during_period(
     assert_multiple_states_equal_without_context(states[:limit], hist[entity_id])
 
 
+@pytest.mark.parametrize("no_attributes", [False, True])
+@pytest.mark.parametrize(
+    ("include_start_time_state", "ascending_states", "descending_states"),
+    [
+        pytest.param(False, ["1", "2"], ["4", "3"], id="without_start"),
+        pytest.param(True, ["0", "1", "2"], ["4", "3", "0"], id="with_start"),
+    ],
+)
+@pytest.mark.parametrize(
+    "offsets",
+    [
+        pytest.param([0, 1, 2, 3, 4, 5], id="distinct_timestamps"),
+        pytest.param([0, 1, 1, 1, 1, 5], id="equal_timestamps"),
+    ],
+)
+async def test_state_changes_during_period_limited_order(
+    hass: HomeAssistant,
+    offsets: list[int],
+    no_attributes: bool,
+    include_start_time_state: bool,
+    ascending_states: list[str],
+    descending_states: list[str],
+) -> None:
+    """Limit selects the requested end of the history, including cached queries."""
+    entity_id = "sensor.test"
+    start = dt_util.utcnow() + timedelta(seconds=1)
+    with freeze_time(start) as freezer:
+        for value, offset in enumerate(offsets):
+            freezer.move_to(start + timedelta(seconds=offset))
+            hass.states.async_set(entity_id, str(value), {"unit": "test"})
+    await async_wait_recording_done(hass)
+
+    for descending, expected in (
+        (False, ascending_states),
+        (True, descending_states),
+        (False, ascending_states),
+    ):
+        result = history.state_changes_during_period(
+            hass,
+            start + timedelta(microseconds=500000),
+            start + timedelta(seconds=5),
+            entity_id,
+            no_attributes=no_attributes,
+            descending=descending,
+            limit=2,
+            include_start_time_state=include_start_time_state,
+        )
+        assert [state.state for state in result[entity_id]] == expected
+
+
 async def test_state_changes_during_period_last_reported(
     hass: HomeAssistant,
 ) -> None:
