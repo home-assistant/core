@@ -72,8 +72,8 @@ async def _get_myuplink_device_id(
 async def async_set_datapoint(call: ServiceCall) -> None:
     """Handle the set_datapoint service call."""
 
-    datapoint_id: str = call.data.get(MyUplinkServiceArgument.DATAPOINT_ID, "")
-    value: str = call.data.get(MyUplinkServiceArgument.VALUE, "")
+    datapoint_id: str = call.data[MyUplinkServiceArgument.DATAPOINT_ID]
+    value: str = call.data[MyUplinkServiceArgument.VALUE]
     config_entry: MyUplinkConfigEntry
 
     device_entry, config_entry = async_get_device_and_config_entry(
