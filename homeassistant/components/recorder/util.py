@@ -24,6 +24,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -240,6 +241,28 @@ def execute_stmt_lambda_element(
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            _rollback_read_only_session(session)
+            time.sleep(QUERY_RETRY_WAIT)
+
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
+
+
+def execute_select(
+    session: Session, stmt: Select, params: dict[str, Any]
+) -> Sequence[Row]:
+    """Execute a Select with bound parameters and return all rows.
+
+    Unlike execute_stmt_lambda_element, the statement is not analyzed on every
+    call, which matters for lookups that run on every write.
+    """
+    for tryno in range(RETRIES):
+        try:
+            return session.connection().execute(stmt, params).all()
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:

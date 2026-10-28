@@ -2,11 +2,17 @@
 
 from typing import Any, override
 
+from satel_integra import (
+    SatelCommandRejectedError,
+    SatelNoResponseError,
+    SatelResultCode,
+)
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -86,28 +92,55 @@ class SatelIntegraSwitch(
         """Method to get switch state from coordinator data."""
         return self.coordinator.data.get(self._device_number)
 
-    @override
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+    async def _async_set_output(self, state: bool) -> None:
+        """Set the output state and validate the result returned by the panel."""
         if self._code is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="missing_output_access_code",
             )
 
-        await self._controller.set_output(self._code, self._device_number, True)
+        try:
+            await self._controller.set_output(
+                self._code,
+                self._device_number,
+                state,
+                wait_for_result=True,
+            )
+        except SatelCommandRejectedError as err:
+            if err.result.code is SatelResultCode.USER_CODE_NOT_FOUND:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_invalid_access_code",
+                ) from err
+            if err.result.code is SatelResultCode.NO_ACCESS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_no_access",
+                ) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_rejected",
+                translation_placeholders={
+                    "result_code": f"0x{int(err.result.code):02X}"
+                },
+            ) from err
+        except SatelNoResponseError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_outcome_unknown",
+            ) from err
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self._async_set_output(True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._code is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_output_access_code",
-            )
-
-        await self._controller.set_output(self._code, self._device_number, False)
+        await self._async_set_output(False)
         self._attr_is_on = False
         self.async_write_ha_state()
