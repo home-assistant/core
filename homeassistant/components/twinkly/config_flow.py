@@ -64,8 +64,13 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_info is None:
                 errors[CONF_HOST] = "cannot_connect"
             else:
-                await self.async_set_unique_id(device_info["mac"])
-                self._abort_if_unique_id_mismatch()
+                if reconfigure_entry.minor_version == 1:
+                    # The MAC migration has not run yet, keep the legacy unique ID
+                    if device_info[DEV_ID] != reconfigure_entry.data[CONF_ID]:
+                        return self.async_abort(reason="unique_id_mismatch")
+                else:
+                    await self.async_set_unique_id(device_info["mac"])
+                    self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
