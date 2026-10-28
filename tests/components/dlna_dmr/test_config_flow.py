@@ -3,7 +3,7 @@
 from collections.abc import Generator
 import dataclasses
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.exceptions import UpnpError
@@ -830,6 +830,28 @@ async def test_reconfigure_flow(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+
+
+async def test_reconfigure_flow_with_update_listener(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test reconfiguring a loaded entry leaves the URL change to its listener."""
+    config_entry_mock.add_to_hass(hass)
+    update_listener = AsyncMock()
+    config_entry_mock.add_update_listener(update_listener)
+
+    result = await config_entry_mock.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
+    update_listener.assert_called_once()
+    mock_reload.assert_not_called()
 
 
 async def test_reconfigure_flow_different_device(

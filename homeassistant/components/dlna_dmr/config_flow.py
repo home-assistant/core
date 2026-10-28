@@ -234,6 +234,11 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(device.udn)
                 self._abort_if_unique_id_mismatch()
+                # A loaded entity's update listener reconnects to the new URL
+                if reconfigure_entry.update_listeners:
+                    return self.async_update_and_abort(
+                        reconfigure_entry, data_updates=user_input
+                    )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
