@@ -44,7 +44,7 @@ TO_REDACT = {
 
 async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
     try:
-        return await envoy.fixture_collection()
+        return await envoy.fixture_collection(mask_serials=True, strict_masking=True)
     except (EnvoyError, EnvoyClientClosedError, ClientError) as err:
         return {"collection_aborted_log": f"Error: {err!r}"}
 
