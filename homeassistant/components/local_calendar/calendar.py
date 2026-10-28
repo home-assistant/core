@@ -171,7 +171,6 @@ class LocalCalendarEntity(CalendarEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="delete_event_error",
-                    translation_placeholders={"error": str(err)},
                 ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
@@ -207,7 +206,6 @@ class LocalCalendarEntity(CalendarEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="update_event_error",
-                    translation_placeholders={"error": str(err)},
                 ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
