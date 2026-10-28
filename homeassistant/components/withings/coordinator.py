@@ -326,7 +326,7 @@ class WithingsWorkoutDataUpdateCoordinator(
         latest_workout = max(workouts, key=lambda workout: workout.end_date)
         if (
             self._previous_data is None
-            or self._previous_data.end_date >= latest_workout.end_date
+            or latest_workout.end_date >= self._previous_data.end_date
         ):
             self._previous_data = latest_workout
             self._last_valid_update = latest_workout.end_date
