@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, EVENT_TYPE_SCHEDULE, NETATMO_CREATE_SELECT
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
-from .entity import NetatmoBaseEntity
+from .entity import NetatmoBaseEntity, netatmo_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +105,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
                 self.async_write_ha_state()
 
     @override
+    @netatmo_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():

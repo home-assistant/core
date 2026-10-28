@@ -1,14 +1,18 @@
 """Base class for Netatmo entities."""
 
 from abc import abstractmethod
-from typing import Any, cast, override
+from collections.abc import Callable, Coroutine
+from typing import Any, Concatenate, cast, override
 
-from pyatmo import DeviceType, Home, Module, Room
+import aiohttp
+from pyatmo import ApiError, ApiThrottlingError, DeviceType, Home, Module, Room
+from pyatmo.exceptions import ApiTooManyRequestError
 from pyatmo.modules.base_class import NetatmoBase, Place
 from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -20,6 +24,30 @@ from .const import (
     SIGNAL_NAME,
 )
 from .coordinator import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+
+
+def netatmo_exception_handler[_EntityT: NetatmoBaseEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Raise a translated error when a Netatmo request fails."""
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except (ApiThrottlingError, ApiTooManyRequestError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+            ) from err
+        # pyatmo leaves transport errors of the request itself unwrapped
+        except (ApiError, TimeoutError, aiohttp.ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err) or type(err).__name__},
+            ) from err
+
+    return handler
 
 
 class NetatmoBaseEntity(Entity):

@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoReachabilityEntity
+from .entity import NetatmoReachabilityEntity, netatmo_exception_handler
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +70,7 @@ class NetatmoFan(NetatmoReachabilityEntity, FanEntity):
         )
 
     @override
+    @netatmo_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self.device.async_set_fan_speed(PRESET_MAPPING[preset_mode])

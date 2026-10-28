@@ -151,18 +151,24 @@ async def async_cloudhook_generate_url(
 
 
 async def async_unregister_webhook(
-    hass: HomeAssistant, entry: NetatmoConfigEntry
-) -> None:
+    hass: HomeAssistant, entry: NetatmoConfigEntry, *, retry_failed: bool = False
+) -> bool:
     """Unregister the webhook from the Netatmo backend.
 
     Dropped at most once per teardown, and never gated on whether this load was
     the one that registered: what Netatmo holds outlives a restart.
+
+    Return False when Netatmo did not confirm the drop. Such a drop is attempted
+    again only with retry_failed: a shutdown tears down more than once, and every
+    attempt can wait out a request timeout.
     """
     if CONF_WEBHOOK_ID not in entry.data:
-        return
+        return True
 
-    if entry.runtime_data.webhook_dropped:
-        return
+    if entry.runtime_data.webhook_dropped and not (
+        retry_failed and entry.runtime_data.webhook_drop_failed
+    ):
+        return not entry.runtime_data.webhook_drop_failed
 
     entry.runtime_data.webhook_dropped = True
     entry.runtime_data.webhook_registered = False
@@ -180,6 +186,10 @@ async def async_unregister_webhook(
         await entry.runtime_data.auth.async_dropwebhook()
     except pyatmo.ApiError, TimeoutError, aiohttp.ClientError:
         _LOGGER.debug("No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID])
+        entry.runtime_data.webhook_drop_failed = True
+        return False
+    entry.runtime_data.webhook_drop_failed = False
+    return True
 
 
 async def async_register_webhook(
@@ -225,6 +235,7 @@ async def async_register_webhook(
     )
     entry.runtime_data.webhook_registered = True
     entry.runtime_data.webhook_dropped = False
+    entry.runtime_data.webhook_drop_failed = False
 
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)
@@ -253,6 +264,11 @@ class NetatmoWebhookManager:
         self._registered = False
         self._attempt_delay = WEBHOOK_RETRY_DELAY
         self._cancel_attempt: CALLBACK_TYPE | None = None
+
+    @property
+    def registered(self) -> bool:
+        """Return whether the registration is settled."""
+        return self._registered
 
     @callback
     def cancel_pending_attempt(self) -> None:
@@ -294,10 +310,20 @@ class NetatmoWebhookManager:
 
     async def async_unregister(self, _: Any = None) -> None:
         """Drop the webhook, waiting out a registration still in flight."""
+        await self._async_drop(retry_failed=False)
+
+    async def async_drop(self) -> bool:
+        """Drop the webhook on request, retrying a drop Netatmo did not confirm."""
+        return await self._async_drop(retry_failed=True)
+
+    async def _async_drop(self, *, retry_failed: bool) -> bool:
+        """Drop the webhook and return whether Netatmo confirmed it."""
         async with self._register_lock:
             self.cancel_pending_attempt()
             self._registered = False
-            await async_unregister_webhook(self.hass, self.entry)
+            return await async_unregister_webhook(
+                self.hass, self.entry, retry_failed=retry_failed
+            )
 
     async def async_handle_cloud_state(self, state: cloud.CloudConnectionState) -> None:
         """Follow the cloud connection the webhook URL is delivered over."""

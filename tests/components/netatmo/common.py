@@ -30,6 +30,15 @@ FAKE_WEBHOOK_ACTIVATION = {
     "push_type": "webhook_activation",
 }
 
+WRITE_ENDPOINTS = (
+    "setpersonsaway",
+    "setpersonshome",
+    "setstate",
+    "setroomthermpoint",
+    "setthermmode",
+    "switchhomeschedule",
+)
+
 
 async def snapshot_platform_entities(
     hass: HomeAssistant,
@@ -65,14 +74,7 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
 
-    if endpoint in [
-        "setpersonsaway",
-        "setpersonshome",
-        "setstate",
-        "setroomthermpoint",
-        "setthermmode",
-        "switchhomeschedule",
-    ]:
+    if endpoint in WRITE_ENDPOINTS:
         payload = {f"{endpoint}": True, "status": "ok"}
 
     elif endpoint == "homestatus":
@@ -93,6 +95,20 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
         url=kwargs["endpoint"],
         json=payload,
     )
+
+
+def fail_write_requests(
+    hass: HomeAssistant, config_entry: MockConfigEntry, error: Exception
+) -> None:
+    """Make every write request raise, keeping data requests working."""
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if kwargs["endpoint"].split("/")[-1] in WRITE_ENDPOINTS:
+            raise error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    auth = config_entry.runtime_data.account.auth
+    auth.async_post_api_request.side_effect = fake_post
 
 
 async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str | None:
