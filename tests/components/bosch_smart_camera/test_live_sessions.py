@@ -789,3 +789,21 @@ async def test_provider_discovery_does_not_open_sessions(
     assert hass.states.get(ENTITY_ID)
     mock_live.open.assert_not_called()
     provider.async_is_supported.assert_not_called()
+
+
+async def test_open_waiting_on_a_renewal_reuses_its_session(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test an open queued behind a renewal does not rotate the credentials again."""
+    await setup_integration(hass, mock_config_entry)
+    live = mock_config_entry.runtime_data.live_sessions
+
+    async with live._locks[CAMERA_ID]:
+        waiting = asyncio.create_task(
+            live._async_open_once(CAMERA_ID, lambda: True, lambda url: None)
+        )
+        await asyncio.sleep(0)
+        renewed = await live._async_open(CAMERA_ID, lambda: True, lambda url: None)
+
+    assert await waiting is renewed
+    assert mock_live.open.await_count == 1

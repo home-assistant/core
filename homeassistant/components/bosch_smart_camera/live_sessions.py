@@ -105,6 +105,9 @@ class LiveSessions:
         on_changed: Callable[[str | None], None],
     ) -> _Session:
         async with self._locks[camera_id]:
+            # A renewal may have installed a session while this waited.
+            if session := self._sessions.get(camera_id):
+                return session
             return await self._async_open(camera_id, is_streaming, on_changed)
 
     async def async_close(self, camera_id: str) -> None:
