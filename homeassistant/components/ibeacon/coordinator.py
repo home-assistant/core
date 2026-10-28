@@ -174,8 +174,12 @@ class IBeaconCoordinator:
             "ignored_address_count": len(self._ignore_addresses),
             "ignored_uuid_count": len(self._ignore_uuids),
             "allowed_nameless_uuid_count": len(self._allow_nameless_uuids),
-            "ignored_nameless_address_count": sum(
-                len(addresses) for addresses in self._ignored_nameless_by_uuid.values()
+            "ignored_nameless_address_count": len(
+                {
+                    address
+                    for addresses in self._ignored_nameless_by_uuid.values()
+                    for address in addresses
+                }
             ),
             "fixed_mac_beacon_count": len(
                 self._last_ibeacon_advertisement_by_unique_id
