@@ -86,4 +86,8 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
                 translation_key="invalid_auth",
             ) from err
         except SwitchBotConnectionError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

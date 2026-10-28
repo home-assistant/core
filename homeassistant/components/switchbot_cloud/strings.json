@@ -121,6 +121,9 @@
     },
     "invalid_auth": {
       "message": "Invalid authentication while connecting to the SwitchBot API"
+    },
+    "no_valid_mac_address": {
+      "message": "No valid MAC address obtained."
     }
   },
   "services": {
