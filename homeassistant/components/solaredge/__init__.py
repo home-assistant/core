@@ -10,9 +10,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_MODULES_COORDINATOR, DOMAIN
-from .coordinator import SolarEdgeModulesCoordinator
+from .coordinator import SolarEdgeModulesCoordinator, SolarEdgeV2Coordinator
 from .types import SolarEdgeConfigEntry, SolarEdgeData
 
 PLATFORMS = [Platform.SENSOR]
@@ -22,6 +26,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
     """Set up SolarEdge from a config entry."""
     entry.runtime_data = SolarEdgeData()
     site_id = entry.data[CONF_SITE_ID]
+
+    if entry.data.get("api_version") == 2:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+        v2_coordinator = SolarEdgeV2Coordinator(
+            hass, entry, OAuth2Session(hass, entry, implementation)
+        )
+        await v2_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data["v2_coordinator"] = v2_coordinator
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Setup for API key (sensors)
     if CONF_API_KEY in entry.data:
@@ -70,7 +83,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> None:
     """Unload SolarEdge config entry."""
-    if DATA_API_CLIENT not in entry.runtime_data:
+    if (
+        DATA_API_CLIENT not in entry.runtime_data
+        and "v2_coordinator" not in entry.runtime_data
+    ):
         return  # Nothing to unload
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
