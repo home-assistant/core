@@ -15,6 +15,7 @@ ATTR_LANGUAGE = "language"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
+ATTR_PREGENERATE = "pregenerate"
 
 CONF_CACHE = "cache"
 CONF_CACHE_DIR = "cache_dir"
@@ -23,6 +24,7 @@ CONF_TIME_MEMORY = "time_memory"
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
+DEFAULT_PREGENERATE = False
 DEFAULT_TIME_MEMORY = 300
 
 DOMAIN: Final = "tts"
@@ -52,3 +54,4 @@ class TextToSpeechServiceArgument(StrEnum):
     MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
     MESSAGE = "message"
     OPTIONS = "options"
+    PREGENERATE = "pregenerate"
