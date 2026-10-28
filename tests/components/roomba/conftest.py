@@ -26,6 +26,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.roomba.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_roomba() -> Generator[AsyncMock]:
     """Build a fixture for the 17Track API."""
     mock_roomba = AsyncMock(spec=RoombaClient, autospec=True)
