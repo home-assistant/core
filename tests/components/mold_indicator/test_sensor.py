@@ -4,7 +4,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import sensor
-from homeassistant.components.mold_indicator.sensor import (
+from homeassistant.components.mold_indicator.const import (
     MoldIndicatorEntityStateAttribute,
 )
 from homeassistant.const import (
