@@ -49,7 +49,7 @@ rules:
       in standby/eco mode. Other API errors raise UpdateFailed.
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage:
     status: todo

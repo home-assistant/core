@@ -146,7 +146,6 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unavailable_host")
 
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self.discovery_info[CONF_NAME]},
