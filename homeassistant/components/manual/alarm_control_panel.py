@@ -1,7 +1,6 @@
 """Support for manual alarms."""
 
 import datetime as dt
-from enum import StrEnum
 from typing import Any, override
 
 import probatio
@@ -32,7 +31,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, ManualEntityStateAttribute
 
 CONF_ARMING_STATES = "arming_states"
 CONF_CODE_TEMPLATE = "code_template"
@@ -87,13 +86,6 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
         AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     ),
 }
-
-
-class ManualEntityStateAttribute(StrEnum):
-    """State attributes for manual alarm control panel entities."""
-
-    NEXT_STATE = "next_state"
-    PREVIOUS_STATE = "previous_state"
 
 
 def _state_validator(
