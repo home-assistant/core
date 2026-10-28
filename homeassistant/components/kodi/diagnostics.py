@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
         properties = await kodi.get_application_properties(["version"])
         players = await kodi.get_players()
     except (TransportError, ProtocolError) as error:
-        diagnostics["error"] = str(error)
+        diagnostics["error"] = type(error).__name__
         return diagnostics
     diagnostics["version"] = properties["version"]
     diagnostics["active_players"] = players

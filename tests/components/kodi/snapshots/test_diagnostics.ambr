@@ -35,7 +35,7 @@
     }),
   })
 # ---
-# name: test_diagnostics_error
+# name: test_diagnostics_error[protocol_error]
   dict({
     'config': dict({
       'port': 8080,
@@ -46,6 +46,34 @@
       'connected': True,
       'websocket': False,
     }),
-    'error': 'Connection lost',
+    'error': 'ProtocolError',
+  })
+# ---
+# name: test_diagnostics_error[transport_error]
+  dict({
+    'config': dict({
+      'port': 8080,
+      'ssl': False,
+      'ws_port': 9090,
+    }),
+    'connection': dict({
+      'connected': True,
+      'websocket': False,
+    }),
+    'error': 'TransportError',
+  })
+# ---
+# name: test_diagnostics_error[transport_error_with_host]
+  dict({
+    'config': dict({
+      'port': 8080,
+      'ssl': False,
+      'ws_port': 9090,
+    }),
+    'connection': dict({
+      'connected': True,
+      'websocket': False,
+    }),
+    'error': 'TransportError',
   })
 # ---
