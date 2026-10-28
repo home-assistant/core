@@ -228,7 +228,12 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
-                self._abort_if_unique_id_mismatch()
+                # The ID is unknown for bulbs that don't answer discovery, such
+                # as when given a hostname, and for entries created that way
+                if self.unique_id and reconfigure_entry.unique_id:
+                    self._abort_if_unique_id_mismatch()
+                elif self.unique_id:
+                    self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
                 )
