@@ -570,6 +570,21 @@ def test_service() -> None:
             "alias": "turn on kitchen lights",
         },
         {"action": "scene.turn_on", "metadata": {}},
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "kitchen",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "{{ 'kitchen' }}",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {"action": "light.turn_on", "target": "{{ {'area_id': 'kitchen'} }}"},
     ],
 )
 def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -612,6 +627,10 @@ def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
         {
             "action": "homeassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
+        },
+        {
+            "action": "light.turn_on",
+            "target": {"exclude": {"entity_id": "light.pantry"}},
         },
     ],
 )
@@ -728,6 +747,40 @@ def test_target_fields_exclude(schema: probatio.Schema) -> None:
     ):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"area_id": ["kitchen"]}, id="no_exclude"),
+        pytest.param(
+            {"area_id": ["kitchen"], "exclude": {"label_id": ["christmas"]}},
+            id="target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_valid(value: dict[str, Any]) -> None:
+    """Test targets which are accepted by exclude_requires_target."""
+    assert cv.exclude_requires_target(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({"exclude": {"label_id": ["christmas"]}}, id="exclude_only"),
+        pytest.param(
+            {"entity_id": [], "exclude": {"label_id": ["christmas"]}},
+            id="empty_target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_invalid(value: dict[str, Any]) -> None:
+    """Test a target consisting of only an exclude block is rejected."""
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        cv.exclude_requires_target(value)
 
 
 def test_entity_service_schema_with_metadata() -> None:

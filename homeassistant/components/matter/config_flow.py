@@ -1,6 +1,7 @@
 """Config flow for Matter integration."""
 
 import asyncio
+import os
 from typing import Any, override
 
 from matter_server.client import MatterClient
@@ -35,6 +36,8 @@ from .const import (
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
+# Below the documented 2 GB, allowing for memory a Raspberry Pi reserves for the GPU.
+MIN_MEMORY_FOR_ONBOARDING_ADDON = 1536 * 1024**2
 DEFAULT_URL = "ws://localhost:5580/ws"
 DEFAULT_TITLE = "Matter"
 ON_SUPERVISOR_SCHEMA = probatio.Schema(
@@ -52,6 +55,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     client = MatterClient(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
+
+
+def total_memory() -> int:
+    """Return the physical memory of the host in bytes."""
+    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
 
 
 def build_ws_address(host: str, port: int) -> str:
@@ -240,7 +248,11 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        if not async_is_onboarded(self.hass) and is_hassio(self.hass):
+        if (
+            not async_is_onboarded(self.hass)
+            and is_hassio(self.hass)
+            and total_memory() >= MIN_MEMORY_FOR_ONBOARDING_ADDON
+        ):
             await self._async_handle_discovery_without_unique_id()
             self._running_in_background = True
             return await self.async_step_on_supervisor(

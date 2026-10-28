@@ -3,12 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_device": "The device does not match the original WattWächter Plus device."
+      "wrong_device": "The device does not match the original WattWächter device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "auth": {
@@ -16,7 +15,7 @@
           "token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
-          "token": "The API token for your WattWächter Plus device."
+          "token": "The API token for your WattWächter device."
         },
         "title": "Authentication required"
       },
@@ -28,7 +27,7 @@
           "token": "[%key:component::wattwaechter::config::step::auth::data_description::token%]"
         },
         "description": "The API token for {host} is no longer valid. Enter a new token to reconnect.",
-        "title": "Re-authenticate WattWächter Plus"
+        "title": "Re-authenticate WattWächter"
       },
       "reconfigure": {
         "data": {
@@ -39,20 +38,20 @@
           "host": "[%key:component::wattwaechter::config::step::user::data_description::host%]",
           "token": "[%key:component::wattwaechter::config::step::auth::data_description::token%]"
         },
-        "title": "Reconfigure WattWächter Plus"
+        "title": "Reconfigure WattWächter"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your WattWächter Plus device."
+          "host": "The hostname or IP address of your WattWächter device."
         },
-        "title": "Add WattWächter Plus"
+        "title": "Add WattWächter"
       },
       "zeroconf_confirm": {
         "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}",
-        "title": "WattWächter Plus discovered"
+        "title": "WattWächter discovered"
       }
     }
   },
@@ -71,6 +70,9 @@
       "export_tariff_2": { "name": "Feed-in tariff 2" },
       "export_total": { "name": "Total feed-in" },
       "frequency": { "name": "Grid frequency" },
+      "gas_consumption": { "name": "Gas consumption" },
+      "gas_flow_rate": { "name": "Gas flow rate" },
+      "gas_power": { "name": "Gas power" },
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
@@ -85,7 +87,9 @@
       "reactive_power_export": { "name": "Reactive power feed-in" },
       "reactive_power_import": { "name": "Reactive power consumption" },
       "ssid": { "name": "SSID" },
-      "voltage_phase": { "name": "Voltage {phase}" }
+      "voltage_phase": { "name": "Voltage {phase}" },
+      "water_consumption": { "name": "Water consumption" },
+      "water_flow_rate": { "name": "Water flow rate" }
     }
   },
   "exceptions": {

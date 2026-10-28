@@ -23,8 +23,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
           "api_key": "API key generated in the AccuWeather APIs portal."
