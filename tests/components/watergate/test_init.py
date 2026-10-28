@@ -368,7 +368,9 @@ async def test_webhook_is_acknowledged_without_coordinator_data(
 
     client = await hass_client_no_auth()
     response = await client.post(
-        f"/api/webhook/{MOCK_WEBHOOK_ID}", json={"type": "valve", "state": "open"}
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "valve", "data": {"state": "open"}},
     )
 
     assert response.status == HTTPStatus.OK
+    assert await response.json() == "OK"
