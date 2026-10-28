@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -39,6 +40,7 @@ async def async_setup_entry(
 class BoschPrivacyModeSwitch(BoschCameraEntity, SwitchEntity):
     """Privacy mode of a camera."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "privacy_mode"
 
     def __init__(self, coordinator: BoschCameraCoordinator, camera_id: str) -> None:

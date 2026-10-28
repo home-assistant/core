@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,6 +45,7 @@ async def test_privacy_mode_switch(
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == f"{CAMERA_ID}_privacy_mode"
     assert entry.translation_key == "privacy_mode"
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 @pytest.mark.parametrize(
