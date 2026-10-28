@@ -141,6 +141,48 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            if (user_input[CONF_HOST], user_input[CONF_PORT]) != (
+                reconfigure_entry.data[CONF_HOST],
+                reconfigure_entry.data[CONF_PORT],
+            ):
+                self._async_abort_entries_match(
+                    {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+                )
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        suggested_values = user_input or reconfigure_entry.data
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                user_form_schema(None),
+                {
+                    CONF_HOST: suggested_values[CONF_HOST],
+                    CONF_PORT: suggested_values[CONF_PORT],
+                },
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
