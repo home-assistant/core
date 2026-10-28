@@ -1321,7 +1321,7 @@ async def test_prefer_local_intents_match_failed(
     async def mock_converse(**kwargs: Any) -> conversation.ConversationResult:
         with (
             chat_session.async_get_chat_session(
-                hass, kwargs["conversation_id"]
+                hass, kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):
@@ -1337,6 +1337,60 @@ async def test_prefer_local_intents_match_failed(
         await pipeline_input.execute()
 
     assert agent_chat_log_roles == ["system", "user"]
+
+
+async def test_reply_of_agent_without_chat_log(
+    hass: HomeAssistant,
+    init_components,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test the speech of an agent that does not use the chat log is its reply."""
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine="test-agent"
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="Hello",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=lambda event: None,
+        ),
+    )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            supports_streaming=False,
+        ),
+    ):
+        await pipeline_input.validate()
+
+    response = intent.IntentResponse(language=hass.config.language)
+    response.async_set_speech("Agent response")
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(response=response),
+    ):
+        await pipeline_input.execute()
+
+    with conversation.async_get_chat_log(hass, mock_chat_session) as chat_log:
+        assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+            ("user", "Hello"),
+            ("assistant", "Agent response"),
+        ]
+        assert chat_log.content[-1].agent_id == "test-agent"
 
 
 async def test_intent_continue_conversation(
@@ -1973,7 +2027,9 @@ async def test_chat_log_tts_streaming(
                         yield {"content": chunk}
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             conversation.async_get_chat_log(
                 hass,
                 session,

@@ -432,9 +432,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Clean up after a logout."""
         nonlocal loaded
 
+        # The logout event is not sent here because the tokens aren't cleared yet,
+        # CloudClient.logout_cleanups sends it.
+
         # Forget a pending auto-login, hass_nabucasa cancels it on logout.
-        # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
-        # the tokens, so a client re-reading the status would still see a session.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
         # Allow _on_start to create a new config entry on the next login.
         loaded = False

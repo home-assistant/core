@@ -61,6 +61,13 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     ),
 )
 
+AC_CONNECTED_BINARY_SENSOR_TYPE = SystemBridgeBinarySensorEntityDescription(
+    key="ac_connected",
+    translation_key="ac_connected",
+    device_class=BinarySensorDeviceClass.PLUG,
+    value_fn=lambda data: data.battery.ac_connected,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -83,6 +90,14 @@ async def async_setup_entry(
         entities.extend(
             SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
             for description in BATTERY_BINARY_SENSOR_TYPES
+        )
+
+    # Desktops have no mains supply to report, so leave the sensor out there
+    if coordinator.data.battery.ac_connected is not None:
+        entities.append(
+            SystemBridgeBinarySensor(
+                coordinator, AC_CONNECTED_BINARY_SENSOR_TYPE, entry.data[CONF_PORT]
+            )
         )
 
     async_add_entities(entities)

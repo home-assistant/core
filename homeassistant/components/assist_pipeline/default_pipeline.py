@@ -14,7 +14,7 @@ import hass_nabucasa
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
     chat_session,
     device_registry as dr,
@@ -594,7 +594,7 @@ class _DefaultPipelineProcessor:
             await conversation.async_prepare_intents(self.host.hass, language)
         await conversation.async_prepare_agent(self.host.hass, agent_id, language)
 
-    async def recognize_intent(
+    async def recognize_intent(  # noqa: C901
         self,
         intent_input: str,
         conversation_id: str,
@@ -739,7 +739,9 @@ class _DefaultPipelineProcessor:
 
             with (
                 chat_session.async_get_chat_session(
-                    self.host.hass, user_input.conversation_id
+                    self.host.hass,
+                    user_input.conversation_id,
+                    context=user_input.context,
                 ) as session,
                 conversation.async_get_chat_log(
                     self.host.hass,
@@ -829,6 +831,14 @@ class _DefaultPipelineProcessor:
                     speech = conversation_result.response.speech.get("plain", {}).get(
                         "speech", ""
                     )
+                    # Agents that do not use the chat log only answer in their result.
+                    if chat_log.content[-1].role == "user" and speech:
+                        chat_log.async_add_assistant_content_without_tools(
+                            conversation.AssistantContent(
+                                agent_id=agent_id,
+                                content=speech,
+                            )
+                        )
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
@@ -845,6 +855,16 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except conversation.ConversationBusyError as src_error:
+            raise IntentRecognitionError(
+                code="intent-busy",
+                message=str(src_error),
+            ) from src_error
+        except Unauthorized as src_error:
+            raise IntentRecognitionError(
+                code="intent-unauthorized",
+                message="Not allowed to continue this conversation",
+            ) from src_error
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(

@@ -1,7 +1,7 @@
 """Support for NWS weather service."""
 
 from functools import partial
-from typing import Any, Required, TypedDict, cast, override
+from typing import Any, Literal, Required, TypedDict, cast, override
 
 from pynws import SimpleNWS
 
@@ -24,8 +24,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -94,7 +93,7 @@ async def async_setup_entry(
         entity_id := entity_registry.async_get_entity_id(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])}_{HOURLY}",
+            f"{base_unique_id(**entry.data[CONF_LOCATION])}_{HOURLY}",
         )
     ):
         entity_registry.async_remove(entity_id)
@@ -158,6 +157,20 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )
+
+    @callback
+    @override
+    def _async_subscription_started(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
+
+    @callback
+    @override
+    def _async_subscription_ended(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
 
     @property
     def nws(self) -> SimpleNWS:
