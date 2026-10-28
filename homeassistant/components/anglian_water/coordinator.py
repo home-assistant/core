@@ -8,6 +8,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    HourlyReadingsUnavailableError,
     InvalidGrantError,
     UnknownEndpointError,
 )
@@ -26,7 +27,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
@@ -87,6 +88,11 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="service_unavailable",
                 retry_after=60.0,
+            ) from err
+        except HourlyReadingsUnavailableError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="hourly_readings_unavailable",
             ) from err
         else:
             async_delete_consent_required_issue(
