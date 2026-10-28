@@ -951,16 +951,16 @@ The `__init__` of a class inheriting from `Entity` does nothing but pass its
 own parameters to `super().__init__()`. Remove the method:
 
 ```python
-class FlowItVmcSensor(FlowItVmcEntity, SensorEntity):
+class AriaQVmcSensor(AriaQVmcEntity, SensorEntity):
     # `__init__` is redundant, the base class already takes these three
     def __init__(
         self,
-        coordinator: FlowItCoordinator,
+        coordinator: AriaQCoordinator,
         vmc: FlowItVMCMachine,
-        description: FlowItVmcSensorEntityDescription,
+        entity_description: AriaQVmcSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, vmc, description)
+        super().__init__(coordinator, vmc, entity_description)
 ```
 
 A parameter counts as forwarded when it reaches the parent under its own
@@ -975,26 +975,26 @@ checker resolves the `__init__` the class would inherit -- the first one
 along the MRO after the class itself, which is the same function
 `super().__init__` already calls -- and compares signatures. Positional
 parameters must line up by index; a parent declaring the same names in
-another order would silently receive swapped arguments. For parameters the
-override forwards *by keyword*, the parent must declare each under that
-exact name at that same index, rather than absorbing it into `**kwargs`.
+another order would silently receive swapped arguments. Every parameter a
+caller may pass by keyword, and every parameter the override forwards *by
+keyword*, must also keep its name: the parent must declare it under that
+exact name at that same index, and accept it by keyword too, rather than
+renaming it, making it positional-only, or absorbing it into `**kwargs`.
 Keyword-only parameters need only to exist in the parent, since they could
 never be passed positionally to begin with. A parent taking more parameters
 is fine: the extra ones have defaults, or the delegating call would already
 fail, so dropping the override only widens what callers may pass.
 
-Note that the parent is free to *name* a positionally forwarded parameter
-differently. Removing the override then renames it for anyone calling that
-argument by keyword -- a change mypy catches, but worth knowing about.
-
-Three cases are deliberately out of scope. A constructor that declares
+Four cases are deliberately out of scope. A constructor that declares
 **default values** is skipped, because the parent's defaults may differ and
 removing the override would then change behaviour. A **decorated**
 `__init__` is skipped, since the decorator can give the override a purpose
-the body does not show. A constructor in a **decorated class** is skipped
-too: `@dataclass` and friends synthesize an `__init__` of their own, which
-the hand-written one currently suppresses, so removing it would not fall
-through to the parent at all.
+the body does not show. A **decorated inherited** `__init__` is skipped as
+well: an `@abstractmethod` constructor needs the override to make the class
+concrete, and a wrapper can change how the parent is called. A constructor
+in a **decorated class** is skipped too: `@dataclass` and friends synthesize
+an `__init__` of their own, which the hand-written one currently suppresses,
+so removing it would not fall through to the parent at all.
 
 
 ## `home_assistant_redundant_translation_key` checker

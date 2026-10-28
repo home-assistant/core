@@ -7,7 +7,7 @@ behaviour.
 
 Pylint's own ``useless-parent-delegation`` does not cover these, because
 it bails out as soon as the override's signature differs from the parent's
--- and narrowing the annotations (``coordinator: FlowItCoordinator``
+-- and narrowing the annotations (``coordinator: AriaQCoordinator``
 instead of the base's ``CoordinatorEntity`` type) is exactly what these
 constructors do.
 """
@@ -78,6 +78,11 @@ def _positional_names(args: nodes.Arguments) -> list[str]:
     return [arg.name for arg in (*(args.posonlyargs or ()), *(args.args or ()))][1:]
 
 
+def _keyword_start(args: nodes.Arguments) -> int:
+    """Return the first ``_positional_names`` index callers may pass by keyword."""
+    return max(len(args.posonlyargs or ()) - 1, 0)
+
+
 def _exposes_same_signature(
     args: nodes.Arguments, inherited: nodes.Arguments, by_keyword: set[str]
 ) -> bool:
@@ -87,22 +92,30 @@ def _exposes_same_signature(
     so the two must agree on where a caller's arguments land. Positional
     parameters must line up by index -- a parent that declares the same
     names in another order would silently receive swapped arguments.
-    Names matter for the parameters the override itself forwards by
-    keyword: the parent must declare each under that exact name, at that
-    same index, rather than absorbing it into ``**kwargs``. Keyword-only
-    parameters need only to exist in the parent, since they could never
-    be passed positionally to begin with. A parent taking *more*
-    parameters is fine -- the extra ones have defaults, or the delegating
-    call would already fail -- so dropping the override only widens what
-    callers may pass.
+    Names matter for every parameter a caller may pass by keyword, and
+    for every one the override itself forwards by keyword: the parent must
+    declare each under that exact name, at that same index, and accept
+    it by keyword too, rather than absorbing it into ``**kwargs``.
+    Keyword-only parameters need only to exist in the parent, since they
+    could never be passed positionally to begin with. A parent taking
+    *more* parameters is fine -- the extra ones have defaults, or the
+    delegating call would already fail -- so dropping the override only
+    widens what callers may pass.
     """
     own_positional = _positional_names(args)
     inherited_positional = _positional_names(inherited)
     if len(own_positional) > len(inherited_positional):
         return False
+    own_keyword_start = _keyword_start(args)
+    inherited_keyword_start = _keyword_start(inherited)
     inherited_index = {name: index for index, name in enumerate(inherited_positional)}
     for index, name in enumerate(own_positional):
-        if name in by_keyword and inherited_index.get(name) != index:
+        keyword_capable = index >= own_keyword_start
+        if not keyword_capable and name not in by_keyword:
+            continue
+        if inherited_index.get(name) != index:
+            return False
+        if keyword_capable and index < inherited_keyword_start:
             return False
     inherited_names = inherited_index.keys() | {
         arg.name for arg in (inherited.kwonlyargs or ())
@@ -218,6 +231,10 @@ class RedundantEntityInitChecker(BaseChecker):
         if (by_keyword := _forwarded_by_keyword(node.args, call)) is None:
             return
         if (inherited := _inherited_init(parent)) is None:
+            return
+        # A decorator (``@abstractmethod``, a wrapper) can make the override
+        # necessary or change how the inherited constructor is called.
+        if inherited.decorators is not None:
             return
         if not _exposes_same_signature(node.args, inherited.args, by_keyword):
             return

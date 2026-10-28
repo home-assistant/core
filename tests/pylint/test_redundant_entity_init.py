@@ -248,6 +248,80 @@ class MySensor(MyBaseEntity):
             id="parent_declares_parameters_in_another_order",
         ),
         pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+
+class MyBaseEntity(Entity):
+    def __init__(self, device: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = device
+
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name)
+            """,
+            id="parent_renames_positional_parameter",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+
+class MyBaseEntity(Entity):
+    def __init__(self, name: str, /) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = name
+
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name)
+            """,
+            id="parent_positional_only_parameter",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+from abc import abstractmethod
+
+class MyBaseEntity(Entity):
+    @abstractmethod
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = name
+
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name)
+            """,
+            id="abstract_inherited_init",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+from collections.abc import Callable
+
+def keyword_only(func: Callable) -> Callable:
+    \"\"\"Wrap.\"\"\"
+    def wrapper(self, **kwargs) -> None:
+        func(self, **kwargs)
+    return wrapper
+
+class MyBaseEntity(Entity):
+    @keyword_only
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        self._attr_name = name
+
+class MySensor(MyBaseEntity):
+    def __init__(self, name: str) -> None:
+        \"\"\"Initialize.\"\"\"
+        super().__init__(name=name)
+            """,
+            id="decorated_inherited_init",
+        ),
+        pytest.param(
             """
 class NotAnEntity:
     def __init__(self, name: str) -> None:
