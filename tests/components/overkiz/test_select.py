@@ -20,7 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+    oven_local_control_event,
+    oven_remote_control_event,
+)
 
 OPEN_CLOSED_PEDESTRIAN = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
@@ -209,3 +216,66 @@ async def test_oven_mode_options_from_state(
         "eco",
         "auto",
     ]
+
+
+async def test_oven_mode_options_update_on_event(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven mode options follow core:AvailableModesState device events."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN_MODE.device_url,
+                device_states=[
+                    {
+                        "name": "core:AvailableModesState",
+                        "type": 10,
+                        "value": ["eco", "pizza", "auto"],
+                    },
+                    {"name": "core:ModeState", "type": 3, "value": "pizza"},
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(OVEN_MODE.entity_id)
+    assert state.state == "pizza"
+    assert state.attributes[ATTR_OPTIONS] == ["eco", "pizza", "auto"]
+
+
+async def test_oven_select_local_control_transition(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven mode select follows localControl blocks delivered after setup."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    assert hass.states.get(OVEN_MODE.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_local_control_event(OVEN_MODE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_MODE.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_remote_control_event(OVEN_MODE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_MODE.entity_id).state != STATE_UNAVAILABLE

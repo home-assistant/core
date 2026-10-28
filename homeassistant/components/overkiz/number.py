@@ -224,15 +224,18 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     ),
     # Oven (ogp:Oven) - target temperature.
     # The device enforces an absolute physical envelope and rejects anything
-    # outside it; the per-mode advisory bounds are not applied here on purpose
-    # (they are UI hints and can be tighter than values the oven accepts).
+    # outside it; the per-mode advisory bounds (exposed as diagnostic sensors)
+    # are not applied here on purpose: they are absent while the oven is idle
+    # and are only hints, so the oven accepts values outside them. The envelope
+    # below is kept wide enough to never reject a value the appliance advertises
+    # as valid in any mode.
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_TEMPERATURE,
         name="Target temperature",
         command=OverkizCommand.SET_TARGET_TEMPERATURE,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_min_value=35,
+        native_min_value=30,
         native_max_value=275,
         native_step=5,
         mode=NumberMode.BOX,

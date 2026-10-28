@@ -24,7 +24,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_unavailable_event,
+    oven_local_control_event,
+    oven_remote_control_event,
+)
 
 MY_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
@@ -325,3 +331,33 @@ async def test_oven_control_unavailable_during_local_control(
     )
 
     assert hass.states.get(OVEN_START.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_button_local_control_transition(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven buttons follow localControl blocks delivered after setup."""
+    await setup_overkiz_integration(fixture=OVEN_START.fixture)
+
+    assert hass.states.get(OVEN_START.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_local_control_event(OVEN_START.device_url)],
+    )
+
+    assert hass.states.get(OVEN_START.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_remote_control_event(OVEN_START.device_url)],
+    )
+
+    assert hass.states.get(OVEN_START.entity_id).state != STATE_UNAVAILABLE

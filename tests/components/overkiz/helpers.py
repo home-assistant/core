@@ -82,6 +82,56 @@ def device_state_changed_event(
     )
 
 
+def oven_local_control_event(device_url: str) -> DeviceStateChangedEvent:
+    """Build an event where the oven advertises a blanket localControl block.
+
+    While this block is active the oven refuses every remote command, so its
+    control entities must become unavailable.
+    """
+    return device_state_changed_event(
+        device_url,
+        [
+            {
+                "name": "ogp:UnavailableFeaturesState",
+                "type": 10,
+                "value": [
+                    {
+                        "feature": "*",
+                        "commands": ["*"],
+                        "states": ["*"],
+                        "cause": "localControl",
+                    }
+                ],
+            }
+        ],
+    )
+
+
+def oven_remote_control_event(device_url: str) -> DeviceStateChangedEvent:
+    """Build an event where the oven only advertises ignored modeConstraint blocks.
+
+    Feature-scoped modeConstraint entries do not block remote operation, so the
+    control entities must be available again.
+    """
+    return device_state_changed_event(
+        device_url,
+        [
+            {
+                "name": "ogp:UnavailableFeaturesState",
+                "type": 10,
+                "value": [
+                    {
+                        "feature": "recipeControl",
+                        "commands": ["*"],
+                        "states": ["*"],
+                        "cause": "modeConstraint",
+                    }
+                ],
+            }
+        ],
+    )
+
+
 def device_available_event(device_url: str) -> DeviceAvailableEvent:
     """Build a DEVICE_AVAILABLE event for the given device."""
     return DeviceAvailableEvent(name=EventName.DEVICE_AVAILABLE, device_url=device_url)

@@ -25,6 +25,8 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
+    oven_local_control_event,
+    oven_remote_control_event,
 )
 
 MEMORIZED_POSITION = FixtureDevice(
@@ -259,3 +261,33 @@ async def test_number_unavailability(
     assert (
         hass.states.get(EXPECTED_NUMBER_OF_SHOWER.entity_id).state == STATE_UNAVAILABLE
     )
+
+
+async def test_oven_number_local_control_transition(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven number follows localControl blocks delivered after setup."""
+    await setup_overkiz_integration(fixture=OVEN_TARGET_TEMPERATURE.fixture)
+
+    assert hass.states.get(OVEN_TARGET_TEMPERATURE.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_local_control_event(OVEN_TARGET_TEMPERATURE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_TARGET_TEMPERATURE.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_remote_control_event(OVEN_TARGET_TEMPERATURE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_TARGET_TEMPERATURE.entity_id).state != STATE_UNAVAILABLE
