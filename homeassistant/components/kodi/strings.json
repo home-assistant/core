@@ -33,6 +33,18 @@
         "description": "The credentials for Kodi at {host} are no longer valid. Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "ws_port": "WebSocket port"
+        },
+        "data_description": {
+          "host": "[%key:component::kodi::config::step::user::data_description::host%]",
+          "ws_port": "The WebSocket port (sometimes called TCP port in Kodi). Leave empty if WebSocket is not enabled."
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

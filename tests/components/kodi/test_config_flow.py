@@ -828,3 +828,109 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize(
+    ("ws_port", "expected_ws_port"),
+    [
+        pytest.param({CONF_WS_PORT: 9091}, 9091, id="ws_port"),
+        pytest.param({}, None, id="no_ws_port"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant, ws_port: dict[str, int], expected_ws_port: int | None
+) -> None:
+    """Test reconfigure updates the connection settings."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "2.2.2.2", CONF_PORT: 8081, CONF_SSL: True, **ws_port},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == REAUTH_ENTRY_DATA | {
+        CONF_HOST: "2.2.2.2",
+        CONF_PORT: 8081,
+        CONF_SSL: True,
+        CONF_WS_PORT: expected_ws_port,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "connection", "error"),
+    [
+        pytest.param(
+            InvalidAuthError, MockConnection(), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(
+            CannotConnectError, MockConnection(), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            None,
+            MockConnection(connected=False),
+            "cannot_connect",
+            id="ws_cannot_connect",
+        ),
+        pytest.param(Exception, MockConnection(), "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    side_effect: type[Exception] | None,
+    connection: MockConnection,
+    error: str,
+) -> None:
+    """Test reconfigure handles errors and can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            side_effect=side_effect,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=connection,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+                CONF_PORT: 8080,
+                CONF_SSL: False,
+                CONF_WS_PORT: 9090,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with _patch_kodi_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+                CONF_PORT: 8080,
+                CONF_SSL: False,
+                CONF_WS_PORT: 9090,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "2.2.2.2"
