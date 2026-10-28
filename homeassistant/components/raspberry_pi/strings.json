@@ -7,6 +7,9 @@
     }
   },
   "exceptions": {
+    "firmware_info_error": {
+      "message": "Error fetching Raspberry Pi firmware info: {error}"
+    },
     "not_hassio": {
       "message": "Home Assistant is not running on Home Assistant OS, the Raspberry Pi entry will be removed"
     },
