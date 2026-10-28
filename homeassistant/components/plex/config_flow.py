@@ -293,19 +293,26 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
                 url = plex_server.url_in_use
                 if not url.startswith("https"):
                     new_server_config.pop(CONF_VERIFY_SSL)
-                return self.async_update_reload_and_abort(
+                result = self.async_update_and_abort(
                     entry,
                     data_updates={
                         CONF_SERVER: plex_server.friendly_name,
                         PLEX_SERVER_CONFIG: {**new_server_config, CONF_URL: url},
                     },
                 )
+                # The update listener only applies options, it does not reload.
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
         else:
             parsed_url = urlparse(server_config[CONF_URL])
+            host = parsed_url.hostname
+            if host and ":" in host:
+                host = f"[{host}]"
+            ssl = parsed_url.scheme == "https"
             user_input = {
-                CONF_HOST: parsed_url.hostname,
-                CONF_PORT: parsed_url.port or DEFAULT_PORT,
-                CONF_SSL: parsed_url.scheme == "https",
+                CONF_HOST: host,
+                CONF_PORT: parsed_url.port or (443 if ssl else 80),
+                CONF_SSL: ssl,
                 CONF_VERIFY_SSL: server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             }
 

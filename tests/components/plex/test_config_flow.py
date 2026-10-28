@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import plexapi.exceptions
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from pytest_homeassistant.typing import ClientSessionGenerator
 import requests.exceptions
 import requests_mock
@@ -962,23 +962,75 @@ def mock_reconfigured_server(
 async def test_reconfigure(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     user_input: dict[str, Any],
     server_config: dict[str, Any],
 ) -> None:
     """Test reconfiguring the server address."""
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    # Plex registers an options update listener that does not reload the entry
+    options_listener = AsyncMock()
+    entry.add_update_listener(options_listener)
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
-    )
+    with patch("homeassistant.components.plex.async_unload_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {**DEFAULT_DATA, PLEX_SERVER_CONFIG: server_config}
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 2
+    assert "has an update listener" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("url", "host", "port", "use_ssl"),
+    [
+        pytest.param(
+            "http://[2001:db8::1]:32400", "[2001:db8::1]", 32400, False, id="ipv6"
+        ),
+        pytest.param(
+            "https://plex.example.com",
+            "plex.example.com",
+            443,
+            True,
+            id="https_no_port",
+        ),
+        pytest.param(
+            "http://plex.example.com", "plex.example.com", 80, False, id="http_no_port"
+        ),
+    ],
+)
+async def test_reconfigure_form_defaults(
+    hass: HomeAssistant, url: str, host: str, port: int, use_ssl: bool
+) -> None:
+    """Test the reconfigure form is prefilled from the stored URL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **DEFAULT_DATA,
+            PLEX_SERVER_CONFIG: {**DEFAULT_DATA[PLEX_SERVER_CONFIG], CONF_URL: url},
+        },
+        options=DEFAULT_OPTIONS,
+        unique_id=DEFAULT_DATA[CONF_SERVER_IDENTIFIER],
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_HOST) == host
+    assert get_schema_suggested_value(schema, CONF_PORT) == port
+    assert get_schema_suggested_value(schema, CONF_SSL) is use_ssl
 
 
 @pytest.mark.parametrize(
