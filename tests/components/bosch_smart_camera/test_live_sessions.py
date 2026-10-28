@@ -20,9 +20,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bosch_smart_camera.const import DOMAIN
 from homeassistant.components.bosch_smart_camera.coordinator import SCAN_INTERVAL
-from homeassistant.components.camera import DATA_COMPONENT, async_get_stream_source
-from homeassistant.components.camera.webrtc import (
+from homeassistant.components.camera import (
+    DATA_COMPONENT,
     CameraWebRTCProvider,
+    async_get_stream_source,
     async_register_webrtc_provider,
 )
 from homeassistant.components.stream import Stream
