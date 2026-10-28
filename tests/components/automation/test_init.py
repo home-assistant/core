@@ -1,6 +1,7 @@
 """The tests for the automation component."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
@@ -8,6 +9,20 @@ from unittest.mock import ANY, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.repairs import get_repairs
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -47,7 +62,12 @@ from homeassistant.exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    trigger as trigger_helper,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -67,21 +87,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockUser,
-    assert_setup_component,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
 from tests.components.logbook.common import MockRow, mock_humanify
-from tests.components.repairs import get_repairs
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -481,6 +487,72 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     # shares the same context
     assert len(calls) == 1
     assert calls[0].context is second_trigger_context
+
+
+async def test_automation_triggered_event_trace_ids(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the automation triggered event identifies the trace of its run."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "with_id",
+                    "alias": "with id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+                {
+                    "alias": "without id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+            ]
+        },
+    )
+    triggered_events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
+
+    hass.bus.async_fire("test_event")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": automation.DOMAIN, "item_id": "with_id"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(run_ids) == 2
+
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.with_id"
+    ] == [
+        {
+            ATTR_NAME: "with id",
+            ATTR_ENTITY_ID: "automation.with_id",
+            ATTR_SOURCE: "event 'test_event'",
+            "item_id": "with_id",
+            "run_id": run_id,
+        }
+        for run_id in run_ids
+    ]
+    # Without an id there is no item id to look up the trace by
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.without_id"
+    ] == [
+        {
+            ATTR_NAME: "without id",
+            ATTR_ENTITY_ID: "automation.without_id",
+            ATTR_SOURCE: "event 'test_event'",
+        }
+    ] * 2
 
 
 async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -1132,7 +1204,8 @@ async def test_reload_moved_automation_without_alias(
 ) -> None:
     """Test that changing the order of automations without alias triggers reload."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1187,7 +1260,8 @@ async def test_reload_identical_automations_without_id(
 ) -> None:
     """Test reloading of identical automations without id."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1362,7 +1436,8 @@ async def test_reload_unchanged_automation(
 ) -> None:
     """Test an unmodified automation is not reloaded."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {automation.DOMAIN: [automation_config]}
         assert await async_setup_component(hass, automation.DOMAIN, config)
@@ -1397,7 +1472,8 @@ async def test_reload_automation_when_blueprint_changes(
 ) -> None:
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1906,6 +1982,167 @@ async def test_automation_with_error_in_script(
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
+
+
+@pytest.mark.parametrize("ignored", [False, True])
+async def test_automation_changed_entity_id_moves_service_not_found_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ignored: bool,
+) -> None:
+    """Test service not found issues follow an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "hello", suggested_object_id="hello"
+    )
+    entity_registry.async_get_or_create(
+        "automation", "automation", "hello_2", suggested_object_id="hello_2"
+    )
+    # Left by a deleted automation which had the same entity_id
+    deleted_issue_id = "automation.hello_service_not_found_test.other"
+    ir.async_create_issue(
+        hass,
+        automation.DOMAIN,
+        deleted_issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="service_not_found",
+        translation_placeholders={
+            "service": "test.other",
+            "entity_id": "automation.hello",
+            "name": "Deleted",
+            "edit": "/config/automation/edit/deleted",
+        },
+    )
+    deleted_issue = issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "hello",
+                    "alias": "Hello",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+                {
+                    "id": "hello_2",
+                    "alias": "Hello 2",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    old_issue_id = "automation.hello_service_not_found_test.automation"
+    other_issue_id = "automation.hello_2_service_not_found_test.automation"
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id)
+    other_issue = issue_registry.async_get_issue(automation.DOMAIN, other_issue_id)
+    assert other_issue
+    ir.async_ignore_issue(hass, automation.DOMAIN, old_issue_id, ignored)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id) is None
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_service_not_found_test.automation"
+    )
+    assert issue
+    assert issue.is_persistent
+    assert (issue.dismissed_version is not None) is ignored
+    assert issue.translation_placeholders == {
+        "service": "test.automation",
+        "entity_id": "automation.renamed",
+        "name": "Hello",
+        "edit": "/config/automation/edit/hello",
+    }
+    # Another automation's issue is not moved, its id starts with the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, other_issue_id) == other_issue
+    )
+    # A deleted automation's issue is not moved, it has the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, deleted_issue_id)
+        == deleted_issue
+    )
+    assert (
+        issue_registry.async_get_issue(
+            automation.DOMAIN, "automation.renamed_service_not_found_test.other"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("ignored", [False, True])
+@pytest.mark.parametrize("destination_ignored", [False, True])
+async def test_automation_changed_entity_id_moves_service_not_found_issue_onto_stale(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ignored: bool,
+    destination_ignored: bool,
+) -> None:
+    """Test a moved issue keeps its ignored state over a stale issue at its new id."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "hello", suggested_object_id="hello"
+    )
+    new_issue_id = "automation.renamed_service_not_found_test.automation"
+    # Left by a deleted automation which had the new entity_id
+    ir.async_create_issue(
+        hass,
+        automation.DOMAIN,
+        new_issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="service_not_found",
+        translation_placeholders={
+            "service": "test.automation",
+            "entity_id": "automation.renamed",
+            "name": "Deleted",
+            "edit": "/config/automation/edit/deleted",
+        },
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, new_issue_id, destination_ignored)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "Hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    old_issue_id = "automation.hello_service_not_found_test.automation"
+    ir.async_ignore_issue(hass, automation.DOMAIN, old_issue_id, ignored)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id) is None
+    issue = issue_registry.async_get_issue(automation.DOMAIN, new_issue_id)
+    assert issue
+    assert (issue.dismissed_version is not None) is ignored
+    assert issue.translation_placeholders == {
+        "service": "test.automation",
+        "entity_id": "automation.renamed",
+        "name": "Hello",
+        "edit": "/config/automation/edit/hello",
+    }
 
 
 async def test_automation_with_error_in_script_2(
@@ -2632,12 +2869,39 @@ async def test_extraction_functions_with_trigger_targets(
                                 "label_id": "combined-label",
                             },
                         },
+                        # Exclude block in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "scene.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                        },
                     ],
                     "conditions": [],
                     "actions": [
                         {
                             "action": "test.script",
                             "data": {"entity_id": "light.action_entity"},
+                        },
+                        {
+                            "action": "test.script",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.action_excluded_entity",
+                                    "device_id": "action-excluded-device",
+                                    "area_id": "action-excluded-area",
+                                    "floor_id": "action-excluded-floor",
+                                    "label_id": "action-excluded-label",
+                                },
+                            },
                         },
                     ],
                 },
@@ -2651,7 +2915,9 @@ async def test_extraction_functions_with_trigger_targets(
         "scene.target_entity_list1",
         "scene.target_entity_list2",
         "scene.combined_entity",
+        "scene.excluded_entity",
         "light.action_entity",
+        "light.action_excluded_entity",
     }
 
     # Test device extraction from trigger targets
@@ -2660,6 +2926,8 @@ async def test_extraction_functions_with_trigger_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
+        "action-excluded-device",
     }
 
     # Test area extraction from trigger targets
@@ -2668,6 +2936,8 @@ async def test_extraction_functions_with_trigger_targets(
         "area-target-1",
         "area-target-2",
         "combined-area",
+        "excluded-area",
+        "action-excluded-area",
     }
 
     # Test floor extraction from trigger targets
@@ -2676,6 +2946,8 @@ async def test_extraction_functions_with_trigger_targets(
         "floor-target-1",
         "floor-target-2",
         "combined-floor",
+        "excluded-floor",
+        "action-excluded-floor",
     }
 
     # Test label extraction from trigger targets
@@ -2684,6 +2956,8 @@ async def test_extraction_functions_with_trigger_targets(
         "label-target-1",
         "label-target-2",
         "combined-label",
+        "excluded-label",
+        "action-excluded-label",
     }
 
     # Test automations_with_* functions
@@ -2821,6 +3095,21 @@ async def test_extraction_functions_with_condition_targets(
                             },
                             "options": {"behavior": "any"},
                         },
+                        # Exclude block in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                            "options": {"behavior": "any"},
+                        },
                     ],
                     "actions": [
                         {
@@ -2840,6 +3129,7 @@ async def test_extraction_functions_with_condition_targets(
         "light.condition_entity_list1",
         "light.condition_entity_list2",
         "light.combined_entity",
+        "light.excluded_entity",
         "light.action_entity",
     }
 
@@ -2849,6 +3139,7 @@ async def test_extraction_functions_with_condition_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
     }
 
     # Test area extraction from condition targets
@@ -2857,6 +3148,7 @@ async def test_extraction_functions_with_condition_targets(
         "area-condition-1",
         "area-condition-2",
         "combined-area",
+        "excluded-area",
     }
 
     # Test floor extraction from condition targets
@@ -2865,6 +3157,7 @@ async def test_extraction_functions_with_condition_targets(
         "floor-condition-1",
         "floor-condition-2",
         "combined-floor",
+        "excluded-floor",
     }
 
     # Test label extraction from condition targets
@@ -2873,6 +3166,7 @@ async def test_extraction_functions_with_condition_targets(
         "label-condition-1",
         "label-condition-2",
         "combined-label",
+        "excluded-label",
     }
 
     # Test automations_with_* functions
@@ -3340,6 +3634,11 @@ async def test_blueprint_automation_bad_config(
         "name": "automation 0",
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
+    # The automation is broken, but still listed under its blueprint
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
 
 
 async def test_blueprint_automation_fails_substitution(
@@ -4249,40 +4548,490 @@ async def test_automation_changed_entity_id(
     assert entry.entity_id == "automation.custom_id"
 
     hass.states.async_set("binary_sensor.test", "on")
+    running = asyncio.Event()
 
+    @callback
+    def running_cb(event: Event) -> None:
+        running.set()
+
+    hass.bus.async_listen("running", running_cb)
+
+    # Triggers are attached after the state is written during startup, so this
+    # is available when rendering the trigger
+    hass.set_state(CoreState.not_running)
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: {
                 "id": "test_automation",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
                 "condition": {
                     "condition": "state",
                     "entity_id": "binary_sensor.test",
                     "state": "on",
                 },
-                "action": {"action": "test.automation"},
+                "action": [
+                    {"action": "test.automation"},
+                    {"event": "running"},
+                    {"wait_for_trigger": {"trigger": "event", "event_type": "go"}},
+                    {"action": "test.automation"},
+                ],
             }
         },
     )
+    await hass.async_start()
+    await hass.async_block_till_done()
 
     # Automation should work with the custom entity_id
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
+    hass.bus.async_fire("automation.custom_id_event")
+    # Can't block till done while the action is waiting
+    await asyncio.wait_for(running.wait(), 1)
     assert len(calls) == 1
+    assert hass.states.get("automation.custom_id").attributes["current"] == 1
 
-    # Change entity_id while loaded
+    # Change entity_id while the action is running
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="automation.custom_id_2"
     )
     assert entry.entity_id == "automation.custom_id_2"
-    await hass.async_block_till_done()
 
-    # Automation should still work after entity_id change
-    hass.bus.async_fire("test_event")
+    # The running action is not stopped by the entity_id change
+    assert hass.states.get("automation.custom_id") is None
+    assert hass.states.get("automation.custom_id_2").attributes["current"] == 1
+    hass.bus.async_fire("go")
     await hass.async_block_till_done()
     assert len(calls) == 2
+    assert hass.states.get("automation.custom_id_2").attributes["current"] == 0
+
+    # Automation should still work after entity_id change, and the triggers
+    # are attached with this referring to the new entity_id
+    hass.bus.async_fire("automation.custom_id_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    running.clear()
+    hass.bus.async_fire("automation.custom_id_2_event")
+    await asyncio.wait_for(running.wait(), 1)
+    assert len(calls) == 3
+    hass.bus.async_fire("go")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+
+async def test_automation_changed_entity_id_enables_trigger(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test a trigger disabled by `this` is attached after an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "enabled": "{{ this.entity_id == 'automation.enabled' }}",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # No trigger is attached
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.enabled"
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def _turn_off_automation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Turn off the renamed automation."""
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.second"},
+        blocking=True,
+    )
+
+
+async def _remove_automation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Remove the renamed automation from the entity registry."""
+    entity_registry.async_remove("automation.second")
+    await asyncio.sleep(0)
+
+
+async def _rename_automation_again(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Change the entity_id of the renamed automation again."""
+    entity_registry.async_update_entity(
+        "automation.second", new_entity_id="automation.third"
+    )
+    await asyncio.sleep(0)
+
+
+@pytest.mark.parametrize(
+    ("change", "expected_listeners"),
+    [
+        pytest.param(_turn_off_automation, {}, id="turn_off"),
+        pytest.param(_remove_automation, {}, id="remove"),
+        pytest.param(
+            _rename_automation_again,
+            {"automation.third_event": 1},
+            id="rename_again",
+        ),
+    ],
+)
+async def test_automation_changed_entity_id_while_attaching(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    change: Callable[[HomeAssistant, er.EntityRegistry], Coroutine[Any, Any, None]],
+    expected_listeners: dict[str, int],
+) -> None:
+    """Test no trigger listeners leak when the automation changes while attaching."""
+    entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation", suggested_object_id="first"
+    )
+    # Triggers are attached after the state is written during startup
+    hass.set_state(CoreState.not_running)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    def trigger_listeners() -> dict[str, int]:
+        return {
+            event_type: count
+            for event_type, count in hass.bus.async_listeners().items()
+            if event_type.endswith("_event")
+        }
+
+    assert trigger_listeners() == {"automation.first_event": 1}
+
+    release = asyncio.Event()
+    initialize_triggers = trigger_helper.async_initialize_triggers
+
+    async def blocked_initialize_triggers(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[], None] | None:
+        await release.wait()
+        return await initialize_triggers(*args, **kwargs)
+
+    with patch.object(
+        trigger_helper, "async_initialize_triggers", blocked_initialize_triggers
+    ):
+        entity_registry.async_update_entity(
+            "automation.first", new_entity_id="automation.second"
+        )
+        await asyncio.sleep(0)
+        # The triggers are detached while the new ones are being attached
+        assert trigger_listeners() == {}
+        await change(hass, entity_registry)
+        release.set()
+        await hass.async_block_till_done()
+
+    assert trigger_listeners() == expected_listeners
+
+
+async def _start_hass(hass: HomeAssistant) -> None:
+    """Start Home Assistant, which enables the automation."""
+    await hass.async_start()
+
+
+async def _turn_on_automation(hass: HomeAssistant) -> None:
+    """Turn on the automation."""
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "automation.first"},
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("core_state", "initial_state", "enable"),
+    [
+        pytest.param(CoreState.not_running, True, _start_hass, id="startup"),
+        pytest.param(CoreState.running, False, _turn_on_automation, id="turn_on"),
+    ],
+)
+async def test_automation_changed_entity_id_while_enabling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
+    initial_state: bool,
+    enable: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+) -> None:
+    """Test triggers attached while enabling follow an entity_id change."""
+    entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation", suggested_object_id="first"
+    )
+    hass.set_state(core_state)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "initial_state": initial_state,
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    def trigger_listeners() -> dict[str, int]:
+        return {
+            event_type: count
+            for event_type, count in hass.bus.async_listeners().items()
+            if event_type.endswith("_event")
+        }
+
+    attaching = asyncio.Event()
+    release = asyncio.Event()
+    initialize_triggers = trigger_helper.async_initialize_triggers
+
+    async def blocked_initialize_triggers(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[], None] | None:
+        attaching.set()
+        await release.wait()
+        return await initialize_triggers(*args, **kwargs)
+
+    with patch.object(
+        trigger_helper, "async_initialize_triggers", blocked_initialize_triggers
+    ):
+        # Starting or turning on waits until the triggers are attached
+        enable_task = hass.async_create_task(enable(hass))
+        await asyncio.wait_for(attaching.wait(), 1)
+        entity_registry.async_update_entity(
+            "automation.first", new_entity_id="automation.second"
+        )
+        await asyncio.sleep(0)
+        release.set()
+        await enable_task
+        await hass.async_block_till_done()
+
+    assert trigger_listeners() == {"automation.second_event": 1}
+
+
+async def test_unavailable_automation_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue of a broken automation follows its entity_id."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    assert issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.bad_automation_validation_failed_schema"
+    )
+
+    entity_registry.async_update_entity(
+        "automation.bad_automation", new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.bad_automation_validation_failed_schema"
+    )
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_validation_failed_schema"
+    )
+    assert issue
+    assert issue.translation_placeholders["entity_id"] == "automation.renamed"
+
+    # The moved issue is deleted when the automation is removed
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: []},
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_validation_failed_schema"
+    )
+
+
+BROKEN_AUTOMATION_ISSUE_ID = "automation.bad_automation_validation_failed_schema"
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_reload_keeps_ignored_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test an ignored issue survives a reload replacing a still broken automation."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+    assert issue.dismissed_version is not None
+    old_state = hass.states.get("automation.bad_automation")
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # The changed config makes the reload replace the still broken automation
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "id": "bad",
+                "alias": "bad_automation",
+                "description": "Still broken",
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("automation.bad_automation") is not old_state
+    assert events == []
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID)
+        == issue
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+@pytest.mark.parametrize(
+    "new_config",
+    [
+        pytest.param(
+            {
+                "id": "bad",
+                "alias": "bad_automation",
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            id="fixed",
+        ),
+        pytest.param([], id="removed"),
+    ],
+)
+async def test_reload_deletes_resolved_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+    new_config: dict[str, Any] | list[Any],
+) -> None:
+    """Test the issue is deleted when a broken automation is fixed or removed."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: new_config},
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_failed_reload_deletes_issue_of_removed_automation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test the issue of a removed automation is deleted if adding new ones fails."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {
+                    "id": "bad",
+                    "alias": "bad_automation",
+                    "description": "Still broken",
+                }
+            },
+        ),
+        patch(
+            "homeassistant.components.automation.util._create_automation_entities",
+            side_effect=HomeAssistantError("Boom"),
+        ),
+        pytest.raises(HomeAssistantError, match="Boom"),
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
 
 
 class _MockDiagnosticTrigger(Trigger):

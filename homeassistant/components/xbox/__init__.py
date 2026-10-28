@@ -41,7 +41,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
     """Set up xbox from a config entry."""
 
     implementation = await async_get_config_entry_implementation(hass, entry)
@@ -67,18 +67,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
     """Handle update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -102,7 +100,7 @@ async def async_remove_config_entry_device(
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> None:
     """Migrate config entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
@@ -184,4 +182,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
                 )
             hass.config_entries.async_update_entry(entry, minor_version=3)
             hass.config_entries.async_schedule_reload(entry.entry_id)
-    return True

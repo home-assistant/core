@@ -26,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
@@ -277,13 +278,6 @@ class CollectionImageImageEntity(ImageEntity):
             try:
                 return self.path.read_bytes()
             except OSError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="image_read_error",
-                    translation_placeholders={
-                        "path": str(self.path),
-                        "error": str(err),
-                    },
-                ) from err
+                raise os_read_error(err, str(self.path)) from err
 
         return None

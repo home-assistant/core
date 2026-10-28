@@ -12,6 +12,7 @@ from pyoctoprintapi import (
     WebcamSettings,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.octoprint import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,8 +20,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import DEFAULT_JOB, DEFAULT_PRINTER
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 
 from aioharmanluxury import HarmanLuxuryError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import DEVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_client")

@@ -1,6 +1,7 @@
 """Test template helper functions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -9,8 +10,6 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.template.helpers import raise_no_default, resolve_area_id
-
-from tests.common import MockConfigEntry
 
 
 def test_raise_no_default() -> None:

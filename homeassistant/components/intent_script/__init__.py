@@ -3,9 +3,9 @@
 import probatio
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, script, service
+from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -20,7 +20,8 @@ from .const import (
     DEFAULT_CONF_ASYNC_ACTION,
     DOMAIN,
 )
-from .helpers import async_load_intents, async_reload
+from .helpers import async_load_intents
+from .services import async_setup_services
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -63,14 +64,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_load_intents(hass, intents)
 
-    async def _handle_reload(service_call: ServiceCall) -> None:
-        return await async_reload(hass, service_call)
-
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        _handle_reload,
-    )
+    async_setup_services(hass)
 
     return True

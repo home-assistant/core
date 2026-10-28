@@ -2,11 +2,11 @@
 
 The output directory holds:
 
-- `results.json`: the skip decision, the pull request number and head SHA, the
-  change counts and the touched domains.
+- `results.json`: the skip decision, the pull request number and head SHA, and
+  the touched domains.
 - `pr-meta.json`: the pull request metadata.
 - `domains.txt`: one touched domain with a `quality_scale.yaml` per line.
-- `pr-diff.patch`: the unified diff of the pull request.
+- `pr-diff.patch`: the unified diff of the pull request, without test snapshots.
 - `rules-index.txt`: one `tier | rule | title` line per quality scale rule.
 - `rules/<rule>.md`: the documentation page of every quality scale rule.
 
@@ -15,6 +15,7 @@ The last three are written only for a pull request that is reviewed.
 
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 from .models import PullRequest, Results, RuleDoc
@@ -38,8 +39,16 @@ def write_pull_request(output: Path, results: Results, pr: PullRequest) -> None:
 
 
 def write_diff(output: Path, diff: str) -> None:
-    """Write the unified diff of the pull request."""
-    (output / "pr-diff.patch").write_text(diff, encoding="utf-8")
+    """Write the unified diff of the pull request without test snapshots."""
+    sections = re.split(r"(?m)^(?=diff --git )", diff)
+    (output / "pr-diff.patch").write_text(
+        "".join(
+            section
+            for section in sections
+            if not section.partition("\n")[0].endswith(".ambr")
+        ),
+        encoding="utf-8",
+    )
 
 
 def write_rules(output: Path, index: str, docs: list[RuleDoc]) -> None:

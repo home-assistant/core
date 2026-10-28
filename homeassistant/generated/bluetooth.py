@@ -170,6 +170,16 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
+        "domain": "flic_button",
+        "service_uuid": "00420000-8f59-4420-870d-84f3b617e493",
+    },
+    {
+        "connectable": True,
+        "domain": "flic_button",
+        "service_uuid": "00c90000-2cbd-4f2a-a725-5ccd960ffb7d",
+    },
+    {
+        "connectable": True,
         "domain": "gardena_bluetooth",
         "manufacturer_id": 1062,
         "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
@@ -921,6 +931,30 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "MOTION_*",
     },
     {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_id": 4554,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_data_start": [
+            2,
+            4,
+        ],
+        "manufacturer_id": 61695,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "manufacturer_id": 8394,
+    },
+    {
+        "connectable": False,
+        "domain": "okok_scale",
+        "local_name": "80:F4:16:*",
+    },
+    {
         "connectable": True,
         "domain": "opendisplay",
         "manufacturer_id": 9286,
@@ -1099,6 +1133,17 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "specialized_turbo",
         "local_name": "SPECIALIZED*",
+    },
+    {
+        "connectable": True,
+        "domain": "spin_ble",
+        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    },
+    {
+        "connectable": True,
+        "domain": "steamvr_base_station",
+        "local_name": "LHB-*",
+        "manufacturer_id": 1373,
     },
     {
         "connectable": False,

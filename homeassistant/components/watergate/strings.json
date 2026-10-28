@@ -19,6 +19,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "water_flowing": {
+        "name": "Water flowing"
+      },
+      "wifi_connected": {
+        "name": "Wi-Fi connected"
+      }
+    },
     "event": {
       "auto_shut_off_duration": {
         "name": "Duration auto shut-off",
@@ -81,6 +92,12 @@
       "water_meter_duration": {
         "name": "Water meter duration"
       },
+      "water_meter_negative_duration": {
+        "name": "Water meter negative duration"
+      },
+      "water_meter_negative_volume": {
+        "name": "Water meter negative volume"
+      },
       "water_meter_volume": {
         "name": "Water meter volume"
       },
@@ -101,6 +118,9 @@
     }
   },
   "exceptions": {
+    "auto_shut_off_update_failed": {
+      "message": "Failed to update auto shut-off"
+    },
     "valve_action_failed": {
       "message": "Failed to change the valve state"
     }

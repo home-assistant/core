@@ -14,15 +14,13 @@ PLATFORMS: Final[list[Platform]] = [Platform.MEDIA_PLAYER]
 type DuneHDConfigEntry = ConfigEntry[DuneHDPlayer]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DuneHDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DuneHDConfigEntry) -> None:
     """Set up a config entry."""
     entry.runtime_data = DuneHDPlayer(entry.data[CONF_HOST])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DuneHDConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DuneHDConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

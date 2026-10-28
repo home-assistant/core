@@ -1,0 +1,13 @@
+{
+  "exceptions": {
+    "arm_away_failed": {
+      "message": "Failed to send the arm away command to the Egardia alarm."
+    },
+    "arm_home_failed": {
+      "message": "Failed to send the arm home command to the Egardia alarm."
+    },
+    "disarm_failed": {
+      "message": "Failed to send the disarm command to the Egardia alarm."
+    }
+  }
+}

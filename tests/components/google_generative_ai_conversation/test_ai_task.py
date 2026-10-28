@@ -6,16 +6,19 @@ from unittest.mock import AsyncMock, Mock, patch
 from google.genai.types import File, FileState, GenerateContentResponse
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_CHAT_MODEL,
+    CONF_RECOMMENDED,
+    CONF_THINKING_LEVEL,
     RECOMMENDED_IMAGE_MODEL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
@@ -286,3 +289,142 @@ async def test_generate_image(
     assert call_args.kwargs["model"] == RECOMMENDED_IMAGE_MODEL
     assert call_args.kwargs["contents"] == ["Generate a test image"]
     assert call_args.kwargs["config"].response_modalities == ["TEXT", "IMAGE"]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("structured", [False, True])
+async def test_data_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    structured: bool,
+) -> None:
+    """AI Task DATA uses the shared config, preserving schema and actual output cap."""
+    subentry = mock_config_entry.subentries["ulid-ai-task"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_CHAT_MODEL: "gemini-3.8-flash",
+            CONF_THINKING_LEVEL: "low",
+        },
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [{"text": '{"value": "Done"}'}],
+                    },
+                    "finishReason": "STOP",
+                }
+            ]
+        }
+    ]
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test",
+        entity_id="ai_task.google_ai_task",
+        instructions="Test",
+        structure=probatio.Schema({probatio.Required("value"): str})
+        if structured
+        else None,
+    )
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert not {"temperature", "topP", "topK"}.intersection(config)
+    assert config["thinkingConfig"] == {
+        "include_thoughts": True,
+        "thinking_level": "LOW",
+    }
+    assert config["maxOutputTokens"] == 3000
+    assert ("responseSchema" in config) is structured
+    assert result.data == ({"value": "Done"} if structured else '{"value": "Done"}')
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "expected_image_support"),
+    [
+        ("models/gemini-2.5-flash-image", True),
+        ("gemini-nano-banana-2.1", True),
+        ("gemini-2.5-flash", False),
+    ],
+)
+async def test_image_support_without_recommended_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_image_support: bool,
+) -> None:
+    """Test image generation support is derived from the model name."""
+    subentry = mock_config_entry.subentries["ulid-ai-task"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_RECOMMENDED: False, CONF_CHAT_MODEL: model},
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[ai_task.DATA_COMPONENT].get_entity("ai_task.google_ai_task")
+    assert (
+        bool(entity.supported_features & ai_task.AITaskEntityFeature.GENERATE_IMAGE)
+        is expected_image_support
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "model", ["models/gemini-2.5-flash-image", "gemini-nano-banana-2.1"]
+)
+async def test_image_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    model: str,
+) -> None:
+    """The dedicated IMAGE path is clean independently of model classification."""
+    subentry = mock_config_entry.subentries["ulid-ai-task"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={**subentry.data, CONF_CHAT_MODEL: model}
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "data": "aW1hZ2U=",
+                                    "mimeType": "image/png",
+                                }
+                            }
+                        ],
+                    }
+                }
+            ]
+        }
+    ]
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/test.png",
+    ):
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test",
+            entity_id="ai_task.google_ai_task",
+            instructions="Image",
+        )
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert config == {"responseModalities": ["TEXT", "IMAGE"]}
+    assert result["mime_type"] == "image/png"

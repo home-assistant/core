@@ -19,9 +19,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    _suggest_report_issue,
-)
+from homeassistant.components.sensor.recorder import _suggest_report_issue  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -36,6 +34,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
 )
 from homeassistant.helpers import entity_registry as er
@@ -84,10 +83,10 @@ from .const import (
 )
 
 PERIOD2CRON = {
-    QUARTER_HOURLY: "{minute}/15 * * * *",
+    QUARTER_HOURLY: "{quarter_minute}/15 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
-    WEEKLY: "{minute} {hour} * * {day}",
+    WEEKLY: "{minute} {hour} * * {weekday}",
     MONTHLY: "{minute} {hour} {day} * *",
     BIMONTHLY: "{minute} {hour} {day} */2 *",
     QUARTERLY: "{minute} {hour} {day} */3 *",
@@ -276,7 +275,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         if isinstance(self.last_reset, (datetime)):
             data["last_reset"] = self.last_reset.isoformat()
         data["last_valid_state"] = (
-            str(self.last_valid_state) if self.last_valid_state else None
+            str(self.last_valid_state) if self.last_valid_state is not None else None
         )
         data["status"] = self.status
         data["input_device_class"] = str(self.input_device_class)
@@ -366,8 +365,10 @@ class UtilityMeterSensor(RestoreSensor):
             # the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
+                quarter_minute=meter_offset.seconds // 60 % 15,
                 hour=meter_offset.seconds // 3600,
                 day=meter_offset.days + 1,
+                weekday=meter_offset.days % 7 + 1,
             )
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:
@@ -610,8 +611,8 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_reset = last_sensor_data.last_reset
             self._last_valid_state = last_sensor_data.last_valid_state
             if last_sensor_data.status == COLLECTING:
-                # Null lambda to allow cancelling the collection on tariff change
-                self._collecting = lambda: None
+                # No-op to allow cancelling the collection on tariff change
+                self._collecting = async_noop
             # Reconfigure the scheduler from the restored last_reset so that
             # next_reset is not shifted forward on entity restore/rename.
             self._config_scheduler(

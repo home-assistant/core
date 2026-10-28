@@ -7,7 +7,7 @@ from ical.diagnostics import redact_ics
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import RemoteCalendarConfigEntry
+from .coordinator import RemoteCalendarConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

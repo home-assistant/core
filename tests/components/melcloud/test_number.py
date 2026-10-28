@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FLOW_TEMPERATURE_ENTITY = "number.ecodan_zone_1_flow_temperature"
 

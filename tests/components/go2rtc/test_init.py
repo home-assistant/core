@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from pathlib import Path
 from typing import NamedTuple
@@ -23,11 +24,20 @@ from go2rtc_client.ws import (
     WsError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture_bytes,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     DATA_CAMERA_PREFS,
+    DOMAIN as CAMERA_DOMAIN,
     CameraPreferences,
+    CameraService,
+    CameraServiceArgument,
     DynamicStreamSettings,
     StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
@@ -51,7 +61,7 @@ from homeassistant.components.go2rtc.util import (
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -59,8 +69,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import MockCamera
-
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture_bytes
 
 # The go2rtc provider does not inspect the details of the offer and answer,
 # and is only a pass through.
@@ -966,8 +974,10 @@ async def test_setup_with_recommended_version_repair(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the issue is created
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     issue = issue_registry.async_get_issue(DOMAIN, "recommended_version")
     assert issue
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable is False
     assert issue.is_persistent is False
     assert issue.severity == ir.IssueSeverity.WARNING
@@ -977,6 +987,10 @@ async def test_setup_with_recommended_version_repair(
         "recommended_version": RECOMMENDED_VERSION,
         "current_version": "1.9.5",
     }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
 
 
 @pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
@@ -999,6 +1013,7 @@ async def test_setup_with_unsupported_version_repair(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_version")
     assert issue
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable is False
     assert issue.is_persistent is False
     assert issue.severity == ir.IssueSeverity.ERROR
@@ -1044,6 +1059,60 @@ async def test_async_get_image(
         HomeAssistantError, match="Stream source is not supported by go2rtc"
     ):
         await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_get_image_go2rtc_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_test_integration: MockCamera,
+    snapshot_error: Go2RtcClientError,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test go2rtc snapshot failures are handled as Home Assistant errors."""
+    with pytest.raises(
+        HomeAssistantError, match="Unable to get image from go2rtc"
+    ) as exc_info:
+        await async_get_image(hass, init_test_integration.entity_id)
+
+    assert exc_info.value.__cause__ is snapshot_error
+
+    client = await hass_client()
+    response = await client.get(f"/api/camera_proxy/{init_test_integration.entity_id}")
+
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert await response.text() == "500: Internal Server Error"
+    assert "Error handling request" not in caplog.text
+    assert init_test_integration.stream is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_snapshot_service_go2rtc_error(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    snapshot_error: Go2RtcClientError,
+    tmp_path: Path,
+) -> None:
+    """Test snapshot actions propagate go2rtc failures without writing a file."""
+    hass.config.allowlist_external_dirs.add(str(tmp_path))
+    snapshot_file = tmp_path / "snapshot.jpg"
+
+    with pytest.raises(
+        HomeAssistantError, match="Unable to get image from go2rtc"
+    ) as exc_info:
+        await hass.services.async_call(
+            CAMERA_DOMAIN,
+            CameraService.SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: init_test_integration.entity_id,
+                CameraServiceArgument.FILENAME: str(snapshot_file),
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.__cause__ is snapshot_error
+    assert not snapshot_file.exists()
+    assert init_test_integration.stream is None
 
 
 @pytest.mark.usefixtures("init_integration")

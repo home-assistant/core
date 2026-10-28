@@ -256,6 +256,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "sensibo",
     },
+    "Slide": {
+        "always_discover": True,
+        "domain": "slide_local",
+    },
     "Smart Bridge": {
         "always_discover": False,
         "domain": "lutron_caseta",
@@ -561,6 +565,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -712,6 +721,16 @@ ZEROCONF = {
             "name": "velux_klf_lan_*",
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",
@@ -720,6 +739,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
         },
     ],
     "_iometer._tcp.local.": [

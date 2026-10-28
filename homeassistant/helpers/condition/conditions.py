@@ -19,6 +19,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_noop,
     callback,
 )
 from homeassistant.exceptions import (
@@ -36,12 +37,7 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
-from .models import (
-    ConditionChecker,
-    ConditionCheckerType,
-    ConditionCheckParams,
-    _async_noop,
-)
+from .models import ConditionChecker, ConditionCheckerType, ConditionCheckParams
 from .tracing import condition_trace_set_result, condition_trace_update_result
 
 
@@ -81,7 +77,7 @@ class LegacyConditionChecker(ConditionChecker):
     @override
     async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
         if not isinstance(self._checker, _StateDependentChecker):
-            return _async_noop
+            return async_noop
 
         @callback
         def state_changed(_: Event[EventStateChangedData]) -> None:

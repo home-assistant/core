@@ -19,6 +19,7 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
@@ -42,8 +43,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SELECT_ENTITY = "select.living_ventilation_state"
 _VALVE_SELECT_ENTITY = "select.bedroom_valve_ventilation_state"

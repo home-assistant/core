@@ -11,6 +11,7 @@ from lyngdorf import LyngdorfInvalidValueError, LyngdorfModel, LyngdorfUnsupport
 from lyngdorf.states import Control, PlaybackState, Repeat
 from lyngdorf.streaming import NowPlaying
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -56,8 +57,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_position_jump, notify_receiver_update
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 POSITION_UPDATED_AT = datetime(2026, 8, 17, 13, tzinfo=UTC)
 
