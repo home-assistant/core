@@ -14,6 +14,7 @@ import yaml
 from homeassistant import config
 from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
+from homeassistant.components.scene import SceneService, SceneServiceArgument
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -32,7 +33,7 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
         autospec=True,
         return_value={"scene": {"name": "Hallo", "entities": {"light.kitchen": "on"}}},
     ):
-        await hass.services.async_call("scene", "reload", blocking=True)
+        await hass.services.async_call("scene", SceneService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     assert hass.states.get("scene.hallo") is not None
@@ -43,7 +44,7 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
         autospec=True,
         return_value={"scene": {"name": "Bye", "entities": {"light.kitchen": "on"}}},
     ):
-        await hass.services.async_call("scene", "reload", blocking=True)
+        await hass.services.async_call("scene", SceneService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     assert len(test_reloaded_event) == 2
@@ -78,7 +79,7 @@ async def test_reload_config_service_failed(
             ),
         ),
     ):
-        await hass.services.async_call("scene", "reload", blocking=True)
+        await hass.services.async_call("scene", SceneService.RELOAD, blocking=True)
 
 
 async def test_apply_service(hass: HomeAssistant) -> None:
@@ -90,15 +91,22 @@ async def test_apply_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "scene", "apply", {"entities": {"light.bed_light": "off"}}, blocking=True
+        "scene",
+        SceneService.APPLY,
+        {SceneServiceArgument.ENTITIES: {"light.bed_light": "off"}},
+        blocking=True,
     )
 
     assert hass.states.get("light.bed_light").state == "off"
 
     await hass.services.async_call(
         "scene",
-        "apply",
-        {"entities": {"light.bed_light": {"state": "on", "brightness": 50}}},
+        SceneService.APPLY,
+        {
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            }
+        },
         blocking=True,
     )
 
@@ -109,10 +117,12 @@ async def test_apply_service(hass: HomeAssistant) -> None:
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     await hass.services.async_call(
         "scene",
-        "apply",
+        SceneService.APPLY,
         {
-            "transition": 42,
-            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            SceneServiceArgument.TRANSITION: 42,
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            },
         },
         blocking=True,
     )
@@ -140,8 +150,12 @@ async def test_create_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
-        {"scene_id": "hallo", "entities": {}, "snapshot_entities": []},
+        SceneService.CREATE,
+        {
+            SceneServiceArgument.SCENE_ID: "hallo",
+            SceneServiceArgument.ENTITIES: {},
+            SceneServiceArgument.SNAPSHOT_ENTITIES: [],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -150,10 +164,12 @@ async def test_create_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
+        SceneService.CREATE,
         {
-            "scene_id": "hallo",
-            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            SceneServiceArgument.SCENE_ID: "hallo",
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            },
         },
         blocking=True,
     )
@@ -168,10 +184,12 @@ async def test_create_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
+        SceneService.CREATE,
         {
-            "scene_id": "hallo",
-            "entities": {"light.kitchen_light": {"state": "on", "brightness": 100}},
+            SceneServiceArgument.SCENE_ID: "hallo",
+            SceneServiceArgument.ENTITIES: {
+                "light.kitchen_light": {"state": "on", "brightness": 100}
+            },
         },
         blocking=True,
     )
@@ -186,10 +204,12 @@ async def test_create_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
+        SceneService.CREATE,
         {
-            "scene_id": "hallo_2",
-            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            SceneServiceArgument.SCENE_ID: "hallo_2",
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            },
         },
         blocking=True,
     )
@@ -217,10 +237,12 @@ async def test_delete_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
+        SceneService.CREATE,
         {
-            "scene_id": "hallo",
-            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            SceneServiceArgument.SCENE_ID: "hallo",
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            },
         },
         blocking=True,
     )
@@ -229,7 +251,7 @@ async def test_delete_service(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "scene",
-            "delete",
+            SceneService.DELETE,
             {
                 "entity_id": "scene.hallo_3",
             },
@@ -239,7 +261,7 @@ async def test_delete_service(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "scene",
-            "delete",
+            SceneService.DELETE,
             {
                 "entity_id": "scene.hallo_2",
             },
@@ -251,7 +273,7 @@ async def test_delete_service(
 
     await hass.services.async_call(
         "scene",
-        "delete",
+        SceneService.DELETE,
         {
             "entity_id": "scene.hallo",
         },
@@ -273,8 +295,11 @@ async def test_snapshot_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
-        {"scene_id": "hallo", "snapshot_entities": ["light.my_light"]},
+        SceneService.CREATE,
+        {
+            SceneServiceArgument.SCENE_ID: "hallo",
+            SceneServiceArgument.SNAPSHOT_ENTITIES: ["light.my_light"],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -294,8 +319,11 @@ async def test_snapshot_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
-        {"scene_id": "hallo_2", "snapshot_entities": ["light.not_existent"]},
+        SceneService.CREATE,
+        {
+            SceneServiceArgument.SCENE_ID: "hallo_2",
+            SceneServiceArgument.SNAPSHOT_ENTITIES: ["light.not_existent"],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -307,11 +335,13 @@ async def test_snapshot_service(
 
     await hass.services.async_call(
         "scene",
-        "create",
+        SceneService.CREATE,
         {
-            "scene_id": "hallo_3",
-            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
-            "snapshot_entities": ["light.my_light"],
+            SceneServiceArgument.SCENE_ID: "hallo_3",
+            SceneServiceArgument.ENTITIES: {
+                "light.bed_light": {"state": "on", "brightness": 50}
+            },
+            SceneServiceArgument.SNAPSHOT_ENTITIES: ["light.my_light"],
         },
         blocking=True,
     )
@@ -330,11 +360,13 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.MultipleInvalid) as ex:
         await hass.services.async_call(
             "scene",
-            "create",
+            SceneService.CREATE,
             {
-                "scene_id": "hallo",
-                "entities": {"light.my_light": {"state": "on", "brightness": 50}},
-                "snapshot_entities": ["light.my_light"],
+                SceneServiceArgument.SCENE_ID: "hallo",
+                SceneServiceArgument.ENTITIES: {
+                    "light.my_light": {"state": "on", "brightness": 50}
+                },
+                SceneServiceArgument.SNAPSHOT_ENTITIES: ["light.my_light"],
             },
             blocking=True,
         )
