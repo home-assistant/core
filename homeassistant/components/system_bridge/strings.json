@@ -211,6 +211,12 @@
       "space_used": {
         "name": "{partition} space used"
       },
+      "swap_used": {
+        "name": "Swap used"
+      },
+      "swap_used_percentage": {
+        "name": "Swap usage"
+      },
       "version": {
         "name": "Version"
       },

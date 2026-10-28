@@ -131,6 +131,12 @@
       "space_used": {
         "default": "mdi:harddisk"
       },
+      "swap_used": {
+        "default": "mdi:harddisk"
+      },
+      "swap_used_percentage": {
+        "default": "mdi:harddisk"
+      },
       "version": {
         "default": "mdi:counter"
       },
