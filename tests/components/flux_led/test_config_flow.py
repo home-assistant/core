@@ -23,6 +23,7 @@ from homeassistant.components.flux_led.const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -861,6 +862,36 @@ async def test_reconfigure(hass: HomeAssistant, unique_id: str | None) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_reconfigure_reloads_loaded_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reconfiguring a loaded entry reloads it without the deprecated helper."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert config_entry.update_listeners
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    assert "has an update listener" not in caplog.text
 
 
 async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
