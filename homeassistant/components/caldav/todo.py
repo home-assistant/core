@@ -133,7 +133,7 @@ def _seconds_since_epoch(value: datetime) -> int:
 
 
 def _set_position(todo: _SortedTodo, position: int) -> None:
-    """Write a position into the text of the todo, not into vobject's parse of it.
+    """Write a position into the todo as the server sent it, not as vobject parsed it.
 
     vobject drops what follows a comma in some values.
     """
@@ -143,17 +143,19 @@ def _set_position(todo: _SortedTodo, position: int) -> None:
 
 def _move_todo(
     calendar: Calendar, uid: str, previous_uid: str | None
-) -> list[CalendarObjectResource]:
-    """Give a todo a position behind another one, and return the todos to save.
+) -> tuple[list[TodoItem], list[CalendarObjectResource]]:
+    """Give a todo a position behind another one.
 
-    It goes between its new neighbors with room left on both sides. Where they
-    leave no room, it and the todos behind it are spread out up to the next
-    todo with room, or at the end up to now, where new todos are added. They
-    are returned from the back, so the moved todo takes its place once there
-    is room.
+    Returns the list as read, and the todos to save. The todo goes between its
+    new neighbors with room left on both sides. Where they leave no room, it
+    and the todos behind it are spread out up to the next todo with room, or
+    at the end up to now, where new todos are added. The todos to save are
+    returned from the back, so the moved todo takes its place once there is
+    room.
     """
     todos = _get_todos(calendar)
-    uids = [todo.item.uid for todo in todos]
+    items = [todo.item for todo in todos]
+    uids = [item.uid for item in items]
     for wanted in (uid, previous_uid):
         if wanted is not None and wanted not in uids:
             raise HomeAssistantError(f"Could not find To-do item {wanted}")
@@ -167,11 +169,11 @@ def _move_todo(
     after = group[index + 1].position if index + 1 < len(group) else None
     if before is None:
         if after is None or moved.position < after:
-            return []
+            return items, []
         _set_position(moved, after - SORT_ORDER_GAP)
-        return [moved.resource]
+        return items, [moved.resource]
     if before < moved.position and (after is None or moved.position < after):
-        return []
+        return items, []
     spread = [moved]
     limit = _seconds_since_epoch(dt_util.utcnow())
     for todo in group[index + 1 :]:
@@ -182,7 +184,7 @@ def _move_todo(
     step = max(1, min(SORT_ORDER_GAP, (limit - before) // (len(spread) + 1)))
     for count, todo in enumerate(spread, 1):
         _set_position(todo, before + step * count)
-    return [todo.resource for todo in reversed(spread)]
+    return items, [todo.resource for todo in reversed(spread)]
 
 
 def _todo_item(resource: CalendarObjectResource) -> TodoItem | None:
@@ -390,12 +392,17 @@ class WebDavTodoListEntity(TodoListEntity):
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
-        """Move a To-do item behind another one, or to the top."""
+        """Move a To-do item behind another one, or to the top.
+
+        A list read for the move that is not the one shown, for example without
+        an item deleted elsewhere, counts as changed, so the refresh reads it in
+        full even if the sync report missed that change.
+        """
         if uid == previous_uid:
             return
         async with self._write_lock:
             try:
-                todos = await self.hass.async_add_executor_job(
+                items, todos = await self.hass.async_add_executor_job(
                     _move_todo, self._calendar, uid, previous_uid
                 )
             except (
@@ -405,6 +412,14 @@ class WebDavTodoListEntity(TodoListEntity):
                 ValueError,
             ) as err:
                 raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+            except HomeAssistantError:
+                self._writes += 1
+                self.hass.async_create_task(
+                    self.async_update_ha_state(force_refresh=True)
+                )
+                raise
+            if items != self._attr_todo_items:
+                self._writes += 1
             try:
                 for todo in todos:
                     await self.hass.async_add_executor_job(

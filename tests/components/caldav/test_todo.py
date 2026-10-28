@@ -1413,7 +1413,7 @@ def saved_positions(dav_client: Mock) -> list[tuple[str, str | None]]:
 
 
 @pytest.mark.parametrize(
-    ("todos", "move", "expected_saved", "expected_order"),
+    ("server_todos", "move", "expected_saved", "expected_order"),
     [
         pytest.param(
             [
@@ -1611,14 +1611,14 @@ async def test_move_item(
     dav_client: Mock,
     calendar: Mock,
     hass_ws_client: WebSocketGenerator,
-    todos: list[str],
+    server_todos: list[str],
     move: dict[str, str],
     expected_saved: list[tuple[str, str]],
     expected_order: list[str],
 ) -> None:
     """Test moving an item saves the positions it needs."""
     calendar.search.return_value = [
-        Todo(dav_client, None, todo, calendar) for todo in todos
+        Todo(dav_client, None, todo, calendar) for todo in server_todos
     ]
     dav_client.put.return_value.status = 204
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1781,12 +1781,16 @@ async def test_move_item_in_place(
     assert calendar.search.call_count == reads + 1
 
 
+@pytest.mark.parametrize(
+    "sync_token", ["token-2", "token-1"], ids=["report_changed", "report_missed"]
+)
 async def test_move_item_in_place_refreshes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     dav_client: Mock,
     calendar: Mock,
     hass_ws_client: WebSocketGenerator,
+    sync_token: str,
 ) -> None:
     """Test a move that saves nothing still shows the order the server has."""
     calendar.search.return_value = [
@@ -1795,11 +1799,18 @@ async def test_move_item_in_place_refreshes(
     ]
     calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
     await hass.config_entries.async_setup(config_entry.entry_id)
+    subscriber = await hass_ws_client(hass)
+    await subscriber.send_json_auto_id(
+        {"type": "todo/item/subscribe", "entity_id": TEST_ENTITY}
+    )
+    assert (await subscriber.receive_json())["success"]
+    msg = await subscriber.receive_json()
+    assert [item["uid"] for item in msg["event"]["items"]] == ["a", "b"]
     calendar.search.return_value = [
         Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:2"), calendar),
         Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:1"), calendar),
     ]
-    calendar.get_objects_by_sync_token.return_value = sync_report("token-2")
+    calendar.get_objects_by_sync_token.return_value = sync_report(sync_token)
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -1810,15 +1821,8 @@ async def test_move_item_in_place_refreshes(
     await hass.async_block_till_done()
 
     assert not dav_client.put.called
-    result = await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.GET_ITEMS,
-        {},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-        return_response=True,
-    )
-    assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == ["b", "a"]
+    msg = await subscriber.receive_json()
+    assert [item["uid"] for item in msg["event"]["items"]] == ["b", "a"]
 
 
 @pytest.mark.parametrize(
@@ -1958,6 +1962,34 @@ async def test_update_after_failed_move(
     await hass.async_block_till_done()
 
     assert calendar.search.call_count == reads + 2
+
+
+async def test_move_item_removed_elsewhere(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move of an item removed elsewhere shows the list without it."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo(uid), calendar) for uid in ("a", "b")
+    ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    calendar.search.return_value = [Todo(dav_client, None, sorted_todo("a"), calendar)]
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    resp = await client.receive_json()
+    assert resp["error"]["message"] == "Could not find To-do item b"
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(
