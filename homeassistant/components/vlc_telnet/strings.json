@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "addon_managed": "This entry is managed by the VLC app and cannot be reconfigured.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",

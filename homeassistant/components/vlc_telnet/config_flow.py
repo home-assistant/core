@@ -8,7 +8,7 @@ from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -147,6 +147,9 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration."""
         errors = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        # Supervisor discovery would overwrite the endpoint of app entries.
+        if reconfigure_entry.source == SOURCE_HASSIO:
+            return self.async_abort(reason="addon_managed")
 
         if user_input is not None:
             if (user_input[CONF_HOST], user_input[CONF_PORT]) != (
@@ -170,16 +173,9 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
                     reconfigure_entry, data_updates=user_input
                 )
 
-        suggested_values = user_input or reconfigure_entry.data
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                user_form_schema(None),
-                {
-                    CONF_HOST: suggested_values[CONF_HOST],
-                    CONF_PORT: suggested_values[CONF_PORT],
-                },
-            ),
+            data_schema=user_form_schema(user_input or dict(reconfigure_entry.data)),
             errors=errors,
         )
 

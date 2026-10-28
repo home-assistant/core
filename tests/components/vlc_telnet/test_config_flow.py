@@ -498,3 +498,45 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_keeps_endpoint_defaults(hass: HomeAssistant) -> None:
+    """Test omitted host and port default to the existing entry values."""
+    entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert dict(entry.data) == {**RECONFIGURE_ENTRY_DATA, "password": "new-password"}
+
+
+async def test_reconfigure_hassio_entry(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts for entries managed by the Supervisor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=RECONFIGURE_ENTRY_DATA,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="hassio",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_managed"
