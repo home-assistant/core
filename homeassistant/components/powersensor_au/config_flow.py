@@ -130,7 +130,6 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # out: this stops every discovered plug from opening its own flow, and
         # lets the user ignore a discovery.
         await self.async_set_unique_id(DOMAIN)
-        self.context.update({"title_placeholders": {"name": "Powersensor"}})
 
     @override
     async def async_step_user(
