@@ -14,7 +14,7 @@ from pyipp import (
     IPPVersionNotSupportedError,
 )
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -236,8 +237,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("IPP Error", exc_info=True)
                 errors["base"] = "ipp_error"
             else:
-                await self.async_set_unique_id(info[CONF_UUID] or info[CONF_SERIAL])
-                self._abort_if_unique_id_mismatch(reason="different_device")
+                if not self._is_same_printer(reconfigure_entry, info):
+                    return self.async_abort(reason="different_device")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={**user_input, CONF_UUID: info[CONF_UUID]},
@@ -249,6 +250,19 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 DATA_SCHEMA, user_input or reconfigure_entry.data
             ),
             errors=errors,
+        )
+
+    def _is_same_printer(self, entry: ConfigEntry, info: dict[str, Any]) -> bool:
+        """Return whether the printer info belongs to the config entry."""
+        if entry.unique_id == (info[CONF_UUID] or info[CONF_SERIAL]):
+            return True
+        # A UUID advertised over zeroconf is not always in the IPP response,
+        # so fall back to the serial number recorded on the device.
+        return bool(info[CONF_SERIAL]) and any(
+            device.serial_number == info[CONF_SERIAL]
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
         )
 
     def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:

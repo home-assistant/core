@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import (
     MOCK_USER_INPUT,
@@ -635,6 +636,33 @@ async def test_reconfigure_different_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.31"
+
+
+@pytest.mark.parametrize(
+    "mock_printer", ["ipp/printer_without_uuid.json"], indirect=True
+)
+@pytest.mark.usefixtures("mock_ipp_config_flow")
+async def test_reconfigure_zeroconf_uuid_matching_device_serial(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a printer whose zeroconf UUID is not reported over IPP."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "cfe92100-67c4-11d4-a45f-f8d027761251")},
+        serial_number="555534593035345555",
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.32"
 
 
 @pytest.mark.parametrize(
