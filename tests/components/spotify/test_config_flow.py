@@ -323,7 +323,7 @@ async def test_reconfigure(
         },
     )
 
-    with patch("homeassistant.components.spotify.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.spotify.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
