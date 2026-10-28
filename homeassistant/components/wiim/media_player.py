@@ -182,6 +182,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_repeat = RepeatMode.OFF
         self._transport_capabilities: WiimTransportCapabilities | None = None
         self._supported_features_update_in_flight = False
+        self._attr_sound_mode_list = list(device.supported_equalizer_modes) or None
+        self._attr_sound_mode = device.equalizer_mode
+        self._equalizer_initialized = not device.supports_http_api
+        self._equalizer_initializing = False
+        self._equalizer_retry_used = False
 
     @property
     def _wiim_data(self) -> WiimData:
@@ -193,6 +198,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the features supported by the current device state."""
         features = SUPPORT_WIIM_BASE
+        if self._attr_sound_mode_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         if self._transport_capabilities is None:
             return features
 
@@ -394,6 +401,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             async_dispatcher_send(self.hass, _group_member_state_signal(member_udn))
 
     @callback
+    def _update_equalizer_from_sdk_cache(self) -> None:
+        """Read this device's GEQ selection independently of group metadata."""
+        self._attr_sound_mode_list = (
+            list(self._device.supported_equalizer_modes) or None
+        )
+        current = self._device.equalizer_mode
+        self._attr_sound_mode = (
+            current if current in (self._attr_sound_mode_list or ()) else None
+        )
+
+    @callback
     def _update_ha_state_from_sdk_cache(
         self,
         *,
@@ -423,6 +441,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         # Update common attributes first
         self._attr_volume_level = self._device.volume / 100
         self._attr_is_volume_muted = self._device.is_muted
+        self._update_equalizer_from_sdk_cache()
         self._attr_source_list = list(self._device.supported_input_modes) or None
 
         # Determine current group role (leader/follower/standalone)
@@ -441,7 +460,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 metadata_device.playing_status, MediaPlayerState.IDLE
             )
 
+        source_changed = False
         if metadata_device.play_mode is not None:
+            source_changed = self._attr_source != metadata_device.play_mode
             self._attr_source = metadata_device.play_mode
 
         loop_state = metadata_device.loop_state
@@ -481,6 +502,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if write_state:
             self.async_write_ha_state()
+            if source_changed and self._attr_source:
+                self._handle_sdk_equalizer_update(self._device)
             self._async_propagate_group_state_update(group_snapshot)
 
     @callback
@@ -501,6 +524,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return
 
         self._update_ha_state_from_sdk_cache()
+        if (
+            not self._equalizer_initialized
+            and not self._equalizer_initializing
+            and not self._equalizer_retry_used
+        ):
+            self._equalizer_retry_used = True
+            self._handle_sdk_equalizer_update(self._device, initialize=True)
 
     @callback
     def _handle_sdk_av_transport_event(
@@ -548,6 +578,41 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     )
 
         self._update_ha_state_from_sdk_cache()
+
+    @callback
+    def _handle_sdk_equalizer_update(
+        self, _device: WiimDevice, *, initialize: bool = False
+    ) -> None:
+        """Read the current GEQ selection when the device reports an EQ change."""
+        if not self._equalizer_initialized and not initialize:
+            return
+        initialize = not self._equalizer_initialized
+        if self._equalizer_initializing or (
+            not initialize and not self._attr_sound_mode_list
+        ):
+            return
+        self._equalizer_initializing = initialize
+
+        async def _refresh() -> None:
+            try:
+                if initialize:
+                    await self._device.async_refresh_equalizer()
+                    self._equalizer_initialized = True
+                else:
+                    await self._device.async_get_equalizer_mode()
+            except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+                if initialize and self._equalizer_retry_used:
+                    self._equalizer_initialized = True
+                LOGGER.debug("Unable to refresh GEQ for %s: %s", self.entity_id, err)
+                return
+            finally:
+                self._equalizer_initializing = False
+            self._update_equalizer_from_sdk_cache()
+            self.async_write_ha_state()
+
+        self._entry.async_create_background_task(
+            self.hass, _refresh(), name=f"wiim_{self.entity_id}_refresh_equalizer"
+        )
 
     @callback
     def _handle_sdk_refresh_event(
@@ -682,6 +747,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
         )
+        self._device.equalizer_event_callback = self._handle_sdk_equalizer_update
         self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
         self._device.play_queue_event_callback = self._handle_sdk_refresh_event
         self.async_on_remove(
@@ -698,6 +764,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._handle_sdk_refresh_event,
             )
         )
+        if not self._equalizer_initialized:
+            self._handle_sdk_equalizer_update(self._device, initialize=True)
         LOGGER.debug(
             "Entity %s registered callbacks with WiimDevice %s",
             self.entity_id,
@@ -708,6 +776,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         # Unregister SDK callbacks
+        self._device.equalizer_event_callback = None
         self._device.av_transport_event_callback = None
         self._device.play_queue_event_callback = None
         LOGGER.debug(
@@ -874,6 +943,28 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await target_device.async_set_loop_mode(
             target_device.build_loop_mode(WiimRepeatMode(repeat), shuffle)
         )
+
+    @media_player_exception_wrap
+    @override
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select a GEQ preset for this device's current input."""
+        if sound_mode not in (self._attr_sound_mode_list or ()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
+            )
+        try:
+            await self._device.async_set_equalizer_mode(sound_mode)
+        except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "async_select_sound_mode",
+                    "entity_id": self.entity_id or self._device.name,
+                },
+            ) from err
 
     @media_player_exception_wrap
     @override

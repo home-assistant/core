@@ -67,6 +67,9 @@
     "invalid_preset_id": {
       "message": "Invalid preset ID: {media_id}"
     },
+    "invalid_sound_mode": {
+      "message": "Unsupported sound mode: {sound_mode}"
+    },
     "invalid_track_id": {
       "message": "Invalid media ID: {media_id}. Expected a valid track index."
     },
