@@ -124,3 +124,97 @@ def test_eleva_300x_sensor_descriptions(
         state=SimpleNamespace(**{attribute: None}),
     )
     assert not description.exists_fn(missing)
+
+
+async def test_eleva_300x_entity_registration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    manager,
+    fan,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Eleva 300X sensors are registered through config entry setup."""
+    fan.cid = "eleva300x"
+    fan.sub_device_no = 0
+    fan.device_name = "Levoit Eleva 300X"
+    fan.device_type = "LAP-C341S-WEU"
+    fan.state = SimpleNamespace(
+        connection_status="online",
+        aqi=20,
+        carbon_filter_life=95,
+        pre_filter_life=90,
+        filter_remain_day=720,
+        filter_life=None,
+        air_quality_string=None,
+        pm1=None,
+        pm10=None,
+        pm25=None,
+    )
+
+    manager._dev_list["fans"].append(fan)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    expected = {
+        "eleva-aqi": ("20", None),
+        "eleva-carbon-filter-life": ("95", "%"),
+        "eleva-pre-filter-life": ("90", "%"),
+        "eleva-filter-remaining-days": ("720", "d"),
+    }
+
+    for key, (value, unit) in expected.items():
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, "vesync", f"eleva300x0-{key}"
+        )
+        assert entity_id is not None, f"Sensor not registered: {key}"
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == value
+        if unit is not None:
+            assert state.attributes["unit_of_measurement"] == unit
+
+
+async def test_eleva_300x_sensors_not_registered_for_other_models(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    manager,
+    fan,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Eleva 300X sensors are not registered for another purifier model."""
+    fan.cid = "otherpurifier"
+    fan.sub_device_no = 0
+    fan.device_name = "Other Levoit Purifier"
+    fan.device_type = "LAP-V102S-AAS"
+    fan.state = SimpleNamespace(
+        connection_status="online",
+        aqi=20,
+        carbon_filter_life=95,
+        pre_filter_life=90,
+        filter_remain_day=720,
+        filter_life=None,
+        air_quality_string=None,
+        pm1=None,
+        pm10=None,
+        pm25=None,
+    )
+
+    manager._dev_list["fans"].append(fan)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for key in (
+        "eleva-aqi",
+        "eleva-carbon-filter-life",
+        "eleva-pre-filter-life",
+        "eleva-filter-remaining-days",
+    ):
+        assert (
+            entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, "vesync", f"otherpurifier0-{key}"
+            )
+            is None
+        ), f"Eleva-only sensor incorrectly registered: {key}"
