@@ -223,9 +223,12 @@ def _is_slats_orientation_tilt(panel: MatterEndpoint, role: ClosurePanelRole) ->
     unit_range = panel.get_attribute_value(
         None, clusters.ClosureDimension.Attributes.UnitRange
     )
+    # UnitRangeStruct.Min/Max are plain int16 physical units (spec 5.5.6.8),
+    # unlike Position, which is percent100ths - so -90..90 here, not
+    # -9000..9000.
     return bool(
-        _extract_struct_field(unit_range, "min") == -9000
-        and _extract_struct_field(unit_range, "max") == 9000
+        _extract_struct_field(unit_range, "min") == -90
+        and _extract_struct_field(unit_range, "max") == 90
     )
 
 

@@ -1598,7 +1598,7 @@ async def test_closure_cover_slats_orientation_tilt(
         3,
         dim.id,
         dim.Attributes.UnitRange.attribute_id,
-        {0: -9000, 1: 9000},
+        {0: -90, 1: 90},
     )
     # Fully open (slats horizontal): percent100ths 5000, not the panel's
     # usual 0%=open.
@@ -1700,7 +1700,7 @@ async def test_closure_cover_slats_orientation_tilt_out_of_range(
         3,
         dim.id,
         dim.Attributes.UnitRange.attribute_id,
-        {0: 0, 1: 9000},
+        {0: 0, 1: 90},
     )
     set_node_attribute(
         matter_node,
@@ -2412,7 +2412,7 @@ async def test_closure_cover_slats_orientation_movement_direction(
         child_ep,
         dim.id,
         dim.Attributes.UnitRange.attribute_id,
-        {0: -9000, 1: 9000},
+        {0: -90, 1: 90},
     )
 
     # Parent is moving but has no target
