@@ -1,7 +1,7 @@
 """Test the Bosch Smart Camera button platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from bosch_shc_camera_client.actions import ActionResult
 from bosch_shc_camera_client.cameras import (
@@ -101,16 +101,14 @@ async def test_restart_failure(
 async def test_restart_auth_error(
     hass: HomeAssistant, enabled_entry: MockConfigEntry, mock_soft_reset: AsyncMock
 ) -> None:
-    """Test a rejected token starts reauthentication."""
+    """Test a rejected token raises without starting an unsupported reauth flow."""
     mock_soft_reset.side_effect = BoschCameraAuthError("rejected", status=401)
 
-    with (
-        patch.object(enabled_entry, "async_start_reauth") as mock_reauth,
-        pytest.raises(HomeAssistantError, match="sign in again"),
-    ):
+    with pytest.raises(HomeAssistantError, match="sign in again"):
         await _press(hass)
+    await hass.async_block_till_done()
 
-    mock_reauth.assert_called_once_with(hass)
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.usefixtures("enabled_entry")

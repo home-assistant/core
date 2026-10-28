@@ -130,7 +130,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 camera_id,
             )
         except BoschCameraAuthError as err:
-            self.config_entry.async_start_reauth(self.hass)
+            self.config_entry.async_start_reauth_if_available(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="auth_failed"
             ) from err
