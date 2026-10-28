@@ -2535,7 +2535,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.4.2
 
 # homeassistant.components.watercryst
-pyocat==1.5.0
+pyocat==1.6.0
 
 # homeassistant.components.octoprint
 pyoctoprintapi==0.1.14
