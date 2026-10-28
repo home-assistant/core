@@ -341,6 +341,96 @@ async def test_new_device_fetches_ability_refs_for_that_device(
 
 
 @pytest.mark.parametrize(
+    ("error", "translation_key", "starts_reauth"),
+    [
+        (TimeoutError("timeout"), "update_timeout", False),
+        (ImouException("cloud failure"), "fetch_devices_failed", False),
+        (InvalidAppIdOrSecretException("bad credentials"), "invalid_auth", True),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_new_device_ability_ref_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    error: Exception,
+    translation_key: str,
+    starts_reauth: bool,
+) -> None:
+    """A failed ability-ref fetch for a new device does not load that device."""
+    known = default_mock_devices()
+    shallow = create_online_device("d2", "Device 2", button_keys=())
+    seen: list[bool | set[str]] = []
+
+    async def list_devices(
+        *, fetch_ability_refs: bool | set[str] = True
+    ) -> list[ImouHaDevice]:
+        seen.append(fetch_ability_refs)
+        if fetch_ability_refs is False:
+            return [*known, shallow]
+        raise error
+
+    mock_imou_ha_device_manager.async_get_devices.reset_mock()
+    mock_imou_ha_device_manager.async_get_devices.side_effect = list_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert seen == [False, {"d2"}]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.last_exception is not None
+    assert (
+        mock_config_entry.runtime_data.last_exception.translation_key == translation_key
+    )
+    flows = mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+    if starts_reauth:
+        assert any(flows)
+    else:
+        assert not any(flows)
+        assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_device_missing_from_ability_detail_is_not_added(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A new device omitted from the ability-ref result is not registered."""
+    known = default_mock_devices()
+    shallow = create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,))
+
+    async def list_devices(
+        *, fetch_ability_refs: bool | set[str] = True
+    ) -> list[ImouHaDevice]:
+        if fetch_ability_refs is False:
+            return [*known, shallow]
+        if fetch_ability_refs == {"d2"}:
+            return []
+        raise AssertionError(fetch_ability_refs)
+
+    mock_imou_ha_device_manager.async_get_devices.reset_mock()
+    mock_imou_ha_device_manager.async_get_devices.side_effect = list_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert "d2$ptz_up" not in {entry.unique_id for entry in entries}
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 1
+    assert hass.states.get("button.device_1_mute").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
     "imou_mock_devices",
     [
         [
