@@ -1,7 +1,8 @@
 """Support for assist satellites in ESPHome."""
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Callable, Coroutine
+from dataclasses import dataclass, field
 from functools import partial
 import hashlib
 from itertools import chain
@@ -21,6 +22,7 @@ from aioesphomeapi import (
     VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
+    VoiceAssistantWakeWordAudio,
 )
 import probatio
 from probatio.humanize import humanize_error
@@ -119,6 +121,8 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 )
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
+# Longer than the device waits for the wake word to be accepted or rejected
+_WAKE_WORD_AUDIO_TIMEOUT_SEC = 10
 _CONFIG_TIMEOUT_SEC = 5
 _WAKE_WORD_CONFIG_SCHEMA = probatio.Schema(
     {
@@ -130,6 +134,34 @@ _WAKE_WORD_CONFIG_SCHEMA = probatio.Schema(
 _DATA_WAKE_WORDS: HassKey[dict[str, VoiceAssistantExternalWakeWord]] = HassKey(
     "wake_word_cache"
 )
+
+
+@dataclass
+class WakeWordAudio:
+    """Audio the device buffered before a wake word detection, per channel."""
+
+    detection: VoiceAssistantWakeWordAudio
+    channels: list[bytearray] = field(
+        default_factory=lambda: [bytearray(), bytearray()]
+    )
+    received: asyncio.Event = field(default_factory=asyncio.Event)
+
+    def __post_init__(self) -> None:
+        """Handle a detection without buffered audio."""
+        if self.detection.audio_bytes <= 0:
+            self.received.set()
+
+    def add(self, channel: int, chunk: bytes) -> bytes:
+        """Add a chunk of a channel's audio, returning the live audio after the buffered audio."""
+        buffer = self.channels[channel]
+        if (missing := self.detection.audio_bytes - len(buffer)) <= 0:
+            return chunk
+
+        buffer.extend(chunk[:missing])
+        if (channel == 0) and (len(buffer) >= self.detection.audio_bytes):
+            self.received.set()
+
+        return chunk[missing:]
 
 
 async def async_setup_entry(
@@ -155,6 +187,9 @@ class EsphomeAssistSatellite(
         key=ASSIST_SATELLITE_KEY, translation_key=ASSIST_SATELLITE_KEY
     )
 
+    # When to ask devices for wake word audio is not decided yet
+    _request_wake_word_audio = False
+
     def __init__(self, entry: ESPHomeConfigEntry) -> None:
         """Initialize satellite."""
         super().__init__(entry.runtime_data)
@@ -176,6 +211,7 @@ class EsphomeAssistSatellite(
         self._active_pipeline_index = 0
         self._active_audio_channel = 0
         self._has_multi_channel_audio = False
+        self._wake_word_audio: WakeWordAudio | None = None
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
@@ -282,6 +318,8 @@ class EsphomeAssistSatellite(
                     handle_stop=self.handle_pipeline_stop,
                     handle_audio=self.handle_audio,
                     handle_announcement_finished=self.handle_announcement_finished,
+                    wake_word_audio=self._request_wake_word_audio
+                    and bool(feature_flags & VoiceAssistantFeature.WAKE_WORD_AUDIO),
                 )
             )
         else:
@@ -531,8 +569,16 @@ class EsphomeAssistSatellite(
         flags: int,
         audio_settings: VoiceAssistantAudioSettings,
         wake_word_phrase: str | None,
+        wake_word_audio: VoiceAssistantWakeWordAudio | None = None,
     ) -> int | None:
         """Handle pipeline run request."""
+        if (self._wake_word_audio is not None) and (self._pipeline_task is not None):
+            self._pipeline_task.cancel()
+        # Before any await: the device doesn't wait for this to return
+        self._wake_word_audio = (
+            None if wake_word_audio is None else WakeWordAudio(wake_word_audio)
+        )
+
         # Clear audio queue
         while not self._audio_queue.empty():
             await self._audio_queue.get()
@@ -601,14 +647,23 @@ class EsphomeAssistSatellite(
             start_stage,
             end_stage,
         )
+        run_pipeline = partial(
+            self.async_accept_pipeline_from_satellite,
+            audio_stream=self._wrap_audio_stream(),
+            start_stage=start_stage,
+            end_stage=end_stage,
+            wake_word_phrase=wake_word_phrase,
+        )
+        if self._wake_word_audio is None:
+            pipeline_coro = run_pipeline()
+        else:
+            pipeline_coro = self._run_pipeline_if_wake_word_accepted(
+                self._wake_word_audio, run_pipeline
+            )
+
         self._pipeline_task = self.config_entry.async_create_background_task(
             self.hass,
-            self.async_accept_pipeline_from_satellite(
-                audio_stream=self._wrap_audio_stream(),
-                start_stage=start_stage,
-                end_stage=end_stage,
-                wake_word_phrase=wake_word_phrase,
-            ),
+            pipeline_coro,
             "esphome_assist_satellite_pipeline",
         )
         self._pipeline_task.add_done_callback(
@@ -617,8 +672,53 @@ class EsphomeAssistSatellite(
 
         return port
 
+    async def _run_pipeline_if_wake_word_accepted(
+        self,
+        wake_word_audio: WakeWordAudio,
+        run_pipeline: Callable[[], Coroutine[Any, Any, None]],
+    ) -> None:
+        """Run the pipeline if the wake word detected on the device is accepted."""
+        try:
+            if await self._async_accept_wake_word(wake_word_audio):
+                await run_pipeline()
+        finally:
+            # A later detection may have replaced this one
+            if self._wake_word_audio is wake_word_audio:
+                self._wake_word_audio = None
+
+    async def _async_accept_wake_word(self, wake_word_audio: WakeWordAudio) -> bool:
+        """Tell the device whether its wake word is accepted, once its buffered audio arrived."""
+        try:
+            async with asyncio.timeout(_WAKE_WORD_AUDIO_TIMEOUT_SEC):
+                await wake_word_audio.received.wait()
+        except TimeoutError:
+            _LOGGER.warning("Did not receive the audio buffered before the wake word")
+            return False
+
+        if not await self._async_verify_wake_word(wake_word_audio):
+            _LOGGER.debug("Wake word rejected: %s", wake_word_audio.detection)
+            self.cli.send_voice_assistant_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED, {}
+            )
+            return False
+
+        _LOGGER.debug("Wake word accepted: %s", wake_word_audio.detection)
+        self.cli.send_voice_assistant_event(
+            VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END, {}
+        )
+        return True
+
+    async def _async_verify_wake_word(self, wake_word_audio: WakeWordAudio) -> bool:
+        """Return True if the wake word detected on the device is accepted."""
+        return True
+
     async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""
+        if self._wake_word_audio is not None:
+            data = self._wake_word_audio.add(0, data)
+            if data2 is not None:
+                data2 = self._wake_word_audio.add(1, data2)
+
         # Default to enhanced audio (channel 0)
         active_data = data
 
