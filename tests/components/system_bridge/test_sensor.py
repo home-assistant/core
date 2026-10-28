@@ -87,7 +87,7 @@ async def test_sensor_memory_missing(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("mock_version")
+@pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "memory",
     [
@@ -95,11 +95,15 @@ async def test_sensor_memory_missing(
         pytest.param(replace(FIXTURE_MEMORY, swap=None), id="no_swap_data"),
     ],
 )
+@pytest.mark.parametrize(
+    "entity_id", ["sensor.hostname_swap_usage", "sensor.hostname_swap_used"]
+)
 async def test_sensor_swap_missing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: MagicMock,
     memory: Memory | None,
+    entity_id: str,
 ) -> None:
     """Test swap sensors are unknown when there is no swap data."""
     mock_websocket_client.get_data.return_value = replace(
@@ -113,7 +117,7 @@ async def test_sensor_swap_missing(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert (state := hass.states.get("sensor.hostname_swap_usage"))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
 
