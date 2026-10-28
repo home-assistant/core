@@ -688,3 +688,26 @@ async def test_reconfigure_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_host_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring to the host of another entry aborts."""
+    entry = _reconfigure_entry(None, None)
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={**entry.data, CONF_HOST: TEST_HOST2}
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
+        None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST2}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == TEST_HOST

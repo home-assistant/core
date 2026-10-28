@@ -249,6 +249,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
+            self._async_abort_entries_match({CONF_HOST: self.host})
             if (receiver := await self._async_connect_receiver()) is None:
                 errors["base"] = "cannot_connect"
             else:
