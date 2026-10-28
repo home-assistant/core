@@ -63,7 +63,7 @@
       "message": "Selected server is not found"
     },
     "update_failed": {
-      "message": "An error occurred while running the speed test: {error}"
+      "message": "An error occurred while running the speed test"
     }
   },
   "options": {
