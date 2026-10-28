@@ -431,7 +431,7 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -468,7 +468,7 @@ async def test_reconfigure_without_credentials(
     )
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -522,7 +522,7 @@ async def test_reconfigure_errors(
         URL_STATUS, json=FIXTURE_STATUS, headers={"Content-Type": CONTENT_TYPE_JSON}
     )
 
-    with patch("homeassistant.components.adguard.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.adguard.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=FIXTURE_USER_INPUT
         )
