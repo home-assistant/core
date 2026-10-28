@@ -88,9 +88,9 @@ def mock_controller_patch_get_host():
 
 @pytest.fixture(name="patch_is_file", autouse=True)
 def mock_controller_patch_is_file():
-    """Mock call to os path.isfile function."""
+    """Mock the config flow _is_file helper."""
     with patch(
-        f"{ASUSWRT_BASE}.config_flow.os.path.isfile", return_value=True
+        f"{ASUSWRT_BASE}.config_flow._is_file", return_value=True
     ) as is_file_mock:
         yield is_file_mock
 
@@ -288,11 +288,10 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     assert result["errors"] == {CONF_BASE: "ssh_not_file"}
 
     patch_is_file.side_effect = None
-    with patch(f"{ASUSWRT_BASE}.config_flow.os.access", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=config_data,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=config_data,
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "legacy"
 

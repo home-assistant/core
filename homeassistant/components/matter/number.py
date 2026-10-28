@@ -193,6 +193,15 @@ class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
             send_value = min(send_value, physical_max or MATTER_MAX_MIREDS)
         await self.write_attribute(value=send_value)
 
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        super()._update_from_device()
+        # A null start-up value means the previous color temperature is kept
+        if self._attr_native_value is None:
+            self._attr_native_value = 0
+
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
@@ -384,53 +393,6 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.OccupiedSetbackMax,
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
-    ),
-    # Eve temperature offset; identical to the generic schema below (will be
-    # merged into it in a follow-up PR). See that schema for the range rationale.
-    MatterDiscoverySchema(
-        platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
-            key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
-            entity_category=EntityCategory.CONFIG,
-            translation_key="temperature_offset",
-            native_max_value=2.5,
-            native_min_value=-2.5,
-            native_step=0.1,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_device=lambda x: round(x * 10),
-            mode=NumberMode.BOX,
-        ),
-        entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
-        ),
-        vendor_id=(4874,),  # Eve Systems
-        cluster_revision_max=THERMOSTAT_EXTENDED_CALIBRATION_REVISION - 1,
-    ),
-    # Eve temperature offset, extended range (Matter 1.4+)
-    MatterDiscoverySchema(
-        platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
-            key="EveTemperatureOffset",
-            device_class=NumberDeviceClass.TEMPERATURE_DELTA,
-            entity_category=EntityCategory.CONFIG,
-            translation_key="temperature_offset",
-            native_max_value=12.7,
-            native_min_value=-12.7,
-            native_step=0.1,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None if x is None else x / 10,
-            ha_to_device=lambda x: round(x * 10),
-            mode=NumberMode.BOX,
-        ),
-        entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
-        ),
-        vendor_id=(4874,),  # Eve Systems
-        cluster_revision_min=THERMOSTAT_EXTENDED_CALIBRATION_REVISION,
     ),
     # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
     # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
@@ -834,5 +796,23 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(clusters.WindowCovering.Attributes.WagoSlatRotationTime,),
         vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="AqaraLedStripMusicSyncSensitivity",
+            translation_key="music_sync_sensitivity",
+            native_min_value=1,
+            native_max_value=100,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            native_step=1,
+            mode=NumberMode.SLIDER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncSensitivity,
+        ),
+        vendor_id=(4447,),
     ),
 ]

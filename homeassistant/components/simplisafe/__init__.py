@@ -69,7 +69,7 @@ ATTR_MESSAGE = "message"
 ATTR_TIMESTAMP = "timestamp"
 
 WEBSOCKET_RECONNECT_RETRIES = 3
-WEBSOCKET_RETRY_DELAY = 2
+WEBSOCKET_RETRY_DELAY = 5
 WEBSOCKET_LOOP_TASK_NAME = "simplisafe websocket task"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
@@ -114,15 +114,13 @@ def _async_register_base_station(
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
 
-    base_station = device_registry.async_get_or_create_device(
+    base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, str(system.system_id))},
-            manufacturer="SimpliSafe",
-            model=str(system.version),
-            name=system.address,
-            serial_number=system.serial,
-        ),
+        identifiers={(DOMAIN, str(system.system_id))},
+        manufacturer="SimpliSafe",
+        model=str(system.version),
+        name=system.address,
+        serial_number=system.serial,
     )
 
     # Check for an old system ID format and remove it:
@@ -155,18 +153,16 @@ def _async_register_camera(
     model_id = system.camera_data[camera.serial]["model"]
     device_name = f"{camera.name.capitalize()} {model_name}"
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, camera.serial)},
-            manufacturer="SimpliSafe",
-            model=model_name,
-            model_id=model_id,
-            name=device_name,
-            serial_number=camera.serial,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
-            ),
+        identifiers={(DOMAIN, camera.serial)},
+        manufacturer="SimpliSafe",
+        model=model_name,
+        model_id=model_id,
+        name=device_name,
+        serial_number=camera.serial,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
         ),
     )
 
@@ -311,7 +307,10 @@ class SimpliSafe:
         if task and not task.done():
             return
 
-        LOGGER.debug("Starting websocket loop task")
+        if task:
+            LOGGER.debug("Restarting websocket loop task")
+        else:
+            LOGGER.debug("Starting websocket loop task")
 
         self._websocket_task = self.entry.async_create_background_task(
             self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
@@ -325,6 +324,7 @@ class SimpliSafe:
             try:
                 await self._api.websocket.async_connect()
                 await self._api.websocket.async_listen()
+                retries = 0
             except asyncio.CancelledError:
                 await self._api.websocket.async_disconnect()
                 raise

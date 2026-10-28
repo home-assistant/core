@@ -19,7 +19,10 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
-from homeassistant.components.usb import usb_device_from_path
+from homeassistant.components.usb import (
+    async_find_moved_serial_port,
+    usb_device_from_path,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_TYPE,
@@ -51,6 +54,7 @@ from .helpers import (
     SIGNAL_ADD_ENTITIES,
     HAZHAData,
     ZHAGatewayProxy,
+    async_update_device_path,
     create_zha_config,
     get_config_entry_unique_id,
     get_zha_data,
@@ -118,6 +122,10 @@ CENTICELSIUS = "C-100"
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
@@ -158,6 +166,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         new_data[CONF_DEVICE][CONF_DEVICE_PATH] = usb_device.device
         hass.config_entries.async_update_entry(config_entry, data=new_data)
         device_path = usb_device.device
+
+    # The radio may have moved between the host and a serial proxy, or between proxies
+    if (new_path := async_find_moved_serial_port(hass, device_path)) is not None:
+        _LOGGER.info("Following ZHA device path from %s to %s", device_path, new_path)
+        async_update_device_path(hass, config_entry, new_path)
+        device_path = new_path
 
     ha_zha_data: HAZHAData = get_zha_data(hass)
     ha_zha_data.config_entry = config_entry
@@ -245,16 +259,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         manufacturer = "Unknown"
         model = "Unknown"
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
-            identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
-            name="Zigbee Coordinator",
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=zha_gateway.state.node_info.version,
-        ),
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=zha_gateway.state.node_info.version,
     )
 
     websocket_api.async_load_api(hass)
@@ -271,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     @callback
     def update_config(event: Event) -> None:
         """Handle Core config update."""
-        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+        zha_gateway.update_local_timezone(ZoneInfo(hass.config.time_zone))
         zha_gateway.config.country_code = hass.config.country
 
     config_entry.async_on_unload(

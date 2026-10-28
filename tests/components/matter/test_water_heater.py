@@ -32,6 +32,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.WATER_HEATER
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_water_heaters(
     hass: HomeAssistant,

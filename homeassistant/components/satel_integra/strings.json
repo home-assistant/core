@@ -1,7 +1,5 @@
 {
   "common": {
-    "code": "Access code",
-    "code_input_description": "Code to toggle switchable outputs",
     "encryption_key": "Integration encryption key",
     "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
@@ -16,14 +14,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "code": {
-        "data": {
-          "code": "[%key:component::satel_integra::common::code%]"
-        },
-        "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]"
-        }
-      },
       "reconfigure": {
         "data": {
           "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
@@ -195,9 +185,91 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "dt1_trouble": {
+        "name": "DT1 trouble"
+      },
+      "dt2_trouble": {
+        "name": "DT2 trouble"
+      },
+      "dtm_trouble": {
+        "name": "DTM trouble"
+      },
+      "eeprom_or_rtc_access_trouble": {
+        "name": "EEPROM or RTC access trouble"
+      },
+      "expander_power_supply_trouble": {
+        "name": "Expander power supply trouble"
+      },
+      "external_device_dtr_trouble": {
+        "name": "External device DTR trouble"
+      },
+      "external_modem_command_trouble": {
+        "name": "External modem command trouble"
+      },
+      "external_modem_initialization_trouble": {
+        "name": "External modem initialization trouble"
+      },
+      "keypad_power_supply_trouble": {
+        "name": "Keypad power supply trouble"
+      },
+      "monitoring_station_trouble": {
+        "name": "Monitoring station {number} trouble"
+      },
+      "output_trouble": {
+        "name": "Output {number} trouble"
+      },
+      "panel_ac_trouble": {
+        "name": "Panel AC trouble"
+      },
+      "panel_battery_missing_trouble": {
+        "name": "Panel battery missing"
+      },
+      "panel_battery_trouble": {
+        "name": "Panel battery trouble"
+      },
+      "panel_restart_memory_trouble": {
+        "name": "Panel restart memory trouble"
+      },
+      "ram_trouble": {
+        "name": "RAM trouble"
+      },
+      "rtc_trouble": {
+        "name": "RTC trouble"
+      },
+      "service_mode": {
+        "name": "Service mode"
+      },
+      "system_trouble": {
+        "name": "System trouble"
+      },
+      "telephone_line_bad_signal_trouble": {
+        "name": "Telephone line bad signal trouble"
+      },
+      "telephone_line_no_signal_trouble": {
+        "name": "Telephone line no signal trouble"
+      },
+      "telephone_line_voltage_or_auxiliary_processor_trouble": {
+        "name": "Telephone line voltage or auxiliary processor trouble"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "command_invalid_access_code": {
+      "message": "The alarm panel did not recognize the access code."
+    },
+    "command_no_access": {
+      "message": "The access code does not have permission to perform this action."
+    },
+    "command_outcome_unknown": {
+      "message": "The alarm panel did not confirm the command. The requested action may have completed; check the panel state before trying again."
+    },
+    "command_rejected": {
+      "message": "The alarm panel rejected the command with result code {result_code}. Check the panel configuration and event log for more information."
     },
     "connection_initialization_failed": {
       "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
@@ -216,13 +288,17 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_code_format": "User code must contain numbers only.",
+      "invalid_code_length": "User code must be between 4 and 16 digits long."
+    },
     "step": {
       "init": {
         "data": {
-          "code": "[%key:component::satel_integra::common::code%]"
+          "code": "Access code"
         },
         "data_description": {
-          "code": "[%key:component::satel_integra::common::code_input_description%]"
+          "code": "Code to toggle switchable outputs"
         }
       }
     }

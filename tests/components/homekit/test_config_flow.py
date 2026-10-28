@@ -72,7 +72,7 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.homekit.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -132,7 +132,7 @@ async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.homekit.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -218,7 +218,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
         ) as mock_setup,
         patch(
             "homeassistant.components.homekit.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -281,7 +281,7 @@ async def test_import(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.homekit.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_init(
@@ -346,7 +346,7 @@ async def test_options_flow_exclude_mode(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "bridged_device_triggers"
 
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=None):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={},
@@ -449,7 +449,7 @@ async def test_options_flow_devices(
         assert result2["data_schema"]({})["devices"] == []
 
         with patch(
-            "homeassistant.components.homekit.async_setup_entry", return_value=True
+            "homeassistant.components.homekit.async_setup_entry", return_value=None
         ):
             result3 = await hass.config_entries.options.async_configure(
                 result2["flow_id"],
@@ -1140,7 +1140,7 @@ async def test_options_flow_blocked_when_from_yaml(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "yaml"
 
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={},
@@ -1335,7 +1335,7 @@ async def test_converting_bridge_to_accessory_mode(
     with (
         patch(
             "homeassistant.components.homekit.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("homeassistant.components.homekit.async_port_is_available"),
     ):
@@ -1689,7 +1689,7 @@ async def test_options_flow_climate_accessory_type_round_trip(
         )
         assert result2["step_id"] == "bridged_device_triggers"
         with patch(
-            "homeassistant.components.homekit.async_setup_entry", return_value=True
+            "homeassistant.components.homekit.async_setup_entry", return_value=None
         ):
             result3 = await hass.config_entries.options.async_configure(
                 result2["flow_id"],

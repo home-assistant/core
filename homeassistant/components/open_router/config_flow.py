@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -34,7 +34,6 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_OUTPUT_MODALITIES,
-    CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,

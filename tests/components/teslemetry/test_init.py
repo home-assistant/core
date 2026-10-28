@@ -24,7 +24,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
@@ -53,6 +57,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.lock import LockState
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -75,6 +80,7 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -1940,6 +1946,126 @@ async def test_local_gateway_repair_cleared_without_subentry(
     assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
 
 
+def _create_gateway_issue(
+    hass: HomeAssistant, site_id: int, entry_id: str, config_entry_id: str | None
+) -> str:
+    """Create a gateway repair issue owned by the given config entry."""
+    issue_id = f"gateway_not_found_{site_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id=config_entry_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="gateway_not_found",
+        translation_placeholders={"site": "Energy Site"},
+        data={"entry_id": entry_id, "subentry_id": "subentry_id"},
+    )
+    return issue_id
+
+
+@pytest.mark.parametrize(
+    ("key_error", "connect_error"),
+    [
+        pytest.param(None, PowerwallConnectionError("unreachable"), id="not_found"),
+        pytest.param(
+            PrivateKeyError("malformed", "Not a valid PEM private key"),
+            None,
+            id="key_load_failure",
+        ),
+    ],
+)
+async def test_ignored_gateway_repair_kept_on_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    key_error: Exception | None,
+    connect_error: Exception | None,
+) -> None:
+    """An ignored gateway repair is kept when it's still valid or can't be checked."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
+    ir.async_ignore_issue(hass, DOMAIN, GATEWAY_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    dismissed_version = issue.dismissed_version
+    assert dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    mock_powerwall_connect.side_effect = connect_error
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+            side_effect=key_error,
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
+            return_value=None,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == dismissed_version
+    assert not [event for event in events if event.data["action"] == "remove"]
+
+
+async def test_stale_gateway_repairs_deleted_on_setup(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Gateway repairs of the entry's sites which aren't set up are deleted.
+
+    Gateway repairs owned by another config entry, or created before issues were
+    linked to their config entry, are left alone.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+    # Site 98765 is in the products but without access, 111 is gone
+    stale_issue_ids = [
+        _create_gateway_issue(hass, site_id, entry.entry_id, entry.entry_id)
+        for site_id in (98765, 111)
+    ]
+    kept_issue_ids = [
+        _create_gateway_issue(hass, 222, other_entry.entry_id, other_entry.entry_id),
+        _create_gateway_issue(hass, 333, entry.entry_id, None),
+    ]
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    for issue_id in stale_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    for issue_id in kept_issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_gateway_repairs_refresh_cancelled_on_setup_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_live_status: AsyncMock
+) -> None:
+    """A failed setup leaves the gateway repairs alone."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = _create_gateway_issue(hass, 111, entry.entry_id, entry.entry_id)
+    mock_live_status.side_effect = TeslaFleetError
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> None:
     """Energy stale-subentry cleanup does not remove other subentry types."""
     entry = mock_config_entry()
@@ -2112,6 +2238,7 @@ def test_stream_topic_allowlist() -> None:
         "site_info",
         "tariff_content_v2",
         "energy_totals",
+        "wall_connector_totals",
     ]
 
 
@@ -3017,6 +3144,52 @@ async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None
     assert len(subentries) == 1
     assert subentries[0].subentry_id == subentry_id
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+
+async def test_labs_charge_on_solar_toggle_triggers_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test labs charge-on-solar feature toggle schedules an integration reload."""
+    assert await async_setup_component(hass, "labs", {})
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_charge_on_solar_settings_removed_with_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the charge-on-solar settings are stored per entry and removed with it."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+    storage_key = f"{DOMAIN}.charge_on_solar.{entry.entry_id}"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+        blocking=True,
+    )
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[storage_key]["data"] == {
+        VIN: {"enabled": None, "lower_limit": 35, "charge_limit_soc": None}
+    }
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert storage_key not in hass_storage
 
 
 # A paired site's local live_status reading.

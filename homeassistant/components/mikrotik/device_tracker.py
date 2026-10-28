@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .device import Device
 from .entity import MikrotikBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -77,7 +78,6 @@ class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
         """Initialize the tracked device."""
         super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.mac
 
     @property

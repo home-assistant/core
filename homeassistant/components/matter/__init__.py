@@ -4,6 +4,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
+from chip.clusters import Objects as clusters
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -26,7 +27,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.issue_registry import (
@@ -88,6 +93,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Set up Matter from a config entry."""
+    _async_migrate_eve_temperature_offset(hass, entry)
+
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
 
@@ -243,6 +250,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
         await matter_client.disconnect()
     finally:
         raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+@callback
+def _async_migrate_eve_temperature_offset(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
+    """Merge legacy EveTemperatureOffset entities into the generic TemperatureOffset entity.
+
+    The vendor-specific Eve schema was dropped once the cluster_revision split
+    made its bounds identical to the generic schema, so entities discovered
+    under the old key are renamed instead of orphaned.
+    """
+    attr = clusters.Thermostat.Attributes.LocalTemperatureCalibration
+    old_suffix = f"-EveTemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    new_suffix = f"-TemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    entity_registry = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if not reg_entry.unique_id.endswith(old_suffix):
+            continue
+        new_unique_id = reg_entry.unique_id.removesuffix(old_suffix) + new_suffix
+        # A stale generic entity can exist if the vendor-gated Eve schema was
+        # skipped during an earlier discovery; the Eve entity is the live one.
+        if conflict_entity_id := entity_registry.async_get_entity_id(
+            reg_entry.domain, DOMAIN, new_unique_id
+        ):
+            entity_registry.async_remove(conflict_entity_id)
+        entity_registry.async_update_entity(
+            reg_entry.entity_id, new_unique_id=new_unique_id
+        )
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:

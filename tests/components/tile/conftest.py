@@ -83,6 +83,6 @@ def mock_pytile(tile: AsyncMock) -> Generator[None]:
 def mock_setup_entry():
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.tile.async_setup_entry", return_value=True
+        "homeassistant.components.tile.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

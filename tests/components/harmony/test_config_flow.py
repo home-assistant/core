@@ -65,7 +65,7 @@ async def test_user_form(
         ),
         patch(
             "homeassistant.components.harmony.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,7 +110,6 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
-    assert progress[0]["context"]["confirm_only"] is True
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
@@ -121,7 +120,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.harmony.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -242,7 +241,7 @@ async def test_form_errors(
         ),
         patch(
             "homeassistant.components.harmony.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

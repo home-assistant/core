@@ -37,3 +37,27 @@ async def test_power_sensor_detected(
         assert entry.unique_id == "hc2_111111.1_power"
         assert entry.original_name == "Room 1 Test sensor Power"
         assert entry.original_device_class == SensorDeviceClass.POWER
+
+
+async def test_voltage_sensor_detected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_multilevel_sensor: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that the sensor entity is detected."""
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_multilevel_sensor]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.SENSOR]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        entry = entity_registry.async_get("sensor.room_1_test_multilevel_sensor_12")
+        assert entry
+        assert entry.unique_id == "hc2_111111.12"
+        assert entry.original_name == "Room 1 Test multilevel sensor"
+        assert entry.original_device_class is None

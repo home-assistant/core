@@ -217,7 +217,7 @@ async def async_setup_device(
     if device.duid in entry.runtime_data:
         return
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=get_device_info(device),
     )

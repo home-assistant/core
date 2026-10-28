@@ -4,6 +4,7 @@ To update, run python3 -m script.hassfest
 """
 
 SERIAL_PORT_SELECTOR_INTEGRATIONS = [
+    "aerosmart",
     "dali",
     "denon_rs232",
     "dsmr",
