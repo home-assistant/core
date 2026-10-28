@@ -82,7 +82,7 @@ class SecuritySystem(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         self._alarm_code = self.config.get(ATTR_CODE)
-        self._skipped: dict[str, int] = {}
+        self._skipped: set[tuple[str, int]] = set()
 
         supported_states = state.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES,
@@ -164,15 +164,14 @@ class SecuritySystem(HomeAccessory):
 
         The characteristic's valid values are frozen at build time; pushing a
         value outside that set would raise ValueError in pyhap. A skip is
-        logged once per value so attribute-only updates don't repeat it.
+        logged once per value, as only a rebuild can change the outcome.
         """
         name = char.display_name
         if value in char.properties[PROP_VALID_VALUES].values():
             char.set_value(value)
-            self._skipped.pop(name, None)
             return True
-        if self._skipped.get(name) != value:
-            self._skipped[name] = value
+        if (name, value) not in self._skipped:
+            self._skipped.add((name, value))
             _LOGGER.warning(
                 "%s: Skipping unsupported %s value %d", self.entity_id, name, value
             )
@@ -198,5 +197,13 @@ class SecuritySystem(HomeAccessory):
                 hass_state,
                 current_state,
             )
-        if target_state is not None:
-            self._set_if_valid(self.char_target_state, target_state)
+        if target_state is None:
+            return
+        if (
+            hass_state is AlarmControlPanelState.ARMING
+            and target_state
+            not in self.char_target_state.properties[PROP_VALID_VALUES].values()
+        ):
+            # Arming doesn't say which mode is pending, so keep the current target
+            return
+        self._set_if_valid(self.char_target_state, target_state)

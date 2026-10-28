@@ -197,6 +197,77 @@ async def test_arming(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_current_state.value == 4
 
 
+@pytest.mark.parametrize(
+    ("features", "target", "service", "armed_state"),
+    [
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME,
+            0,
+            "alarm_arm_home",
+            AlarmControlPanelState.ARMED_HOME,
+            id="home",
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_NIGHT,
+            2,
+            "alarm_arm_night",
+            AlarmControlPanelState.ARMED_NIGHT,
+            id="night",
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT,
+            2,
+            "alarm_arm_night",
+            AlarmControlPanelState.ARMED_NIGHT,
+            id="home_night",
+        ),
+    ],
+)
+async def test_arming_without_away_keeps_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+    features: AlarmControlPanelEntityFeature,
+    target: int,
+    service: str,
+    armed_state: AlarmControlPanelState,
+) -> None:
+    """Test arming a panel without away keeps the target requested from HomeKit."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": features},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+    async_mock_service(hass, ALARM_CONTROL_PANEL_DOMAIN, service)
+
+    # Two arm cycles: a valid push must not re-arm a per-cycle warning.
+    for _ in range(2):
+        acc.char_target_state.client_update_value(target)
+        await hass.async_block_till_done()
+
+        # Call the update path directly: the state-change dispatcher swallows
+        # callback exceptions, so a raising set_value would go unnoticed there.
+        acc.async_update_state(State(entity_id, AlarmControlPanelState.ARMING))
+        assert acc.char_target_state.value == target
+        assert acc.char_current_state.value == 3
+
+        acc.async_update_state(State(entity_id, armed_state))
+        assert acc.char_target_state.value == target
+        assert acc.char_current_state.value == target
+
+        acc.async_update_state(State(entity_id, AlarmControlPanelState.DISARMED))
+
+    assert "Skipping unsupported" not in caplog.text
+    assert "invalid value" not in caplog.text
+
+
 async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
     """Test different supported states."""
     code = "1234"
@@ -429,7 +500,7 @@ async def test_skip_warning_logged_once_per_value(
     caplog: pytest.LogCaptureFixture,
     hk_driver: HomeDriver,
 ) -> None:
-    """Test the skip warning is not repeated while the state stays unsupported."""
+    """Test each unsupported value is warned about once, across arm cycles."""
     entity_id = "alarm_control_panel.test"
 
     hass.states.async_set(
@@ -442,14 +513,17 @@ async def test_skip_warning_logged_once_per_value(
     acc.run()
     await hass.async_block_till_done()
 
-    armed_home = State(entity_id, AlarmControlPanelState.ARMED_HOME)
-    acc.async_update_state(armed_home)
-    acc.async_update_state(armed_home)
-    assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 1
-    assert caplog.text.count("Skipping unsupported SecuritySystemTargetState") == 1
+    # Alternate two unsupported states with valid pushes in between, as a
+    # read-only panel (e.g. SIA) does on every arm cycle.
+    for _ in range(2):
+        for state in (
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.DISARMED,
+        ):
+            acc.async_update_state(State(entity_id, state))
 
-    # A valid push resets the guard, so the next skip is reported again.
-    acc.async_update_state(State(entity_id, AlarmControlPanelState.DISARMED))
-    acc.async_update_state(armed_home)
-    assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 2
-    assert caplog.text.count("Skipping unsupported SecuritySystemTargetState") == 2
+    for char in ("SecuritySystemCurrentState", "SecuritySystemTargetState"):
+        for value in (0, 2):
+            assert caplog.text.count(f"Skipping unsupported {char} value {value}") == 1
