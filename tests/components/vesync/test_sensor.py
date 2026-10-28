@@ -1,11 +1,19 @@
 """Tests for the sensor module."""
 
+from types import SimpleNamespace
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.vesync.sensor import SENSORS
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -56,3 +64,63 @@ async def test_humidity(
     """Test the state of humidity sensor entity."""
 
     assert hass.states.get(ENTITY_HUMIDIFIER_HUMIDITY).state == "35"
+
+
+@pytest.mark.parametrize(
+    ("key", "attribute", "value", "device_class", "unit", "category"),
+    [
+        ("eleva-aqi", "aqi", 20, SensorDeviceClass.AQI, None, None),
+        (
+            "eleva-carbon-filter-life",
+            "carbon_filter_life",
+            95,
+            None,
+            UnitOfRatio.PERCENTAGE,
+            EntityCategory.DIAGNOSTIC,
+        ),
+        (
+            "eleva-pre-filter-life",
+            "pre_filter_life",
+            90,
+            None,
+            UnitOfRatio.PERCENTAGE,
+            EntityCategory.DIAGNOSTIC,
+        ),
+        (
+            "eleva-filter-remaining-days",
+            "filter_remain_day",
+            720,
+            None,
+            UnitOfTime.DAYS,
+            EntityCategory.DIAGNOSTIC,
+        ),
+    ],
+)
+def test_eleva_300x_sensor_descriptions(
+    key, attribute, value, device_class, unit, category
+) -> None:
+    """Test Eleva 300X sensor values and availability."""
+    description = next(sensor for sensor in SENSORS if sensor.key == key)
+
+    eleva = SimpleNamespace(
+        device_type="LAP-C341S-WEU",
+        state=SimpleNamespace(**{attribute: value}),
+    )
+    other = SimpleNamespace(
+        device_type="LAP-V102S-AAS",
+        state=SimpleNamespace(**{attribute: value}),
+    )
+
+    assert description.exists_fn(eleva)
+    assert description.value_fn(eleva) == value
+    assert not description.exists_fn(other)
+    assert description.device_class == device_class
+    assert description.native_unit_of_measurement == unit
+    assert description.entity_category == category
+    assert description.state_class == SensorStateClass.MEASUREMENT
+
+    missing = SimpleNamespace(
+        device_type="LAP-C341S-WEU",
+        state=SimpleNamespace(**{attribute: None}),
+    )
+    assert not description.exists_fn(missing)

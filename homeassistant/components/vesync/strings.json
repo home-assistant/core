@@ -142,6 +142,18 @@
       },
       "preheat_set_time": {
         "name": "Preheating set time"
+      },
+      "aqi": {
+        "name": "Air quality index"
+      },
+      "carbon_filter_life": {
+        "name": "Carbon filter lifetime"
+      },
+      "pre_filter_life": {
+        "name": "Pre-filter lifetime"
+      },
+      "filter_remaining_days": {
+        "name": "Filter remaining days"
       }
     },
     "switch": {
