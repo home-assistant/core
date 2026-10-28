@@ -1,7 +1,6 @@
 """Configuration and authentication flows for IAMMETER."""
 
 from collections.abc import Mapping
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -15,24 +14,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv, selector
 
-from .const import (
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MAX_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
+from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import async_get_meter, meter_identity
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL_SCHEMA = probatio.All(
-    cv.positive_int, probatio.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL)
-)
 CONNECTION_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
@@ -116,19 +105,11 @@ class IammeterConfigFlow(ConfigFlow, domain=DOMAIN):
         if error:
             return self.async_abort(reason=error)
         self._abort_if_unique_id_configured()
-        interval = import_data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        if isinstance(interval, timedelta):
-            interval = interval.total_seconds()
-        try:
-            interval = SCAN_INTERVAL_SCHEMA(interval)
-        except probatio.Invalid:
-            return self.async_abort(reason="invalid_interval")
         return self.async_create_entry(
             title=import_data.get(
                 CONF_NAME, f"IAMMETER {meter['Model']} {self.unique_id}"
             ),
             data=self._connection_data(data),
-            options={CONF_SCAN_INTERVAL: interval},
         )
 
     async def _async_connection_step(

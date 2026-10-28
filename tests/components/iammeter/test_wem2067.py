@@ -8,13 +8,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.iammeter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -44,13 +38,12 @@ def mock_readings(
 
 
 def make_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Register a dual-channel meter with a short test polling interval."""
+    """Register a dual-channel meter with the standard polling interval."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Dual-channel meter",
         unique_id=SERIAL,
         data={CONF_HOST: "192.0.2.1", CONF_PORT: 80},
-        options={CONF_SCAN_INTERVAL: 5},
     )
     entry.add_to_hass(hass)
     return entry
@@ -145,7 +138,7 @@ async def test_net_discovery_loss_and_recovery(
         is None
     )
     mock_readings(aioclient_mock, [A, B, NET])
-    freezer.tick(timedelta(seconds=6))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     net_power = entity_registry.async_get_entity_id(
@@ -157,7 +150,7 @@ async def test_net_discovery_loss_and_recovery(
     await hass.async_block_till_done()
     assert hass.states.get(net_power).state == "710.0"
     mock_readings(aioclient_mock, [A, B])
-    freezer.tick(timedelta(seconds=6))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(net_power).state == STATE_UNAVAILABLE
@@ -166,7 +159,7 @@ async def test_net_discovery_loss_and_recovery(
     )
     assert hass.states.get(power_b).state == "480.0"
     mock_readings(aioclient_mock, [A, B, NET])
-    freezer.tick(timedelta(seconds=6))
+    freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(net_power).state == "710.0"

@@ -6,7 +6,6 @@
       "invalid_auth": "[%key:component::iammeter::config::error::invalid_auth%]",
       "invalid_data": "[%key:component::iammeter::config::error::invalid_data%]",
       "invalid_host": "[%key:component::iammeter::config::error::invalid_host%]",
-      "invalid_interval": "The polling interval must be between 1 and 3600 seconds.",
       "unique_id_mismatch": "The device is not the same meter. Reconfigure using the original meter.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

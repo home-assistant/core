@@ -319,32 +319,22 @@ async def test_reconfigure_interval(
     assert mock_entry.unique_id == "test-meter"
 
 
-async def test_import_interval(hass: HomeAssistant) -> None:
-    """Preserve the legacy platform's parsed scan interval and configured name."""
+@pytest.mark.parametrize("interval", [0, 5, 45, 3601, 7200, timedelta(hours=2)])
+async def test_import_interval(hass: HomeAssistant, interval: int | timedelta) -> None:
+    """Ignore legacy scan intervals without blocking import or saving options."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
             **MOCK_INPUT,
             CONF_NAME: "Solar",
-            CONF_SCAN_INTERVAL: timedelta(seconds=45),
+            CONF_SCAN_INTERVAL: interval,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "test-meter"
-    assert result["options"] == {CONF_SCAN_INTERVAL: 45}
-
-
-@pytest.mark.parametrize("interval", [0, 3601])
-async def test_invalid_import_interval(hass: HomeAssistant, interval: int) -> None:
-    """Do not silently accept an invalid polling interval from YAML."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={**MOCK_INPUT, CONF_SCAN_INTERVAL: interval},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_interval"
+    assert result["title"] == "Solar"
+    assert result["options"] == {}
 
 
 async def test_invalid_import_address(hass: HomeAssistant) -> None:
@@ -355,6 +345,25 @@ async def test_invalid_import_address(hass: HomeAssistant) -> None:
         data={**MOCK_INPUT, CONF_HOST: "http://192.0.2.1/#fragment"},
     )
     assert result["reason"] == "invalid_host"
+
+
+async def test_reconfigure_removes_credentials(
+    hass: HomeAssistant, mock_entry: MockConfigEntry, mock_meter: MagicMock
+) -> None:
+    """Clearing the form credentials must restore anonymous monitoring access."""
+    mock_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_entry, data={**MOCK_INPUT, "username": "custom", "password": "secret"}
+    )
+    result = await mock_entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_reload", new_callable=AsyncMock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_INPUT, "username": "", "password": ""}
+        )
+        await hass.async_block_till_done()
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data == MOCK_INPUT
+    assert mock_meter.call_args.kwargs == {"username": "", "password": ""}
 
 
 @pytest.mark.parametrize(

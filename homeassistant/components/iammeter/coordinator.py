@@ -13,13 +13,7 @@ from iammeter.async_client import (
 from iammeter.models import SUPPORTED_MODELS, IammeterDataError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
@@ -85,9 +79,7 @@ class IammeterDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(
-                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            ),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.client = create_client(hass, dict(entry.data))
 

@@ -59,11 +59,16 @@ async def test_diagnostics_after_failed_setup(
     """Connection failures must not prevent downloading redacted diagnostics."""
     mock_meter.return_value.async_get_data.side_effect = IammeterConnectionError()
     mock_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_entry, data={**MOCK_INPUT, "username": "custom", "password": "secret"}
+    )
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
     data = await async_get_config_entry_diagnostics(hass, mock_entry)
     assert data["entry"]["data"]["host"] == "**REDACTED**"
+    assert data["entry"]["data"]["username"] == "**REDACTED**"
+    assert data["entry"]["data"]["password"] == "**REDACTED**"
     assert "measurement" not in data
     assert "last_update_success" not in data
 

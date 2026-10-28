@@ -265,7 +265,7 @@ async def test_migration_collision(
 
 
 @pytest.mark.parametrize(
-    ("options", "seconds"), [({}, 30), ({CONF_SCAN_INTERVAL: 5}, 5)]
+    "options", [{}, {CONF_SCAN_INTERVAL: 5}, {CONF_SCAN_INTERVAL: 7200}]
 )
 async def test_polling_interval(
     hass: HomeAssistant,
@@ -274,20 +274,19 @@ async def test_polling_interval(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     options: dict[str, int],
-    seconds: int,
 ) -> None:
-    """Use the chosen interval while old entries retain the original default."""
+    """Poll every 30 seconds even if an entry has stale interval options."""
     mock_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_entry, options=options)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_entry.runtime_data.update_interval == timedelta(seconds=seconds)
-    freezer.tick(timedelta(seconds=seconds / 2))
+    assert mock_entry.runtime_data.update_interval == timedelta(seconds=30)
+    freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_meter.return_value.async_get_data.call_count == 1
     mock_meter.return_value.async_get_data.return_value = {**MOCK_DATA, "Power": 690}
-    freezer.tick(timedelta(seconds=seconds))
+    freezer.tick(timedelta(seconds=16))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_meter.return_value.async_get_data.call_count == 2
@@ -295,3 +294,56 @@ async def test_polling_interval(
         Platform.SENSOR, DOMAIN, "test-meter_Power"
     )
     assert hass.states.get(entity_id).state == "690"
+
+
+@pytest.mark.parametrize(
+    "scan_config", [{}, {CONF_SCAN_INTERVAL: 7200}, {CONF_SCAN_INTERVAL: {"hours": 2}}]
+)
+async def test_yaml_import_fixed_polling(
+    hass: HomeAssistant,
+    scan_config: dict[str, int | dict[str, int]],
+) -> None:
+    """Parse real YAML platform settings and retain the original fixed cadence."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {"sensor": {"platform": DOMAIN, **MOCK_INPUT, **scan_config}},
+    )
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.options == {}
+    assert entry.runtime_data.update_interval == timedelta(seconds=30)
+
+
+async def test_disabled_yaml_entity_survives_reload(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Import and reload without enabling or renaming a user's disabled entity."""
+    old = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "test-meter_ImportEnergy",
+        suggested_object_id="original_energy",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_update_entity(old.entity_id, name="Custom energy")
+    assert await async_setup_component(
+        hass, "sensor", {"sensor": {"platform": DOMAIN, **MOCK_INPUT}}
+    )
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    migrated = entity_registry.async_get(old.entity_id)
+    assert migrated.config_entry_id == entry.entry_id
+    assert migrated.disabled_by is er.RegistryEntryDisabler.USER
+    assert migrated.name == "Custom energy"
+    assert hass.states.get(old.entity_id) is None
+    entities = set(entity_registry.entities)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert set(entity_registry.entities) == entities
+    assert (
+        entity_registry.async_get(old.entity_id).disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
+    assert hass.states.get(old.entity_id) is None
