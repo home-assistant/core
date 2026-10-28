@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[mc80z][mc80z]
   dict({
-    'climate.test_floor_heating_leaving_water_offset': dict({
+    'climate.test_floor_heating_climatecontrol_leaving_water_offset': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -25,11 +25,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000109')]>,
+        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-0000000001091')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_climatecontrol_leaving_water_offset',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -54,7 +54,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test floor heating Leaving water offset',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Leaving water offset',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
@@ -74,7 +74,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.test_floor_heating_leaving_water_offset',
+        'entity_id': 'climate.test_floor_heating_climatecontrol_leaving_water_offset',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

@@ -1322,7 +1322,9 @@ async def test_climate_service_updates_entity_state(
         value=20, min_value=7, max_value=30, step_value=1, settable=True
     )
     operation_mode = SimpleNamespace(value="heating", values=["heating"], settable=True)
-    climate_control = MagicMock(embedded_id="zone")
+    climate_control = MagicMock(
+        embedded_id="zone", management_point_type="climateControl"
+    )
     climate_control.temperature_control = SimpleNamespace(
         value=SimpleNamespace(
             operation_modes={
@@ -1354,7 +1356,7 @@ async def test_climate_service_updates_entity_state(
     )
     device.management_point.return_value = climate_control
     device.patch = AsyncMock(return_value=patch_result)
-    device_registry.async_get_or_create(
+    gateway_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, device.id)},
         manufacturer="Daikin",
@@ -1387,7 +1389,13 @@ async def test_climate_service_updates_entity_state(
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
     )
-    assert entity_id == "climate.daikin_room_temperature"
+    assert entity_id == "climate.daikin_climatecontrol_room_temperature"
+    child_entry = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "gatewayzone"), config_entry.entry_id
+    )
+    assert child_entry is not None
+    assert child_entry.parent_device_id == gateway_entry.id
+    assert entity_registry.async_get(entity_id).device_id == child_entry.id
 
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -1543,6 +1551,7 @@ async def test_climate_platform_services_and_management_points(
         }
         control = SimpleNamespace(
             embedded_id=embedded_id,
+            management_point_type="climateControl",
             operation_mode=SimpleNamespace(
                 value="heating", values=["heating", "cooling"], settable=True
             ),
