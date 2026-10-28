@@ -241,7 +241,7 @@ async def test_reconfigure_home(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"location": config_flow.TYPE_USE_HOME}
@@ -271,7 +271,7 @@ async def test_reconfigure_coordinates(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -304,7 +304,7 @@ async def test_reconfigure_country(
 
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_COUNTRY_CODE: "fr"}
@@ -355,7 +355,7 @@ async def test_reconfigure_error_handling(
     electricity_maps.carbon_intensity_for_home_assistant.side_effect = None
     with patch(
         "homeassistant.components.co2signal.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_COUNTRY_CODE: "fr"}
