@@ -16,7 +16,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     plex_server = entry.runtime_data.server
     server = plex_server.plex_server
-    monitored_users = plex_server.option_monitored_users
 
     return {
         "options": {
@@ -24,10 +23,7 @@ async def async_get_config_entry_diagnostics(
             for key, value in entry.options.get(MP_DOMAIN, {}).items()
             if key != CONF_MONITORED_USERS
         },
-        "monitored_users": {
-            "total": len(monitored_users),
-            "enabled": sum(user["enabled"] for user in monitored_users.values()),
-        },
+        "monitored_users": len(plex_server.monitored_users & plex_server.accounts),
         "server": {
             "version": plex_server.version,
             "platform": server.platform,
@@ -53,6 +49,6 @@ async def async_get_config_entry_diagnostics(
                 "player_platform": session.player.platform,
                 "player_version": session.player.version,
             }
-            for session in plex_server.active_sessions.values()
+            for session in list(plex_server.active_sessions.values())
         ],
     }
