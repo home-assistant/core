@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from enum import Enum, StrEnum
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
@@ -66,16 +66,10 @@ from .const import (
     METHOD_LEFT,
     METHOD_RIGHT,
     METHOD_TRAPEZOIDAL,
+    IntegrationEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class IntegrationEntityStateAttribute(StrEnum):
-    """State attributes for integration entities."""
-
-    SOURCE = "source"
-
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}

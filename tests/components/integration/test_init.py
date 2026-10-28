@@ -7,8 +7,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import integration
 from homeassistant.components.integration.config_flow import ConfigFlowHandler
-from homeassistant.components.integration.const import DOMAIN
-from homeassistant.components.integration.sensor import IntegrationEntityStateAttribute
+from homeassistant.components.integration.const import (
+    DOMAIN,
+    IntegrationEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
