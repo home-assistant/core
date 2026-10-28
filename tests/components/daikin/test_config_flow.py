@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
@@ -11,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -217,3 +217,129 @@ async def test_discovery_zeroconf(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a Daikin config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=HOST,
+        unique_id=MAC,
+        data={
+            CONF_HOST: HOST,
+            KEY_MAC: MAC,
+            CONF_API_KEY: None,
+            CONF_UUID: None,
+            CONF_PASSWORD: None,
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the Daikin device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2", CONF_API_KEY: "secret"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.2",
+        KEY_MAC: MAC,
+        CONF_API_KEY: "secret",
+        CONF_UUID: ANY,
+        CONF_PASSWORD: None,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(web_exceptions.HTTPForbidden, "invalid_auth", id="invalid_auth"),
+        pytest.param(DaikinException, "cannot_connect", id="daikin_exception"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_daikin: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    reason: str,
+) -> None:
+    """Test reconfigure errors are shown and the flow can recover."""
+    mock_config_entry.add_to_hass(hass)
+    original_side_effect = mock_daikin.side_effect
+    mock_daikin.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": reason}
+
+    mock_daikin.side_effect = original_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure_api_password(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring with both an API key and a password shows an error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2", CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "api_password"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2", CONF_PASSWORD: "aa"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "aa"
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a different device aborts."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="other")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == HOST
