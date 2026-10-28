@@ -13,7 +13,7 @@ from homeassistant.components.onvif.const import (
     CONF_SNAPSHOT_AUTH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_DHCP
+from homeassistant.config_entries import SOURCE_DHCP, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -1156,6 +1156,48 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
         **RECONFIGURE_INPUT,
     }
+
+
+async def test_reconfigure_flow_reloads_loaded_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reconfiguring a loaded entry reloads it without the deprecated helper."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=MAC,
+        data={
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.onvif.device.ONVIFCamera"
+    ) as mock_onvif_camera_cls:
+        setup_mock_onvif_camera(mock_onvif_camera_cls, with_full_setup=True)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.update_listeners
+
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == RECONFIGURE_INPUT[CONF_HOST]
+    assert "has an update listener" not in caplog.text
 
 
 async def test_reconfigure_flow_different_device(hass: HomeAssistant) -> None:

@@ -196,9 +196,14 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if not self._is_same_device(reconfigure_entry):
                     return self.async_abort(reason="unique_id_mismatch")
-                return self.async_update_reload_and_abort(
+                result = self.async_update_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(
+                    reconfigure_entry.entry_id
+                )
+                return result
 
         suggested_values = {
             key: value
