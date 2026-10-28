@@ -47,7 +47,9 @@ async def test_missing_ip_addresses_does_not_block_sensor_setup(
 ) -> None:
     """Missing address data must not prevent other sensors from loading."""
 
-    def discover_interfaces_with_missing_addresses(hass, psutil_wrapper):
+    def discover_interfaces_with_missing_addresses(
+        _hass: HomeAssistant, psutil_wrapper
+    ):
         interfaces = get_all_network_interfaces(hass, psutil_wrapper)
         coordinator = mock_config_entry.runtime_data.coordinator
         coordinator.data = replace(coordinator.data, addresses=None)
