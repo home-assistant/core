@@ -37,9 +37,9 @@ CONF_AWAY_HUMIDITY = "away_humidity"
 CONF_AWAY_FIXED = "away_fixed"
 CONF_STALE_DURATION = "sensor_stale_duration"
 
+
 DEFAULT_TOLERANCE = 3
 DEFAULT_NAME = "Generic Hygrostat"
-
 
 HYGROSTAT_SCHEMA = probatio.Schema(
     {
