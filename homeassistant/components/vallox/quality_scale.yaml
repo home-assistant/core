@@ -15,8 +15,8 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: >-
-      config_flow.py branch coverage is missing for async_step_reconfigure with
-      the unchanged host, where the duplicate check is skipped.
+      Tests that create an entry must also check its unique ID. Blocked on the
+      config entry unique ID from unique-config-entry.
   config-flow:
     status: todo
     comment: >-
@@ -110,9 +110,6 @@ rules:
       (2) The fan's power-setting failure and unsupported-profile fan speed
       error paths are not tested.
       (3) No test explicitly unloads the entry.
-      (4) The config flow tests patch the library inline instead of using
-      shared mock_client and mock_setup_entry fixtures, and the user-step
-      error tests could be one parametrized test.
 
   # Gold
   devices:

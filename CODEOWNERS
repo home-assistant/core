@@ -24,6 +24,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/packages/hassfest/ @home-assistant/core
 /packages/pylint-home-assistant/ @home-assistant/core
 /packages/pytest-home-assistant/ @home-assistant/core
 /script/ @home-assistant/core
@@ -48,6 +49,8 @@ CLAUDE.md @home-assistant/core
 # Integrations
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
+/homeassistant/components/abrp/ @mtandersson
+/tests/components/abrp/ @mtandersson
 /homeassistant/components/acaia/ @zweckj
 /tests/components/acaia/ @zweckj
 /homeassistant/components/accuweather/ @bieniu
@@ -570,6 +573,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/event/ @home-assistant/core
 /homeassistant/components/evohome/ @zxdavb
 /tests/components/evohome/ @zxdavb
+/homeassistant/components/exicom_spin_ble/ @Dr-Blank
+/tests/components/exicom_spin_ble/ @Dr-Blank
 /homeassistant/components/ezviz/ @RenierM26
 /tests/components/ezviz/ @RenierM26
 /homeassistant/components/faa_delays/ @ntilley905
@@ -610,6 +615,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flexit/ @troelde
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
+/homeassistant/components/flic_button/ @50ButtonsEach
+/tests/components/flic_button/ @50ButtonsEach
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flow_it/ @albertogeniola
@@ -1861,8 +1868,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/specialized_turbo/ @JamieMagee
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
-/homeassistant/components/spin_ble/ @Dr-Blank
-/tests/components/spin_ble/ @Dr-Blank
 /homeassistant/components/splunk/ @Bre77
 /tests/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck @joostlek

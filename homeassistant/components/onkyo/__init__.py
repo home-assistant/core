@@ -35,6 +35,7 @@ class OnkyoData:
     manager: ReceiverManager
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
+    channel_muting_coordinator: ChannelMutingCoordinator
 
 
 type OnkyoConfigEntry = ConfigEntry[OnkyoData]
@@ -73,9 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> Non
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
-    entry.runtime_data = OnkyoData(manager, sources, sound_modes)
+    channel_muting_coordinator = ChannelMutingCoordinator(hass, entry, manager)
 
-    ChannelMutingCoordinator(hass, entry, manager)
+    entry.runtime_data = OnkyoData(
+        manager, sources, sound_modes, channel_muting_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -50,7 +50,7 @@ PlexAPI==4.18.2
 ProgettiHWSW==0.1.4
 
 # homeassistant.components.cast
-PyChromecast==14.0.10
+PyChromecast==14.1.0
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -177,6 +177,9 @@ aio-ownet==0.1.0
 # homeassistant.components.wattwaechter
 aio-wattwaechter==1.3.0
 
+# homeassistant.components.abrp
+aioabrp==0.6.0
+
 # homeassistant.components.acaia
 aioacaia==0.2.2
 
@@ -301,7 +304,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.8.1
+aiohasupervisor==0.9.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.39.1
@@ -403,7 +406,7 @@ aiopegelonline==0.1.1
 aiopnsense==1.0.10
 
 # homeassistant.components.teslemetry
-aiopowerwall==0.8.0
+aiopowerwall==0.9.0
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2
@@ -755,7 +758,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_smart_camera
-bosch-shc-camera-client==0.5.12
+bosch-shc-camera-client==0.6.2
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.25
@@ -798,7 +801,7 @@ cached-ipaddress==1.1.2
 caldav==3.5.0a0
 
 # homeassistant.components.chef_iq
-chefiq-ble==1.0.1
+chefiq-ble==1.1.1
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
@@ -1311,7 +1314,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.8.0
+hass-nabucasa==2.8.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1361,7 +1364,7 @@ hole==0.9.2
 holidays==0.107
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260930.5
+home-assistant-frontend==20261028.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -1581,7 +1584,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.10.1
+lifx-async==7.13.1
 
 # homeassistant.components.steamvr_base_station
 lighthouse-ble==0.2.0
@@ -1752,7 +1755,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.15
+my-pv==0.0.16
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2315,6 +2318,9 @@ pyfirefly==0.1.12
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.49
 
+# homeassistant.components.flic_button
+pyflic-ble==0.2.5
+
 # homeassistant.components.flic
 pyflic==2.0.4
 
@@ -2582,7 +2588,7 @@ pyotgw==2.2.3
 pyotp==2.10.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.3.0
+pyoverkiz[nexity]==2.3.1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2717,7 +2723,7 @@ pysmartyplants==0.2.1
 pysmhi==2.1.0
 
 # homeassistant.components.edl21
-pysml==0.1.8
+pysml==0.1.9
 
 # homeassistant.components.smlight
 pysmlight==0.5.3
@@ -3239,7 +3245,7 @@ specialized-turbo[cloud]==0.8.4
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.3
 
-# homeassistant.components.spin_ble
+# homeassistant.components.exicom_spin_ble
 spinev-ble[bleak]==0.5.0
 
 # homeassistant.components.spotify
@@ -3326,7 +3332,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.18.0
+tesla-fleet-api==1.19.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3550,7 +3556,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.3.2
+wiim==0.4.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -3637,10 +3643,10 @@ zeroconf==0.151.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.3.0
+zha-quirks==2.4.0
 
 # homeassistant.components.zha
-zha==2.3.1
+zha==2.4.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21
