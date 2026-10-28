@@ -4,6 +4,7 @@ from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -82,6 +83,10 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
         self._attr_mac_address = mac
         self._attr_unique_id = mac
         self._attr_hostname = device_info.device.name or mac.replace(":", "_")
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            name=device_info.device.name or mac,
+        )
 
     @property
     def _device_info(self) -> VodafoneStationDeviceInfo:
