@@ -394,21 +394,15 @@ async def test_zeroconf_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_nam_client")
-async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: MagicMock) -> None:
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_config_entry_with_auth: MockConfigEntry,
+    mock_nam: MagicMock,
+) -> None:
     """Test starting a reconfigure flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={
-            CONF_HOST: "10.10.2.3",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry_with_auth.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry_with_auth.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -420,7 +414,7 @@ async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: MagicMock) 
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {
+    assert mock_config_entry_with_auth.data == {
         CONF_HOST: "10.10.10.10",
         CONF_USERNAME: "fake_username",
         CONF_PASSWORD: "fake_password",
@@ -440,22 +434,16 @@ async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: MagicMock) 
     ],
 )
 async def test_reconfigure_not_successful(
-    hass: HomeAssistant, mock_nam: MagicMock, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    mock_config_entry_with_auth: MockConfigEntry,
+    mock_nam: MagicMock,
+    exc: Exception,
+    base_error: str,
 ) -> None:
     """Test starting a reconfigure flow but the device probe fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={
-            CONF_HOST: "10.10.2.3",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry_with_auth.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry_with_auth.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -478,7 +466,7 @@ async def test_reconfigure_not_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {
+    assert mock_config_entry_with_auth.data == {
         CONF_HOST: "10.10.10.10",
         CONF_USERNAME: "fake_username",
         CONF_PASSWORD: "fake_password",
@@ -486,21 +474,16 @@ async def test_reconfigure_not_successful(
 
 
 @pytest.mark.usefixtures("mock_nam_client")
-async def test_reconfigure_not_the_same_device(hass: HomeAssistant) -> None:
+async def test_reconfigure_not_the_same_device(
+    hass: HomeAssistant, mock_config_entry_with_auth: MockConfigEntry
+) -> None:
     """Test starting the reconfiguration process, but with a different printer."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="11:22:33:44:55:66",
-        data={
-            CONF_HOST: "10.10.2.3",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
-        },
+    mock_config_entry_with_auth.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_auth, unique_id="11:22:33:44:55:66"
     )
-    entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await mock_config_entry_with_auth.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"

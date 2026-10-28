@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nam.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 NAM_SENSORS = NAMSensors(**load_json_object_fixture("nam_sensors.json", DOMAIN))
 
@@ -30,6 +30,21 @@ def mock_config_entry() -> MockConfigEntry:
         title="10.10.2.3",
         unique_id="aa:bb:cc:dd:ee:ff",
         data={CONF_HOST: "10.10.2.3"},
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_auth() -> MockConfigEntry:
+    """Mock a config entry with credentials."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={
+            CONF_HOST: "10.10.2.3",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
     )
 
 
