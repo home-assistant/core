@@ -118,6 +118,13 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
+    "Keypad Touch": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SENSOR,)),
+    "Keypad Vision": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SENSOR,)
+    ),
+    "Keypad Vision Pro": SwitchbotCloudDeviceConfig(
+        False, entity_config=(Platform.SENSOR,)
+    ),
     "Strip Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
     "Strip Light 3": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
     "Floor Lamp": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
