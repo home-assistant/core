@@ -19,12 +19,12 @@
   },
   "options": {
     "error": {
-      "llm_api_required": "Select at least one set of tools or expose all tools."
+      "llm_api_required": "Select at least one set of tools or expose all AI tools."
     },
     "step": {
       "init": {
         "data": {
-          "all_llm_apis": "Expose all tools",
+          "all_llm_apis": "Expose all AI tools",
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
           "read_only": "Read-only",
           "require_admin": "Require an administrator account"
