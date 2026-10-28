@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioseafile import SeafileConnectionError, SeafilePermissionError
+from aioseafile import (
+    SeafileConnectionError,
+    SeafilePermissionError,
+    SeafileTimeoutError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -51,12 +55,9 @@ async def test_empty_trash(
 @pytest.mark.parametrize(
     ("exception", "translation_key"),
     [
-        pytest.param(
-            SeafilePermissionError,
-            "empty_trash_not_allowed",
-            id="not_allowed",
-        ),
-        pytest.param(SeafileConnectionError, "empty_trash_failed", id="failed"),
+        pytest.param(SeafilePermissionError, "permission_denied", id="not_allowed"),
+        pytest.param(SeafileTimeoutError, "timeout_connect", id="timeout"),
+        pytest.param(SeafileConnectionError, "api_error", id="failed"),
     ],
 )
 async def test_empty_trash_errors(
