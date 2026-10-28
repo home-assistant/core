@@ -63,7 +63,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     # Levoit Eleva 300X specific sensors.
     VeSyncSensorEntityDescription(
         key="eleva-aqi",
-        translation_key="aqi",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.aqi,
