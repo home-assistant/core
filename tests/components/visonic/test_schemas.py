@@ -335,3 +335,47 @@ def test_connection_schema_normalizes_port() -> None:
     assert result[CONF_PORT] == "1234"
     assert CONF_USER_CODE_SLOT not in result
     assert CONF_DOWNLOAD_CODE not in result
+
+
+@pytest.mark.parametrize("value", [1, 2.0, "2", 48])
+def test_whole_user_code_slot(value: float | str) -> None:
+    """Whole slots remain integers in both form and complete-data validation."""
+    expected = int(value)
+    result = POWERLINK_SCHEMA({CONF_USER_CODE_SLOT: value})
+    assert result[CONF_USER_CODE_SLOT] == expected
+    assert type(result[CONF_USER_CODE_SLOT]) is int
+    result = CONNECTION_SCHEMA(
+        {
+            CONF_TYPE: DeviceType.SERIAL,
+            CONF_PANEL_NUMBER: 1,
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_USER_CODE_SLOT: value,
+        }
+    )
+    assert result[CONF_USER_CODE_SLOT] == expected
+    assert type(result[CONF_USER_CODE_SLOT]) is int
+
+
+@pytest.mark.parametrize("value", [1.1, 2.9, "2.9", 47.5])
+def test_fractional_user_code_slot(value: float | str) -> None:
+    """Fractional input cannot silently select a different credential slot."""
+    with pytest.raises(Invalid):
+        POWERLINK_SCHEMA({CONF_USER_CODE_SLOT: value})
+    with pytest.raises(Invalid):
+        CONNECTION_SCHEMA(
+            {
+                CONF_TYPE: DeviceType.SERIAL,
+                CONF_PANEL_NUMBER: 1,
+                CONF_DEVICE: "/dev/ttyUSB0",
+                CONF_USER_CODE_SLOT: value,
+            }
+        )
+
+
+def test_user_code_slot_selector_serialization() -> None:
+    """The stricter validator preserves the numeric selector for the frontend."""
+    fields = to_field_list(POWERLINK_SCHEMA, custom_serializer=cv.custom_serializer)
+    field = next(item for item in fields if item["name"] == CONF_USER_CODE_SLOT)
+    assert field["selector"] == {
+        "number": {"min": 1.0, "max": 48.0, "step": 1.0, "mode": "box"}
+    }

@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import cast
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -68,6 +68,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -1490,3 +1491,105 @@ def test_downloading_retains_alarm_state(coordinator: DummyCoordinator) -> None:
     assert state.alarm_state is AlarmControlPanelState.ARMED_HOME
     assert state.attributes["state"] == "downloading"
     assert state.attributes["ready"] == "none"
+
+
+@pytest.mark.parametrize("device_type", list(DeviceType))
+async def test_commands_are_serialized(
+    hass: HomeAssistant, device_type: DeviceType
+) -> None:
+    """Only one command can enter a backend at a time."""
+    coordinator = VisonicCoordinator(
+        hass, create_config_entry_example(data={CONF_TYPE: device_type}), 1
+    )
+    started = asyncio.Event()
+    release = asyncio.Event()
+    success = CommandResult(AlarmCommandStatus.SUCCESS)
+
+    async def send(command: AlarmPanelCommand, code: str | None) -> CommandResult:
+        started.set()
+        await release.wait()
+        return success
+
+    with (
+        patch.object(
+            coordinator.connection, "send_command", side_effect=send
+        ) as backend,
+        patch.object(coordinator.connection, "async_panel_stop"),
+    ):
+        first = asyncio.create_task(
+            coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+        )
+        await started.wait()
+        second = asyncio.create_task(
+            coordinator.send_command(AlarmPanelCommand.DISARM, "1234")
+        )
+        await asyncio.sleep(0)
+        backend.assert_awaited_once_with(AlarmPanelCommand.ARM_AWAY, "1234")
+        release.set()
+        assert await first is success
+        assert await second is success
+        assert backend.await_args_list == [
+            call(AlarmPanelCommand.ARM_AWAY, "1234"),
+            call(AlarmPanelCommand.DISARM, "1234"),
+        ]
+        await coordinator.async_panel_stop()
+
+
+@pytest.mark.parametrize("device_type", list(DeviceType))
+@pytest.mark.parametrize(
+    "semaphore_factory",
+    [
+        pytest.param(lambda: asyncio.Semaphore(1), id="entity-queue"),
+        pytest.param(lambda: None, id="coordinator-queue"),
+    ],
+)
+async def test_stop_rejects_queued_entity_command(
+    hass: HomeAssistant,
+    device_type: DeviceType,
+    semaphore_factory: Callable[[], asyncio.Semaphore | None],
+) -> None:
+    """An admitted action waiting on the entity cannot reopen a stopped backend."""
+    coordinator = VisonicCoordinator(
+        hass, create_config_entry_example(data={CONF_TYPE: device_type}), 1
+    )
+    entity = Entity()
+    entity.parallel_updates = semaphore_factory()
+    started = asyncio.Event()
+    release = asyncio.Event()
+    success = CommandResult(AlarmCommandStatus.SUCCESS)
+
+    async def send(command: AlarmPanelCommand, code: str | None) -> CommandResult:
+        started.set()
+        await release.wait()
+        return success
+
+    with (
+        patch.object(
+            coordinator.connection, "send_command", side_effect=send
+        ) as backend,
+        patch.object(coordinator.connection, "async_panel_stop") as close,
+    ):
+        first = asyncio.create_task(
+            entity.async_request_call(
+                coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+            )
+        )
+        await started.wait()
+        queued = asyncio.create_task(
+            entity.async_request_call(
+                coordinator.send_command(AlarmPanelCommand.DISARM, "1234")
+            )
+        )
+        await asyncio.sleep(0)
+        stop = asyncio.create_task(coordinator.async_panel_stop())
+        await asyncio.sleep(0)
+        close.assert_not_awaited()
+        release.set()
+        first_result, queued_result, _ = await asyncio.gather(first, queued, stop)
+        assert first_result is success
+        assert queued_result.status is AlarmCommandStatus.FAIL_PANEL_NO_CONNECTION
+        backend.assert_awaited_once_with(AlarmPanelCommand.ARM_AWAY, "1234")
+        close.assert_awaited_once_with()
+        after_stop = await coordinator.send_command(AlarmPanelCommand.DISARM, "1234")
+        assert after_stop.status is AlarmCommandStatus.FAIL_PANEL_NO_CONNECTION
+        backend.assert_awaited_once()

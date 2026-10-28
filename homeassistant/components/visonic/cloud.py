@@ -470,7 +470,7 @@ class VisonicCloudConnection(VisonicConnection):
         )
         for device in devices:
             if isinstance(device, PanelDevice):
-                panelstate.battery_level = 0 if device.low_battery else 100
+                panelstate.battery_level = 0 if to_bool(device.low_battery) else 100
                 panelstate.tamper = to_bool(device.tamper)
                 panelstate.trouble = device.trouble
         return panelstate

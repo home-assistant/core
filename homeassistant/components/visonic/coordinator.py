@@ -159,6 +159,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         self._stopping = False
         self._refresh_tasks: set[asyncio.Task[Any]] = set()
 
+        self._command_lock = asyncio.Lock()
         self._alarm_setup_lock = asyncio.Lock()
         self._created_alarm_panel = False
         self._device_type = device_type
@@ -239,7 +240,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             self.hass,
             "Visonic flood recovery failed. "
             "The integration has stopped communicating. Reload the integration to reconnect.",
-            title="Visonic recovery failed",
+            title=f"Visonic panel {self.panel_id}: recovery failed",
             notification_id=f"visonic_recovery_failed_{self.panel_id}",
         )
         self.hass.async_create_task(
@@ -512,22 +513,26 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         self.async_set_updated_data(
             VisonicCoordinatorData(connected=False, mode="stopped")
         )
-        await self.connection.async_panel_stop()
+        async with self._command_lock:
+            await self.connection.async_panel_stop()
 
     # the return value indicates whether any sensors needed to be bypassed
     async def send_command(
         self, command: AlarmPanelCommand, code: str | None
     ) -> CommandResult:
         """Send a whole-panel command through the selected connection."""
-        try:
-            return await self.connection.send_command(command, code)
-        except VisonicAuthException as err:
-            self._async_handle_authentication_failure(err)
-            raise
-        except (TimeoutError, OSError, aiohttp.ClientError) as err:
-            raise HomeAssistantError(
-                f"Unable to communicate with Visonic panel {self.panel_id}"
-            ) from err
+        async with self._command_lock:
+            if self._stopping:
+                return CommandResult(AlarmCommandStatus.FAIL_PANEL_NO_CONNECTION)
+            try:
+                return await self.connection.send_command(command, code)
+            except VisonicAuthException as err:
+                self._async_handle_authentication_failure(err)
+                raise
+            except (TimeoutError, OSError, aiohttp.ClientError) as err:
+                raise HomeAssistantError(
+                    f"Unable to communicate with Visonic panel {self.panel_id}"
+                ) from err
 
     def get_panel_state(self) -> PanelStateData:
         """Return the whole-panel state for the alarm entity."""

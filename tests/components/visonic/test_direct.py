@@ -169,13 +169,16 @@ async def test_async_set_updated_data_does_not_update_if_same(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("connected", [True, False])
 async def test_async_panel_connect_single_attempt(
-    coordinator: VisonicDirectConnection,
+    direct: VisonicDirectConnection,
+    connected: bool,
 ) -> None:
-    """Test async_panel_connect with 0 retry attempts."""
-    coordinator._client.connect = AsyncMock(return_value=True)
-    result = await coordinator.async_panel_connect()
-    assert result is True
+    """Use the synchronous client's result without treating a coroutine as true."""
+    direct._client.connect = MagicMock(return_value=connected)
+    result = await direct.async_panel_connect()
+    assert result is connected
+    direct._client.connect.assert_called_once_with()
 
 
 @pytest.mark.asyncio
@@ -682,12 +685,6 @@ async def test_direct_startup_waits_for_state(direct: VisonicDirectConnection) -
     direct.callbacks.state_changed.assert_called_once_with(0.2)
 
 
-async def test_direct_startup_rejected(direct: VisonicDirectConnection) -> None:
-    """A rejected client start cannot complete backend setup."""
-    direct._client.connect.return_value = False
-    assert not await direct.async_panel_connect()
-
-
 async def test_recovery_command_error_reaches_home_assistant(
     hass: HomeAssistant,
     direct_parent: VisonicCoordinator,
@@ -720,7 +717,10 @@ async def test_recovery_failure_stops_and_notifies(
     stop.assert_awaited_once_with()
     notify.assert_called_once()
     assert "integration has stopped" in notify.call_args.args[1]
-    assert notify.call_args.kwargs["title"] == "Visonic recovery failed"
+    assert (
+        notify.call_args.kwargs["title"]
+        == f"Visonic panel {direct_parent.panel_id}: recovery failed"
+    )
 
 
 async def test_recovery_failure_actually_stops_coordinator_and_client(

@@ -86,13 +86,24 @@ CLOUD_PANEL_SCHEMA = probatio.Schema(
     }
 )
 
+
+def _validate_user_code_slot(value: float) -> int:
+    """Reject fractional user-code slots rather than truncating them."""
+    if not value.is_integer():
+        raise probatio.Invalid("User-code slot must be a whole number")
+    return int(value)
+
+
 POWERLINK_SCHEMA = probatio.Schema(
     {
         probatio.Optional(probatio.Secret(CONF_DOWNLOAD_CODE)): DOWNLOAD_CODE_VALIDATOR,
-        probatio.Required(CONF_USER_CODE_SLOT, default=1): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=1, max=48, step=1, mode=selector.NumberSelectorMode.BOX
-            )
+        probatio.Required(CONF_USER_CODE_SLOT, default=1): probatio.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=48, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            probatio.Coerce(_validate_user_code_slot),
         ),
     }
 )

@@ -1981,3 +1981,31 @@ async def test_dated_fire_alarm_survives_undated_record(
     assert snapshot.connected
     assert snapshot.armcode is AlarmPanelStatus.DISARMED
     assert snapshot.siren_active
+
+
+@pytest.mark.parametrize(
+    ("warnings", "expected_level"),
+    [
+        pytest.param([], 100, id="healthy"),
+        pytest.param(
+            [{"type": "LOW_BATTERY", "severity": "TROUBLE", "in_memory": "false"}],
+            0,
+            id="low-battery",
+        ),
+    ],
+)
+async def test_panel_battery_from_library_devices(
+    cloud: VisonicCloudConnection, warnings: list[dict[str, str]], expected_level: int
+) -> None:
+    """Interpret the flags produced by the pinned library's real device conversion."""
+    api = MagicMock(spec=API)
+    api.get_devices.return_value = [
+        {
+            "device_type": "CONTROL_PANEL",
+            "subtype": "VISONIC_PANEL",
+            "warnings": warnings,
+        }
+    ]
+    devices = await AlarmSystem(api).get_devices()
+    state = cloud.process_devices(devices)
+    assert state.battery_level == expected_level
