@@ -34,6 +34,7 @@ from homeassistant.components.recorder.models import (
     datetime_to_timestamp_or_none,
     process_timestamp,
 )
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.statistics import (
     _PRIMARY_UNIT_CONVERTERS,
     _SECONDARY_UNIT_CONVERTERS,
@@ -4731,14 +4732,18 @@ async def test_get_statistics_service(
     await async_recorder_block_till_done(hass)
 
     result = await hass.services.async_call(
-        DOMAIN, "get_statistics", service_args, return_response=True, blocking=True
+        DOMAIN,
+        RecorderService.GET_STATISTICS,
+        service_args,
+        return_response=True,
+        blocking=True,
     )
     assert result == expected_result
 
     with pytest.raises(exceptions.Unauthorized):
         result = await hass.services.async_call(
             DOMAIN,
-            "get_statistics",
+            RecorderService.GET_STATISTICS,
             service_args,
             return_response=True,
             blocking=True,
@@ -4799,7 +4804,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "get_statistics",
+            RecorderService.GET_STATISTICS,
             service_args,
             return_response=True,
             blocking=True,
