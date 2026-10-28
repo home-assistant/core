@@ -45,6 +45,8 @@ HOMEKIT_IGNORE = [
     "T8410",
     # Hive Hub - vendor does not give user a pairing code
     "HHKBridge1,1",
+    # Slide curtain motor - handled by slide_local
+    "Slide",
 ]
 
 PAIRING_FILE = "pairing.json"

@@ -347,12 +347,21 @@ async def test_id_missing(hass: HomeAssistant, controller) -> None:
     assert result["reason"] == "invalid_properties"
 
 
-async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
-    """Already paired."""
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("HHKBridge1,1", id="hive"),
+        pytest.param("Slide", id="slide"),
+    ],
+)
+async def test_discovery_ignored_model(
+    hass: HomeAssistant, controller: FakeController, model: str
+) -> None:
+    """Test models with a native local integration are ignored."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
     discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
-    discovery_info.properties["md"] = "HHKBridge1,1"
+    discovery_info.properties["md"] = model
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
