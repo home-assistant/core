@@ -66,6 +66,7 @@
             'id': '**REDACTED**',
             'name': 'Morning',
             'summary': 'Every day at 6:00 AM',
+            'totalDuration': 900,
             'type': 'FIXED',
           }),
         ]),

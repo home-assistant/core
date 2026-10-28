@@ -9,6 +9,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rachio.const import CONF_MANUAL_RUN_MINS, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
@@ -44,6 +45,7 @@ MOCK_CONTROLLER = {
             "name": "Morning",
             "enabled": True,
             "summary": "Every day at 6:00 AM",
+            "totalDuration": 900,
             "type": "FIXED",
         }
     ],
@@ -133,6 +135,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
+    assert init_integration.state is ConfigEntryState.LOADED
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
         == snapshot
