@@ -58,4 +58,19 @@ async def get_axis_api(
         LOGGER.exception("Unknown Axis communication error occurred")
         raise AuthenticationRequired from err
 
+    api.config.is_companion = _is_companion_device(api)
+
     return api
+
+
+def _is_companion_device(api: axis.AxisDevice) -> bool:
+    """Return if device belongs to the AXIS Companion product line."""
+    vapix = api.vapix
+    handler = (
+        vapix.basic_device_info
+        if vapix.basic_device_info.initialized
+        else vapix.params.brand_handler
+    )
+    return (item := handler.get("0")) is not None and (
+        "Companion" in item.product_full_name
+    )

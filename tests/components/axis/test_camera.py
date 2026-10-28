@@ -15,7 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType
-from .const import MAC, NAME
+from .const import (
+    API_DISCOVERY_BASIC_DEVICE_INFO,
+    BASIC_DEVICE_INFO_RESPONSE,
+    BRAND_RESPONSE,
+    MAC,
+    NAME,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +83,58 @@ async def test_camera(
 async def test_camera_disabled(hass: HomeAssistant) -> None:
     """Test Axis camera platform loads but does not create camera entity."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
+
+
+COMPANION_FULL_NAME = "AXIS Companion Cube L Network Camera"
+
+
+@pytest.mark.parametrize(
+    ("api_discovery_items", "basic_device_info_payload", "param_brand_payload"),
+    [
+        pytest.param(
+            API_DISCOVERY_BASIC_DEVICE_INFO,
+            {
+                **BASIC_DEVICE_INFO_RESPONSE,
+                "data": {
+                    "propertyList": {
+                        **BASIC_DEVICE_INFO_RESPONSE["data"]["propertyList"],
+                        "ProdFullName": COMPANION_FULL_NAME,
+                    }
+                },
+            },
+            BRAND_RESPONSE,
+            id="basic_device_info",
+        ),
+        pytest.param(
+            {},
+            BASIC_DEVICE_INFO_RESPONSE,
+            BRAND_RESPONSE.replace("AXIS M1065-LW Network Camera", COMPANION_FULL_NAME),
+            id="param_cgi",
+        ),
+    ],
+)
+async def test_camera_companion(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test Companion devices request media with the Axis-Orig-Sw parameter."""
+    assert config_entry_setup.runtime_data.api.config.is_companion
+
+    camera_entity = camera.helper.get_camera_from_entity_id(
+        hass, f"{CAMERA_DOMAIN}.{NAME}"
+    )
+    assert (
+        camera_entity.image_source
+        == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        camera_entity.mjpeg_source
+        == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        await camera_entity.stream_source()
+        == "rtsp://root:pass@1.2.3.4/axis-media/media.amp"
+        "?videocodec=h264&Axis-Orig-Sw=true"
+    )
 
 
 @pytest.mark.parametrize(

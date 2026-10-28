@@ -140,7 +140,9 @@ def reset_mock_requests(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
 @pytest.fixture(name="mock_requests")
 def fixture_request(
     aioclient_mock: AiohttpClientMocker,
+    basic_device_info_payload: dict[str, Any],
     port_management_payload: dict[str, Any],
+    param_brand_payload: str,
     param_properties_payload: str,
     param_properties_status_code: int,
     param_ports_payload: str,
@@ -168,7 +170,7 @@ def fixture_request(
         ) -> AiohttpClientMockResponse:
             group = (data or {}).get("group")
             if group == "root.Brand":
-                return _text_response(url, BRAND_RESPONSE)
+                return _text_response(url, param_brand_payload)
             if group == "root.Image":
                 return _text_response(url, IMAGE_RESPONSE)
             if group == "root.Input":
@@ -194,7 +196,7 @@ def fixture_request(
             )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/basicdeviceinfo.cgi"),
-            json=BASIC_DEVICE_INFO_RESPONSE,
+            json=basic_device_info_payload,
         )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/io/portmanagement.cgi"),
@@ -266,10 +268,22 @@ def fixture_api_discovery(
     )
 
 
+@pytest.fixture(name="basic_device_info_payload")
+def fixture_basic_device_info_data() -> dict[str, Any]:
+    """Basic device information data."""
+    return BASIC_DEVICE_INFO_RESPONSE
+
+
 @pytest.fixture(name="port_management_payload")
 def fixture_io_port_management_data() -> dict[str, Any]:
     """Property parameter data."""
     return PORT_MANAGEMENT_RESPONSE
+
+
+@pytest.fixture(name="param_brand_payload")
+def fixture_param_brand_data() -> str:
+    """Brand parameter data."""
+    return BRAND_RESPONSE
 
 
 @pytest.fixture(name="param_properties_payload")
