@@ -19,6 +19,7 @@ from systembridgeconnector.models.modules.battery import (
     BatteryState,
 )
 from systembridgeconnector.models.modules.disks import Disk, DiskIOCounters, Disks
+from systembridgeconnector.models.modules.memory import Memory
 from systembridgeconnector.models.modules.networks import (
     Network,
     NetworkIO,
@@ -83,6 +84,36 @@ async def test_sensor_memory_missing(
 
     state = hass.states.get("sensor.hostname_memory_used")
     assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "memory",
+    [
+        pytest.param(None, id="no_memory_data"),
+        pytest.param(replace(FIXTURE_MEMORY, swap=None), id="no_swap_data"),
+    ],
+)
+async def test_sensor_swap_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    memory: Memory | None,
+) -> None:
+    """Test swap sensors are unknown when there is no swap data."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, memory=memory
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get("sensor.hostname_swap_usage"))
     assert state.state == STATE_UNKNOWN
 
 
