@@ -934,11 +934,19 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
+class DeviceClassSelectorContext(TypedDict, total=False):
+    """Class to represent a device class selector context."""
+
+    filter_unit_of_measurement: str
+
+
 class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a device class selector config."""
 
     domain: Required[Platform]
     multiple: bool
+    # Maps context keys to the names of the fields providing their value
+    context: DeviceClassSelectorContext
 
 
 @cache
@@ -959,6 +967,12 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
     """Selector for device class."""
 
     selector_type = "device_class"
+    allowed_context_keys = ReadOnlyDict(
+        {
+            # Filters the available device classes based on the unit of measurement
+            "filter_unit_of_measurement": frozenset({"unit_of_measurement"}),
+        }
+    )
 
     SUPPORTED_PLATFORMS = {
         Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
@@ -981,6 +995,9 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
                 probatio.In(SUPPORTED_PLATFORMS), lambda val: Platform(val).value
             ),
             probatio.Optional("multiple", default=False): cv.boolean,
+            probatio.Optional("context"): {
+                probatio.Optional("filter_unit_of_measurement"): str,
+            },
         }
     )
 
