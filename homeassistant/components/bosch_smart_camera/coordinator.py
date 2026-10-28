@@ -8,6 +8,7 @@ import logging
 import time
 from typing import override
 
+from aiohttp import ClientSession
 from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
     BoschCameraConnectionError,
@@ -52,6 +53,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     config_entry: BoschCameraConfigEntry
     _oauth_session: OAuth2Session
+    _session: ClientSession
 
     def __init__(
         self, hass: HomeAssistant, config_entry: BoschCameraConfigEntry
@@ -72,7 +74,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     @override
     async def _async_setup(self) -> None:
-        """Resolve the OAuth2 implementation."""
+        """Resolve the OAuth2 implementation and the shared HTTP session."""
+        self._session = async_get_clientsession(self.hass)
         implementation = await async_get_config_entry_implementation(
             self.hass, self.config_entry
         )
@@ -84,12 +87,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
     async def _async_update_data(self) -> dict[str, Camera]:
         """Fetch the camera list."""
         await self._oauth_session.async_ensure_token_valid()
-        session = async_get_clientsession(self.hass)
         token = str(self._oauth_session.token[CONF_ACCESS_TOKEN])
         started = self._write_seq
         try:
-            cameras = await list_cameras(session, token)
-            states = await get_camera_account_states(session, token)
+            cameras = await list_cameras(self._session, token)
+            states = await get_camera_account_states(self._session, token)
         except BoschCameraAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
@@ -124,7 +126,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             await self._oauth_session.async_ensure_token_valid()
             try:
                 image = await get_latest_event_image(
-                    async_get_clientsession(self.hass),
+                    self._session,
                     str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
                     camera_id,
                 )
@@ -143,7 +145,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         """Switch the privacy mode of a camera and update the cached state."""
         await self._oauth_session.async_ensure_token_valid()
         result = await cloud_set_privacy_mode(
-            async_get_clientsession(self.hass),
+            self._session,
             str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
             camera_id,
             enabled,
