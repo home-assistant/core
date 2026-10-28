@@ -816,27 +816,36 @@ async def test_reconfigure_unique_id_mismatch(
 
 
 @pytest.mark.parametrize(
-    ("mac", "reason", "host"),
+    ("entry_mac", "mac", "reason", "host"),
     [
         pytest.param(
-            "AA:BB:CC:DD:EE:FF", "reconfigure_successful", "10.0.0.2", id="same_tv"
+            "AA:BB:CC:DD:EE:FF",
+            "AA:BB:CC:DD:EE:FF",
+            "reconfigure_successful",
+            "10.0.0.2",
+            id="same_tv",
         ),
         pytest.param(
-            "11:22:33:44:55:66", "unique_id_mismatch", "bravia-host", id="other_tv"
+            "AA:BB:CC:DD:EE:FF",
+            "11:22:33:44:55:66",
+            "unique_id_mismatch",
+            "bravia-host",
+            id="other_tv",
         ),
+        pytest.param("", "", "unique_id_mismatch", "bravia-host", id="no_mac"),
     ],
 )
 async def test_reconfigure_entry_without_unique_id(
-    hass: HomeAssistant, mac: str, reason: str, host: str
+    hass: HomeAssistant, entry_mac: str, mac: str, reason: str, host: str
 ) -> None:
-    """Test reconfiguring a disabled legacy entry compares the MAC address."""
+    """Test reconfiguring a legacy entry without unique ID compares the MAC address."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="",
         data={
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: entry_mac,
             CONF_USE_PSK: True,
         },
         disabled_by=ConfigEntryDisabler.USER,

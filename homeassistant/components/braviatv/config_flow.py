@@ -317,9 +317,12 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
                             system_info[ATTR_CID].lower() or formatted_mac
                         )
                         self._abort_if_unique_id_mismatch()
-                    # Disabled entries are not migrated, so they can still have
-                    # an empty unique ID, which the migration sets later
-                    elif format_mac(reconfigure_entry.data[CONF_MAC]) != formatted_mac:
+                    # Entries without a CID keep an empty unique ID until the
+                    # migration sets the MAC, and without a MAC can't be verified
+                    elif (
+                        not formatted_mac
+                        or format_mac(reconfigure_entry.data[CONF_MAC]) != formatted_mac
+                    ):
                         return self.async_abort(reason="unique_id_mismatch")
                     # A loaded entry is reloaded by its update listener
                     if reconfigure_entry.update_listeners:
