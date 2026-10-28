@@ -64,10 +64,7 @@ async def async_get_config_rest_data_and_coordinator(
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="ssl_error",
-                    translation_placeholders={
-                        "resource": rest.url,
-                        "error": str(rest.last_exception),
-                    },
+                    translation_placeholders={"resource": rest.url},
                 ) from rest.last_exception
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
