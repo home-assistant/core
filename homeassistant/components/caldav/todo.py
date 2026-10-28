@@ -244,7 +244,7 @@ class WebDavTodoListEntity(TodoListEntity):
         self._skips_left = 0
         self._writes = 0
         self._writes_seen = 0
-        self._move_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock()
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
@@ -295,92 +295,96 @@ class WebDavTodoListEntity(TodoListEntity):
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
-        uid: str = cast(str, item.uid)
-        try:
-            todo = cast(
-                Todo,
-                await self.hass.async_add_executor_job(
-                    self._calendar.get_todo_by_uid, uid
-                ),
-            )
-        except NotFoundError as err:
-            raise HomeAssistantError(f"Could not find To-do item {uid}") from err
-        except (
-            caldav_requests.exceptions.ConnectionError,
-            caldav_requests.exceptions.Timeout,
-            DAVError,
-        ) as err:
-            raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
-        vtodo = todo.icalendar_component
-        vtodo["SUMMARY"] = item.summary or ""
-        if status := item.status:
-            previous = TODO_STATUS_MAP.get(
-                vtodo.get("STATUS", ""), TodoItemStatus.NEEDS_ACTION
-            )
-            vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
-            if status != TodoItemStatus.COMPLETED:
-                vtodo.pop("COMPLETED", None)
-            elif previous != TodoItemStatus.COMPLETED:
-                vtodo.pop("COMPLETED", None)
-                vtodo.add("COMPLETED", dt_util.utcnow())
-        if due := item.due:
-            todo.set_due(due)
-        else:
-            vtodo.pop("DUE", None)
-        if description := item.description:
-            vtodo["DESCRIPTION"] = description
-        else:
-            vtodo.pop("DESCRIPTION", None)
-        try:
-            await self.hass.async_add_executor_job(
-                partial(
-                    todo.save,
-                    no_create=True,
-                    obj_type="todo",
-                ),
-            )
-            self._writes += 1
-            # refreshing async otherwise it would take too much time
-            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
-        except (
-            caldav_requests.exceptions.ConnectionError,
-            caldav_requests.exceptions.Timeout,
-            DAVError,
-        ) as err:
-            raise HomeAssistantError(f"CalDAV save error: {err}") from err
-
-    @override
-    async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Delete To-do items."""
-        tasks = (
-            self.hass.async_add_executor_job(self._calendar.get_todo_by_uid, uid)
-            for uid in uids
-        )
-
-        try:
-            items = cast(list[Todo], await asyncio.gather(*tasks))
-        except NotFoundError as err:
-            raise HomeAssistantError("Could not find To-do item") from err
-        except (
-            caldav_requests.exceptions.ConnectionError,
-            caldav_requests.exceptions.Timeout,
-            DAVError,
-        ) as err:
-            raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
-
-        # Run serially as some CalDAV servers do not support concurrent modifications
-        for item in items:
+        async with self._write_lock:
+            uid: str = cast(str, item.uid)
             try:
-                await self.hass.async_add_executor_job(item.delete)
+                todo = cast(
+                    Todo,
+                    await self.hass.async_add_executor_job(
+                        self._calendar.get_todo_by_uid, uid
+                    ),
+                )
+            except NotFoundError as err:
+                raise HomeAssistantError(f"Could not find To-do item {uid}") from err
             except (
                 caldav_requests.exceptions.ConnectionError,
                 caldav_requests.exceptions.Timeout,
                 DAVError,
             ) as err:
-                raise HomeAssistantError(f"CalDAV delete error: {err}") from err
-            self._writes += 1
-        # refreshing async otherwise it would take too much time
-        self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
+                raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+            vtodo = todo.icalendar_component
+            vtodo["SUMMARY"] = item.summary or ""
+            if status := item.status:
+                previous = TODO_STATUS_MAP.get(
+                    vtodo.get("STATUS", ""), TodoItemStatus.NEEDS_ACTION
+                )
+                vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+                if status != TodoItemStatus.COMPLETED:
+                    vtodo.pop("COMPLETED", None)
+                elif previous != TodoItemStatus.COMPLETED:
+                    vtodo.pop("COMPLETED", None)
+                    vtodo.add("COMPLETED", dt_util.utcnow())
+            if due := item.due:
+                todo.set_due(due)
+            else:
+                vtodo.pop("DUE", None)
+            if description := item.description:
+                vtodo["DESCRIPTION"] = description
+            else:
+                vtodo.pop("DESCRIPTION", None)
+            try:
+                await self.hass.async_add_executor_job(
+                    partial(
+                        todo.save,
+                        no_create=True,
+                        obj_type="todo",
+                    ),
+                )
+                self._writes += 1
+                # refreshing async otherwise it would take too much time
+                self.hass.async_create_task(
+                    self.async_update_ha_state(force_refresh=True)
+                )
+            except (
+                caldav_requests.exceptions.ConnectionError,
+                caldav_requests.exceptions.Timeout,
+                DAVError,
+            ) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
+
+    @override
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        """Delete To-do items."""
+        async with self._write_lock:
+            tasks = (
+                self.hass.async_add_executor_job(self._calendar.get_todo_by_uid, uid)
+                for uid in uids
+            )
+
+            try:
+                items = cast(list[Todo], await asyncio.gather(*tasks))
+            except NotFoundError as err:
+                raise HomeAssistantError("Could not find To-do item") from err
+            except (
+                caldav_requests.exceptions.ConnectionError,
+                caldav_requests.exceptions.Timeout,
+                DAVError,
+            ) as err:
+                raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+
+            # Run serially as some CalDAV servers do not support concurrent changes
+            for item in items:
+                try:
+                    await self.hass.async_add_executor_job(item.delete)
+                except (
+                    caldav_requests.exceptions.ConnectionError,
+                    caldav_requests.exceptions.Timeout,
+                    DAVError,
+                ) as err:
+                    raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+                self._writes += 1
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
 
     @override
     async def async_move_todo_item(
@@ -389,7 +393,7 @@ class WebDavTodoListEntity(TodoListEntity):
         """Move a To-do item behind another one, or to the top."""
         if uid == previous_uid:
             return
-        async with self._move_lock:
+        async with self._write_lock:
             try:
                 todos = await self.hass.async_add_executor_job(
                     _move_todo, self._calendar, uid, previous_uid

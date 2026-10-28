@@ -1780,6 +1780,70 @@ async def test_move_item_in_place(
     assert calendar.search.call_count == reads + 1
 
 
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (TodoServices.UPDATE_ITEM, {ATTR_ITEM: "b", ATTR_STATUS: "completed"}),
+        (TodoServices.REMOVE_ITEM, {ATTR_ITEM: ["b"]}),
+    ],
+    ids=["update", "remove"],
+)
+async def test_write_waits_for_move(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    service: TodoServices,
+    data: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a write during a move waits until the move has saved."""
+    events: list[str] = []
+    todos = [Todo(dav_client, None, sorted_todo(uid), calendar) for uid in "abc"]
+    for todo in todos:
+        todo.delete = Mock()
+
+    def lookup(uid: str) -> Todo:
+        events.append("lookup")
+        return next(todo for todo in todos if todo.id == uid)
+
+    async def start_write() -> None:
+        hass.async_create_task(
+            hass.services.async_call(
+                TODO_DOMAIN,
+                service,
+                data,
+                target={ATTR_ENTITY_ID: TEST_ENTITY},
+                blocking=True,
+            )
+        )
+
+    def put(*args: Any) -> MagicMock:
+        if not events:
+            asyncio.run_coroutine_threadsafe(start_write(), hass.loop).result()
+        events.append("save")
+        return MagicMock(status=204)
+
+    calendar.search.return_value = todos
+    calendar.get_todo_by_uid = Mock(side_effect=lookup)
+    dav_client.put.side_effect = put
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "c",
+            "previous_uid": "a",
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    assert events[:3] == ["save", "save", "lookup"]
+
+
 async def test_update_after_move(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
