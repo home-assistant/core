@@ -20,6 +20,9 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_TOKEN,
 )
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -28,7 +31,14 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_FW_VERSION, DOMAIN, LEGACY_MODEL_IDS, MODEL_ID_PLUS, MODEL_NAMES
+from .const import (
+    CONF_FW_VERSION,
+    DOMAIN,
+    LEGACY_MODEL_IDS,
+    MODEL_ID_PLUS,
+    MODEL_NAMES,
+    MQTT_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +71,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._mac: str = ""
         self._device_name: str | None = None
         self._product_name: str | None = None
+        self._mqtt_client_id: str | None = None
 
     async def _async_test_connection(
         self, host: str, token: str | None = None
@@ -80,7 +91,16 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
             device_name = None
         else:
             device_name = settings.device_name
+            self._mqtt_client_id = settings.mqtt.client_id
         return {}, system_info, device_name
+
+    @callback
+    def _abort_if_set_up_through_mqtt(self) -> None:
+        """Abort if the device is already set up through MQTT discovery."""
+        if self._mqtt_client_id and dr.async_get(self.hass).async_get_devices(
+            identifiers={(MQTT_DOMAIN, self._mqtt_client_id)}
+        ):
+            raise AbortFlow("already_configured_mqtt")
 
     def _apply_system_info(self, system_info: SystemInfo) -> None:
         """Take over the device details reported by the system info."""
@@ -155,6 +175,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         assert system_info is not None
         self._apply_system_info(system_info)
         self._device_name = device_name
+        self._abort_if_set_up_through_mqtt()
         self.context["title_placeholders"] = {
             "name": self._device_name or f"WattWächter {self._device_id[-4:]}"
         }
@@ -201,6 +222,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 await self.async_set_unique_id(self._device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+                self._abort_if_set_up_through_mqtt()
 
                 return self._create_entry()
 
@@ -237,6 +259,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._device_id, raise_on_progress=False
                     )
                     self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+                self._abort_if_set_up_through_mqtt()
 
                 return self._create_entry(token)
 
