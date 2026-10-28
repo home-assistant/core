@@ -1582,18 +1582,6 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
-    """Report non awaited platform forwards."""
-    report_usage(
-        f"calls {what} for integration {entry.domain} with "
-        f"title: {entry.title} and entry_id: {entry.entry_id}, "
-        f"during setup without awaiting {what}, which can cause "
-        "the setup lock to be released before the setup is done",
-        core_behavior=ReportBehavior.LOG,
-        breaks_in_ha_version="2025.1",
-    )
-
-
 class ConfigEntriesFlowManager(
     data_entry_flow.FlowManager[ConfigFlowContext, ConfigFlowResult]
 ):
@@ -2995,17 +2983,14 @@ class ConfigEntries:
         in each integration. This is to ensure that all platforms are loaded
         before the entry is set up. This ensures that the config entry cannot
         be unloaded before all platforms are loaded.
-
-        This method is more efficient than async_forward_entry_setup as
-        it can load multiple platforms at once and does not require a separate
-        import executor job for each platform.
         """
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
 
-        if not entry.setup_lock.locked():
+        # A loaded entry's lock is held by another forward, so wait for it
+        if not entry.setup_lock.locked() or entry.state is ConfigEntryState.LOADED:
             async with entry.setup_lock:
                 if entry.state is not ConfigEntryState.LOADED:
                     raise OperationNotAllowed(
@@ -3017,11 +3002,15 @@ class ConfigEntries:
                 await self._async_forward_entry_setups_locked(entry, platforms)
         else:
             await self._async_forward_entry_setups_locked(entry, platforms)
-            # If the lock was held when we stated, and it was released during
-            # the platform setup, it means they did not await the setup call.
+            # If the lock was held when the forward started, and it was released
+            # during the platform setup, it means they did not await the setup call.
             if not entry.setup_lock.locked():
-                _report_non_awaited_platform_forwards(
-                    entry, "async_forward_entry_setups"
+                raise HomeAssistantError(
+                    "Detected code that calls async_forward_entry_setups during setup "
+                    f"for integration {entry.domain} with title: {entry.title} and "
+                    f"entry_id: {entry.entry_id}, without awaiting "
+                    "async_forward_entry_setups, which can cause the setup lock to be "
+                    "released before the setup is done"
                 )
 
     async def _async_forward_entry_setups_locked(

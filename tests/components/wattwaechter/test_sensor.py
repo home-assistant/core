@@ -379,6 +379,9 @@ async def test_gas_water_medium_change(
     assert gas_volume_id is not None
     assert hass.states.get(gas_volume_id).state == "1234.567"
     assert _get_entity_id("7-0:43.0.0") is not None
+    gas_power_id = _get_entity_id("7-0:16.7.0")
+    assert gas_power_id is not None
+    assert hass.states.get(gas_power_id).state == "4.389"
     assert _get_entity_id("8-0:1.0.0") is None
 
     device = device_registry.async_get_device_by_identifier(
@@ -397,6 +400,7 @@ async def test_gas_water_medium_change(
 
     assert _get_entity_id("7-0:3.0.0") is None
     assert _get_entity_id("7-0:43.0.0") is None
+    assert _get_entity_id("7-0:16.7.0") is None
     assert hass.states.get(gas_volume_id) is None
 
     water_volume_id = _get_entity_id("8-0:1.0.0")
@@ -421,6 +425,7 @@ async def test_gas_water_medium_change(
 
     assert _get_entity_id("7-0:3.0.0") == gas_volume_id
     assert hass.states.get(gas_volume_id).state == "1234.567"
+    assert _get_entity_id("7-0:16.7.0") == gas_power_id
     assert _get_entity_id("8-0:1.0.0") is None
 
 

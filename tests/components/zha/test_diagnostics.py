@@ -12,11 +12,13 @@ from pytest_homeassistant.components.diagnostics import (
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
+from zigpy.application import ControllerApplication
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.types import EUI64, NWK
 from zigpy.zcl.clusters import security
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -27,7 +29,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from .conftest import (
+    FIXTURE_GRP_WITH_ENTITIES_ID,
+    FIXTURE_GRP_WITH_ENTITIES_NAME,
+    SIG_EP_INPUT,
+    SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
+    SIG_EP_TYPE,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -137,3 +146,31 @@ async def test_diagnostics_for_device(
     )
 
     assert diagnostics_data == snapshot(exclude=props("device_reg_id", "last_seen"))
+
+
+async def test_diagnostics_for_group_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+) -> None:
+    """Test diagnostics for a ZHA group device."""
+    await setup_zha()
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device
+
+    diagnostics_data = await get_diagnostics_for_device(
+        hass, hass_client, config_entry, device
+    )
+
+    assert diagnostics_data["name"] == FIXTURE_GRP_WITH_ENTITIES_NAME
+    assert diagnostics_data["group_id"] == FIXTURE_GRP_WITH_ENTITIES_ID
+    assert len(diagnostics_data["members"]) == 2
+    for member in diagnostics_data["members"]:
+        assert member["device"]["ieee"] == REDACTED
