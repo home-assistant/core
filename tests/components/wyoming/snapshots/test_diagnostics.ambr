@@ -87,6 +87,11 @@
     }),
     'last_update_success': True,
     'platforms': list([
+      'assist_satellite',
+      'binary_sensor',
+      'select',
+      'switch',
+      'number',
     ]),
     'satellite': dict({
       'auto_gain': 0,

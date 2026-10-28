@@ -4,6 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
+from . import SATELLITE_PLATFORMS
 from .models import WyomingConfigEntry
 
 
@@ -12,10 +13,14 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     item = entry.runtime_data
+    platforms = list(item.service.platforms)
+    if item.device is not None:
+        platforms += SATELLITE_PLATFORMS
+
     diagnostics: dict[str, Any] = {
         "info": item.coordinator.data.event().data,
         "last_update_success": item.coordinator.last_update_success,
-        "platforms": item.service.platforms,
+        "platforms": platforms,
     }
 
     if (device := item.device) is not None:
