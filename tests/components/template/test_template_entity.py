@@ -201,3 +201,65 @@ async def test_running_action_after_entity_id_change(
         {"entity_id": "button.renamed", "state": state.state}
     ]
     assert state.state != "unknown"
+
+
+@pytest.mark.parametrize(
+    "runs",
+    [
+        pytest.param([[1], [2], [3], [4], [5], [6], [7], [2]], id="separate_runs"),
+        pytest.param([[1, 2, 3, 4, 5, 6]], id="single_run"),
+    ],
+)
+async def test_self_referencing_template_after_external_updates(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, runs: list[list[int]]
+) -> None:
+    """Test external state writes do not count towards template loop detection."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "number": {
+                    "name": "test",
+                    "icon": "mdi:brightness-{{ states('number.test') | int(0) }}",
+                    "min": 1,
+                    "max": 7,
+                    "step": 1,
+                    "set_value": [],
+                },
+            }
+        },
+    )
+    # A single run shares one context across all of its set_value calls
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "set_values": {
+                    "sequence": {
+                        "repeat": {
+                            "for_each": "{{ values }}",
+                            "sequence": {
+                                "action": "number.set_value",
+                                "target": {"entity_id": "number.test"},
+                                "data": {"value": "{{ repeat.item }}"},
+                            },
+                        }
+                    }
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for values in runs:
+        await hass.services.async_call(
+            "script", "set_values", {"values": values}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("number.test")
+        assert state.state == f"{values[-1]}.0"
+        assert state.attributes["icon"] == f"mdi:brightness-{values[-1]}"
+
+    assert "Template loop detected" not in caplog.text

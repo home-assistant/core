@@ -153,6 +153,8 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
+        self._handling_results = False
+        self._last_render_state: State | None = None
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -419,8 +421,15 @@ class TemplateEntity(AbstractTemplateEntity):
 
         entity_id = event and event.data["entity_id"]
 
-        if entity_id and entity_id == self.entity_id:
-            self._self_ref_update_count += 1
+        if event and entity_id == self.entity_id:
+            # Only count states written by a render, rate limited renders run later
+            if (
+                self._handling_results
+                or event.data["new_state"] is self._last_render_state
+            ):
+                self._self_ref_update_count += 1
+            else:
+                self._self_ref_update_count = 1
         else:
             self._self_ref_update_count = 0
 
@@ -446,7 +455,14 @@ class TemplateEntity(AbstractTemplateEntity):
                     errors.append(update.result)
 
         if not self._preview_callback:
-            self.async_write_ha_state()
+            # Self referencing events fire synchronously during this write
+            handling_results = self._handling_results
+            self._handling_results = True
+            try:
+                self.async_write_ha_state()
+            finally:
+                self._handling_results = handling_results
+            self._last_render_state = self.hass.states.get(self.entity_id)
             return
 
         if errors:
