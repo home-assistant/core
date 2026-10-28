@@ -1365,7 +1365,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '35',
   })
 # ---
 # name: test_entity[sensor.cocina_cocina_setpoint_end_time-entry]

@@ -28,6 +28,9 @@
       "health_idx": {
         "default": "mdi:cloud"
       },
+      "heating_power_request": {
+        "default": "mdi:radiator"
+      },
       "pressure_trend": {
         "default": "mdi:trending-up"
       },
