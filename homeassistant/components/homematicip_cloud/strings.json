@@ -48,6 +48,9 @@
       },
       "raining": {
         "name": "Raining"
+      },
+      "water_alarm": {
+        "name": "Water alarm"
       }
     },
     "event": {
@@ -124,6 +127,9 @@
       },
       "today_rain": {
         "name": "Today rain"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "window_state": {
         "name": "Window state",

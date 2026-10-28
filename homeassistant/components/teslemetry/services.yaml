@@ -266,3 +266,37 @@ remove_precondition_schedule:
         number:
           min: 1
           mode: box
+
+dispatch_battery_power:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    power:
+      required: true
+      selector:
+        number:
+          min: -100000
+          max: 100000
+          unit_of_measurement: W
+          mode: box
+    duration:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: s
+          mode: box
+
+resume_battery_operation:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry

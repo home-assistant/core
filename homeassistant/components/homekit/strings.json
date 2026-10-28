@@ -17,6 +17,14 @@
       }
     }
   },
+  "exceptions": {
+    "accessory_not_found": {
+      "message": "No HomeKit accessory found for device ID: {device_id}"
+    },
+    "device_not_found": {
+      "message": "No device found for device ID: {device_id}"
+    }
+  },
   "options": {
     "step": {
       "accessory": {

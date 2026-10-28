@@ -170,11 +170,11 @@ class SensorManager:
 
             for key, entity in to_remove.items():
                 self.current_entities.pop(key)
-                await entity.async_remove()
+                await _async_remove_if_added(entity)
 
             for power_key, power_entity in power_to_remove.items():
                 self.current_power_entities.pop(power_key)
-                await power_entity.async_remove()
+                await _async_remove_if_added(power_entity)
 
         # This guard is for the optional typing of EnergyManager.data.
         # In practice, data is always set to default preferences in async_update
@@ -366,6 +366,13 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
     """Set the result of a future unless it is done."""
     if not future.done():
         future.set_result(None)
+
+
+async def _async_remove_if_added(entity: SensorEntity) -> None:
+    """Remove an entity unless the platform rejected it."""
+    # add_to_platform_abort clears hass, e.g. for a disabled or duplicate entity
+    if entity.hass is not None:
+        await entity.async_remove()
 
 
 @dataclass
