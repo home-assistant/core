@@ -173,6 +173,40 @@ async def test_setup_entry(
     assert registry_entry.unique_id == f"{mock_config_entry.entry_id}_{LAPTOP.mac}"
 
 
+@pytest.mark.parametrize(
+    ("name", "entity_id", "expected_device_name"),
+    [
+        pytest.param(LAPTOP.name, "device_tracker.laptop", LAPTOP.name, id="named"),
+        pytest.param("", "device_tracker.aa_bb_cc_dd_ee_ff", LAPTOP.mac, id="unnamed"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    name: str,
+    entity_id: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracker device is named by the Sky Hub, else the MAC address."""
+    mock_router.async_get_skyhub_data.return_value = [MockDevice(LAPTOP.mac, name)]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(LAPTOP.mac))
+    }
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_new_device_discovered(
     hass: HomeAssistant,
