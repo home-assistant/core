@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'active_players': list([
+      dict({
+        'playerid': 1,
+        'type': 'video',
+      }),
+    ]),
+    'config': dict({
+      'port': 8080,
+      'ssl': False,
+      'ws_port': 9090,
+    }),
+    'connection': dict({
+      'connected': True,
+      'websocket': False,
+    }),
+    'version': dict({
+      'major': 21,
+      'minor': 2,
+    }),
+  })
+# ---
+# name: test_diagnostics_disconnected
+  dict({
+    'config': dict({
+      'port': 8080,
+      'ssl': False,
+      'ws_port': 9090,
+    }),
+    'connection': dict({
+      'connected': False,
+      'websocket': False,
+    }),
+  })
+# ---
+# name: test_diagnostics_error
+  dict({
+    'config': dict({
+      'port': 8080,
+      'ssl': False,
+      'ws_port': 9090,
+    }),
+    'connection': dict({
+      'connected': True,
+      'websocket': False,
+    }),
+    'error': 'Connection lost',
+  })
+# ---
