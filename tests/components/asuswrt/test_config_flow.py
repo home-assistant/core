@@ -1,7 +1,8 @@
 """Tests for the AsusWrt config flow."""
 
 from socket import gaierror
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from asusrouter import AsusRouterError
 from asusrouter.modules.identity import AsusDevice
@@ -591,3 +592,178 @@ async def test_options_flow_http(hass: HomeAssistant, patch_setup_entry) -> None
         CONF_CONSIDER_HOME: 20,
         CONF_TRACK_UNKNOWN: True,
     }
+
+
+@pytest.mark.usefixtures("connect_http", "patch_setup_entry")
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring the router connection."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_HTTP, unique_id=ROUTER_MAC_ADDR
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.2",
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_pwd",
+            CONF_MORE_OPTIONS: {CONF_PORT: 443},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "192.168.1.2",
+        CONF_USERNAME: "new_user",
+        CONF_PASSWORD: "new_pwd",
+        CONF_PROTOCOL: PROTOCOL_HTTPS,
+        CONF_PORT: 443,
+    }
+
+
+@pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
+async def test_reconfigure_password_to_ssh_key(hass: HomeAssistant) -> None:
+    """Test reconfiguring a legacy router from a password to an SSH key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_DATA, CONF_PROTOCOL: PROTOCOL_SSH, CONF_MODE: MODE_AP},
+        unique_id=ROUTER_MAC_ADDR,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: HOST,
+            CONF_USERNAME: "user",
+            CONF_MORE_OPTIONS: {CONF_SSH_KEY: SSH_KEY},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: HOST,
+        CONF_USERNAME: "user",
+        CONF_SSH_KEY: SSH_KEY,
+        CONF_PROTOCOL: PROTOCOL_SSH,
+        CONF_MODE: MODE_AP,
+    }
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        pytest.param(
+            {CONF_HOST: HOST, CONF_USERNAME: "user", CONF_MORE_OPTIONS: {}},
+            "pwd_required",
+            id="pwd_required",
+        ),
+        pytest.param(
+            {
+                **CONFIG_DATA,
+                CONF_MORE_OPTIONS: {CONF_SSH_KEY: SSH_KEY},
+            },
+            "pwd_and_ssh",
+            id="pwd_and_ssh",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("connect_http", "patch_setup_entry")
+async def test_reconfigure_invalid_input(
+    hass: HomeAssistant, user_input: dict[str, Any], error: str
+) -> None:
+    """Test reconfigure shows input errors and can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_HTTP, unique_id=ROUTER_MAC_ADDR
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_BASE: error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**CONFIG_DATA, CONF_MORE_OPTIONS: {CONF_PORT: 8443}},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == CONFIG_DATA_HTTP
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(AsusRouterError, "cannot_connect", id="cannot_connect"),
+        pytest.param(TypeError, "unknown", id="unknown"),
+        pytest.param(None, "cannot_connect", id="not_connected"),
+    ],
+)
+@pytest.mark.usefixtures("patch_setup_entry")
+async def test_reconfigure_connection_errors(
+    hass: HomeAssistant,
+    connect_http: MagicMock,
+    side_effect: type[Exception] | None,
+    error: str,
+) -> None:
+    """Test reconfigure shows connection errors and can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_HTTP, unique_id=ROUTER_MAC_ADDR
+    )
+    entry.add_to_hass(hass)
+    connect_http.return_value.connected = False
+    connect_http.return_value.async_connect.side_effect = side_effect
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**CONFIG_DATA, CONF_MORE_OPTIONS: {CONF_PORT: 8443}},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_BASE: error}
+
+    connect_http.return_value.connected = True
+    connect_http.return_value.async_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**CONFIG_DATA, CONF_MORE_OPTIONS: {CONF_PORT: 8443}},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("connect_http", "patch_setup_entry")
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfiguring to a different router aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_DATA_HTTP, unique_id="11:22:33:44:55:66"
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**CONFIG_DATA, CONF_MORE_OPTIONS: {}, CONF_HOST: "192.168.1.2"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == CONFIG_DATA_HTTP
