@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERVER_ID
+from .const import CONF_SERVER_ID, DEFAULT_SERVER
 from .coordinator import SpeedTestConfigEntry
 
 # Client info (IP, ISP, location) and server location/host are left out on purpose
@@ -28,6 +28,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "configured_server_id": entry.options.get(CONF_SERVER_ID),
         "last_update_success": coordinator.last_update_success,
-        "known_servers": len(coordinator.servers),
+        "known_servers": len(coordinator.servers.keys() - {DEFAULT_SERVER}),
         "results": results,
     }

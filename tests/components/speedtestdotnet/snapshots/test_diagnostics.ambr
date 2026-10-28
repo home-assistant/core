@@ -2,7 +2,7 @@
 # name: test_diagnostics
   dict({
     'configured_server_id': '1',
-    'known_servers': 3,
+    'known_servers': 2,
     'last_update_success': True,
     'results': dict({
       'bytes_received': 19712300,
