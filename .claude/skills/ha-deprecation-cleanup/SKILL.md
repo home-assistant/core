@@ -9,9 +9,9 @@ Each deprecation is marked with its own `breaks_in_ha_version`. It is due when t
 at or below the X.Y of the current version on `dev` (`MAJOR_VERSION`/`MINOR_VERSION` in
 `homeassistant/const.py`).
 
-Each deprecation gets its own decision and, when it is cleaned up, its own branch. Unless
-the user narrows it down, scan everything, then prepare branches for the deprecations the
-user picks. When running unattended (for example in a routine), prepare a branch for every
+Decide on each deprecation separately, and clean up each one in its own branch. Unless the
+user narrows it down, scan everything, then prepare branches for the deprecations the user
+picks. When running unattended (for example in a routine), prepare a branch for every
 deprecation that qualifies.
 
 ## 1. Scan
