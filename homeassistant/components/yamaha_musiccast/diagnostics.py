@@ -78,7 +78,12 @@ async def async_get_config_entry_diagnostics(
             "volume_range": data.alarm_volume_range,
             "fade_range": data.alarm_fade_range,
             "details": {
-                key: asdict(details) for key, details in data.alarm_details.items()
+                day: {
+                    key: value
+                    for key, value in asdict(details).items()
+                    if key != "preset_info"
+                }
+                for day, details in data.alarm_details.items()
             },
         },
     }

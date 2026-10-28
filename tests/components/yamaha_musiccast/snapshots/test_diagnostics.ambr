@@ -3,6 +3,15 @@
   dict({
     'alarm': dict({
       'details': dict({
+        'oneday': dict({
+          'beep': False,
+          'enabled': True,
+          'playback_type': 'preset',
+          'preset': 1,
+          'preset_type': 'netusb',
+          'resume_input': None,
+          'time': '0700',
+        }),
       }),
       'fade_range': list([
         0,

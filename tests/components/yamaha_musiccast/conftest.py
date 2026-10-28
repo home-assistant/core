@@ -7,6 +7,7 @@ from aiomusiccast.capabilities import BinarySetter, EntityType
 from aiomusiccast.features import DeviceFeature, ZoneFeature
 from aiomusiccast.musiccast_data import (
     Dimmer,
+    MusicCastAlarmDetails,
     MusicCastData,
     MusicCastZoneData,
     RangeStep,
@@ -68,6 +69,17 @@ def mock_musiccast_device() -> Generator[MagicMock]:
     data.netusb_track = "Track"
     data.dimmer = Dimmer(-1, 15, 1, 5)
     data.party_enable = False
+    data.alarm_details = {
+        "oneday": MusicCastAlarmDetails(
+            enabled=True,
+            time="0700",
+            playback_type="preset",
+            preset=1,
+            preset_type="netusb",
+            preset_info={"input": "net_radio", "text": "My Station"},
+            beep=False,
+        )
+    }
 
     main_zone = MusicCastZoneData()
     main_zone.name = "Main"
