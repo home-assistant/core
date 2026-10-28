@@ -230,7 +230,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         if user_input is None:
-            self._set_confirm_only()
             name = self._discovery_info.name or self._discovery_info.address
             return self.async_show_form(
                 step_id="bluetooth_confirm",
