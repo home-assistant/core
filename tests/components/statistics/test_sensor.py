@@ -25,7 +25,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.statistics import DOMAIN, StatisticsEntityStateAttribute
+from homeassistant.components.statistics import DOMAIN
 from homeassistant.components.statistics.sensor import (
     CONF_KEEP_LAST_SAMPLE,
     CONF_PERCENTILE,
@@ -33,6 +33,7 @@ from homeassistant.components.statistics.sensor import (
     CONF_SAMPLES_MAX_BUFFER_SIZE,
     CONF_STATE_CHARACTERISTIC,
     STAT_MEAN,
+    StatisticsEntityStateAttribute,
     StatisticsSensor,
 )
 from homeassistant.const import (

@@ -1,6 +1,5 @@
 """The statistics component."""
 
-from enum import StrEnum
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,14 +13,6 @@ from homeassistant.helpers.helper_integration import (
 
 DOMAIN = "statistics"
 PLATFORMS = [Platform.SENSOR]
-
-
-class StatisticsEntityStateAttribute(StrEnum):
-    """State attributes for statistics entities."""
-
-    AGE_COVERAGE_RATIO = "age_coverage_ratio"
-    BUFFER_USAGE_RATIO = "buffer_usage_ratio"
-    SOURCE_VALUE_VALID = "source_value_valid"
 
 
 _LOGGER = logging.getLogger(__name__)

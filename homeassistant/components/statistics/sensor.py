@@ -4,6 +4,7 @@ from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
+from enum import StrEnum
 from itertools import pairwise
 import logging
 import math
@@ -60,9 +61,18 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import DOMAIN, PLATFORMS, StatisticsEntityStateAttribute
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class StatisticsEntityStateAttribute(StrEnum):
+    """State attributes for statistics entities."""
+
+    AGE_COVERAGE_RATIO = "age_coverage_ratio"
+    BUFFER_USAGE_RATIO = "buffer_usage_ratio"
+    SOURCE_VALUE_VALID = "source_value_valid"
+
 
 # Samples expiring within this window are purged together in one update,
 # so bursts of samples do not each cause a separate state write.
