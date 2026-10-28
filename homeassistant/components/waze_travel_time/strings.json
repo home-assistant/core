@@ -18,6 +18,17 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "Connection error: {error}"
+    },
+    "unknown_origin_or_destination": {
+      "message": "Unable to determine origin or destination"
+    },
+    "update_error": {
+      "message": "Error on retrieving data: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
