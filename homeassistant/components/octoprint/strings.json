@@ -5,6 +5,7 @@
       "auth_failed": "Failed to retrieve API key",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The OctoPrint instance at this address is not the one that was originally set up.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -19,6 +20,18 @@
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "path": "[%key:component::octoprint::config::step::user::data::path%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::octoprint::config::step::user::data_description::host%]"
         }
       },
       "user": {

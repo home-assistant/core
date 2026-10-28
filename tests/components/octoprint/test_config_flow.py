@@ -1,9 +1,11 @@
 """Test the OctoPrint config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
@@ -667,3 +669,133 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+RECONFIGURE_INPUT = {
+    "host": "2.2.2.2",
+    "port": 443,
+    "path": "/octoprint",
+    "ssl": True,
+    "verify_ssl": False,
+}
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "port": 81,
+            "ssl": False,
+            "verify_ssl": True,
+            "path": "/",
+            "api_key": "test-key",
+        },
+        unique_id="uuid",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.octoprint.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the connection settings."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        "username": "testuser",
+        "host": "2.2.2.2",
+        "port": 443,
+        "ssl": True,
+        "verify_ssl": False,
+        "path": "/octoprint",
+        "api_key": "test-key",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(ApiError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data["host"] == "2.2.2.2"
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the address points to another instance."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "other-uuid"}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_reconfigure_entry.data["host"] == "1.1.1.1"
