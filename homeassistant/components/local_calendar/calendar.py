@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import LocalCalendarConfigEntry
-from .const import CONF_CALENDAR_NAME
+from .const import CONF_CALENDAR_NAME, DOMAIN
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,7 +168,10 @@ class LocalCalendarEntity(CalendarEntity):
                     recurrence_range=range_value,
                 )
             except EventStoreError as err:
-                raise HomeAssistantError(f"Error while deleting event: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="delete_event_error",
+                ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -200,7 +203,10 @@ class LocalCalendarEntity(CalendarEntity):
             try:
                 await self.hass.async_add_executor_job(apply_edit)
             except EventStoreError as err:
-                raise HomeAssistantError(f"Error while updating event: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="update_event_error",
+                ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
