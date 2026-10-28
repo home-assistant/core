@@ -62,6 +62,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             update_interval=SCAN_INTERVAL,
         )
         self.light_states: dict[str, LightState] = {}
+        self._light_writes: defaultdict[str, int] = defaultdict(int)
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -93,24 +94,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         data = {camera.id: camera for camera in cameras}
-        try:
-            self.light_states = {
-                camera.id: await get_light_state(
-                    async_get_clientsession(self.hass),
-                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-                    camera.id,
-                )
-                for camera in cameras
-                if camera.model is CameraModel.EYES_OUTDOOR
-            }
-        except BoschCameraAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="auth_failed"
-            ) from err
-        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="cannot_connect"
-            ) from err
+        await self._async_update_light_states(cameras)
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
@@ -141,6 +125,33 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
 
+    async def _async_update_light_states(self, cameras: list[Camera]) -> None:
+        """Poll the light of each Gen1 outdoor camera, isolating failures."""
+        states: dict[str, LightState] = {}
+        for camera in cameras:
+            if camera.model is not CameraModel.EYES_OUTDOOR:
+                continue
+            writes = self._light_writes[camera.id]
+            try:
+                state = await get_light_state(
+                    async_get_clientsession(self.hass),
+                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+                    camera.id,
+                )
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                _LOGGER.debug("Unable to read the light of a camera", exc_info=True)
+                continue
+            # A write that finished during the request makes this state outdated.
+            if writes == self._light_writes[camera.id]:
+                states[camera.id] = state
+            elif camera.id in self.light_states:
+                states[camera.id] = self.light_states[camera.id]
+        self.light_states = states
+
     async def async_set_light(self, camera_id: str, on: bool) -> None:
         """Switch the light of a camera and remember the new state."""
         await self._oauth_session.async_ensure_token_valid()
@@ -158,10 +169,16 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="light_failed"
             ) from err
+        if result.status in (401, 403):
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            )
         if not result.ok:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="light_failed"
             )
+        self._light_writes[camera_id] += 1
         self.light_states[camera_id] = LightState(
             front_light_on=on,
             wallwasher_on=on,

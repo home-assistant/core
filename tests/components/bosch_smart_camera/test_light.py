@@ -1,6 +1,7 @@
 """Test the Bosch Smart Camera light platform."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import (
@@ -12,9 +13,11 @@ from bosch_shc_camera_client.cameras import (
 )
 from bosch_shc_camera_client.cloud import CameraLightSetResult
 from bosch_shc_camera_client.states import LightState
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.bosch_smart_camera.coordinator import SCAN_INTERVAL
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -178,23 +181,76 @@ async def test_unavailable_without_light_state(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+async def test_light_auth_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_get_light: AsyncMock
+) -> None:
+    """Test a rejected token while reading the light starts reauthentication."""
+    mock_get_light.side_effect = BoschCameraAuthError("rejected")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 @pytest.mark.parametrize(
-    ("error", "state"),
-    [
-        (BoschCameraAuthError("rejected"), ConfigEntryState.SETUP_ERROR),
-        (BoschCameraConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
-        (BoschCameraInvalidResponseError("bad"), ConfigEntryState.SETUP_RETRY),
-    ],
+    "error",
+    [BoschCameraConnectionError("offline"), BoschCameraInvalidResponseError("bad")],
 )
-async def test_light_state_errors(
+async def test_light_read_error_only_affects_the_light(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_light: AsyncMock,
     error: Exception,
-    state: ConfigEntryState,
 ) -> None:
-    """Test errors while reading the light state fail the update."""
+    """Test a failing light endpoint leaves the camera itself available."""
     mock_get_light.side_effect = error
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is state
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get("camera.garden").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("status", [401, 403])
+@pytest.mark.usefixtures("mock_get_light")
+async def test_write_auth_status_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_light: AsyncMock,
+    status: int,
+) -> None:
+    """Test a rejected write token starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+    mock_set_light.return_value = CameraLightSetResult(ok=False, status=status)
+
+    with (
+        patch.object(mock_config_entry, "async_start_reauth") as start_reauth,
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert err.value.translation_key == "auth_failed"
+    start_reauth.assert_called_once_with(hass)
+
+
+async def test_poll_started_before_a_write_does_not_overwrite_it(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    mock_set_light: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an older poll result is dropped after a successful write."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    async def stale_read(*args: Any, **kwargs: Any) -> LightState:
+        await coordinator.async_set_light(CAMERA_ID, True)
+        return OFF
+
+    mock_get_light.side_effect = stale_read
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
