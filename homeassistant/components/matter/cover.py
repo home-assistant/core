@@ -153,28 +153,6 @@ class MatterCover(MatterEntity, CoverEntity):
         """Stop the cover tilt movement."""
         await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
 
-    @override
-    async def async_toggle_tilt(self, **kwargs: Any) -> None:
-        """Toggle the cover tilt."""
-        # tilt-only covers replace the lift buttons with the tilt buttons, so keep
-        # stopping a moving cover like the lift toggle does
-        if self.is_opening or self.is_closing:
-            await self.async_stop_cover_tilt(**kwargs)
-            return
-        if self.current_cover_tilt_position is not None:
-            await super().async_toggle_tilt(**kwargs)
-            return
-        # the default tilt toggle always closes without a tilt position,
-        # so reverse the last reported direction instead
-        toggle = self._get_toggle_function(
-            {
-                "open": self.async_open_cover_tilt,
-                "close": self.async_close_cover_tilt,
-                "stop": self.async_stop_cover_tilt,
-            }
-        )
-        await toggle(**kwargs)
-
     @callback
     def _positions_at_target(self) -> bool | None:
         """Return whether all supported positions match their target position.
