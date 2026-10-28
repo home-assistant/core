@@ -92,7 +92,8 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         delegate = self._device_manager.delegate
         # pyimouapi keeps this callback private. It is the only place a single
         # device's failed ability-ref read can be told apart from the list.
-        update_refs = getattr(delegate, "_async_update_device_ability_refs", None)
+        callback_name = "_async_update_device_ability_refs"
+        update_refs = getattr(delegate, callback_name, None)
         if update_refs is not None and fetch_ability_refs is not False:
 
             async def noting(imou_device: ImouDevice) -> None:
@@ -102,7 +103,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     failed.add(imou_device.device_id)
                     raise
 
-            delegate._async_update_device_ability_refs = noting  # noqa: SLF001
+            setattr(delegate, callback_name, noting)
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 devices = await self._device_manager.async_get_devices(
@@ -124,7 +125,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise self._update_failed(err, "fetch_devices_failed") from err
         finally:
             if update_refs is not None and fetch_ability_refs is not False:
-                delegate._async_update_device_ability_refs = update_refs  # noqa: SLF001
+                setattr(delegate, callback_name, update_refs)
         return devices, failed
 
     def _remember_unresolved(self, asked: bool | set[str], failed: set[str]) -> None:
