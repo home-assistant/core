@@ -213,10 +213,38 @@ async def test_mixed_account_and_device_disappears(
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
     single_eco3_device: IntelliClimaDevices,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """An unavailable ECO3 does not affect ECO2 entities in the same account."""
     single_eco3_device.ecocomfort2_devices = single_eco_device.ecocomfort2_devices
     await setup_integration(hass, mock_config_entry)
+
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+        )
+        == 2
+    )
+    assert (
+        eco2 := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "56789"), mock_config_entry.entry_id
+        )
+    )
+    assert (
+        eco3 := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "33333"), mock_config_entry.entry_id
+        )
+    )
+    assert eco2.id != eco3.id
+    assert eco2.model == "ECOCOMFORT 2.0"
+    assert eco3.model == "ECOCOMFORT 3"
+    assert (eco2_fan := entity_registry.async_get("fan.test_vmc"))
+    assert (eco3_fan := entity_registry.async_get(FAN_ENTITY_ID))
+    assert eco2_fan.device_id == eco2.id
+    assert eco3_fan.device_id == eco3.id
 
     assert hass.states.get("fan.test_vmc").state == STATE_ON
     assert hass.states.get(FAN_ENTITY_ID).state == STATE_ON

@@ -133,6 +133,8 @@ def single_eco3_device(single_eco_device: IntelliClimaDevices) -> IntelliClimaDe
         name="Test VMC 3",
         model=IntelliClimaModelType(modello="ECO3", tipo="wifi"),
         fw="0.9.6",
+        mac="00:11:22:33:44:66",
+        macwifi="00:11:22:33:44:67",
         mode_set=FanMode.sensor,
         speed_set=FanSpeed.auto,
         mode_state="132",
