@@ -14,11 +14,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: IammeterConfigEntry
 ) -> dict[str, Any]:
     """Return connection and parser state without local addresses or identity."""
-    return async_redact_data(
-        {
-            "entry": entry.as_dict(),
-            "measurement": entry.runtime_data.data,
-            "last_update_success": entry.runtime_data.last_update_success,
-        },
-        TO_REDACT,
-    )
+    data: dict[str, Any] = {"entry": entry.as_dict()}
+    if hasattr(entry, "runtime_data"):
+        data["measurement"] = entry.runtime_data.data
+        data["last_update_success"] = entry.runtime_data.last_update_success
+    return async_redact_data(data, TO_REDACT)

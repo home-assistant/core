@@ -11,6 +11,19 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
 
 
+def migrate_pf_unit(registry: er.EntityRegistry, entity: er.RegistryEntry) -> None:
+    """Reset the implicit PF unit while preserving an explicit user preference."""
+    if "unit_of_measurement" not in entity.options.get("sensor", {}):
+        registry.async_update_entity_options(
+            entity.entity_id,
+            "sensor.private",
+            {
+                **entity.options.get("sensor.private", {}),
+                "suggested_unit_of_measurement": None,
+            },
+        )
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: IammeterConfigEntry) -> None:
     """Migrate the default PF display, preserving explicit unit preferences."""
     if entry.minor_version < 2:
@@ -19,15 +32,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IammeterConfigEntry) -
             if (
                 entity.original_device_class == "power_factor"
                 or entity.unique_id.startswith(f"{entry.unique_id}_PF_")
-            ) and "unit_of_measurement" not in entity.options.get("sensor", {}):
-                registry.async_update_entity_options(
-                    entity.entity_id,
-                    "sensor.private",
-                    {
-                        **entity.options.get("sensor.private", {}),
-                        "suggested_unit_of_measurement": None,
-                    },
-                )
+            ):
+                migrate_pf_unit(registry, entity)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
 

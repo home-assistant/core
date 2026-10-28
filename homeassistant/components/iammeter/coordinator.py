@@ -110,6 +110,7 @@ class IammeterDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.hass,
                 DOMAIN,
                 issue_id,
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="identity_changed",

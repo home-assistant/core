@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import migrate_pf_unit
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .coordinator import (
     IammeterConfigEntry,
@@ -151,11 +152,22 @@ async def async_setup_entry(
         hass, model, entry.unique_id or meter_identity(coordinator.data)
     )
     identity = entry.unique_id or meter_identity(coordinator.data)
-    registered_keys = {
-        entity.unique_id.removeprefix(f"{identity}_")
-        for entity in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
+    registry = er.async_get(hass)
+    registered_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
+    for description in SENSOR_TYPES_BY_MODEL[model]:
+        entity_id = registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{identity}_{description.key}"
         )
+        if entity_id is None:
+            continue
+        entity = registry.entities[entity_id]
+        if entity.config_entry_id is not None:
+            continue
+        if description.device_class is SensorDeviceClass.POWER_FACTOR:
+            migrate_pf_unit(registry, entity)
+        registered_entities.append(entity)
+    registered_keys = {
+        entity.unique_id.removeprefix(f"{identity}_") for entity in registered_entities
     }
     added_keys: set[str] = set()
 
