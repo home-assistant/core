@@ -941,7 +941,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "auth"
 
-    with patch("homeassistant.components.google.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
         # Run one tick to invoke the credential exchange check
         await fire_alarm(hass, utcnow() + CODE_CHECK_ALARM_TIMEDELTA)
         result = await hass.config_entries.flow.async_configure(
@@ -1012,7 +1012,7 @@ async def test_web_reconfigure_flow(
         },
     )
 
-    with patch("homeassistant.components.google.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
