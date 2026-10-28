@@ -12,10 +12,25 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 from .errors import CannotConnect, LoginError
+
+
+def interface_identifier(serial_number: str, name: str) -> str:
+    """Return the unique ID and device identifier of an interface.
+
+    Interface names are unique within a router, while MAC addresses are not:
+    software interfaces such as WireGuard have none, and VRRP peers share one.
+    """
+    return f"{serial_number}_{name}"
+
+
+def legacy_interface_identifier(mac_address: str | None, name: str) -> str:
+    """Return the interface identifier used before it was scoped to the router."""
+    return f"{slugify(mac_address)}_{name}"
 
 
 def percentage(total: float, free: float) -> float | None:

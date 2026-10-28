@@ -11,8 +11,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import mikrotik
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.mikrotik.const import (
     ARP,
+    ATTR_SERIAL_NUMBER,
     CONF_ARP_PING,
     CONF_FORCE_DHCP,
     DHCP,
@@ -26,9 +28,9 @@ from homeassistant.components.mikrotik.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
 from . import build_mock_command, setup_integration, setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
@@ -51,7 +53,7 @@ _BASE_COMMAND_RESPONSES: dict[str, list[dict[str, Any]]] = {
 
 def _interface_identifier(interface: dict[str, Any]) -> tuple[str, str]:
     """Return the device registry identifier used for an interface."""
-    return (DOMAIN, f"{slugify(interface['mac-address'])}_{interface['name']}")
+    return (DOMAIN, f"{TEST_SERIAL_NUMBER}_{interface['name']}")
 
 
 def _command_side_effect(
@@ -480,3 +482,110 @@ async def test_stale_interface_device_removed_on_coordinator_update(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_SERIAL_NUMBER), config_entry_id=config_entry.entry_id
     )
+
+
+WIREGUARD1_INTERFACE = {
+    ".id": "*4",
+    "name": "wireguard1",
+    "type": "wg",
+    "running": True,
+    "disabled": False,
+}
+
+
+async def test_interface_without_mac_address_keeps_its_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an interface without a MAC address is not removed as stale."""
+    config_entry = await setup_mikrotik_entry(
+        hass, interface_data=[WIREGUARD1_INTERFACE]
+    )
+
+    command = build_mock_command({MIKROTIK_SERVICES[INTERFACE]: [WIREGUARD1_INTERFACE]})
+
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=command):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_identifier(
+        _interface_identifier(WIREGUARD1_INTERFACE),
+        config_entry_id=config_entry.entry_id,
+    )
+    assert entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{TEST_SERIAL_NUMBER}_wireguard1"
+    )
+
+
+async def test_interfaces_of_different_routers_do_not_collide(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test two routers with the same interface names both get their entities."""
+    other_serial_number = "XYZ789"
+    interfaces = [ETHER1_INTERFACE, WIREGUARD1_INTERFACE]
+
+    first_entry = await setup_mikrotik_entry(hass, interface_data=interfaces)
+    second_entry = await setup_mikrotik_entry(
+        hass,
+        interface_data=interfaces,
+        routerboard_data=[
+            {**ROUTERBOARD_DATA[0], ATTR_SERIAL_NUMBER: other_serial_number}
+        ],
+    )
+
+    for config_entry, serial_number in (
+        (first_entry, TEST_SERIAL_NUMBER),
+        (second_entry, other_serial_number),
+    ):
+        assert {
+            entity_entry.unique_id
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            if entity_entry.domain == BINARY_SENSOR_DOMAIN
+        } == {f"{serial_number}_ether1", f"{serial_number}_wireguard1"}
+
+
+async def test_interface_identifiers_are_migrated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test MAC-based interface identifiers are moved to router-scoped ones."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    legacy_identifier = "00_0c_29_00_00_01_ether1"
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, legacy_identifier)}
+    )
+    entity = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        legacy_identifier,
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    command = build_mock_command(
+        {
+            MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
+            MIKROTIK_SERVICES[ROUTERBOARD]: ROUTERBOARD_DATA,
+            MIKROTIK_SERVICES[INTERFACE]: [ETHER1_INTERFACE],
+        }
+    )
+
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=command):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    migrated_entity = entity_registry.async_get(entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.unique_id == f"{TEST_SERIAL_NUMBER}_ether1"
+    assert migrated_entity.device_id == device.id
+
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, f"{TEST_SERIAL_NUMBER}_ether1")}

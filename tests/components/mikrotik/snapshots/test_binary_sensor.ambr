@@ -9,7 +9,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_03_bridge1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_bridge1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00_0c_29_00_00_03_bridge1',
+    'unique_id': 'ABC123_bridge1',
     'unit_of_measurement': None,
   })
 # ---
@@ -60,7 +60,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_01_ether1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_ether1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00_0c_29_00_00_01_ether1',
+    'unique_id': 'ABC123_ether1',
     'unit_of_measurement': None,
   })
 # ---
@@ -111,7 +111,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_02_wlan1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_wlan1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00_0c_29_00_00_02_wlan1',
+    'unique_id': 'ABC123_wlan1',
     'unit_of_measurement': None,
   })
 # ---

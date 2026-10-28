@@ -5,10 +5,10 @@ from yarl import URL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .utils import interface_identifier
 
 
 class MikrotikBaseEntity(CoordinatorEntity[MikrotikDataUpdateCoordinator]):
@@ -71,8 +71,8 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
         """Initialize the entity."""
         super().__init__(coordinator, description)
 
-        name = interface.get("name")
-        ident = f"{slugify(interface.get('mac-address'))}_{name}"
+        name = interface["name"]
+        ident = interface_identifier(self._serial, name)
 
         self._attr_device_info = self._device_info(ident, name)
         self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
