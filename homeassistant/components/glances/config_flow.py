@@ -88,13 +88,7 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
-            try:
-                await get_api(self.hass, user_input)
-            except GlancesApiAuthorizationError:
-                errors["base"] = "invalid_auth"
-            except GlancesApiConnectionError, ServerVersionMismatch:
-                errors["base"] = "cannot_connect"
-            else:
+            if not (errors := await self._async_validate_input(user_input)):
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
                     data=user_input,
@@ -103,3 +97,43 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+            if not (
+                errors := await self._async_validate_input({**entry.data, **user_input})
+            ):
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        suggested_values = {
+            key: value
+            for key, value in (user_input or entry.data).items()
+            if key != CONF_PASSWORD
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Validate the connection settings and return any errors."""
+        try:
+            await get_api(self.hass, user_input)
+        except GlancesApiAuthorizationError:
+            return {"base": "invalid_auth"}
+        except GlancesApiConnectionError, ServerVersionMismatch:
+            return {"base": "cannot_connect"}
+        return {}

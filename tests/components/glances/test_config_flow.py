@@ -156,3 +156,82 @@ async def test_reauth_fails(
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+RECONFIGURE_INPUT = {
+    "host": "1.1.1.1",
+    "username": "new-username",
+    "password": "new-password",
+    "port": 61209,
+    "ssl": True,
+    "verify_ssl": False,
+}
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring the connection settings."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURE_INPUT
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(GlancesApiAuthorizationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(GlancesApiConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(GlancesApiNoDataAvailable, "cannot_connect", id="no_data"),
+    ],
+)
+async def test_reconfigure_fails(
+    hass: HomeAssistant, error: type[Exception], message: str, mock_api: MagicMock
+) -> None:
+    """Test reconfigure errors and recovery."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = error
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": message}
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURE_INPUT
+
+
+async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when another entry uses the host and port."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_INPUT).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == MOCK_USER_INPUT
