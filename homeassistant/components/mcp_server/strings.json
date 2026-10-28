@@ -14,7 +14,7 @@
   },
   "exceptions": {
     "snapshot_error": {
-      "message": "Error reading the Assist context snapshot: {error}"
+      "message": "An error occurred while reading the Assist context snapshot"
     }
   },
   "options": {

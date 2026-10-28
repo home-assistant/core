@@ -175,9 +175,6 @@ async def create_server(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="snapshot_error",
-                translation_placeholders={
-                    "error": cast(str, tool_response.data["error"])
-                },
             )
 
         return types.ReadResourceResult(
