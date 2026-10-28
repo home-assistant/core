@@ -31,7 +31,7 @@
         },
         "data_description": {
           "all_llm_apis": "Also exposes sets of tools that integrations add later.",
-          "llm_hass_api": "**Device control** only accesses the entities you expose to Assist. **Home Assistant** accesses everything and requires an administrator account.",
+          "llm_hass_api": "**Device control** only accesses the entities you expose to voice assistants. **Home Assistant** accesses everything and requires an administrator account.",
           "read_only": "Only expose tools that are marked as not changing anything.",
           "require_admin": "Only allow administrator accounts to use the main URL. Some tools always require an administrator account."
         },

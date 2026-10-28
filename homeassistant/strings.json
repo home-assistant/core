@@ -83,7 +83,7 @@
       },
       "data_description": {
         "infrared_entity_id": "The infrared emitter entity to use for sending commands.",
-        "llm_hass_api": "**Device control** only accesses the entities you expose to Assist. **Home Assistant** accesses everything and only works for administrators, not voice assistant devices.",
+        "llm_hass_api": "**Device control** only accesses the entities you expose to voice assistants. **Home Assistant** accesses everything and only works for administrators, not voice assistant devices.",
         "radio_frequency_transmitter": "The radio frequency transmitter to use for sending commands."
       },
       "description": {
