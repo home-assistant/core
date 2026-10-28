@@ -1,7 +1,7 @@
 """Test the Bosch Smart Camera switch platform."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from bosch_shc_camera_client.cameras import BoschCameraConnectionError
 from bosch_shc_camera_client.cloud import CloudPutResult
@@ -132,20 +132,18 @@ async def test_set_privacy_mode_auth_error(
     mock_set_privacy_mode: AsyncMock,
     status: int,
 ) -> None:
-    """Test a rejected token starts reauthentication."""
+    """Test a rejected token raises without starting an unsupported reauth flow."""
     mock_set_privacy_mode.return_value = CloudPutResult(ok=False, status=status)
     await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
-        pytest.raises(HomeAssistantError) as err,
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
+    await hass.async_block_till_done()
 
     assert err.value.translation_key == "auth_failed"
-    mock_reauth.assert_called_once_with(hass)
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_poll_during_write_keeps_written_state(
