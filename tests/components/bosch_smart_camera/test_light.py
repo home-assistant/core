@@ -224,7 +224,9 @@ async def test_write_auth_status_starts_reauth(
     mock_set_light.return_value = CameraLightSetResult(ok=False, status=status)
 
     with (
-        patch.object(mock_config_entry, "async_start_reauth") as start_reauth,
+        patch.object(
+            mock_config_entry, "async_start_reauth_if_available"
+        ) as start_reauth,
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
