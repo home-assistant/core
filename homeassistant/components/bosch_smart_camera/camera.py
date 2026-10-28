@@ -141,7 +141,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         """Stop the stream, its worker keeps retrying a closed proxy otherwise."""
         if self._reopen_task:
             self._reopen_task.cancel()
-        await self.coordinator.live_sessions.async_close(self._camera_id)
+            await asyncio.wait([self._reopen_task])
         if (stream := self.stream) is not None:
             # The settings object is cached per entity, so only the stream's copy changes.
             stream.dynamic_stream_settings = replace(
@@ -149,6 +149,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             )
             self.stream = None
             await stream.stop()
+        # Closed last: a running worker would reopen the session otherwise.
+        await self.coordinator.live_sessions.async_close(self._camera_id)
 
     @property
     @override

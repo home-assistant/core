@@ -136,6 +136,9 @@ class LiveSessions:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        # The done callback runs a loop iteration later, so drop the entries here.
+        for camera_id in camera_ids:
+            self._opening.pop(camera_id, None)
 
     async def _async_close(self, camera_id: str) -> None:
         proxy = self._proxies.pop(camera_id, None)
