@@ -1,238 +1,194 @@
-"""Snapshot tests for sensor entity state and registry attributes.
-
-These tests set up real config entries, inject library events, and compare
-the resulting entity state / registry attributes against syrupy snapshots.
-On first run (or after ``pytest --snapshot-update``) the snapshots are
-written; subsequent runs assert that nothing has changed unexpectedly.
+"""Snapshot tests for the Powersensor sensor entities and devices.
 
 Run to update snapshots:
     pytest tests/components/powersensor_au/test_sensor_snapshots.py --snapshot-update
-
-Coverage targets:
-  - Entity names, unique IDs, device classes, units, state classes
-  - State values after representative measurement events
-  - Device registry name / identifiers
 """
 
 from collections.abc import Callable, Coroutine
 from typing import Any
 
-from pytest_homeassistant.common import MockConfigEntry
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.powersensor_au.const import (
     DOMAIN,
+    ROLE_APPLIANCE,
     ROLE_HOUSENET,
     ROLE_SOLAR,
+    ROLE_WATER,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 PLUG_MAC = "aabbccddeeff"
-SENSOR_MAC = "112233445566"
+MAINS_MAC = "112233445566"
 SOLAR_MAC = "665544332211"
+WATER_MAC = "a1b2c3d4e5f6"
+UNASSIGNED_MAC = "0f0e0d0c0b0a"
+STARTTIME = 1700000000
+RESETTIME = 1690000000
+
+Fire = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
 
 
-def _entity(hass: HomeAssistant, entry: MockConfigEntry, unique_id: str):
-    """Return entity registry entry + state tuple, or fail clearly."""
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id)
-    assert entity_id is not None, f"No entity registered with unique_id={unique_id!r}"
-    return reg.async_get(entity_id), hass.states.get(entity_id)
+async def _discover_sensor(fire: Fire, mac: str, role: str) -> None:
+    """Discover a sensor with the given role, and report its battery and signal."""
+    await fire({"event": "device_found", "mac": mac, "device_type": "sensor"})
+    await fire(
+        {"event": "now_relaying_for", "device_type": "sensor", "mac": mac, "role": role}
+    )
+    await fire({"event": "battery_level", "mac": mac, "role": role, "volts": 4.15})
+    await fire({"event": "radio_signal_quality", "mac": mac, "average_rssi": -72})
 
 
-async def test_plug_entity_snapshot(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Snapshot all plug entities after discovery."""
+async def _discover_installation(hass: HomeAssistant, fire: Fire) -> None:
+    """Discover a plug and a sensor of each role, with a reading for each entity."""
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
+    for mac, role in (
+        (MAINS_MAC, ROLE_HOUSENET),
+        (SOLAR_MAC, ROLE_SOLAR),
+        (WATER_MAC, ROLE_WATER),
+    ):
+        await _discover_sensor(fire, mac, role)
+    # A sensor that has not reported a role yet.
+    await fire(
+        {"event": "device_found", "mac": UNASSIGNED_MAC, "device_type": "sensor"}
+    )
+    await fire({"event": "battery_level", "mac": UNASSIGNED_MAC, "volts": 3.9})
+    await fire(
+        {"event": "radio_signal_quality", "mac": UNASSIGNED_MAC, "average_rssi": -80}
+    )
+    # The household view's entities must be listening before it calculates.
     await hass.async_block_till_done()
 
-    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    # Stable sort so snapshot order is deterministic.
-    entities.sort(key=lambda e: e.unique_id)
-    assert entities == snapshot
-
-
-async def test_sensor_no_role_entity_snapshot(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Snapshot universal sensor entities before any role is assigned."""
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await hass.async_block_till_done()
-
-    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    entities.sort(key=lambda e: e.unique_id)
-    assert entities == snapshot
-
-
-async def test_sensor_housenet_state_snapshot(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Snapshot entity states for a house-net sensor after representative events."""
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire(
-        {
-            "event": "now_relaying_for",
-            "device_type": "sensor",
-            "mac": SENSOR_MAC,
-            "role": ROLE_HOUSENET,
-        }
-    )
-    await fire(
-        {
-            "event": "battery_level",
-            "mac": SENSOR_MAC,
-            "volts": 4.15,
-        }
-    )
     await fire(
         {
             "event": "average_power",
-            "mac": SENSOR_MAC,
-            "role": ROLE_HOUSENET,
-            "watts": 1500.0,
-            "starttime_utc": 1700000000,
-            "duration_s": 10,
+            "mac": PLUG_MAC,
+            "role": ROLE_APPLIANCE,
+            "watts": 120.0,
+            "starttime_utc": STARTTIME,
+            "duration_s": 1,
+        }
+    )
+    await fire(
+        {
+            "event": "average_power_components",
+            "mac": PLUG_MAC,
+            "volts": 240.5,
+            "apparent_current": 0.55,
+            "active_current": 0.5,
+            "reactive_current": 0.23,
+            "starttime_utc": STARTTIME,
+            "duration_s": 1,
         }
     )
     await fire(
         {
             "event": "summation_energy",
-            "mac": SENSOR_MAC,
-            "role": ROLE_HOUSENET,
-            "summation_joules": 18_000_000,  # 5 kWh
-            "starttime_utc": 1700000000,
-            "summation_resettime_utc": 1690000000,
+            "mac": PLUG_MAC,
+            "summation_joules": 7_200_000,  # 2 kWh
+            "starttime_utc": STARTTIME,
+            "summation_resettime_utc": RESETTIME,
+        }
+    )
+
+    # The household view combines solar and mains readings with the same start
+    # time, using each only once, so solar has to arrive first.  Its energy
+    # comes from the change between two readings.
+    for starttime, solar_joules, mains_joules in (
+        (STARTTIME, 18_000_000, 18_000_000),
+        (STARTTIME + 30, 16_200_000, 18_720_000),
+    ):
+        for mac, role, watts, joules in (
+            (SOLAR_MAC, ROLE_SOLAR, -600.0, solar_joules),
+            (MAINS_MAC, ROLE_HOUSENET, 1500.0, mains_joules),
+        ):
+            await fire(
+                {
+                    "event": "average_power",
+                    "mac": mac,
+                    "role": role,
+                    "watts": watts,
+                    "starttime_utc": starttime,
+                    "duration_s": 30,
+                }
+            )
+            await fire(
+                {
+                    "event": "summation_energy",
+                    "mac": mac,
+                    "role": role,
+                    "summation_joules": joules,
+                    "starttime_utc": starttime,
+                    "summation_resettime_utc": RESETTIME,
+                }
+            )
+
+    await fire(
+        {
+            "event": "average_flow",
+            "mac": WATER_MAC,
+            "role": ROLE_WATER,
+            "litres_per_minute": 9.2,
         }
     )
     await fire(
         {
-            "event": "radio_signal_quality",
-            "mac": SENSOR_MAC,
-            "average_rssi": -72,
+            "event": "summation_volume",
+            "mac": WATER_MAC,
+            "role": ROLE_WATER,
+            "summation_litres": 132.1,
         }
     )
-    await hass.async_block_till_done()
-
-    states = {
-        e.unique_id: hass.states.get(e.entity_id)
-        for e in sorted(
-            er.async_entries_for_config_entry(entity_registry, config_entry.entry_id),
-            key=lambda e: e.unique_id,
-        )
-    }
-    assert states == snapshot
 
 
-async def test_vhh_full_state_snapshot(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    snapshot: SnapshotAssertion,
+    fire: Fire,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot VHH entity states after mains and solar sensors are active."""
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire(
-        {
-            "event": "now_relaying_for",
-            "device_type": "sensor",
-            "mac": SENSOR_MAC,
-            "role": ROLE_HOUSENET,
-        }
-    )
-    await fire(
-        {
-            "event": "average_power",
-            "mac": SENSOR_MAC,
-            "role": ROLE_HOUSENET,
-            "watts": 800.0,
-            "starttime_utc": 1700000100,
-            "duration_s": 10,
-        }
-    )
-
-    await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
-    await fire(
-        {
-            "event": "now_relaying_for",
-            "device_type": "sensor",
-            "mac": SOLAR_MAC,
-            "role": ROLE_SOLAR,
-        }
-    )
-    await fire(
-        {
-            "event": "average_power",
-            "mac": SOLAR_MAC,
-            "role": ROLE_SOLAR,
-            "watts": 300.0,
-            "starttime_utc": 1700000100,
-            "duration_s": 10,
-        }
-    )
-
+    """Snapshot every entity of an installation, including those disabled by default."""
+    await _discover_installation(hass, fire)
     await hass.async_block_till_done()
 
-    vhh_entries = [
-        e
-        for e in er.async_entries_for_config_entry(
-            entity_registry, config_entry.entry_id
-        )
-        if e.unique_id.startswith("vhh_")
-    ]
-    states = {
-        e.unique_id: hass.states.get(e.entity_id)
-        for e in sorted(vhh_entries, key=lambda e: e.unique_id)
-    }
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_plug_device_registry_snapshot(
+async def test_devices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    snapshot: SnapshotAssertion,
+    fire: Fire,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot the device registry entry for a discovered plug."""
-    await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
+    """Snapshot every device of an installation, household view included."""
+    await _discover_installation(hass, fire)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, PLUG_MAC), config_entry.entry_id
-    )
-    assert device is not None
-    assert device == snapshot
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert devices
+    for device in devices:
+        assert device == snapshot(name=device.name)
 
 
 async def test_sensor_device_registry_renames_on_role(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    fire: Fire,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Device registry entry is updated (translation_key changes) when role is assigned."""
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await fire({"event": "device_found", "mac": MAINS_MAC, "device_type": "sensor"})
     await hass.async_block_till_done()
 
     device_before = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SENSOR_MAC), config_entry.entry_id
+        (DOMAIN, MAINS_MAC), config_entry.entry_id
     )
     assert device_before is not None
     assert device_before == snapshot(name="before_role")
@@ -241,13 +197,13 @@ async def test_sensor_device_registry_renames_on_role(
         {
             "event": "now_relaying_for",
             "device_type": "sensor",
-            "mac": SENSOR_MAC,
+            "mac": MAINS_MAC,
             "role": ROLE_HOUSENET,
         }
     )
     await hass.async_block_till_done()
 
     device_after = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SENSOR_MAC), config_entry.entry_id
+        (DOMAIN, MAINS_MAC), config_entry.entry_id
     )
     assert device_after == snapshot(name="after_role")

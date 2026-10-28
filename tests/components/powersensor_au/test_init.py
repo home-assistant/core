@@ -4,9 +4,8 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from powersensor_local import VirtualHousehold
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -34,7 +33,6 @@ SENSOR_MAC = "112233445566"
 
 
 async def test_setup_entry_populates_runtime_data(
-    hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Setup stores a populated PowersensorRuntimeData on the entry."""
@@ -45,30 +43,35 @@ async def test_setup_entry_populates_runtime_data(
     assert config_entry.runtime_data.devices is not None
 
 
-async def test_setup_starts_mdns_browser(
-    hass: HomeAssistant,
-    mock_devices: MagicMock,
-    config_entry: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_setup_starts_mdns_browser(mock_devices: MagicMock) -> None:
     """devices.start() is called once during setup with an async callback."""
     mock_devices.start.assert_awaited_once()
     cb = mock_devices.start.call_args[0][0]
     assert callable(cb)
 
 
-async def test_unload_calls_disconnect_and_stop(
+async def test_unload_unsubscribes_devices_then_stops_library(
     hass: HomeAssistant,
     mock_devices: MagicMock,
     config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
-    """Unloading the entry calls disconnect() then stop() exactly once each."""
+    """Unloading unsubscribes every discovered device, then stops the library."""
+    await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
+    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await hass.async_block_till_done()
+    mock_devices.reset_mock()
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_devices.stop.assert_awaited_once()
-    # dispatcher.disconnect() is also called once; it's a real object so we
-    # check indirectly that no exception was raised (state is NOT_LOADED).
+    assert mock_devices.mock_calls == [
+        call.unsubscribe(PLUG_MAC),
+        call.unsubscribe(SENSOR_MAC),
+        call.stop(),
+    ]
 
 
 async def test_event_during_unload_does_not_orphan_entities(
@@ -152,53 +155,50 @@ async def test_devices_start_failure_retries_and_recovers(
     }
 
 
-async def test_setup_constructs_vhh_with_solar_when_role_persisted(
+@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.parametrize(
+    ("roles", "with_solar"),
+    [
+        pytest.param({}, False, id="no_roles"),
+        pytest.param({SENSOR_MAC: ROLE_HOUSENET}, False, id="mains_only"),
+        pytest.param({SENSOR_MAC: ROLE_SOLAR}, True, id="solar"),
+    ],
+)
+async def test_setup_constructs_vhh_with_solar_from_saved_roles(
     hass: HomeAssistant,
-    mock_async_zeroconf: MagicMock,
+    mock_devices: MagicMock,
+    roles: dict[str, str],
+    with_solar: bool,
 ) -> None:
-    """VirtualHousehold gets with_solar=True when a solar role is persisted.
+    """VirtualHousehold gets with_solar=True only when a solar role is saved.
 
     It also gets the integration's logger, so errors in its callbacks are logged.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"roles": {"aabbccddeeff": ROLE_SOLAR}},
+        data={CFG_ROLES: roles},
         version=PowersensorConfigFlow.VERSION,
         minor_version=PowersensorConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    constructed_args: list[tuple[bool, logging.Logger | None]] = []
-
-    class CapturingVHH(VirtualHousehold):
-        def __init__(
-            self, with_solar: bool, logger: logging.Logger | None = None
-        ) -> None:
-            constructed_args.append((with_solar, logger))
-            super().__init__(with_solar, logger=logger)
-
-    devices = MagicMock()
-    devices.start = AsyncMock()
-    devices.stop = AsyncMock()
-    devices.subscribe = MagicMock()
-    devices.unsubscribe = MagicMock()
-
     with (
         patch(
             "homeassistant.components.powersensor_au.PowersensorZeroconfDevices",
-            return_value=devices,
+            return_value=mock_devices,
         ),
         patch(
             "homeassistant.components.powersensor_au.VirtualHousehold",
-            CapturingVHH,
-        ),
+            autospec=True,
+        ) as mock_vhh,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert constructed_args == [
-        (True, logging.getLogger("homeassistant.components.powersensor_au"))
-    ]
+    mock_vhh.assert_called_once_with(
+        with_solar,
+        logger=logging.getLogger("homeassistant.components.powersensor_au"),
+    )
 
 
 async def _delete_device(

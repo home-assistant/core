@@ -10,7 +10,6 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
-import homeassistant.components.powersensor_au
 from homeassistant.components.powersensor_au.config_flow import (
     CONF_ROLE,
     PowersensorConfigFlow,
@@ -41,19 +40,6 @@ LATE_MAC = "0a0b0c0d0e0f"
 UNRECOGNISED_ROLE = "gas"
 
 
-@pytest.fixture
-def bypass_setup(
-    monkeypatch: pytest.MonkeyPatch,
-    mock_async_zeroconf: MagicMock,
-) -> None:
-    """Bypass actual entry setup and prevent real zeroconf socket from opening."""
-    monkeypatch.setattr(
-        homeassistant.components.powersensor_au,
-        "async_setup_entry",
-        AsyncMock(return_value=True),
-    )
-
-
 def _zc_info(mac: str, ip: str = "192.168.0.33") -> ZeroconfServiceInfo:
     return ZeroconfServiceInfo(
         ip_address=ip_address(ip),
@@ -66,8 +52,10 @@ def _zc_info(mac: str, ip: str = "192.168.0.33") -> ZeroconfServiceInfo:
     )
 
 
-@pytest.mark.usefixtures("bypass_setup")
-async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_user_flow_creates_entry(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """User-initiated flow reaches the confirm form then creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,10 +68,12 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
-    assert isinstance(result["data"]["roles"], dict)
+    assert result["data"] == {CFG_ROLES: {}}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_zeroconf")
 async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> None:
     """A second user flow aborts with single_instance_allowed once an entry exists."""
     result = await hass.config_entries.flow.async_init(
@@ -98,7 +88,7 @@ async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> 
     assert result2["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_zeroconf")
 async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) -> None:
     """A second user flow aborts if the first is still on the confirm form."""
     result1 = await hass.config_entries.flow.async_init(
@@ -113,8 +103,10 @@ async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) ->
     assert result2["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("bypass_setup")
-async def test_zeroconf_flow_creates_entry(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_flow_creates_entry(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Zeroconf discovery reaches confirm form then creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -129,10 +121,12 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
-    assert isinstance(result["data"]["roles"], dict)
+    assert result["data"] == {CFG_ROLES: {}}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_zeroconf")
 async def test_zeroconf_second_plug_aborts_when_configured(hass: HomeAssistant) -> None:
     """A second plug discovery aborts once the entry exists."""
     result = await hass.config_entries.flow.async_init(
@@ -148,9 +142,10 @@ async def test_zeroconf_second_plug_aborts_when_configured(hass: HomeAssistant) 
         data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
     )
     assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_zeroconf")
 async def test_zeroconf_discovery_can_be_ignored(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -178,9 +173,9 @@ async def test_zeroconf_discovery_can_be_ignored(
     assert [entry.source for entry in entries] == [config_entries.SOURCE_IGNORE]
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_zeroconf_simultaneous_discoveries_deduplicate(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Two simultaneous discoveries only produce one flow; the second aborts."""
     result1 = await hass.config_entries.flow.async_init(
@@ -203,9 +198,11 @@ async def test_zeroconf_simultaneous_discoveries_deduplicate(
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
     assert result1["result"].unique_id == DOMAIN
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.usefixtures("bypass_setup")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_zeroconf")
 async def test_zeroconf_missing_id_aborts(hass: HomeAssistant) -> None:
     """Discovery aborts when the plug advertises without an 'id' property."""
     result = await hass.config_entries.flow.async_init(

@@ -1,6 +1,6 @@
 """Common fixtures for powersensor_au integration tests."""
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -25,6 +25,16 @@ def _make_mock_devices() -> MagicMock:
     devices.subscribe = MagicMock()
     devices.unsubscribe = MagicMock()
     return devices
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry, so config flow tests set nothing up."""
+    with patch(
+        "homeassistant.components.powersensor_au.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
