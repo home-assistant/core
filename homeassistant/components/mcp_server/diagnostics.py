@@ -35,7 +35,8 @@ async def async_get_config_entry_diagnostics(
         api_instance = await async_get_api_instance(
             hass, llm_api_ids, llm_context, entry.data[CONF_READ_ONLY]
         )
-    except HomeAssistantError as err:
+    # Merged APIs raise ValueError on tool name collisions.
+    except (HomeAssistantError, ValueError) as err:
         llm_api = {"error": str(err)}
     else:
         llm_api = {

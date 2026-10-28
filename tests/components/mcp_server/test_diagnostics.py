@@ -78,3 +78,40 @@ async def test_diagnostics_missing_llm_api(
         await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
         == snapshot
     )
+
+
+@pytest.mark.parametrize("llm_hass_api", [[TEST_LLM_API_ID, "other-api"]])
+async def test_diagnostics_tool_name_collision(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics when merging the LLM APIs fails on a tool name collision."""
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id=TEST_LLM_API_ID,
+            name="Test API",
+            tools=[
+                _StubTool("duplicate", read_only=True),
+                _StubTool("duplicate", read_only=True),
+            ],
+        ),
+    )
+    llm.async_register_api(
+        hass,
+        MockLLMAPI(
+            hass=hass,
+            id="other-api",
+            name="Other API",
+            tools=[_StubTool("duplicate", read_only=True)],
+        ),
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
+    )
