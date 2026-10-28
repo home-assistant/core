@@ -572,7 +572,10 @@ class BackupSchedule:
         self._unschedule_next(manager)
         now = dt_util.now()
         if (cron_event := self.cron_event) is None:
-            seed_time = manager.config.data.last_completed_automatic_backup or now
+            # The stored timestamp has a fixed UTC offset, which does not follow DST
+            seed_time = dt_util.as_local(
+                manager.config.data.last_completed_automatic_backup or now
+            )
             cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 

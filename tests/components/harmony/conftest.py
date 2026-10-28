@@ -107,7 +107,18 @@ class FakeHarmonyClient:
     @property
     def json_config(self):
         """Return the json config as a dict."""
-        return {}
+        return {
+            "Activities": {
+                activity["id"]: activity["label"]
+                for activity in self.config["activity"]
+            },
+            "Devices": {
+                TV_DEVICE_NAME: {
+                    "id": TV_DEVICE_ID,
+                    "commands": ["PowerOn", "PowerOff", "VolumeUp", "VolumeDown"],
+                }
+            },
+        }
 
     @property
     def hub_config(self):
