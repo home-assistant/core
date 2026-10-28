@@ -1,6 +1,7 @@
 """Test the Wyoming config flow."""
 
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -368,3 +369,91 @@ async def test_bad_config_entry(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result.get("type") is FlowResultType.FORM
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param({"host": "1.1.1.1", "port": 4321}, id="new_host_port"),
+        pytest.param({"host": "1.2.3.4", "port": 1234}, id="unchanged"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    stt_config_entry: MockConfigEntry,
+    user_input: dict[str, Any],
+) -> None:
+    """Test reconfiguring the host and port."""
+    result = await stt_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert stt_config_entry.data == user_input
+
+
+@pytest.mark.parametrize(
+    ("info", "error"),
+    [
+        pytest.param(None, "cannot_connect", id="cannot_connect"),
+        pytest.param(EMPTY_INFO, "no_services", id="no_services"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    stt_config_entry: MockConfigEntry,
+    info: Info | None,
+    error: str,
+) -> None:
+    """Test errors during reconfiguration and recovering from them."""
+    result = await stt_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert stt_config_entry.data == {"host": "1.1.1.1", "port": 4321}
+
+
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, stt_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to the endpoint of another entry aborts."""
+    MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1", "port": 4321}).add_to_hass(
+        hass
+    )
+
+    result = await stt_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert stt_config_entry.data == {"host": "1.2.3.4", "port": 1234}
