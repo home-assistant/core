@@ -9986,6 +9986,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "categories": [

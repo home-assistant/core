@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
@@ -64,7 +64,7 @@ async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA button platform."""
     await setup_zha()
