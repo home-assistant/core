@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import AmbientNetworkConfigEntry, AmbientNetworkDataUpdateCoordinator
+from .coordinator import AmbientNetworkConfigEntry
 from .entity import AmbientNetworkEntity
 
 TYPE_AQI_PM25 = "aqi_pm25"
@@ -289,15 +289,6 @@ async def async_setup_entry(
 
 class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
     """A sensor implementation for an Ambient Weather Network sensor."""
-
-    def __init__(
-        self,
-        coordinator: AmbientNetworkDataUpdateCoordinator,
-        description: SensorEntityDescription,
-        mac_address: str,
-    ) -> None:
-        """Initialize a sensor object."""
-        super().__init__(coordinator, description, mac_address)
 
     @override
     def _update_attrs(self) -> None:
