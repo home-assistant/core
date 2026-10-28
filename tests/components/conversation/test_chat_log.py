@@ -271,9 +271,9 @@ async def test_unknown_llm_api(
 ) -> None:
     """Test when we reference an LLM API that does not exists."""
     with (
+        pytest.raises(ConverseError) as exc_info,
         chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-        pytest.raises(ConverseError) as exc_info,
     ):
         await chat_log.async_provide_llm_data(
             mock_conversation_input.as_llm_context("test"),
@@ -745,9 +745,9 @@ async def test_template_error(
 ) -> None:
     """Test that template error handling works."""
     with (
+        pytest.raises(ConverseError) as exc_info,
         chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-        pytest.raises(ConverseError) as exc_info,
     ):
         await chat_log.async_provide_llm_data(
             mock_conversation_input.as_llm_context("test"),
