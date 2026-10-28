@@ -93,9 +93,11 @@ class NetatmoFlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data_updates=data
-            )
+            entry = self._get_reconfigure_entry()
+            result = self.async_update_and_abort(entry, data_updates=data)
+            # The update listener only signals public weather changes, it won't reload
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
         existing_entry = await self.async_set_unique_id(DOMAIN)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)

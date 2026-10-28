@@ -1,7 +1,7 @@
 """Test the Netatmo config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyatmo.const import ALL_SCOPES
 import pytest
@@ -341,6 +341,7 @@ async def test_reconfigure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the reconfigure flow re-runs OAuth and updates the entry."""
     entry = MockConfigEntry(
@@ -353,6 +354,18 @@ async def test_reconfigure(
         },
     )
     entry.add_to_hass(hass)
+
+    async def _mock_setup_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+        # Netatmo registers an update listener on setup
+        entry.async_on_unload(entry.add_update_listener(AsyncMock()))
+
+    with patch(
+        "homeassistant.components.netatmo.async_setup_entry",
+        side_effect=_mock_setup_entry,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
     result = await entry.start_reconfigure_flow(hass)
     state = config_entry_oauth2_flow._encode_jwt(
@@ -385,8 +398,12 @@ async def test_reconfigure(
         },
     )
 
-    with patch("homeassistant.components.netatmo.async_setup_entry", return_value=None):
+    with patch(
+        "homeassistant.components.netatmo.async_setup_entry",
+        side_effect=_mock_setup_entry,
+    ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -394,3 +411,6 @@ async def test_reconfigure(
     assert entry.data["token"]["access_token"] == "new-access-token"
     assert entry.data["token"]["refresh_token"] == "new-refresh-token"
     assert entry.data["webhook_id"] == "mock-webhook-id"
+    assert entry.state is ConfigEntryState.LOADED
+    mock_setup.assert_called_once()
+    assert "has an update listener" not in caplog.text
