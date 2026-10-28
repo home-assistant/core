@@ -6062,6 +6062,12 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "ledvance": {
+      "name": "LEDVANCE",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "legrand": {
       "name": "Legrand",
       "integration_type": "virtual",
