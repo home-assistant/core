@@ -297,6 +297,14 @@ def zvidar_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("cover_zvidar_state.json", DOMAIN)
 
 
+@pytest.fixture(name="simon_io_700_roller_blind_state", scope="package")
+def simon_io_700_roller_blind_state_fixture() -> dict[str, Any]:
+    """Load the Simon IO 700 series roller blind node state fixture data."""
+    return load_json_object_fixture(
+        "cover_simon_io_700_roller_blind_state.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="qubino_shutter_state", scope="package")
 def qubino_shutter_state_fixture() -> dict[str, Any]:
     """Load the Qubino Shutter node state fixture data."""
@@ -1156,6 +1164,16 @@ def iblinds_v3_cover_fixture(client, iblinds_v3_state) -> Node:
 def zvidar_cover_fixture(client, zvidar_state) -> Node:
     """Mock a ZVIDAR window cover node."""
     node = Node(client, copy.deepcopy(zvidar_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="simon_io_700_roller_blind")
+def simon_io_700_roller_blind_fixture(
+    client, simon_io_700_roller_blind_state
+) -> Node:
+    """Mock a Simon IO 700 series roller blind node."""
+    node = Node(client, copy.deepcopy(simon_io_700_roller_blind_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
