@@ -297,3 +297,101 @@ async def test_dhcp_error_from_wall_connector(
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_wall_connector_version")
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring the host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.1.1.1"}, unique_id="abc123"
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST) == "1.1.1.1"
+    )
+
+    with patch(
+        "homeassistant.components.tesla_wall_connector.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "2.2.2.2"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            WallConnectorConnectionError, "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_wall_connector_version")
+async def test_reconfigure_errors(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test reconfigure errors and recovery."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.1.1.1"}, unique_id="abc123"
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "tesla_wall_connector.WallConnector.async_get_version",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_HOST) == "2.2.2.2"
+    )
+
+    with patch(
+        "homeassistant.components.tesla_wall_connector.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "2.2.2.2"}
+
+
+@pytest.mark.usefixtures("mock_wall_connector_version")
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the host is a different Wall Connector."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.1.1.1"}, unique_id="other_serial"
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == {CONF_HOST: "1.1.1.1"}
