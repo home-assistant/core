@@ -68,14 +68,15 @@ from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.device import (
+    BaseDevice,
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
-    Device,
     DeviceConfiguredEvent,
     DeviceEntityAddedEvent,
     DeviceEntityRemovedEvent,
     DeviceFirmwareInfoUpdatedEvent,
     ZHAEvent,
+    ZigbeeDevice,
 )
 from zha.zigbee.group import Group, GroupInfo, GroupMember
 import zhaquirks
@@ -447,7 +448,7 @@ class ZHADeviceProxy(EventBase):
 
     _ha_device_id: str
 
-    def __init__(self, device: Device, gateway_proxy: ZHAGatewayProxy) -> None:
+    def __init__(self, device: BaseDevice, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         super().__init__()
         self.device = device
@@ -456,7 +457,7 @@ class ZHADeviceProxy(EventBase):
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
     @callback
-    def async_rebind_device(self, device: Device) -> None:
+    def async_rebind_device(self, device: BaseDevice) -> None:
         """Repoint this proxy to a replacement device object after a re-interview."""
         for unsub in self._unsubs:
             unsub()
@@ -561,11 +562,14 @@ class ZHADeviceProxy(EventBase):
             for route in topology.routes[self.device.ieee]
         ]
 
-        # Return endpoint device type Names
+        # Return endpoint device type Names. Green Power devices have no endpoints.
         names: list[dict[str, str]] = []
-        for endpoint in (
-            ep for epid, ep in self.device.device.endpoints.items() if epid
-        ):
+        endpoints = (
+            self.device.device.endpoints.items()
+            if isinstance(self.device, ZigbeeDevice)
+            else ()
+        )
+        for endpoint in (ep for epid, ep in endpoints if epid):
             profile = PROFILES.get(endpoint.profile_id)
             if profile and endpoint.device_type is not None:
                 # DeviceType provides undefined enums
@@ -1079,7 +1083,9 @@ class ZHAGatewayProxy(EventBase):
             e for e in entity_refs if e.ha_entity_id != entity.entity_id
         ]
 
-    def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
+    def _async_get_or_create_device_proxy(
+        self, zha_device: BaseDevice
+    ) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
         if (zha_device_proxy := self.device_proxies.get(zha_device.ieee)) is None:
             coordinator_ieee = self.gateway.state.node_info.ieee
@@ -1629,6 +1635,9 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
     zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
+        # Green Power devices have no clusters
+        if not isinstance(zha_device, ZigbeeDevice):
+            continue
         if skip_coordinator and zha_device.is_coordinator:
             continue
         clusters_by_endpoint = zha_device.async_get_clusters()
