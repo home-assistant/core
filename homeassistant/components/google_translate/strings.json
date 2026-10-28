@@ -19,7 +19,7 @@
   },
   "exceptions": {
     "tts_error": {
-      "message": "An error occurred while generating speech: {error}"
+      "message": "An error occurred while generating speech"
     }
   }
 }

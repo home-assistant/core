@@ -117,7 +117,6 @@ class GoogleTTSEntity(TextToSpeechEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="tts_error",
-                translation_placeholders={"error": str(exc)},
             ) from exc
 
         return "mp3", mp3_data.getvalue()
