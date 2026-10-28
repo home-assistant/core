@@ -73,7 +73,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -105,7 +105,9 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
             description_placeholders={
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],

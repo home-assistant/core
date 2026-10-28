@@ -34,7 +34,7 @@ REQUIRED_CAPABILITIES = {"writeFiles", "listFiles", "deleteFiles", "readFiles"}
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_KEY_ID): cv.string,
-        probatio.Required(CONF_APPLICATION_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_APPLICATION_KEY)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_BUCKET): cv.string,
@@ -253,7 +253,9 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_KEY_ID): cv.string,
-                    probatio.Required(CONF_APPLICATION_KEY): TextSelector(
+                    probatio.Required(
+                        probatio.Secret(CONF_APPLICATION_KEY)
+                    ): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

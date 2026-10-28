@@ -173,7 +173,7 @@ def _dev_help_message(what: str) -> str:
     """Generate help message to guide developers."""
     return (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/"
         f"#{what.replace('.', '')}"
     )
 

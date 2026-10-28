@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.fan import (
@@ -39,8 +40,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, get_fixture_path
 
 FAN_GROUP = "fan.fan_group"
 

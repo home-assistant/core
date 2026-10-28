@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aemet_opendata.exceptions import AemetTimeout
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import mock_api_call
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "aemet",
@@ -80,6 +79,7 @@ async def test_init_town_not_found(
         config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_api_timeout(

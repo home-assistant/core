@@ -92,6 +92,12 @@ class RoonServer:
         self._roon_name_by_id[entity_id] = roon_name
         self._id_by_roon_name[roon_name] = entity_id
 
+    def remove_player_id(self, entity_id):
+        """Unregister a roon player."""
+        roon_name = self._roon_name_by_id.pop(entity_id, None)
+        if self._id_by_roon_name.get(roon_name) == entity_id:
+            del self._id_by_roon_name[roon_name]
+
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
         return self._roon_name_by_id.get(entity_id)

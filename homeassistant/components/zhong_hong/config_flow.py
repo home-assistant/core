@@ -35,7 +35,7 @@ from .const import (
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,

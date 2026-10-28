@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from aiohttp import web
 from dateutil import parser
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import (
@@ -32,8 +33,6 @@ from .common import (
     generate_h264_video,
 )
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
-
-from tests.typing import ClientSessionGenerator
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75

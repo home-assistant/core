@@ -28,7 +28,9 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Exclusive(CONF_URL, DOMAIN): cv.string,
-                probatio.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
+                probatio.Exclusive(
+                    probatio.Secret(CONF_ACCESS_TOKEN), DOMAIN
+                ): cv.string,
                 probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
                 ): probatio.All(cv.time_period, cv.positive_timedelta),

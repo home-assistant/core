@@ -3,12 +3,11 @@
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from rachiopy import Rachio
 from requests.exceptions import Timeout
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,6 +21,9 @@ from .const import (
     KEY_START_TIME,
     KEY_VALVES,
 )
+
+if TYPE_CHECKING:
+    from .device import RachioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         rachio: Rachio,
-        config_entry: ConfigEntry,
+        config_entry: RachioConfigEntry,
         base_station,
         base_count: int,
     ) -> None:
@@ -79,7 +81,7 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
         self,
         hass: HomeAssistant,
         rachio: Rachio,
-        config_entry: ConfigEntry,
+        config_entry: RachioConfigEntry,
         base_station,
     ) -> None:
         """Initialize a Rachio schedule coordinator."""
