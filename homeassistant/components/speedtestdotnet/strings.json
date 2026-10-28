@@ -59,6 +59,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to Speedtest.net"
+    },
     "server_not_found": {
       "message": "Selected server is not found"
     },

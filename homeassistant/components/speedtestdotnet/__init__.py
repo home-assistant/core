@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.start import async_at_started
 
+from .const import DOMAIN
 from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -25,7 +26,9 @@ async def async_setup_entry(
         )
         coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
     except speedtest.SpeedtestException as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
 
     config_entry.runtime_data = coordinator
 
