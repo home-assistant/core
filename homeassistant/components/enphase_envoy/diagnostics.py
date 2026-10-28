@@ -4,9 +4,9 @@ import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError, ClientResponse
+from aiohttp import ClientError
 from pyenphase.envoy import Envoy
-from pyenphase.exceptions import EnvoyError
+from pyenphase.exceptions import EnvoyClientClosedError, EnvoyError
 
 from homeassistant.components.diagnostics import (
     async_redact_data,
@@ -43,62 +43,10 @@ TO_REDACT = {
 
 
 async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
-    """Collect Envoy endpoints to use for test fixture set."""
-    fixture_data: dict[str, Any] = {}
-    end_points = [
-        "/info",
-        "/api/v1/production",
-        "/api/v1/production/inverters",
-        "/production.json",
-        "/production.json?details=1",
-        "/production",
-        "/ivp/ensemble/power",
-        "/ivp/ensemble/inventory",
-        "/ivp/ensemble/dry_contacts",
-        "/ivp/ensemble/status",
-        "/ivp/ensemble/secctrl",
-        "/ivp/ss/dry_contact_settings",
-        "/admin/lib/tariff",
-        "/ivp/ss/gen_config",
-        "/ivp/ss/gen_schedule",
-        "/ivp/sc/pvlimit",
-        "/ivp/ss/pel_settings",
-        "/ivp/ensemble/generator",
-        "/ivp/meters",
-        "/ivp/meters/readings",
-        "/ivp/pdm/device_data",
-        "/home",
-        "/inventory.json?deleted=1",
-        "/admin/lib/acb_config",
-        "/ivp/sc/sched",
-        "/admin/lib/network_display",
-        "/admin/lib/wireless_display",
-        "/ivp/ensemble/relay",
-        "/ivp/livedata/status",
-        "/ivp/pdm/energy",
-    ]
-
-    for end_point in end_points:
-        try:
-            response: ClientResponse = await envoy.request(end_point)
-            fixture_data[end_point] = (
-                (await response.text(errors="replace"))
-                .replace("\n", "")
-                .replace(serial, CLEAN_TEXT)
-            )
-            fixture_data[f"{end_point}_log"] = json_dumps(
-                {
-                    "headers": dict(response.headers.items()),
-                    "code": response.status,
-                }
-            )
-        except ClientError as err:
-            fixture_data[f"{end_point}_log"] = {
-                "Error": f"Aiohttp Client error {type(err).__name__ if not hasattr(err, 'status') else err.status}"
-            }
-        except EnvoyError as err:
-            fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
-    return fixture_data
+    try:
+        return await envoy.fixture_collection()
+    except (EnvoyError, EnvoyClientClosedError, ClientError) as err:
+        return {"collection_aborted_log": f"Error: {err!r}"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -183,6 +131,7 @@ async def async_get_config_entry_diagnostics(
         "part_number": envoy.part_number,
         "envoy_model": envoy.envoy_model,
         "active interface": active_interface,
+        "token_lifetime": coordinator.token_lifetime,
         "supported_features": [feature.name for feature in envoy.supported_features],
         "phase_mode": envoy.phase_mode,
         "phase_count": envoy.phase_count,

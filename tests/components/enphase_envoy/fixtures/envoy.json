@@ -61,5 +61,43 @@
     "dhcp": true,
     "software_build_epoch": 1719503966,
     "timezone": "Europe/Amsterdam"
+  },
+  "fixture_collection": {
+    "/info": "Lorem ipsum dolor sit amet, consectetur adipiscing elit,",
+    "/info_log": {
+      "code": 200,
+      "mask_state": "unchanged",
+      "line": "1, first half"
+    },
+    "/api/v1/production/inverters": "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    "/api/v1/production/inverters_log": {
+      "code": 200,
+      "mask_state": "masked",
+      "line": "1, second half"
+    },
+    "/ivp/pdm/device_data": "Ut enim ad minim veniam,",
+    "/ivp/pdm/device_data_log": {
+      "code": 200,
+      "mask_state": "removed",
+      "line": "2, first half"
+    },
+    "/ivp/meters/readings": "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    "/ivp/meters/readings_log": {
+      "code": 200,
+      "mask_state": "failed",
+      "line": "2, second half"
+    },
+    "/ivp/ensemble/power": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+    "/ivp/ensemble/power_log": {
+      "code": 200,
+      "mask_state": "unchanged",
+      "line": "3"
+    },
+    "/admin/lib/tariff": "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "/admin/lib/tariff_log": {
+      "code": 200,
+      "mask_state": "unchanged",
+      "line": "4"
+    }
   }
 }
