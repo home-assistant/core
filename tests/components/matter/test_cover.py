@@ -238,16 +238,21 @@ def test_slats_percent100ths_to_ha_position(
 
 
 @pytest.mark.parametrize(
-    ("position", "expected"),
+    ("position", "mirrored", "expected"),
     [
-        pytest.param(0, 0, id="ha_closed"),
-        pytest.param(100, 5000, id="ha_open"),
-        pytest.param(50, 2500, id="halfway"),
+        pytest.param(0, False, 0, id="ha_closed"),
+        pytest.param(100, False, 5000, id="ha_open"),
+        pytest.param(50, False, 2500, id="halfway"),
+        pytest.param(0, True, 10000, id="ha_closed_mirrored"),
+        pytest.param(100, True, 5000, id="ha_open_mirrored"),
+        pytest.param(50, True, 7500, id="halfway_mirrored"),
     ],
 )
-def test_ha_position_to_slats_percent100ths(position: int, expected: int) -> None:
+def test_ha_position_to_slats_percent100ths(
+    position: int, mirrored: bool, expected: int
+) -> None:
     """Test converting a HA position to a slat-rotating Tilt panel's percent100ths."""
-    assert _ha_position_to_slats_percent100ths(position) == expected
+    assert _ha_position_to_slats_percent100ths(position, mirrored=mirrored) == expected
 
 
 @pytest.mark.parametrize(
@@ -1555,18 +1560,24 @@ async def test_closure_cover_slats_orientation_tilt(
     """Test a Tilt panel whose Modulation is SlatsOrientation (spec 5.5.5.1 / 5.5.8.1.5.1).
 
     Closed at both 0% and 100%, open at 50%: the general monotonic
-    0%=open/100%=closed conversion doesn't apply to it.
+    0%=open/100%=closed conversion doesn't apply to it. The fold only
+    applies when Unit/UnitRange report the spec's -90..90 degree exception
+    (5.5.8.1.5.1); a panel reporting a different range uses the general
+    mapping instead (see `test_closure_cover_slats_orientation_tilt_out_of_range`).
     """
     entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
     dim = clusters.ClosureDimension
 
-    # Mark the Tilt panel (endpoint 3) as Modulation/SlatsOrientation.
+    # Mark the Tilt panel (endpoint 3) as Modulation/SlatsOrientation,
+    # Unit=Degree, UnitRange=-90..90. Translation/Rotation/Modulation are a
+    # mutually exclusive choice (spec 7.3.14), so Rotation (set by the base
+    # fixture) is cleared when Modulation is added.
     set_node_attribute(
         matter_node,
         3,
         dim.id,
         dim.Attributes.FeatureMap.attribute_id,
-        95 | dim.Bitmaps.Feature.kModulation,
+        (95 & ~dim.Bitmaps.Feature.kRotation) | dim.Bitmaps.Feature.kModulation,
     )
     set_node_attribute(
         matter_node,
@@ -1574,6 +1585,20 @@ async def test_closure_cover_slats_orientation_tilt(
         dim.id,
         dim.Attributes.ModulationType.attribute_id,
         dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.Unit.attribute_id,
+        dim.Enums.ClosureUnitEnum.kDegree.value,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.UnitRange.attribute_id,
+        {0: -9000, 1: 9000},
     )
     # Fully open (slats horizontal): percent100ths 5000, not the panel's
     # usual 0%=open.
@@ -1600,6 +1625,106 @@ async def test_closure_cover_slats_orientation_tilt(
         endpoint_id=3,
         # HA tilt 100 (open) must become Matter 5000 (open), not 0 (closed).
         command=clusters.ClosureDimension.Commands.SetTarget(position=5000),
+        timed_request_timeout_ms=1000,
+    )
+
+    # The panel is now sitting on the far (50%-100%) side, closed there
+    # (raw 10000, i.e. tilt 0). Setting tilt 0 again must target 10000, not
+    # sweep back through fully open (5000) to the near side's 0.
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 10000, 1: False, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_tilt_position"] == 0
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 0},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=3,
+        command=clusters.ClosureDimension.Commands.SetTarget(position=10000),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_slats_orientation_tilt_out_of_range(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a Modulation/SlatsOrientation panel outside the spec's -90..90 fold.
+
+    Per spec 5.5.8.1.5.1, the SlatsOrientation fold is only the spec's "only
+    accepted exception" for a Unit=Degree, UnitRange=-90..90 panel. A panel
+    reporting a different range (here 0..90) isn't covered, so it must keep
+    the general monotonic 0%=open/100%=closed mapping.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    dim = clusters.ClosureDimension
+
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.FeatureMap.attribute_id,
+        (95 & ~dim.Bitmaps.Feature.kRotation) | dim.Bitmaps.Feature.kModulation,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.ModulationType.attribute_id,
+        dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.Unit.attribute_id,
+        dim.Enums.ClosureUnitEnum.kDegree.value,
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.UnitRange.attribute_id,
+        {0: 0, 1: 9000},
+    )
+    set_node_attribute(
+        matter_node,
+        3,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 7000, 1: False, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    # General mapping (100 - 7000/100 = 30), not the SlatsOrientation fold.
+    assert state.attributes["current_tilt_position"] == 30
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=3,
+        command=clusters.ClosureDimension.Commands.SetTarget(position=7000),
         timed_request_timeout_ms=1000,
     )
 
@@ -1778,7 +1903,39 @@ async def test_closure_cover_duplicate_panel_role_warns_and_keeps_first(
         ),
         timed_request_timeout_ms=1000,
     )
-    assert "Multiple ClosurePanel children report the POSITION role" in caplog.text
+    assert (
+        f"Node {matter_node.node_id} endpoint 1 has multiple ClosurePanel"
+        " children reporting the POSITION role" in caplog.text
+    )
+
+
+async def test_closure_cover_duplicate_panel_role_warns_at_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the duplicate-panel-role warning names the node when it fires at setup.
+
+    The first `_closure_panels` access happens before the entity has an
+    entity_id, so the warning must identify the device via the node/endpoint
+    IDs, not `self.entity_id` (which would log `None` and never recover,
+    since the role is marked as already warned about). Setup (where this
+    first access happens) must run inside the test body, after `caplog` has
+    started capturing - not via the `matter_node` fixture, which runs before.
+    """
+    node = await setup_integration_with_node_fixture(
+        hass,
+        "mock_closure_venetian_blinds",
+        matter_client,
+        # Both endpoints 2 and 3 already claim the POSITION role at setup,
+        # before `_update_from_device` (called from `MatterEntity.__init__`)
+        # has an entity_id to log.
+        {"3/29/4": [{"1": NAMESPACE_CLOSURE_PANEL, "2": 0}]},
+    )
+    assert (
+        f"Node {node.node_id} endpoint 1 has multiple ClosurePanel"
+        " children reporting the POSITION role" in caplog.text
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
@@ -2022,6 +2179,11 @@ async def test_closure_cover_feature_map_subscription_on_all_children(
         == 0
     )
 
+    # Snapshot subscriptions made so far: the assertions below must only see
+    # calls made while restoring Positioning, not the ones from setup (which
+    # would pass even if the restore never re-subscribed anything).
+    subscriptions_before_restore = len(matter_client.subscribe_events.call_args_list)
+
     # Now restore Positioning on the Tilt panel by toggling its FeatureMap
     set_node_attribute(
         matter_node,
@@ -2047,11 +2209,13 @@ async def test_closure_cover_feature_map_subscription_on_all_children(
     # TargetState subscriptions, not just recompute supported_features from
     # the live TagList/FeatureMap (which would mask a stale subscription set).
     dim = clusters.ClosureDimension
+    calls_since_restore = matter_client.subscribe_events.call_args_list[
+        subscriptions_before_restore:
+    ]
     for attribute in (dim.Attributes.CurrentState, dim.Attributes.TargetState):
         path = create_attribute_path(3, dim.id, attribute.attribute_id)
         assert any(
-            call.kwargs.get("attr_path_filter") == path
-            for call in matter_client.subscribe_events.call_args_list
+            call.kwargs.get("attr_path_filter") == path for call in calls_since_restore
         )
 
 
@@ -2225,7 +2389,9 @@ async def test_closure_cover_slats_orientation_movement_direction(
         child_ep,
         dim.id,
         dim.Attributes.FeatureMap.attribute_id,
-        83 | dim.Bitmaps.Feature.kModulation,
+        (83 & ~dim.Bitmaps.Feature.kRotation)
+        | dim.Bitmaps.Feature.kModulation
+        | dim.Bitmaps.Feature.kUnit,
     )
     set_node_attribute(
         matter_node,
@@ -2233,6 +2399,20 @@ async def test_closure_cover_slats_orientation_movement_direction(
         dim.id,
         dim.Attributes.ModulationType.attribute_id,
         dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.Unit.attribute_id,
+        dim.Enums.ClosureUnitEnum.kDegree.value,
+    )
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.UnitRange.attribute_id,
+        {0: -9000, 1: 9000},
     )
 
     # Parent is moving but has no target

@@ -182,25 +182,50 @@ def _ha_position_to_percent100ths(position: int) -> int:
     return (100 - position) * 100
 
 
-def _is_slats_orientation_tilt(panel: MatterEndpoint) -> bool:
+def _is_slats_orientation_tilt(panel: MatterEndpoint, role: ClosurePanelRole) -> bool:
     """Return True if `panel` is a slat-rotating Tilt panel.
 
-    Per spec 5.5.5.1 / 5.5.8.1.5.1, such a panel is closed at both 0% and
-    100% and open at 50%, unlike the general monotonic 0%=open/100%=closed
-    convention the other panels (and `_ha_position_to_percent100ths`/
-    `_percent100ths_to_ha_position`) assume.
+    Per spec 5.5.8.1.5.1, the fold only applies to a Unit=Degree,
+    UnitRange=-90..90 panel (the spec's own "only accepted exception" to the
+    general monotonic 0%=open/100%=closed convention the other panels (and
+    `_ha_position_to_percent100ths`/`_percent100ths_to_ha_position`) assume).
+    A Unit/UnitRange where 0 falls strictly inside the range, or that isn't
+    advertised via the Unit feature, is out of scope. The fold is also only
+    valid for the Tilt role: `role` scopes it there so a Modulation panel
+    driving position isn't folded.
     """
+    if role is not ClosurePanelRole.TILT:
+        return False
     if not _feature_supported(
         panel,
         clusters.ClosureDimension.Attributes.FeatureMap,
         clusters.ClosureDimension.Bitmaps.Feature.kModulation,
     ):
         return False
-    return bool(
+    if (
         panel.get_attribute_value(
             None, clusters.ClosureDimension.Attributes.ModulationType
         )
-        == clusters.ClosureDimension.Enums.ModulationTypeEnum.kSlatsOrientation
+        != clusters.ClosureDimension.Enums.ModulationTypeEnum.kSlatsOrientation
+    ):
+        return False
+    if not _feature_supported(
+        panel,
+        clusters.ClosureDimension.Attributes.FeatureMap,
+        clusters.ClosureDimension.Bitmaps.Feature.kUnit,
+    ):
+        return False
+    if (
+        panel.get_attribute_value(None, clusters.ClosureDimension.Attributes.Unit)
+        != clusters.ClosureDimension.Enums.ClosureUnitEnum.kDegree
+    ):
+        return False
+    unit_range = panel.get_attribute_value(
+        None, clusters.ClosureDimension.Attributes.UnitRange
+    )
+    return bool(
+        _extract_struct_field(unit_range, "min") == -9000
+        and _extract_struct_field(unit_range, "max") == 9000
     )
 
 
@@ -216,14 +241,17 @@ def _slats_percent100ths_to_ha_position(value: int | None) -> int | None:
     return floor((5000 - abs(value - 5000)) / 50)
 
 
-def _ha_position_to_slats_percent100ths(position: int) -> int:
+def _ha_position_to_slats_percent100ths(position: int, *, mirrored: bool) -> int:
     """Convert a HA 0-100 position to a slat-rotating Tilt panel's percent100ths.
 
     The reverse mapping is ambiguous (two closed states fold into one), so
-    this always targets the first half (0%-50%) of the physical range -
-    the exact inverse of `_slats_percent100ths_to_ha_position` there.
+    this targets whichever half of the physical range the panel's raw
+    position is already on, keeping the slats on their current side instead
+    of sweeping 180 degrees through fully open to reach the other one. `mirrored`
+    selects the 50%-100% half; otherwise this is the exact inverse of
+    `_slats_percent100ths_to_ha_position`, targeting the 0%-50% half.
     """
-    return position * 50
+    return 10000 - position * 50 if mirrored else position * 50
 
 
 def _feature_supported(
@@ -578,10 +606,12 @@ class MatterClosure(MatterEntity, CoverEntity):
             if role in panels:
                 if role not in self._warned_duplicate_panel_roles:
                     LOGGER.warning(
-                        "Multiple ClosurePanel children report the %s role for"
-                        " %s; keeping endpoint %s, ignoring endpoint %s",
+                        "Node %s endpoint %s has multiple ClosurePanel children"
+                        " reporting the %s role; keeping endpoint %s, ignoring"
+                        " endpoint %s",
+                        self._endpoint.node.node_id,
+                        self._endpoint.endpoint_id,
                         role.name,
-                        self.entity_id,
                         panels[role].endpoint_id,
                         child.endpoint_id,
                     )
@@ -749,7 +779,9 @@ class MatterClosure(MatterEntity, CoverEntity):
                 translation_domain=DOMAIN,
                 translation_key="closure_no_position_panel",
             )
-        await self._set_panel_target(panel, kwargs[ATTR_POSITION])
+        await self._set_panel_target(
+            panel, kwargs[ATTR_POSITION], ClosurePanelRole.POSITION
+        )
 
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
@@ -760,9 +792,13 @@ class MatterClosure(MatterEntity, CoverEntity):
                 translation_domain=DOMAIN,
                 translation_key="closure_no_tilt_panel",
             )
-        await self._set_panel_target(panel, kwargs[ATTR_TILT_POSITION])
+        await self._set_panel_target(
+            panel, kwargs[ATTR_TILT_POSITION], ClosurePanelRole.TILT
+        )
 
-    async def _set_panel_target(self, panel: MatterEndpoint, position: int) -> None:
+    async def _set_panel_target(
+        self, panel: MatterEndpoint, position: int, role: ClosurePanelRole
+    ) -> None:
         """Send SetTarget to a ClosurePanel child endpoint.
 
         A latched panel rejects SetTarget with InvalidInState until it's
@@ -770,15 +806,21 @@ class MatterClosure(MatterEntity, CoverEntity):
         is currently latched and the move actually changes its position
         (mirrors the parent's MoveTo `latch=False` in `_move_closure`).
         """
-        target_position = (
-            _ha_position_to_slats_percent100ths(position)
-            if _is_slats_orientation_tilt(panel)
-            else _ha_position_to_percent100ths(position)
-        )
-        command_kwargs: dict[str, Any] = {"position": target_position}
         current_state = panel.get_attribute_value(
             None, clusters.ClosureDimension.Attributes.CurrentState
         )
+        if _is_slats_orientation_tilt(panel, role):
+            # Mirror onto whichever half the panel is already on, so the
+            # move doesn't sweep 180 degrees through fully open.
+            current_raw_position = _extract_struct_field(current_state, "position")
+            target_position = _ha_position_to_slats_percent100ths(
+                position,
+                mirrored=isinstance(current_raw_position, int)
+                and current_raw_position > 5000,
+            )
+        else:
+            target_position = _ha_position_to_percent100ths(position)
+        command_kwargs: dict[str, Any] = {"position": target_position}
         if (
             _extract_struct_field(current_state, "position") != target_position
             and _extract_struct_field(current_state, "latch")
@@ -862,10 +904,17 @@ class MatterClosure(MatterEntity, CoverEntity):
                 == clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
             ):
                 self._attr_is_closing = True
-            elif direction_panel := (
-                closure_panels.get(ClosurePanelRole.POSITION)
-                or closure_panels.get(ClosurePanelRole.TILT)
-            ):
+            elif (
+                direction_role := next(
+                    (
+                        role
+                        for role in (ClosurePanelRole.POSITION, ClosurePanelRole.TILT)
+                        if role in closure_panels
+                    ),
+                    None,
+                )
+            ) is not None:
+                direction_panel = closure_panels[direction_role]
                 # Prefer the primary (position) panel: Tilt is a secondary
                 # axis, so a closed venetian blind whose slats are moving
                 # isn't opening or closing. Fall back to Tilt only when it's
@@ -885,7 +934,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                     # higher=more open) like the general convention below.
                     to_ha_position = (
                         _slats_percent100ths_to_ha_position
-                        if _is_slats_orientation_tilt(direction_panel)
+                        if _is_slats_orientation_tilt(direction_panel, direction_role)
                         else _percent100ths_to_ha_position
                     )
                     current_ha_position = to_ha_position(current_pos)
@@ -941,7 +990,7 @@ class MatterClosure(MatterEntity, CoverEntity):
             raw_tilt_position = _extract_struct_field(tilt_state, "position")
             self._attr_current_cover_tilt_position = (
                 _slats_percent100ths_to_ha_position(raw_tilt_position)
-                if _is_slats_orientation_tilt(tilt)
+                if _is_slats_orientation_tilt(tilt, ClosurePanelRole.TILT)
                 else _percent100ths_to_ha_position(raw_tilt_position)
             )
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
