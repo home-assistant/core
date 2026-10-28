@@ -536,7 +536,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="websocket_error",
-                    translation_placeholders={"error": str(exc)},
                 ) from exc
             if response.get("success"):
                 if data:

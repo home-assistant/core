@@ -170,7 +170,7 @@
       "message": "Error on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
     },
     "websocket_error": {
-      "message": "Error when calling Sonos websocket: {error}"
+      "message": "An error occurred while communicating with the Sonos speaker"
     }
   },
   "issues": {
