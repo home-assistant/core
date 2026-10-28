@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -77,6 +77,36 @@ async def test_brightness_added_later(
 
     assert (state := hass.states.get("number.hostname_display_def456_brightness"))
     assert state.state == "25.0"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_brightness_display_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the number is unavailable while its display is disconnected."""
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(Module.DISPLAYS, [])
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    await coordinator.async_handle_module(Module.DISPLAYS, FIXTURE_DISPLAYS)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == "80.0"
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 1
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
