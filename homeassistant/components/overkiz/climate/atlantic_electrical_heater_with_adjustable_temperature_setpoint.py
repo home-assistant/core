@@ -128,8 +128,9 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
         # Percentage of nominal power in use; the most reliable heating
         # indicator, so prefer it when the device reports it.
-        working_rate = states.get(OverkizState.IO_CURRENT_WORKING_RATE)
-        if working_rate and working_rate.value_as_float is not None:
+        if (
+            working_rate := states.get(OverkizState.IO_CURRENT_WORKING_RATE)
+        ) and working_rate.value_as_float is not None:
             if self.hvac_mode == HVACMode.OFF:
                 return HVACAction.OFF
             if working_rate.value_as_float > 0:
@@ -138,8 +139,9 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
         # Fallback for devices without a working rate. Less accurate: some
         # devices keep reporting standby or none while heating.
-        regulation_mode = states.get(OverkizState.CORE_REGULATION_MODE)
-        if regulation_mode and regulation_mode.value_as_str:
+        if (
+            regulation_mode := states.get(OverkizState.CORE_REGULATION_MODE)
+        ) and regulation_mode.value_as_str:
             return OVERKIZ_TO_HVAC_ACTION[regulation_mode.value_as_str]
 
         return HVACAction.OFF
