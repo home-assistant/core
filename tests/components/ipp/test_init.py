@@ -3,12 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyipp import IPPConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.ipp.const import REQUEST_TIMEOUT
 from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @patch(
@@ -43,3 +43,12 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_request_timeout(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a printer gets time to wake up before we give up on it."""
+    coordinator = IPPDataUpdateCoordinator(hass, mock_config_entry)
+
+    assert coordinator.ipp.request_timeout == REQUEST_TIMEOUT

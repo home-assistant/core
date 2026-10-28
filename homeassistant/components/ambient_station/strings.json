@@ -390,9 +390,6 @@
       "wind_average_2m": {
         "name": "Wind average 2 minutes"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_direction_average_10m": {
         "name": "Wind direction average 10 minutes"
       },

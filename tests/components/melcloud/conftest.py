@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pymelcloud
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry
 
 MOCK_SERIAL = "ABC123456"
 MOCK_MAC = "AA:BB:CC:DD:EE:FF"
@@ -27,7 +26,9 @@ def _build_mock_zone(zone_index: int) -> MagicMock:
     zone.operation_mode = "heat-flow"
     zone.operation_modes = ["heat-thermostat", "heat-flow", "curve"]
     zone.target_temperature = 21.0
+    zone.target_flow_temperature = 40.0
     zone.set_operation_mode = AsyncMock()
+    zone.set_target_flow_temperature = AsyncMock()
     return zone
 
 

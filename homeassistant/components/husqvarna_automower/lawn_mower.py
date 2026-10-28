@@ -1,7 +1,7 @@
 """Husqvarna Automower lawn mower entity."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from aioautomower.model import MowerActivities, MowerStates, WorkArea
 
@@ -14,9 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
 from .const import DOMAIN, ERROR_STATES, MOW, PARK
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity, handle_sending_exception
 
 PARALLEL_UPDATES = 1
@@ -87,6 +86,8 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             or mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
+        if mower_attributes.mower.state is MowerStates.STOPPED:
+            return LawnMowerActivity.IDLE
         if mower_attributes.mower.state in MowerStates.IN_OPERATION:
             return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR
@@ -141,9 +142,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_areas_not_supported"
             )
-        if TYPE_CHECKING:
-            assert self.work_areas is not None
-        if work_area_id not in self.work_areas:
+        if (work_areas := self.work_areas) is None or work_area_id not in work_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="work_area_not_existing"
             )

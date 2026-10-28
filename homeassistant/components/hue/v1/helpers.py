@@ -25,9 +25,7 @@ async def remove_devices(bridge, api_ids, current):
             (DOMAIN, entity.device_id), bridge.config_entry.entry_id
         )
         if device is not None:
-            dev_registry.async_update_device(
-                device.id, remove_config_entry_id=bridge.config_entry.entry_id
-            )
+            dev_registry.async_remove_device(device.id)
 
     for item_id in removed_items:
         del current[item_id]

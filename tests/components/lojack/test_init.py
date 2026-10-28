@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from lojack_api import ApiError, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
@@ -149,8 +148,8 @@ async def test_device_info(
     """Test device registry entry is created."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

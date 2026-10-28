@@ -7,20 +7,22 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
     DeviceAvailableEvent,
+    DeviceCreatedEvent,
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     DeviceUnavailableEvent,
     Event,
     EventState,
     ExecutionStateChangedEvent,
+    GatewayAliveEvent,
+    GatewayDownEvent,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockOverkizClient
-
-from tests.common import async_fire_time_changed
 
 
 def assert_command_call(
@@ -97,6 +99,11 @@ def device_removed_event(device_url: str) -> DeviceRemovedEvent:
     return DeviceRemovedEvent(name=EventName.DEVICE_REMOVED, device_url=device_url)
 
 
+def device_created_event(device_url: str) -> DeviceCreatedEvent:
+    """Build a DEVICE_CREATED event for the given device."""
+    return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
+
+
 def execution_state_changed_event(
     exec_id: str, new_state: ExecutionState, old_state: ExecutionState
 ) -> ExecutionStateChangedEvent:
@@ -107,6 +114,16 @@ def execution_state_changed_event(
         new_state=new_state,
         old_state=old_state,
     )
+
+
+def gateway_down_event(gateway_id: str) -> GatewayDownEvent:
+    """Build a GATEWAY_DOWN event for the given gateway."""
+    return GatewayDownEvent(name=EventName.GATEWAY_DOWN, gateway_id=gateway_id)
+
+
+def gateway_alive_event(gateway_id: str) -> GatewayAliveEvent:
+    """Build a GATEWAY_ALIVE event for the given gateway."""
+    return GatewayAliveEvent(name=EventName.GATEWAY_ALIVE, gateway_id=gateway_id)
 
 
 async def async_deliver_events(

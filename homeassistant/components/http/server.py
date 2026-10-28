@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -27,6 +27,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 from yarl import URL
 
+from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.http import (
@@ -36,12 +37,14 @@ from homeassistant.helpers.http import (
     current_request,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.setup import async_when_setup
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
+from homeassistant.util.ssl import SSLProfile
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import ConfData
+from .config import _DEFAULT_CONFIG, ConfData, _strip_meta
 from .const import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
@@ -50,7 +53,8 @@ from .const import (
     CONF_SSL_PEER_CERTIFICATE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
-    SSL_INTERMEDIATE,
+    ENV_SUPERVISOR,
+    is_supervisor_unix_socket_request,
 )
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
@@ -67,6 +71,7 @@ MAX_LINE_SIZE: Final = 24570
 
 _HAS_IPV6 = hasattr(socket, "AF_INET6")
 DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
+_WILDCARD_ADDRESSES: Final = frozenset({"0.0.0.0", "::"})
 
 
 @dataclass(slots=True)
@@ -105,7 +110,69 @@ def make_server(
         ],
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
+        # Only the unconfigured default config on the new Supervisor default
+        # port bridges the previous one; compare without metadata so a default
+        # config reloaded from disk still matches.
+        port_transition=(
+            ENV_SUPERVISOR in os.environ
+            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and conf[CONF_SERVER_PORT] != SERVER_PORT
+        ),
     )
+
+
+def _resolve_hosts(hosts: list[str]) -> list[tuple[str, int, tuple[Any, ...]]]:
+    """Resolve hosts to (host, family, sockaddr) like create_server() does."""
+    resolved: list[tuple[str, int, tuple[Any, ...]]] = []
+    for host in hosts:
+        try:
+            infos = socket.getaddrinfo(
+                host,
+                None,
+                type=socket.SOCK_STREAM,
+                proto=socket.IPPROTO_TCP,
+                flags=socket.AI_PASSIVE,
+            )
+        except (OSError, UnicodeError) as err:
+            raise HomeAssistantError(
+                f"Cannot resolve listen address {host!r}: {err}"
+            ) from err
+        resolved.extend((host, family, sockaddr) for family, _, _, _, sockaddr in infos)
+    return resolved
+
+
+async def async_verify_hosts_distinct(hass: HomeAssistant, hosts: list[str]) -> None:
+    """Verify the configured hosts can all listen on the same port.
+
+    Sockets of one address family conflict on a port when one of them is
+    bound to the wildcard address. The server binds with
+    ``SO_REUSEADDR``, which lets such sockets bind alongside each other while
+    only one of them can listen, so the conflict would surface only once the
+    server starts serving. Checking the resolved addresses catches it up
+    front and without touching the configured port.
+
+    Raises ``HomeAssistantError`` naming the conflicting hosts, or if a host
+    cannot be resolved.
+    """
+    resolved = await hass.async_add_executor_job(_resolve_hosts, hosts)
+    # Keyed by the full sockaddr: the same IPv6 link-local address on two
+    # interfaces (differing scope ID) binds two distinct endpoints.
+    seen: dict[int, dict[tuple[Any, ...], str]] = {}
+    for host, family, sockaddr in resolved:
+        family_seen = seen.setdefault(family, {})
+        if sockaddr in family_seen:
+            # create_server() binds each resolved endpoint only once.
+            continue
+        if family_seen and (
+            sockaddr[0] in _WILDCARD_ADDRESSES
+            or any(seen_addr[0] in _WILDCARD_ADDRESSES for seen_addr in family_seen)
+        ):
+            conflicting = next(iter(family_seen.values()))
+            raise HomeAssistantError(
+                f"Listen addresses {conflicting!r} and {host!r} overlap:"
+                " both cannot listen on the same port"
+            )
+        family_seen[sockaddr] = host
 
 
 async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
@@ -119,6 +186,7 @@ async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
     Raises ``HomeAssistantError`` if the SSL configuration is unusable or the
     configured address cannot be bound.
     """
+    await async_verify_hosts_distinct(hass, conf.get(CONF_SERVER_HOST, DEFAULT_BIND))
     server = make_server(hass, conf)
     try:
         await server.async_bind()
@@ -189,8 +257,9 @@ class HomeAssistantHTTP:
         server_host: list[str] | None,
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
-        ssl_profile: str,
+        ssl_profile: SSLProfile,
         supervisor_unix_socket_path: Path | None = None,
+        port_transition: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -214,6 +283,12 @@ class HomeAssistantHTTP:
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
         self._server: asyncio.Server | None = None
+        # Redirect the previous default port to the active one, bound to
+        # onboarding: it starts only while onboarding is pending and is torn
+        # down when onboarding completes.
+        self._port_transition = port_transition
+        self._legacy_redirect_runner: web.AppRunner | None = None
+        self._legacy_redirect_server: asyncio.Server | None = None
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -381,10 +456,7 @@ class HomeAssistantHTTP:
         context: ssl.SSLContext | None = None
         assert self.ssl_certificate is not None
         try:
-            if self.ssl_profile == SSL_INTERMEDIATE:
-                context = ssl_util.server_context_intermediate()
-            else:
-                context = ssl_util.server_context_modern()
+            context = ssl_util.server_context(self.ssl_profile)
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         except OSError as error:
             if not self.hass.config.recovery_mode:
@@ -436,7 +508,7 @@ class HomeAssistantHTTP:
 
     def _create_emergency_ssl_context(self) -> ssl.SSLContext:
         """Create an emergency ssl certificate so we can still startup."""
-        context = ssl_util.server_context_modern()
+        context = ssl_util.server_context(self.ssl_profile)
         host: str
         try:
             host = cast(str, URL(get_url(self.hass, prefer_external=True)).host)
@@ -462,7 +534,7 @@ class HomeAssistantHTTP:
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=30))
+            .not_valid_after(now + dt.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,
@@ -530,8 +602,89 @@ class HomeAssistantHTTP:
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
+        if self._port_transition:
+            # Defer to onboarding setup so async_is_onboarded and
+            # async_add_listener see loaded onboarding data. onboarding is a
+            # dependency of frontend, so it is always set up here.
+            async_when_setup(
+                self.hass, "onboarding", self._async_manage_port_transition
+            )
+
+    async def _async_manage_port_transition(
+        self, hass: HomeAssistant, _component: str
+    ) -> None:
+        """Start the legacy-port redirect until onboarding completes."""
+        from homeassistant.components import onboarding  # noqa: PLC0415
+
+        if onboarding.async_is_onboarded(hass):
+            return
+        await self._async_start_legacy_redirect()
+        if self._legacy_redirect_server is not None:
+            onboarding.async_add_listener(hass, self._on_onboarding_complete)
+
+    @callback
+    def _on_onboarding_complete(self) -> None:
+        """Tear down the transition once onboarding completes."""
+        self.hass.async_create_task(self._async_stop_legacy_redirect())
+
+    async def _async_start_legacy_redirect(self) -> None:
+        """Redirect the previous default port to the active port."""
+        target_port = self.server_port
+
+        async def _redirect(request: web.Request) -> web.StreamResponse:
+            # Temporary, method-preserving redirect so non-GET requests from
+            # existing clients keep working during the transition.
+            raise web.HTTPTemporaryRedirect(request.url.with_port(target_port))
+
+        redirect_app = web.Application()
+        redirect_app.router.add_route("*", "/{path:.*}", _redirect)
+        self._legacy_redirect_runner = web.AppRunner(redirect_app)
+        await self._legacy_redirect_runner.setup()
+        try:
+            self._legacy_redirect_server = await self._async_create_redirect_server()
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to start legacy port %d redirect: %s", SERVER_PORT, error
+            )
+            await self._legacy_redirect_runner.cleanup()
+            self._legacy_redirect_runner = None
+            return
+
+        _LOGGER.info("Redirecting legacy port %d to port %d", SERVER_PORT, target_port)
+
+    async def _async_create_redirect_server(self) -> asyncio.Server:
+        """Bind the legacy redirect server on the previous default port."""
+        assert self._legacy_redirect_runner is not None
+        server_factory = self._legacy_redirect_runner.server
+        assert server_factory is not None
+        return await self.hass.loop.create_server(
+            server_factory,
+            self.server_host if self.server_host is not None else DEFAULT_BIND,
+            SERVER_PORT,
+        )
+
+    async def _async_stop_legacy_redirect(self) -> None:
+        """Stop the legacy redirect server and free its port."""
+        server = self._legacy_redirect_server
+        runner = self._legacy_redirect_runner
+        # Drop the references up front: both the onboarding listener and the
+        # stop event tear the redirect down, so a second call must not wait on
+        # a teardown that is already in flight.
+        self._legacy_redirect_server = None
+        self._legacy_redirect_runner = None
+        if server is not None:
+            # Stop accepting new connections, but do not await wait_closed()
+            # yet: it only returns once every open connection is done, and the
+            # runner cleanup below is what actually closes them.
+            server.close()
+        if runner is not None:
+            await runner.cleanup()
+        if server is not None:
+            await server.wait_closed()
+
     async def stop(self) -> None:
         """Stop the aiohttp server."""
+        await self._async_stop_legacy_redirect()
         if self.supervisor_site is not None:
             await self.supervisor_site.stop()
             if self.supervisor_unix_socket_path is not None:
@@ -551,3 +704,37 @@ class HomeAssistantHTTP:
             self._server.close()
         if self.runner is not None:
             await self.runner.cleanup()
+
+
+class HassioHTTPConfigView(HomeAssistantView):
+    """Expose the HTTP server configuration to Supervisor.
+
+    Only reachable over the Supervisor Unix socket. It lets Supervisor pull its
+    connection parameters (port, SSL) directly rather than depending on the
+    hassio integration having pushed them via the options API first, which is
+    racy during startup.
+    """
+
+    url = "/api/core/http_config"
+    name = "api:core:http_config"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the HTTP server configuration."""
+        if not is_supervisor_unix_socket_request(request):
+            raise web.HTTPNotFound
+        server: HomeAssistantHTTP = request.app[KEY_HASS].http
+        return self.json(
+            {
+                "port": server.server_port,
+                # The active SSL context, not the configured certificate: in
+                # recovery mode the context can be None (both the configured and
+                # emergency certificates failed) while a certificate is still
+                # configured, so the listener actually serves plaintext.
+                "ssl": server.context is not None,
+                "ssl_peer_certificate": server.ssl_peer_certificate is not None,
+                # The bind address(es). Supervisor decides whether it can reach
+                # Core there or must skip probes that assume the container IP.
+                "server_host": server.server_host or DEFAULT_BIND,
+            }
+        )

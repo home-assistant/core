@@ -5,8 +5,8 @@ from contextlib import suppress
 from enum import StrEnum
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components.blueprint import (
     BlueprintException,
@@ -53,12 +53,12 @@ from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "dict"
 
-_MINIMAL_SCRIPT_ENTITY_SCHEMA = vol.Schema(
+_MINIMAL_SCRIPT_ENTITY_SCHEMA = probatio.Schema(
     {
         CONF_ALIAS: cv.string,
-        vol.Optional(CONF_DESCRIPTION): cv.string,
+        probatio.Optional(CONF_DESCRIPTION): cv.string,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _INVALID_OBJECT_IDS = {
@@ -68,9 +68,9 @@ _INVALID_OBJECT_IDS = {
     SERVICE_TOGGLE,
 }
 
-_SCRIPT_OBJECT_ID_SCHEMA = vol.All(
+_SCRIPT_OBJECT_ID_SCHEMA = probatio.All(
     cv.slug,
-    vol.NotIn(
+    probatio.NotIn(
         _INVALID_OBJECT_IDS,
         (
             "A script's object_id must not be one of "
@@ -81,21 +81,21 @@ _SCRIPT_OBJECT_ID_SCHEMA = vol.All(
 
 SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_FIELDS, default={}): {
+        probatio.Optional(CONF_ALIAS): cv.string,
+        probatio.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
+        probatio.Optional(CONF_ICON): cv.icon,
+        probatio.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DESCRIPTION, default=""): cv.string,
+        probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        probatio.Optional(CONF_FIELDS, default={}): {
             cv.string: {
-                vol.Optional(CONF_ADVANCED, default=False): cv.boolean,
-                vol.Optional(CONF_DEFAULT): cv.match_all,
-                vol.Optional(CONF_DESCRIPTION): cv.string,
-                vol.Optional(CONF_EXAMPLE): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_REQUIRED, default=False): cv.boolean,
-                vol.Optional(CONF_SELECTOR): validate_selector,
+                probatio.Optional(CONF_ADVANCED, default=False): cv.boolean,
+                probatio.Optional(CONF_DEFAULT): cv.match_all,
+                probatio.Optional(CONF_DESCRIPTION): cv.string,
+                probatio.Optional(CONF_EXAMPLE): cv.string,
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_REQUIRED, default=False): cv.boolean,
+                probatio.Optional(CONF_SELECTOR): validate_selector,
             }
         },
     },
@@ -118,8 +118,8 @@ async def _async_validate_config_item(
         raw_config = dict(config)
 
     def _humanize(err: Exception, data: Any) -> str:
-        """Humanize vol.Invalid, stringify other exceptions."""
-        if isinstance(err, vol.Invalid):
+        """Humanize probatio.Invalid, stringify other exceptions."""
+        if isinstance(err, probatio.Invalid):
             return humanize_error(data, err)
         return str(err)
 
@@ -216,12 +216,12 @@ async def _async_validate_config_item(
 
     try:
         _SCRIPT_OBJECT_ID_SCHEMA(object_id)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "has invalid object id", object_id)
         raise
     try:
         validated_config = SCRIPT_ENTITY_SCHEMA(config)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:
             raise
@@ -236,7 +236,7 @@ async def _async_validate_config_item(
             hass, validated_config[CONF_SEQUENCE]
         )
     except (
-        vol.Invalid,
+        probatio.Invalid,
         HomeAssistantError,
     ) as err:
         _log_invalid_script(
@@ -278,7 +278,7 @@ async def _try_async_validate_config_item(
     """Validate config item."""
     try:
         return await _async_validate_config_item(hass, object_id, config, False, True)
-    except vol.Invalid, HomeAssistantError:
+    except probatio.Invalid, HomeAssistantError:
         return None
 
 

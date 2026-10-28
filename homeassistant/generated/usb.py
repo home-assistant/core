@@ -3,6 +3,28 @@
 To update, run python3 -m script.hassfest
 """
 
+SERIAL_PORT_SELECTOR_INTEGRATIONS = [
+    "aerosmart",
+    "denon_rs232",
+    "dsmr",
+    "edl21",
+    "flexit",
+    "kaco_rs485",
+    "landisgyr_heat_meter",
+    "lg_tv_rs232",
+    "marantz_rs232",
+    "monoprice",
+    "neopool",
+    "russound_rio",
+    "samsung_exlink",
+    "sofar",
+    "solaredge_modbus",
+    "tonewinner",
+    "upb",
+    "velbus",
+    "zha",
+]
+
 USB = [
     {
         "description": "*usb 300*",

@@ -5,14 +5,16 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from roborock.data.v1.v1_containers import StatusField, StatusV2
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,6 +30,7 @@ from .coordinator import (
 from .entity import (
     RoborockCoordinatedEntityA01,
     RoborockCoordinatedEntityB01Q10,
+    RoborockCoordinatedEntityV1,
     RoborockEntity,
     RoborockEntityV1,
 )
@@ -94,10 +97,17 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_registry_enabled_default=False,
         is_dock_entity=True,
         is_supported=lambda coordinator: (
-            coordinator.properties_api.wash_towel_mode is not None
+            coordinator.properties_api.device_features.dock_features.is_cleaning_brush_supported
         ),
     ),
 ]
+
+
+RESOLVE_DOCK_ERROR_BUTTON_DESCRIPTION = ButtonEntityDescription(
+    key="resolve_dock_error",
+    translation_key="resolve_dock_error",
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -141,6 +151,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock button platform."""
     coordinators = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_add_coordinator_entities(
@@ -149,11 +160,27 @@ async def async_setup_entry(
         """Add entities for a specific coordinator."""
         entities: list[ButtonEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockButtonEntity(coordinator, description)
-                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
-                if description.is_supported(coordinator)
-            )
+            for description in CONSUMABLE_BUTTON_DESCRIPTIONS:
+                unique_id = f"{description.key}_{coordinator.duid_slug}"
+                if description.is_supported(coordinator):
+                    entities.append(
+                        RoborockButtonEntity(unique_id, coordinator, description)
+                    )
+                elif entity_id := entity_registry.async_get_entity_id(
+                    Platform.BUTTON,
+                    DOMAIN,
+                    unique_id,
+                ):
+                    entity_registry.async_remove(entity_id)
+
+            if coordinator.properties_api.device_features.is_field_supported(
+                StatusV2, StatusField.DOCK_ERROR_STATUS
+            ):
+                entities.append(
+                    RoborockResolveDockErrorButtonEntity(
+                        coordinator, RESOLVE_DOCK_ERROR_BUTTON_DESCRIPTION
+                    )
+                )
 
             async def async_add_routine_buttons() -> None:
                 try:
@@ -213,6 +240,7 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockButtonDescription,
     ) -> None:
@@ -223,7 +251,7 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
             else coordinator.device_info
         )
         super().__init__(
-            f"{entity_description.key}_{coordinator.duid_slug}",
+            unique_id,
             device_info,
             api=coordinator.properties_api.command,
         )
@@ -246,6 +274,47 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
                     "command": "RESET_CONSUMABLE",
                 },
             ) from err
+
+
+class RoborockResolveDockErrorButtonEntity(RoborockCoordinatedEntityV1, ButtonEntity):
+    """A button that resolves the current dock error."""
+
+    entity_description: ButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: ButtonEntityDescription,
+    ) -> None:
+        """Create a resolve dock error button entity."""
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+            is_dock_entity=True,
+        )
+        self.entity_description = entity_description
+        self._status = coordinator.properties_api.status
+
+    @override
+    async def async_press(self) -> None:
+        """Press the button."""
+        if not (dock_error := self._status.dock_error_status):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_dock_error_to_resolve",
+            )
+        try:
+            # An explicit dock error prevents falling back to the robot error.
+            await self._status.resolve_error(int(dock_error))
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "RESOLVE_ERROR",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
 
 
 class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):

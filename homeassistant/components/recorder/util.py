@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -16,6 +16,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
+import probatio
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
@@ -23,13 +24,17 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.generated.recorder_database_versions import (
+    SUPPORTED_DATABASE_VERSIONS,
+)
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
     DATA_INSTANCE,
+    SESSION_INFO_READ_ONLY,
     get_instance,
     session_scope,
 )
@@ -89,6 +94,47 @@ MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.40.1")
 
+# PostgreSQL has no LTS/short-term split, so we warn once the version drops
+# below this upcoming minimum, as (version, breaks_in_ha_version).
+UPCOMING_MIN_VERSION_PGSQL = (_simple_version("15.0"), "2027.3.0")
+
+
+# MariaDB and MySQL ship both long-term support (LTS) releases, supported for
+# years, and short-term/innovation releases, supported only until the next
+# release (~3 months). We allow versions on a currently-supported (non-EoL) LTS
+# series and warn against all others (short-term releases and end-of-life LTS
+# series).
+# Versions newer than the latest known non-LTS release are assumed supported
+# so we don't warn about releases we don't know about yet.
+class _LTSVersionSupport(NamedTuple):
+    """Supported LTS policy for an engine that ships LTS + short-term releases."""
+
+    supported_series: frozenset[tuple[int, int]]
+    latest_non_lts_series: tuple[int, int]
+    breaks_in_ha_version: str
+
+
+def _parse_db_series(cycle: str) -> tuple[int, int]:
+    """Parse a "<major>.<minor>" release series into a tuple."""
+    major, _, minor = cycle.partition(".")
+    return int(major), int(minor)
+
+
+def _lts_support(engine: str, breaks_in_ha_version: str) -> _LTSVersionSupport:
+    """Build the LTS support policy for an engine from the generated version file."""
+    versions = SUPPORTED_DATABASE_VERSIONS[engine]
+    return _LTSVersionSupport(
+        supported_series=frozenset(
+            _parse_db_series(cycle) for cycle in versions["supported_lts"]
+        ),
+        latest_non_lts_series=_parse_db_series(versions["latest_non_lts"]),
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+SUPPORTED_MARIA_DB_LTS = _lts_support("mariadb", "2027.3.0")
+SUPPORTED_MYSQL_LTS = _lts_support("mysql", "2027.3.0")
+
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -106,6 +152,22 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 FIRST_POSSIBLE_SUNDAY = 8
 SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
+
+
+def _rollback_read_only_session(session: Session) -> None:
+    """Roll back a read-only session so a retried query can reconnect.
+
+    A query after a lost connection otherwise raises PendingRollbackError. Only a
+    read-only session is rolled back: it is never committed, so nothing is lost. A
+    session holding writes is left alone, a rollback would discard them while the
+    retry succeeds and the caller commits what is left of its unit of work.
+    """
+    if not session.info.get(SESSION_INFO_READ_ONLY):
+        return
+    try:
+        session.rollback()
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error rolling back the session: %s", err)
 
 
 def execute(qry: Query) -> list[Row]:
@@ -133,6 +195,7 @@ def execute(qry: Query) -> list[Row]:
 
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(qry.session)
             time.sleep(QUERY_RETRY_WAIT)
         else:
             return result
@@ -148,6 +211,7 @@ def execute_stmt_lambda_element(
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
     orm_rows: bool = True,
+    stream: bool = False,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -159,6 +223,11 @@ def execute_stmt_lambda_element(
     when selecting non-ranged rows (ie selecting
     specific entities) since they are usually faster
     with .all().
+
+    If stream is True the result is returned without building a list of
+    rows, so rows can be consumed one at a time and freed right away, which
+    avoids promoting large result sets into the oldest garbage collector
+    generation. Errors raised while consuming the rows are not retried.
     """
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
@@ -167,6 +236,8 @@ def execute_stmt_lambda_element(
                 executed = session.execute(stmt)
             else:
                 executed = session.connection().execute(stmt)
+            if stream:
+                return executed
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
@@ -174,6 +245,29 @@ def execute_stmt_lambda_element(
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(session)
+            time.sleep(QUERY_RETRY_WAIT)
+
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
+
+
+def execute_select(
+    session: Session, stmt: Select, params: dict[str, Any]
+) -> Sequence[Row]:
+    """Execute a Select with bound parameters and return all rows.
+
+    Unlike execute_stmt_lambda_element, the statement is not analyzed on every
+    call, which matters for lookups that run on every write.
+    """
+    for tryno in range(RETRIES):
+        try:
+            return session.connection().execute(stmt, params).all()
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            _rollback_read_only_session(session)
             time.sleep(QUERY_RETRY_WAIT)
 
     # Unreachable
@@ -240,9 +334,8 @@ def validate_sqlite_database(dbpath: str) -> bool:
     import sqlite3  # noqa: PLC0415
 
     try:
-        conn = sqlite3.connect(dbpath)
-        run_checks_on_open_db(dbpath, conn.cursor())
-        conn.close()
+        with contextlib.closing(sqlite3.connect(dbpath)) as conn:
+            run_checks_on_open_db(dbpath, conn.cursor())
     except sqlite3.DatabaseError:
         _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False
@@ -344,6 +437,122 @@ def _raise_if_version_unsupported(
         minimum_version,
     )
     raise UnsupportedDialect
+
+
+@callback
+def _async_delete_issue_deprecated_version(hass: HomeAssistant, issue_id: str) -> None:
+    """Delete a deprecated database version repair issue."""
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    min_version: AwesomeVersion,
+    breaks_in_ha_version: str,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "database_engine_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="database_engine_too_old",
+        translation_placeholders={
+            "database_engine": database_engine,
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+@callback
+def _async_create_issue_not_supported_lts(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    lts_versions: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Warn about a database version that is not a supported LTS release."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "database_engine_not_supported_lts",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="database_engine_not_supported_lts",
+        translation_placeholders={
+            "database_engine": database_engine,
+            "server_version": str(server_version),
+            "lts_versions": lts_versions,
+        },
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+def _check_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    upcoming_min_version: tuple[AwesomeVersion, str],
+) -> None:
+    """Create or remove the issue about an upcoming unsupported database version."""
+    min_version, breaks_in_ha_version = upcoming_min_version
+    if server_version < min_version:
+        hass.add_job(
+            _async_create_issue_deprecated_version,
+            hass,
+            server_version,
+            database_engine,
+            min_version,
+            breaks_in_ha_version,
+        )
+    else:
+        hass.add_job(
+            _async_delete_issue_deprecated_version, hass, "database_engine_too_old"
+        )
+
+
+def _check_lts_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    lts_support: _LTSVersionSupport,
+) -> None:
+    """Warn unless the version is on a supported LTS series or newer than we know.
+
+    MariaDB and MySQL only support long-term support (LTS) releases for years;
+    short-term releases and end-of-life LTS series are deprecated. Versions newer
+    than the latest known non-LTS release are assumed supported to avoid warning
+    about releases we don't know about yet.
+    """
+    series = (server_version.section(0), server_version.section(1))
+    if (
+        series in lts_support.supported_series
+        or series > lts_support.latest_non_lts_series
+    ):
+        hass.add_job(
+            _async_delete_issue_deprecated_version,
+            hass,
+            "database_engine_not_supported_lts",
+        )
+    else:
+        lts_versions = ", ".join(
+            f"{major}.{minor}" for major, minor in sorted(lts_support.supported_series)
+        )
+        hass.add_job(
+            _async_create_issue_not_supported_lts,
+            hass,
+            server_version,
+            database_engine,
+            lts_versions,
+            lts_support.breaks_in_ha_version,
+        )
 
 
 def _extract_version_from_server_response_or_raise(
@@ -490,6 +699,10 @@ def setup_connection_for_dialect(
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
+                # No elif here since _raise_if_version_unsupported raises
+                _check_lts_version(
+                    instance.hass, version, "MariaDB", SUPPORTED_MARIA_DB_LTS
+                )
                 if version and (
                     (version < RECOMMENDED_MIN_VERSION_MARIA_DB)
                     or (MARIA_DB_106 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_106)
@@ -516,6 +729,7 @@ def setup_connection_for_dialect(
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
                 slow_dependent_subquery = True
+                _check_lts_version(instance.hass, version, "MySQL", SUPPORTED_MYSQL_LTS)
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -531,10 +745,24 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SHOW server_version")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
+            if version is None:
+                # PostgreSQL prereleases such as 19beta3 are not SimpleVer.
+                result = query_on_connection(
+                    dbapi_connection, "SHOW server_version_num"
+                )
+                version_num = int(result[0][0])
+                # PostgreSQL < 12 is rejected regardless of the minor version.
+                version = _simple_version(
+                    f"{version_num // 10000}.{version_num % 10000}"
+                )
             if not version or version < MIN_VERSION_PGSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
+            # No elif here since _raise_if_version_unsupported raises
+            _check_deprecated_version(
+                instance.hass, version, "PostgreSQL", UPCOMING_MIN_VERSION_PGSQL
+            )
 
     else:
         _fail_unsupported_dialect(dialect_name)
@@ -775,29 +1003,136 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
-PERIOD_SCHEMA = vol.Schema(
+PERIOD_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive("calendar", "period"): vol.Schema(
+        probatio.Exclusive("calendar", "period"): probatio.Schema(
             {
-                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
-                vol.Optional("offset"): int,
-                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
+                probatio.Required("period"): probatio.Any(
+                    "hour", "day", "week", "month", "year"
+                ),
+                probatio.Optional("offset"): int,
+                probatio.Optional("first_weekday"): probatio.Any(*WEEKDAYS),
             }
         ),
-        vol.Exclusive("fixed_period", "period"): vol.Schema(
+        probatio.Exclusive("fixed_period", "period"): probatio.Schema(
             {
-                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
-                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+                probatio.Optional("start_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
+                probatio.Optional("end_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
             }
         ),
-        vol.Exclusive("rolling_window", "period"): vol.Schema(
+        probatio.Exclusive("rolling_window", "period"): probatio.Schema(
             {
-                vol.Required("duration"): cv.time_period_dict,
-                vol.Optional("offset"): cv.time_period_dict,
+                probatio.Required("duration"): cv.time_period_dict,
+                probatio.Optional("offset"): cv.time_period_dict,
             }
         ),
     }
 )
+
+
+_HOUR = timedelta(hours=1)
+_OFFSET_CHANGE_SCAN_STEP = timedelta(days=1)
+
+
+def _utc_offset_change(low: datetime, high: datetime) -> datetime:
+    """Return when the local UTC offset changes between two UTC times.
+
+    Assumes a single change, after low and no later than high.
+    """
+    offset = dt_util.as_local(high).utcoffset()
+    while high - low > timedelta(seconds=1):
+        middle = low + (high - low) / 2
+        if dt_util.as_local(middle).utcoffset() == offset:
+            high = middle
+        else:
+            low = middle
+    # Offset changes happen on whole seconds
+    return high.replace(microsecond=0)
+
+
+def _start_of_local_hour(utc_time: datetime) -> datetime:
+    """Return the start of the local calendar hour containing a UTC time.
+
+    A calendar hour starts at the top of a local hour or at a UTC offset change,
+    so DST changes of half an hour give half-hour calendar hours.
+    """
+    local_time = dt_util.as_local(utc_time)
+    start = utc_time - timedelta(
+        minutes=local_time.minute,
+        seconds=local_time.second,
+        microseconds=local_time.microsecond,
+    )
+    if dt_util.as_local(start).utcoffset() != local_time.utcoffset():
+        return _utc_offset_change(start, utc_time)
+    return start
+
+
+def _local_hours_later(start: datetime, hours: int) -> datetime:
+    """Return the start of the local calendar hour a number of hours later.
+
+    Jumps whole hours in UTC while the UTC offset is unchanged and only searches
+    for offset changes, which are assumed to be more than a day apart.
+    """
+    while True:
+        local_start = dt_util.as_local(start)
+        offset = local_start.utcoffset()
+        next_top = (
+            start
+            - timedelta(
+                minutes=local_start.minute,
+                seconds=local_start.second,
+                microseconds=local_start.microsecond,
+            )
+            + _HOUR
+        )
+        target = next_top + (hours - 1) * _HOUR
+        low = start
+        while low < target:
+            high = min(low + _OFFSET_CHANGE_SCAN_STEP, target)
+            if dt_util.as_local(high).utcoffset() != offset:
+                break
+            low = high
+        else:
+            return target
+        start = _utc_offset_change(low, high)
+        # Skip the hours that started before the offset change, and the change
+        hours -= max(0, -((next_top - start) // _HOUR)) + 1
+        if not hours:
+            return start
+
+
+def _local_hours_earlier(start: datetime, hours: int) -> datetime:
+    """Return the start of the local calendar hour a number of hours earlier.
+
+    Jumps whole hours in UTC while the UTC offset is unchanged and only searches
+    for offset changes, which are assumed to be more than a day apart.
+    """
+    while True:
+        high = start - timedelta(microseconds=1)
+        local_high = dt_util.as_local(high)
+        offset = local_high.utcoffset()
+        last_top = high - timedelta(
+            minutes=local_high.minute,
+            seconds=local_high.second,
+            microseconds=local_high.microsecond,
+        )
+        target = last_top - (hours - 1) * _HOUR
+        while high > target:
+            low = max(high - _OFFSET_CHANGE_SCAN_STEP, target)
+            if dt_util.as_local(low).utcoffset() != offset:
+                break
+            high = low
+        else:
+            return target
+        start = _utc_offset_change(low, high)
+        # Skip the hours that started after the offset change, and the change
+        hours -= max(0, -((start - last_top) // _HOUR)) + 1
+        if not hours:
+            return start
 
 
 def resolve_period(
@@ -812,9 +1147,12 @@ def resolve_period(
         start_of_day = dt_util.start_of_local_day()
         cal_offset = period_def["calendar"].get("offset", 0)
         if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=cal_offset)
-            end_time = start_time + timedelta(hours=1)
+            start_time = _start_of_local_hour(dt_util.utcnow())
+            if cal_offset > 0:
+                start_time = _local_hours_later(start_time, cal_offset)
+            elif cal_offset < 0:
+                start_time = _local_hours_earlier(start_time, -cal_offset)
+            end_time = _local_hours_later(start_time, 1)
         elif calendar_period == "day":
             start_time = start_of_day
             start_time += timedelta(days=cal_offset)

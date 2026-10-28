@@ -10,8 +10,9 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_RECOMMENDED = "recommended"
 CONF_WEB_SEARCH = "web_search"
+CONF_OUTPUT_MODALITIES = "output_modalities"
 
-RECOMMENDED_WEB_SEARCH = False
+RECOMMENDED_WEB_SEARCH = "off"
 
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,

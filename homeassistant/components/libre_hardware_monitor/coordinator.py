@@ -10,19 +10,13 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorNoDevicesError,
     LibreHardwareMonitorUnauthorizedError,
 )
-from librehardwaremonitor_api.model import (
-    DeviceId,
-    DeviceName,
-    LibreHardwareMonitorData,
-)
+from librehardwaremonitor_api.model import LibreHardwareMonitorData
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -57,17 +51,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             password=config_entry.data.get(CONF_PASSWORD),
             session=async_create_clientsession(hass),
         )
-        device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
-            registry=dr.async_get(self.hass), config_entry_id=self._entry_id
-        )
-        self._previous_devices: dict[DeviceId, DeviceName] = {
-            DeviceId(
-                next(iter(device.identifiers))[1].removeprefix(f"{self._entry_id}_")
-            ): DeviceName(device.name)
-            for device in device_entries
-            if device.identifiers and device.name
-        }
-        self._is_deprecated_version: bool | None = None
 
     @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
@@ -78,21 +61,18 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                 "LibreHardwareMonitor connection failed, will retry", retry_after=25
             ) from err
         except LibreHardwareMonitorUnauthorizedError as err:
-            _LOGGER.error("Authentication against LibreHardwareMonitor instance failed")
             raise ConfigEntryAuthFailed("Authentication failed") from err
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 
-        # Check whether user has upgraded LHM from a deprecated
-        # version while the integration is running
-        if self._is_deprecated_version and not lhm_data.is_deprecated_version:
-            # Clear deprecation issue
-            ir.async_delete_issue(self.hass, DOMAIN, f"deprecated_api_{self._entry_id}")
-        self._is_deprecated_version = lhm_data.is_deprecated_version
-
-        await self._async_handle_changes_in_devices(
-            dict(lhm_data.main_device_ids_and_names)
-        )
+        if lhm_data.is_deprecated_version:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                # if user downgrades while HA is running, reload integration to surface ConfigEntryError
+                self.hass.config_entries.async_schedule_reload(self._entry_id)
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="deprecated_version",
+            )
 
         return lhm_data
 
@@ -109,36 +89,3 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         await super()._async_refresh(
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
-
-    async def _async_handle_changes_in_devices(
-        self, detected_devices: dict[DeviceId, DeviceName]
-    ) -> None:
-        """Handle device changes in the device registry."""
-        previous_device_ids = set(self._previous_devices.keys())
-        detected_device_ids = set(detected_devices.keys())
-
-        _LOGGER.debug("Previous device_ids: %s", previous_device_ids)
-        _LOGGER.debug("Detected device_ids: %s", detected_device_ids)
-
-        if previous_device_ids == detected_device_ids:
-            return
-
-        if orphaned_devices := previous_device_ids - detected_device_ids:
-            _LOGGER.warning(
-                "Device(s) no longer available, will be removed: %s",
-                [self._previous_devices[device_id] for device_id in orphaned_devices],
-            )
-            device_registry = dr.async_get(self.hass)
-            for device_id in orphaned_devices:
-                if device := device_registry.async_get_device_by_identifier(
-                    (DOMAIN, f"{self._entry_id}_{device_id}"), self._entry_id
-                ):
-                    _LOGGER.debug(
-                        "Removing device: %s", self._previous_devices[device_id]
-                    )
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self._entry_id,
-                    )
-
-        self._previous_devices = detected_devices

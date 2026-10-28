@@ -34,7 +34,7 @@
               "passive": []
             },
             "respond_to_read": false,
-            "sync_state": false
+            "sync_state": true
           }
         }
       }

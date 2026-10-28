@@ -4,12 +4,11 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components.rest_command import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 type ComponentSetup = Callable[[dict[str, Any] | None], Awaitable[None]]
 
@@ -23,7 +22,7 @@ TEST_CONFIG = {
     "auth_test": {
         "url": TEST_URL,
         "method": "get",
-        "username": "test",
+        "username": "tøst",
         "password": "123456",
     },
 }

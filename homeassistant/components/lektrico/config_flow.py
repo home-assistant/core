@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from lektricowifi import Device, DeviceConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -18,9 +18,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -134,5 +134,4 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._async_create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")

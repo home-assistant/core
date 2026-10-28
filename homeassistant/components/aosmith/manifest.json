@@ -1,6 +1,7 @@
 {
   "domain": "aosmith",
   "name": "A. O. Smith",
+  "categories": ["climate.water_heaters"],
   "codeowners": ["@bdr99"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aosmith",

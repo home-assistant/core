@@ -1,6 +1,7 @@
 """Provides data updates from the Control4 controller for platforms."""
 
 from collections import defaultdict
+from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -23,7 +24,14 @@ async def _update_variables_for_config_entry(
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
     director = entry.runtime_data.director
-    data = await director.get_all_item_variable_value(variable_names)
+    try:
+        data = await director.get_all_item_variable_value(variable_names)
+    except JSONDecodeError:
+        # A subclass of ValueError: an unreadable response is still a failure.
+        raise
+    except ValueError:
+        # pyControl4 raises ValueError when no item has any of the variables.
+        return {}
     result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
         result_dict[item["id"]][item["varName"]] = item["value"]

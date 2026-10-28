@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast, override
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
+from matter_server.common import custom_clusters
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -144,13 +145,13 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
         """Update from device."""
         # the options can dynamically change based on the state of the device
         available_values = cast(
-            list[int],
+            list[int] | None,
             self.get_matter_attribute_value(self.entity_description.list_attribute),
         )
         # map available (int) values to string representation
         self._attr_options = [
             mapped_value
-            for value in available_values
+            for value in available_values or []
             if (mapped_value := self.entity_description.device_to_ha(value))
         ]
         # use base implementation from
@@ -191,6 +192,31 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
+
+
+class MatterChimeSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a select entity for the Chime cluster's SelectedChime attribute."""
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected chime sound."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        for sound in cluster.installedChimeSounds:
+            if sound.name != option:
+                continue
+            await self.write_attribute(value=sound.chimeID)
+            break
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        cluster: clusters.Chime = self._endpoint.get_cluster(clusters.Chime)
+        chime_sounds = {
+            sound.chimeID: sound.name for sound in cluster.installedChimeSounds
+        }
+        self._attr_options = list(chime_sounds.values())
+        self._attr_current_option = chime_sounds.get(cluster.selectedChime)
 
 
 class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
@@ -267,15 +293,15 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         list_values_raw = self.get_matter_attribute_value(
             self.entity_description.list_attribute
         )
-        if TYPE_CHECKING:
-            assert list_values_raw is not None
-
         # Accept both list[str] and list[int], convert to str
-        list_values = [str(v) for v in list_values_raw]
+        list_values = [str(v) for v in list_values_raw or []]
         self._attr_options = list_values
-        current_option_idx: int = self.get_matter_attribute_value(
+        current_option_idx: int | None = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+        if current_option_idx is None:
+            self._attr_current_option = None
+            return
         try:
             self._attr_current_option = list_values[current_option_idx]
         except IndexError:
@@ -573,6 +599,21 @@ DISCOVERY_SCHEMAS = [
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="ChimeSelectedChime",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="selected_chime",
+        ),
+        entity_class=MatterChimeSelectEntity,
+        required_attributes=(
+            clusters.Chime.Attributes.SelectedChime,
+            clusters.Chime.Attributes.InstalledChimeSounds,
+        ),
+        # don't discover this entry if the installed chime sounds list is empty
+        secondary_value_is_not=[],
+    ),
     # Keep the legacy vendor-specific select entities until HA 2026.11.0,
     # so existing users can migrate before we remove them in favor of the
     # generic number slider.
@@ -678,5 +719,111 @@ DISCOVERY_SCHEMAS = [
             clusters.DoorLock.Attributes.OperatingMode,
             clusters.DoorLock.Attributes.SupportedOperatingModes,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoSwitchType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_type",
+            options=["switch", "button"],
+            device_to_ha={
+                0: "button",
+                1: "switch",
+            }.get,
+            ha_to_device={
+                "button": 0,
+                "switch": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.SwitchType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoDirectlyConnected",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_connection_mode",
+            options=["directly_connected", "matter_only"],
+            device_to_ha={
+                True: "directly_connected",
+                False: "matter_only",
+            }.get,
+            ha_to_device={
+                "directly_connected": True,
+                "matter_only": False,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.DirectlyConnected,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoManualMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_mode",
+            options=["automatic", "manual"],
+            device_to_ha={
+                False: "automatic",
+                True: "manual",
+            }.get,
+            ha_to_device={
+                "automatic": False,
+                "manual": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoManualMode,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoBlindType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="blind_type",
+            options=["roller_shutter", "venetian_blind"],
+            device_to_ha={
+                0: "roller_shutter",
+                1: "venetian_blind",
+            }.get,
+            ha_to_device={
+                "roller_shutter": 0,
+                "venetian_blind": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoBlindType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraLedStripMusicSyncEffect",
+            translation_key="music_sync_effect",
+            entity_category=EntityCategory.CONFIG,
+            options=["stretch", "pulse", "dash", "flash"],
+            device_to_ha={
+                1: "stretch",
+                2: "pulse",
+                3: "dash",
+                4: "flash",
+            }.get,
+            ha_to_device={
+                "stretch": 1,
+                "pulse": 2,
+                "dash": 3,
+                "flash": 4,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEffect,
+        ),
+        vendor_id=(4447,),
     ),
 ]

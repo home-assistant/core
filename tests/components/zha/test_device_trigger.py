@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from zha.application.const import ATTR_ENDPOINT_ID, RadioType
 from zha.quirks import DEVICE_REGISTRY
 from zigpy.application import ControllerApplication
@@ -16,13 +17,13 @@ from homeassistant.components.device_automation import (
     DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_gateway, get_zha_gateway_proxy
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_get_device_automations
+from .conftest import FIXTURE_GRP_WITH_ENTITIES_ID
 
 ON = 1
 OFF = 0
@@ -79,8 +80,9 @@ async def test_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     triggers = await async_get_device_automations(
@@ -160,8 +162,9 @@ async def test_no_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     triggers = await async_get_device_automations(
@@ -177,6 +180,25 @@ async def test_no_triggers(
             "metadata": {},
         }
     ]
+
+
+async def test_get_triggers_group_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+) -> None:
+    """Test that ZHA group devices expose no ZHA device triggers."""
+    await setup_zha()
+
+    group_proxy = get_zha_gateway_proxy(hass).group_proxies[
+        FIXTURE_GRP_WITH_ENTITIES_ID
+    ]
+    assert group_proxy.device_id is not None
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, group_proxy.device_id
+    )
+    assert not [trigger for trigger in triggers if trigger["domain"] == "zha"]
 
 
 async def test_if_fires_on_event(
@@ -211,8 +233,9 @@ async def test_if_fires_on_event(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -276,8 +299,9 @@ async def test_device_offline_fires(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     assert await async_setup_component(
@@ -332,8 +356,9 @@ async def test_exception_no_triggers(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     await async_setup_component(
@@ -392,8 +417,9 @@ async def test_exception_bad_trigger(
     await gateway.async_device_initialized(zha_device.device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)),
+        hass.config_entries.async_entries("zha")[0].entry_id,
     )
 
     await async_setup_component(
@@ -457,8 +483,8 @@ async def test_validate_trigger_config_missing_info(
     # it be pulled from the current device, making it impossible to validate triggers
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)), config_entry.entry_id
     )
 
     assert await async_setup_component(
@@ -532,8 +558,8 @@ async def test_validate_trigger_config_unloaded_bad_info(
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device.ieee)), config_entry.entry_id
     )
 
     assert await async_setup_component(

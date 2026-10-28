@@ -8,10 +8,10 @@ from solarlog_cli.solarlog_connector import SolarLogConnector
 
 from homeassistant.const import CONF_HOST, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HAS_PWD, DEFAULT_TIMEOUT
+from .const import CONF_HAS_PWD, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import (
     SolarLogBasicDataCoordinator,
     SolarlogConfigEntry,
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Set up a config entry for solarlog."""
 
     host_entry = entry.data[CONF_HOST]
@@ -77,19 +77,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
         entry.runtime_data.device_data_coordinator = device_coordinator
         await device_coordinator.async_config_entry_first_refresh()
 
+    # Register the controller device so inverter entities can resolve it as
+    # their via_device parent when they are added.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Solar-Log",
+        model="Controller",
+        name="SolarLog",
+        configuration_url=solarlog.host,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SolarlogConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -125,5 +135,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

@@ -1,6 +1,7 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@marcelveldt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
@@ -10,6 +11,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiohue"],
-  "requirements": ["aiohue==4.8.1"],
+  "requirements": ["aiohue==4.9.0"],
   "zeroconf": ["_hue._tcp.local."]
 }

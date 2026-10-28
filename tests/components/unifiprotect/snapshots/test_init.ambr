@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://127.0.0.1',
     'connections': set({
       tuple(
@@ -29,7 +29,7 @@
     'name': 'UnifiProtect',
     'name_by_user': None,
     'serial_number': None,
-    'sw_version': '6.0.0',
+    'sw_version': '7.2.105',
     'via_device_id': None,
   })
 # ---

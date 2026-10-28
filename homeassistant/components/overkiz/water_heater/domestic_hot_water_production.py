@@ -41,7 +41,7 @@ DEFAULT_MAX_TEMP: float = 70
 class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
     """Representation of a DomesticHotWaterProduction Water Heater."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -178,7 +178,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(
             OverkizState.IO_MIDDLE_WATER_TEMPERATURE
@@ -194,7 +194,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
 
         target_temperature = self.device.states.get(
@@ -219,7 +219,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         target_temperature_high = self.device.states.get(
             OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
@@ -230,7 +230,7 @@ class DomesticHotWaterProduction(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         target_temperature_low = self.device.states.get(
             OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE

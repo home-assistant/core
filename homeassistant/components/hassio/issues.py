@@ -14,6 +14,7 @@ class SuggestionDataType(TypedDict):
     type: str
     context: str
     reference: str | None
+    reference_extra: dict | None
 
 
 @dataclass(slots=True, frozen=True)
@@ -24,6 +25,7 @@ class Suggestion:
     type: str
     context: ContextType
     reference: str | None = None
+    reference_extra: dict | None = field(default=None, hash=False)
 
     @property
     def key(self) -> str:
@@ -38,6 +40,7 @@ class Suggestion:
             type=data["type"],
             context=ContextType(data["context"]),
             reference=data["reference"],
+            reference_extra=data["reference_extra"],
         )
 
 
@@ -48,6 +51,7 @@ class IssueDataType(TypedDict):
     type: str
     context: str
     reference: str | None
+    reference_extra: dict | None
     suggestions: NotRequired[list[SuggestionDataType]]
 
 
@@ -59,6 +63,7 @@ class Issue:
     type: str
     context: ContextType
     reference: str | None = None
+    reference_extra: dict | None = field(default=None, hash=False)
     suggestions: list[Suggestion] = field(default_factory=list, compare=False)
 
     @property
@@ -75,6 +80,7 @@ class Issue:
             type=data["type"],
             context=ContextType(data["context"]),
             reference=data["reference"],
+            reference_extra=data["reference_extra"],
             suggestions=[
                 Suggestion.from_dict(suggestion) for suggestion in suggestions
             ],

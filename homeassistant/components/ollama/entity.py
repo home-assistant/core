@@ -3,11 +3,11 @@
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import ollama
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -43,7 +43,11 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": convert(tool.parameters, custom_serializer=custom_serializer),
+        "parameters": probatio.to_openapi(
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
+        ),
     }
     if tool.description:
         tool_spec["description"] = tool.description
@@ -93,7 +97,12 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json_dumps(chat_content.tool_result),
+            content=json_dumps(
+                {
+                    "data": chat_content.result.data,
+                    "error": chat_content.result.error,
+                }
+            ),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
@@ -131,6 +140,17 @@ def _convert_content(
             content=chat_content.content,
         )
     raise TypeError(f"Unexpected content type: {type(chat_content)}")
+
+
+def _read_images(messages: list[ollama.Message]) -> None:
+    """Replace image paths with their bytes.
+
+    The ollama client would otherwise read the files on the event loop.
+    """
+    for message in messages:
+        for image in message.images or ():
+            if isinstance(image.value, Path):
+                image.value = image.value.read_bytes()
 
 
 async def _transform_stream(
@@ -202,7 +222,7 @@ class OllamaBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
@@ -222,16 +242,21 @@ class OllamaBaseLLMEntity(Entity):
         )
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
+        if any(message.images for message in message_history.messages):
+            await self.hass.async_add_executor_job(
+                _read_images, message_history.messages
+            )
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = convert(
+            output_format = probatio.to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer
                     if chat_log.llm_api
                     else llm.selector_serializer
                 ),
+                openapi_version="3.1.0",
             )
 
         # Get response
@@ -264,6 +289,7 @@ class OllamaBaseLLMEntity(Entity):
                     format=output_format,
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to the Ollama server: {err}"

@@ -1,0 +1,13 @@
+{
+  "type": "HEATING",
+  "heatingCircuit": 1,
+  "earlyStartEnabled": false,
+  "duties": {
+    "type": "HEATING",
+    "leader": {
+      "deviceType": "RU02",
+      "serialNo": "RU1234567890",
+      "shortSerialNo": "RU1234"
+    }
+  }
+}

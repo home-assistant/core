@@ -1,23 +1,36 @@
 """Blebox sensors tests."""
 
+from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.blebox.const import CO2_LEVEL, OPEN_STATUS
-from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.components.blebox.const import CO2_LEVEL, DOMAIN, OPEN_STATUS
+from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfDensity,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
     async_setup_config_entry,
@@ -25,10 +38,11 @@ from .conftest import (
     async_setup_entity,
     mock_feature,
     mock_only_feature,
-    setup_product_mock,
+    setup_multi_feature_product,
 )
 
-from tests.common import MockConfigEntry
+TANK_FILL_LEVEL_UNIQUE_ID = "BleBox-multiSensor-1afe34db9437-fillLevel_2"
+PROBE_ISSUE_ID = f"probe_not_configured_{TANK_FILL_LEVEL_UNIQUE_ID}"
 
 
 @pytest.fixture(name="airsensor")
@@ -48,6 +62,7 @@ def airsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My air sensor")
     type(product).model = PropertyMock(return_value="airSensor")
+    type(product).product = PropertyMock(return_value="airSensor")
     return (feature, "sensor.my_air_sensor_pm1")
 
 
@@ -69,6 +84,7 @@ def tempsensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My temperature sensor")
     type(product).model = PropertyMock(return_value="tempSensor")
+    type(product).product = PropertyMock(return_value="tempSensor")
     return (feature, "sensor.my_temperature_sensor_temperature")
 
 
@@ -131,6 +147,141 @@ async def test_update_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_update_with_error_state_is_unavailable(
+    hass: HomeAssistant, tempsensor: tuple[Mock, str]
+) -> None:
+    """A sensor reporting an error state must become unavailable."""
+
+    feature_mock, entity_id = tempsensor
+    feature_mock.is_error = True
+    feature_mock.native_value = None
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_recovers_after_error_state_clears(
+    hass: HomeAssistant,
+    tempsensor: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Entity becomes available again once the sensor reports a valid state."""
+
+    feature_mock, entity_id = tempsensor
+    feature_mock.is_error = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    feature_mock.is_error = False
+    feature_mock.native_value = 21.5
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "21.5"
+
+
+@pytest.fixture(name="tank_fill_level")
+def tank_fill_level_fixture() -> tuple[Mock, str]:
+    """Return a tankSensor fill level sensor mock."""
+    feature = mock_feature(
+        "sensors",
+        blebox_uniapi.sensor.GenericSensor,
+        unique_id=TANK_FILL_LEVEL_UNIQUE_ID,
+        device_class="fillLevel",
+        unit="percentage",
+        native_value=20.5,
+        sensor_id=2,
+        index=2,
+    )
+    type(feature).name = PropertyMock(return_value=None)
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My tankSensor")
+    type(product).type = PropertyMock(return_value="multiSensor")
+    type(product).model = PropertyMock(return_value="multiSensor")
+    type(product).product = PropertyMock(return_value="tankSensor")
+    return (feature, "sensor.my_tanksensor_fill_level")
+
+
+async def test_probe_not_configured_issue(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unconfigured probe raises a repair issue that clears once configured."""
+
+    feature_mock, entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.needs_configuration = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "probe_not_configured"
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "device_name": "My tankSensor",
+        "sensor_name": "Fill level",
+    }
+
+    feature_mock.is_error = False
+    feature_mock.needs_configuration = False
+    feature_mock.native_value = 20.5
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "20.5"
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
+
+
+async def test_sensor_error_does_not_create_probe_issue(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A regular sensor error makes the entity unavailable without a repair issue."""
+
+    feature_mock, entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
+
+
+async def test_probe_not_configured_issue_removed_with_entry(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Removing the config entry deletes the probe repair issue."""
+
+    feature_mock, _entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.needs_configuration = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is not None
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
+
+
 async def test_airsensor_init(
     airsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -174,6 +325,7 @@ async def test_multi_sensor_single_has_no_channel_suffix(
     product = feature.product
     type(product).name = PropertyMock(return_value="My smart meter")
     type(product).model = PropertyMock(return_value="smartMeter")
+    type(product).product = PropertyMock(return_value="smartMeter")
 
     await async_setup_entity(hass, "sensor.my_smart_meter_voltage")
     state = hass.states.get("sensor.my_smart_meter_voltage")
@@ -198,17 +350,7 @@ async def test_multi_sensor_multiple_have_channel_suffix(
         for i in range(4)
     ]
 
-    product = setup_product_mock("sensors", features)
-    type(product).name = PropertyMock(return_value="My smart meter")
-    type(product).model = PropertyMock(return_value="smartMeter")
-    type(product).brand = PropertyMock(return_value="BleBox")
-    type(product).firmware_version = PropertyMock(return_value="1.23")
-    type(product).unique_id = PropertyMock(return_value="aabbcc112233")
-
-    for feature in features:
-        type(feature).product = PropertyMock(return_value=product)
-        type(feature).name = PropertyMock(return_value=None)
-        feature.async_update = AsyncMock()
+    setup_multi_feature_product("sensors", features, "My smart meter", "smartMeter")
 
     entity_ids = [
         "sensor.my_smart_meter_voltage",
@@ -222,6 +364,115 @@ async def test_multi_sensor_multiple_have_channel_suffix(
     assert hass.states.get(entity_ids[1]).name == "My smart meter Voltage 1"
     assert hass.states.get(entity_ids[2]).name == "My smart meter Voltage 2"
     assert hass.states.get(entity_ids[3]).name == "My smart meter Voltage 3"
+
+
+async def test_sensor_error_does_not_affect_sibling_sensors(
+    hass: HomeAssistant,
+) -> None:
+    """A single errored sensor must not make sibling sensors unavailable."""
+    ok_feature = mock_only_feature(
+        blebox_uniapi.sensor.GenericSensor,
+        unique_id="BleBox-multiSensor-aabbcc-humidity_0",
+        full_name="multiSensor-humidity_0",
+        device_class="humidity",
+        unit="percentage",
+        native_value=42,
+        sensor_id=0,
+        index=0,
+    )
+    error_feature = mock_only_feature(
+        blebox_uniapi.sensor.Temperature,
+        unique_id="BleBox-multiSensor-aabbcc-temperature_1",
+        full_name="multiSensor-temperature_1",
+        device_class="temperature",
+        unit="celsius",
+        current=None,
+        native_value=None,
+        is_error=True,
+        sensor_id=1,
+        index=1,
+    )
+    setup_multi_feature_product(
+        "sensors", [ok_feature, error_feature], "My multi sensor", "multiSensor"
+    )
+
+    ok_entity_id = "sensor.my_multi_sensor_humidity"
+    error_entity_id = "sensor.my_multi_sensor_temperature"
+    await async_setup_entities(hass, [ok_entity_id, error_entity_id])
+
+    assert hass.states.get(ok_entity_id).state == "42"
+    assert hass.states.get(error_entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "unit", "expected_state"),
+    [
+        pytest.param(
+            "sensor.my_tanksensor_gauge_pressure",
+            SensorDeviceClass.PRESSURE,
+            UnitOfPressure.MBAR,
+            "98",
+            id="gauge_pressure",
+        ),
+        pytest.param(
+            "sensor.my_tanksensor_liquid_height",
+            SensorDeviceClass.DISTANCE,
+            UnitOfLength.CENTIMETERS,
+            "62.4",
+            id="liquid_height",
+        ),
+        pytest.param(
+            "sensor.my_tanksensor_fill_level",
+            None,
+            UnitOfRatio.PERCENTAGE,
+            "20.5",
+            id="fill_level",
+        ),
+        pytest.param(
+            "sensor.my_tanksensor_volume",
+            SensorDeviceClass.VOLUME_STORAGE,
+            UnitOfVolume.LITERS,
+            "3660.0",
+            id="volume",
+        ),
+    ],
+)
+async def test_tank_sensor(
+    hass: HomeAssistant,
+    entity_id: str,
+    device_class: SensorDeviceClass | None,
+    unit: str,
+    expected_state: str,
+) -> None:
+    """Test tankSensor fill level related sensors."""
+    features = [
+        mock_only_feature(
+            blebox_uniapi.sensor.GenericSensor,
+            unique_id=f"BleBox-multiSensor-aabbcc-{sensor_type}_{i}",
+            device_class=sensor_type,
+            unit=uniapi_unit,
+            native_value=value,
+            sensor_id=i,
+            index=i,
+        )
+        for i, (sensor_type, uniapi_unit, value) in enumerate(
+            [
+                ("gaugePressure", "mbar", 98),
+                ("liquidHeight", "cm", 62.4),
+                ("fillLevel", "percentage", 20.5),
+                ("volume", "L", 3660.0),
+            ]
+        )
+    ]
+    setup_multi_feature_product("sensors", features, "My tankSensor", "tankSensor")
+
+    await async_setup_entities(hass, [entity_id])
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.state == expected_state
 
 
 async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
@@ -256,6 +507,7 @@ def open_status_sensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My open sensor")
     type(product).model = PropertyMock(return_value="openSensor")
+    type(product).product = PropertyMock(return_value="openSensor")
     return (feature, "sensor.my_open_sensor_open_status")
 
 
@@ -326,6 +578,7 @@ def co2_definition_sensor_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My CO2 sensor")
     type(product).model = PropertyMock(return_value="co2Sensor")
+    type(product).product = PropertyMock(return_value="co2Sensor")
     return (feature, "sensor.my_co2_sensor_carbon_dioxide_level")
 
 

@@ -6,10 +6,10 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, cast, override
 
-from aiopurpleair import API
+from aiopurpleair.api import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -20,7 +20,9 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_RADIUS,
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -32,6 +34,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -45,11 +49,19 @@ CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
 CONF_SENSOR_DEVICE_ID = "sensor_device_id"
 CONF_SENSOR_INDEX = "sensor_index"
 
-DEFAULT_DISTANCE = 5
+DEFAULT_DISTANCE = 5000
 
-API_KEY_SCHEMA = vol.Schema(
+API_KEY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+    }
+)
+
+STEP_COORDINATES_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=True)
+        )
     }
 )
 
@@ -59,22 +71,6 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
     """Get an aiopurpleair API object."""
     session = aiohttp_client.async_get_clientsession(hass)
     return API(api_key, session=session)
-
-
-@callback
-def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
-    """Define a schema for searching for sensors near a coordinate pair."""
-    return vol.Schema(
-        {
-            vol.Inclusive(
-                CONF_LATITUDE, "coords", default=hass.config.latitude
-            ): cv.latitude,
-            vol.Inclusive(
-                CONF_LONGITUDE, "coords", default=hass.config.longitude
-            ): cv.longitude,
-            vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
-        }
-    )
 
 
 @callback
@@ -91,11 +87,11 @@ def async_get_nearby_sensors_options(
 
 
 @callback
-def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
+def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema for selecting a sensor from a list."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_INDEX): SelectSelector(
+            probatio.Required(CONF_SENSOR_INDEX): SelectSelector(
                 SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -110,18 +106,18 @@ def async_get_remove_sensor_options(
     device_registry = dr.async_get(hass)
     return [
         SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
-            config_entry.entry_id
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
         )
     ]
 
 
 @callback
-def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schema:
+def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> probatio.Schema:
     """Define a schema removing a sensor."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
+            probatio.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
                 SelectSelectorConfig(options=sensors, mode=SelectSelectorMode.DROPDOWN)
             )
         }
@@ -214,31 +210,39 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the discovery of sensors near a latitude/longitude."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="by_coordinates",
-                data_schema=async_get_coordinates_schema(self.hass),
+        validation = ValidationResult()
+
+        if user_input is not None:
+            location = user_input[CONF_LOCATION]
+            validation = await async_validate_coordinates(
+                self.hass,
+                self._flow_data[CONF_API_KEY],
+                location[CONF_LATITUDE],
+                location[CONF_LONGITUDE],
+                location.get(CONF_RADIUS, DEFAULT_DISTANCE) / 1000,
             )
 
-        validation = await async_validate_coordinates(
-            self.hass,
-            self._flow_data[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
-            user_input[CONF_DISTANCE],
-        )
-        if validation.errors:
-            return self.async_show_form(
-                step_id="by_coordinates",
-                data_schema=async_get_coordinates_schema(self.hass),
-                errors=validation.errors,
-            )
+            if not validation.errors:
+                self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = (
+                    async_get_nearby_sensors_options(validation.data)
+                )
+                return await self.async_step_choose_sensor()
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
-            validation.data
+        return self.async_show_form(
+            step_id="by_coordinates",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_COORDINATES_SCHEMA,
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_RADIUS: DEFAULT_DISTANCE,
+                    },
+                },
+            ),
+            errors=validation.errors,
         )
-
-        return await self.async_step_choose_sensor()
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -320,11 +324,11 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
         self._flow_data: dict[str, Any] = {}
 
     @property
-    def settings_schema(self) -> vol.Schema:
+    def settings_schema(self) -> probatio.Schema:
         """Return the settings schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_ON_MAP,
                     description={
                         "suggested_value": self.config_entry.options.get(
@@ -339,32 +343,38 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add a sensor."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="add_sensor",
-                data_schema=async_get_coordinates_schema(self.hass),
+        validation = ValidationResult()
+
+        if user_input is not None:
+            location = user_input[CONF_LOCATION]
+            validation = await async_validate_coordinates(
+                self.hass,
+                self.config_entry.data[CONF_API_KEY],
+                location[CONF_LATITUDE],
+                location[CONF_LONGITUDE],
+                location.get(CONF_RADIUS, DEFAULT_DISTANCE) / 1000,
             )
 
-        validation = await async_validate_coordinates(
-            self.hass,
-            self.config_entry.data[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
-            user_input[CONF_DISTANCE],
+            if not validation.errors:
+                self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = (
+                    async_get_nearby_sensors_options(validation.data)
+                )
+                return await self.async_step_choose_sensor()
+        return self.async_show_form(
+            step_id="add_sensor",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_COORDINATES_SCHEMA,
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_RADIUS: DEFAULT_DISTANCE,
+                    },
+                },
+            ),
+            errors=validation.errors,
         )
-
-        if validation.errors:
-            return self.async_show_form(
-                step_id="add_sensor",
-                data_schema=async_get_coordinates_schema(self.hass),
-                errors=validation.errors,
-            )
-
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
-            validation.data
-        )
-
-        return await self.async_step_choose_sensor()
 
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
@@ -438,9 +448,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlowWithReload):
             [entity_entry.entity_id for entity_entry in entity_entries],
             async_device_entity_state_changed,
         )
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=self.config_entry.entry_id
-        )
+        device_registry.async_remove_device(device_id)
         await device_entities_removed_event.wait()
 
         # Once we're done, we can cancel the state change tracker callback:

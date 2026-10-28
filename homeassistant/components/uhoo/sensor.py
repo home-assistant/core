@@ -99,7 +99,7 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     UhooSensorEntityDescription(
         key=API_TVOC,
         translation_key="volatile_organic_compounds",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.tvoc,

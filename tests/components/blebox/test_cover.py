@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, PropertyMock
 import blebox_uniapi
 from blebox_uniapi.cover import UnifiedCoverType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -34,8 +35,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
 
-from tests.common import MockConfigEntry
-
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
 
@@ -63,6 +62,7 @@ def shutterbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
+    type(product).product = PropertyMock(return_value="shutterBox")
     return (feature, "cover.my_shutter")
 
 
@@ -86,6 +86,7 @@ def gatebox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
+    type(product).product = PropertyMock(return_value="gateBox")
     return (feature, "cover.my_gatebox")
 
 
@@ -109,6 +110,7 @@ def gate_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
+    type(product).product = PropertyMock(return_value="gateController")
     return (feature, "cover.my_gate_controller")
 
 
@@ -247,6 +249,7 @@ async def test_device_class_from_unified_cover_type(
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
+    type(product).product = PropertyMock(return_value="shutterBox")
 
     entity_id = "cover.my_shutter"
     entry = await async_setup_entity(hass, entity_id)

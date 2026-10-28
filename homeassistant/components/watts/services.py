@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE
@@ -21,10 +21,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ACTIVATE_TIMER_MODE,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
-            vol.Required(ATTR_DURATION): vol.All(
+            probatio.Required(ATTR_TEMPERATURE): probatio.Coerce(float),
+            probatio.Required(ATTR_DURATION): probatio.All(
                 cv.time_period,
-                vol.Range(min=timedelta(minutes=1), max=timedelta(days=1)),
+                probatio.Range(min=timedelta(minutes=1), max=timedelta(days=1)),
             ),
         },
         func="async_activate_timer_mode",

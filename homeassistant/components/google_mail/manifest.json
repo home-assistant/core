@@ -1,6 +1,7 @@
 {
   "domain": "google_mail",
   "name": "Google Mail",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

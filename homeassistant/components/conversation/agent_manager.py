@@ -5,7 +5,7 @@ import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -17,6 +17,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
+from .chat_log import current_chat_log
 from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
 from .entity import ConversationEntity
 from .models import (
@@ -51,7 +52,7 @@ def agent_id_validator(value: Any) -> str:
     """Validate agent ID."""
     hass = async_get_hass()
     if async_get_agent(hass, cv.string(value)) is None:
-        raise vol.Invalid("invalid agent ID")
+        raise probatio.Invalid("invalid agent ID")
     return value
 
 
@@ -126,6 +127,11 @@ async def async_converse(
         try:
             result = await method(conversation_input)
         except HomeAssistantError as err:
+            if (
+                chat_log := current_chat_log.get()
+            ) and chat_log.conversation_id == conversation_id:
+                # The open turn of the caller does not see the handled error.
+                chat_log.async_add_error(agent_id, err)
             intent_response = intent.IntentResponse(language=language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,

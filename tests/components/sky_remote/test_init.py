@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from skyboxremote import SkyBoxConnectionError
 
 from homeassistant.components.sky_remote.const import DEFAULT_PORT, DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_mock_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
@@ -25,8 +24,8 @@ async def test_setup_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     mock_remote_control.assert_called_once_with("example.com", DEFAULT_PORT)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == "example.com"

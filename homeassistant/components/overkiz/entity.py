@@ -5,6 +5,7 @@ from typing import cast, override
 from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Device
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,7 +19,8 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
 
     _attr_has_entity_name = True
-    _attr_name: str | None = None
+    _attr_name: str | None
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -41,6 +43,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
+        # An unreachable gateway keeps serving its devices' last known states,
+        # so device.available stays True for as long as the outage lasts.
+        if self.device.identifier.gateway_id in self.coordinator.unreachable_gateways:
+            return False
+
         if self.device.available:
             return super().available
 
@@ -111,7 +118,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.device.identifier.gateway_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.device.identifier.gateway_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             configuration_url=self.coordinator.client.server_config.configuration_url,
         )
 
@@ -137,3 +148,6 @@ class OverkizDescriptiveEntity(OverkizEntity):
                 self._attr_name = self.device.label
         elif isinstance(description.name, str):
             self._attr_name = description.name
+        else:
+            # Fall back to the device name, not the device class name.
+            self._attr_name = None

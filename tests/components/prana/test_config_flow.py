@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from prana_local_api_client.exceptions import (
     PranaApiCommunicationError as PranaCommunicationError,
 )
+from pytest_homeassistant.common import load_json_object_fixture
 
 from homeassistant.components.prana.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import load_json_object_fixture
 
 ZEROCONF_INFO = ZeroconfServiceInfo(
     ip_address="192.168.1.30",
@@ -114,6 +113,36 @@ async def test_communication_error_on_device_info(
 
     # Now simulating a successful fetch, without aborting
     mock_prana_api.get_device_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == device_info["label"]
+    assert result["result"].unique_id == device_info["manufactureId"]
+    assert result["result"].data == {CONF_HOST: "192.168.1.50"}
+
+
+async def test_user_flow_no_device_data(hass: HomeAssistant, mock_prana_api) -> None:
+    """No data returned when fetching device info surfaces as a form error."""
+    mock_prana_api.get_device_info.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "invalid_device_or_unreachable" in result["errors"].values()
+
+    # Now simulating a successful fetch, without aborting
+    device_info = await async_load_fixture(hass, "device_info.json")
+    mock_prana_api.get_device_info.return_value = SimpleNamespace(**device_info)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}

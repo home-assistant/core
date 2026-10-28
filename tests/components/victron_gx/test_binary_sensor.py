@@ -1,6 +1,7 @@
 """Tests for Victron GX MQTT binary sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub, VictronEnum
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -11,11 +12,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
 
-from tests.common import MockConfigEntry
-
 
 class _TestEnum(VictronEnum):
-    UNKNOWN = (99, "unknown_id", "Unknown")
+    UNKNOWN = (99, "unknown_id", "Unknown", "Unknown test value")
 
 
 async def test_victron_binary_sensor(
@@ -50,8 +49,8 @@ async def test_victron_binary_sensor(
     assert state.state == "on"
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_evcharger_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_evcharger_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"

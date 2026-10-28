@@ -13,6 +13,7 @@ from datetime import datetime
 from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import load_json_value_fixture
 from ring_doorbell import (
     RingCapability,
     RingChime,
@@ -24,8 +25,6 @@ from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.util import dt as dt_util
-
-from tests.common import load_json_value_fixture
 
 DEVICES_FIXTURE = load_json_value_fixture("devices.json", DOMAIN)
 DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", DOMAIN)

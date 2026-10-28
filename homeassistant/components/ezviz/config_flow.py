@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import (
     AuthTestResultFailed,
@@ -13,7 +14,6 @@ from pyezvizapi.exceptions import (
     PyEzvizError,
 )
 from pyezvizapi.test_cam_rtsp import TestRTSPAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -30,11 +30,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_ENCRYPTION_PASSWORD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -203,11 +209,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=EU_URL): vol.In(
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                probatio.Required(CONF_URL, default=EU_URL): probatio.In(
                     [EU_URL, RUSSIA_URL, CONF_CUSTOMIZE]
                 ),
             }
@@ -256,9 +262,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema_custom_url = vol.Schema(
+        data_schema_custom_url = probatio.Schema(
             {
-                vol.Required(CONF_URL, default=EU_URL): str,
+                probatio.Required(CONF_URL, default=EU_URL): str,
             }
         )
 
@@ -308,10 +314,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-        discovered_camera_schema = vol.Schema(
+        discovered_camera_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -375,10 +381,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=auth_data,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=entry.title): vol.In([entry.title]),
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=entry.title): probatio.In(
+                    [entry.title]
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -399,21 +407,30 @@ class EzvizOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
-                    ),
-                ): int,
-                vol.Optional(
-                    CONF_FFMPEG_ARGUMENTS,
-                    default=self.config_entry.options.get(
-                        CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-                    ),
-                ): str,
-            }
-        )
+        fields: dict[probatio.Marker, Any] = {
+            probatio.Optional(
+                CONF_TIMEOUT,
+                default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ): int,
+            probatio.Optional(
+                CONF_FFMPEG_ARGUMENTS,
+                default=self.config_entry.options.get(
+                    CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+                ),
+            ): str,
+        }
+        # Alarm pictures can be encrypted with a password that differs from
+        # the verification code used for the RTSP stream.
+        if self.config_entry.data[CONF_TYPE] == ATTR_TYPE_CAMERA:
+            fields[
+                probatio.Optional(
+                    CONF_ENCRYPTION_PASSWORD,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_ENCRYPTION_PASSWORD
+                        )
+                    },
+                )
+            ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-        return self.async_show_form(step_id="init", data_schema=options)
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))

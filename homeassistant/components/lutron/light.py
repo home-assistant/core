@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client, config_entry)
+            LutronLight(hass, area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
         ),
         True,
@@ -65,13 +65,16 @@ class LutronLight(LutronDevice, LightEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         lutron_device: LutronEntity,
         controller: Lutron,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, lutron_device, controller)
+        super().__init__(
+            hass, area_name, lutron_device, controller, config_entry.entry_id
+        )
         self._config_entry = config_entry
 
     @override
@@ -93,6 +96,8 @@ class LutronLight(LutronDevice, LightEntity):
             if ATTR_TRANSITION in kwargs:
                 args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
             self._lutron_device.set_level(**args)
+            # Publish now rather than waiting for the controller to report back.
+            self._publish_level()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -101,6 +106,18 @@ class LutronLight(LutronDevice, LightEntity):
         if ATTR_TRANSITION in kwargs:
             args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
         self._lutron_device.set_level(**args)
+        self._publish_level()
+
+    def _publish_level(self) -> None:
+        """Publish the device's current level without waiting for a report.
+
+        Reads `last_level()` like `_update_callback` does, so a report that
+        lands around the same time cannot be overwritten by a separately held
+        assumed value -- whichever reached the library last is what gets
+        published.
+        """
+        self._update_attrs()
+        self.schedule_update_ha_state()
 
     @property
     @override

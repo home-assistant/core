@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock
 
 from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
@@ -27,6 +26,23 @@ async def test_async_setup_entry(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "sunny"
+
+
+async def test_hourly_forecast_fits_in_one_request(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test the hourly forecast asks for no more than one page of records.
+
+    The API returns at most 24 hourly records per request, so asking for more
+    costs an extra request against the quota on every update.
+    """
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    mock_google_weather_api.async_get_hourly_forecast.assert_called_once_with(
+        10.1, 20.1, hours=24
+    )
 
 
 @pytest.mark.parametrize(

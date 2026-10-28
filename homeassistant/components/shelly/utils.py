@@ -5,6 +5,8 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
+from aioshelly.ble import get_device_from_model_id
+from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
@@ -12,8 +14,8 @@ from aioshelly.const import (
     BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
+    DEVICES,
     MODEL_1L,
-    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -21,20 +23,18 @@ from aioshelly.const import (
     MODEL_NAMES,
     MODEL_PLUG,
     RPC_GENERATIONS,
+    ShellyDevice,
 )
+from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
+from aioshelly.rpc_device.models import ShellyLedStripEffect
 from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -59,7 +59,8 @@ from .const import (
     DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
-    FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    DYNAMIC_COMPONENTS_MAP,
+    FW_ID_VERSION_PATTERN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
@@ -72,10 +73,9 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
-    VIRTUAL_COMPONENTS_MAP,
     WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
@@ -322,6 +322,30 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def is_device_supported(info: dict[str, Any]) -> bool:
+    """Return True if the device model is supported."""
+    if get_info_gen(info) in RPC_GENERATIONS:
+        # Devices with firmware not fully provisioned
+        model = info.get(CONF_MODEL, "")
+    else:
+        model = info["type"]
+    if (device := DEVICES.get(model)) is None:
+        return True
+
+    return device.supported
+
+
+def get_device_from_manufacturer_data(
+    manufacturer_data: dict[int, bytes],
+) -> ShellyDevice | None:
+    """Return the Shelly device matching the advertised BLE model ID."""
+    parsed = parse_shelly_manufacturer_data(manufacturer_data)
+    if not parsed or not isinstance(model_id := parsed.get("model_id"), int):
+        return None
+
+    return get_device_from_model_id(model_id)
+
+
 def get_shelly_model_name(
     model: str,
     sleep_period: int,
@@ -379,7 +403,13 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     _, component, component_id = get_rpc_key(key)
 
     if custom_name := get_rpc_custom_name(device, key):
-        if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
+        if component in (
+            *VIRTUAL_COMPONENTS,
+            "camerazone",
+            "input",
+            "presencezone",
+            "script",
+        ):
             return custom_name
 
         return (
@@ -558,6 +588,14 @@ def mac_address_from_name(name: str) -> str | None:
     return mac.upper()
 
 
+def get_version_from_fw_id(fw_id: str) -> str | None:
+    """Return the version part of a Shelly firmware ID."""
+    if match := FW_ID_VERSION_PATTERN.search(fw_id):
+        return match["version"]
+
+    return None
+
+
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
     if (
@@ -565,33 +603,13 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
         return GEN2_BETA_RELEASE_URL
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
-
-
-@callback
-def async_create_issue_unsupported_firmware(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> None:
-    """Create a repair issue if the device runs an unsupported firmware."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-        is_fixable=False,
-        is_persistent=False,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="unsupported_firmware",
-        translation_placeholders={
-            "device_name": entry.title,
-            "ip_address": entry.data[CONF_HOST],
-        },
-    )
 
 
 def is_rpc_wifi_stations_disabled(
@@ -637,7 +655,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -656,7 +674,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
     view = config[key]["meta"]["ui"]["view"]
     return view in component["modes"]
 
@@ -773,18 +791,34 @@ async def get_rpc_scripts_event_types(
     return script_events
 
 
+def is_rpc_ledstrip_control_available(
+    effects: dict[str, ShellyLedStripEffect] | None,
+    status: dict[str, Any],
+    control: str,
+) -> bool:
+    """Return True if the current effect supports the control and reports it."""
+    return (
+        effects is not None
+        and (effect := effects.get(status["effect"])) is not None
+        and control in effect["controls"]
+        and control in status
+    )
+
+
 def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
     """Return the zone id if the component is an irrigation zone."""
-    if (
-        device.initialized
-        and key in device.config
-        and (zone := get_rpc_role_by_key(device.config, key)).startswith("zone")
-    ):
+    try:
+        config = device.config
+    except NotInitialized:
+        return None
+    if key in config and (zone := get_rpc_role_by_key(config, key)).startswith("zone"):
         return int(zone[4:])
     return None
 
 
 def get_rpc_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: RpcDevice,
     mac: str,
     configuration_url: str,
@@ -809,7 +843,9 @@ def get_rpc_device_info(
             model=model_name,
             model_id=model,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, mac), config_entry_id=config_entry_id
+            ),
             configuration_url=configuration_url,
         )
 
@@ -830,25 +866,55 @@ def get_rpc_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
+    hass: HomeAssistant,
+    config_entry_id: str,
+    config: dict[str, Any],
+    ble_addr: str,
+    parent_mac: str,
+    fw_ver: str | None,
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
     return DeviceInfo(
         connections={(CONNECTION_BLUETOOTH, ble_addr)},
         identifiers={(DOMAIN, ble_addr)},
-        via_device=(DOMAIN, parent_mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, parent_mac), config_entry_id=config_entry_id
+        ),
         manufacturer="Shelly",
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
         sw_version=fw_ver,
+    )
+
+
+def get_ir_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    device: RpcDevice,
+    mac: str,
+    key: str,
+) -> DeviceInfo:
+    """Return device info for IR code sub-device."""
+    device_id = device.config[key]["device_id"]
+    ir_device_key = f"irdevice:{device_id}"
+    name = device.config[ir_device_key].get("name") or f"IR Device {device_id}"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{ir_device_key}")},
+        name=name,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
     )
 
 
@@ -862,6 +928,8 @@ def is_block_single_device(device: BlockDevice, block: Block | None = None) -> b
 
 
 def get_block_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
     device: BlockDevice,
     mac: str,
     configuration_url: str,
@@ -886,7 +954,9 @@ def get_block_device_info(
         model=model_name,
         model_id=model,
         suggested_area=suggested_area,
-        via_device=(DOMAIN, mac),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
         configuration_url=configuration_url,
     )
 
@@ -896,11 +966,8 @@ def remove_stale_blu_trv_devices(
     hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
-    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
-        return
-
     dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
     blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
     trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
@@ -908,6 +975,12 @@ def remove_stale_blu_trv_devices(
     for device in devices:
         if not device.via_device_id:
             # Device is not a sub-device, skip
+            continue
+
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
             continue
 
         if any(
@@ -926,7 +999,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     for device in devices:
         if not device.via_device_id:
@@ -1073,6 +1146,7 @@ async def async_manage_coiot_issues_task(
                 "device_name": device.name,
                 "ip_address": device.ip_address,
             },
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -1091,4 +1165,11 @@ async def async_manage_coiot_issues_task(
             "ip_address": device.ip_address,
         },
         data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
     )
+
+
+def normalize_command_source(source: str | None) -> str | None:
+    """Normalize the last command source to match translation keys."""
+    # Sources mix case (e.g. "WS_in"); Wall Display also uses spaces ("RPC Set")
+    return source and source.lower().replace(" ", "_")

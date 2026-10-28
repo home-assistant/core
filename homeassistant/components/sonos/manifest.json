@@ -2,6 +2,7 @@
   "domain": "sonos",
   "name": "Sonos",
   "after_dependencies": ["plex", "spotify", "zeroconf", "media_source"],
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@peterager", "@jjlawren"],
   "config_flow": true,
   "dependencies": ["ssdp"],
@@ -12,7 +13,7 @@
   "quality_scale": "bronze",
   "requirements": [
     "defusedxml==0.7.1",
-    "soco==0.31.1",
+    "soco==0.31.5",
     "sonos-websocket==0.2.0"
   ],
   "ssdp": [

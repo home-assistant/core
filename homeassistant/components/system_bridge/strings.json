@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
@@ -32,6 +31,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "ac_connected": {
+        "name": "AC power"
+      },
       "camera_in_use": {
         "name": "Camera in use"
       },
@@ -48,8 +50,37 @@
       "amount_memory_used": {
         "name": "Amount of memory used"
       },
+      "battery_info": {
+        "name": "{battery} battery"
+      },
+      "battery_info_state": {
+        "name": "{battery} battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]"
+        }
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "Not charging"
+        }
+      },
       "battery_time_remaining": {
         "name": "Battery time remaining"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
       },
       "boot_time": {
         "name": "Boot time"
@@ -68,6 +99,18 @@
       },
       "cpu_voltage": {
         "name": "CPU voltage"
+      },
+      "disk_device_read_rate": {
+        "name": "{disk} read rate"
+      },
+      "disk_device_write_rate": {
+        "name": "{disk} write rate"
+      },
+      "disk_read_rate": {
+        "name": "Disk read rate"
+      },
+      "disk_write_rate": {
+        "name": "Disk write rate"
       },
       "display_refresh_rate": {
         "name": "Display {display_id} refresh rate"
@@ -114,6 +157,15 @@
       "load": {
         "name": "Load"
       },
+      "load_average": {
+        "name": "Load average (1 min)"
+      },
+      "load_average_15": {
+        "name": "Load average (15 min)"
+      },
+      "load_average_5": {
+        "name": "Load average (5 min)"
+      },
       "memory_free": {
         "name": "Memory free"
       },
@@ -122,6 +174,27 @@
       },
       "memory_used_percentage": {
         "name": "Memory used %"
+      },
+      "network_download_rate": {
+        "name": "Network download rate"
+      },
+      "network_interface_download_rate": {
+        "name": "{interface} download rate"
+      },
+      "network_interface_link_rate": {
+        "name": "{interface} link rate"
+      },
+      "network_interface_signal_strength": {
+        "name": "{interface} signal strength"
+      },
+      "network_interface_ssid": {
+        "name": "{interface} SSID"
+      },
+      "network_interface_upload_rate": {
+        "name": "{interface} upload rate"
+      },
+      "network_upload_rate": {
+        "name": "Network upload rate"
       },
       "os": {
         "name": "Operating system"
@@ -152,9 +225,6 @@
     },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
-    },
-    "device_not_found": {
-      "message": "Could not find device {device}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.twilio import DATA_TWILIO
+from homeassistant.components.twilio import get_client
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -23,9 +23,9 @@ ATTR_MEDIAURL = "media_url"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
             cv.string,
-            vol.Match(
+            probatio.Match(
                 r"^\+?[1-9]\d{1,14}$|"
                 r"^(?=.{1,11}$)[a-zA-Z0-9\s]*"
                 r"[a-zA-Z][a-zA-Z0-9\s]*$"
@@ -42,9 +42,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TwilioSMSNotificationService | None:
     """Get the Twilio SMS notification service."""
-    return TwilioSMSNotificationService(
-        hass.data[DATA_TWILIO], config[CONF_FROM_NUMBER]
-    )
+    return TwilioSMSNotificationService(get_client(hass), config[CONF_FROM_NUMBER])
 
 
 class TwilioSMSNotificationService(BaseNotificationService):

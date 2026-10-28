@@ -2,6 +2,8 @@
 
 from infrared_protocols.codes.samsung.tv import SamsungTVCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -24,9 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared.common import MockInfraredEmitterEntity
-
 MEDIA_PLAYER_ENTITY_ID = "media_player.samsung_tv"
 
 
@@ -48,8 +47,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify entity belongs to the correct device
-    device_entry = device_registry.async_get_device(
-        identifiers={("samsung_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("samsung_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(

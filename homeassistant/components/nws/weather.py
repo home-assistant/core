@@ -1,10 +1,9 @@
 """Support for NWS weather service."""
 
 from functools import partial
-from typing import Any, Required, TypedDict, cast, override
+from typing import Any, Literal, Required, TypedDict, cast, override
 
 from pynws import SimpleNWS
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -25,20 +24,14 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONF_LOCATION,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.json import JsonValueType
@@ -100,19 +93,10 @@ async def async_setup_entry(
         entity_id := entity_registry.async_get_entity_id(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])}_{HOURLY}",
+            f"{base_unique_id(**entry.data[CONF_LOCATION])}_{HOURLY}",
         )
     ):
         entity_registry.async_remove(entity_id)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "get_forecasts_extra",
-        {vol.Required("type"): vol.In(("hourly", "twice_daily"))},
-        "async_get_forecasts_extra_service",
-        supports_response=SupportsResponse.ONLY,
-    )
 
     async_add_entities([NWSWeather(entry, nws_data)], False)
 
@@ -173,6 +157,20 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )
+
+    @callback
+    @override
+    def _async_subscription_started(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
+
+    @callback
+    @override
+    def _async_subscription_ended(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
 
     @property
     def nws(self) -> SimpleNWS:

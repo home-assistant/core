@@ -1,6 +1,7 @@
 """Tests for the AsusWrt integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import sensor
@@ -12,8 +13,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 
 from .common import CONFIG_DATA_HTTP, CONFIG_DATA_TELNET, HOST, ROUTER_MAC_ADDR
-
-from tests.common import MockConfigEntry
 
 
 async def test_disconnect_on_stop(hass: HomeAssistant, connect_legacy) -> None:
@@ -67,7 +66,7 @@ async def test_device_registry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, ROUTER_MAC_ADDR)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ROUTER_MAC_ADDR), config_entry.entry_id
     )
     assert device_entry == snapshot

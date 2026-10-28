@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -24,8 +25,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("motionblinds_ble_connect")

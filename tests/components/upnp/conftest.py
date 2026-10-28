@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine, Generator
 import copy
-from datetime import datetime
 import socket
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
@@ -12,6 +11,7 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
@@ -32,8 +32,7 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
 
 TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
@@ -77,8 +76,18 @@ def mock_async_create_device():
         yield mock_create
 
 
+@pytest.fixture
+def mock_notify_server() -> AiohttpNotifyServer:
+    """Mock async_upnp_client notify server."""
+    notify_server = create_autospec(AiohttpNotifyServer)
+    notify_server.event_handler = MagicMock()
+    return notify_server
+
+
 @pytest.fixture(autouse=True)
-def mock_igd_device(mock_async_create_device) -> IgdDevice:
+def mock_igd_device(
+    mock_async_create_device, mock_notify_server: AiohttpNotifyServer
+) -> IgdDevice:
     """Mock async_upnp_client device."""
     mock_upnp_device = create_autospec(UpnpDevice, instance=True)
     mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
@@ -93,7 +102,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     mock_igd_device.device = mock_upnp_device
 
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        timestamp=dt_util.naive_now(),
         bytes_received=0,
         bytes_sent=0,
         packets_received=0,
@@ -114,9 +123,6 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     )
 
     mock_igd_device.async_subscribe_services = AsyncMock()
-
-    mock_notify_server = create_autospec(AiohttpNotifyServer)
-    mock_notify_server.event_handler = MagicMock()
 
     with (
         patch(

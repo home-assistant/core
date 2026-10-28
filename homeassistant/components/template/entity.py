@@ -3,6 +3,8 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from functools import partial
+import logging
 from typing import Any, override
 
 from homeassistant.const import (
@@ -15,6 +17,7 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
@@ -22,7 +25,9 @@ from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+from .validators import BlockedTemplateAttributes
 
+_LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 
 
@@ -37,6 +42,32 @@ class EntityTemplate:
     none_on_template_error: bool
 
 
+class _TemplateStateFromEntity(TemplateStateFromEntityId):
+    """Template state of an entity which follows changes of its entity_id."""
+
+    __slots__ = ("_entity",)
+
+    # pylint: disable-next=super-init-not-called
+    def __init__(self, hass: HomeAssistant, entity: Entity) -> None:
+        """Initialize template state."""
+        self._hass = hass
+        self._collect = True
+        self._entity = entity
+        self._cache: dict[str, Any] = {}
+
+    @property
+    @override
+    def _entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
+
+    @property
+    @override
+    def entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
+
+
 class AbstractTemplateEntity(Entity):
     """Actions linked to a template entity."""
 
@@ -45,6 +76,7 @@ class AbstractTemplateEntity(Entity):
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
+    _blocked_attributes: BlockedTemplateAttributes | None = None
 
     # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
@@ -62,9 +94,16 @@ class AbstractTemplateEntity(Entity):
         self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
-        self._attribute_templates: dict[str, Template] | None = config.get(
-            CONF_ATTRIBUTES
-        )
+        self._assumed_attributes: dict[str, str] = {}
+        self._rendered_list_items: dict[str, Any] = {}
+
+        self._attribute_templates: dict[str, Template] | None = None
+        self._attributes_template: Template | None = None
+        if templates := config.get(CONF_ATTRIBUTES):
+            if isinstance(templates, dict):
+                self._attribute_templates = templates
+            elif isinstance(templates, Template):
+                self._attributes_template = templates
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
@@ -88,8 +127,13 @@ class AbstractTemplateEntity(Entity):
             )
 
         device_registry = dr.async_get(hass)
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            self.device_entry = device_registry.async_get(device_id)
+        # Allow linking to a main or child device, but not to a composite device.
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None and (
+            device_entry := device_registry.async_get(
+                device_id, include_composite_devices=False
+            )
+        ) is not None:
+            self.device_entry = device_entry
 
     @property
     @abstractmethod
@@ -150,6 +194,71 @@ class AbstractTemplateEntity(Entity):
             on_update.
         """
 
+    def setup_list_item_templates(
+        self,
+        list_option: str,
+        list_attribute: str,
+        list_validator: Callable[[Any], Any],
+        option: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+    ) -> None:
+        """Set up a list template and an item template validated against it.
+
+        The item validator must read the list from list_attribute. The raw
+        rendered item is cached because the item attribute holds None when
+        validation fails, and an unchanged item template does not re-render,
+        so the cache is needed to revalidate the item when only the list changes.
+        """
+        # The list template must be set up first, the item validator reads it.
+        self.setup_template(
+            list_option,
+            list_attribute,
+            list_validator,
+            partial(
+                self._update_list, option, list_attribute, attribute, item_validator
+            ),
+            none_on_template_error=False,
+        )
+        self.setup_template(
+            option,
+            attribute,
+            on_update=partial(
+                self._update_list_item, option, attribute, item_validator
+            ),
+            none_on_template_error=False,
+        )
+
+    @callback
+    def _update_list(
+        self,
+        option: str,
+        list_attribute: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+        items: list[Any] | TemplateError | None,
+    ) -> None:
+        """Update a list and revalidate the item rendered against it."""
+        setattr(
+            self, list_attribute, None if isinstance(items, TemplateError) else items
+        )
+        if option in self._rendered_list_items:
+            setattr(self, attribute, item_validator(self._rendered_list_items[option]))
+
+    @callback
+    def _update_list_item(
+        self,
+        option: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+        result: Any,
+    ) -> None:
+        """Store the rendered item and validate it against its list."""
+        if isinstance(result, TemplateError):
+            result = None
+        self._rendered_list_items[option] = result
+        setattr(self, attribute, item_validator(result))
+
     def add_template(
         self,
         option: str,
@@ -189,17 +298,49 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
+    def add_assumed_attribute(
+        self,
+        attr: str,
+        option: str,
+        action_option: str,
+        *,
+        optimistic_option: str | None = None,
+    ):
+        """Add an optimistic option."""
+        if action_option not in self._config:
+            return
+
+        if optimistic_option is None:
+            if option not in self._config:
+                self._assumed_attributes[option] = attr
+            return
+
+        if (optimistic_override := self._config.get(optimistic_option)) or (
+            not optimistic_override and option not in self._config
+        ):
+            self._assumed_attributes[option] = attr
+
+    def update_assumed_attribute(self, option: str, value: Any) -> bool:
+        """If the attribute is assumed, update attribute with the new value."""
+        attr = self._assumed_attributes.get(option)
+        if assumed_attribute := attr is not None:
+            _LOGGER.debug(
+                "Optimistically setting %s %s to %s", self.entity_id, option, value
+            )
+            setattr(self, attr, value)
+
+        return assumed_attribute
+
+    def write_assumed_attribute(self, option: str, value: Any) -> None:
+        """If the attribute is assumed, write the value to the attribute and update the ha state."""
+        if self.update_assumed_attribute(option, value):
+            self.async_write_ha_state()
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
-        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
-            # Entity ID not changed, unload scripts as they will not be reused.
-            for action_script in self._action_scripts.values():
-                await action_script.async_unload()
-        else:
-            # Entity ID changed, just stop scripts
-            for action_script in self._action_scripts.values():
-                await action_script.async_stop()
+        for action_script in self._action_scripts.values():
+            await action_script.async_unload()
 
     async def async_run_script(
         self,
@@ -213,7 +354,7 @@ class AbstractTemplateEntity(Entity):
             run_variables = {}
         await script.async_run(
             run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                "this": _TemplateStateFromEntity(self.hass, self),
                 **self._render_script_variables(),
                 **run_variables,
             },
