@@ -58,5 +58,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "position_error": {
+      "message": "Error fetching position: {error}"
+    }
   }
 }
