@@ -192,7 +192,6 @@
     "step": {
       "init": {
         "data": {
-          "auto_delete": "Automatically delete devices no longer reported by Apple",
           "include_completed": "Include completed reminders"
         }
       }

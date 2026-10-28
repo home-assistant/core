@@ -23,7 +23,6 @@ from homeassistant.components.icloud.config_flow import (
     CONF_VERIFICATION_CODE,
 )
 from homeassistant.components.icloud.const import (
-    CONF_AUTO_DELETE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
     CONF_MAX_INTERVAL,
@@ -269,7 +268,7 @@ async def test_user_with_cookie(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test that the options can be toggled."""
+    """Test that the include_completed option can be toggled."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
@@ -281,14 +280,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.icloud.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_INCLUDE_COMPLETED: True, CONF_AUTO_DELETE: True},
+            result["flow_id"], user_input={CONF_INCLUDE_COMPLETED: True}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_INCLUDE_COMPLETED] is True
-    assert result["data"][CONF_AUTO_DELETE] is True
     assert config_entry.options[CONF_INCLUDE_COMPLETED] is True
-    assert config_entry.options[CONF_AUTO_DELETE] is True
 
 
 @pytest.mark.usefixtures("service_authenticated")

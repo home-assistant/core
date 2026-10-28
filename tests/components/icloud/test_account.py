@@ -24,7 +24,6 @@ from homeassistant.components.icloud.const import (
     ATTR_BATTERY,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
-    CONF_AUTO_DELETE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
@@ -42,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .conftest import MockAppleDevice, MockDevicesContainer
@@ -1582,13 +1581,14 @@ class UnavailableService:
 
 async def test_a_failed_fetch_keeps_the_reported_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     icloud_devices: list[dict[str, Any]],
 ) -> None:
-    """Test that a poll which cannot read the devices reports the old list.
+    """Test that a poll which cannot read the devices removes none of them.
 
     What Apple currently reports is what tells a device went missing, so a
-    fetch that dies before reaching that answer has to leave it as it was:
-    an error is not the account reporting nothing.
+    fetch that dies before reaching that answer has to leave the devices
+    alone: an error is not the account reporting nothing.
     """
     icloud_devices.extend([DEVICE, DEVICE_2])
 
@@ -1597,7 +1597,6 @@ async def test_a_failed_fetch_keeps_the_reported_devices(
         data=MOCK_CONFIG,
         entry_id="test",
         unique_id=USERNAME,
-        options={CONF_AUTO_DELETE: True},
     )
     config_entry.add_to_hass(hass)
 
@@ -1605,14 +1604,19 @@ async def test_a_failed_fetch_keeps_the_reported_devices(
     await hass.async_block_till_done()
 
     account = config_entry.runtime_data
-    assert account.reported_device_ids == {"device1", "device6"}
 
     account.api = UnavailableService()
     await hass.async_add_executor_job(account.update_devices)
     await hass.async_block_till_done()
 
-    assert account.reported_device_ids == {"device1", "device6"}
     assert set(account.devices) == {"device1", "device6"}
+    for device_id in ("device1", "device6"):
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), config_entry.entry_id
+            )
+            is not None
+        )
 
 
 async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
@@ -1632,7 +1636,6 @@ async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
         data=MOCK_CONFIG,
         entry_id="test",
         unique_id=USERNAME,
-        options={CONF_AUTO_DELETE: True},
     )
     config_entry.add_to_hass(hass)
 

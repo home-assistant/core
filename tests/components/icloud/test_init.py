@@ -1,6 +1,5 @@
 """Tests for the iCloud config flow."""
 
-from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from pyicloud.const import AppleAuthError
@@ -15,12 +14,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from requests import Response
 
-from homeassistant.components.icloud import async_remove_config_entry_device
 from homeassistant.components.icloud.config_flow import (
     CONF_REQUEST_NEW_CODE,
     CONF_VERIFICATION_CODE,
 )
-from homeassistant.components.icloud.const import CONF_AUTO_DELETE, DOMAIN
+from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -1133,81 +1131,24 @@ async def test_an_undeliverable_challenge_drops_the_stored_session(
 
 
 @pytest.mark.usefixtures("mock_icloud_service")
-async def test_remove_config_entry_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    icloud_devices: list[MockAppleDevice],
-) -> None:
-    """Test a device can be removed only once iCloud stopped reporting it."""
-    iphone = icloud_devices[0]
-    icloud_devices.append(MockAppleDevice(DEVICE_2))
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    # The first calendars and reminders fetch runs as a background task of the
-    # config entry; waiting for it keeps it from outliving the test.
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    iphone_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "device1"), config_entry.entry_id
-    )
-    ipad_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "device6"), config_entry.entry_id
-    )
-    assert iphone_entry is not None
-    assert ipad_entry is not None
-
-    # iCloud still reports the iPhone, so deleting it would only come back.
-    assert not await async_remove_config_entry_device(hass, config_entry, iphone_entry)
-
-    icloud_devices.remove(iphone)
-    await hass.async_add_executor_job(config_entry.runtime_data.update_devices)
-    await hass.async_block_till_done()
-
-    assert await async_remove_config_entry_device(hass, config_entry, iphone_entry)
-    assert not await async_remove_config_entry_device(hass, config_entry, ipad_entry)
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    # Without a loaded account nothing can be confirmed as gone from iCloud.
-    assert not await async_remove_config_entry_device(hass, config_entry, iphone_entry)
-
-
-@pytest.mark.usefixtures("mock_icloud_service")
-@pytest.mark.parametrize(
-    ("options", "iphone_kept"),
-    [
-        pytest.param({CONF_AUTO_DELETE: True}, False, id="auto_delete_enabled"),
-        pytest.param({}, True, id="auto_delete_disabled"),
-    ],
-)
-async def test_auto_delete_removes_stale_device(
+async def test_a_device_apple_stops_reporting_is_removed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     icloud_devices: list[MockAppleDevice],
-    options: dict[str, Any],
-    iphone_kept: bool,
 ) -> None:
-    """Test that a device Apple stopped reporting only goes when opted in.
+    """Test that a device Apple stops reporting is removed with its entities.
 
     The account polls a list of what Apple currently reports, and that list
-    can drop a device without saying so; the option turns that difference
-    into a removal of the device and everything bound to it.
+    can drop a device without saying so; the difference removes the device
+    and everything bound to it. The account's own service device, which
+    Apple never lists, is left alone.
     """
     iphone = icloud_devices[0]
     icloud_devices.append(MockAppleDevice(DEVICE_2))
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        entry_id="test",
-        unique_id=USERNAME,
-        options=options,
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
     config_entry.add_to_hass(hass)
 
@@ -1223,25 +1164,93 @@ async def test_auto_delete_removes_stale_device(
         is not None
     )
     assert entity_registry.async_get("sensor.iphone_battery") is not None
+    # Calendars and to-dos hang off the account's own service device.
+    account_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{USERNAME}_account")},
+        name=config_entry.title,
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
     icloud_devices.remove(iphone)
     await hass.async_add_executor_job(config_entry.runtime_data.update_devices)
     await hass.async_block_till_done()
 
-    # The iPhone follows the option; the iPad Apple still reports is left
-    # alone either way.
-    iphone_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "device1"), config_entry.entry_id
+    # The iPhone follows the list; the iPad Apple still reports and the
+    # account's service device stay.
+    assert set(config_entry.runtime_data.devices) == {"device6"}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device1"), config_entry.entry_id
+        )
+        is None
     )
-    iphone_battery = entity_registry.async_get("sensor.iphone_battery")
-
-    assert ("device1" in config_entry.runtime_data.devices) is iphone_kept
-    assert (iphone_entry is not None) is iphone_kept
-    assert (iphone_battery is not None) is iphone_kept
-    assert (hass.states.get("sensor.iphone_battery") is not None) is iphone_kept
-
-    ipad_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "device6"), config_entry.entry_id
+    assert entity_registry.async_get("sensor.iphone_battery") is None
+    assert hass.states.get("sensor.iphone_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is not None
     )
-    assert ipad_entry is not None
     assert entity_registry.async_get("sensor.ipad_battery") is not None
+    assert device_registry.async_get(account_device.id) is account_device
+
+
+@pytest.mark.usefixtures("mock_icloud_service")
+async def test_a_device_gone_while_hass_was_stopped_is_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    icloud_devices: list[MockAppleDevice],
+) -> None:
+    """Test a device Apple stopped reporting between two runs goes.
+
+    The devices this run has fetched so far cannot tell a device that went
+    missing while Home Assistant was off, so the registry of the previous
+    run is what the report is compared against.
+    """
+    ipad = MockAppleDevice(DEVICE_2)
+    icloud_devices.append(ipad)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # The first calendars and reminders fetch runs as a background task of the
+    # config entry; waiting for it keeps it from outliving the test.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.ipad_battery") is not None
+
+    # Apple stops reporting the iPad while Home Assistant is not running.
+    icloud_devices.remove(ipad)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The iPad is gone with its entities; the iPhone Apple still reports and
+    # the account's own service device stay.
+    assert set(config_entry.runtime_data.devices) == {"device1"}
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device6"), config_entry.entry_id
+        )
+        is None
+    )
+    assert entity_registry.async_get("sensor.ipad_battery") is None
+    assert hass.states.get("sensor.ipad_battery") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "device1"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert entity_registry.async_get("sensor.iphone_battery") is not None

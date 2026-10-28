@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -98,19 +98,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> N
         unsub()
     account.listeners.clear()
     await hass.async_add_executor_job(account.cancel_fetch)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: IcloudConfigEntry,
-    device_entry: dr.AnyDeviceEntry,
-) -> bool:
-    """Allow removal of a device the iCloud account no longer reports."""
-    if (account := getattr(config_entry, "runtime_data", None)) is None:
-        # Without the loaded account no device can be confirmed as stale.
-        return False
-    return not any(
-        identifier[1] in account.reported_device_ids
-        for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN
-    )

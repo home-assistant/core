@@ -34,12 +34,10 @@ from homeassistant.helpers.storage import Store
 
 from .account import code_can_be_delivered, is_2fa_status, is_auth_error
 from .const import (
-    CONF_AUTO_DELETE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_AUTO_DELETE,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_INCLUDE_COMPLETED,
     DEFAULT_MAX_INTERVAL,
@@ -706,12 +704,6 @@ class IcloudOptionsFlowHandler(OptionsFlowWithReload):
                             self.config_entry.data.get(
                                 CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED
                             ),
-                        ),
-                    ): bool,
-                    probatio.Optional(
-                        CONF_AUTO_DELETE,
-                        default=self.config_entry.options.get(
-                            CONF_AUTO_DELETE, DEFAULT_AUTO_DELETE
                         ),
                     ): bool,
                 }

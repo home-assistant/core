@@ -26,7 +26,8 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -43,8 +44,6 @@ from .const import (
     ATTR_DEVICE_STATUS,
     ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
-    CONF_AUTO_DELETE,
-    DEFAULT_AUTO_DELETE,
     DEVICE_ACTION_STATUS_CODE,
     DEVICE_ACTION_STATUS_PENDING,
     DEVICE_ACTIVATION_LOCKED,
@@ -218,10 +217,6 @@ class IcloudAccount:
         self._fetch_interval: float = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
-        # Options changes reload the entry, so this only has to be read once.
-        self._auto_delete = config_entry.options.get(
-            CONF_AUTO_DELETE, DEFAULT_AUTO_DELETE
-        )
 
         self._icloud_dir = icloud_dir
 
@@ -231,7 +226,6 @@ class IcloudAccount:
         self._owner_fullname: str | None = None
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
-        self._reported_device_ids: set[str] = set()
         self._retried_fetch = False
         self._config_entry = config_entry
 
@@ -579,10 +573,6 @@ class IcloudAccount:
             self._devices[device_id].update(status)
             new_device = True
 
-        # Only a complete read replaces what the account reports, so a
-        # half-failed fetch cannot make every device look stale.
-        self._reported_device_ids = reported_device_ids
-
         # A pending read is not the whole list, so wait for the retry below
         # before treating anything missing from it as gone from the account.
         retry_pending = (
@@ -594,16 +584,15 @@ class IcloudAccount:
             and not self._retried_fetch
         )
 
-        if self._auto_delete and not retry_pending:
-            if stale_device_ids := set(self._devices) - reported_device_ids:
-                # This runs in the executor, while the registries only change
-                # on the event loop; waiting leaves the devices deleted before
-                # the update signal below reaches the entities.
-                run_callback_threadsafe(
-                    self.hass.loop,
-                    self._async_delete_stale_devices,
-                    stale_device_ids,
-                ).result()
+        if not retry_pending:
+            # This runs in the executor, while the registries only change
+            # on the event loop; waiting leaves the devices deleted before
+            # the update signal below reaches the entities.
+            run_callback_threadsafe(
+                self.hass.loop,
+                self._async_delete_stale_devices,
+                reported_device_ids,
+            ).result()
 
         if retry_pending:
             _LOGGER.debug("Pending devices, trying again in 15s")
@@ -623,36 +612,38 @@ class IcloudAccount:
         self._schedule_next_fetch()
 
     @callback
-    def _async_delete_stale_devices(self, device_ids: set[str]) -> None:
+    def _async_delete_stale_devices(self, reported_device_ids: set[str]) -> None:
         """Delete the devices Apple stopped reporting, with their entities.
 
         This runs on the event loop, as scheduled by update_devices().
         """
         device_registry = dr.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
+        for device_id in set(self._devices) - reported_device_ids:
+            self._devices.pop(device_id)
 
-        for device_id in device_ids:
-            device = self._devices.pop(device_id, None)
-            if device is None:
+        # The registry holds the devices of the previous run too, so it is
+        # what catches a device that went stale while Home Assistant was off.
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        ):
+            # The account's own service device (calendars, to-dos) is never
+            # in Apple's report.
+            if device_entry.entry_type is DeviceEntryType.SERVICE:
+                continue
+            icloud_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not icloud_ids or icloud_ids & reported_device_ids:
                 continue
 
             _LOGGER.info(
-                "Removing iCloud device %s, no longer reported by Apple", device.name
+                "Removing iCloud device %s, no longer reported by Apple",
+                device_entry.name_by_user or device_entry.name,
             )
-
-            device_entry = device_registry.async_get_device_by_identifier(
-                (DOMAIN, device_id), self._config_entry.entry_id
-            )
-            if device_entry is None:
-                continue
-
-            # The entities go first: their device_info would recreate the
-            # device as soon as they are set up again.
-            for entity_entry in er.async_entries_for_device(
-                entity_registry, device_entry.id, True
-            ):
-                entity_registry.async_remove(entity_entry.entity_id)
-
+            # The entity registry removes the device's entities when the
+            # device goes.
             device_registry.async_remove_device(device_entry.id)
 
     def _ask_to_authenticate(self, err: Exception) -> None:
@@ -904,11 +895,6 @@ class IcloudAccount:
     def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
-
-    @property
-    def reported_device_ids(self) -> set[str]:
-        """Return the device ids iCloud reported on the last complete fetch."""
-        return self._reported_device_ids
 
     @property
     def signal_device_new(self) -> str:
