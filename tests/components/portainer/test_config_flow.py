@@ -57,6 +57,13 @@ async def test_form(
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
     assert result["result"].unique_id == TEST_INSTANCE_ID
+    assert [
+        (subentry.subentry_type, subentry.title, subentry.unique_id)
+        for subentry in result["result"].subentries.values()
+    ] == [
+        (SUBENTRY_TYPE_ENVIRONMENT, "my-environment", "1"),
+        (SUBENTRY_TYPE_ENVIRONMENT, "my-edge-offline", "42"),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -394,6 +401,7 @@ async def test_environment_subentry_flow(
         (PortainerConnectionError("cannot connect"), "cannot_connect"),
         (PortainerTimeoutError("timeout"), "timeout_connect"),
         (PortainerAuthenticationError("invalid auth"), "invalid_auth"),
+        (Exception("Some other error"), "unknown"),
     ],
 )
 async def test_environment_subentry_flow_exceptions(
@@ -402,7 +410,7 @@ async def test_environment_subentry_flow_exceptions(
     exception: Exception,
     reason: str,
 ) -> None:
-    """Test the environment subentry flow aborts on connection errors."""
+    """Test the environment subentry flow aborts on errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Portainer test",
