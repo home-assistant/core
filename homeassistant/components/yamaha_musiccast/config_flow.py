@@ -42,23 +42,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
 
         host = user_input[CONF_HOST]
-        serial_number = None
-
-        errors = {}
-        # Check if device is a MusicCast device
-
-        try:
-            info = await MusicCastDevice.get_device_info(
-                host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
-            )
-        except MusicCastConnectionException, ClientConnectorError:
-            errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            if (serial_number := info.get("system_id")) is None:
-                errors["base"] = "no_musiccast_device"
+        serial_number, errors = await self._async_get_serial_number(host)
 
         if not errors:
             await self.async_set_unique_id(serial_number, raise_on_progress=False)
@@ -74,6 +58,55 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self._show_setup_form(errors)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            serial_number, errors = await self._async_get_serial_number(host)
+            if not errors:
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_HOST: host,
+                        CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def _async_get_serial_number(
+        self, host: str
+    ) -> tuple[str | None, dict[str, str]]:
+        """Return the serial number of the MusicCast device at host and any errors."""
+        serial_number = None
+        errors: dict[str, str] = {}
+        try:
+            info = await MusicCastDevice.get_device_info(
+                host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
+            )
+        except MusicCastConnectionException, ClientConnectorError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            if (serial_number := info.get("system_id")) is None:
+                errors["base"] = "no_musiccast_device"
+        return serial_number, errors
 
     def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""

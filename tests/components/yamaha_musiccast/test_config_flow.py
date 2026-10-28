@@ -384,3 +384,117 @@ async def test_ssdp_discovery_existing_device_update(
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_entry.data["upnp_description"] == "http://127.0.0.1/desc.xml"
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567890",
+        data={
+            CONF_HOST: "192.168.188.18",
+            "serial": "1234567890",
+            "upnp_description": "http://192.168.188.18:49154/MediaRenderer/desc.xml",
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_valid", "mock_valid_discovery_information"
+)
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the device host."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        "serial": "1234567890",
+        "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
+    }
+
+
+@pytest.mark.usefixtures("mock_valid_discovery_information")
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "error"),
+    [
+        pytest.param(
+            MusicCastConnectionException("mocked error"),
+            None,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(Exception("mocked error"), None, "unknown", id="unknown"),
+        pytest.param(
+            None, {"type": "no_yamaha"}, "no_musiccast_device", id="no_musiccast"
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    side_effect: Exception | None,
+    return_value: dict[str, str] | None,
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        side_effect=side_effect,
+        return_value=return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with _patch_valid_device_info():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_valid_discovery_information")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the host points to another device."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        return_value={"system_id": "0987654321", "model_name": "MC20"},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "192.168.188.18"
