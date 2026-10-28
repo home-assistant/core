@@ -46,8 +46,9 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      The tests patch methods of the library instead of using a mocked
-      library client. They should be rewritten to use a mock client.
+      Coverage is above 95% for all modules, but the tests patch methods of
+      the library instead of using a mocked library client. They should be
+      rewritten to use a mock client.
 
   # Gold
   devices: done
