@@ -15,6 +15,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -93,10 +94,24 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if serialnumber := hub.system.get("serialnumber"):
             await self.async_set_unique_id(serialnumber)
-            if self.source != SOURCE_REAUTH:
+            if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
                 self._abort_if_unique_id_configured(
                     updates=self._current, reload_on_update=True
                 )
+
+    async def _async_prepare_user_input(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Connect to the TV from the user input and return any errors."""
+        self._current = user_input
+        try:
+            await self._async_attempt_prepare(
+                user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
+            )
+        except GeneralFailure as exc:
+            LOGGER.error(exc)
+            return {"base": "cannot_connect"}
+        return {}
 
     async def _async_attempt_add(self) -> ConfigFlowResult:
         assert self._hub
@@ -177,6 +192,32 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and API version."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input and not (
+            errors := await self._async_prepare_user_input(user_input)
+        ):
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates=self._current
+            )
+
+        schema = self.add_suggested_values_to_schema(
+            USER_SCHEMA,
+            user_input
+            or {
+                CONF_HOST: reconfigure_entry.data[CONF_HOST],
+                CONF_API_VERSION: str(reconfigure_entry.data[CONF_API_VERSION]),
+            },
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -222,18 +263,11 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input:
-            self._current = user_input
-            try:
-                await self._async_attempt_prepare(
-                    user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
-                )
-            except GeneralFailure as exc:
-                LOGGER.error(exc)
-                errors["base"] = "cannot_connect"
-            else:
-                return await self._async_attempt_add()
+        errors: dict[str, str] = {}
+        if user_input and not (
+            errors := await self._async_prepare_user_input(user_input)
+        ):
+            return await self._async_attempt_add()
 
         schema = self.add_suggested_values_to_schema(USER_SCHEMA, self._current)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
