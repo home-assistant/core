@@ -206,21 +206,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
         exceptions = ADB_TCP_EXCEPTIONS
 
     try:
-        aftv, error_message = await async_connect_androidtv(
+        aftv, _ = await async_connect_androidtv(
             hass, entry.data, state_detection_rules=state_det_rules
         )
     except exceptions as exc:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"error": str(exc)},
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from exc
 
     if not aftv:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"error": str(error_message)},
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         )
 
     async def async_close_connection(event: Event) -> None:
