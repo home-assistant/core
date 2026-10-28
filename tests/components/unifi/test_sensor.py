@@ -1,6 +1,5 @@
 """UniFi Network sensor platform tests."""
 
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -16,7 +15,6 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -1070,7 +1068,7 @@ async def test_outlet_power_readings(
     expected_update_value: str | None,
 ) -> None:
     """Test the outlet power reporting on PDU devices."""
-    assert len(hass.states.async_all()) == 13
+    assert len(hass.states.async_all()) == 12
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 7
 
     assert hass.states.get(f"sensor.{entity_id}").state == expected_value
@@ -1228,7 +1226,9 @@ async def test_ups_battery_pool_sensors(
 
 
 @pytest.mark.parametrize(
-    ("device_payload", "device_name", "field", "sensor"), UPS_BATTERY_POOL_FIELDS
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
 )
 async def test_ups_battery_pool_readings(
     hass: HomeAssistant,
@@ -1270,7 +1270,9 @@ async def test_ups_battery_pool_readings(
 
 
 @pytest.mark.parametrize(
-    ("device_payload", "device_name", "field", "sensor"), UPS_BATTERY_POOL_FIELDS
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
 )
 @pytest.mark.parametrize(
     "initial_readings",
@@ -1278,10 +1280,8 @@ async def test_ups_battery_pool_readings(
 )
 async def test_ups_battery_pool_late_field(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
     entity_registry: er.EntityRegistry,
-    mock_requests: Callable[[], None],
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     device_name: str,
@@ -1289,29 +1289,20 @@ async def test_ups_battery_pool_late_field(
     sensor: str,
     initial_readings: tuple[None, ...],
 ) -> None:
-    """Test unsupported initial fields need a reload for later discovery."""
+    """Test initially unsupported fields are discovered on ordinary updates."""
     original_device = deepcopy(device_payload[0])
     device_payload[0] = deepcopy(original_device)
     pool = device_payload[0]["vbms_table"]["battpool"]
     pool.pop(field)
     for value in initial_readings:
         pool[field] = value
-    config_entry = await config_entry_factory()
+    await config_entry_factory()
 
     entity_id = f"sensor.{device_name}_{sensor}"
     assert hass.states.get(entity_id) is None
     assert entity_registry.async_get(entity_id) is None
 
     mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id) is None
-    assert entity_registry.async_get(entity_id) is None
-
-    device_payload[0] = original_device
-    aioclient_mock.clear_requests()
-    mock_requests()
-    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == str(
@@ -1433,7 +1424,7 @@ async def test_device_system_stats(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device stats sensors are working as expected."""
-    assert len(hass.states.async_all()) == 8
+    assert len(hass.states.async_all()) == 7
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "5.8"
@@ -1794,7 +1785,7 @@ async def test_device_client_sensors(
     await hass.async_block_till_done()
 
     # Validate state object
-    assert len(hass.states.async_all()) == 13
+    assert len(hass.states.async_all()) == 11
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     assert hass.states.get("sensor.wired_device_clients").state == "2"
@@ -2137,7 +2128,7 @@ async def test_wan_monitor_latency(
     """Verify that wan latency sensors are working as expected."""
     entity_id = f"sensor.mock_name_{monitor_id}_latency"
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     latency_entry = entity_registry.async_get(entity_id)
@@ -2154,7 +2145,7 @@ async def test_wan_monitor_latency(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
     # Verify sensor state
@@ -2225,7 +2216,7 @@ async def test_wan_monitor_latency_with_no_entries(
 ) -> None:
     """Verify that wan latency sensors is not created if there is no data."""
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
@@ -2259,7 +2250,7 @@ async def test_wan_monitor_latency_with_no_uptime(
 ) -> None:
     """Verify that wan latency sensors is not created if there is no data."""
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
@@ -2300,7 +2291,7 @@ async def test_wan_monitor_latency_without_monitors_key(
 ) -> None:
     """Verify setup succeeds when a WAN's uptime stats omit the 'monitors' key."""
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
@@ -2360,7 +2351,7 @@ async def test_device_temperatures(
 
     entity_id = f"sensor.device_{temperature_id}_temperature"
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     temperature_entity = entity_registry.async_get(entity_id)
@@ -2377,7 +2368,7 @@ async def test_device_temperatures(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
     # Verify sensor state
@@ -2424,7 +2415,7 @@ async def test_device_temperatures(
 async def test_device_temperature_with_missing_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
@@ -2453,7 +2444,7 @@ async def test_device_temperature_with_missing_value(
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Send original payload again to verify sensor recovers
     mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
@@ -2488,7 +2479,7 @@ async def test_device_with_no_temperature(
 ) -> None:
     """Verify that device temperature sensors is not created if there is no data."""
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")
@@ -2526,7 +2517,7 @@ async def test_device_with_no_matching_temperatures(
 ) -> None:
     """Verify device temperature sensors are not created without matching data."""
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")

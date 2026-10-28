@@ -113,7 +113,10 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
                 self._latitude, self._longitude
             )
         except RequestError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from error
         return self._convert_weather_response(weather_report)
 
     def _convert_weather_response(self, weather_report: WeatherReport):
@@ -278,7 +281,10 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
                 self._latitude, self._longitude
             )
         except RequestError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from error
         current_air_pollution = (
             self._get_current_air_pollution_data(air_pollution_report.current)
             if air_pollution_report.current is not None

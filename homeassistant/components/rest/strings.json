@@ -211,8 +211,17 @@
     "no_json": {
       "message": "[%key:component::rest::common::no_json%]"
     },
+    "no_route": {
+      "message": "No route to resource/endpoint: {resource}"
+    },
     "parse_error": {
       "message": "[%key:component::rest::common::parse_error%]"
+    },
+    "resource_not_set": {
+      "message": "The resource is not set"
+    },
+    "ssl_error": {
+      "message": "An SSL error occurred while connecting to {resource}"
     },
     "template_error": {
       "message": "[%key:component::rest::common::template_error%]"

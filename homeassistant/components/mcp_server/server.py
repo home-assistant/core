@@ -20,8 +20,9 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.network import get_url
 
-from .const import STATELESS_LLM_API
+from .const import DOMAIN, STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +172,10 @@ async def create_server(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
         if tool_response.error:
-            raise HomeAssistantError(cast(str, tool_response.data["error"]))
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="snapshot_error",
+            )
 
         return types.ReadResourceResult(
             contents=[
@@ -227,6 +231,13 @@ async def create_server(
 
     return Server[Any](
         name="home-assistant",
+        icons=[
+            types.Icon(
+                src=f"{get_url(hass, require_current_request=True)}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ],
         on_list_prompts=handle_list_prompts,
         on_get_prompt=handle_get_prompt,
         on_list_resources=handle_list_resources,
