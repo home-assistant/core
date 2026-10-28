@@ -50,12 +50,10 @@ from .const import (
     CONF_INDOOR_TEMP,
     CONF_OUTDOOR_TEMP,
     DEFAULT_NAME,
+    MoldIndicatorEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CRITICAL_TEMP = "estimated_critical_temp"
-ATTR_DEWPOINT = "dewpoint"
 
 
 MAGNUS_K2 = 17.62
@@ -437,6 +435,10 @@ class MoldIndicator(SensorEntity):
         )
 
         return {
-            ATTR_DEWPOINT: round(dewpoint, 2) if dewpoint else None,
-            ATTR_CRITICAL_TEMP: round(crit_temp, 2) if crit_temp else None,
+            MoldIndicatorEntityStateAttribute.DEWPOINT: (
+                round(dewpoint, 2) if dewpoint else None
+            ),
+            MoldIndicatorEntityStateAttribute.CRITICAL_TEMP: (
+                round(crit_temp, 2) if crit_temp else None
+            ),
         }

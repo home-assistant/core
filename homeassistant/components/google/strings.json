@@ -9,7 +9,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unique_id_mismatch": "The Google account you signed in with does not match the account of this entry. Please sign in with the previously configured account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
