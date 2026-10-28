@@ -1266,11 +1266,25 @@ def _execute_stmt_lambda_element_failing_once(session: Session) -> Any:
         return util.execute_stmt_lambda_element(session, MagicMock())
 
 
+def _execute_select_failing_once(session: Session) -> Any:
+    """Run a statement through execute_select which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
+    connection = MagicMock()
+    connection.execute.side_effect = [
+        OperationalError("SELECT", {}, Exception()),
+        result,
+    ]
+    with patch.object(session, "connection", return_value=connection):
+        return util.execute_select(session, MagicMock(), {})
+
+
 QUERIES_FAILING_ONCE = [
     pytest.param(_execute_failing_once, id="execute"),
     pytest.param(
         _execute_stmt_lambda_element_failing_once, id="execute_stmt_lambda_element"
     ),
+    pytest.param(_execute_select_failing_once, id="execute_select"),
 ]
 
 

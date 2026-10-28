@@ -24,6 +24,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -210,6 +211,7 @@ def execute_stmt_lambda_element(
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
     orm_rows: bool = True,
+    stream: bool = False,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -221,6 +223,11 @@ def execute_stmt_lambda_element(
     when selecting non-ranged rows (ie selecting
     specific entities) since they are usually faster
     with .all().
+
+    If stream is True the result is returned without building a list of
+    rows, so rows can be consumed one at a time and freed right away, which
+    avoids promoting large result sets into the oldest garbage collector
+    generation. Errors raised while consuming the rows are not retried.
     """
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
@@ -229,9 +236,33 @@ def execute_stmt_lambda_element(
                 executed = session.execute(stmt)
             else:
                 executed = session.connection().execute(stmt)
+            if stream:
+                return executed
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            _rollback_read_only_session(session)
+            time.sleep(QUERY_RETRY_WAIT)
+
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
+
+
+def execute_select(
+    session: Session, stmt: Select, params: dict[str, Any]
+) -> Sequence[Row]:
+    """Execute a Select with bound parameters and return all rows.
+
+    Unlike execute_stmt_lambda_element, the statement is not analyzed on every
+    call, which matters for lookups that run on every write.
+    """
+    for tryno in range(RETRIES):
+        try:
+            return session.connection().execute(stmt, params).all()
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
