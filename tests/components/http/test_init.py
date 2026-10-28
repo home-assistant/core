@@ -2170,6 +2170,26 @@ async def test_persisted_default_config_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+async def test_persisted_default_config_with_earlier_default_profile_starts_redirect(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect starts for a default config with an earlier default profile.
+
+    2026.11.0b0 persisted modern_v6 as the default profile. Without a
+    certificate the profile is unused, so the config is still the default.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 80, "ssl_profile": "modern_v6"}
+    )
+
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+    assert hass.config.api.port == 80
+    assert hass.http._legacy_redirect_server is not None
+
+
 async def test_no_redirect_when_already_onboarded(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
