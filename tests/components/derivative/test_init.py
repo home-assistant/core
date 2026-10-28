@@ -6,8 +6,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import derivative
-from homeassistant.components.derivative.const import DOMAIN
-from homeassistant.components.derivative.sensor import DerivativeEntityStateAttribute
+from homeassistant.components.derivative.const import (
+    DOMAIN,
+    DerivativeEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
