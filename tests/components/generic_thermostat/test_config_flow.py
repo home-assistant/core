@@ -128,6 +128,8 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_PRECISION: "0.5",
+            CONF_TEMP_STEP: "1",
         },
     )
     assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -137,6 +139,8 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
         user_input={},
     )
     assert result == snapshot(name="create_entry", include=SNAPSHOT_FLOW_PROPS)
+    assert result["data"][CONF_PRECISION] == "0.5"
+    assert result["data"][CONF_TEMP_STEP] == "1"
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
@@ -270,110 +274,42 @@ async def test_validate_config_min_max_duration() -> None:
     assert result == user_input_partial
 
 
-BASE_OPTIONS = {
-    CONF_NAME: "My thermostat",
-    CONF_HEATER: "switch.run",
-    CONF_SENSOR: "sensor.temperature",
-    CONF_AC_MODE: False,
-    CONF_COLD_TOLERANCE: 0.3,
-    CONF_HOT_TOLERANCE: 0.3,
-}
-
-
 @pytest.mark.parametrize(
-    (
-        "precision",
-        "sensor_reading",
-        "target_temp",
-        "expected_current",
-        "expected_target",
-    ),
+    ("precision", "temp_step"),
     [
-        pytest.param("0.1", "20.34", 21.77, 20.3, 21.8, id="tenths"),
-        pytest.param("0.5", "20.3", 21.7, 20.5, 21.5, id="halves"),
-        pytest.param("1", "20.3", 21.7, 20.0, 22.0, id="whole"),
+        pytest.param("0.1", "1", id="tenths_precision"),
+        pytest.param("0.5", "0.1", id="halves_precision"),
+        pytest.param("1", "0.5", id="whole_precision"),
     ],
 )
-async def test_precision_rounds_displayed_temperatures(
-    hass: HomeAssistant,
-    precision: str,
-    sensor_reading: str,
-    target_temp: float,
-    expected_current: float,
-    expected_target: float,
+async def test_config_flow_stores_precision_and_temp_step(
+    hass: HomeAssistant, precision: str, temp_step: str
 ) -> None:
-    """Test that precision from config entry options rounds current and target temperature display."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            **BASE_OPTIONS,
-            CONF_PRECISION: precision,
-            "target_temp": target_temp,
-        },
-        title="My thermostat",
-    )
-    config_entry.add_to_hass(hass)
-    hass.states.async_set("switch.run", STATE_OFF)
-    hass.states.async_set("sensor.temperature", sensor_reading)
+    """Test precision and target_temp_step are stored in the options."""
+    with patch(
+        "homeassistant.components.generic_thermostat.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My thermostat",
+                CONF_HEATER: "switch.run",
+                CONF_SENSOR: "sensor.temperature",
+                CONF_AC_MODE: False,
+                CONF_COLD_TOLERANCE: 0.3,
+                CONF_HOT_TOLERANCE: 0.3,
+                CONF_PRECISION: precision,
+                CONF_TEMP_STEP: temp_step,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("climate.my_thermostat")
-    assert state is not None
-    assert state.attributes["current_temperature"] == expected_current
-    assert state.attributes["temperature"] == expected_target
-
-
-@pytest.mark.parametrize(
-    ("temp_step", "expected_step"),
-    [
-        pytest.param("0.1", 0.1, id="tenths"),
-        pytest.param("0.5", 0.5, id="halves"),
-        pytest.param("1", 1.0, id="whole"),
-    ],
-)
-async def test_target_temp_step_configurable(
-    hass: HomeAssistant,
-    temp_step: str,
-    expected_step: float,
-) -> None:
-    """Test that target_temp_step from config entry options sets the UI step size."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={**BASE_OPTIONS, CONF_TEMP_STEP: temp_step},
-        title="My thermostat",
-    )
-    config_entry.add_to_hass(hass)
-    hass.states.async_set("switch.run", STATE_OFF)
-    hass.states.async_set("sensor.temperature", "20")
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("climate.my_thermostat")
-    assert state is not None
-    assert state.attributes["target_temp_step"] == expected_step
-
-
-async def test_precision_and_temp_step_independent(hass: HomeAssistant) -> None:
-    """Test that precision and target_temp_step can be set independently."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={**BASE_OPTIONS, CONF_PRECISION: "0.1", CONF_TEMP_STEP: "0.5"},
-        title="My thermostat",
-    )
-    config_entry.add_to_hass(hass)
-    hass.states.async_set("switch.run", STATE_OFF)
-    hass.states.async_set("sensor.temperature", "20.34")
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("climate.my_thermostat")
-    assert state is not None
-    assert state.attributes["current_temperature"] == 20.3
-    assert state.attributes["target_temp_step"] == 0.5
+    assert result["type"] == "create_entry"
+    assert result["options"][CONF_PRECISION] == precision
+    assert result["options"][CONF_TEMP_STEP] == temp_step

@@ -79,6 +79,14 @@ TARGET_TEMP = 42.0
 COLD_TOLERANCE = 0.5
 HOT_TOLERANCE = 0.5
 TARGET_TEMP_STEP = 0.5
+CONFIG_ENTRY_OPTIONS = {
+    "name": "Test",
+    "heater": ENT_SWITCH,
+    "target_sensor": ENT_SENSOR,
+    "ac_mode": False,
+    "cold_tolerance": 0.3,
+    "hot_tolerance": 0.3,
+}
 
 
 async def test_setup_missing_conf(hass: HomeAssistant) -> None:
@@ -1871,6 +1879,105 @@ async def test_device_id(
     helper_entity = entity_registry.async_get("climate.test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
+
+
+@pytest.mark.parametrize(
+    (
+        "precision",
+        "sensor_reading",
+        "target_temp",
+        "expected_current",
+        "expected_target",
+    ),
+    [
+        pytest.param("0.1", "20.34", 21.77, 20.3, 21.8, id="tenths"),
+        pytest.param("0.5", "20.3", 21.7, 20.5, 21.5, id="halves"),
+        pytest.param("1", "20.3", 21.7, 20.0, 22.0, id="whole"),
+    ],
+)
+async def test_config_entry_precision_rounds_temperatures(
+    hass: HomeAssistant,
+    precision: str,
+    sensor_reading: str,
+    target_temp: float,
+    expected_current: float,
+    expected_target: float,
+) -> None:
+    """Test precision from config entry options rounds current and target temperature."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            **CONFIG_ENTRY_OPTIONS,
+            "precision": precision,
+            "target_temp": target_temp,
+        },
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    hass.states.async_set(ENT_SENSOR, sensor_reading)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes["current_temperature"] == expected_current
+    assert state.attributes["temperature"] == expected_target
+
+
+@pytest.mark.parametrize(
+    ("temp_step", "expected_step"),
+    [
+        pytest.param("0.1", 0.1, id="tenths"),
+        pytest.param("0.5", 0.5, id="halves"),
+        pytest.param("1", 1.0, id="whole"),
+    ],
+)
+async def test_config_entry_target_temp_step(
+    hass: HomeAssistant, temp_step: str, expected_step: float
+) -> None:
+    """Test target_temp_step from config entry options sets the step attribute."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**CONFIG_ENTRY_OPTIONS, "target_temp_step": temp_step},
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    hass.states.async_set(ENT_SENSOR, "20")
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY).attributes["target_temp_step"] == expected_step
+
+
+async def test_config_entry_precision_and_temp_step_independent(
+    hass: HomeAssistant,
+) -> None:
+    """Test precision and target_temp_step from config entry options are independent."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            **CONFIG_ENTRY_OPTIONS,
+            "precision": "0.1",
+            "target_temp_step": "0.5",
+        },
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    hass.states.async_set(ENT_SENSOR, "20.34")
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes["current_temperature"] == 20.3
+    assert state.attributes["target_temp_step"] == 0.5
 
 
 @pytest.mark.usefixtures("setup_comp_1")
