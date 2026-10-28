@@ -1578,7 +1578,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.10.1
+lifx-async==7.13.1
 
 # homeassistant.components.steamvr_base_station
 lighthouse-ble==0.2.0
