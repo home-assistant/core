@@ -130,3 +130,37 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the LinkPlay device host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session: ClientSession = await async_get_client_session(self.hass)
+            try:
+                bridge = await linkplay_factory_httpapi_bridge(
+                    user_input[CONF_HOST], session
+                )
+            except LinkPlayRequestException:
+                _LOGGER.exception(
+                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
+                )
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(bridge.device.uuid)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
