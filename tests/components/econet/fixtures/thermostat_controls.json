@@ -1,0 +1,74 @@
+{
+  "device_name": "thermostat_1",
+  "device_type": "HVAC",
+  "serial_number": "serial_2",
+  "@NAME": {
+    "value": "Thermostat"
+  },
+  "@CONNECTED": true,
+  "@RUNNINGSTATUS": "",
+  "@BEEP": {
+    "value": 1
+  },
+  "@SCREENLOCK": {
+    "value": 0
+  },
+  "@MODE": {
+    "value": 1,
+    "constraints": {
+      "enumText": [
+        "Off",
+        "Heating",
+        "Cooling",
+        "Auto",
+        "Fan Only",
+        "Emergency Heat"
+      ]
+    }
+  },
+  "@SETPOINT": {
+    "value": 73
+  },
+  "@COOLSETPOINT": {
+    "value": 76,
+    "constraints": {
+      "lowerLimit": 60,
+      "upperLimit": 90
+    }
+  },
+  "@HEATSETPOINT": {
+    "value": 68,
+    "constraints": {
+      "lowerLimit": 50,
+      "upperLimit": 85
+    }
+  },
+  "@FANSPEED": {
+    "value": 0,
+    "constraints": {
+      "enumText": ["Auto", "Low", "MedLo", "Medium", "MedHi", "High", "Max"]
+    }
+  },
+  "@FANMODE": {
+    "value": 0,
+    "constraints": {
+      "enumText": ["Auto", "On Continuous"]
+    }
+  },
+  "@HUMIDITY": {
+    "value": 45
+  },
+  "@DEHUMENABLE": {
+    "value": 1,
+    "constraints": {
+      "enumText": ["Off", "On"]
+    }
+  },
+  "@DEHUMSETPOINT": {
+    "value": 50,
+    "constraints": {
+      "lowerLimit": 30,
+      "upperLimit": 60
+    }
+  }
+}
