@@ -325,7 +325,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: entry.data[CONF_USERNAME],
                     CONF_PORT: str(entry.data[CONF_PORT]),
                     CONF_SSL: entry.data[CONF_SSL],
-                    CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL],
+                    CONF_VERIFY_SSL: entry.data.get(
+                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                    ),
                 },
             )
         user_input = {**entry.data, **user_input}

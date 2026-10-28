@@ -631,6 +631,27 @@ async def test_reconfigure(hass: HomeAssistant, service: MagicMock) -> None:
     assert entry.options == {CONF_BACKUP_PATH: None, CONF_BACKUP_SHARE: None}
 
 
+async def test_reconfigure_legacy_entry_without_verify_ssl(hass: HomeAssistant) -> None:
+    """Test the form defaults verify SSL for entries that never migrated it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: 5001,
+            CONF_SSL: True,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_2sa(hass: HomeAssistant, service_2sa: MagicMock) -> None:
     """Test reconfiguring with 2SA authentication."""
