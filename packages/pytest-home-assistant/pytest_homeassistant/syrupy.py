@@ -13,8 +13,8 @@ from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
 from syrupy.location import PyTestLocation
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import State
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.core import State, async_get_hass_or_none
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
     area_registry as ar,
@@ -32,6 +32,39 @@ class _ANY:
 
 
 ANY = _ANY()
+
+
+class _DeviceReference:
+    """Represent a device by its identifiers, or connections if it has none."""
+
+    def __init__(self, device: dr.AnyDeviceEntry) -> None:
+        """Initialize the device reference."""
+        self._type = type(device).__name__
+        if isinstance(device, dr.DeviceEntry) and not device.identifiers:
+            self._key = "connections"
+            self._values = sorted(device.connections)
+        else:
+            self._key = "identifiers"
+            self._values = sorted(device.identifiers)
+
+    def __repr__(self) -> str:
+        return f"<{self._type} {self._key}={self._values!r}>"
+
+
+class _SubentryReference:
+    """Represent a config subentry by its type and title."""
+
+    def __init__(self, subentry: ConfigSubentry) -> None:
+        """Initialize the subentry reference."""
+        self._subentry_type = subentry.subentry_type
+        self._title = subentry.title
+
+    def __repr__(self) -> str:
+        return (
+            f"<ConfigSubentry subentry_type={self._subentry_type!r}"
+            f" title={self._title!r}>"
+        )
+
 
 __all__ = ["HomeAssistantSnapshotExtension"]
 
@@ -175,11 +208,12 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             )
             | {"id": ANY}
         )
-        if serialized["via_device_id"] is not None:
-            serialized["via_device_id"] = ANY
+        serialized["via_device_id"] = cls._serializable_device_id(data.via_device_id)
 
         serialized["config_entry_id"] = ANY
-        serialized["config_subentry_id"] = ANY
+        serialized["config_subentry_id"] = cls._serializable_subentry_id(
+            data.config_entry_id, data.config_subentry_id
+        )
 
         return cls._remove_created_and_modified_at(serialized)
 
@@ -197,8 +231,12 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             | {"id": ANY}
         )
         serialized["config_entry_id"] = ANY
-        serialized["config_subentry_id"] = ANY
-        serialized["parent_device_id"] = ANY
+        serialized["config_subentry_id"] = cls._serializable_subentry_id(
+            data.config_entry_id, data.config_subentry_id
+        )
+        serialized["parent_device_id"] = cls._serializable_device_id(
+            data.parent_device_id
+        )
 
         return cls._remove_created_and_modified_at(serialized)
 
@@ -219,9 +257,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized = EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
-                "config_entry_id": ANY,
-                "config_subentry_id": ANY,
-                "device_id": ANY,
+                "config_entry_id": None if data.config_entry_id is None else ANY,
+                "config_subentry_id": cls._serializable_subentry_id(
+                    data.config_entry_id, data.config_subentry_id
+                ),
+                "device_id": cls._serializable_device_id(data.device_id),
                 "id": ANY,
                 "options": {k: dict(v) for k, v in data.options.items()},
             }
@@ -233,6 +273,34 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         serialized.pop("_cache")
         serialized["aliases"] = er._serialize_aliases(serialized["aliases"])
         return cls._remove_created_and_modified_at(serialized)
+
+    @classmethod
+    def _serializable_device_id(cls, device_id: str | None) -> SerializableData:
+        """Replace a device id with a reference to the device it points to."""
+        if device_id is None:
+            return None
+        # The serializer has no hass argument; it runs in the event loop thread
+        if (hass := async_get_hass_or_none()) is None or (
+            device := dr.async_get(hass).async_get(device_id)
+        ) is None:
+            return ANY
+        return _DeviceReference(device)
+
+    @classmethod
+    def _serializable_subentry_id(
+        cls, config_entry_id: str | None, subentry_id: str | None
+    ) -> SerializableData:
+        """Replace a subentry id with a reference to the subentry it points to."""
+        if subentry_id is None:
+            return None
+        if (
+            config_entry_id is None
+            or (hass := async_get_hass_or_none()) is None
+            or (entry := hass.config_entries.async_get_entry(config_entry_id)) is None
+            or (subentry := entry.subentries.get(subentry_id)) is None
+        ):
+            return ANY
+        return _SubentryReference(subentry)
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:

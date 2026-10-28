@@ -9,6 +9,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
+    async_capture_events,
     async_fire_time_changed,
     async_mock_service,
     get_fixture_path,
@@ -2061,6 +2062,103 @@ async def test_config_schedule_logic(
 
 @pytest.mark.parametrize(
     (
+        "last_completed_automatic_backup",
+        "now",
+        "before_scheduled_time",
+        "scheduled_backup_time",
+    ),
+    [
+        pytest.param(
+            "2024-10-26T03:45:00+02:00",
+            "2024-10-26T12:00:00+02:00",
+            "2024-10-27T03:44:00+01:00",
+            "2024-10-27T03:45:00+01:00",
+            id="summer_to_winter_time",
+        ),
+        pytest.param(
+            "2024-03-30T03:45:00+01:00",
+            "2024-03-30T12:00:00+01:00",
+            "2024-03-31T03:44:00+02:00",
+            "2024-03-31T03:45:00+02:00",
+            id="winter_to_summer_time",
+        ),
+    ],
+)
+async def test_config_schedule_logic_dst_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    last_completed_automatic_backup: str,
+    now: str,
+    before_scheduled_time: str,
+    scheduled_backup_time: str,
+) -> None:
+    """Test the schedule keeps its local time when DST changes.
+
+    The last completed backup is stored with the UTC offset in effect when it
+    was made, and must not pin later backups to that offset.
+    """
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "backups": [],
+        "config": {
+            "agents": {},
+            "automatic_backups_configured": True,
+            "create_backup": {
+                "agent_ids": ["test.test-agent"],
+                "include_addons": [],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": [],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_attempted_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup_size": None,
+            "schedule": {
+                "days": [],
+                "recurrence": "daily",
+                "time": "03:45:00",
+            },
+        },
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(now)
+
+    await setup_backup_integration(hass, remote_agents=["test.test-agent"])
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    result = await client.receive_json()
+    assert result["result"]["next_automatic_backup"] == scheduled_backup_time
+
+    freezer.move_to(before_scheduled_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 0
+
+    freezer.move_to(scheduled_backup_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == BACKUP_CALL
+
+
+@pytest.mark.parametrize(
+    (
         "command",
         "backups",
         "get_backups_agent_errors",
@@ -4084,6 +4182,73 @@ async def test_configured_agents_unavailable_repair(
     await ws_client.send_json_auto_id({"type": "backup/config/info"})
     result = await ws_client.receive_json()
     assert result["result"]["config"]["create_backup"]["agent_ids"] == []
+
+
+async def test_configured_agents_unavailable_repair_keeps_ignore(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an ignored unavailable agent issue is kept while still unavailable."""
+    issue_id = "automatic_backup_agents_unavailable_test.agent"
+    hass_storage["backup"] = {
+        "data": {
+            "backups": [],
+            "config": {
+                "agents": {},
+                "automatic_backups_configured": True,
+                "create_backup": {
+                    "agent_ids": ["test.agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": None},
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
+                "last_completed_automatic_backup_size": None,
+                "schedule": {"days": [], "recurrence": "never", "time": None},
+            },
+        },
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await setup_backup_integration(hass)
+    get_agents_mock = AsyncMock(return_value=[])
+    register_listener_mock = Mock()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=get_agents_mock,
+            async_register_backup_agents_listener=register_listener_mock,
+        ),
+    )
+    await hass.async_block_till_done()
+    reload_backup_agents = register_listener_mock.call_args[1]["listener"]
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # Checking again while the agent is still unavailable keeps the issue as is
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert get_agents_mock.call_count == 2
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) == issue
+    assert events == []
+
+    get_agents_mock.return_value = [mock_backup_agent("agent")]
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_subscribe_event(

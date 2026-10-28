@@ -280,6 +280,17 @@ class RepositoryArchive:
             archive.extractall(local, extractable)
 
 
+def valid_integration_categories(value: Any) -> list[str]:
+    """Return the integration categories, or none when they are not valid.
+
+    The catalog only lists known categories. A broken value loses just the
+    categories, not the whole repository.
+    """
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        return []
+    return list(value)
+
+
 @attr.s(auto_attribs=True)
 class RepositoryData:
     """RepositoryData class."""
@@ -302,6 +313,8 @@ class RepositoryData:
     has_issues: bool = True
     # "0" until the repository is known on GitHub
     id: str = "0"
+    # The categories in the manifest of an integration, like `energy.ev_charging`
+    integration_categories: list[str] = attr.field(factory=list)
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False

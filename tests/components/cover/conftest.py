@@ -72,6 +72,6 @@ def mock_cover_entities() -> list[MockCover]:
             | CoverEntityFeature.CLOSE
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION,
-            supported_speeds=["slow", "fast", "default"],
+            supported_speeds=["slow", "medium", "fast"],
         ),
     ]

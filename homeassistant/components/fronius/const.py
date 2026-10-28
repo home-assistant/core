@@ -3,6 +3,7 @@
 from datetime import timedelta
 from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
+from urllib.parse import urlsplit
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
@@ -31,6 +32,13 @@ def discovery_signal(entry_id: str) -> str:
     return f"{_SOLAR_NET_DISCOVERY_NEW}_{entry_id}"
 
 
+def host_from_config(host: str) -> str | None:
+    """Return the lowercased host name of a configured host, or None if unusable."""
+    # the configured host may be a bare host name or a full URL
+    url = host if "://" in host else f"//{host}"
+    return urlsplit(url).hostname
+
+
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
 SOLAR_NET_ID_SYSTEM: SolarNetId = "system"
 SOLAR_NET_RESCAN_TIMER: Final = 60
@@ -49,6 +57,8 @@ class FroniusDeviceInfo(NamedTuple):
     """Information about a Fronius inverter device."""
 
     device_info: DeviceInfo
+    # registry id of the inverter device, the parent of its MPPT child devices
+    device_id: str
     solar_net_id: SolarNetId
     unique_id: str
 
