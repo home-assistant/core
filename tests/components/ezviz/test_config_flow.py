@@ -1,6 +1,6 @@
 """Test the EZVIZ config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyezvizapi.exceptions import (
     EzvizAuthVerificationCode,
@@ -716,11 +716,22 @@ async def test_reauth_unknown_exception(
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("mock_ezviz_client", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ezviz_client_class: MagicMock
 ) -> None:
     """Test reconfiguring the cloud account."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        title="EZVIZ account",
+        data={
+            CONF_SESSION_ID: "test-username",
+            CONF_RFSESSION_ID: "test-password",
+            CONF_URL: "apiieu.ezvizlife.com",
+            CONF_TYPE: ATTR_TYPE_CLOUD,
+        },
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -735,6 +746,9 @@ async def test_reconfigure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    mock_ezviz_client_class.assert_called_once_with(
+        "test-username", "new-password", "apirus.ezvizru.com", DEFAULT_TIMEOUT
+    )
     assert mock_config_entry.data == {
         CONF_SESSION_ID: "fake_token",
         CONF_RFSESSION_ID: "fake_rf_token",
