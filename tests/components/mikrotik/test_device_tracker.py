@@ -32,31 +32,6 @@ from .const import (
 )
 
 
-@pytest.fixture
-def mock_device_registry_devices(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntryFactory,
-) -> None:
-    """Create device registry devices so the device tracker entities are enabled."""
-    config_entry = mock_config_entry(domain="something_else", data={})
-    config_entry.add_to_hass(hass)
-
-    for idx, device in enumerate(
-        (
-            "00:00:00:00:00:01",
-            "00:00:00:00:00:02",
-            "00:00:00:00:00:03",
-            "00:00:00:00:00:04",
-        )
-    ):
-        device_registry.async_get_or_create(
-            name=f"Device {idx}",
-            config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, device)},
-        )
-
-
 def mock_command(
     self,
     cmd: str,
@@ -76,7 +51,7 @@ def mock_command(
     return {}
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_trackers(hass: HomeAssistant) -> None:
     """Test device_trackers created by mikrotik."""
 
@@ -126,7 +101,44 @@ async def test_device_trackers(hass: HomeAssistant) -> None:
         assert device_2.state == "not_home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.parametrize(
+    ("dhcp_data", "entity_id", "expected_device_name"),
+    [
+        pytest.param(
+            [DEVICE_1_DHCP], "device_tracker.device_1", "Device_1", id="hostname"
+        ),
+        # A wireless client without a DHCP lease has no hostname
+        pytest.param(
+            [],
+            "device_tracker.00_00_00_00_00_01",
+            "00:00:00:00:00:01",
+            id="no_hostname",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dhcp_data: list[dict[str, Any]],
+    entity_id: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracker device is named by the hostname, else the MAC address."""
+    await setup_mikrotik_entry(
+        hass, dhcp_data=dhcp_data, wireless_data=[DEVICE_1_WIRELESS]
+    )
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_force_dhcp(hass: HomeAssistant) -> None:
     """Test updating hub that supports wireless with forced dhcp method."""
 
@@ -141,7 +153,7 @@ async def test_force_dhcp(hass: HomeAssistant) -> None:
     assert device_2.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_not_support_wireless(hass: HomeAssistant) -> None:
     """Test device_trackers created when hub doesn't support wireless."""
 
@@ -155,7 +167,7 @@ async def test_hub_not_support_wireless(hass: HomeAssistant) -> None:
     assert device_2.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_capsman(hass: HomeAssistant) -> None:
     """Test device_trackers created when hub is a CAPsMAN manager."""
 
@@ -172,7 +184,7 @@ async def test_hub_capsman(hass: HomeAssistant) -> None:
     assert device_1.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_wifi(hass: HomeAssistant) -> None:
     """Test device_trackers created when hub supports the legacy wifi driver."""
 
@@ -189,7 +201,7 @@ async def test_hub_wifi(hass: HomeAssistant) -> None:
     assert device_2.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_wireless_and_wifi(hass: HomeAssistant) -> None:
     """Test a hub exposing both the legacy wireless package and the wifi driver.
 
@@ -216,7 +228,7 @@ async def test_hub_wireless_and_wifi(hass: HomeAssistant) -> None:
     assert device_2.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wired_device_without_active_address_is_not_home(
     hass: HomeAssistant,
 ) -> None:
@@ -236,7 +248,7 @@ async def test_wired_device_without_active_address_is_not_home(
     assert device_2.state == "not_home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_arp_ping_success(hass: HomeAssistant) -> None:
     """Test arp ping devices to confirm they are connected."""
     ping_replies = [{"seq": "0"}, {"seq": "1"}, {"seq": "2"}]
@@ -251,7 +263,7 @@ async def test_arp_ping_success(hass: HomeAssistant) -> None:
     assert device_2.state == "home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     """Test arp ping timeout so devices are shown away."""
     ping_replies = [
@@ -270,7 +282,7 @@ async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     assert device_2.state == "not_home"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_trackers_numerical_name(hass: HomeAssistant) -> None:
     """Test device_trackers created by mikrotik with numerical device name."""
 
@@ -281,13 +293,13 @@ async def test_device_trackers_numerical_name(hass: HomeAssistant) -> None:
     device_3 = hass.states.get("device_tracker.123")
     assert device_3
     assert device_3.state == "home"
-    assert device_3.attributes["friendly_name"] == "123 123"
+    assert device_3.attributes["friendly_name"] == "123"
     assert device_3.attributes["ip"] == "0.0.0.3"
     assert device_3.attributes["mac"] == "00:00:00:00:00:03"
     assert device_3.attributes["host_name"] == "123"
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_wifiwave2(hass: HomeAssistant) -> None:
     """Test device_trackers created when hub supports wifiwave2."""
 
@@ -302,7 +314,7 @@ async def test_hub_wifiwave2(hass: HomeAssistant) -> None:
     device_4 = hass.states.get("device_tracker.device_4")
     assert device_4
     assert device_4.state == "home"
-    assert device_4.attributes["friendly_name"] == "Device_4 Device_4"
+    assert device_4.attributes["friendly_name"] == "Device_4"
     assert device_4.attributes["ip"] == "0.0.0.4"
     assert device_4.attributes["mac"] == "00:00:00:00:00:04"
     assert device_4.attributes["host_name"] == "Device_4"
@@ -358,7 +370,7 @@ async def test_restoring_devices(
     assert device_3 is None
 
 
-@pytest.mark.usefixtures("mock_device_registry_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_failed(hass: HomeAssistant) -> None:
     """Test failing to connect during update."""
 

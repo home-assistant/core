@@ -20,6 +20,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from . import discovery
+from .const import DOMAIN
 
 BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
@@ -299,13 +300,17 @@ class DatasetStore:
             MeshcopTLVType.EXTPANID not in dataset
             or MeshcopTLVType.ACTIVETIMESTAMP not in dataset
         ):
-            raise HomeAssistantError("Invalid dataset")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_dataset",
+            )
 
         # Don't allow setting preferred border agent ID without setting
         # preferred extended address
         if preferred_border_agent_id is not None and preferred_extended_address is None:
             raise HomeAssistantError(
-                "Must set preferred extended address with preferred border agent ID"
+                translation_domain=DOMAIN,
+                translation_key="preferred_extended_address_required",
             )
 
         # Bail out if the dataset already exists
@@ -444,7 +449,8 @@ class DatasetStore:
         # preferred extended address
         if border_agent_id is not None and extended_address is None:
             raise HomeAssistantError(
-                "Must set preferred extended address with preferred border agent ID"
+                translation_domain=DOMAIN,
+                translation_key="preferred_extended_address_required",
             )
 
         self.datasets[dataset_id] = dataclasses.replace(

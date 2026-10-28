@@ -18,6 +18,15 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "abrp": {
+      "name": "A Better Routeplanner",
+      "integration_type": "hub",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "acaia": {
       "name": "Acaia",
       "integration_type": "device",
@@ -134,6 +143,16 @@
         "energy.meters_monitoring"
       ],
       "supported_by": "opower"
+    },
+    "aerosmart": {
+      "name": "aerosmart",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation",
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "aftership": {
       "name": "AfterShip",
@@ -1334,6 +1353,15 @@
             "hubs_protocols.smart_home_hubs"
           ],
           "name": "Bosch SHC"
+        },
+        "bosch_smart_camera": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "security_safety.cameras"
+          ],
+          "name": "Bosch Smart Camera"
         },
         "home_connect": {
           "integration_type": "hub",
@@ -3160,6 +3188,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "exicom_spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ezviz": {
       "name": "EZVIZ",
       "integration_type": "hub",
@@ -3416,12 +3453,26 @@
     },
     "flic": {
       "name": "Flic",
-      "integration_type": "hub",
-      "categories": [
-        "buttons_remotes"
-      ],
-      "config_flow": false,
-      "iot_class": "local_push"
+      "integrations": {
+        "flic": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        },
+        "flic_button": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        }
+      }
     },
     "flipr": {
       "name": "Flipr",
@@ -3499,11 +3550,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
@@ -4918,7 +4969,9 @@
       "name": "Qube heat pump",
       "integration_type": "hub",
       "categories": [
-        "climate.heat_pumps_air_conditioning"
+        "climate.heat_pumps_air_conditioning",
+        "climate.thermostats_heating",
+        "climate.water_heaters"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6141,6 +6194,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "libresync": {
+      "name": "LibreSync",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.speakers_audio"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "lichess": {
       "name": "Lichess",
@@ -7902,7 +7964,7 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "nyt_games": {
@@ -8362,7 +8424,7 @@
       "iot_class": "local_polling"
     },
     "otbr": {
-      "name": "Open Thread Border Router",
+      "name": "OpenThread Border Router",
       "integration_type": "service",
       "categories": [
         "hubs_protocols.wireless_protocols"
@@ -8614,6 +8676,15 @@
             "lighting.bulbs_lamps"
           ],
           "name": "Philips Hue BLE"
+        },
+        "philips_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "name": "Philips Infrared"
         },
         "philips_js": {
           "integration_type": "device",
@@ -9248,6 +9319,15 @@
       "integration_type": "hub",
       "categories": [
         "garden_plants"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "rainbowminer": {
+      "name": "RainbowMiner",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.monitoring"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -9938,6 +10018,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "categories": [
@@ -10069,7 +10158,7 @@
       "iot_class": "cloud_polling"
     },
     "serial": {
-      "name": "Serial",
+      "name": "Raw Serial",
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
@@ -10230,6 +10319,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "silvercrest_infrared": {
+      "name": "SilverCrest Infrared",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "simplefin": {
       "name": "SimpleFin",
@@ -10644,6 +10742,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
@@ -10782,15 +10890,6 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "spin_ble": {
-      "name": "Spin EV Charger",
-      "integration_type": "device",
-      "categories": [
-        "energy.ev_charging"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "splunk": {
       "name": "Splunk",
@@ -11312,28 +11411,14 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "telegram": {
-      "name": "Telegram",
-      "integrations": {
-        "telegram": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram"
-        },
-        "telegram_bot": {
-          "integration_type": "service",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "categories": [
-            "messaging_notifications.chat_apps"
-          ],
-          "name": "Telegram bot"
-        }
-      }
+    "telegram_bot": {
+      "name": "Telegram bot",
+      "integration_type": "service",
+      "categories": [
+        "messaging_notifications.chat_apps"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "teleinfo": {
       "name": "Teleinfo",
@@ -12563,7 +12648,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
