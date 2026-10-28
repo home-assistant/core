@@ -177,9 +177,11 @@ class WellKnownProtectedResourceView(HomeAssistantView):
         except NoURLAvailableError:
             return self.json_message("No URL available", HTTPStatus.NOT_FOUND)
 
+        # RFC 9728 section 3.3: resource must match the URL the client fetched.
+        resource = url_prefix + request.path.removeprefix(self.url)
         return self.json(
             {
-                "resource": url_prefix,
+                "resource": resource,
                 "authorization_servers": [url_prefix],
                 "resource_documentation": (
                     "https://contributors.home-assistant.io/core/internals/auth-api/"

@@ -773,7 +773,7 @@ async def test_well_known_protected_resource_mcp_path(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test the MCP path-suffixed URL returns the same protected resource metadata."""
+    """Test the MCP path-suffixed URL names the MCP endpoint as its resource."""
     await async_process_ha_core_config(
         hass,
         {
@@ -788,7 +788,11 @@ async def test_well_known_protected_resource_mcp_path(
 
     assert root.status == 200
     assert path_suffixed.status == 200
-    assert await path_suffixed.json() == await root.json()
+    assert (await root.json())["resource"] == "https://example.com"
+    assert await path_suffixed.json() == {
+        **await root.json(),
+        "resource": "https://example.com/api/mcp",
+    }
 
 
 @pytest.mark.parametrize(
