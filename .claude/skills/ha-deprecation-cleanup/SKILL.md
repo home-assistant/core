@@ -17,8 +17,8 @@ deprecation that qualifies.
 ## 1. Scan
 
 Fetch the latest `dev` of `home-assistant/core` (for example `upstream/dev` when `origin`
-is your fork) and check it out. Use that same ref for every branch. Then run from the
-repository root:
+is your fork) and create a detached worktree of it, so the current working tree is left
+alone. Use that same ref for every branch. Then run from the root of that worktree:
 
 ```bash
 uv run --no-sync python3 ./.claude/skills/ha-deprecation-cleanup/scripts/find_due_deprecations.py [--version X.Y]
