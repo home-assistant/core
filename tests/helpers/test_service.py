@@ -1992,15 +1992,24 @@ async def test_service_call_exclude(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exclude",
+    "target",
     [
-        pytest.param({"entity_id": "{{ 'invalid' }}"}, id="invalid_entity_id"),
-        pytest.param({"entity_id": "{{ 'Light.Kitchen' }}"}, id="uppercase_entity_id"),
-        pytest.param({"area_id": "{{ ['kitchen'] }}", "exclude": {}}, id="nested"),
+        pytest.param(
+            {"area_id": "kitchen", "exclude": {"entity_id": "{{ 'invalid' }}"}},
+            id="invalid_entity_id",
+        ),
+        pytest.param(
+            {"area_id": "kitchen", "exclude": {"entity_id": "{{ 'Light.Kitchen' }}"}},
+            id="uppercase_entity_id",
+        ),
+        pytest.param(
+            "{{ {'area_id': 'kitchen', 'exclude': {'exclude': {}}} }}",
+            id="nested",
+        ),
     ],
 )
 async def test_service_call_exclude_invalid(
-    hass: HomeAssistant, exclude: dict[str, Any]
+    hass: HomeAssistant, target: dict[str, Any] | str
 ) -> None:
     """Test a rendered exclude block is validated like a static one."""
     with pytest.raises(
@@ -2009,10 +2018,8 @@ async def test_service_call_exclude_invalid(
     ):
         service.async_prepare_call_from_config(
             hass,
-            {
-                "action": "test_domain.test_service",
-                "target": {"area_id": "kitchen", "exclude": exclude},
-            },
+            {"action": "test_domain.test_service", "target": target},
+            validate_config=True,
         )
 
 
