@@ -7,6 +7,7 @@ import logging
 import time
 from typing import override
 
+from bosch_shc_camera_client.actions import soft_reset
 from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
     BoschCameraConnectionError,
@@ -118,6 +119,29 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
+
+    async def async_restart_camera(self, camera_id: str) -> None:
+        """Restart a camera through the Bosch cloud."""
+        await self._oauth_session.async_ensure_token_valid()
+        try:
+            result = await soft_reset(
+                async_get_clientsession(self.hass),
+                str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+                camera_id,
+            )
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except BoschCameraConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="restart_failed"
+            ) from err
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="restart_failed"
+            )
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
         """Remove devices of cameras no longer in the account, refresh the rest."""
