@@ -328,15 +328,17 @@ async def test_reconfigure(
         patch(
             "homeassistant.components.harmony.async_setup_entry",
             return_value=None,
-        ),
+        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "5.6.7.8"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {CONF_HOST: "5.6.7.8", CONF_NAME: HUB_NAME}
+    mock_setup_entry.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -380,15 +382,17 @@ async def test_reconfigure_errors(
         patch(
             "homeassistant.components.harmony.async_setup_entry",
             return_value=None,
-        ),
+        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "5.6.7.8"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "5.6.7.8"
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_reconfigure_unique_id_mismatch(

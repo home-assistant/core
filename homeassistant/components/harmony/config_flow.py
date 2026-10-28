@@ -113,6 +113,12 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(validated[UNIQUE_ID])
                 self._abort_if_unique_id_mismatch()
+                # A loaded entry is reloaded by its update listener
+                if reconfigure_entry.update_listeners:
+                    return self.async_update_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_HOST: validated[CONF_HOST]},
+                    )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates={CONF_HOST: validated[CONF_HOST]}
                 )
@@ -154,8 +160,11 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         unique_id = str(remote_id)
         await self.async_set_unique_id(str(unique_id))
+        # A loaded entry is reloaded by its update listener, an entry
+        # retrying setup is reloaded because it was discovered
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.harmony_config[CONF_HOST]}
+            updates={CONF_HOST: self.harmony_config[CONF_HOST]},
+            reload_on_update=False,
         )
         self.harmony_config[UNIQUE_ID] = unique_id
         return await self.async_step_link()
