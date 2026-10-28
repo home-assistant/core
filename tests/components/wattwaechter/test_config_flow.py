@@ -845,3 +845,4 @@ async def test_user_flow_other_mqtt_device(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
