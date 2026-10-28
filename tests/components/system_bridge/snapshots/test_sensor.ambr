@@ -1912,7 +1912,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'name decoder usage %',
+    'object_id_base': 'name decoder usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1920,7 +1920,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'name decoder usage %',
+    'original_name': 'name decoder usage',
     'platform': 'system_bridge',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1933,7 +1933,7 @@
 # name: test_sensor_platform[sensor.hostname_name_decoder_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name decoder usage %',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name decoder usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
@@ -2030,7 +2030,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'name encoder usage %',
+    'object_id_base': 'name encoder usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2038,7 +2038,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'name encoder usage %',
+    'original_name': 'name encoder usage',
     'platform': 'system_bridge',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2051,7 +2051,7 @@
 # name: test_sensor_platform[sensor.hostname_name_encoder_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name encoder usage %',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname name encoder usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),

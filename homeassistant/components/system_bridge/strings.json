@@ -128,10 +128,10 @@
         "name": "{gpu_name} clock speed"
       },
       "gpu_decoder_usage_percentage": {
-        "name": "{gpu_name} decoder usage %"
+        "name": "{gpu_name} decoder usage"
       },
       "gpu_encoder_usage_percentage": {
-        "name": "{gpu_name} encoder usage %"
+        "name": "{gpu_name} encoder usage"
       },
       "gpu_fan_speed": {
         "name": "{gpu_name} fan speed"
