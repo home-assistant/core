@@ -138,7 +138,7 @@
       "message": "Failed to unload the device"
     },
     "update_failed": {
-      "message": "Failed to update the device: {error}"
+      "message": "Failed to update the device"
     }
   }
 }

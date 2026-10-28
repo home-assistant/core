@@ -101,7 +101,6 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):  # noqa: UP046
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         if self.available is False:
