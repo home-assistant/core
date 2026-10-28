@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.network import get_url
 
-from .const import STATELESS_LLM_API
+from .const import DOMAIN, STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,7 +172,10 @@ async def create_server(
             llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
         )
         if tool_response.error:
-            raise HomeAssistantError(cast(str, tool_response.data["error"]))
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="snapshot_error",
+            )
 
         return types.ReadResourceResult(
             contents=[
