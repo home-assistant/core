@@ -61,17 +61,13 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
+from .const import StatisticsEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
 # Samples expiring within this window are purged together in one update,
 # so bursts of samples do not each cause a separate state write.
 PURGE_COALESCE_WINDOW_SECONDS = 1.0
-
-# Stats for attributes only
-STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
-STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
-STAT_SOURCE_VALUE_VALID = "source_value_valid"
 
 # All sensor statistics
 STAT_AVERAGE_LINEAR = "average_linear"
@@ -816,10 +812,14 @@ class StatisticsSensor(SensorEntity):
         # Here we make a copy the current value, which is okay.
         self._attr_available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
-            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = None
+            self._attr_extra_state_attributes[
+                StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
+            ] = None
             return
         if new_state.state in (STATE_UNKNOWN, None, ""):
-            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
+            self._attr_extra_state_attributes[
+                StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
+            ] = False
             return
 
         try:
@@ -829,9 +829,13 @@ class StatisticsSensor(SensorEntity):
             else:
                 self.states.append(float(new_state.state))
             self.ages.append(last_reported_timestamp)
-            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = True
+            self._attr_extra_state_attributes[
+                StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
+            ] = True
         except ValueError:
-            self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
+            self._attr_extra_state_attributes[
+                StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
+            ] = False
             _LOGGER.error(
                 "%s: parsing error. Expected number or binary state, but received '%s'",
                 self.entity_id,
@@ -1111,18 +1115,22 @@ class StatisticsSensor(SensorEntity):
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
         if self._samples_max_buffer_size is not None:
-            self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = round(
-                len(self.states) / self._samples_max_buffer_size, 2
-            )
+            self._attr_extra_state_attributes[
+                StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+            ] = round(len(self.states) / self._samples_max_buffer_size, 2)
 
         if (max_age := self._samples_max_age) is not None:
             if len(self.states) >= 1:
-                self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = round(
+                self._attr_extra_state_attributes[
+                    StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO
+                ] = round(
                     (self.ages[-1] - self.ages[0]) / max_age,
                     2,
                 )
             else:
-                self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = 0
+                self._attr_extra_state_attributes[
+                    StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO
+                ] = 0
 
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
