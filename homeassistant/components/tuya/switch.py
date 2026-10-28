@@ -873,19 +873,8 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.WKCZ: (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
+    DeviceCategory.WKCZ: _channel_switches(
+        2, translation_key="switch", device_class=SwitchDeviceClass.OUTLET
     ),
     DeviceCategory.WKF: (
         TuyaSwitchEntityDescription(

@@ -179,6 +179,14 @@ async def _test_sensors(
     )
     assert hass.states.get(entity_id) is None
 
+    # The tracker describes its device even when disabled
+    device = dr.async_get(hass).async_get(entity_reg.async_get(entity_id).device_id)
+    assert device is not None
+    assert device.name == "TestThree"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MACS[2]))
+    }
+
 
 @pytest.mark.parametrize(
     "entry_unique_id",
