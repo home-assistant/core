@@ -678,7 +678,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_RECIPE,
         name="Recipe",
         native_value=str,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        # The running recipe is operational cooking state rather than device
+        # diagnostics, so it has no diagnostic category; it stays disabled by
+        # default because it is only populated during a guided cooking program.
         entity_registry_enabled_default=False,
     ),
 ]
