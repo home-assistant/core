@@ -4,6 +4,12 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
+      "locked": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
@@ -73,6 +79,9 @@
       },
       "gpu_usage_percentage": {
         "default": "mdi:percent"
+      },
+      "idle_time": {
+        "default": "mdi:timer-sand"
       },
       "kernel": {
         "default": "mdi:devices"

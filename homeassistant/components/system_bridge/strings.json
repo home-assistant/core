@@ -37,6 +37,9 @@
       "camera_in_use": {
         "name": "Camera in use"
       },
+      "locked": {
+        "name": "Locked"
+      },
       "pending_reboot": {
         "name": "Pending reboot"
       }
@@ -150,6 +153,9 @@
       },
       "gpu_usage_percentage": {
         "name": "{gpu_name} usage %"
+      },
+      "idle_time": {
+        "name": "Idle time"
       },
       "kernel": {
         "name": "Kernel"

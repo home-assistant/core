@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -622,6 +623,14 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         suggested_display_precision=2,
         value=disk_write_rate,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="idle_time",
+        translation_key="idle_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value=lambda data: data.system.idle_time,
     ),
     SystemBridgeSensorEntityDescription(
         key="kernel",

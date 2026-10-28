@@ -41,6 +41,11 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         value_fn=camera_in_use,
     ),
     SystemBridgeBinarySensorEntityDescription(
+        key="locked",
+        translation_key="locked",
+        value_fn=lambda data: data.system.locked,
+    ),
+    SystemBridgeBinarySensorEntityDescription(
         key="pending_reboot",
         translation_key="pending_reboot",
         value_fn=lambda data: data.system.pending_reboot,
