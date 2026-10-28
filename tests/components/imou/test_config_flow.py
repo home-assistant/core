@@ -12,12 +12,18 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imou.const import (
+    API_URLS,
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -425,34 +431,54 @@ async def test_reconfigure_flow_success(
     mock_imou_openapi_client.async_close.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_imou_ha_device_manager")
 async def test_reconfigure_migrates_legacy_region_before_saving(
     hass: HomeAssistant,
-    mock_imou_openapi_client: AsyncMock,
 ) -> None:
-    """A legacy region is corrected before the submitted region is saved."""
+    """A disabled legacy entry keeps the region chosen while it is reconfigured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={**CONFIG_ENTRY_DATA, CONF_API_URL: "eu"},
         unique_id=CONFIG_ENTRY_DATA[CONF_APP_ID],
         minor_version=1,
+        disabled_by=ConfigEntryDisabler.USER,
     )
     entry.add_to_hass(hass)
 
-    result = await entry.start_reconfigure_flow(hass)
+    with (
+        patch(
+            "homeassistant.components.imou.ImouOpenApiClient",
+            autospec=True,
+        ) as client_cls,
+        patch(
+            "homeassistant.components.imou.config_flow.ImouOpenApiClient",
+            new=client_cls,
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
 
-    assert entry.minor_version == 2
-    assert entry.data[CONF_API_URL] == "na"
+        assert entry.minor_version == 2
+        assert entry.data[CONF_API_URL] == "na"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: "eu"},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: "eu"},
+        )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_API_URL] == "eu"
+
+        await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_API_URL] == "eu"
-    mock_imou_openapi_client.async_close.assert_awaited_once()
+    client_cls.assert_called_with(
+        CONFIG_ENTRY_DATA[CONF_APP_ID],
+        NEW_APP_SECRET,
+        API_URLS["eu"],
+    )
 
 
 @pytest.mark.parametrize(
