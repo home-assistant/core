@@ -3,13 +3,12 @@
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
+from homeassistant.components.gdacs.const import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
 )
 
 
@@ -19,13 +18,13 @@ def config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_LATITUDE: -41.2,
-            CONF_LONGITUDE: 174.7,
-            CONF_RADIUS: 25,
-            CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
-            CONF_CATEGORIES: [],
+            CONF_LOCATION: {
+                CONF_LATITUDE: -41.2,
+                CONF_LONGITUDE: 174.7,
+                CONF_RADIUS: 25000,
+            }
         },
-        title="-41.2, 174.7",
+        title="Global Disaster Alert and Coordination System",
         unique_id="-41.2, 174.7",
+        version=2,
     )

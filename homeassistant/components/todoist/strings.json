@@ -27,7 +27,7 @@
   },
   "services": {
     "new_task": {
-      "description": "Creates a new task and add it to a project.",
+      "description": "Creates a new task and adds it to a project.",
       "fields": {
         "assignee": {
           "description": "The username of a shared project's member to assign this task to.",
@@ -82,7 +82,7 @@
           "name": "Section"
         }
       },
-      "name": "New task"
+      "name": "Create task"
     }
   }
 }
