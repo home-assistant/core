@@ -110,6 +110,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aeg": {
+      "name": "AEG",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "aemet": {
       "name": "AEMET OpenData",
       "integration_type": "service",
