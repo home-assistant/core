@@ -18,7 +18,7 @@
       "message": "Item \"{uid}\" not found in to-do list {entity_id}"
     },
     "load_file_error": {
-      "message": "Failed to load file {path}: {error}"
+      "message": "Failed to load file {path}"
     }
   },
   "title": "Local to-do"

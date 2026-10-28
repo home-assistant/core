@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) ->
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="load_file_error",
-            translation_placeholders={"path": str(path), "error": str(err)},
+            translation_placeholders={"path": str(path)},
         ) from err
 
     entry.runtime_data = store
