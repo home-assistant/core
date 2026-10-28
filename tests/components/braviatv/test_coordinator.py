@@ -75,6 +75,7 @@ async def test_async_source_find_not_found(hass: HomeAssistant) -> None:
 
     assert exc_info.value.translation_key == "source_not_found"
     assert exc_info.value.translation_placeholders == {
+        "device": "Mock Title",
         "source_type": "input",
         "query": "HDMI 9",
     }
@@ -99,7 +100,10 @@ async def test_async_play_media_invalid_media_type(hass: HomeAssistant) -> None:
         await coordinator.async_play_media(MediaType.MUSIC, "something")
 
     assert exc_info.value.translation_key == "invalid_media_type"
-    assert exc_info.value.translation_placeholders == {"media_type": "music"}
+    assert exc_info.value.translation_placeholders == {
+        "device": "Mock Title",
+        "media_type": "music",
+    }
 
 
 async def test_async_send_command_unsupported(hass: HomeAssistant) -> None:
@@ -121,5 +125,8 @@ async def test_async_send_command_unsupported(hass: HomeAssistant) -> None:
         await coordinator.async_send_command(["Foo", "Bar"], 2)
 
     assert exc_info.value.translation_key == "unsupported_command"
-    assert exc_info.value.translation_placeholders == {"command": "Foo"}
+    assert exc_info.value.translation_placeholders == {
+        "device": "Mock Title",
+        "command": "Foo",
+    }
     client.send_command.assert_called_once_with("Foo")

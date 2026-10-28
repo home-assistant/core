@@ -316,7 +316,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="source_not_found",
-            translation_placeholders={"source_type": str(source_type), "query": query},
+            translation_placeholders={
+                "device": self.config_entry.title,
+                "source_type": str(source_type),
+                "query": query,
+            },
         )
 
     @catch_braviatv_errors
@@ -389,7 +393,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_media_type",
-                translation_placeholders={"media_type": str(media_type)},
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "media_type": str(media_type),
+                },
             )
         await self.async_source_find(media_id, media_type)
 
@@ -408,7 +415,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="unsupported_command",
-                        translation_placeholders={"command": cmd},
+                        translation_placeholders={
+                            "device": self.config_entry.title,
+                            "command": cmd,
+                        },
                     )
 
     @catch_braviatv_errors
