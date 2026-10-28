@@ -186,6 +186,13 @@
           "verylow": "[%key:common::state::very_low%]"
         }
       },
+      "cycle_stage": {
+        "state": {
+          "analysis": "Analysis",
+          "cooking": "Cooking",
+          "end": "Finished"
+        }
+      },
       "discrete_rssi_level": {
         "state": {
           "good": "Good",

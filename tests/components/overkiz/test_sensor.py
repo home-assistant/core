@@ -5,11 +5,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
+from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState, UIClass
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -76,12 +78,19 @@ YUTAKI = FixtureDevice(
     "sensor.my_house_yutaki_outdoor_ambient_temperature",
 )
 
+OVEN = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "sensor.oven_remaining_time",
+)
+
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
     YUTAKI,
+    OVEN,
 ]
 
 
@@ -365,3 +374,86 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+def _as_heating_system(setup: Setup) -> None:
+    """Present the oven as a non-oven device."""
+    setup.devices[0].ui_class = UIClass.HEATING_SYSTEM
+
+
+async def test_oven_sensors_scoped_to_ovens(
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the oven sensors are not created for a non-oven device."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_as_heating_system)
+
+    assert entity_registry.async_get("sensor.oven_remaining_time") is None
+    assert entity_registry.async_get("sensor.oven_cycle_stage") is None
+    assert entity_registry.async_get("sensor.oven_recommended_temperature") is None
+
+
+async def test_oven_remaining_time_only_while_cooking(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven remaining time is only reported while cooking."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_STARTED_STOPPED.value,
+                        "type": 3,
+                        "value": "started",
+                    },
+                    {
+                        "name": OverkizState.CORE_REMAINING_TIME.value,
+                        "type": 1,
+                        "value": 1500,
+                    },
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(OVEN.entity_id).state == "1500"
+
+
+def _add_cycle_stage(setup: Setup) -> None:
+    """Advertise an extra cycle stage and make it the current one."""
+    oven = setup.devices[0]
+    oven.attributes["core:SupportedCycleStages"].value = [
+        "analysis",
+        "preheating",
+        "cooking",
+        "end",
+    ]
+    oven.states["core:CurrentCycleStageState"].value = "preheating"
+
+
+async def test_oven_cycle_stage_options_from_attribute(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the oven cycle stage options are read from the device attribute."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_add_cycle_stage)
+
+    state = hass.states.get("sensor.oven_cycle_stage")
+    assert state.state == "preheating"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "analysis",
+        "preheating",
+        "cooking",
+        "end",
+    ]
