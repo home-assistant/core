@@ -1,6 +1,6 @@
 """Tests for the Imou init."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
@@ -282,6 +282,62 @@ async def test_coordinator_adds_entities_for_new_device(
     assert len(devices) == 2
     device_keys = {next(iter(device.identifiers))[1] for device in devices}
     assert device_keys == {"d1", "d2"}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_known_device_refresh_skips_ability_refs(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """A later listing of the same devices does not fetch ability refs again."""
+    mock_imou_ha_device_manager.async_get_devices.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_imou_ha_device_manager.async_get_devices.assert_awaited_once_with(
+        fetch_ability_refs=False
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_device_fetches_ability_refs_for_that_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Only a device that just appeared gets an ability-ref request."""
+    known = default_mock_devices()
+    shallow = create_online_device("d2", "Device 2", button_keys=())
+    detailed = create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,))
+
+    async def list_devices(
+        *, fetch_ability_refs: bool | set[str] = True
+    ) -> list[ImouHaDevice]:
+        if fetch_ability_refs is False:
+            return [*known, shallow]
+        if fetch_ability_refs == {"d2"}:
+            return [detailed]
+        raise AssertionError(fetch_ability_refs)
+
+    mock_imou_ha_device_manager.async_get_devices.reset_mock()
+    mock_imou_ha_device_manager.async_get_devices.side_effect = list_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert "d2$ptz_up" in {entry.unique_id for entry in entries}
+    assert mock_imou_ha_device_manager.async_get_devices.await_args_list == [
+        call(fetch_ability_refs=False),
+        call(fetch_ability_refs={"d2"}),
+    ]
 
 
 @pytest.mark.parametrize(
