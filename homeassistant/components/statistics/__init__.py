@@ -14,7 +14,6 @@ from homeassistant.helpers.helper_integration import (
 DOMAIN = "statistics"
 PLATFORMS = [Platform.SENSOR]
 
-
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
