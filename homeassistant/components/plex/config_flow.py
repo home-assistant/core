@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any, override
+from urllib.parse import urlparse
 
 from aiohttp import web_response
 import plexapi.exceptions
@@ -258,6 +259,71 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
 
         return self.async_create_entry(title=url, data=data)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server address."""
+        entry = self._get_reconfigure_entry()
+        server_config = entry.data[PLEX_SERVER_CONFIG]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            prefix = "https" if user_input[CONF_SSL] else "http"
+            new_server_config = {
+                **server_config,
+                CONF_URL: f"{prefix}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+            }
+            plex_server = PlexServer(self.hass, new_server_config)
+            try:
+                await self.hass.async_add_executor_job(plex_server.connect)
+            except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
+                errors["base"] = "faulty_credentials"
+            except requests.exceptions.SSLError:
+                errors["base"] = "ssl_error"
+            except plexapi.exceptions.NotFound, requests.exceptions.ConnectionError:
+                errors[CONF_HOST] = "not_found"
+            except Exception:
+                _LOGGER.exception("Unknown error connecting to Plex server")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(plex_server.machine_identifier)
+                self._abort_if_unique_id_mismatch()
+                url = plex_server.url_in_use
+                if not url.startswith("https"):
+                    new_server_config.pop(CONF_VERIFY_SSL)
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_SERVER: plex_server.friendly_name,
+                        PLEX_SERVER_CONFIG: {**new_server_config, CONF_URL: url},
+                    },
+                )
+        else:
+            parsed_url = urlparse(server_config[CONF_URL])
+            user_input = {
+                CONF_HOST: parsed_url.hostname,
+                CONF_PORT: parsed_url.port or DEFAULT_PORT,
+                CONF_SSL: parsed_url.scheme == "https",
+                CONF_VERIFY_SSL: server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Required(CONF_SSL): bool,
+                        probatio.Required(CONF_VERIFY_SSL): bool,
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
 
     async def async_step_select_server(
         self, user_input: dict[str, str] | None = None

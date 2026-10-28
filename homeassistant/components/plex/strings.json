@@ -5,6 +5,7 @@
       "already_configured": "This Plex server is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "token_request_timeout": "Timed out obtaining token",
+      "unique_id_mismatch": "The Plex server at this address is not the server configured for this entry.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -12,7 +13,8 @@
       "host_or_token": "Must provide at least one of host or token",
       "no_servers": "No servers linked to Plex account",
       "not_found": "Plex server not found",
-      "ssl_error": "SSL certificate issue"
+      "ssl_error": "SSL certificate issue",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({host})",
     "step": {
@@ -25,6 +27,15 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "title": "Manual Plex configuration"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Change the address used to connect to your Plex server. The existing token is kept."
       },
       "select_server": {
         "data": {
