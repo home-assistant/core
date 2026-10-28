@@ -325,7 +325,6 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
-    assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
@@ -394,6 +393,36 @@ async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_already_configured_host_changed(hass: HomeAssistant) -> None:
+    """Test that the host is updated when a configured device is discovered with a new IP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("10.10.2.99"),
+                ip_addresses=[ip_address("10.10.2.99")],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+            context={"source": SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "10.10.2.99"
 
 
 @pytest.mark.parametrize(

@@ -89,7 +89,6 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE]},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

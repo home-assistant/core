@@ -41,6 +41,7 @@ homeassistant.util.unit_system
 # --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
+homeassistant.components.abrp.*
 homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acmeda.*
@@ -48,6 +49,7 @@ homeassistant.components.actiontec.*
 homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
+homeassistant.components.aerosmart.*
 homeassistant.components.aftership.*
 homeassistant.components.ai_task.*
 homeassistant.components.air_quality.*
@@ -217,6 +219,7 @@ homeassistant.components.eurotronic_cometblue.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*
+homeassistant.components.exicom_spin_ble.*
 homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
@@ -228,6 +231,7 @@ homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit.*
 homeassistant.components.flexit_bacnet.*
+homeassistant.components.flic_button.*
 homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
@@ -427,6 +431,7 @@ homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.music_assistant.*
 homeassistant.components.my.*
+homeassistant.components.my_pv.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
@@ -551,6 +556,7 @@ homeassistant.components.schlage.*
 homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
+homeassistant.components.seafile.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
@@ -566,6 +572,7 @@ homeassistant.components.sftp_storage.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
+homeassistant.components.silvercrest_infrared.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.siren.*
@@ -582,11 +589,11 @@ homeassistant.components.snooz.*
 homeassistant.components.sofar.*
 homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
+homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*
-homeassistant.components.spin_ble.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
 homeassistant.components.squeezebox.*
@@ -594,6 +601,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
+homeassistant.components.steamvr_base_station.*
 homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
