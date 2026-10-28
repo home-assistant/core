@@ -41,6 +41,7 @@ ENTITY_ID = "light.garden_camera_light"
 GEN1 = Camera(CAMERA_ID, "Garden", "OUTDOOR", CameraModel.EYES_OUTDOOR, "7.91.56")
 OFF = LightState(False, False, 0.5)
 ON = LightState(True, True, 0.5)
+OTHER_ID = "22222222-2222-2222-2222-222222222222"
 MODULE = "homeassistant.components.bosch_smart_camera.coordinator"
 
 
@@ -252,5 +253,56 @@ async def test_poll_started_before_a_write_does_not_overwrite_it(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_write_during_poll_of_another_camera_is_kept(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_light: AsyncMock,
+    mock_set_light: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write to a camera polled earlier is not overwritten by the batch."""
+    other = Camera(OTHER_ID, "Yard", "OUTDOOR", CameraModel.EYES_OUTDOOR, None)
+    mock_list_cameras.return_value = [GEN1, other]
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    async def read(session: Any, token: str, camera_id: str) -> LightState:
+        if camera_id == OTHER_ID:
+            await coordinator.async_set_light(CAMERA_ID, True)
+        return OFF
+
+    mock_get_light.side_effect = read
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_write_after_failed_poll_keeps_working(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    mock_set_light: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll failing during a write does not break recording the write."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    async def slow_write(*args: Any, **kwargs: Any) -> CameraLightSetResult:
+        mock_get_light.side_effect = BoschCameraConnectionError("offline")
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return CameraLightSetResult(ok=True, status=204)
+
+    mock_set_light.side_effect = slow_write
+    await coordinator.async_set_light(CAMERA_ID, True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON

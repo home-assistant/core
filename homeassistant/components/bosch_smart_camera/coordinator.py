@@ -127,7 +127,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     async def _async_update_light_states(self, cameras: list[Camera]) -> None:
         """Poll the light of each Gen1 outdoor camera, isolating failures."""
-        states: dict[str, LightState] = {}
+        polled: dict[str, tuple[int, LightState | None]] = {}
         for camera in cameras:
             if camera.model is not CameraModel.EYES_OUTDOOR:
                 continue
@@ -144,16 +144,22 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             except BoschCameraConnectionError, BoschCameraInvalidResponseError:
                 _LOGGER.debug("Unable to read the light of a camera", exc_info=True)
-                continue
-            # A write that finished during the request makes this state outdated.
-            if writes == self._light_writes[camera.id]:
-                states[camera.id] = state
-            elif camera.id in self.light_states:
-                states[camera.id] = self.light_states[camera.id]
+                state = None
+            polled[camera.id] = (writes, state)
+        # A write that finished while polling makes the polled state outdated,
+        # also for cameras polled before the write.
+        states: dict[str, LightState] = {}
+        for camera_id, (writes, state) in polled.items():
+            if writes != self._light_writes[camera_id]:
+                state = self.light_states.get(camera_id)
+            if state is not None:
+                states[camera_id] = state
         self.light_states = states
 
     async def async_set_light(self, camera_id: str, on: bool) -> None:
         """Switch the light of a camera and remember the new state."""
+        known = self.light_states.get(camera_id)
+        intensity = known.front_light_intensity if known else None
         await self._oauth_session.async_ensure_token_valid()
         try:
             result = await cloud_set_camera_light(
@@ -162,8 +168,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 camera_id,
                 on,
                 gen2=False,
-                last_front_intensity=self.light_states[camera_id].front_light_intensity
-                or 1.0,
+                last_front_intensity=intensity or 1.0,
             )
         except (BoschCameraAuthError, BoschCameraConnectionError) as err:
             raise HomeAssistantError(
@@ -182,7 +187,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self.light_states[camera_id] = LightState(
             front_light_on=on,
             wallwasher_on=on,
-            front_light_intensity=self.light_states[camera_id].front_light_intensity,
+            front_light_intensity=intensity,
         )
         self.async_update_listeners()
 
