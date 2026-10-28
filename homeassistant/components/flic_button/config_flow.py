@@ -224,7 +224,8 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle bluetooth confirmation step."""
-        assert self._discovery_info is not None
+        if TYPE_CHECKING:
+            assert self._discovery_info is not None
 
         self._abort_if_unique_id_configured()
 
