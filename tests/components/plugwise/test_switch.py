@@ -274,23 +274,8 @@ async def test_deferred_dhw_switch_check_unsubscribed_when_entry_unloads(
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    assert await async_setup_component(
-        hass,
-        AUTOMATION_DOMAIN,
-        {
-            AUTOMATION_DOMAIN: {
-                "alias": "Unrelated automation",
-                "trigger": {
-                    "platform": "state",
-                    "entity_id": "sensor.unrelated",
-                },
-                "action": [],
-            }
-        },
-    )
-    assert await async_setup_component(
-        hass, SCRIPT_DOMAIN, {SCRIPT_DOMAIN: {"unrelated_script": {"sequence": []}}}
-    )
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(
@@ -399,6 +384,8 @@ async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
             }
         },
     )
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     assert (
