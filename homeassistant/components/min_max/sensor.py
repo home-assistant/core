@@ -1,6 +1,7 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
 from datetime import datetime
+from enum import StrEnum
 import logging
 import statistics
 from typing import Any, override
@@ -36,14 +37,19 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
-from .const import (
-    CONF_ENTITY_IDS,
-    CONF_ROUND_DIGITS,
-    DOMAIN,
-    MinMaxEntityStateAttribute,
-)
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MinMaxEntityStateAttribute(StrEnum):
+    """State attributes for min/max entities."""
+
+    ENTITY_ID = "entity_id"
+    LAST_ENTITY_ID = "last_entity_id"
+    MAX_ENTITY_ID = "max_entity_id"
+    MIN_ENTITY_ID = "min_entity_id"
+
 
 ATTR_MIN_VALUE = "min_value"
 ATTR_MAX_VALUE = "max_value"
