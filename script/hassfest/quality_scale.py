@@ -1508,7 +1508,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
