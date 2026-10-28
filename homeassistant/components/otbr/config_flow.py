@@ -218,8 +218,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
                 errors["base"] = "cannot_connect"
             else:
-                # The update listener reloads the entry
-                return self.async_update_and_abort(entry, data_updates={CONF_URL: url})
+                # The update listener is only registered after a successful setup
+                if entry.update_listeners:
+                    return self.async_update_and_abort(
+                        entry, data_updates={CONF_URL: url}
+                    )
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_URL: url}
+                )
 
         return self.async_show_form(
             step_id="reconfigure",

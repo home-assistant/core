@@ -1281,6 +1281,42 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+    "get_coprocessor_version",
+)
+async def test_reconfigure_flow_setup_retry(
+    hass: HomeAssistant, get_border_agent_id: AsyncMock
+) -> None:
+    """Test the reconfigure flow reloads an entry that failed to set up."""
+    mock_integration(hass, MockModule("hassio"))
+    config_entry = MockConfigEntry(
+        data={"url": "http://custom_url:1234"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="user",
+        title="OpenThread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    get_border_agent_id.side_effect = TimeoutError
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    get_border_agent_id.side_effect = None
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"url": "http://new_url:1234"}
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     "error",
     [
