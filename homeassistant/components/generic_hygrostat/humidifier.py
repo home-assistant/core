@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
-from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -71,15 +70,9 @@ from . import (
     CONF_WET_TOLERANCE,
     HYGROSTAT_SCHEMA,
 )
+from .const import GenericHygrostatEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class GenericHygrostatEntityStateAttribute(StrEnum):
-    """State attributes for generic hygrostat entities."""
-
-    SAVED_HUMIDITY = "saved_humidity"
-
 
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 

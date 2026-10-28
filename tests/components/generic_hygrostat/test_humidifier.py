@@ -17,7 +17,7 @@ from pytest_homeassistant.common import (
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.generic_hygrostat import DOMAIN
-from homeassistant.components.generic_hygrostat.humidifier import (
+from homeassistant.components.generic_hygrostat.const import (
     GenericHygrostatEntityStateAttribute,
 )
 from homeassistant.components.humidifier import (
