@@ -41,7 +41,7 @@ hass-nabucasa==2.8.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
 home-assistant-frontend==20260930.5
-home-assistant-intents==2026.10.6
+home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -66,7 +66,7 @@ PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.10.0
-serialx==1.15.0
+serialx==1.15.1
 SQLAlchemy==2.0.54
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
@@ -269,10 +269,9 @@ bitstring<5
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
-# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
 # https://github.com/home-assistant/core/issues/185645
-# https://github.com/c-ares/c-ares/pull/1256
-pycares==5.0.1
+pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0

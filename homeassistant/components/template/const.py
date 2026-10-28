@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

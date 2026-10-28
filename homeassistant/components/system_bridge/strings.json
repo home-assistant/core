@@ -31,6 +31,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "ac_connected": {
+        "name": "AC power"
+      },
       "camera_in_use": {
         "name": "Camera in use"
       },
@@ -47,8 +50,37 @@
       "amount_memory_used": {
         "name": "Amount of memory used"
       },
+      "battery_info": {
+        "name": "{battery} battery"
+      },
+      "battery_info_state": {
+        "name": "{battery} battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]"
+        }
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "Not charging"
+        }
+      },
       "battery_time_remaining": {
         "name": "Battery time remaining"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
       },
       "boot_time": {
         "name": "Boot time"

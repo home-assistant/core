@@ -5,8 +5,8 @@ https://contributors.home-assistant.io/core/quality-scale/reconfiguration-flow/
 
 import ast
 
-from script.hassfest import ast_parse_module
-from script.hassfest.model import Config, Integration
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
 
 
 def _has_step_reconfigure_function(module: ast.Module) -> bool:

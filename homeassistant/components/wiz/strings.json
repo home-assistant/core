@@ -41,6 +41,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to the WiZ device at {ip_address}"
+    },
     "communication_error": {
       "message": "Error while communicating with the WiZ device"
     },
@@ -49,6 +52,12 @@
     },
     "timeout": {
       "message": "Timed out waiting for the WiZ device to respond"
+    },
+    "unexpected_device": {
+      "message": "Found WiZ device {mac} at {ip_address}, expected {expected_mac}"
+    },
+    "update_failed": {
+      "message": "Failed to update the WiZ device at {ip_address}"
     }
   }
 }
