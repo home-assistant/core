@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "sensor": {
+      "current_energy_usage": {
+        "default": "mdi:fire"
+      },
+      "current_usage": {
+        "default": "mdi:gauge-full"
+      },
+      "forecast_empty": {
+        "default": "mdi:calendar"
+      },
+      "last_reading_date": {
+        "default": "mdi:clock-outline"
+      },
+      "oil_consumption": {
+        "default": "mdi:fire"
+      },
+      "oil_level": {
+        "default": "mdi:gauge"
+      },
+      "tank_capacity": {
+        "default": "mdi:gauge-full"
+      },
+      "tank_percentage_full": {
+        "default": "mdi:gauge",
+        "range": {
+          "25": "mdi:gauge-low",
+          "50": "mdi:gauge",
+          "75": "mdi:gauge-full"
+        }
+      }
+    }
+  }
+}

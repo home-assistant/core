@@ -1,0 +1,12 @@
+{
+  "domain": "watchman",
+  "name": "Kingspan Watchman SENSiT",
+  "categories": ["energy"],
+  "codeowners": ["@masaccio"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watchman",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "quality_scale": "gold",
+  "requirements": ["kingspan-connect-sensor==4.6.2"]
+}

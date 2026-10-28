@@ -924,6 +924,7 @@ FLOWS = {
         "wake_on_lan",
         "wallbox",
         "waqi",
+        "watchman",
         "waterfurnace",
         "watergate",
         "watts",
