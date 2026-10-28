@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
-from homeassistant.components.tod.const import TodEntityStateAttribute
+from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

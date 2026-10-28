@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
+from enum import StrEnum
 import logging
 from typing import Any, Literal, TypeGuard, override
 
@@ -35,12 +36,20 @@ from .const import (
     CONF_AFTER_TIME,
     CONF_BEFORE_OFFSET,
     CONF_BEFORE_TIME,
-    TodEntityStateAttribute,
 )
 
 type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class TodEntityStateAttribute(StrEnum):
+    """State attributes for times of the day entities."""
+
+    AFTER = "after"
+    BEFORE = "before"
+    NEXT_UPDATE = "next_update"
+
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {

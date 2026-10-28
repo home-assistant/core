@@ -6,7 +6,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
-from homeassistant.components.tod.const import DOMAIN, TodEntityStateAttribute
+from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
+from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
