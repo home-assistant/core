@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "exceeded_api_calls": "The number of API calls has been exceeded.",
       "exceeded_user_api_calls": "The number of User API calls has been exceeded.",
       "invalid_token": "The token is not valid.",

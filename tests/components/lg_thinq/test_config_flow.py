@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from thinqconnect import ThinQAPIException
@@ -168,11 +169,25 @@ async def test_reconfigure(
 
 
 @pytest.mark.parametrize(
-    ("code", "error"),
+    ("side_effect", "error"),
     [
-        pytest.param("1307", "not_supported_country", id="not_supported_country"),
-        pytest.param("1103", "invalid_token", id="invalid_token"),
-        pytest.param("9999", "token_unauthorized", id="unknown_code"),
+        pytest.param(
+            ThinQAPIException(code="1307", message="Error", headers=None),
+            "not_supported_country",
+            id="not_supported_country",
+        ),
+        pytest.param(
+            ThinQAPIException(code="1103", message="Error", headers=None),
+            "invalid_token",
+            id="invalid_token",
+        ),
+        pytest.param(
+            ThinQAPIException(code="9999", message="Error", headers=None),
+            "token_unauthorized",
+            id="unknown_code",
+        ),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -180,7 +195,7 @@ async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_config_thinq_api: AsyncMock,
-    code: str,
+    side_effect: Exception,
     error: str,
 ) -> None:
     """Test reconfiguring recovers from errors."""
@@ -188,9 +203,7 @@ async def test_reconfigure_errors(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    mock_config_thinq_api.async_get_device_list.side_effect = ThinQAPIException(
-        code=code, message="Error", headers=None
-    )
+    mock_config_thinq_api.async_get_device_list.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_COUNTRY: "US"}
     )

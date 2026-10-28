@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 import uuid
 
+from aiohttp import ClientError
 import probatio
 from thinqconnect import ThinQApi, ThinQAPIErrorCodes, ThinQAPIException
 from thinqconnect.country import Country
@@ -130,6 +131,8 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except ThinQAPIException as exc:
                 errors["base"] = THINQ_ERRORS.get(exc.code, "token_unauthorized")
+            except ClientError, TimeoutError:
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
                     entry, data_updates=user_input
