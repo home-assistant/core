@@ -13,8 +13,17 @@ from pyimouapi.exceptions import (
 )
 from pyimouapi.openapi import ImouOpenApiClient
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import UnitOfTime
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -23,7 +32,17 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
+from .const import (
+    API_URLS,
+    CONF_API_URL,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MAX_SCAN_INTERVAL,
+)
+from .coordinator import ImouConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +81,15 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ImouConfigEntry,
+    ) -> ImouOptionsFlow:
+        """Return the options flow."""
+        return ImouOptionsFlow()
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate credentials and close the temporary client."""
@@ -189,4 +217,39 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={"app_id": reconfigure_entry.data[CONF_APP_ID]},
             errors=errors,
+        )
+
+
+class ImouOptionsFlow(OptionsFlowWithReload):
+    """Handle Imou options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set how often devices are refreshed."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_SCAN_INTERVAL): NumberSelector(
+                            NumberSelectorConfig(
+                                min=DEFAULT_SCAN_INTERVAL,
+                                max=MAX_SCAN_INTERVAL,
+                                step=60,
+                                mode=NumberSelectorMode.BOX,
+                                unit_of_measurement=UnitOfTime.SECONDS,
+                            )
+                        ),
+                    }
+                ),
+                {
+                    CONF_SCAN_INTERVAL: self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    )
+                },
+            ),
         )

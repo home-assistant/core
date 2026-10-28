@@ -215,6 +215,18 @@
       "message": "Timed out while contacting Imou"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Polling interval"
+        },
+        "data_description": {
+          "scan_interval": "Seconds between refreshes. The shortest is 120 (2 minutes) and the longest is 3600 (60 minutes)."
+        }
+      }
+    }
+  },
   "selector": {
     "api_url": {
       "options": {

@@ -25,6 +25,12 @@ API_URLS: dict[str, str] = {
 CONF_API_URL = "api_url"
 CONF_APP_ID = "app_id"
 CONF_APP_SECRET = "app_secret"
+CONF_SCAN_INTERVAL = "scan_interval"
+
+# Shortest refresh is the historical interval. Longer values stay inside the
+# free monthly request quota more easily. The options form steps by 60 seconds.
+DEFAULT_SCAN_INTERVAL = 120
+MAX_SCAN_INTERVAL = 3600
 
 # Switch keys not yet exported by pyimouapi (keep integration-local).
 PARAM_HEADER_DETECT = "header_detect"

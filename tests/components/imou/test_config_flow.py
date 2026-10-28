@@ -1,5 +1,6 @@
 """Tests for the Imou config flow."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from pyimouapi.exceptions import (
@@ -15,6 +16,7 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    CONF_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -450,3 +452,26 @@ async def test_reconfigure_unique_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_sets_scan_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Configure stores the polling interval and the next setup uses it."""
+    assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=120)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 300},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert mock_config_entry.options[CONF_SCAN_INTERVAL] == 300
+    assert mock_config_entry.runtime_data.update_interval == timedelta(seconds=300)

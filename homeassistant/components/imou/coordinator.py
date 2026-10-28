@@ -15,11 +15,17 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
+from .const import (
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    UPDATE_TIMEOUT,
+    imou_device_identifier,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 _QUOTA_CODE = "OP1013"
 
 type ImouConfigEntry = ConfigEntry[ImouDataUpdateCoordinator]
@@ -37,11 +43,12 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         config_entry: ImouConfigEntry,
     ) -> None:
         """Initialize the Imou data update coordinator."""
+        interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
             name="ImouDataUpdateCoordinator",
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(seconds=interval),
             config_entry=config_entry,
             always_update=True,
         )
