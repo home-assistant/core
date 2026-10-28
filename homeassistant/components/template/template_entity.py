@@ -153,7 +153,7 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
-        self._handling_results = False
+        self._writing_render_state = False
         self._render_states: list[State] = []
         self._attr_unique_id = unique_id
         self._preview_callback: (
@@ -424,7 +424,7 @@ class TemplateEntity(AbstractTemplateEntity):
         if event and entity_id == self.entity_id:
             new_state = event.data["new_state"]
             # Only count states written by a render, rate limited renders run later
-            if self._handling_results:
+            if self._writing_render_state:
                 self._add_render_state(new_state)
                 self._self_ref_update_count += 1
             elif any(new_state is state for state in self._render_states):
@@ -456,14 +456,7 @@ class TemplateEntity(AbstractTemplateEntity):
                     errors.append(update.result)
 
         if not self._preview_callback:
-            # Self referencing events fire synchronously during this write
-            handling_results = self._handling_results
-            self._handling_results = True
-            try:
-                self.async_write_ha_state()
-            finally:
-                self._handling_results = handling_results
-            self._add_render_state(self.hass.states.get(self.entity_id))
+            self._async_write_render_state()
             return
 
         if errors:
@@ -471,6 +464,19 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         self._async_preview_update()
+
+    @callback
+    def _async_write_render_state(self) -> None:
+        """Write a state resulting from a template render."""
+        # Outside of an event dispatch, the bus delivers our own state change
+        # synchronously during this write, before the new state can be recorded
+        writing_render_state = self._writing_render_state
+        self._writing_render_state = True
+        try:
+            self.async_write_ha_state()
+        finally:
+            self._writing_render_state = writing_render_state
+        self._add_render_state(self.hass.states.get(self.entity_id))
 
     @callback
     def _add_render_state(self, state: State | None) -> None:
