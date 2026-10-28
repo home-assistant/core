@@ -67,6 +67,7 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         value_fn=lambda entity: entity.yesterday_water_cost,
         translation_key=AnglianWaterSensor.YESTERDAY_WATER_COST,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
@@ -75,6 +76,7 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         value_fn=lambda entity: entity.yesterday_sewerage_cost,
         translation_key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.LAST_UPDATED,
