@@ -17,6 +17,20 @@ from .const import (
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 
+# Entries saved before the Europe and North America hosts were corrected stored
+# the region key of the other server. Swap those keys so the entry keeps the
+# server it was already calling.
+_LEGACY_REGION_SWAP = {"eu": "na", "na": "eu"}
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
+    """Keep an existing entry on the server it was already calling."""
+    if entry.minor_version < 2:
+        data = entry.data
+        if (region := data.get(CONF_API_URL)) in _LEGACY_REGION_SWAP:
+            data = {**data, CONF_API_URL: _LEGACY_REGION_SWAP[region]}
+        hass.config_entries.async_update_entry(entry, data=data, minor_version=2)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None:
     """Set up Imou integration from a config entry."""

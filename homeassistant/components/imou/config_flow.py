@@ -61,7 +61,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate credentials and close the temporary client."""

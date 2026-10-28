@@ -196,6 +196,7 @@ async def test_user_flow_uses_region_host(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == user_input[CONF_APP_ID]
     client_cls.assert_called_once_with(
         user_input[CONF_APP_ID],
         user_input[CONF_APP_SECRET],
