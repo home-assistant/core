@@ -102,6 +102,11 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         because the same failure aborts setup in one place and only marks the
         entities unavailable in another.
         """
+        if self._closed:
+            # Teardown cancels the pass that got here, but closing the old
+            # client awaits the library's reader and can swallow that
+            # cancellation; connecting anyway would hold up the unload.
+            raise CoolbotError("Unloaded before connecting")
         session = async_get_clientsession(self.hass)
         client = CoolbotClient(
             self.config_entry.data[CONF_EMAIL],

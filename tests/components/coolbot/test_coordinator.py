@@ -141,6 +141,47 @@ async def test_unloading_mid_reconnect_leaves_no_socket_open(
     mock_client.async_close.assert_awaited()
 
 
+async def test_unloading_while_the_old_socket_closes_does_not_reconnect(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A close that swallows the unload's cancellation must not lead to a connect.
+
+    The library's close awaits its reader task and catches CancelledError, so
+    cancelling the pass there can be lost, and the pass would go on to open a
+    new socket the unload then has to wait for.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+
+    closing = asyncio.Event()
+
+    async def close_swallowing_cancellation() -> None:
+        closing.set()
+        with suppress(asyncio.CancelledError):
+            await asyncio.Event().wait()
+
+    mock_client.connected = False
+    mock_client.async_close.side_effect = close_swallowing_cancellation
+    created: list[AsyncMock] = []
+
+    def new_client(*args: object, **kwargs: object) -> AsyncMock:
+        created.append(make_client())
+        return created[-1]
+
+    with patch(
+        "homeassistant.components.coolbot.coordinator.CoolbotClient", new_client
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + MAINTENANCE_INTERVAL + timedelta(seconds=1)
+        )
+        await closing.wait()
+
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not created
+
+
 async def test_a_slow_maintenance_pass_is_not_overlapped(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
