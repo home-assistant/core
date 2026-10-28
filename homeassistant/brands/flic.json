@@ -1,0 +1,5 @@
+{
+  "domain": "flic",
+  "name": "Flic",
+  "integrations": ["flic", "flic_button"]
+}
