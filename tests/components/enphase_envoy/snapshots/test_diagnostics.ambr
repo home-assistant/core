@@ -1797,6 +1797,7 @@
       '/admin/lib/tariff': 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
       '/admin/lib/tariff_log': dict({
         'code': 200,
+        'error': 'ClientResponseError',
         'line': '4',
         'mask_state': 'unchanged',
       }),
@@ -2734,6 +2735,7 @@
       '/admin/lib/tariff': 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
       '/admin/lib/tariff_log': dict({
         'code': 200,
+        'error': 'ClientResponseError',
         'line': '4',
         'mask_state': 'unchanged',
       }),

@@ -42,11 +42,27 @@ TO_REDACT = {
 }
 
 
-async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
+async def _get_fixture_collection(
+    envoy: Envoy, mask: bool, strict: bool
+) -> dict[str, Any]:
     try:
-        return await envoy.fixture_collection(mask_serials=True, strict_masking=True)
-    except (EnvoyError, EnvoyClientClosedError, ClientError) as err:
+        fixtures: dict[str, Any] = await envoy.fixture_collection(
+            mask_serials=mask, strict_masking=strict
+        )
+        # pyenphase may leak Clientconnectionerror header data in endpoint_log, clean until fixed
+        for ep in [ep for ep in fixtures if ep.endswith("_log") and ep.startswith("/")]:
+            if (
+                "error" in (ep_data := fixtures[ep])
+                and "ClientResponseError" in ep_data["error"]
+            ):
+                ep_data["error"] = "ClientResponseError"
+    except ClientError as err:
+        return {
+            "collection_aborted_log": f"Error: {type(err).__name__ if not hasattr(err, 'status') else err.status}"
+        }
+    except (EnvoyError, EnvoyClientClosedError) as err:
         return {"collection_aborted_log": f"Error: {err!r}"}
+    return fixtures
 
 
 async def async_get_config_entry_diagnostics(
@@ -145,7 +161,10 @@ async def async_get_config_entry_diagnostics(
 
     fixture_data: dict[str, Any] = {}
     if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
-        fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+        # use strict masking until option_flow let user select mode that should be used
+        fixture_data = await _get_fixture_collection(
+            envoy=envoy, mask=True, strict=True
+        )
 
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),

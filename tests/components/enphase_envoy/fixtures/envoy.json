@@ -95,6 +95,7 @@
     },
     "/admin/lib/tariff": "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     "/admin/lib/tariff_log": {
+      "error": "ClientResponseError(RequestInfo(url='http://example.com'",
       "code": 200,
       "mask_state": "unchanged",
       "line": "4"

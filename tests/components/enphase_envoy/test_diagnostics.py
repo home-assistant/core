@@ -122,10 +122,7 @@ async def test_entry_diagnostics_with_fixtures_with_clientresponse_error(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     )
-    assert (
-        "Error: ClientResponseError(RequestInfo(url='http://example.com'"
-        in diagnostics["fixtures"]["collection_aborted_log"]
-    )
+    assert diagnostics["fixtures"]["collection_aborted_log"] == "Error: 0"
 
     mock_envoy.fixture_collection.side_effect = EnvoyError("Test")
     diagnostics = await get_diagnostics_for_config_entry(
@@ -141,7 +138,7 @@ async def test_entry_diagnostics_with_fixtures_with_clientresponse_error(
     )
     assert (
         diagnostics["fixtures"]["collection_aborted_log"]
-        == "Error: ClientConnectionError()"
+        == "Error: ClientConnectionError"
     )
 
 
