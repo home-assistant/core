@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import SCAN_INTERVAL
+from homeassistant.components.control4.coordinator import SCAN_INTERVAL
 from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,

@@ -1,5 +1,6 @@
 """Data update coordinator for the Control4 integration."""
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -8,13 +9,14 @@ from pyControl4.error_handling import C4Exception
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
 from .director_utils import update_variables_for_config_entry
 
 if TYPE_CHECKING:
     from . import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 class Control4DataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
