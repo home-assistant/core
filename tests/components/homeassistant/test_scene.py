@@ -14,6 +14,7 @@ import yaml
 from homeassistant import config
 from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
+from homeassistant.components.scene import SceneEntityStateAttribute
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -164,7 +165,9 @@ async def test_create_service(
     assert scene.domain == "scene"
     assert scene.name == "hallo"
     assert scene.state == STATE_UNKNOWN
-    assert scene.attributes.get("entity_id") == ["light.bed_light"]
+    assert scene.attributes.get(SceneEntityStateAttribute.ENTITY_ID) == [
+        "light.bed_light"
+    ]
 
     await hass.services.async_call(
         "scene",
@@ -182,7 +185,9 @@ async def test_create_service(
     assert scene.domain == "scene"
     assert scene.name == "hallo"
     assert scene.state == STATE_UNKNOWN
-    assert scene.attributes.get("entity_id") == ["light.kitchen_light"]
+    assert scene.attributes.get(SceneEntityStateAttribute.ENTITY_ID) == [
+        "light.kitchen_light"
+    ]
 
     await hass.services.async_call(
         "scene",
@@ -201,7 +206,9 @@ async def test_create_service(
     assert scene.domain == "scene"
     assert scene.name == "hallo_2"
     assert scene.state == STATE_UNKNOWN
-    assert scene.attributes.get("entity_id") == ["light.kitchen"]
+    assert scene.attributes.get(SceneEntityStateAttribute.ENTITY_ID) == [
+        "light.kitchen"
+    ]
 
 
 async def test_delete_service(
@@ -280,7 +287,9 @@ async def test_snapshot_service(
     await hass.async_block_till_done()
     scene = hass.states.get("scene.hallo")
     assert scene is not None
-    assert scene.attributes.get("entity_id") == ["light.my_light"]
+    assert scene.attributes.get(SceneEntityStateAttribute.ENTITY_ID) == [
+        "light.my_light"
+    ]
 
     hass.states.async_set("light.my_light", "off", {"hs_color": (123, 45)})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
@@ -318,8 +327,10 @@ async def test_snapshot_service(
     await hass.async_block_till_done()
     scene = hass.states.get("scene.hallo_3")
     assert scene is not None
-    assert "light.my_light" in scene.attributes.get("entity_id")
-    assert "light.bed_light" in scene.attributes.get("entity_id")
+    assert "light.my_light" in scene.attributes.get(SceneEntityStateAttribute.ENTITY_ID)
+    assert "light.bed_light" in scene.attributes.get(
+        SceneEntityStateAttribute.ENTITY_ID
+    )
 
 
 async def test_ensure_no_intersection(hass: HomeAssistant) -> None:

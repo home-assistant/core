@@ -8,9 +8,13 @@ import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components.light import ATTR_TRANSITION
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
+from homeassistant.components.scene import (
+    DOMAIN as SCENE_DOMAIN,
+    STATES,
+    Scene,
+    SceneEntityStateAttribute,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
     CONF_ICON,
@@ -366,9 +370,11 @@ class HomeAssistantScene(Scene):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the scene state attributes."""
-        attributes: dict[str, Any] = {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        attributes: dict[str, Any] = {
+            SceneEntityStateAttribute.ENTITY_ID: list(self.scene_config.states)
+        }
         if (unique_id := self.unique_id) is not None:
-            attributes[CONF_ID] = unique_id
+            attributes[SceneEntityStateAttribute.ID] = unique_id
         return attributes
 
     @override
