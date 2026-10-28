@@ -68,7 +68,7 @@
   },
   "exceptions": {
     "invalid_response": {
-      "message": "Invalid response from API: {error}"
+      "message": "Invalid response received from the printer"
     }
   }
 }

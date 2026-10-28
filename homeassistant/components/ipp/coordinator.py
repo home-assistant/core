@@ -56,5 +56,4 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
-                translation_placeholders={"error": str(error)},
             ) from error
