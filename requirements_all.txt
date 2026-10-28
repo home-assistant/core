@@ -50,7 +50,7 @@ PlexAPI==4.18.2
 ProgettiHWSW==0.1.4
 
 # homeassistant.components.cast
-PyChromecast==14.0.10
+PyChromecast==14.1.0
 
 # homeassistant.components.flume
 PyFlume==0.6.5
