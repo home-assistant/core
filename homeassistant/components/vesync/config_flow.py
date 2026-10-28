@@ -147,9 +147,13 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(account_id)
-                self._abort_if_unique_id_mismatch()
+                # Entries awaiting the minor version 3 migration have no unique ID
+                if reconfigure_entry.unique_id:
+                    self._abort_if_unique_id_mismatch()
+                else:
+                    self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry, data_updates=user_input
+                    reconfigure_entry, unique_id=account_id, data_updates=user_input
                 )
 
         return self.async_show_form(

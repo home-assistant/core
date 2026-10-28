@@ -287,3 +287,48 @@ async def test_reconfigure_flow_wrong_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert config_entry.data == {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unmigrated_entry(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry still waiting for its account ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.unique_id == "TESTACCOUNTID"
+    assert entry.data == {CONF_USERNAME: "user", CONF_PASSWORD: "new-password"}
+
+
+async def test_reconfigure_flow_unmigrated_entry_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring an entry without account ID to a configured account."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "other-user", CONF_PASSWORD: "pass"},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id is None
+    assert entry.data == {CONF_USERNAME: "other-user", CONF_PASSWORD: "pass"}
