@@ -1345,6 +1345,15 @@
           ],
           "name": "Bosch SHC"
         },
+        "bosch_smart_camera": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "security_safety.cameras"
+          ],
+          "name": "Bosch Smart Camera"
+        },
         "home_connect": {
           "integration_type": "hub",
           "config_flow": true,

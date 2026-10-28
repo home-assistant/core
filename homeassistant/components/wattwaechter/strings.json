@@ -72,6 +72,7 @@
       "frequency": { "name": "Grid frequency" },
       "gas_consumption": { "name": "Gas consumption" },
       "gas_flow_rate": { "name": "Gas flow rate" },
+      "gas_power": { "name": "Gas power" },
       "import_tariff_1": { "name": "Consumption tariff 1" },
       "import_tariff_2": { "name": "Consumption tariff 2" },
       "import_total": { "name": "Total consumption" },
