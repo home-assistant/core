@@ -25,7 +25,7 @@ def mock_modbus_unavailable(
         return unit
 
     with patch(
-        "homeassistant.components.fronius.async_get_unit",
+        "homeassistant.components.fronius.modbus.async_get_unit",
         MagicMock(side_effect=_refusing_unit),
     ) as mock_get_unit:
         yield mock_get_unit

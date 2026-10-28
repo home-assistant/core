@@ -156,8 +156,6 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.auth_enabled is True:
             return await self.async_step_credentials()
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={"host": self.host},

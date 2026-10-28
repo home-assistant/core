@@ -89,7 +89,6 @@ class MonzoFlowHandler(
         if user_input is not None:
             return await self.async_step_wait_for_approval()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="approval_timeout")
 
     async def async_step_connection_error(
@@ -99,7 +98,6 @@ class MonzoFlowHandler(
         if user_input is not None:
             return await self.async_step_wait_for_approval()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="connection_error")
 
     async def async_step_finish_approval(
