@@ -40,33 +40,19 @@ class OverkizExecutor:
                 return self.device.definition.states[state_name]
         return None
 
-    async def async_execute_command(
-        self, command_name: str, *args: Any, refresh_afterwards: bool = True
-    ) -> None:
-        """Execute device command in async context.
-
-        :param refresh_afterwards: Whether to refresh the device
-            state after the command is executed. If several
-            commands are executed, it will be refreshed only once.
-        """
+    async def async_execute_command(self, command_name: str, *args: Any) -> None:
+        """Execute device command in async context."""
         parameters = [arg for arg in args if arg is not None]
 
         await self.async_execute_commands(
-            [Command(name=command_name, parameters=parameters)],
-            refresh_afterwards=refresh_afterwards,
+            [Command(name=command_name, parameters=parameters)]
         )
 
-    async def async_execute_commands(
-        self, commands: list[Command], refresh_afterwards: bool = True
-    ) -> None:
+    async def async_execute_commands(self, commands: list[Command]) -> None:
         """Execute multiple device commands as a single batch execution.
 
         The Overkiz API processes all commands in order within a single action group,
         which is required when commands depend on each other.
-
-        :param refresh_afterwards: Whether to refresh the device state
-            after the batch is executed. Disable it to refresh only once
-            when this batch is part of a larger sequence of commands.
         """
         if not commands:
             return
@@ -90,8 +76,7 @@ class OverkizExecutor:
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
         # to register it here.
         self.coordinator.register_execution(exec_id, actions)
-        if refresh_afterwards:
-            self.coordinator.async_execution_started()
+        self.coordinator.async_execution_started()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
