@@ -477,7 +477,7 @@
     'supported_features': 0,
     'translation_key': 'mined_blocks',
     'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_mined_blocks',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'blocks',
   })
 # ---
 # name: test_entities[sensor.bitcoin_mined_blocks-state]
@@ -485,6 +485,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Mined blocks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'blocks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bitcoin_mined_blocks',
@@ -786,7 +787,7 @@
     'supported_features': 0,
     'translation_key': 'total_blocks',
     'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_total_blocks',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'blocks',
   })
 # ---
 # name: test_entities[sensor.bitcoin_total_blocks-state]
@@ -794,6 +795,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Total blocks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'blocks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bitcoin_total_blocks',
@@ -1097,7 +1099,7 @@
     'supported_features': 0,
     'translation_key': 'number_of_transactions',
     'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_number_of_transactions',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'transactions',
   })
 # ---
 # name: test_entities[sensor.bitcoin_transactions-state]
@@ -1105,6 +1107,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Transactions',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'transactions',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bitcoin_transactions',

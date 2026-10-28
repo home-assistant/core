@@ -42,7 +42,8 @@
         "name": "Market price"
       },
       "mined_blocks": {
-        "name": "Mined blocks"
+        "name": "Mined blocks",
+        "unit_of_measurement": "blocks"
       },
       "miners_revenue_btc": {
         "name": "Miners revenue"
@@ -57,13 +58,15 @@
         "name": "Next retarget"
       },
       "number_of_transactions": {
-        "name": "Transactions"
+        "name": "Transactions",
+        "unit_of_measurement": "transactions"
       },
       "timestamp": {
         "name": "Statistics timestamp"
       },
       "total_blocks": {
-        "name": "Total blocks"
+        "name": "Total blocks",
+        "unit_of_measurement": "[%key:component::bitcoin::entity::sensor::mined_blocks::unit_of_measurement%]"
       },
       "total_btc": {
         "name": "Total supply"

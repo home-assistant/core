@@ -6,7 +6,6 @@ from typing import override
 import probatio
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
@@ -134,33 +133,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-# The names the YAML platform used. Sensors an imported YAML setup already had
-# suggest the entity IDs derived from them when they are registered for the
-# first time, so they keep the IDs they had. Remove with the YAML import.
-LEGACY_NAMES = {
-    "exchangerate": "Exchange rate (1 BTC)",
-    "trade_volume_btc": "Trade volume",
-    "miners_revenue_usd": "Miners revenue",
-    "btc_mined": "Mined",
-    "trade_volume_usd": "Trade volume",
-    "difficulty": "Difficulty",
-    "minutes_between_blocks": "Time between Blocks",
-    "number_of_transactions": "No. of Transactions",
-    "hash_rate": "Hash rate",
-    "timestamp": "Timestamp",
-    "mined_blocks": "Mined Blocks",
-    "blocks_size": "Block size",
-    "total_fees_btc": "Total fees",
-    "total_btc_sent": "Total sent",
-    "estimated_btc_sent": "Estimated sent",
-    "total_btc": "Total",
-    "total_blocks": "Total Blocks",
-    "next_retarget": "Next retarget",
-    "estimated_transaction_volume_usd": "Est. Transaction volume",
-    "miners_revenue_btc": "Miners revenue",
-    "market_price_usd": "Market price",
-}
-
 OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -252,9 +224,8 @@ async def async_setup_entry(
     if currency not in coordinator.data.ticker:
         _LOGGER.warning("Currency %s is not available. Using USD", currency)
 
-    previous = entry.data.get(CONF_DISPLAY_OPTIONS, [])
     async_add_entities(
-        BitcoinSensor(coordinator, currency, description, description.key in previous)
+        BitcoinSensor(coordinator, currency, description)
         for description in SENSOR_TYPES
     )
 
@@ -270,7 +241,6 @@ class BitcoinSensor(CoordinatorEntity[BitcoinDataUpdateCoordinator], SensorEntit
         coordinator: BitcoinDataUpdateCoordinator,
         currency: str,
         description: SensorEntityDescription,
-        had_in_yaml: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -284,10 +254,6 @@ class BitcoinSensor(CoordinatorEntity[BitcoinDataUpdateCoordinator], SensorEntit
             name=INTEGRATION_TITLE,
             configuration_url="https://www.blockchain.com/explorer",
         )
-        if had_in_yaml:
-            self.entity_id = ENTITY_ID_FORMAT.format(
-                slugify(LEGACY_NAMES[description.key])
-            )
         self._currency = currency
         self._update_from_data()
 
