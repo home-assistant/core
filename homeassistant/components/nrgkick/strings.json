@@ -120,13 +120,13 @@
         "name": "Charged energy"
       },
       "charging_current": {
-        "name": "Charging current"
+        "name": "Offered charging current"
       },
       "charging_rate": {
         "name": "Charging rate"
       },
       "charging_voltage": {
-        "name": "Charging voltage"
+        "name": "Average voltage"
       },
       "connector_l1_temperature": {
         "name": "Connector L1 temperature"
