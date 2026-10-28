@@ -201,6 +201,7 @@ async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> 
 
     notification_to_subscribe = {
         NotificationCategory.WEIGHT,
+        NotificationCategory.TEMPERATURE,
         NotificationCategory.PRESSURE,
         NotificationCategory.ACTIVITY,
         NotificationCategory.SLEEP,

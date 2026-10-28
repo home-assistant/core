@@ -41,7 +41,12 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.util import dt as dt_util
 
-from . import call_webhook, prepare_webhook_setup, setup_integration
+from . import (
+    call_webhook,
+    load_measurements_fixture,
+    prepare_webhook_setup,
+    setup_integration,
+)
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.components.cloud import mock_cloud
@@ -58,12 +63,15 @@ async def test_data_manager_webhook_subscription(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert withings.subscribe_notification.call_count == 6
+    assert withings.subscribe_notification.call_count == 7
 
     webhook_url = "https://example.com/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
     withings.subscribe_notification.assert_any_call(
         webhook_url, NotificationCategory.WEIGHT
+    )
+    withings.subscribe_notification.assert_any_call(
+        webhook_url, NotificationCategory.TEMPERATURE
     )
     withings.subscribe_notification.assert_any_call(
         webhook_url, NotificationCategory.PRESSURE
@@ -119,12 +127,21 @@ async def test_head_request(
     assert response.status == 200
 
 
+@pytest.mark.parametrize(
+    "notification_category",
+    [
+        pytest.param(NotificationCategory.WEIGHT, id="weight"),
+        pytest.param(NotificationCategory.TEMPERATURE, id="temperature"),
+        pytest.param(NotificationCategory.PRESSURE, id="pressure"),
+    ],
+)
 async def test_webhooks_request_data(
     hass: HomeAssistant,
     withings: AsyncMock,
     webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
+    notification_category: NotificationCategory,
 ) -> None:
     """Test calling a webhook requests data."""
     await setup_integration(hass, webhook_config_entry)
@@ -138,11 +155,61 @@ async def test_webhooks_request_data(
     await call_webhook(
         hass,
         WEBHOOK_ID,
-        {"userid": USER_ID, "appli": NotificationCategory.WEIGHT},
+        {"userid": USER_ID, "appli": notification_category},
         client,
     )
     assert withings.get_measurement_since.call_count == 1
     assert withings.get_measurement_in_period.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "initial_value", "updated_value"),
+    [
+        pytest.param("sensor.henk_temperature", "40", "37.3", id="temperature"),
+        pytest.param(
+            "sensor.henk_body_temperature", "40", "37.3", id="body-temperature"
+        ),
+        pytest.param(
+            "sensor.henk_skin_temperature", "20", "35.1", id="skin-temperature"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_temperature_webhook_updates_sensor(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    initial_value: str,
+    updated_value: str,
+) -> None:
+    """Test a temperature notification updates the existing sensor."""
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+    client = await hass_client_no_auth()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == initial_value
+    withings.get_measurement_since.assert_not_called()
+
+    withings.get_measurement_since.return_value = load_measurements_fixture(
+        "withings/measurements_temperature.json"
+    )
+    response = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotificationCategory.TEMPERATURE},
+        client,
+    )
+
+    assert response.message_code == 0
+    withings.get_measurement_since.assert_awaited_once()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == updated_value
 
 
 @pytest.mark.parametrize(
@@ -489,7 +556,7 @@ async def test_cloud_disconnect(
 
         withings.list_notification_configurations.return_value = []
 
-        assert withings.subscribe_notification.call_count == 6
+        assert withings.subscribe_notification.call_count == 7
 
         async_mock_cloud_connection_status(hass, False)
         await hass.async_block_till_done()
@@ -499,7 +566,7 @@ async def test_cloud_disconnect(
         async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
-        assert withings.subscribe_notification.call_count == 12
+        assert withings.subscribe_notification.call_count == 14
 
 
 async def test_internet_disconnect(
@@ -537,7 +604,7 @@ async def test_internet_disconnect(
         assert cloud.async_active_subscription(hass) is True
         assert cloud.async_is_connected(hass) is True
         assert withings.revoke_notification_configurations.call_count == 3
-        assert withings.subscribe_notification.call_count == 6
+        assert withings.subscribe_notification.call_count == 7
 
         await hass.async_block_till_done()
 
@@ -551,7 +618,7 @@ async def test_internet_disconnect(
         async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
-        assert withings.subscribe_notification.call_count == 12
+        assert withings.subscribe_notification.call_count == 14
 
 
 async def test_cloud_disconnect_retry(
@@ -641,7 +708,7 @@ async def test_internet_timeout_then_restore(
         assert cloud.async_active_subscription(hass) is True
         assert cloud.async_is_connected(hass) is True
         assert withings.revoke_notification_configurations.call_count == 3
-        assert withings.subscribe_notification.call_count == 6
+        assert withings.subscribe_notification.call_count == 7
 
         await hass.async_block_till_done()
 
@@ -656,7 +723,7 @@ async def test_internet_timeout_then_restore(
         async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
 
-        assert withings.subscribe_notification.call_count == 12
+        assert withings.subscribe_notification.call_count == 14
 
 
 @pytest.mark.parametrize(
@@ -790,7 +857,7 @@ async def test_webhook_subscription_retry_on_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert withings.subscribe_notification.call_count >= 6
+    assert withings.subscribe_notification.call_count >= 7
 
 
 async def test_webhook_subscription_continues_retrying(
@@ -881,7 +948,7 @@ async def test_webhook_subscription_waits_for_start(
     await hass.async_block_till_done()
     await prepare_webhook_setup(hass, freezer)
 
-    assert withings.subscribe_notification.call_count == 6
+    assert withings.subscribe_notification.call_count == 7
 
 
 async def test_webhook_subscription_invalid_params(
