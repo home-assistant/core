@@ -811,7 +811,7 @@ async def test_battery_services_not_paired(
 @pytest.mark.parametrize(
     ("cloud_error", "translation_key"),
     [
-        pytest.param(InvalidCommand, "command_exception", id="fleet_error"),
+        pytest.param(InvalidCommand, "energy_command_failed", id="fleet_error"),
         pytest.param(ClientError, "command_connection_error", id="connection_error"),
     ],
 )
@@ -845,6 +845,40 @@ async def test_battery_services_cloud_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
+    assert not exc_info.value.translation_placeholders
+
+
+async def test_battery_services_cloud_error_message(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the cloud's own error text is logged, not shown to the user."""
+    entry = await _setup_site(hass, [])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(
+            f"{CLOUD_ENERGY_SITE}.dispatch_battery_power",
+            side_effect=InvalidCommand(
+                {"error": "invalid_command", "error_description": "site offline"}
+            ),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {CONF_DEVICE_ID: device.id, ATTR_POWER: 5000, ATTR_DURATION: 1800},
+            blocking=True,
+        )
+    assert str(exc_info.value) == (
+        "Teslemetry could not complete the command, check the logs for details"
+    )
+    assert "site offline" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -142,23 +142,30 @@ def fail_over_unless_gateway_rejected(
 async def handle_energy_command(command: Awaitable[dict[str, Any]]) -> None:
     """Handle a command routed to the local Powerwall gateway or the cloud."""
     try:
-        await handle_command(command)
+        await command
     except PowerwallNotSupportedError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="local_command_not_supported",
         ) from e
-    except PowerwallCommandError as e:
+    except (PowerwallCommandError, TeslaFleetError) as e:
+        detail: object = e
+        if isinstance(e, TeslaFleetError):
+            detail = e.data or e.message
+            translation_key = "energy_command_failed"
+        elif e.code == GATEWAY_OUT_OF_RANGE:
+            translation_key = "local_command_out_of_range"
+        else:
+            translation_key = "local_command_failed"
         # pylint: disable-next=home-assistant-log-and-raise
-        LOGGER.error("Local Powerwall gateway command failed: %s", e)
-        if e.code == GATEWAY_OUT_OF_RANGE:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="local_command_out_of_range",
-            ) from e
+        LOGGER.error("Energy site command failed: %s", detail)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key=translation_key
+        ) from e
+    except (ClientError, TimeoutError) as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="local_command_failed",
+            translation_key="command_connection_error",
         ) from e
 
 

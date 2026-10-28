@@ -1299,6 +1299,9 @@
     "command_reason": {
       "message": "Command was rejected: {reason}"
     },
+    "energy_command_failed": {
+      "message": "Teslemetry could not complete the command, check the logs for details"
+    },
     "local_command_failed": {
       "message": "The Powerwall gateway could not complete the command, check the logs for details"
     },
