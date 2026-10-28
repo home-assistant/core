@@ -394,13 +394,8 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
-    # Temperature offset. Applies to all vendors, including Eve Systems: the
-    # legacy vendor-specific EveTemperatureOffset schema was dropped once the
-    # cluster_revision split (below) made its bounds identical to this one;
-    # existing Eve entities are migrated onto this key in __init__.py.
-    # Older Thermostat cluster revisions (Matter 1.3 and earlier) are
-    # spec-limited to ±2.5°C. If the ClusterRevision can't be read, this
-    # schema wins by default, so the conservative bound is assumed.
+    # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
+    # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
