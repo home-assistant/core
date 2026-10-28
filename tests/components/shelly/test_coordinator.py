@@ -447,6 +447,47 @@ async def test_rpc_reload_on_cfg_change(
     assert hass.states.get(entity_id) is None
 
 
+async def test_rpc_no_reload_on_plugs_ui_cfg_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC plug LED config change does not reload the entry."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    await init_integration(hass, 2)
+
+    # A reload would turn the switch into a light
+    monkeypatch.setitem(
+        mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
+    )
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "plugs_ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)
+
+
 async def test_rpc_reload_with_invalid_auth(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -990,6 +1031,29 @@ async def test_rpc_polling_disconnected(
 
     await mock_polling_rpc_update(hass, freezer)
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_polling_not_initialized(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC polling is skipped while the device is re-initializing."""
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
+    await init_integration(hass, 2)
+
+    # The websocket is connected but initialization has not completed yet
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    mock_rpc_device.poll.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 

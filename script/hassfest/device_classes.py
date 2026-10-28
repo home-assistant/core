@@ -2,6 +2,8 @@
 
 import json
 
+from hassfest.model import Config, Integration
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
@@ -10,13 +12,12 @@ from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.infrared import InfraredDeviceClass
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.radio_frequency import RadioFrequencyDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.components.valve import ValveDeviceClass
 from homeassistant.const import Platform
-
-from .model import Config, Integration
 
 PATH = "homeassistant/generated/device_classes.json"
 
@@ -35,6 +36,7 @@ def _generate() -> str:
                 Platform.INFRARED: InfraredDeviceClass,
                 Platform.MEDIA_PLAYER: MediaPlayerDeviceClass,
                 Platform.NUMBER: NumberDeviceClass,
+                Platform.RADIO_FREQUENCY: RadioFrequencyDeviceClass,
                 Platform.SENSOR: SensorDeviceClass,
                 Platform.SWITCH: SwitchDeviceClass,
                 Platform.UPDATE: UpdateDeviceClass,

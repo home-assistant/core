@@ -45,13 +45,14 @@ from . import (
     register_entity,
     register_sub_device,
 )
-from .conftest import MOCK_LEDSTRIP_STATUS
+from .conftest import MOCK_LEDSTRIP_STATUS_RAINBOW, MOCK_LEDSTRIP_STATUS_SOLID
 
 DEVICE_BLOCK_ID = 4
 LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
+LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
 
 
 @pytest.fixture(autouse=True)
@@ -1148,17 +1149,6 @@ async def test_rpc_camera_privacy_switch(
     assert state.state == STATE_ON
 
 
-LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
-LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
-LEDSTRIP_STATUS_SOLID = {
-    "id": 0,
-    "on": True,
-    "brightness": 36,
-    "effect": "solid",
-    "rgb": [100, 150, 200],
-}
-
-
 async def test_rpc_ledstrip_reverse_switch(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
@@ -1204,9 +1194,12 @@ async def test_rpc_ledstrip_reverse_switch(
 @pytest.mark.parametrize(
     ("ledstrip_status", "expected_state"),
     [
-        (LEDSTRIP_STATUS_RAINBOW, STATE_ON),
-        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
-        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, STATE_ON),
+        (MOCK_LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (
+            MOCK_LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True},
+            STATE_UNAVAILABLE,
+        ),
         (
             {
                 "id": 0,
@@ -1233,7 +1226,9 @@ async def test_rpc_ledstrip_reverse_switch_availability(
 ) -> None:
     """Test RPC LED strip reverse switch availability depends on the effect."""
     monkeypatch.setitem(
-        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        deepcopy(MOCK_LEDSTRIP_STATUS_SOLID),
     )
 
     await init_integration(hass, 4)

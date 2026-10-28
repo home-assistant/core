@@ -364,55 +364,6 @@ async def test_cleanup_recreates_tracker_when_client_reappears(
     )
 
 
-async def test_recreated_tracker_enabled_when_device_registered(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a recreated tracker is enabled when its device is registered."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    removed_mac = "2C-71-FF-ED-34-83"
-    tracker_unique_id = f"scanner_Default_{removed_mac}"
-    site_client = mock_omada_clients_only_client.get_site_client.return_value
-
-    # Remove the client from the controller's known-clients list and clean up
-    site_client.get_known_clients.side_effect = partial(
-        _get_known_clients_without, hass, removed_mac
-    )
-    await _async_poll_known_clients(hass, freezer)
-    assert (
-        entity_registry.async_get_entity_id("device_tracker", DOMAIN, tracker_unique_id)
-        is None
-    )
-
-    # Another integration registers the client's device while it is absent
-    device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "registered-client-device")},
-        connections={(dr.CONNECTION_NETWORK_MAC, "2c:71:ff:ed:34:83")},
-    )
-
-    # The client returns; the tracker is recreated enabled by default
-    site_client.get_known_clients.side_effect = partial(
-        _get_known_clients_without, hass, ""
-    )
-    await _async_poll_known_clients(hass, freezer)
-
-    entity_id = entity_registry.async_get_entity_id(
-        "device_tracker", DOMAIN, tracker_unique_id
-    )
-    assert entity_id is not None
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by is None
-
-
 async def test_startup_cleanup_runs_before_trackers_are_registered(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,

@@ -1,12 +1,17 @@
 """Test Axis config flow."""
 
 from collections.abc import Callable
+from hashlib import sha256
 from ipaddress import ip_address
 from unittest.mock import patch
+from urllib.request import parse_http_list, parse_keqv_list
 
+import httpx2
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+import respx
 
+from homeassistant.components import camera
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
@@ -17,6 +22,8 @@ from homeassistant.components.axis.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -40,6 +47,105 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import API_DISCOVERY_BASIC_DEVICE_INFO, DEFAULT_HOST, MAC, MODEL, NAME
 
 DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
+
+
+@pytest.mark.parametrize("source", [SOURCE_REAUTH, SOURCE_RECONFIGURE])
+@pytest.mark.parametrize("username", ["root", "user2"])
+@respx.mock
+async def test_credentials_update_camera_authentication(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    source: str,
+    username: str,
+) -> None:
+    """Refresh snapshot authentication after changing alphanumeric credentials."""
+    old_hub = config_entry_setup.runtime_data
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": config_entry_setup.entry_id},
+        data=config_entry_setup.data,
+    )
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PROTOCOL: "http",
+                CONF_HOST: DEFAULT_HOST,
+                CONF_PORT: 80,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: "pass2",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == f"{source}_successful"
+    assert config_entry_setup.data[CONF_PASSWORD] == "pass2"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, f"camera.{NAME}")
+    assert await camera_entity.stream_source() == (
+        f"rtsp://{username}:pass2@{DEFAULT_HOST}/axis-media/media.amp?videocodec=h264"
+    )
+
+    image = b"synthetic image"
+    route = respx.get(f"http://{DEFAULT_HOST}/axis-cgi/jpg/image.cgi").mock(
+        side_effect=[
+            httpx2.Response(
+                401,
+                headers={
+                    "WWW-Authenticate": 'Digest realm="axis", nonce="testnonce", '
+                    'algorithm=SHA-256, qop="auth"',
+                },
+            ),
+            httpx2.Response(200, content=image),
+        ]
+    )
+    assert await camera_entity.async_camera_image() == image
+    assert route.call_count == 2
+    request = route.calls.last.request
+    digest = parse_keqv_list(
+        parse_http_list(request.headers["Authorization"].removeprefix("Digest "))
+    )
+    assert digest["username"] == username
+    # Verify the response with the new password, using the client's random cnonce.
+    ha1 = sha256(f"{username}:axis:pass2".encode()).hexdigest()
+    ha2 = sha256(f"GET:{request.url.raw_path.decode()}".encode()).hexdigest()
+    expected_response = sha256(
+        f"{ha1}:testnonce:{digest['nc']}:{digest['cnonce']}:auth:{ha2}".encode()
+    ).hexdigest()
+    assert digest["response"] == expected_response
+    assert config_entry_setup.runtime_data is not old_hub
+    assert config_entry_setup.runtime_data.api.config.username == username
+    assert config_entry_setup.runtime_data.api.config.password == "pass2"
+    reload_entry.assert_awaited_once_with(config_entry_setup.entry_id)
+
+
+@pytest.mark.parametrize(("protocol", "port"), [("https", 80), ("http", 8080)])
+async def test_reconfigure_connection_settings(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    protocol: str,
+    port: int,
+) -> None:
+    """Rebuild clients when the protocol or port changes without new credentials."""
+    old_hub = config_entry_setup.runtime_data
+    result = await config_entry_setup.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PROTOCOL: protocol, CONF_PORT: port},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_setup.runtime_data is not old_hub
+    assert config_entry_setup.runtime_data.api.config.web_proto == protocol
+    assert config_entry_setup.runtime_data.api.config.port == port
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, f"camera.{NAME}")
+    assert camera_entity.image_source == (
+        f"{protocol}://{DEFAULT_HOST}:{port}/axis-cgi/jpg/image.cgi"
+    )
 
 
 @pytest.mark.usefixtures("mock_default_requests")

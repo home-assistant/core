@@ -109,6 +109,9 @@
     "error_while_turn_on": {
       "message": "An error occurred while turning on AdGuard Home switch."
     },
+    "install_update_failed": {
+      "message": "Failed to install the AdGuard Home update"
+    },
     "update_failed": {
       "message": "An error occurred while updating AdGuard Home: {error}"
     }

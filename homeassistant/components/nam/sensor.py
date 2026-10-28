@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -68,9 +67,10 @@ from .const import (
     DOMAIN,
     MIGRATION_SENSORS,
 )
-from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
+from .coordinator import NAMConfigEntry
+from .entity import NAMEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,22 +396,10 @@ async def async_setup_entry(
     )
 
 
-class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
+class NAMSensor(NAMEntity, SensorEntity):
     """Define an Nettigo Air Monitor sensor."""
 
-    _attr_has_entity_name = True
     entity_description: NAMSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: NAMDataUpdateCoordinator,
-        description: NAMSensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
-        self.entity_description = description
 
     @property
     @override
