@@ -552,6 +552,6 @@ async def test_reauth_wrong_account(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
+    assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_TOKEN] == TOKEN
     mock_seafile_client.logout_device.assert_awaited_once()

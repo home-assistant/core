@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "wrong_account": "The account you logged in with is not the account of this entry."
+      "unique_id_mismatch": "You logged in with a different account. Log in with the account that was set up before."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

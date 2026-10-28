@@ -171,7 +171,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             # random virtual ID, except for the account created at server setup.
             await self.async_set_unique_id(account.email)
             if self.source == SOURCE_REAUTH:
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates={CONF_TOKEN: self._take_token()},
