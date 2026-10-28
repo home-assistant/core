@@ -78,7 +78,6 @@ class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
         """Initialize the tracked device."""
         super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.mac
 
     @property

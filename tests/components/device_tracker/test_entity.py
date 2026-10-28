@@ -336,13 +336,23 @@ class MockScannerEntity(ScannerEntity):
         hostname: str | None = None,
         connected: bool | None = False,
         unique_id: str | None = None,
+        legacy: bool = False,
     ) -> None:
-        """Initialize entity."""
+        """Initialize entity.
+
+        Unless legacy, the entity describes its tracked device like a migrated
+        integration.
+        """
         self._ip_address = ip_address
         self._mac_address = mac_address
         self._hostname = hostname
         self._connected = connected
         self._unique_id = unique_id
+        if mac_address is not None and not legacy:
+            self._attr_device_info = dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+                name=hostname or mac_address,
+            )
 
     @property
     def should_poll(self) -> bool:
@@ -1332,10 +1342,10 @@ async def test_base_scanner_entity_associated_zone_option_set_before_add(
     ("ip_address", "mac_address", "hostname"),
     [("0.0.0.0", "ad:de:ef:be:ed:fe", "test.hostname.org")],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_scanner_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_id: str,
     ip_address: str,
     mac_address: str,
@@ -1343,15 +1353,6 @@ async def test_scanner_entity_state(
     scanner_entity: MockScannerEntity,
 ) -> None:
     """Test ScannerEntity based device tracker."""
-    # Make device tied to other integration so device tracker entities get enabled
-    other_config_entry = MockConfigEntry(domain="not_fake_integration")
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        name="Device from other integration",
-        config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-    )
-
     config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -1387,23 +1388,15 @@ async def test_scanner_entity_state(
     ("ip_address", "mac_address", "hostname"),
     [("0.0.0.0", "ad:de:ef:be:ed:fe", "test.hostname.org")],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_scanner_entity_entity_id_changed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     entity_id: str,
-    mac_address: str,
     scanner_entity: MockScannerEntity,
 ) -> None:
     """Test a scanner entity's entity_id is changed in place."""
-    other_config_entry = MockConfigEntry(domain="not_fake_integration")
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        name="Device from other integration",
-        config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-    )
     config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
@@ -1621,7 +1614,7 @@ def test_location_name_override_deprecation_warning(
 @pytest.mark.parametrize(
     ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
 )
-async def test_register_mac(
+async def test_scanner_entity_not_enabled_when_mac_becomes_known(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -1631,152 +1624,18 @@ async def test_register_mac(
     mac_address: str,
     unique_id: str,
 ) -> None:
-    """Test registering a mac."""
+    """Test a tracker stays disabled when another integration adds its device."""
     await create_mock_platform(hass, config_entry, [scanner_entity])
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=other_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+        identifiers={("other", "x")},
     )
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by is None
-
-
-@pytest.mark.parametrize(
-    ("connections", "mac_address", "unique_id"),
-    [
-        (
-            set(),
-            TEST_MAC_ADDRESS,
-            f"{TEST_MAC_ADDRESS}_yo1",
-        ),
-        (
-            {(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
-            "aa:bb:cc:dd:ee:ff",
-            "aa_bb_cc_dd_ee_ff",
-        ),
-    ],
-)
-async def test_register_mac_not_found(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    scanner_entity: MockScannerEntity,
-    entity_id: str,
-    connections: set[tuple[str, str]],
-    mac_address: str,
-    unique_id: str,
-) -> None:
-    """Test registering a mac when the mac or entity isn't found."""
-    registering_scanner_entity = MockScannerEntity(mac_address="aa:bb:cc:dd:ee:ff")
-    registering_scanner_entity.entity_id = f"{DOMAIN}.registering_scanner_entity"
-
-    await create_mock_platform(
-        hass, config_entry, [registering_scanner_entity, scanner_entity]
-    )
-
-    test_entity_entry = entity_registry.async_get(entity_id)
-    assert test_entity_entry is not None
-    assert test_entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections=connections,
-        identifiers={(TEST_DOMAIN, "device1")},
-    )
-    await hass.async_block_till_done()
-
-    # The entity entry under test should still be disabled.
-    test_entity_entry = entity_registry.async_get(entity_id)
-    assert test_entity_entry is not None
-    assert test_entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.parametrize(
-    ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
-)
-async def test_register_mac_ignored(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    scanner_entity: MockScannerEntity,
-    entity_id: str,
-    mac_address: str,
-    unique_id: str,
-) -> None:
-    """Test ignoring registering a mac."""
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN, pref_disable_new_entities=True)
-    config_entry.add_to_hass(hass)
-
-    await create_mock_platform(hass, config_entry, [scanner_entity])
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-    )
-    await hass.async_block_till_done()
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.parametrize(
-    ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
-)
-async def test_register_mac_ignores_child_device_created(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    scanner_entity: MockScannerEntity,
-    entity_id: str,
-    mac_address: str,
-    unique_id: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the MAC listener skips a newly created child device.
-
-    Registering a scanner MAC installs a device-registry create listener. A child
-    device has no connections attribute, so the listener must resolve it to None
-    (include_child_devices=False) and skip it, instead of raising AttributeError
-    while reading connections.
-    """
-    await create_mock_platform(hass, config_entry, [scanner_entity])
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-    caplog.clear()
-
-    parent = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(TEST_DOMAIN, "parent")},
-    )
-    device_registry.async_get_or_create_child(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(TEST_DOMAIN, "child")},
-        parent_device_id=parent.id,
-    )
-    await hass.async_block_till_done()
-
-    # The listener must not have raised while handling the child's create event.
-    assert "Error running job" not in caplog.text
-
-    # A child device has no MAC, so the scanner entity stays disabled.
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -2054,6 +1913,212 @@ async def test_scanner_entity_prunes_composite_identifiers(
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))}
 
 
+async def test_scanner_entity_device_info(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the integration's device info describes the tracked device as is."""
+    router = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "router")},
+    )
+    scanner_entity = MockScannerEntity(
+        mac_address=TEST_MAC_ADDRESS, hostname="printer-01"
+    )
+    scanner_entity._attr_has_entity_name = True
+    scanner_entity._attr_name = None
+    scanner_entity._attr_device_info = dr.DeviceInfo(
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
+        model="LaserJet",
+        name="Office printer",
+        via_device_id=router.id,
+    )
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.office_printer")
+    assert entity_entry is not None
+    assert entity_entry.original_name is None
+    assert entity_entry.device_id is not None
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_MAC_ADDRESS))
+    }
+    assert device.model == "LaserJet"
+    assert device.name == "Office printer"
+    assert device.via_device_id == router.id
+
+
+@pytest.mark.parametrize(
+    ("hostname", "expected_device_name"),
+    [
+        pytest.param("printer-01", "printer-01", id="hostname"),
+        pytest.param(None, TEST_MAC_ADDRESS, id="mac-address"),
+    ],
+)
+async def test_scanner_entity_default_device_info_new_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    expected_device_name: str,
+) -> None:
+    """Test a tracker without device info gets a default device, with a warning."""
+    scanner_entity = MockScannerEntity(
+        mac_address=TEST_MAC_ADDRESS,
+        hostname=hostname,
+        unique_id="scanner",
+        legacy=True,
+    )
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_id = entity_registry.async_get_entity_id(DOMAIN, TEST_DOMAIN, "scanner")
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id is not None
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device is not None
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_MAC_ADDRESS))
+    }
+    assert device.name == expected_device_name
+
+
+@pytest.mark.parametrize(
+    ("hostname", "expected_device_name"),
+    [
+        pytest.param("printer-01", "printer-01", id="hostname"),
+        pytest.param(None, "Printer", id="keeps-name"),
+    ],
+)
+async def test_scanner_entity_default_device_info_existing_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    expected_device_name: str,
+) -> None:
+    """Test the MAC address does not replace the name of an existing device."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
+        name="Printer",
+    )
+    scanner_entity = MockScannerEntity(
+        mac_address=TEST_MAC_ADDRESS,
+        hostname=hostname,
+        unique_id="scanner",
+        legacy=True,
+    )
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.name == expected_device_name
+
+
+async def test_scanner_entity_overriding_device_info_without_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a tracker overriding device info without a device gets no default."""
+
+    class NoDeviceScannerEntity(MockScannerEntity):
+        """Test scanner entity without a device."""
+
+        @property
+        def device_info(self) -> None:
+            """Return no device info."""
+            return None
+
+    scanner_entity = NoDeviceScannerEntity(
+        mac_address=TEST_MAC_ADDRESS, unique_id="scanner"
+    )
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_id = entity_registry.async_get_entity_id(DOMAIN, TEST_DOMAIN, "scanner")
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id is None
+
+
+@pytest.mark.parametrize(
+    "mac_known",
+    [pytest.param(False, id="mac_unknown"), pytest.param(True, id="mac_known")],
+)
+async def test_scanner_entity_device_created_before_registry_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mac_known: bool,
+) -> None:
+    """Test a new tracker is disabled and gets its own device.
+
+    The device is created before the registry entry, so the entity ID is derived
+    with the device even though the tracker is created disabled.
+    """
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    known_connections = {(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)}
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections=known_connections if mac_known else set(),
+        identifiers={("other", "x")},
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=TEST_MAC_ADDRESS, hostname="printer")
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.printer")
+    assert entity_entry is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.device_id is not None
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.config_entry_id == config_entry.entry_id
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_MAC_ADDRESS))
+    }
+    assert device_entry.name == "printer"
+
+
+async def test_scanner_entity_existing_entry_linked_to_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an existing disabled tracker without a device is linked to its device."""
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        TEST_DOMAIN,
+        TEST_MAC_ADDRESS,
+        config_entry=config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        suggested_object_id="test_12_34_56_ab_cd_ef",
+    )
+
+    scanner_entity = MockScannerEntity(mac_address=TEST_MAC_ADDRESS, hostname="printer")
+    await create_mock_platform(hass, config_entry, [scanner_entity])
+
+    entity_entry = entity_registry.async_get("device_tracker.test_12_34_56_ab_cd_ef")
+    assert entity_entry is not None
+    # Neither enabled by its own device, nor renamed
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.device_id is not None
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.config_entry_id == config_entry.entry_id
+    assert device_entry.name == "printer"
+
+
 async def test_connected_device_registered(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2105,9 +2170,7 @@ async def test_connected_device_registered(
     )  # should be disabled
     assert len(entity_registry.entities) == 3
     assert (
-        entity_registry.entities[
-            "device_tracker.test_aa_bb_cc_dd_ee_ff"
-        ].config_entry_id
+        entity_registry.entities["device_tracker.connected"].config_entry_id
         == config_entry.entry_id
     )
     unsub()
@@ -2144,14 +2207,10 @@ async def test_entity_has_device_info(
 
     config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
 
-    assert (
-        len(hass.states.async_entity_ids(domain_filter=DOMAIN)) == 1
-    )  # should be enabled
     assert len(entity_registry.entities) == 1
-    assert (
-        entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
-        == config_entry.entry_id
-    )
+    entity_entry = entity_registry.entities[f"{DOMAIN}.test_device"]
+    assert entity_entry.config_entry_id == config_entry.entry_id
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_tracker_entity_unavailable(
