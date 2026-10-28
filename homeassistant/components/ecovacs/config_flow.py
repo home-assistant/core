@@ -472,9 +472,11 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the connection settings."""
         entry = self._get_reconfigure_entry()
-        self._input = dict(entry.data)
-        if CONF_OVERRIDE_REST_URL in entry.data:
-            self._mode = InstanceMode.SELF_HOSTED
+        # Keep the input of a previous attempt, which holds a verified device ID
+        if user_input is None:
+            self._input = dict(entry.data)
+            if CONF_OVERRIDE_REST_URL in entry.data:
+                self._mode = InstanceMode.SELF_HOSTED
         errors: dict[str, str] = {}
         if user_input:
             authenticator = await self._async_set_input(self._input | user_input)

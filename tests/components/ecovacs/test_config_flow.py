@@ -839,3 +839,53 @@ async def test_reconfigure_device_verification(
     mock_authenticator.request_device_verification_code.assert_awaited_once()
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
     mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_unmigrated_entry_mqtt_retry_after_device_verification(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test a MQTT retry reuses the verified device ID of an entry without one."""
+    mock_authenticator.authenticate.side_effect = [
+        DeviceVerificationRequiredError,
+        None,
+    ]
+    mock_mqtt_client.verify_config.side_effect = [MqttError, None]
+    entry = MockConfigEntry(
+        title=VALID_ENTRY_DATA_CLOUD[CONF_USERNAME],
+        domain=DOMAIN,
+        data=VALID_ENTRY_DATA_CLOUD,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.ecovacs.config_flow.create_rest_config",
+        wraps=create_rest_config,
+    ) as mock_create_rest_config:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+        )
+        assert result["step_id"] == "device_verification"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_create_rest_config.call_count == 2
+    device_id = mock_create_rest_config.call_args_list[0].kwargs["device_id"]
+    assert mock_create_rest_config.call_args_list[1].kwargs["device_id"] == device_id
+    assert entry.data[CONF_DEVICE_ID] == device_id
+    mock_authenticator.request_device_verification_code.assert_awaited_once()
