@@ -1,6 +1,6 @@
 """Tests for the Imou config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyimouapi.exceptions import (
     ConnectFailedException,
@@ -158,6 +158,49 @@ async def test_user_flow_success_per_region(
     assert result["title"] == "Imou"
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_APP_ID]
+
+
+@pytest.mark.parametrize(
+    ("region", "host"),
+    [
+        ("sg", "openapi-sg.easy4ip.com"),
+        ("eu", "openapi-fk.easy4ip.com"),
+        ("na", "openapi-or.easy4ip.com"),
+        ("cn", "openapi.lechange.cn"),
+    ],
+)
+async def test_user_flow_uses_region_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    region: str,
+    host: str,
+) -> None:
+    """Login uses the host that matches the selected server region."""
+    user_input = {
+        CONF_APP_ID: f"{TEST_APP_ID}_{region}",
+        CONF_APP_SECRET: TEST_APP_SECRET,
+        CONF_API_URL: region,
+    }
+
+    with patch(
+        "homeassistant.components.imou.config_flow.ImouOpenApiClient",
+        autospec=True,
+    ) as client_cls:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    client_cls.assert_called_once_with(
+        user_input[CONF_APP_ID],
+        user_input[CONF_APP_SECRET],
+        host,
+    )
 
 
 async def test_dhcp_discovery_success(
