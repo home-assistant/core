@@ -13,8 +13,8 @@ from homeassistant.components.google_assistant import (
     GOOGLE_ASSISTANT_SCHEMA,
     GoogleConfig,
 )
+from homeassistant.components.google_assistant.services import GoogleAssistantService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -99,7 +99,7 @@ async def test_request_sync_service(
     assert aioclient_mock.call_count == 0
     await hass.services.async_call(
         ga.const.DOMAIN,
-        ga.const.SERVICE_REQUEST_SYNC,
+        GoogleAssistantService.REQUEST_SYNC,
         blocking=True,
         context=Context(user_id="123"),
     )
@@ -134,7 +134,9 @@ async def test_reload_service(hass: HomeAssistant) -> None:
         ),
         patch.object(GoogleConfig, "async_sync_entities_all") as mock_sync,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, GoogleAssistantService.RELOAD, blocking=True
+        )
 
     assert google_config.entity_config == {
         "light.kitchen": {"name": "Kitchen", "expose": False}
@@ -157,10 +159,14 @@ async def test_reload_service_report_state(hass: HomeAssistant) -> None:
         ),
         patch.object(GoogleConfig, "async_sync_entities_all"),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, GoogleAssistantService.RELOAD, blocking=True
+        )
         assert google_config.is_reporting_state
 
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, GoogleAssistantService.RELOAD, blocking=True
+        )
         assert not google_config.is_reporting_state
 
 
@@ -175,7 +181,9 @@ async def test_reload_service_invalid_config(hass: HomeAssistant) -> None:
         ),
         patch.object(GoogleConfig, "async_sync_entities_all") as mock_sync,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, GoogleAssistantService.RELOAD, blocking=True
+        )
 
     assert google_config.entity_config == {}
     mock_sync.assert_not_called()
@@ -212,7 +220,9 @@ async def test_reload_service_restart_required(
         patch.object(GoogleConfig, "async_sync_entities_all") as mock_sync,
         pytest.raises(ServiceValidationError) as exc_info,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, GoogleAssistantService.RELOAD, blocking=True
+        )
 
     assert exc_info.value.translation_key == "restart_required"
     assert exc_info.value.translation_placeholders == {"option": option}
