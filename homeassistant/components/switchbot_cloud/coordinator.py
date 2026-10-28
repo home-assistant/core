@@ -88,6 +88,5 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         except SwitchBotConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"error": str(err)},
+                translation_key="update_connection_error",
             ) from err

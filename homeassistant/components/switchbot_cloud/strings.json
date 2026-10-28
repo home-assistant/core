@@ -124,6 +124,9 @@
     },
     "no_valid_mac_address": {
       "message": "No valid MAC address obtained."
+    },
+    "update_connection_error": {
+      "message": "An error occurred while retrieving data from SwitchBot Cloud"
     }
   },
   "services": {
