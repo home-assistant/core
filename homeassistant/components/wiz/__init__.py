@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"ip_address": ip_address, "error": str(err)},
+            translation_placeholders={"ip_address": ip_address},
         ) from err
 
     if bulb.mac != entry.unique_id:

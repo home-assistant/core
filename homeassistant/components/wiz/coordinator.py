@@ -70,6 +70,6 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-                translation_placeholders={"ip_address": ip_address, "error": str(ex)},
+                translation_placeholders={"ip_address": ip_address},
             ) from ex
         return None

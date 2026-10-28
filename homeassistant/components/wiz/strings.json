@@ -42,7 +42,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Failed to connect to the WiZ device at {ip_address}: {error}"
+      "message": "Failed to connect to the WiZ device at {ip_address}"
     },
     "communication_error": {
       "message": "Error while communicating with the WiZ device"
@@ -57,7 +57,7 @@
       "message": "Found WiZ device {mac} at {ip_address}, expected {expected_mac}"
     },
     "update_failed": {
-      "message": "Failed to update the WiZ device at {ip_address}: {error}"
+      "message": "Failed to update the WiZ device at {ip_address}"
     }
   }
 }
