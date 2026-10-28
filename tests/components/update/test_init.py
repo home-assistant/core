@@ -24,7 +24,6 @@ from homeassistant.components.update import (
     ATTR_BACKUP,
     ATTR_VERSION,
     DOMAIN,
-    RELEASE_NOTES_MESSAGE_BATTERY_POWERED,
     RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     SERVICE_INSTALL,
     SERVICE_SKIP,
@@ -895,9 +894,22 @@ async def test_release_notes(
         }
     )
     result = await client.receive_json()
-    assert result["result"] == "Release notes"
+    assert result["result"] == {"release_notes": "Release notes", "messages": []}
 
 
+DO_NOT_INTERRUPT_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "Do not restart, remove power from, or otherwise interrupt the device "
+        "while the update is in progress."
+    ),
+}
+REVIEW_DOCS_MESSAGE = UpdateReleaseNotesMessage(
+    translation_domain=TEST_DOMAIN,
+    translation_key="review_docs",
+    severity=UpdateReleaseNotesMessageSeverity.ERROR,
+    translation_placeholders={"docs_url": "https://example.com/update"},
+)
 INTEGRATION_RELEASE_NOTES_TRANSLATIONS = {
     "component.test.entity.update.release_notes_messages.review_docs": (
         "Review {docs_url} before starting the update."
@@ -923,66 +935,53 @@ async def _async_get_translations_with_integration(
             "1.0.1",
             (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             "Release notes",
-            '<ha-alert alert-type="warning">'
-            "Do not restart, remove power from, or otherwise interrupt the device "
-            "while the update is in progress."
-            "</ha-alert>\n\n"
-            "Release notes",
+            {"release_notes": "Release notes", "messages": [DO_NOT_INTERRUPT_MESSAGE]},
             id="shared_message",
         ),
         pytest.param(
             "1.0.1",
-            (
-                UpdateReleaseNotesMessage(
-                    translation_domain=TEST_DOMAIN,
-                    translation_key="review_docs",
-                    severity=UpdateReleaseNotesMessageSeverity.ERROR,
-                    translation_placeholders={"docs_url": "https://example.com/update"},
-                ),
-            ),
+            (REVIEW_DOCS_MESSAGE,),
             "Release notes",
-            '<ha-alert alert-type="error">'
-            "Review https://example.com/update before starting the update."
-            "</ha-alert>\n\n"
-            "Release notes",
+            {
+                "release_notes": "Release notes",
+                "messages": [
+                    {
+                        "severity": "error",
+                        "message": (
+                            "Review https://example.com/update before starting "
+                            "the update."
+                        ),
+                    }
+                ],
+            },
             id="integration_message_with_placeholders",
         ),
         pytest.param(
             "1.0.1",
-            (
-                RELEASE_NOTES_MESSAGE_BATTERY_POWERED,
-                RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
-            ),
+            (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             None,
-            '<ha-alert alert-type="info">'
-            "Battery powered devices can sometimes take multiple hours to update "
-            "and you may need to wake the device for the update to begin."
-            "</ha-alert>\n\n"
-            '<ha-alert alert-type="warning">'
-            "Do not restart, remove power from, or otherwise interrupt the device "
-            "while the update is in progress."
-            "</ha-alert>",
+            {"release_notes": None, "messages": [DO_NOT_INTERRUPT_MESSAGE]},
             id="no_release_notes",
         ),
         pytest.param(
             "1.0.0",
             (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             "Release notes",
-            "Release notes",
+            {"release_notes": "Release notes", "messages": []},
             id="no_update_available",
         ),
         pytest.param(
             "1.0.0",
             (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             None,
-            None,
+            {"release_notes": None, "messages": []},
             id="no_update_available_no_release_notes",
         ),
         pytest.param(
             None,
             (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             "Release notes",
-            "Release notes",
+            {"release_notes": "Release notes", "messages": []},
             id="unknown_latest_version",
         ),
     ],
@@ -993,9 +992,9 @@ async def test_release_notes_with_messages(
     latest_version: str | None,
     release_notes_messages: tuple[UpdateReleaseNotesMessage, ...],
     release_notes: str | None,
-    expected: str | None,
+    expected: dict[str, Any],
 ) -> None:
-    """Test rendering release notes messages before release notes."""
+    """Test release notes messages are returned with the release notes."""
     entity = MockUpdateEntity(
         name="Update with release notes messages",
         unique_id="with_release_notes_messages",
@@ -1034,7 +1033,7 @@ async def test_release_notes_with_messages_skipped_version(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test release notes messages are rendered for a skipped version."""
+    """Test release notes messages are returned for a skipped version."""
     entity = MockUpdateEntity(
         name="Update with skipped version",
         unique_id="with_skipped_version",
@@ -1069,13 +1068,10 @@ async def test_release_notes_with_messages_skipped_version(
     )
     result = await client.receive_json()
 
-    assert result["result"] == (
-        '<ha-alert alert-type="warning">'
-        "Do not restart, remove power from, or otherwise interrupt the device "
-        "while the update is in progress."
-        "</ha-alert>\n\n"
-        "Release notes"
-    )
+    assert result["result"] == {
+        "release_notes": "Release notes",
+        "messages": [DO_NOT_INTERRUPT_MESSAGE],
+    }
 
 
 async def test_release_notes_message_missing_translation(
@@ -1111,7 +1107,7 @@ async def test_release_notes_message_missing_translation(
     )
     result = await client.receive_json()
 
-    assert result["result"] == "Release notes"
+    assert result["result"] == {"release_notes": "Release notes", "messages": []}
     assert "Missing translation for release notes message missing of test" in (
         caplog.text
     )
@@ -1124,16 +1120,16 @@ async def test_release_notes_message_missing_translation(
             {},
             UpdateEntityDescription(
                 key="update",
-                release_notes_messages=(RELEASE_NOTES_MESSAGE_BATTERY_POWERED,),
+                release_notes_messages=(REVIEW_DOCS_MESSAGE,),
             ),
-            (RELEASE_NOTES_MESSAGE_BATTERY_POWERED,),
+            (REVIEW_DOCS_MESSAGE,),
             id="entity_description",
         ),
         pytest.param(
             {"release_notes_messages": (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)},
             UpdateEntityDescription(
                 key="update",
-                release_notes_messages=(RELEASE_NOTES_MESSAGE_BATTERY_POWERED,),
+                release_notes_messages=(REVIEW_DOCS_MESSAGE,),
             ),
             (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,),
             id="attribute_overrides_entity_description",

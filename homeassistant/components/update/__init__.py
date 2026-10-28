@@ -52,10 +52,6 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(minutes=15)
 
 
-RELEASE_NOTES_MESSAGE_BATTERY_POWERED = UpdateReleaseNotesMessage(
-    translation_domain=DOMAIN,
-    translation_key="battery_powered_update",
-)
 RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT = UpdateReleaseNotesMessage(
     translation_domain=DOMAIN,
     translation_key="do_not_interrupt",
@@ -80,7 +76,6 @@ __all__ = [
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
-    "RELEASE_NOTES_MESSAGE_BATTERY_POWERED",
     "RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
@@ -163,37 +158,26 @@ async def websocket_release_notes(
             "Entity is not available",
         )
         return
-    connection.send_result(
-        msg["id"],
-        await _async_render_release_notes(hass, entity),
-    )
-
-
-async def _async_render_release_notes(
-    hass: HomeAssistant, entity: UpdateEntity
-) -> str | None:
-    """Render release notes messages followed by the entity release notes."""
     release_notes = await entity.async_release_notes()
     # Like the state, but a skipped version can still be installed
     if entity.latest_version == entity.installed_version or not entity.has_update:
-        return release_notes
-    release_notes_messages = await _async_render_release_notes_messages(
-        hass, entity.release_notes_messages
+        messages: list[dict[str, str]] = []
+    else:
+        messages = await _async_translate_release_notes_messages(
+            hass, entity.release_notes_messages
+        )
+    connection.send_result(
+        msg["id"],
+        {"release_notes": release_notes, "messages": messages},
     )
 
-    if release_notes_messages is None:
-        return release_notes
-    if not release_notes:
-        return release_notes_messages
-    return f"{release_notes_messages}\n\n{release_notes}"
 
-
-async def _async_render_release_notes_messages(
+async def _async_translate_release_notes_messages(
     hass: HomeAssistant, messages: tuple[UpdateReleaseNotesMessage, ...]
-) -> str | None:
-    """Render release notes messages as alert elements."""
+) -> list[dict[str, str]]:
+    """Translate release notes messages."""
     if not messages:
-        return None
+        return []
 
     entity_component_translations = await async_get_translations(
         hass, hass.config.language, "entity_component", {DOMAIN}
@@ -209,7 +193,7 @@ async def _async_render_release_notes_messages(
         },
     )
 
-    rendered_messages: list[str] = []
+    translated_messages: list[dict[str, str]] = []
     for message in messages:
         if message.translation_domain == DOMAIN:
             translation = entity_component_translations.get(
@@ -231,8 +215,8 @@ async def _async_render_release_notes_messages(
         if message.translation_placeholders is not None:
             with suppress(KeyError):
                 translation = translation.format(**message.translation_placeholders)
-        rendered_messages.append(
-            f'<ha-alert alert-type="{message.severity}">{translation}</ha-alert>'
+        translated_messages.append(
+            {"severity": message.severity, "message": translation}
         )
 
-    return "\n\n".join(rendered_messages) or None
+    return translated_messages

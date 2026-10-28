@@ -269,7 +269,7 @@ async def test_release_notes(
     )
     result = await ws_client.receive_json()
 
-    release_notes = result["result"]
+    release_notes = result["result"]["release_notes"]
     assert "The update process can take a while" in release_notes
     assert ("Update provided by" in release_notes) is expect_warning
 
