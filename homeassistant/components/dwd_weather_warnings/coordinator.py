@@ -65,7 +65,6 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="position_error",
-                    translation_placeholders={"entity_id": self._device_tracker},
                 ) from err
 
             distance = None
