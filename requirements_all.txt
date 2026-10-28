@@ -2058,6 +2058,9 @@ py-madvr2==1.9.1
 # homeassistant.components.melissa
 py-melissa-climate==3.0.3
 
+# homeassistant.components.picotts
+py-nanotts==0.1.2
+
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
 
