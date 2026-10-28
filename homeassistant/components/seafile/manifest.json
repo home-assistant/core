@@ -1,0 +1,13 @@
+{
+  "domain": "seafile",
+  "name": "Seafile",
+  "categories": ["computers_network.nas_servers"],
+  "codeowners": ["@erwindouna"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/seafile",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["aioseafile"],
+  "quality_scale": "bronze",
+  "requirements": ["aioseafile==0.1.1"]
+}

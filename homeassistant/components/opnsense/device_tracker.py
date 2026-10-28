@@ -3,7 +3,8 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -77,15 +78,6 @@ class OPNsenseDeviceTrackerEntity(
 
     @property
     @override
-    def name(self) -> str:
-        """Return device name."""
-        device_data = self.device_data
-        if device_data and device_data.get("hostname"):
-            return str(device_data["hostname"])
-        return f"OPNsense {self.mac_address}"
-
-    @property
-    @override
     def ip_address(self) -> str | None:
         """Return the primary IP address of the device."""
         device_data = self.device_data
@@ -102,3 +94,15 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Rename the device when the hostname of the client changes."""
+        if (
+            (hostname := self.hostname)
+            and (device_entry := self.device_entry)
+            and device_entry.name != hostname
+        ):
+            dr.async_get(self.hass).async_update_device(device_entry.id, name=hostname)
+        super()._handle_coordinator_update()

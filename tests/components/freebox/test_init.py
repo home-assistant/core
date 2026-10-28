@@ -101,6 +101,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
     assert router().open.call_count == 1
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"

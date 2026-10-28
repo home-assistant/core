@@ -12,7 +12,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
-COPY --parents requirements.txt requirements_all.txt homeassistant/ script /usr/src/homeassistant/
+COPY --parents pyproject.toml requirements.txt requirements_all.txt homeassistant/ script packages/hassfest /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \
@@ -33,7 +33,12 @@ RUN --mount=type=tmpfs,target=/tmp \
         --no-build \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
-        -r /usr/src/homeassistant/requirements.txt
+        -r /usr/src/homeassistant/requirements.txt \
+    && UV_EXTRA_INDEX_URL="" uv pip install \
+        --no-cache \
+        --no-deps \
+        --config-settings editable_mode=compat \
+        -e /usr/src/homeassistant/packages/hassfest
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
