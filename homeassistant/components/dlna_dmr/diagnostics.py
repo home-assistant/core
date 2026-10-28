@@ -53,15 +53,19 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    # The entity is not added to the platform when it is disabled
     entity = next(
-        entity
-        for platform in async_get_platforms(hass, DOMAIN)
-        if platform.config_entry is not None
-        and platform.config_entry.entry_id == entry.entry_id
-        for entity in platform.entities.values()
-        if isinstance(entity, DlnaDmrEntity)
+        (
+            entity
+            for platform in async_get_platforms(hass, DOMAIN)
+            if platform.config_entry is not None
+            and platform.config_entry.entry_id == entry.entry_id
+            for entity in platform.entities.values()
+            if isinstance(entity, DlnaDmrEntity)
+        ),
+        None,
     )
-    device = entity.device
+    device = entity.device if entity else None
     return {
         "device_type": entry.data[CONF_TYPE],
         "options": {
@@ -72,8 +76,8 @@ async def async_get_config_entry_diagnostics(
                 entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
             ),
         },
-        "available": entity.available,
-        "state": entity.state,
-        "supported_features": entity.supported_features,
+        "available": entity.available if entity else None,
+        "state": entity.state if entity else None,
+        "supported_features": entity.supported_features if entity else None,
         "device": _device_diagnostics(device) if device else None,
     }

@@ -69,3 +69,18 @@
     'supported_features': 0,
   })
 # ---
+# name: test_diagnostics_entity_disabled
+  dict({
+    'available': None,
+    'device': None,
+    'device_type': 'urn:schemas-upnp-org:device:MediaRenderer:1',
+    'options': dict({
+      'browse_unfiltered': False,
+      'callback_url_override_set': False,
+      'listen_port': None,
+      'poll_availability': False,
+    }),
+    'state': None,
+    'supported_features': None,
+  })
+# ---

@@ -14,10 +14,13 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DOMAIN,
 )
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import EVENT_CALLBACK_URL
+from .conftest import EVENT_CALLBACK_URL, MOCK_DEVICE_UDN
 
 
 @pytest.fixture
@@ -97,6 +100,32 @@ async def test_diagnostics_disconnected(
     """Test diagnostics when the device is not connected."""
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
     config_entry_mock.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_mock.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry_mock)
+        == snapshot
+    )
+
+
+@pytest.mark.usefixtures("domain_data_mock", "connected_device")
+async def test_diagnostics_entity_disabled(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    config_entry_mock: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics when the media player entity is disabled."""
+    config_entry_mock.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        MEDIA_PLAYER_DOMAIN,
+        DOMAIN,
+        MOCK_DEVICE_UDN,
+        config_entry=config_entry_mock,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id)
     await hass.async_block_till_done()
 
