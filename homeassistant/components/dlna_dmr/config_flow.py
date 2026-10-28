@@ -8,7 +8,7 @@ from pprint import pformat
 from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
-from async_upnp_client.client import UpnpError
+from async_upnp_client.client import UpnpDevice, UpnpError
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.profiles.profile import find_device_of_type
 from getmac import get_mac_address
@@ -219,6 +219,34 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="confirm")
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device URL."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                device = await _async_get_dmr_device(self.hass, user_input[CONF_URL])
+            except ConnectError as err:
+                errors["base"] = err.args[0]
+            else:
+                await self.async_set_unique_id(device.udn)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_URL): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
     async def _async_connect(self) -> None:
         """Connect to a device to confirm it works and gather extra information.
 
@@ -228,16 +256,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("_async_connect: location: %s", self._location)
         assert self._location, "self._location has not been set before connect"
 
-        domain_data = get_domain_data(self.hass)
-        try:
-            device = await domain_data.upnp_factory.async_create_device(self._location)
-        except UpnpError as err:
-            raise ConnectError("cannot_connect") from err
-
-        if not DmrDevice.is_profile_device(device):
-            raise ConnectError("not_dmr")
-
-        device = find_device_of_type(device, DmrDevice.DEVICE_TYPES)
+        device = await _async_get_dmr_device(self.hass, self._location)
 
         if not self._udn:
             self._udn = device.udn
@@ -466,6 +485,23 @@ def _is_dmr_device(discovery_info: SsdpServiceInfo) -> bool:
         return False
 
     return True
+
+
+async def _async_get_dmr_device(hass: HomeAssistant, location: str) -> UpnpDevice:
+    """Connect to a device and return its DMR (sub)device.
+
+    Raises ConnectError if something goes wrong.
+    """
+    domain_data = get_domain_data(hass)
+    try:
+        device = await domain_data.upnp_factory.async_create_device(location)
+    except UpnpError as err:
+        raise ConnectError("cannot_connect") from err
+
+    if not DmrDevice.is_profile_device(device):
+        raise ConnectError("not_dmr")
+
+    return find_device_of_type(device, DmrDevice.DEVICE_TYPES)
 
 
 async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:

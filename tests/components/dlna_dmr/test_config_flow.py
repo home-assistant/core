@@ -806,3 +806,98 @@ async def test_options_flow(
         CONF_POLL_AVAILABILITY: True,
         CONF_BROWSE_UNFILTERED: True,
     }
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test the reconfigure flow updates the device URL."""
+    config_entry_mock.add_to_hass(hass)
+
+    result = await config_entry_mock.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_mock.data == {
+        CONF_URL: NEW_DEVICE_LOCATION,
+        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+        CONF_TYPE: MOCK_DEVICE_TYPE,
+        CONF_MAC: MOCK_MAC_ADDRESS,
+    }
+
+
+async def test_reconfigure_flow_different_device(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry, domain_data_mock: Mock
+) -> None:
+    """Test the reconfigure flow aborts when the URL points to another device."""
+    config_entry_mock.add_to_hass(hass)
+    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
+    upnp_device.udn = CHANGED_DEVICE_UDN
+
+    result = await config_entry_mock.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry, domain_data_mock: Mock
+) -> None:
+    """Test the reconfigure flow recovers from a connection error."""
+    config_entry_mock.add_to_hass(hass)
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+
+    result = await config_entry_mock.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
+
+
+async def test_reconfigure_flow_not_dmr(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry, domain_data_mock: Mock
+) -> None:
+    """Test the reconfigure flow recovers when the URL is not a DMR device."""
+    config_entry_mock.add_to_hass(hass)
+    upnp_device = domain_data_mock.upnp_factory.async_create_device.return_value
+    upnp_device.device_type = WRONG_DEVICE_TYPE
+
+    result = await config_entry_mock.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "not_dmr"}
+
+    upnp_device.device_type = MOCK_DEVICE_TYPE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_URL: NEW_DEVICE_LOCATION}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
