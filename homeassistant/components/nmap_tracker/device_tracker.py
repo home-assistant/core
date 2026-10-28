@@ -5,6 +5,8 @@ from typing import Any, override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -61,6 +63,10 @@ class NmapTrackerEntity(ScannerEntity):
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
         self._active = active
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+            name=self._device.name or mac_address,
+        )
 
     @property
     def _device(self) -> NmapDevice:
@@ -72,12 +78,6 @@ class NmapTrackerEntity(ScannerEntity):
     def is_connected(self) -> bool:
         """Return device status."""
         return self._active
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return device name."""
-        return self._device.name
 
     @property
     @override
@@ -125,6 +125,15 @@ class NmapTrackerEntity(ScannerEntity):
     def async_on_demand_update(self, online: bool) -> None:
         """Update state."""
         self.async_process_update(online)
+        if (
+            online
+            and self._device.hostname
+            and (device_entry := self.device_entry)
+            and device_entry.name != self._device.name
+        ):
+            dr.async_get(self.hass).async_update_device(
+                device_entry.id, name=self._device.name
+            )
         self.async_write_ha_state()
 
     @override

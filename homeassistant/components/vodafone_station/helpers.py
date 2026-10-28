@@ -15,6 +15,7 @@ async def cleanup_device_tracker(
 ) -> None:
     """Cleanup stale device tracker."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     entities_removed: bool = False
 
@@ -28,6 +29,14 @@ async def cleanup_device_tracker(
         if entry.domain != DEVICE_TRACKER_DOMAIN:
             continue
         entry_name = entry.name or entry.original_name
+        if (
+            not entry_name
+            and entry.device_id
+            and (device := device_reg.async_get(entry.device_id))
+        ):
+            # The tracker has no entity name; its device is named by the hostname,
+            # which a user rename of the device must not hide
+            entry_name = device.name
         entry_host = entry_name.partition(" ")[0] if entry_name else None
         entry_mac = entry.unique_id.partition("_")[0]
 
