@@ -553,6 +553,7 @@ homeassistant.components.schlage.*
 homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
+homeassistant.components.seafile.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
