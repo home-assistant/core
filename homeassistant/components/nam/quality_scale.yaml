@@ -54,7 +54,7 @@ rules:
   devices: done
   diagnostics: done
   discovery: done
-  discovery-update-info: todo
+  discovery-update-info: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
