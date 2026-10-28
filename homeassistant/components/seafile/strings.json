@@ -81,6 +81,11 @@
     }
   },
   "entity": {
+    "button": {
+      "empty_trash": {
+        "name": "Empty trash"
+      }
+    },
     "sensor": {
       "file_count": {
         "name": "Files",
@@ -97,6 +102,12 @@
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while retrieving data from the Seafile server."
+    },
+    "empty_trash_failed": {
+      "message": "An error occurred while emptying the trash of the library."
+    },
+    "empty_trash_not_allowed": {
+      "message": "Only the owner or an admin of the library can empty its trash."
     },
     "invalid_auth": {
       "message": "The access token of the Seafile account is no longer valid."

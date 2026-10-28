@@ -1,6 +1,6 @@
 """Test the Seafile sensor platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioseafile import SeafileConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.seafile.const import DOMAIN
 from homeassistant.components.seafile.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -34,7 +34,8 @@ async def test_all_entities(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test all entities and the library device."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.seafile.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     library_device = device_registry.async_get_device_by_identifier(
