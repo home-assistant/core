@@ -171,7 +171,6 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Require consent before opening a validation connection."""
         assert self._selected is not None
-        self._set_confirm_only()
         errors: dict[str, str] = {}
         if user_input is not None:
             result, error = await self._async_validate_selected()

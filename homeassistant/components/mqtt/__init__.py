@@ -103,10 +103,10 @@ from .subscription import (
     async_unsubscribe_topics,
 )
 from .util import (
-    async_begin_mqtt_issues_refresh,
     async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
+    async_refresh_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -410,7 +410,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     # setup platforms and discovery, this re-creates the issues of manually
     # configured items which are still invalid, also those stored before a restart
-    with async_begin_mqtt_issues_refresh(hass):
+    with async_refresh_mqtt_issues(hass):
         await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
 
     # Setup discovery
