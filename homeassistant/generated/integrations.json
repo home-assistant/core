@@ -786,6 +786,14 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "aquarite_neopool": {
+      "name": "AquaRite",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
+    },
     "aquostv": {
       "name": "Sharp Aquos TV",
       "integration_type": "hub",
@@ -1143,6 +1151,14 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "bayrol_neopool": {
+      "name": "Bayrol",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
+    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
@@ -1391,6 +1407,14 @@
       ],
       "supported_by": "motion_blinds"
     },
+    "brilix_neopool": {
+      "name": "Brilix",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",
@@ -1625,6 +1649,14 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "certikin_neopool": {
+      "name": "Certikin",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
     },
     "chacon_dio": {
       "name": "Chacon DiO",
@@ -4569,6 +4601,14 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "hayward_neopool": {
+      "name": "Hayward",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
     },
     "hddtemp": {
       "name": "hddtemp",
@@ -11072,6 +11112,14 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "sugar_valley": {
+      "name": "Sugar Valley",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "supported_by": "neopool"
     },
     "sun": {
       "integration_type": "service",
