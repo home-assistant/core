@@ -10,6 +10,7 @@ from .models import RoombaConfigEntry
 TO_OMIT = {
     "mac",
     "mobSerNo",
+    "name",
     "navSerialNo",
     "netinfo",
     "wlan0HwAddr",

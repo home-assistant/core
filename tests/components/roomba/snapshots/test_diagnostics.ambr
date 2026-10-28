@@ -23,7 +23,6 @@
       'hardwareRev': '1.0',
       'hwPartsRev': dict({
       }),
-      'name': 'Test Roomba',
       'pose': dict({
         'point': dict({
           'x': 1,
