@@ -1,7 +1,5 @@
 """Constants for the Integration - Riemann sum integral integration."""
 
-from enum import StrEnum
-
 DOMAIN = "integration"
 
 CONF_ROUND_DIGITS = "round"
@@ -15,9 +13,3 @@ METHOD_TRAPEZOIDAL = "trapezoidal"
 METHOD_LEFT = "left"
 METHOD_RIGHT = "right"
 INTEGRATION_METHODS = [METHOD_TRAPEZOIDAL, METHOD_LEFT, METHOD_RIGHT]
-
-
-class IntegrationEntityStateAttribute(StrEnum):
-    """State attributes for integration entities."""
-
-    SOURCE = "source"
