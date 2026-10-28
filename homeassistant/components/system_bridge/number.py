@@ -4,7 +4,7 @@ from typing import override
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_PORT, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SystemBridgeConfigEntry
@@ -20,15 +20,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up System Bridge numbers based on a config entry."""
     coordinator = entry.runtime_data
+    known_displays: set[str] = set()
 
-    # Only displays that report a brightness can have it set
-    async_add_entities(
-        SystemBridgeDisplayBrightnessNumber(
-            coordinator, entry.data[CONF_PORT], "brightness", display.id
+    @callback
+    def _async_add_new_displays() -> None:
+        """Add brightness numbers for displays not seen before."""
+        # Only displays that report a brightness can have it set
+        new_displays = [
+            display.id
+            for display in coordinator.data.displays
+            if display.brightness is not None and display.id not in known_displays
+        ]
+        if not new_displays:
+            return
+        known_displays.update(new_displays)
+        async_add_entities(
+            SystemBridgeDisplayBrightnessNumber(
+                coordinator, entry.data[CONF_PORT], "brightness", display_id
+            )
+            for display_id in new_displays
         )
-        for display in coordinator.data.displays
-        if display.brightness is not None
-    )
+
+    _async_add_new_displays()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_displays))
 
 
 class SystemBridgeDisplayBrightnessNumber(SystemBridgeDisplayEntity, NumberEntity):

@@ -1,6 +1,7 @@
 """Tests for the System Bridge number platform."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,6 +10,8 @@ from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.display_control import DisplayControl
+from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
+from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.number import (
@@ -45,6 +48,35 @@ async def test_number_platform(
 ) -> None:
     """Test setup of the number platform."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_brightness_added_later(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test a brightness number is added once a display reports a brightness."""
+    mock_websocket_client.listen.side_effect = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    display = replace(FIXTURE_DISPLAYS[0], id="def456", brightness=None)
+
+    await coordinator.async_handle_module(Module.DISPLAYS, [*FIXTURE_DISPLAYS, display])
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.hostname_display_def456_brightness") is None
+
+    await coordinator.async_handle_module(
+        Module.DISPLAYS, [*FIXTURE_DISPLAYS, replace(display, brightness=25.0)]
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("number.hostname_display_def456_brightness"))
+    assert state.state == "25.0"
 
 
 @pytest.mark.usefixtures("init_integration")
