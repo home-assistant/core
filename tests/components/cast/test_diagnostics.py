@@ -17,12 +17,14 @@ SERVICE = pychromecast.discovery.MDNSServiceInfo("the-service")
 CHROMECAST_UUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
 GROUP_UUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
 UNKNOWN_UUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")
+DYNAMIC_GROUP_UUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e5")
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     get_cast_type_mock: MagicMock,
+    get_multizone_status_mock: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
@@ -90,9 +92,23 @@ async def test_diagnostics(
             "audio",
             "Cyberdyne Systems",
         )
-        # Only report the Chromecast and the unknown model as discovered
+        get_multizone_status_mock.return_value.dynamic_groups = [
+            MagicMock(uuid=DYNAMIC_GROUP_UUID)
+        ]
+        browser.devices[DYNAMIC_GROUP_UUID] = pychromecast.models.CastInfo(
+            {SERVICE},
+            DYNAMIC_GROUP_UUID,
+            "Google Cast Group",
+            "Everywhere",
+            "192.168.1.13",
+            42242,
+            CAST_TYPE_GROUP,
+            "Google Inc.",
+        )
+        # The static group is not reported as discovered
         discovery_callback(CHROMECAST_UUID, "")
         discovery_callback(UNKNOWN_UUID, "")
+        discovery_callback(DYNAMIC_GROUP_UUID, "")
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
