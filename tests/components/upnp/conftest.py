@@ -15,6 +15,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -295,6 +296,7 @@ async def mock_config_entry(
             CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
             CONFIG_ENTRY_LOCATION: TEST_LOCATION,
             CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+            CONFIG_ENTRY_HOST: TEST_HOST,
         },
     )
 

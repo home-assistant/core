@@ -26,6 +26,7 @@
       'model_name': 'mock-model-name',
     }),
     'entry_data': dict({
+      'host': '**REDACTED**',
       'location': '**REDACTED**',
       'mac_address': '**REDACTED**',
       'original_udn': '**REDACTED**',

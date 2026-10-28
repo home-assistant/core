@@ -6,6 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -15,6 +16,7 @@ from .const import (
 from .coordinator import UpnpConfigEntry
 
 TO_REDACT = {
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
