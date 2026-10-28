@@ -1,35 +1,29 @@
 """Diagnostics support for Chef iQ."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.bluetooth import async_last_service_info
+from homeassistant.components import bluetooth
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from . import ChefIqConfigEntry
+
+SERVICE_INFO_TO_REDACT = frozenset(
+    {"address", "advertisement", "device", "name", "source"}
+)
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ChefIqConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry.
-
-    The entry title is left out on purpose: users can rename it, so it may
-    hold personal information. The Bluetooth address identifies the probe.
-    """
+    """Return diagnostics for a config entry."""
     address = entry.unique_id
-    assert address is not None
-    service_info = async_last_service_info(hass, address, connectable=False)
+    if TYPE_CHECKING:
+        assert address is not None
+    service_info = bluetooth.async_last_service_info(hass, address, connectable=False)
     return {
-        "address": address,
-        "advertisement": None
-        if service_info is None
-        else {
-            "name": service_info.name,
-            "rssi": service_info.rssi,
-            "source": service_info.source,
-            "manufacturer_data": {
-                str(key): value.hex()
-                for key, value in service_info.manufacturer_data.items()
-            },
-        },
+        "service_info": async_redact_data(
+            service_info.as_dict() if service_info else None,
+            SERVICE_INFO_TO_REDACT,
+        ),
     }

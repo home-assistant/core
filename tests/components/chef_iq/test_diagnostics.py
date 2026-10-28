@@ -4,6 +4,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.chef_iq.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,9 +14,11 @@ from . import ADDRESS, CHEFIQ_STATUS_SERVICE_INFO, TITLE
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the diagnostics include the latest advertisement but not the title."""
+    """Test the diagnostics hold the latest advertisement, redacted."""
     # A user-edited title may hold personal information; it must not be exported.
     entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS, title="Backyard smoker")
     entry.add_to_hass(hass)
@@ -24,15 +28,9 @@ async def test_diagnostics(
     inject_bluetooth_service_info(hass, CHEFIQ_STATUS_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
-        "address": ADDRESS,
-        "advertisement": {
-            "name": "CQ60",
-            "rssi": -60,
-            "source": "local",
-            "manufacturer_data": {"1485": "0350c91465ca079a64201e010301007ac4"},
-        },
-    }
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props("time")
+    )
 
 
 async def test_diagnostics_without_advertisement(
@@ -45,6 +43,5 @@ async def test_diagnostics_without_advertisement(
     await hass.async_block_till_done()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
-        "address": ADDRESS,
-        "advertisement": None,
+        "service_info": None
     }
