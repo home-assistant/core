@@ -294,7 +294,7 @@ async def test_config_flow_stores_precision_and_temp_step(
     """Test precision and target_temp_step are stored in the options."""
     with patch(
         "homeassistant.components.generic_thermostat.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
