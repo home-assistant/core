@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The host you entered belongs to a different Harmony Hub."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,6 +13,15 @@
       "link": {
         "description": "Do you want to set up {name} ({host})?",
         "title": "[%key:component::harmony::config::step::user::title%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::harmony::config::step::user::data_description::host%]"
+        },
+        "title": "Reconfigure Logitech Harmony Hub"
       },
       "user": {
         "data": {

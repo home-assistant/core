@@ -14,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
+from .const import HUB_NAME
+
 
 def _get_mock_harmonyapi(connect=None, close=None):
     harmonyapi_mock = MagicMock()
@@ -302,3 +304,110 @@ async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> 
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
         "delay_secs": 0.4,
     }
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the host of the hub."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.name = "friend"
+    harmonyapi.hub_id = 123
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "5.6.7.8"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: "5.6.7.8", CONF_NAME: HUB_NAME}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(None, "cannot_connect", id="cannot_connect"),
+        pytest.param(ValueError, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    error: str,
+) -> None:
+    """Test reconfiguring shows errors and recovers from them."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    harmonyapi = _get_mock_harmonyapi(connect=False)
+    with patch(
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "5.6.7.8"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.hub_id = 123
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "5.6.7.8"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "5.6.7.8"
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a different hub aborts."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.hub_id = 456
+    with patch(
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "5.6.7.8"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "192.0.2.0"
