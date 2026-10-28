@@ -1,10 +1,10 @@
 """Constants for the script integration."""
 
+from enum import StrEnum
 import logging
 
 DOMAIN = "script"
 
-ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
@@ -19,3 +19,13 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 EVENT_SCRIPT_STARTED = "script_started"
 
 LOGGER = logging.getLogger(__package__)
+
+
+class ScriptEntityStateAttribute(StrEnum):
+    """State attributes for script entities."""
+
+    LAST_TRIGGERED = "last_triggered"
+    MODE = "mode"
+    CUR = "current"
+    MAX = "max"
+    LAST_ACTION = "last_action"

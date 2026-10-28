@@ -19,6 +19,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
+from homeassistant.components.script.const import ScriptEntityStateAttribute
 from homeassistant.components.script.entity import ScriptEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -1506,7 +1507,11 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
         hass,
         (
             State("script.no_last_triggered", STATE_OFF),
-            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
+            State(
+                "script.last_triggered",
+                STATE_OFF,
+                {ScriptEntityStateAttribute.LAST_TRIGGERED: time},
+            ),
         ),
     )
     hass.set_state(CoreState.starting)
@@ -1528,11 +1533,11 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
     state = hass.states.get("script.no_last_triggered")
     assert state
-    assert state.attributes["last_triggered"] is None
+    assert state.attributes[ScriptEntityStateAttribute.LAST_TRIGGERED] is None
 
     state = hass.states.get("script.last_triggered")
     assert state
-    assert state.attributes["last_triggered"] == time
+    assert state.attributes[ScriptEntityStateAttribute.LAST_TRIGGERED] == time
 
 
 @pytest.mark.parametrize(
