@@ -152,13 +152,11 @@ async def async_get_travel_times(
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="update_error",
-            translation_placeholders={"error": str(exp)},
         ) from exp
     except httpx2.RequestError as exp:
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="connection_error",
-            translation_placeholders={"error": str(exp)},
         ) from exp
 
     else:
