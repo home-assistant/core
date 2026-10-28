@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_lutron_device": "Discovered device is not a Lutron device"
+      "not_lutron_device": "Discovered device is not a Lutron device",
+      "unique_id_mismatch": "The bridge at this address is not the bridge that was originally set up."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -17,6 +18,14 @@
       "link": {
         "description": "To pair with {name} ({host}), after submitting this form, press the black button on the back of the bridge.",
         "title": "Pair with the bridge"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::lutron_caseta::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {

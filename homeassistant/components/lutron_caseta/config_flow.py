@@ -68,6 +68,31 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the bridge host."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            # The existing TLS assets are tied to the bridge, not to its host.
+            self.data = {**entry.data, CONF_HOST: user_input[CONF_HOST]}
+            if lutron_id := await self.async_get_lutron_id():
+                await self.async_set_unique_id(lutron_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+            errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_USER, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
