@@ -36,7 +36,7 @@ from homeassistant.components.androidtv.const import (
     PROP_WIFIMAC,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -626,6 +626,17 @@ RECONFIGURE_INPUT = {
                 CONF_ADB_SERVER_PORT: 5038,
             },
             id="python_adb_to_adb_server",
+        ),
+        pytest.param(
+            {**CONFIG_ADB_SERVER, CONF_NAME: "Living room TV"},
+            {CONF_HOST: RECONFIGURE_HOST, CONF_PORT: 5556, CONF_MORE_OPTIONS: {}},
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: 5556,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+                CONF_NAME: "Living room TV",
+            },
+            id="keeps_yaml_imported_name",
         ),
     ],
 )

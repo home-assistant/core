@@ -62,6 +62,8 @@ CONF_RULE_VALUES = "rule_values"
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
 
+_ADB_OPTION_KEYS = (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -219,8 +221,18 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             if error is None:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
-                # Replace the data so cleared optional settings are removed
-                return self.async_update_reload_and_abort(entry, data=data)
+                # Drop the old ADB settings so cleared optional ones are removed
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={
+                        **{
+                            key: value
+                            for key, value in entry.data.items()
+                            if key not in _ADB_OPTION_KEYS
+                        },
+                        **data,
+                    },
+                )
             errors["base"] = error
         else:
             user_input = {
@@ -228,7 +240,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: entry.data[CONF_PORT],
                 CONF_MORE_OPTIONS: {
                     key: entry.data[key]
-                    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT)
+                    for key in _ADB_OPTION_KEYS
                     if key in entry.data
                 },
             }
