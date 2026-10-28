@@ -15,7 +15,8 @@ from zwave_js_server.exceptions import (
     NotConnected,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.endpoint import Endpoint
+from zwave_js_server.model.node import EndpointGroup, Node as ZwaveNode
 from zwave_js_server.model.notification import (
     BatteryNotification,
     EntryControlNotification,
@@ -128,9 +129,12 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    endpoint_device_for_late_value,
+    endpoint_devices,
     format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
+    get_endpoint_device_id,
     get_network_identifier_for_notification,
     get_unique_id,
     get_valueless_base_unique_id,
@@ -500,7 +504,7 @@ class ControllerEvents:
         self.node_events = NodeEvents(hass, self)
 
     @callback
-    def remove_device(self, device: dr.DeviceEntry) -> None:
+    def remove_device(self, device: dr.AnyDeviceEntry) -> None:
         """Remove device from registry."""
         # note: removal of entity registry entry is handled by core
         self.dev_reg.async_remove_device(device.id)
@@ -598,7 +602,10 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-            # We don't want to remove the device so we can keep the user customizations
+            # We keep the parent device so its user customizations are preserved; it has
+            # a hardware based identifier that distinguishes it from the replacement. Its
+            # stale child devices are reconciled in async_register_node_in_dev_reg, which
+            # also covers a node replaced while Home Assistant was stopped.
             return
 
         if reason == RemoveNodeReason.RESET:
@@ -625,6 +632,7 @@ class ControllerEvents:
             )
 
         self.node_events.value_updates_disc_info.pop(node.node_id, None)
+        self.node_events.endpoint_devices_by_node.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
@@ -740,6 +748,15 @@ class ControllerEvents:
                 self.dev_reg.async_update_device(
                     node_id_device.id, new_identifiers=new_identifiers
                 )
+                # The old parent's child devices still hold node-id based identifiers
+                # that would collide with the replacement node's child devices
+                # (reparenting is rejected), so remove them to let the replacement's
+                # child devices be created. This also covers a node replaced while Home
+                # Assistant was stopped, where no node-removed event fires.
+                for child_device in dr.async_entries_for_parent_device(
+                    self.dev_reg, node_id_device.id
+                ):
+                    self.remove_device(child_device)
             # If there is an orphaned device that already exists with this hardware
             # based identifier, add the node ID based identifier to the orphaned
             # device.
@@ -797,6 +814,11 @@ class NodeEvents:
         self.value_updates_disc_info: dict[
             int, dict[str, PlatformZwaveDiscoveryInfo]
         ] = {}
+        # per-node cache mapping primary value IDs to their endpoint child device,
+        # keyed by node_id; used by the late-value path to resolve child-device placement
+        self.endpoint_devices_by_node: dict[
+            int, dict[str, Endpoint | EndpointGroup]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -812,10 +834,64 @@ class NodeEvents:
         self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_node_values(
-            node, device, self.controller_events.discovered_value_ids
-        ):
+        driver = self.controller_events.driver_events.driver
+        endpoint_device_ids: set[tuple[str, str]] = set()
+        rediscovered_unique_ids: set[str] = set()
+
+        # Pass 1: collect all disc_infos and compute endpoint-device placement based on
+        # discovered (non-suppressed) entities. Suppressed disc_infos must not count
+        # toward the collision check — they produce no entity and must not force a split.
+        all_disc_infos = list(
+            async_discover_node_values(
+                node, device, self.controller_events.discovered_value_ids
+            )
+        )
+        # An entity registry entry created by an earlier release for a value that is now
+        # suppressed is intentionally not removed here; it is left to become unavailable
+        # so the user can decide whether to delete it. The exception is when it is the
+        # last entry on an endpoint child device that is pruned below, in which case it is
+        # removed together with that device.
+        real_disc_infos = [i for i in all_disc_infos if not i.discovery_suppressed]
+        endpoint_device_by_value_id = endpoint_devices(node, real_disc_infos)
+        self.endpoint_devices_by_node[node.node_id] = endpoint_device_by_value_id
+
+        # Pass 2: set the resolved placement on each disc_info and dispatch.
+        for disc_info in real_disc_infos:
+            primary_value = disc_info.primary_value
+            rediscovered_unique_ids.add(get_unique_id(driver, primary_value.value_id))
+            disc_info.endpoint_device = endpoint_device_by_value_id.get(
+                primary_value.value_id
+            )
+            if disc_info.endpoint_device is not None:
+                endpoint_device_ids.add(
+                    get_endpoint_device_id(driver, node, disc_info.endpoint_device)
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+
+        # Prune endpoint child devices that no longer have any entities, e.g. after a
+        # re-interview removed an endpoint or its colliding values.
+        for child_device in dr.async_entries_for_parent_device(self.dev_reg, device.id):
+            if not child_device.identifiers & endpoint_device_ids:
+                # Before removing the child device, reassociate entity entries that are
+                # still being rediscovered to the parent node device. The pending
+                # rediscovery then moves each entity to its final device (the parent, or
+                # a different child), preserving user customizations when an endpoint
+                # stops colliding or its placement changes after re-interview. Entries
+                # that are no longer rediscovered are left for device removal to clean up.
+                for entity_entry in er.async_entries_for_device(
+                    self.ent_reg, child_device.id
+                ):
+                    # Some platforms append a suffix to the base value unique id (a state
+                    # key or property key), so match those entities by their base id too.
+                    entry_unique_id = entity_entry.unique_id
+                    if entry_unique_id in rediscovered_unique_ids or any(
+                        entry_unique_id.startswith((f"{unique_id}.", f"{unique_id}_"))
+                        for unique_id in rediscovered_unique_ids
+                    ):
+                        self.ent_reg.async_update_entity(
+                            entity_entry.entity_id, device_id=device.id
+                        )
+                self.controller_events.remove_device(child_device)
 
         # add listeners to handle new values that get added later
         for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
@@ -900,6 +976,8 @@ class NodeEvents:
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
+        if disc_info.discovery_suppressed:
+            return
         platform = disc_info.platform
         # This migration logic was added in 2021.3 to handle a breaking change to
         # the value_id format. Some time in the future, this call (as well as the
@@ -964,9 +1042,21 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
+        cached_endpoint_devices = self.endpoint_devices_by_node.setdefault(
+            value.node.node_id, {}
+        )
         for disc_info in async_discover_single_value(
             value, device, self.controller_events.discovered_value_ids
         ):
+            # A newly added value is not in the node-ready cache, so resolve its
+            # placement from the node's endpoint structure and the cached placements.
+            disc_info.endpoint_device = endpoint_device_for_late_value(
+                value.node, cached_endpoint_devices, disc_info.primary_value
+            )
+            if disc_info.endpoint_device is not None:
+                cached_endpoint_devices[disc_info.primary_value.value_id] = (
+                    disc_info.endpoint_device
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
@@ -1100,15 +1190,13 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device_by_identifier(
-            get_device_id(driver, value.node), self.config_entry.entry_id
-        )
-        # We assert because we know the device exists
-        assert device
-
         unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
         entity_id = self.ent_reg.async_get_entity_id(
             disc_info.platform, DOMAIN, unique_id
+        )
+
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
         )
 
         raw_value = value_ = value.value
@@ -1121,7 +1209,7 @@ class NodeEvents:
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
                 ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id if device else None,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,

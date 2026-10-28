@@ -10,10 +10,10 @@ from .coordinator import SpinEvConfigEntry, SpinEvCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: SpinEvConfigEntry) -> None:
     """Set up a charger from a config entry."""
     coordinator = SpinEvCoordinator(hass, entry)
-    entry.async_on_unload(coordinator.async_release)
 
+    # The coordinator shuts itself down on unload, but not on stop.
     async def _async_stop(event: Event) -> None:
-        await coordinator.async_release()
+        await coordinator.async_shutdown()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)

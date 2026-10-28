@@ -6,7 +6,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -36,7 +36,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'toilet',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -66,7 +66,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -96,7 +96,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -142,7 +142,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -176,7 +176,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -206,7 +206,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -236,7 +236,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -266,7 +266,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -296,7 +296,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -326,7 +326,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -356,7 +356,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -390,7 +390,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -424,7 +424,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -454,7 +454,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -484,7 +484,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -514,7 +514,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -544,7 +544,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -574,7 +574,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -604,7 +604,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -634,7 +634,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -664,7 +664,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -694,7 +694,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -724,7 +724,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -754,7 +754,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -784,7 +784,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -814,7 +814,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -844,7 +844,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -874,7 +874,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -904,7 +904,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -934,7 +934,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -964,7 +964,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -994,7 +994,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1024,7 +1024,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1054,7 +1054,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1084,7 +1084,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1114,7 +1114,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1144,7 +1144,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1174,7 +1174,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1204,7 +1204,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1234,7 +1234,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1264,7 +1264,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1294,7 +1294,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1324,7 +1324,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1354,7 +1354,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1384,7 +1384,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1414,7 +1414,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1444,7 +1444,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1474,7 +1474,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1504,7 +1504,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1534,7 +1534,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1564,7 +1564,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1594,7 +1594,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1624,7 +1624,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1654,7 +1654,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1684,7 +1684,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1714,7 +1714,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1744,7 +1744,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1774,7 +1774,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1804,7 +1804,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -1838,7 +1838,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1868,7 +1868,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1898,7 +1898,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -1932,7 +1932,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1962,7 +1962,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -1992,7 +1992,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2022,7 +2022,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2052,7 +2052,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2082,7 +2082,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2112,7 +2112,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2146,7 +2146,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2176,7 +2176,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2206,7 +2206,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2240,7 +2240,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2270,7 +2270,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2300,7 +2300,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2330,7 +2330,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2364,7 +2364,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2394,7 +2394,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2428,7 +2428,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2458,7 +2458,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2488,7 +2488,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2518,7 +2518,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2552,7 +2552,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2582,7 +2582,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2612,7 +2612,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2642,7 +2642,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2672,7 +2672,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2702,7 +2702,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2732,7 +2732,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2762,7 +2762,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2792,7 +2792,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2822,7 +2822,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
     }),
@@ -2852,7 +2852,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
@@ -2886,7 +2886,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
