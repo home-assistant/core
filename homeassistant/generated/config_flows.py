@@ -255,6 +255,7 @@ FLOWS = {
         "fjaraskupan",
         "flexit",
         "flexit_bacnet",
+        "flic_button",
         "flo",
         "flow_it",
         "flume",
