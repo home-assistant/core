@@ -53,13 +53,7 @@ async def async_get_config_entry_diagnostics(
             "rssi": service_info.rssi,
             "tx_power": service_info.tx_power,
             "connectable": service_info.connectable,
+            # Raw service/manufacturer data is omitted as it can embed the MAC address
             "service_uuids": service_info.service_uuids,
-            "service_data": {
-                uuid: data.hex() for uuid, data in service_info.service_data.items()
-            },
-            "manufacturer_data": {
-                company_id: data.hex()
-                for company_id, data in service_info.manufacturer_data.items()
-            },
         },
     }

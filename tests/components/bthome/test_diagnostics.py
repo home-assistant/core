@@ -11,7 +11,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import make_bthome_v2_adv, make_encrypted_bthome_v1_adv
+from . import INVALID_PAYLOAD, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
 
 
 @pytest.mark.parametrize(
@@ -34,6 +34,12 @@ from . import make_bthome_v2_adv, make_encrypted_bthome_v1_adv
                 b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99',
             ),
             id="encrypted",
+        ),
+        pytest.param(
+            "A4:C1:38:56:53:84",
+            {},
+            INVALID_PAYLOAD,
+            id="mac_in_payload",
         ),
     ],
 )
