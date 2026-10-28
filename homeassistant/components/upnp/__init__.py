@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"location": location, "error": str(err)},
+            translation_placeholders={"location": location},
         ) from err
 
     # Try to subscribe, if configured.

@@ -76,7 +76,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Error connecting to device at location: {location}, error: {error}"
+      "message": "Error connecting to device at location: {location}"
     },
     "communication_error": {
       "message": "Unable to communicate with IGD at: {device_url}"
