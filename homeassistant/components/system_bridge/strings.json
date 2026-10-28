@@ -140,7 +140,7 @@
         "name": "{gpu_name} memory used"
       },
       "gpu_memory_used_percentage": {
-        "name": "{gpu_name} memory used %"
+        "name": "{gpu_name} memory usage"
       },
       "gpu_power_usage": {
         "name": "{gpu_name} power usage"
@@ -173,7 +173,7 @@
         "name": "Memory used"
       },
       "memory_used_percentage": {
-        "name": "Memory used %"
+        "name": "Memory usage"
       },
       "network_download_rate": {
         "name": "Network download rate"
