@@ -22,6 +22,9 @@
     "learn_command": {
       "service": "mdi:school"
     },
+    "navigate": {
+      "service": "mdi:gamepad-up"
+    },
     "send_command": {
       "service": "mdi:remote"
     },

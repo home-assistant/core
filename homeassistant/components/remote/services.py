@@ -9,6 +9,8 @@ from .const import (
     DATA_COMPONENT,
     DEFAULT_HOLD_SECS,
     DEFAULT_NUM_REPEATS,
+    RemoteEntityFeature,
+    RemoteNavigation,
     RemoteService,
     RemoteServiceArgument,
 )
@@ -51,6 +53,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ): probatio.Coerce(float),
         },
         "async_send_command",
+    )
+
+    component.async_register_entity_service(
+        RemoteService.NAVIGATE,
+        {
+            probatio.Required(RemoteServiceArgument.DIRECTION): probatio.Coerce(
+                RemoteNavigation
+            )
+        },
+        "async_navigate",
+        [RemoteEntityFeature.NAVIGATE],
     )
 
     component.async_register_entity_service(

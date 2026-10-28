@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -122,6 +123,58 @@ async def test_remote_send_command(
     )
     mock_api.send_key_command.assert_called_with("DPAD_LEFT", "SHORT")
     assert mock_api.send_key_command.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("direction", "key_code"),
+    [
+        ("up", "DPAD_UP"),
+        ("down", "DPAD_DOWN"),
+        ("left", "DPAD_LEFT"),
+        ("right", "DPAD_RIGHT"),
+        ("select", "DPAD_CENTER"),
+        ("back", "BACK"),
+        ("home", "HOME"),
+        ("menu", "MENU"),
+    ],
+)
+async def test_remote_navigate(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    direction: str,
+    key_code: str,
+) -> None:
+    """Test remote.navigate service."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "navigate",
+        {"entity_id": REMOTE_ENTITY, "direction": direction},
+        blocking=True,
+    )
+    mock_api.send_key_command.assert_called_once_with(key_code, "SHORT")
+
+
+async def test_remote_navigate_invalid_direction(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.navigate rejects an unknown direction."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            "remote",
+            "navigate",
+            {"entity_id": REMOTE_ENTITY, "direction": "diagonal"},
+            blocking=True,
+        )
+    mock_api.send_key_command.assert_not_called()
 
 
 async def test_remote_send_command_multiple(

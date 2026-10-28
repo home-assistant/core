@@ -59,6 +59,20 @@
       }
     }
   },
+  "selector": {
+    "direction": {
+      "options": {
+        "back": "Back",
+        "down": "Down",
+        "home": "Home",
+        "left": "Left",
+        "menu": "Menu",
+        "right": "Right",
+        "select": "Select",
+        "up": "Up"
+      }
+    }
+  },
   "services": {
     "delete_command": {
       "description": "Deletes a command or a list of commands from a remote's database.",
@@ -99,6 +113,16 @@
         }
       },
       "name": "Learn remote command"
+    },
+    "navigate": {
+      "description": "Sends a navigation action to a device.",
+      "fields": {
+        "direction": {
+          "description": "The navigation action to send.",
+          "name": "Direction"
+        }
+      },
+      "name": "Navigate via remote"
     },
     "send_command": {
       "description": "Sends a command or a list of commands to a device.",

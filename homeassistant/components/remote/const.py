@@ -41,12 +41,26 @@ class RemoteEntityStateAttribute(StrEnum):
     CURRENT_ACTIVITY = "current_activity"
 
 
+class RemoteNavigation(StrEnum):
+    """Standard navigation (d-pad) actions of a remote."""
+
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+    SELECT = "select"
+    BACK = "back"
+    HOME = "home"
+    MENU = "menu"
+
+
 class RemoteEntityFeature(IntFlag):
     """Supported features of the remote entity."""
 
     LEARN_COMMAND = 1
     DELETE_COMMAND = 2
     ACTIVITY = 4
+    NAVIGATE = 8
 
 
 class RemoteService(StrEnum):
@@ -54,6 +68,7 @@ class RemoteService(StrEnum):
 
     DELETE_COMMAND = "delete_command"
     LEARN_COMMAND = "learn_command"
+    NAVIGATE = "navigate"
     SEND_COMMAND = "send_command"
     TOGGLE = "toggle"
     TURN_OFF = "turn_off"
@@ -69,6 +84,7 @@ class RemoteServiceArgument(StrEnum):
     COMMAND_TYPE = "command_type"
     DELAY_SECS = "delay_secs"
     DEVICE = "device"
+    DIRECTION = "direction"
     HOLD_SECS = "hold_secs"
     NUM_REPEATS = "num_repeats"
     TIMEOUT = "timeout"

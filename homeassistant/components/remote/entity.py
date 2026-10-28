@@ -8,7 +8,7 @@ from propcache.api import cached_property
 
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 
-from .const import RemoteEntityFeature, RemoteEntityStateAttribute
+from .const import RemoteEntityFeature, RemoteEntityStateAttribute, RemoteNavigation
 
 
 class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
@@ -68,6 +68,14 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
+
+    def navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation (d-pad) action to a device."""
+        raise NotImplementedError
+
+    async def async_navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation (d-pad) action to a device."""
+        await self.hass.async_add_executor_job(self.navigate, direction)
 
     def learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""

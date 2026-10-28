@@ -14,6 +14,7 @@ from homeassistant.components.remote import (
     DEFAULT_NUM_REPEATS,
     RemoteEntity,
     RemoteEntityFeature,
+    RemoteNavigation,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -34,6 +35,18 @@ VALID_PREFIXES: Final[frozenset[str]] = frozenset(
         "END_LONG",
     }
 )
+
+
+NAVIGATION_KEY_CODES: Final[dict[RemoteNavigation, str]] = {
+    RemoteNavigation.UP: "DPAD_UP",
+    RemoteNavigation.DOWN: "DPAD_DOWN",
+    RemoteNavigation.LEFT: "DPAD_LEFT",
+    RemoteNavigation.RIGHT: "DPAD_RIGHT",
+    RemoteNavigation.SELECT: "DPAD_CENTER",
+    RemoteNavigation.BACK: "BACK",
+    RemoteNavigation.HOME: "HOME",
+    RemoteNavigation.MENU: "MENU",
+}
 
 
 def _parse_command(single_command: str) -> tuple[str, str | None]:
@@ -59,7 +72,9 @@ async def async_setup_entry(
 class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
     """Android TV Remote Entity."""
 
-    _attr_supported_features = RemoteEntityFeature.ACTIVITY
+    _attr_supported_features = (
+        RemoteEntityFeature.ACTIVITY | RemoteEntityFeature.NAVIGATE
+    )
 
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
@@ -116,6 +131,11 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         """Turn the Android TV off."""
         if self.is_on:
             self._send_key_command("POWER")
+
+    @override
+    async def async_navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation action to the Android TV."""
+        self._send_key_command(NAVIGATION_KEY_CODES[direction])
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
