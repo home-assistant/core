@@ -9,8 +9,10 @@ from boschshcpy.services_impl import (
     OutdoorSirenService,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
     SwitchConfiguration,
+    TerminalConfiguration,
     VibrationSensorService,
     WallThermostatConfiguration,
 )
@@ -41,6 +43,7 @@ DISPLAYED_TEMPERATURE_ENTITY_ID = "select.thermostat_gen2_displayed_temperature"
 STATE_AFTER_OUTAGE_ENTITY_ID = "select.smart_plug_state_after_power_outage"
 VALVE_TYPE_ENTITY_ID = "select.thermostat_gen2_valve_type"
 HEATER_TYPE_ENTITY_ID = "select.thermostat_gen2_heater_type"
+TERMINAL_TYPE_ENTITY_ID = "select.thermostat_gen2_sensor_connection"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
@@ -683,3 +686,239 @@ async def test_relay_switch_type_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(SWITCH_TYPE_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    spec=SHCRoomThermostat2,
+                    terminal_type=TerminalConfiguration.Type.NOT_CONNECTED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_terminal_type(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The terminal type is reported and written to the Room Thermostat II."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.roomthermostats[0]
+
+    assert hass.states.get(TERMINAL_TYPE_ENTITY_ID).state == "not_connected"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: TERMINAL_TYPE_ENTITY_ID, "option": "outdoor_sensor_connected"},
+        blocking=True,
+    )
+    assert device.terminal_type == TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"roomthermostats": [thermostat_gen2_device(spec=SHCRoomThermostat2)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_terminal_type_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No terminal type select is created without terminal configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(TERMINAL_TYPE_ENTITY_ID) is None
+
+
+ACTUATOR_TYPE_ENTITY_ID = "select.relay_actuator_type"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True,
+                    actuator_type=SwitchConfiguration.ActuatorType.NORMALLY_CLOSED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_actuator_type(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The relay actuator type is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    assert hass.states.get(ACTUATOR_TYPE_ENTITY_ID).state == "normally_closed"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ACTUATOR_TYPE_ENTITY_ID, "option": "normally_open"},
+        blocking=True,
+    )
+    assert device.actuator_type == SwitchConfiguration.ActuatorType.NORMALLY_OPEN
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_relays": [micromodule_relay_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_actuator_type_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No actuator type select is created without switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ACTUATOR_TYPE_ENTITY_ID) is None
+
+
+OUTPUT_MODE_ENTITY_ID = "select.relay_output_mode"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True,
+                    output_mode=SwitchConfiguration.OutputMode.ATTACHED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_output_mode(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The relay output mode is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    assert hass.states.get(OUTPUT_MODE_ENTITY_ID).state == "attached"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: OUTPUT_MODE_ENTITY_ID, "option": "detached"},
+        blocking=True,
+    )
+    assert device.output_mode == SwitchConfiguration.OutputMode.DETACHED
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_relays": [micromodule_relay_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_output_mode_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No output mode select is created without switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(OUTPUT_MODE_ENTITY_ID) is None
+
+
+SECURITY_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_alarm_system"
+COMFORT_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_other_cases"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    supports_smart_sensitivity=True,
+                    smart_sensitivity={"SECURITY": "HIGH", "COMFORT": "LOW"},
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The smart sensitivity levels are reported and written per context."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == "high"
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == "low"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: COMFORT_LEVEL_ENTITY_ID, "option": "middle"},
+        blocking=True,
+    )
+    device.set_smart_sensitivity_manual_level.assert_called_once_with(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity.MIDDLE,
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No smart sensitivity selects are created without support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID) is None
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_smart_sensitivity=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The levels stay unknown while the controller reports none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
