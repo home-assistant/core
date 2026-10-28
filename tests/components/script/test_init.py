@@ -1507,11 +1507,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
         hass,
         (
             State("script.no_last_triggered", STATE_OFF),
-            State(
-                "script.last_triggered",
-                STATE_OFF,
-                {ScriptEntityStateAttribute.LAST_TRIGGERED: time},
-            ),
+            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
         ),
     )
     hass.set_state(CoreState.starting)
