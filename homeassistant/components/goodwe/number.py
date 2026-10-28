@@ -117,6 +117,32 @@ NUMBERS = (
         filter=lambda inv: _has_setting(inv, "battery_charge_current"),
         converter=float,
     ),
+    # Target SoC of fast charging (immediate battery charge).
+    GoodweNumberEntityDescription(
+        key="fast_charging_soc",
+        translation_key="fast_charging_soc",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_soc"),
+        setter=lambda inv, val: inv.write_setting("fast_charging_soc", val),
+        filter=lambda inv: _has_setting(inv, "fast_charging_soc"),
+    ),
+    # Fast charging power as % of the inverter rated power.
+    GoodweNumberEntityDescription(
+        key="fast_charging_power",
+        translation_key="fast_charging_power",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_power"),
+        setter=lambda inv, val: inv.write_setting("fast_charging_power", val),
+        filter=lambda inv: _has_setting(inv, "fast_charging_power"),
+    ),
 )
 
 
