@@ -31,6 +31,7 @@ class TuyaCameraEntityDescription(TuyaEntityDescription, CameraEntityDescription
 
 CAMERAS: dict[DeviceCategory, TuyaCameraEntityDescription] = {
     DeviceCategory.DGHSXJ: TuyaCameraEntityDescription(key=""),
+    DeviceCategory.ZNWNSXJ: TuyaCameraEntityDescription(key=""),
     DeviceCategory.SP: TuyaCameraEntityDescription(key=""),
 }
 
