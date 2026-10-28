@@ -162,6 +162,18 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "air_flap_primary_position": {
+        "name": "Primary air flap position"
+      },
+      "air_flap_secondary_position": {
+        "name": "Secondary air flap position"
+      },
+      "ash_level": {
+        "name": "Ash level"
+      },
+      "boiler_circuit_pump_power": {
+        "name": "Boiler circuit pump"
+      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },
