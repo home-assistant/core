@@ -8,13 +8,8 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    METHODS,
-)
+from homeassistant.components.rest.const import DEFAULT_METHOD, METHODS  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -45,7 +40,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -64,6 +58,8 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
@@ -108,7 +104,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -159,13 +155,14 @@ SENSOR_SETTINGS = probatio.Schema(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
-                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
-                            custom_value=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
-                            sort=True,
+                    probatio.Optional(
+                        CONF_UNIT_OF_MEASUREMENT
+                    ): UnitOfMeasurementSelector(
+                        UnitOfMeasurementSelectorConfig(
+                            context={
+                                "filter_device_class": CONF_DEVICE_CLASS,
+                                "filter_state_class": CONF_STATE_CLASS,
+                            }
                         )
                     ),
                 }
@@ -301,7 +298,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to reconfigure a sensor subentry."""
         if user_input is not None:
-            self.async_update_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(), self._get_reconfigure_subentry(), data=user_input
             )
 

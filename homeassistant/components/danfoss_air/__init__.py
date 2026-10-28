@@ -79,7 +79,9 @@ class DanfossAir:
             self._client.command(ReadCommand.filterPercent), 2
         )
         self._data[ReadCommand.bypass] = self._client.command(ReadCommand.bypass)
-        self._data[ReadCommand.fan_step] = self._client.command(ReadCommand.fan_step)
+        self._data[ReadCommand.fan_speed_percent] = self._client.command(
+            ReadCommand.fan_speed_percent
+        )
         self._data[ReadCommand.supply_fan_speed] = self._client.command(
             ReadCommand.supply_fan_speed
         )

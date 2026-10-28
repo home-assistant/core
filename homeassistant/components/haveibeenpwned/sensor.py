@@ -33,8 +33,8 @@ URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_EMAIL): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_EMAIL): probatio.All(probatio.EnsureList(), [cv.string]),
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
     }
 )
 

@@ -11,9 +11,10 @@
     }),
     'entry_data': dict({
       'elevation': 1.0,
-      'latitude': '**REDACTED**',
-      'longitude': '**REDACTED**',
-      'name': 'test',
+      'location': dict({
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+      }),
     }),
   })
 # ---

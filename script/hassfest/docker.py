@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from hassfest.model import Config, Integration
+
 from homeassistant import core
 from homeassistant.util import executor, thread
-
-from .model import Config, Integration
 
 # Don't forget to update also Dockerfile.dev when updating this.
 _DOCKERFILE_SYNTAX_SHA = (
@@ -97,7 +97,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
-COPY --parents requirements.txt homeassistant/ script /usr/src/homeassistant/
+COPY --parents pyproject.toml requirements.txt requirements_all.txt homeassistant/ script packages/hassfest /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \
@@ -107,14 +107,23 @@ RUN --mount=type=tmpfs,target=/tmp \
     apk add --no-cache libturbojpeg \
     # Install uv at the version pinned in the requirements file
     && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{{print $2}}' /usr/src/homeassistant/requirements.txt)" \
+    # Install CI-only tooling from PyPI, bypassing the Home Assistant wheel index
+    && UV_EXTRA_INDEX_URL="" uv pip install \
+        --no-build \
+        --no-cache \
+        "pipdeptree==$(awk -F'==' '/^pipdeptree==/{{print $2}}' /tmp/requirements_test.txt)" \
+        "tqdm==$(awk -F'==' '/^tqdm==/{{print $2}}' /tmp/requirements_test.txt)" \
+        "ruff==$(awk -F'==' '/^ruff==/{{print $2}}' /tmp/requirements_test_pre_commit.txt)" \
     && uv pip install \
         --no-build \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        "pipdeptree==$(awk -F'==' '/^pipdeptree==/{{print $2}}' /tmp/requirements_test.txt)" \
-        "tqdm==$(awk -F'==' '/^tqdm==/{{print $2}}' /tmp/requirements_test.txt)" \
-        "ruff==$(awk -F'==' '/^ruff==/{{print $2}}' /tmp/requirements_test_pre_commit.txt)"
+    && UV_EXTRA_INDEX_URL="" uv pip install \
+        --no-cache \
+        --no-deps \
+        --config-settings editable_mode=compat \
+        -e /usr/src/homeassistant/packages/hassfest
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"

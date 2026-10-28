@@ -36,7 +36,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -84,7 +84,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
 
     client = await create_omada_client(hass, data)
     controller_id = await client.login()
-    name = await client.get_controller_name()
+    controller_status = await client.get_controller_status()
+    name = controller_status.name or controller_status.model
     sites = await client.get_sites()
 
     return HubInfo(controller_id, name, sites)
@@ -196,7 +197,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

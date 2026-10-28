@@ -49,10 +49,10 @@ SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
         {
             probatio.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
             probatio.Optional(ATTR_DOMAINS, default=[]): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(ATTR_ENTITY_GLOBS, default=[]): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
         }
@@ -81,12 +81,14 @@ SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
     {
         probatio.Required("start_time"): cv.datetime,
         probatio.Optional("end_time"): cv.datetime,
-        probatio.Required("statistic_ids"): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required("statistic_ids"): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Required("period"): probatio.In(
             ["5minute", "hour", "day", "week", "month", "year"]
         ),
         probatio.Required("types"): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.In(
                     ["change", "last_reset", "max", "mean", "min", "state", "sum"]

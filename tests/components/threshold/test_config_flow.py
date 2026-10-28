@@ -1,18 +1,21 @@
 """Test the Threshold config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.threshold.const import DOMAIN
+from homeassistant.components.threshold.const import (
+    DOMAIN,
+    ThresholdEntityStateAttribute,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -27,7 +30,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.threshold.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -65,7 +68,9 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(("extra_input_data", "error"), [({}, "need_lower_upper")])
-async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
+async def test_fail(
+    hass: HomeAssistant, extra_input_data: dict[str, Any], error: str
+) -> None:
     """Test not providing lower or upper limit fails."""
     input_sensor = "sensor.input"
 
@@ -86,6 +91,22 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.threshold.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "entity_id": input_sensor,
+                "lower": -2,
+                "name": "My threshold sensor",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -153,7 +174,7 @@ async def test_options(hass: HomeAssistant) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get("binary_sensor.my_threshold")
     assert state.state == "off"
-    assert state.attributes["type"] == "upper"
+    assert state.attributes[ThresholdEntityStateAttribute.TYPE] == "upper"
 
 
 @pytest.mark.parametrize(

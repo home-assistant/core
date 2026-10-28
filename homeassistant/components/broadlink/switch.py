@@ -1,11 +1,10 @@
 """Support for Broadlink switches."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import ABC, abstractmethod
 import logging
 from typing import Any, override
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import probatio
 
 from homeassistant.components.switch import (
@@ -36,8 +35,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BroadlinkDevice
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
+from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -63,7 +62,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Required(CONF_MAC): mac_address,
             probatio.Optional(CONF_HOST): cv.string,
             probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [SWITCH_SCHEMA],
             ),
         }
@@ -86,7 +85,7 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
 
     if switches := config.get(CONF_SWITCHES):
-        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
+        platform_data = hass.data[BROADLINK_DATA].platforms.get(Platform.SWITCH, {})
         async_add_entities_config_entry: AddConfigEntryEntitiesCallback
         device: BroadlinkDevice
         async_add_entities_config_entry, device = platform_data.get(
@@ -116,11 +115,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink switch."""
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     switches: list[BroadlinkSwitch] = []
 
-    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
+    if device.api.type in DOMAINS_AND_TYPES[Platform.REMOTE]:
+        platform_data = hass.data[BROADLINK_DATA].platforms.setdefault(
+            Platform.SWITCH, {}
+        )
         platform_data[device.api.mac] = async_add_entities, device
     elif device.api.type == "SP1":
         switches.append(BroadlinkSP1Switch(device))

@@ -54,7 +54,7 @@ class VoipData:
 type VoipConfigEntry = ConfigEntry[VoipData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None:
     """Set up VoIP integration from a config entry."""
     # Make sure there is a valid user ID for VoIP in the config entry
     if (
@@ -84,8 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
-
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
@@ -111,15 +109,13 @@ async def _create_sip_server(
     return transport, protocol
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VoipConfigEntry) -> None:
     """Unload VoIP."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        _LOGGER.debug("Shutting down VoIP server")
-        entry.runtime_data.domain_data.transport.close()
-        await entry.runtime_data.domain_data.protocol.wait_closed()
-        _LOGGER.debug("VoIP server shut down successfully")
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    _LOGGER.debug("Shutting down VoIP server")
+    entry.runtime_data.domain_data.transport.close()
+    await entry.runtime_data.domain_data.protocol.wait_closed()
+    _LOGGER.debug("VoIP server shut down successfully")
 
 
 async def async_remove_config_entry_device(

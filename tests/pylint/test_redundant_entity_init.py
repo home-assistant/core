@@ -44,7 +44,7 @@ class MyDescription:
 
 @pytest.fixture(name="checker")
 def checker_fixture(linter: UnittestLinter) -> RedundantEntityInitChecker:
-    """Fixture to provide the R7405 checker."""
+    """Fixture to provide the R7406 checker."""
     return RedundantEntityInitChecker(linter)
 
 

@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OpenGarageConfigEntry
+from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 
@@ -56,6 +56,15 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
     """Representation of an OpenGarage button."""
 
     entity_description: OpenGarageButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: OpenGarageDataUpdateCoordinator,
+        device_id: str,
+        description: OpenGarageButtonEntityDescription,
+    ) -> None:
+        """Initialize the button."""
+        super().__init__(coordinator, device_id, description)
 
     @override
     async def async_press(self) -> None:

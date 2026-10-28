@@ -4,8 +4,10 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 

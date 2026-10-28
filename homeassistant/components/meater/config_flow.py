@@ -15,9 +15,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 USER_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 

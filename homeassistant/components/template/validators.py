@@ -146,6 +146,8 @@ def strenum[T: StrEnum](
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
+    *,
+    deprecated_enums: tuple[T, ...] | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
@@ -165,9 +167,12 @@ def strenum[T: StrEnum](
         if isinstance(result, str):
             value = result.lower().strip()
             try:
-                return state_enum(value)
+                enum_value = state_enum(value)
             except ValueError:
                 pass
+            else:
+                if enum_value not in (deprecated_enums or ()):
+                    return enum_value
 
         if state_on or state_off:
             try:
@@ -181,7 +186,9 @@ def strenum[T: StrEnum](
             except probatio.Invalid:
                 pass
 
-        expected = tuple(s.value for s in state_enum)
+        expected = tuple(
+            s.value for s in state_enum if s.value not in (deprecated_enums or ())
+        )
         if state_on:
             expected += RESULT_ON
         if state_off:
@@ -350,6 +357,7 @@ def item_in_list[T](
     attribute: str,
     items: list[Any] | str | None,
     items_attribute: str | None = None,
+    stringify_result: bool = False,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
     """Assert the result of the template is an item inside a list.
@@ -380,6 +388,9 @@ def item_in_list[T](
                 )
 
             return None
+
+        if stringify_result:
+            result = str(result)
 
         if result not in _items:
             log_validation_result_error(
@@ -463,3 +474,42 @@ def check_conditions(
         )
 
     return condition_result
+
+
+def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict], dict]:
+    """Validate an inclusive group of configuration options, with 1 optional option.
+
+    The optional member requires all required options, however the required options
+    do not require the optional option.
+    """
+    _all = {optional, *required}
+    _required = set(required)
+
+    def verify(obj: dict) -> dict:
+        options = set(obj.keys())
+        if not (common := options.intersection(_all)) or common in (_required, _all):
+            return obj
+
+        missing = _required - common
+        raise probatio.Invalid(
+            f"Some required option(s) are missing from inclusive group '{name}', expected missing options: {', '.join(missing)}."
+        )
+
+    return verify
+
+
+def requires_option(option: str, required_option: str) -> Callable[[dict], dict]:
+    """Validate a pair of options.
+
+    Raises probatio.Invalid if required_option is missing when option is present.
+    """
+
+    def verify(obj: dict) -> dict:
+        if (option in obj and required_option in obj) or option not in obj:
+            return obj
+
+        raise probatio.Invalid(
+            f"Required option: '{required_option}' is missing for option '{option}'. Remove '{option}' from your config or add '{required_option}'."
+        )
+
+    return verify

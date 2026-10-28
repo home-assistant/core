@@ -2,8 +2,6 @@
 
 from typing import Final, override
 
-from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
-
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventEntity,
@@ -15,10 +13,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
-from .utils import async_remove_entity_from_virtual_group
+from .utils import async_remove_entities
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
 
 EVENTS: Final = {
     EventEntityDescription(
@@ -38,15 +37,20 @@ async def async_setup_entry(
     """Set up Alexa Devices events based on a config entry."""
     coordinator = entry.runtime_data
 
-    # Remove voice event from virtual groups
-    await async_remove_entity_from_virtual_group(
-        hass, coordinator, EVENT_DOMAIN, "voice_event"
+    # Remove voice event from virtual groups and AQM devices
+    await async_remove_entities(
+        hass,
+        coordinator,
+        EVENT_DOMAIN,
+        "voice_event",
+        remove_fn=lambda device: not device.voice_control_supported,
     )
 
     known_devices: set[str] = set()
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
@@ -54,7 +58,7 @@ async def async_setup_entry(
                 AlexaVoiceEvent(coordinator, serial_num, event_desc)
                 for event_desc in EVENTS
                 for serial_num in new_devices
-                if coordinator.data[serial_num].device_family != SPEAKER_GROUP_FAMILY
+                if coordinator.data[serial_num].voice_control_supported
             )
 
     _check_device()
@@ -96,6 +100,8 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
                 "intent": vocal_record.intent,
                 "voice_command": vocal_record.title,
                 "voice_reply": vocal_record.sub_title,
+                "person_first_name": vocal_record.person_first_name,
+                "person_type": vocal_record.person_type,
             },
         )
         self.async_write_ha_state()

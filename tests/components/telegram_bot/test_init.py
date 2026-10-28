@@ -1,6 +1,7 @@
 """Init tests for the Telegram Bot integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_error(
