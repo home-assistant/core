@@ -198,7 +198,13 @@ async def test_device_tracker_device_names(
     assert no_hostname_device is not None
     assert hostname_device is not None
     assert no_hostname_device.name == "ff:ff:ff:ff:ff:ff"
+    assert no_hostname_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:ff")
+    }
     assert hostname_device.name == "Desktop"
+    assert hostname_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:fe")
+    }
     assert (
         hass.states.get(no_hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
         == "ff:ff:ff:ff:ff:ff"

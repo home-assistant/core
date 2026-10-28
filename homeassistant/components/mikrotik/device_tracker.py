@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -79,6 +80,9 @@ class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
         super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
         self._attr_unique_id = device.mac
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)}, name=device.name
+        )
 
     @property
     @override
