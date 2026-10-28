@@ -24,12 +24,6 @@ CLIENT_SECRET = "5678"
 ACCESS_TOKEN = "mock-access-token"
 
 
-@pytest.fixture(autouse=True)
-async def setup_homeassistant(hass: HomeAssistant) -> None:
-    """Set up the homeassistant integration, which the conversation agent needs."""
-    assert await async_setup_component(hass, "homeassistant", {})
-
-
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
