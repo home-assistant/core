@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import socket
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -13,13 +14,23 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
-from homeassistant.components.systemmonitor.sensor import get_cpu_icon
+from homeassistant.components.systemmonitor.sensor import get_cpu_icon, get_ip_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockProcess
+
+
+def test_ip_address_not_collected_yet() -> None:
+    """A missing coordinator address snapshot must not abort sensor setup."""
+    sensor = SimpleNamespace(
+        coordinator=SimpleNamespace(data=SimpleNamespace(addresses=None)),
+        argument="eth0",
+        entity_description=SimpleNamespace(key="ipv4_address"),
+    )
+    assert get_ip_address(sensor) is None
 
 
 @pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
