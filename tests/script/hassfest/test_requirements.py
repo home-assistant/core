@@ -5,9 +5,9 @@ from importlib.metadata import PackagePath
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config, Integration
 import pytest
 
-from script.hassfest.model import Config, Integration
 from script.hassfest.requirements import (
     FORBIDDEN_PACKAGE_NAMES,
     PACKAGE_CHECK_PREPARE_UPDATE,
@@ -27,7 +27,7 @@ def integration():
     return Integration(
         path=Path("homeassistant/components/test").absolute(),
         _config=Config(
-            root=Path(".").absolute(),
+            root=Path().absolute(),
             specific_integrations=None,
             action="validate",
             requirements=True,
@@ -88,7 +88,7 @@ def test_validate_requirements_format_ignore_pin_for_custom(
         "test_package>=1.4.2,<1.9,!=1.5",
         "test_package>=1.4.2;python_version<'3.11'",
     ]
-    integration.path = Path("")
+    integration.path = Path()
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
 
@@ -128,7 +128,7 @@ def test_validate_requirements_format_github_custom(integration: Integration) ->
     integration.manifest["requirements"] = [
         "git+https://github.com/user/project.git@1.2.3",
     ]
-    integration.path = Path("")
+    integration.path = Path()
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
 

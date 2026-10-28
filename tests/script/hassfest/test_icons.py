@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from hassfest.model import Config, Integration
 import pytest
 
 from script.hassfest import icons
-from script.hassfest.model import Config, Integration
 
 INTEGRATION_CATEGORY_STRINGS = {
     "integration_category": {

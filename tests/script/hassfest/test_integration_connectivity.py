@@ -4,10 +4,10 @@ from dataclasses import replace
 import json
 from pathlib import Path
 
+from hassfest.model import Config, Integration
 import pytest
 
 from script.hassfest import integration_connectivity
-from script.hassfest.model import Config, Integration
 
 STRINGS = {
     "integration_connectivity": {

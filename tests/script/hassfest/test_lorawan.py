@@ -4,12 +4,12 @@ import ast
 import json
 from pathlib import Path
 
+from hassfest.model import Config, Integration
 import probatio
 import pytest
 
 from script.hassfest.lorawan import generate_and_validate
 from script.hassfest.manifest import INTEGRATION_MANIFEST_SCHEMA
-from script.hassfest.model import Config, Integration
 from script.hassfest.quality_scale_validation import discovery
 
 
@@ -26,10 +26,10 @@ from script.hassfest.quality_scale_validation import discovery
         [["tts"]],
     ],
 )
-def test_invalid_vendor_ids(vendors: list[object]) -> None:
+def test_invalid_vendor_ids(config: Config, vendors: list[object]) -> None:
     """Discovery identities must be unique stack and native brand pairs."""
     manifest = json.loads(
-        Path("homeassistant/components/lorawan/manifest.json").read_text(
+        (config.core_integrations_path / "lorawan/manifest.json").read_text(
             encoding="utf-8"
         )
     )
@@ -38,10 +38,10 @@ def test_invalid_vendor_ids(vendors: list[object]) -> None:
         INTEGRATION_MANIFEST_SCHEMA(manifest)
 
 
-def test_stack_specific_vendor_ids() -> None:
+def test_stack_specific_vendor_ids(config: Config) -> None:
     """Native numeric and string brand IDs survive manifest validation."""
     manifest = json.loads(
-        Path("homeassistant/components/lorawan/manifest.json").read_text(
+        (config.core_integrations_path / "lorawan/manifest.json").read_text(
             encoding="utf-8"
         )
     )

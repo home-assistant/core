@@ -1,59 +1,53 @@
-"""Tests for hassfest conditions."""
+"""Tests for hassfest triggers."""
 
 import io
 import json
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config
 import pytest
 
 from homeassistant.util.yaml.loader import parse_yaml
-from script.hassfest import conditions
-from script.hassfest.model import Config
+from script.hassfest import triggers
 
 from . import get_integration
 
-CONDITION_DESCRIPTION_FILENAME = "conditions.yaml"
-CONDITION_ICONS_FILENAME = "icons.json"
-CONDITION_STRINGS_FILENAME = "strings.json"
+TRIGGER_DESCRIPTION_FILENAME = "triggers.yaml"
+TRIGGER_ICONS_FILENAME = "icons.json"
+TRIGGER_STRINGS_FILENAME = "strings.json"
 
-CONDITION_DESCRIPTIONS = {
+TRIGGER_DESCRIPTIONS = {
     "valid": {
-        CONDITION_DESCRIPTION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             _:
-              target:
-                entity:
-                  domain: light
               fields:
-                after:
+                event:
                   example: sunrise
                   selector:
                     select:
                       options:
                         - sunrise
                         - sunset
-                after_offset:
+                offset:
                   selector:
                     time: null
-                after_offset_no_description:
+                offset_no_description:
                   selector:
                     time: null
         """,
-        CONDITION_ICONS_FILENAME: {"conditions": {"_": {"condition": "mdi:flash"}}},
-        CONDITION_STRINGS_FILENAME: {
-            "conditions": {
+        TRIGGER_ICONS_FILENAME: {"triggers": {"_": {"trigger": "mdi:flash"}}},
+        TRIGGER_STRINGS_FILENAME: {
+            "triggers": {
                 "_": {
-                    "name": "Sun",
-                    "description": "When the sun is above/below the horizon",
+                    "name": "MQTT",
+                    "description": (
+                        "When a specific message is received on a given MQTT topic."
+                    ),
                     "fields": {
-                        "after": {"name": "After event", "description": "The event."},
-                        "after_offset": {
-                            "name": "Offset",
-                            "description": "The offset.",
-                        },
-                        "after_offset_no_description": {
-                            "name": "Offset",
-                        },
+                        "event": {"name": "Event", "description": "The event."},
+                        "offset": {"name": "Offset", "description": "The offset."},
+                        "offset_no_description": {"name": "Offset"},
                     },
                 }
             }
@@ -61,18 +55,18 @@ CONDITION_DESCRIPTIONS = {
         "errors": [],
     },
     "yaml_missing_colon": {
-        CONDITION_DESCRIPTION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             test:
               fields
                 entity:
                   selector:
                     entity:
         """,
-        "errors": ["Invalid conditions.yaml"],
+        "errors": ["Invalid triggers.yaml"],
     },
-    "invalid_conditions_schema": {
-        CONDITION_DESCRIPTION_FILENAME: """
-            invalid_condition:
+    "invalid_triggers_schema": {
+        TRIGGER_DESCRIPTION_FILENAME: """
+            invalid_trigger:
               fields:
                 entity:
                   selector:
@@ -81,27 +75,27 @@ CONDITION_DESCRIPTIONS = {
         "errors": ["Unknown selector type invalid_selector"],
     },
     "missing_strings_and_icons": {
-        CONDITION_DESCRIPTION_FILENAME: """
+        TRIGGER_DESCRIPTION_FILENAME: """
             sun:
               fields:
-                after:
+                event:
                   example: sunrise
                   selector:
                     select:
                       options:
                         - sunrise
                         - sunset
-                      translation_key: after
-                after_offset:
+                      translation_key: event
+                offset:
                   selector:
                     time: null
         """,
-        CONDITION_ICONS_FILENAME: {"conditions": {}},
-        CONDITION_STRINGS_FILENAME: {
-            "conditions": {
+        TRIGGER_ICONS_FILENAME: {"triggers": {}},
+        TRIGGER_STRINGS_FILENAME: {
+            "triggers": {
                 "sun": {
                     "fields": {
-                        "after_offset": {},
+                        "offset": {},
                     },
                 }
             }
@@ -110,9 +104,9 @@ CONDITION_DESCRIPTIONS = {
             "has no icon",
             "has no name",
             "has no description",
-            "field after with no name",
-            "field after with a selector with a translation key",
-            "field after_offset with no name",
+            "field event with no name",
+            "field event with a selector with a translation key",
+            "field offset with no name",
         ],
     },
 }
@@ -124,33 +118,33 @@ def test_validate(config: Config) -> None:
 
     def _load_yaml(fname, secrets=None):
         domain, yaml_file = fname.split("/")
-        assert yaml_file == CONDITION_DESCRIPTION_FILENAME
+        assert yaml_file == TRIGGER_DESCRIPTION_FILENAME
 
-        condition_descriptions = CONDITION_DESCRIPTIONS[domain][yaml_file]
-        with io.StringIO(condition_descriptions) as file:
+        trigger_descriptions = TRIGGER_DESCRIPTIONS[domain][yaml_file]
+        with io.StringIO(trigger_descriptions) as file:
             return parse_yaml(file)
 
     def _patched_path_read_text(path: Path):
         domain = path.parent.name
         filename = path.name
 
-        return json.dumps(CONDITION_DESCRIPTIONS[domain][filename])
+        return json.dumps(TRIGGER_DESCRIPTIONS[domain][filename])
 
     integrations = {
-        domain: get_integration(domain, config) for domain in CONDITION_DESCRIPTIONS
+        domain: get_integration(domain, config) for domain in TRIGGER_DESCRIPTIONS
     }
 
     with (
-        patch("script.hassfest.conditions.grep_dir", return_value=True),
+        patch("script.hassfest.triggers.grep_dir", return_value=True),
         patch("pathlib.Path.is_file", return_value=True),
         patch("pathlib.Path.read_text", _patched_path_read_text),
         patch("annotatedyaml.loader.load_yaml", side_effect=_load_yaml),
     ):
-        conditions.validate(integrations, config)
+        triggers.validate(integrations, config)
 
     assert not config.errors
 
-    for domain, description in CONDITION_DESCRIPTIONS.items():
+    for domain, description in TRIGGER_DESCRIPTIONS.items():
         assert len(integrations[domain].errors) == len(description["errors"]), (
             f"Domain '{domain}' has unexpected errors: {integrations[domain].errors}"
         )

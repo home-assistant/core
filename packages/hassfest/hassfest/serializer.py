@@ -1,8 +1,8 @@
 """Hassfest utils."""
 
 from collections.abc import Collection, Iterable, Mapping
-import shutil
 import subprocess
+import sys
 from typing import Any
 
 DEFAULT_GENERATOR = "script.hassfest"
@@ -70,11 +70,8 @@ To update, run python3 -m {generator}
 
 {content}
 """
-    ruff = shutil.which("ruff")
-    if not ruff:
-        raise RuntimeError("ruff not found")
     return subprocess.check_output(
-        [ruff, "format", "-"],
+        [sys.executable, "-m", "ruff", "format", "-"],
         input=content.strip(),
         encoding="utf-8",
     )
