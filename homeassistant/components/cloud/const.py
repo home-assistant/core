@@ -1,6 +1,7 @@
 """Constants for the cloud component."""
 
 import asyncio
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.util.hass_dict import HassKey
@@ -103,3 +104,10 @@ CONVERSATION_ENTITY_UNIQUE_ID = "cloud-conversation-agent"
 LOGIN_MFA_TIMEOUT = 60
 
 VOICE_STYLE_SEPERATOR = "||"
+
+
+class CloudService(StrEnum):
+    """Store keys for cloud services."""
+
+    REMOTE_CONNECT = "remote_connect"
+    REMOTE_DISCONNECT = "remote_disconnect"
