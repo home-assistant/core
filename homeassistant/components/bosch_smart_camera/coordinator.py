@@ -175,6 +175,8 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
             update_interval=FIRMWARE_SCAN_INTERVAL,
         )
         self.cameras = cameras
+        # Entities are added even when the first refresh fails.
+        self.data = {}
 
     @override
     async def _async_update_data(self) -> dict[str, FirmwareStatus]:

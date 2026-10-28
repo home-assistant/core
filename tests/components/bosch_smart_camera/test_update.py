@@ -104,24 +104,45 @@ async def test_unknown_status_keeps_installed_version(
 
 
 @pytest.mark.parametrize(
-    ("exception", "state"),
-    [
-        (BoschCameraAuthError("rejected"), ConfigEntryState.SETUP_ERROR),
-        (BoschCameraConnectionError("down"), ConfigEntryState.SETUP_RETRY),
-    ],
+    "exception",
+    [BoschCameraAuthError("rejected"), BoschCameraConnectionError("down")],
 )
-async def test_setup_errors(
+async def test_firmware_failure_does_not_block_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_firmware_status: AsyncMock,
     exception: Exception,
-    state: ConfigEntryState,
 ) -> None:
-    """Test failing firmware requests while setting up."""
+    """Test the camera is set up although the firmware status cannot be read."""
     mock_get_firmware_status.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is state
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    camera = hass.states.get("camera.garden")
+    assert camera is not None
+    assert camera.state != STATE_UNAVAILABLE
+    update = hass.states.get(ENTITY_ID)
+    assert update is not None
+    assert update.state == STATE_UNAVAILABLE
+
+
+async def test_unavailable_when_camera_list_is_stale(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed camera list refresh makes the firmware entity unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_list_cameras.side_effect = BoschCameraConnectionError("down")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_update_failure_makes_entity_unavailable(

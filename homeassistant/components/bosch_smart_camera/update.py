@@ -91,6 +91,7 @@ class BoschFirmware(CoordinatorEntity[BoschFirmwareCoordinator], UpdateEntity):
         """Return whether both the camera list and firmware status know the camera."""
         return (
             super().available
+            and self.coordinator.cameras.last_update_success
             and self._camera_id in self.coordinator.data
             and self._camera_id in self.coordinator.cameras.data
         )
