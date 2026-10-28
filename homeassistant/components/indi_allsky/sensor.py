@@ -440,12 +440,9 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
         ):
             self._attr_name = name_str
 
-        is_initial = "_attr_native_unit_of_measurement" not in self.__dict__
         self._attr_device_class = device_class
-        if is_initial or unit is not None:
-            self._attr_native_unit_of_measurement = unit
-        if is_initial or state_class is not None:
-            self._attr_state_class = state_class
+        self._attr_native_unit_of_measurement = unit
+        self._attr_state_class = state_class
 
     @property
     @override
