@@ -21,7 +21,7 @@ from homeassistant.helpers.helper_integration import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "generic_hygrostat"
+from .const import DOMAIN
 
 CONF_HUMIDIFIER = "humidifier"
 CONF_SENSOR = "target_sensor"

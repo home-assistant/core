@@ -2,6 +2,8 @@
 
 from enum import StrEnum
 
+DOMAIN = "generic_hygrostat"
+
 
 class GenericHygrostatEntityStateAttribute(StrEnum):
     """State attributes for generic hygrostat entities."""

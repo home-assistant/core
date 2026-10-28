@@ -12,8 +12,8 @@ from homeassistant.components.generic_hygrostat import (
     CONF_NAME,
     CONF_SENSOR,
     CONF_WET_TOLERANCE,
-    DOMAIN,
 )
+from homeassistant.components.generic_hygrostat.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant

@@ -21,8 +21,8 @@ from . import (
     CONF_SENSOR,
     CONF_WET_TOLERANCE,
     DEFAULT_TOLERANCE,
-    DOMAIN,
 )
+from .const import DOMAIN
 
 OPTIONS_SCHEMA = {
     probatio.Required(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
