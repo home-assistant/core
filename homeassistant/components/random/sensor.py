@@ -1,6 +1,7 @@
 """Support for showing random numbers."""
 
 from collections.abc import Mapping
+from enum import StrEnum
 from random import randrange
 from typing import Any
 
@@ -26,7 +27,15 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_MAX, DEFAULT_MIN, RandomEntityStateAttribute
+from .const import DEFAULT_MAX, DEFAULT_MIN
+
+
+class RandomEntityStateAttribute(StrEnum):
+    """State attributes for random sensor entities."""
+
+    MAXIMUM = "maximum"
+    MINIMUM = "minimum"
+
 
 DEFAULT_NAME = "Random sensor"
 
