@@ -187,9 +187,7 @@ async def test_config_flow_preset_accepts_float(
         "heater": "switch.run",
         "hot_tolerance": 0.3,
         "name": "My thermostat",
-        "precision": "0.1",
         "target_sensor": "sensor.temperature",
-        "target_temp_step": "0.5",
     }
 
 
