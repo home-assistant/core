@@ -190,8 +190,8 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         """Return the color mode of the light."""
         if (
             self._mode_attr is not None
-            and self._temp_attr is not None
             and self._mode_attr.current_value == HOMEE_COLOR_MODE_COLOR_TEMPERATURE
+            and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
         ):
             return ColorMode.COLOR_TEMP
         return self._default_color_mode
