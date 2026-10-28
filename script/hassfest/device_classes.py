@@ -2,6 +2,8 @@
 
 import json
 
+from hassfest.model import Config, Integration
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
@@ -16,8 +18,6 @@ from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.components.valve import ValveDeviceClass
 from homeassistant.const import Platform
-
-from .model import Config, Integration
 
 PATH = "homeassistant/generated/device_classes.json"
 
