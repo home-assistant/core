@@ -20,7 +20,7 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, STATELESS_LLM_API
 
@@ -238,15 +238,23 @@ async def create_server(
             is_error=tool_response.error,
         )
 
-    return Server[Any](
-        name="home-assistant",
-        icons=[
+    try:
+        base_url = get_url(hass, require_current_request=True)
+    except NoURLAvailableError:
+        # The request host matches no configured URL, e.g. a Cloud custom domain
+        icons = None
+    else:
+        icons = [
             types.Icon(
-                src=f"{get_url(hass, require_current_request=True)}/static/icons/favicon-192x192.png",
+                src=f"{base_url}/static/icons/favicon-192x192.png",
                 mime_type="image/png",
                 sizes=["192x192"],
             )
-        ],
+        ]
+
+    return Server[Any](
+        name="home-assistant",
+        icons=icons,
         on_list_prompts=handle_list_prompts,
         on_get_prompt=handle_get_prompt,
         on_list_resources=handle_list_resources,

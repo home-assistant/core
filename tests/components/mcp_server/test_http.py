@@ -46,6 +46,7 @@ from homeassistant.helpers import (
     llm,
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -468,6 +469,22 @@ async def test_server_icons(
             assert response.status == HTTPStatus.OK
             assert response.content_type == "image/png"
             assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
+
+
+async def test_server_icons_no_matching_url(
+    hass: HomeAssistant,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Serve requests without an icon when the request host matches no URL."""
+    with patch(
+        "homeassistant.components.mcp_server.server.get_url",
+        side_effect=NoURLAvailableError,
+    ):
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            assert session.server_info is not None
+            assert session.server_info.icons is None
 
 
 @pytest.mark.parametrize(
