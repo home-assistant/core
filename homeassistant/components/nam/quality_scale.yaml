@@ -43,12 +43,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Coverage is above 95% for all modules, but the tests patch methods of
-      the library instead of using a mocked library client. They should be
-      rewritten to use a mock client.
+  test-coverage: done
 
   # Gold
   devices: done
