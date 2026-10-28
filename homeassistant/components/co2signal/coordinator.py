@@ -64,5 +64,4 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(err)},
             ) from err
