@@ -22,6 +22,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, ca
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -137,6 +138,10 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_mac_address = mac
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            name=device.hostname or mac,
+        )
 
     @property
     @override

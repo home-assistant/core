@@ -10,7 +10,7 @@ from pytest_homeassistant.common import async_fire_time_changed, patch
 from homeassistant.components import device_tracker, mikrotik
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import setup_mikrotik_entry
@@ -99,6 +99,43 @@ async def test_device_trackers(hass: HomeAssistant) -> None:
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2
         assert device_2.state == "not_home"
+
+
+@pytest.mark.parametrize(
+    ("dhcp_data", "entity_id", "expected_device_name"),
+    [
+        pytest.param(
+            [DEVICE_1_DHCP], "device_tracker.device_1", "Device_1", id="hostname"
+        ),
+        # A wireless client without a DHCP lease has no hostname
+        pytest.param(
+            [],
+            "device_tracker.00_00_00_00_00_01",
+            "00:00:00:00:00:01",
+            id="no_hostname",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    dhcp_data: list[dict[str, Any]],
+    entity_id: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracker device is named by the hostname, else the MAC address."""
+    await setup_mikrotik_entry(
+        hass, dhcp_data=dhcp_data, wireless_data=[DEVICE_1_WIRELESS]
+    )
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

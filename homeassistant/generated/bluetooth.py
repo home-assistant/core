@@ -164,6 +164,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
     },
     {
+        "connectable": True,
+        "domain": "exicom_spin_ble",
+        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    },
+    {
         "connectable": False,
         "domain": "fjaraskupan",
         "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b",
@@ -1133,11 +1138,6 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "specialized_turbo",
         "local_name": "SPECIALIZED*",
-    },
-    {
-        "connectable": True,
-        "domain": "spin_ble",
-        "service_uuid": "49535343-fe7d-4ae5-8fa9-9fafd205e455",
     },
     {
         "connectable": True,

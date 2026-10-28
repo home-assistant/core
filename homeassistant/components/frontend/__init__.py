@@ -36,6 +36,7 @@ from .helpers import (
     DATA_THEMES,
     DATA_THEMES_STORE,
     DEFAULT_THEME,
+    DEFAULT_THEME_COLOR,
     MANIFEST_JSON,
     VALUE_NO_THEME,
     validate_themes,
@@ -114,6 +115,7 @@ CONFIG_SCHEMA = probatio.Schema(
 __all__ = [
     "CONF_THEMES",
     "DEFAULT_THEME",
+    "DEFAULT_THEME_COLOR",
     "DOMAIN",
     "MANIFEST_JSON",
     "VALUE_NO_THEME",
