@@ -18,6 +18,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -118,6 +119,9 @@ class SkyHubScannerEntity(CoordinatorEntity[SkyHubCoordinator], ScannerEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
         self._attr_hostname = name or None
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}, name=name or mac
+        )
 
     @property
     @override

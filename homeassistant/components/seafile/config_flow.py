@@ -42,9 +42,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_BACKUP,
+    CONF_BACKUP_PATH,
     CONF_LIBRARIES,
     CONF_LIBRARY_ID,
     CONF_OTP,
+    DEFAULT_BACKUP_PATH,
     DOMAIN,
     SUBENTRY_TYPE_LIBRARY,
 )
@@ -73,6 +76,24 @@ STEP_OTP_DATA_SCHEMA = probatio.Schema(
         ),
     }
 )
+
+
+BACKUP_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_BACKUP, default=False): bool,
+        probatio.Required(
+            CONF_BACKUP_PATH, default=DEFAULT_BACKUP_PATH
+        ): TextSelector(),
+    }
+)
+
+
+def _backup_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the backup settings, with the folder as an absolute path."""
+    return {
+        CONF_BACKUP: user_input[CONF_BACKUP],
+        CONF_BACKUP_PATH: "/" + user_input[CONF_BACKUP_PATH].strip("/"),
+    }
 
 
 def _library_options(libraries: list[Library]) -> list[SelectOptionDict]:
@@ -204,7 +225,11 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries=[
                     {
                         "subentry_type": SUBENTRY_TYPE_LIBRARY,
-                        "data": {CONF_LIBRARY_ID: library_id},
+                        "data": {
+                            CONF_LIBRARY_ID: library_id,
+                            CONF_BACKUP: False,
+                            CONF_BACKUP_PATH: DEFAULT_BACKUP_PATH,
+                        },
                         "title": names[library_id],
                         "unique_id": library_id,
                     }
@@ -235,7 +260,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class LibrarySubentryFlowHandler(ConfigSubentryFlow):
-    """Handle a subentry flow to add a library."""
+    """Handle a subentry flow to add or reconfigure a library."""
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -244,7 +269,7 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Let the user pick a library."""
+        """Let the user pick a library and whether to store backups in it."""
         entry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
@@ -253,7 +278,7 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
             library_id = user_input[CONF_LIBRARY_ID]
             return self.async_create_entry(
                 title=self._libraries[library_id].name,
-                data={CONF_LIBRARY_ID: library_id},
+                data={CONF_LIBRARY_ID: library_id, **_backup_data(user_input)},
                 unique_id=library_id,
             )
 
@@ -283,6 +308,25 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Required(CONF_LIBRARY_ID): SelectSelector(
                         SelectSelectorConfig(options=options)
                     ),
+                    **BACKUP_SCHEMA.schema,
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Change whether backups are stored in the library."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                data={**subentry.data, **_backup_data(user_input)},
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                BACKUP_SCHEMA, subentry.data
             ),
         )

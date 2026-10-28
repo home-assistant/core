@@ -20,7 +20,7 @@ from .const import IDLE_STATUS, STATE_SENSOR
 @pytest.fixture(autouse=True)
 def platforms() -> Generator[None]:
     """Set up only the sensor platform."""
-    with patch("homeassistant.components.spin_ble.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.exicom_spin_ble.PLATFORMS", [Platform.SENSOR]):
         yield
 
 

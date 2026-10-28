@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from fing_agent_api.models import DeviceResponse
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import (
     AsyncMock,
     async_fire_time_changed,
@@ -136,3 +137,33 @@ async def test_device_modified(
     device_entry = device_registry.async_get(new_entry.device_id)
     assert device_entry.name == "NEW_PC_HOME"
     assert hass.states.get(new_entry.entity_id).name == "NEW_PC_HOME"
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_name"),
+    [
+        pytest.param("PC_HOME", "PC_HOME", id="named"),
+        pytest.param(None, "00:00:00:00:00:03", id="unnamed"),
+    ],
+)
+async def test_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_fing_agent: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    name: str | None,
+    expected_name: str,
+) -> None:
+    """Test the tracked device is named by its Fing name, else by MAC address."""
+    devices = await async_load_json_object_fixture(
+        hass, "device_resp_new_API.json", DOMAIN
+    )
+    devices["devices"][2]["name"] = name
+    mocked_fing_agent.get_devices.return_value = DeviceResponse(devices)
+    entry = await init_integration(hass, mock_config_entry, mocked_fing_agent)
+
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:03"), entry.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.name == expected_name

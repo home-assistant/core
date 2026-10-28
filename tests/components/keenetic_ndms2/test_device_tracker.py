@@ -85,6 +85,7 @@ async def test_client_name_change_renames_device(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == "Phone"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)}
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == "Phone"
 
     mock_client.get_devices.return_value = [
@@ -129,6 +130,7 @@ async def test_client_without_name(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == CLIENT_MAC
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)}
 
     mock_client.get_devices.return_value = [
         Device(
@@ -192,12 +194,21 @@ async def test_restoring_client_name_with_device(
     assert device.name == expected_name
 
 
+@pytest.mark.parametrize(
+    ("original_name", "expected_name"),
+    [
+        pytest.param("Old name", "Old name", id="original_name"),
+        pytest.param(None, "11:22:33:44:55:66", id="no_name"),
+    ],
+)
 @pytest.mark.usefixtures("mock_client")
 async def test_restoring_client_name_without_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    original_name: str | None,
+    expected_name: str,
 ) -> None:
     """Test a restored client without a device names it by its original name."""
     mac = "11:22:33:44:55:66"
@@ -207,7 +218,7 @@ async def test_restoring_client_name_without_device(
         f"{mac}_{mock_config_entry.entry_id}",
         suggested_object_id="restored",
         config_entry=mock_config_entry,
-        original_name="Old name",
+        original_name=original_name,
     )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -215,9 +226,10 @@ async def test_restoring_client_name_without_device(
 
     state = hass.states.get("device_tracker.restored")
     assert state.state == STATE_NOT_HOME
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Old name"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_name
     entity_entry = entity_registry.async_get("device_tracker.restored")
     assert entity_entry is not None
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
-    assert device.name == "Old name"
+    assert device.name == expected_name
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, mac)}
