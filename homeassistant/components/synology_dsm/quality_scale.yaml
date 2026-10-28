@@ -84,7 +84,7 @@ rules:
   icon-translations:
     status: todo
     comment: button still has icons
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: todo

@@ -25,6 +25,7 @@ from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
+    CONF_DEVICE_TOKEN,
     CONF_SNAPSHOT_QUALITY,
     DOMAIN,
 )
@@ -56,6 +57,7 @@ from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import (
     DEVICE_TOKEN,
     HOST,
+    HOST_2,
     MACS,
     PASSWORD,
     PORT,
@@ -573,6 +575,226 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
+
+
+def _reconfigure_entry() -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: 5001,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        options={CONF_BACKUP_PATH: None, CONF_BACKUP_SHARE: None},
+        unique_id=SERIAL,
+    )
+
+
+RECONFIGURE_INPUT = {
+    CONF_HOST: HOST_2,
+    CONF_PORT: PORT,
+    CONF_SSL: False,
+    CONF_VERIFY_SSL: True,
+    CONF_USERNAME: f"{USERNAME}_2",
+    CONF_PASSWORD: f"{PASSWORD}_2",
+}
+
+RECONFIGURED_DATA = {
+    **RECONFIGURE_INPUT,
+    CONF_MAC: MACS,
+}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(hass: HomeAssistant, service: MagicMock) -> None:
+    """Test reconfiguring the connection settings."""
+    entry = _reconfigure_entry()
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURED_DATA
+    assert entry.options == {CONF_BACKUP_PATH: None, CONF_BACKUP_SHARE: None}
+
+
+async def test_reconfigure_legacy_entry_without_verify_ssl(hass: HomeAssistant) -> None:
+    """Test the form defaults verify SSL for entries that never migrated it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: 5001,
+            CONF_SSL: True,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_2sa(hass: HomeAssistant, service_2sa: MagicMock) -> None:
+    """Test reconfiguring with 2SA authentication."""
+    entry = _reconfigure_entry()
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with _patch_dsm(service_2sa):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "2sa"
+
+    service_2sa.login = AsyncMock(return_value=True)
+    service_2sa.device_token = DEVICE_TOKEN
+
+    with _patch_dsm(service_2sa):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_OTP_CODE: "123456"}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**RECONFIGURED_DATA, CONF_DEVICE_TOKEN: DEVICE_TOKEN}
+
+
+@pytest.mark.parametrize(
+    ("failing_call", "side_effect", "errors"),
+    [
+        pytest.param(
+            "login",
+            SynologyDSMLoginInvalidException(USERNAME),
+            {CONF_USERNAME: "invalid_auth"},
+            id="invalid_auth",
+        ),
+        pytest.param(
+            "login",
+            SynologyDSMRequestException(OSError("arg")),
+            {CONF_HOST: "cannot_connect"},
+            id="cannot_connect",
+        ),
+        pytest.param(
+            "login",
+            SynologyDSMLogin2SAForcedException(USERNAME),
+            {"base": "otp_enforced"},
+            id="otp_enforced",
+        ),
+        pytest.param(
+            "utilisation.update",
+            SynologyDSMAPIInsufficientPrivilegeException(
+                "SYNO.Core.System.Utilization", None
+            ),
+            {"base": "insufficient_privilege"},
+            id="insufficient_privilege",
+        ),
+        pytest.param(
+            "login",
+            SynologyDSMException(None, None),
+            {"base": "unknown"},
+            id="unknown",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    service: MagicMock,
+    failing_call: str,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test errors during reconfiguration and recovering from them."""
+    entry = _reconfigure_entry()
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    attrgetter(failing_call)(service).side_effect = side_effect
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == errors
+
+    attrgetter(failing_call)(service).side_effect = None
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURED_DATA
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_missing_data(
+    hass: HomeAssistant, service: MagicMock, service_failed: MagicMock
+) -> None:
+    """Test reconfiguring when the NAS returns incomplete data."""
+    entry = _reconfigure_entry()
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with _patch_dsm(service_failed):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_data"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURED_DATA
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, service: MagicMock
+) -> None:
+    """Test reconfiguring to a different NAS aborts."""
+    entry = _reconfigure_entry()
+    entry.add_to_hass(hass)
+    service.information.serial = SERIAL_2
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data[CONF_HOST] == HOST
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
