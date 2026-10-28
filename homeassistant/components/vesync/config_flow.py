@@ -41,6 +41,21 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    async def _async_try_login(self, username: str, password: str) -> str | None:
+        """Log in to VeSync and return the account ID, or None on failure."""
+        manager = VeSync(
+            username,
+            password,
+            time_zone=str(self.hass.config.time_zone),
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            await manager.login()
+        except VeSyncError as e:
+            _LOGGER.error("VeSync login failed: %s", str(e))
+            return None
+        return manager.account_id
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,21 +68,10 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
-        time_zone = str(self.hass.config.time_zone)
-
-        manager = VeSync(
-            username,
-            password,
-            time_zone=time_zone,
-            session=async_get_clientsession(self.hass),
-        )
-        try:
-            await manager.login()
-        except VeSyncError as e:
-            _LOGGER.error("VeSync login failed: %s", str(e))
+        if (account_id := await self._async_try_login(username, password)) is None:
             return self._show_form(errors={"base": "invalid_auth"})
 
-        await self.async_set_unique_id(manager.account_id)
+        await self.async_set_unique_id(account_id)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -126,4 +130,33 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             description_placeholders={"name": "VeSync"},
             errors={"base": "invalid_auth"},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the VeSync account credentials."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            account_id = await self._async_try_login(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if account_id is None:
+                errors["base"] = "invalid_auth"
+            else:
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                {CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]},
+            ),
+            errors=errors,
         )

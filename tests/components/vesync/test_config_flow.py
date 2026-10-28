@@ -2,6 +2,7 @@
 
 from unittest.mock import PropertyMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pyvesync.utils.errors import VeSyncLoginError
 
@@ -211,3 +212,78 @@ async def test_dhcp_discovery_duplicate(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a successful reconfigure flow."""
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_invalid_auth(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the reconfigure flow recovers from an authentication error."""
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "pyvesync.vesync.VeSync.login",
+        side_effect=VeSyncLoginError("Mock login failed"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+    }
+
+
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the reconfigure flow aborts when logging in to another account."""
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "pyvesync.auth.VeSyncAuth._account_id",
+        new_callable=PropertyMock,
+        return_value="OTHERACCOUNTID",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "other-username", CONF_PASSWORD: "other-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data == {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
