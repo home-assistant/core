@@ -1,7 +1,7 @@
 """Test sensor of Nettigo Air Monitor integration."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from nettigo_air_monitor import ApiError, InvalidSensorDataError
@@ -82,7 +82,7 @@ async def test_incomplete_data_after_device_restart(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
 ) -> None:
     """Test states of the air_quality after device restart."""
     await setup_integration(hass, mock_config_entry)
@@ -110,7 +110,7 @@ async def test_incomplete_data_after_device_restart(
     [
         ApiError("API Error"),
         InvalidSensorDataError("Invalid sensor data"),
-        RetryError,
+        RetryError(Mock()),
         TimeoutError,
     ],
 )
@@ -118,7 +118,7 @@ async def test_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
     exc: Exception | type[Exception],
 ) -> None:
     """Ensure we mark entities unavailable when device causes an error."""
@@ -152,7 +152,7 @@ async def test_availability(
 async def test_manual_update_entity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
 ) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
     await setup_integration(hass, mock_config_entry)

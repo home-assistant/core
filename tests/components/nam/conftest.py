@@ -1,7 +1,7 @@
 """Common fixtures for the Nettigo Air Monitor tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from nettigo_air_monitor import NAMSensors
 import pytest
@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_nam() -> Generator[AsyncMock]:
+def mock_nam() -> Generator[MagicMock]:
     """Mock the NettigoAirMonitor class."""
     with (
         patch(
@@ -48,9 +48,10 @@ def mock_nam() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_nam_client(mock_nam: AsyncMock) -> AsyncMock:
+def mock_nam_client(mock_nam: MagicMock) -> MagicMock:
     """Mock a NettigoAirMonitor client instance."""
-    client = mock_nam.create.return_value
+    client = mock_nam.return_value
+    mock_nam.create.return_value = client
     client.async_update.return_value = NAM_SENSORS
     client.host = "10.10.2.3"
     client.mac = "aa:bb:cc:dd:ee:ff"

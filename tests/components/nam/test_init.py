@@ -1,6 +1,6 @@
 """Test init of Nettigo Air Monitor integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -34,7 +34,7 @@ async def test_async_setup_entry(
 async def test_config_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nam: AsyncMock,
+    mock_nam: MagicMock,
     exc: Exception | type[Exception],
 ) -> None:
     """Test for setup failure if the connection to the device fails."""
@@ -46,7 +46,7 @@ async def test_config_not_ready(
 
 
 async def test_config_auth_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: MagicMock
 ) -> None:
     """Test for setup failure if the auth fails."""
     mock_nam.create.side_effect = AuthFailedError("Authorization has failed")

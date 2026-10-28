@@ -1,6 +1,6 @@
 """Test button of Nettigo Air Monitor integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -45,7 +45,7 @@ async def test_button(
 async def test_button_press(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
 ) -> None:
     """Test button press."""
     await setup_integration(hass, mock_config_entry)
@@ -71,7 +71,7 @@ async def test_button_press(
 async def test_button_press_exc(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
     exc: Exception | type[Exception],
 ) -> None:
     """Test button press when exception occurs."""
@@ -94,7 +94,7 @@ async def test_button_press_exc(
 async def test_button_press_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nam_client: AsyncMock,
+    mock_nam_client: MagicMock,
 ) -> None:
     """Test button press when auth error occurs."""
     await setup_integration(hass, mock_config_entry)

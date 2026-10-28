@@ -1,7 +1,7 @@
 """Define tests for the Nettigo Air Monitor config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from nettigo_air_monitor import ApiError, AuthFailedError, CannotGetMacError
 import pytest
@@ -55,8 +55,8 @@ async def test_form_create_entry_without_auth(
 async def test_form_create_entry_with_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_nam: AsyncMock,
-    mock_nam_client: AsyncMock,
+    mock_nam: MagicMock,
+    mock_nam_client: MagicMock,
 ) -> None:
     """Test that the user step with auth works."""
     result = await hass.config_entries.flow.async_init(
@@ -112,7 +112,7 @@ async def test_reauth_successful(
 
 
 async def test_reauth_unsuccessful(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: MagicMock
 ) -> None:
     """Test starting a reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -142,7 +142,7 @@ async def test_reauth_unsuccessful(
 @pytest.mark.usefixtures("mock_setup_entry", "mock_nam_client")
 async def test_form_with_auth_errors(
     hass: HomeAssistant,
-    mock_nam: AsyncMock,
+    mock_nam: MagicMock,
     exc: Exception | type[Exception],
     base_error: str,
 ) -> None:
@@ -191,7 +191,7 @@ async def test_form_with_auth_errors(
 @pytest.mark.usefixtures("mock_setup_entry", "mock_nam_client")
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_nam: AsyncMock,
+    mock_nam: MagicMock,
     exc: Exception | type[Exception],
     base_error: str,
 ) -> None:
@@ -220,7 +220,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_abort(hass: HomeAssistant, mock_nam: AsyncMock) -> None:
+async def test_form_abort(hass: HomeAssistant, mock_nam: MagicMock) -> None:
     """Test we handle abort after error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -293,7 +293,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
 
 @pytest.mark.usefixtures("mock_nam_client")
 async def test_zeroconf_with_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_nam: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_nam: MagicMock
 ) -> None:
     """Test that the zeroconf step with auth works."""
     mock_nam.create.side_effect = AuthFailedError("Auth Error")
@@ -329,7 +329,7 @@ async def test_zeroconf_with_auth(
 
 
 async def test_zeroconf_host_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: MagicMock
 ) -> None:
     """Test that errors are shown when host is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -379,7 +379,7 @@ async def test_zeroconf_already_configured_host_changed(
     ],
 )
 async def test_zeroconf_errors(
-    hass: HomeAssistant, mock_nam: AsyncMock, exc: Exception, reason: str
+    hass: HomeAssistant, mock_nam: MagicMock, exc: Exception, reason: str
 ) -> None:
     """Test we handle errors."""
     mock_nam.create.side_effect = exc
@@ -394,7 +394,7 @@ async def test_zeroconf_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_nam_client")
-async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: AsyncMock) -> None:
+async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: MagicMock) -> None:
     """Test starting a reconfigure flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -440,7 +440,7 @@ async def test_reconfigure_successful(hass: HomeAssistant, mock_nam: AsyncMock) 
     ],
 )
 async def test_reconfigure_not_successful(
-    hass: HomeAssistant, mock_nam: AsyncMock, exc: Exception, base_error: str
+    hass: HomeAssistant, mock_nam: MagicMock, exc: Exception, base_error: str
 ) -> None:
     """Test starting a reconfigure flow but the device probe fails."""
     entry = MockConfigEntry(
