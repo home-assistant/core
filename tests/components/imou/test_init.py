@@ -1,6 +1,8 @@
 """Tests for the Imou init."""
 
-from unittest.mock import AsyncMock, MagicMock, call
+import contextlib
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
@@ -11,7 +13,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.imou import async_remove_config_entry_device
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
-from homeassistant.components.imou.const import DOMAIN
+from homeassistant.components.imou.const import DOMAIN, PLATFORMS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -428,6 +430,64 @@ async def test_new_device_missing_from_ability_detail_is_not_added(
     )
     assert len(devices) == 1
     assert hass.states.get("button.device_1_mute").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_imou_openapi_client")
+async def test_failed_ability_ref_is_retried_before_the_device_is_added(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A device whose ability-ref read failed is asked again on the next poll."""
+    camera = create_online_device("d1", "Device 1", button_keys=(PARAM_MUTE,))
+    pending = create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,))
+    raw = SimpleNamespace(device_id="d2")
+    seen: list[bool | set[str]] = []
+    attempts = 0
+
+    async def fail_once(_imou_device: SimpleNamespace) -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise ImouException("detail failed")
+
+    async def list_devices(
+        *, fetch_ability_refs: bool | set[str] = True
+    ) -> list[ImouHaDevice]:
+        seen.append(fetch_ability_refs)
+        if fetch_ability_refs is not False:
+            with contextlib.suppress(ImouException):
+                await mock_imou_ha_device_manager.delegate._async_update_device_ability_refs(
+                    raw
+                )
+        return [camera, pending]
+
+    mock_imou_ha_device_manager.delegate._async_update_device_ability_refs = fail_once
+    mock_imou_ha_device_manager.async_get_devices.side_effect = list_devices
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.imou.PLATFORMS", PLATFORMS):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert "d1$mute" in {entry.unique_id for entry in entries}
+    assert "d2$ptz_up" not in {entry.unique_id for entry in entries}
+    assert hass.states.get("button.device_1_mute").state != STATE_UNAVAILABLE
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert "d2$ptz_up" in {entry.unique_id for entry in entries}
+    assert seen == [True, {"d2"}]
+    assert attempts == 2
 
 
 @pytest.mark.parametrize(

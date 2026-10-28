@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from pyimouapi.device import ImouDevice
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
@@ -48,6 +49,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._device_manager = device_manager
         self.devices_by_key: dict[str, ImouHaDevice] = {}
         self._devices_initialized = False
+        self._ability_refs_pending: set[str] = set()
         self.new_device_callbacks: list[Callable[[list[ImouHaDevice]], None]] = []
         self.open_api_quota_exceeded = False
 
@@ -78,15 +80,33 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the current device for device_key, if still on the account."""
         return self.devices_by_key.get(device_key)
 
-    @override
-    async def _async_update_data(self) -> None:
-        """Update coordinator data."""
+    async def _async_list_devices(
+        self, fetch_ability_refs: bool | set[str]
+    ) -> tuple[list[ImouHaDevice], set[str]]:
+        """List devices and note which ability-ref reads failed.
+
+        A failed read is logged by the library and the device is still
+        returned. The device id is only available where that read runs.
+        """
+        failed: set[str] = set()
+        delegate = self._device_manager.delegate
+        # pyimouapi keeps this callback private. It is the only place a single
+        # device's failed ability-ref read can be told apart from the list.
+        update_refs = getattr(delegate, "_async_update_device_ability_refs", None)
+        if update_refs is not None and fetch_ability_refs is not False:
+
+            async def noting(imou_device: ImouDevice) -> None:
+                try:
+                    await update_refs(imou_device)
+                except Exception:
+                    failed.add(imou_device.device_id)
+                    raise
+
+            delegate._async_update_device_ability_refs = noting  # noqa: SLF001
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                # Ability refs decide which entities to create. A device that is
-                # already registered does not need that detail call again.
-                fresh_devices = await self._device_manager.async_get_devices(
-                    fetch_ability_refs=not self._devices_initialized
+                devices = await self._device_manager.async_get_devices(
+                    fetch_ability_refs=fetch_ability_refs
                 )
         except TimeoutError as err:
             self.open_api_quota_exceeded = False
@@ -102,42 +122,79 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from err
         except ImouException as err:
             raise self._update_failed(err, "fetch_devices_failed") from err
+        finally:
+            if update_refs is not None and fetch_ability_refs is not False:
+                delegate._async_update_device_ability_refs = update_refs  # noqa: SLF001
+        return devices, failed
 
+    def _remember_unresolved(self, asked: bool | set[str], failed: set[str]) -> None:
+        """Keep asking for ability refs that did not load."""
+        if asked is False:
+            return
+        if asked is True:
+            self._ability_refs_pending = set(failed)
+            return
+        self._ability_refs_pending.difference_update(asked)
+        self._ability_refs_pending.update(failed)
+
+    def _drop_unresolved_new_devices(
+        self,
+        fresh_by_key: dict[str, ImouHaDevice],
+        failed: set[str],
+    ) -> None:
+        """Leave out devices whose entities cannot be created yet."""
+        if not failed:
+            return
+        for key, device in list(fresh_by_key.items()):
+            if device.device_id in failed and key not in self.devices_by_key:
+                del fresh_by_key[key]
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Update coordinator data."""
+        # Ability refs decide which entities to create. Ask again only for a
+        # device that is new or whose last read failed.
+        if not self._devices_initialized:
+            fetch: bool | set[str] = True
+        elif self._ability_refs_pending:
+            fetch = set(self._ability_refs_pending)
+        else:
+            fetch = False
+
+        fresh_devices, failed = await self._async_list_devices(fetch)
+        self._remember_unresolved(fetch, failed)
         fresh_by_key = {
             imou_device_identifier(device): device for device in fresh_devices
         }
+        self._drop_unresolved_new_devices(fresh_by_key, failed)
         if self._devices_initialized and (
             new_keys := set(fresh_by_key) - set(self.devices_by_key)
         ):
-            try:
-                async with asyncio.timeout(UPDATE_TIMEOUT):
-                    detailed = await self._device_manager.async_get_devices(
-                        fetch_ability_refs={
-                            fresh_by_key[key].device_id for key in new_keys
-                        }
-                    )
-            except TimeoutError as err:
-                self.open_api_quota_exceeded = False
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_timeout",
-                ) from err
-            except InvalidAppIdOrSecretException as err:
-                self.open_api_quota_exceeded = False
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_auth",
-                ) from err
-            except ImouException as err:
-                raise self._update_failed(err, "fetch_devices_failed") from err
-            detailed_by_key = {
-                imou_device_identifier(device): device for device in detailed
-            }
-            for key in new_keys:
-                if key in detailed_by_key:
-                    fresh_by_key[key] = detailed_by_key[key]
-                else:
-                    fresh_by_key.pop(key)
+            new_ids = {fresh_by_key[key].device_id for key in new_keys}
+            if fetch is False:
+                missing = new_ids
+            elif fetch is True:
+                missing = set()
+            else:
+                missing = new_ids - fetch
+            if missing:
+                detailed, failed_detail = await self._async_list_devices(missing)
+                self._remember_unresolved(missing, failed_detail)
+                detailed_by_key = {
+                    imou_device_identifier(device): device for device in detailed
+                }
+                for key in new_keys:
+                    if key not in fresh_by_key:
+                        continue
+                    if fresh_by_key[key].device_id not in missing:
+                        continue
+                    if (
+                        fresh_by_key[key].device_id in failed_detail
+                        or key not in detailed_by_key
+                    ):
+                        fresh_by_key.pop(key)
+                    else:
+                        fresh_by_key[key] = detailed_by_key[key]
         self._async_add_remove_devices(fresh_by_key)
         devices = list(self.devices_by_key.values())
         if not devices:
