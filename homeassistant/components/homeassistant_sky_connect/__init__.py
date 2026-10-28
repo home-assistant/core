@@ -190,7 +190,9 @@ async def async_migrate_entry(
 
                 if not (usb_info := serial_ports_info.get(device)):
                     raise HomeAssistantError(
-                        f"USB device {device} is missing, cannot migrate"
+                        translation_domain=DOMAIN,
+                        translation_key="device_missing_migration",
+                        translation_placeholders={"device": device},
                     )
 
                 assert isinstance(usb_info, USBDevice)
