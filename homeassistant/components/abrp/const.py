@@ -1,6 +1,6 @@
 """Constants for the A Better Routeplanner integration."""
 
-DOMAIN = "abetterrouteplanner"
+DOMAIN = "abrp"
 
 OAUTH2_AUTHORIZE = "https://accounts.abetterrouteplanner.com/authorize"
 OAUTH2_TOKEN = "https://accounts.abetterrouteplanner.com/token"

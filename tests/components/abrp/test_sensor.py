@@ -15,7 +15,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.abetterrouteplanner.const import DOMAIN
+from homeassistant.components.abrp.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,

@@ -39,7 +39,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
+from .coordinator import AbrpConfigEntry, AbrpTelemetryCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -195,16 +195,14 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
 )
 
 
-def _telemetry_unique_id(
-    entry: AbetterrouteplannerConfigEntry, vehicle_id: int, key: str
-) -> str:
+def _telemetry_unique_id(entry: AbrpConfigEntry, vehicle_id: int, key: str) -> str:
     """Build a telemetry sensor's ``unique_id`` — the one definition of the scheme."""
     return f"{entry.unique_id}_{vehicle_id}_{key}"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: AbetterrouteplannerConfigEntry,
+    entry: AbrpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create telemetry sensors for every vehicle in the ABRP garage."""
@@ -249,7 +247,7 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
     def __init__(
         self,
         coordinator: AbrpTelemetryCoordinator,
-        entry: AbetterrouteplannerConfigEntry,
+        entry: AbrpConfigEntry,
         vehicle_id: int,
         description: AbrpTelemetrySensorEntityDescription,
     ) -> None:

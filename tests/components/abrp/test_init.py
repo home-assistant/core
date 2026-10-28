@@ -17,11 +17,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.abetterrouteplanner.const import (
-    ABRP_APP_KEY,
-    DOMAIN,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.abrp.const import ABRP_APP_KEY, DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -212,7 +208,7 @@ async def test_setup_missing_implementation(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.abetterrouteplanner.config_entry_oauth2_flow"
+        "homeassistant.components.abrp.config_entry_oauth2_flow"
         ".async_get_config_entry_implementation",
         side_effect=ImplementationUnavailableError,
     ):

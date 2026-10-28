@@ -24,7 +24,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.abetterrouteplanner.const import DOMAIN
+from homeassistant.components.abrp.const import DOMAIN
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
@@ -152,7 +152,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.abetterrouteplanner.async_setup_entry",
+        "homeassistant.components.abrp.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         yield mock_setup
@@ -252,7 +252,7 @@ def stream_auth(mock_telemetry_stream: MagicMock) -> AbstractAuth:
 def mock_telemetry_stream() -> Generator[MagicMock]:
     """Patch the integration's TelemetryStream with an autospec mock."""
     with patch(
-        "homeassistant.components.abetterrouteplanner.TelemetryStream",
+        "homeassistant.components.abrp.TelemetryStream",
         autospec=True,
     ) as mock_stream:
         yield mock_stream

@@ -17,7 +17,7 @@ from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
-class AbetterrouteplannerAuth(AbstractAuth):
+class AbrpAuth(AbstractAuth):
     """Provide aioabrp with a fresh token from an HA ``OAuth2Session``."""
 
     def __init__(self, oauth_session: OAuth2Session) -> None:

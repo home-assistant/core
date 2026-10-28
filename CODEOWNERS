@@ -46,10 +46,10 @@ CLAUDE.md @home-assistant/core
 /.gemini/ @home-assistant/core
 
 # Integrations
-/homeassistant/components/abetterrouteplanner/ @mtandersson
-/tests/components/abetterrouteplanner/ @mtandersson
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
+/homeassistant/components/abrp/ @mtandersson
+/tests/components/abrp/ @mtandersson
 /homeassistant/components/acaia/ @zweckj
 /tests/components/acaia/ @zweckj
 /homeassistant/components/accuweather/ @bieniu

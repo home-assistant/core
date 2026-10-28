@@ -40,8 +40,8 @@ homeassistant.util.unit_system
 
 # --- Add components below this line ---
 homeassistant.components
-homeassistant.components.abetterrouteplanner.*
 homeassistant.components.abode.*
+homeassistant.components.abrp.*
 homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acmeda.*

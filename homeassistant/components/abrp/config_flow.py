@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_SCOPES
 
 
-class AbetterrouteplannerFlowHandler(
+class AbrpFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
     """Config flow to handle A Better Routeplanner OAuth2 authentication."""

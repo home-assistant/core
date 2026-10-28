@@ -33,7 +33,7 @@ class AbrpData:
     telemetry_coordinator: AbrpTelemetryCoordinator
 
 
-type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
+type AbrpConfigEntry = ConfigEntry[AbrpData]
 
 
 async def async_fetch_garage(
@@ -98,12 +98,12 @@ async def async_fetch_garage(
 class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
     """Thin push-mode coordinator for the v2 telemetry stream."""
 
-    config_entry: AbetterrouteplannerConfigEntry
+    config_entry: AbrpConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: AbetterrouteplannerConfigEntry,
+        entry: AbrpConfigEntry,
     ) -> None:
         """Initialize the telemetry coordinator."""
         super().__init__(

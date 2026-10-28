@@ -4,7 +4,7 @@ To update, run python3 -m script.hassfest
 """
 
 APPLICATION_CREDENTIALS = [
-    "abetterrouteplanner",
+    "abrp",
     "aladdin_connect",
     "august",
     "dropbox",

@@ -10,10 +10,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .auth import AbetterrouteplannerAuth
+from .auth import AbrpAuth
 from .const import ABRP_APP_KEY, DOMAIN
 from .coordinator import (
-    AbetterrouteplannerConfigEntry,
+    AbrpConfigEntry,
     AbrpData,
     AbrpTelemetryCoordinator,
     async_fetch_garage,
@@ -24,9 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
-) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None:
     """Set up A Better Routeplanner from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -45,7 +43,7 @@ async def async_setup_entry(
         ) from err
 
     websession = async_get_clientsession(hass)
-    auth = AbetterrouteplannerAuth(session)
+    auth = AbrpAuth(session)
     client = AbrpClient(websession, ABRP_APP_KEY, auth)
 
     vehicles = await async_fetch_garage(client)
@@ -105,8 +103,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
-) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

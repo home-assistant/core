@@ -11,11 +11,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.abetterrouteplanner.const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.abrp.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
