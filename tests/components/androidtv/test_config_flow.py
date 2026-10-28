@@ -35,11 +35,14 @@ from homeassistant.components.androidtv.const import (
     PROP_ETHMAC,
     PROP_WIFIMAC,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import patchers
+from .common import CONFIG_ANDROID_DEFAULT, SHELL_RESPONSE_OFF, setup_mock_entry
 from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
 
 ADBKEY = "adbkey"
@@ -666,6 +669,36 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == expected_data
+
+
+async def test_reconfigure_reloads_loaded_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reconfiguring a loaded entry reloads it without the deprecated helper."""
+    patch_key, _, entry = setup_mock_entry(CONFIG_ANDROID_DEFAULT, MP_DOMAIN)
+    entry.add_to_hass(hass)
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.update_listeners
+
+        result = await entry.start_reconfigure_flow(hass)
+        with patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=RECONFIGURE_INPUT
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == RECONFIGURE_HOST
+    assert "has an update listener" not in caplog.text
 
 
 @pytest.mark.parametrize(

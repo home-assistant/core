@@ -222,7 +222,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
                 # Drop the old ADB settings so cleared optional ones are removed
-                return self.async_update_reload_and_abort(
+                result = self.async_update_and_abort(
                     entry,
                     data={
                         **{
@@ -233,6 +233,9 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                         **data,
                     },
                 )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
             errors["base"] = error
         else:
             user_input = {
