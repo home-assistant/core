@@ -1971,7 +1971,7 @@ poolsense==0.1.0
 powerfox==2.1.3
 
 # homeassistant.components.powersensor_au
-powersensor-local==2.4.0
+powersensor-local==2.4.1
 
 # homeassistant.components.prana
 prana-api-client==0.12.0
