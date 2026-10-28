@@ -33,6 +33,7 @@ from . import (
     NAME,
     PASSWORD,
     PORT,
+    SERIAL_NUMBER,
     URN,
     USERNAME,
     setup_mock_device,
@@ -1159,7 +1160,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_flow_different_device(hass: HomeAssistant) -> None:
     """Test the reconfigure flow aborts when reaching a different device."""
-    entry, _, _ = await setup_onvif_integration(hass, unique_id="ff:ee:dd:cc:bb:aa")
+    entry, _, _ = await setup_onvif_integration(hass)
 
     result = await entry.start_reconfigure_flow(hass)
 
@@ -1170,6 +1171,10 @@ async def test_reconfigure_flow_different_device(hass: HomeAssistant) -> None:
         patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
     ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
+        devicemgmt = mock_onvif_camera.create_devicemgmt_service.return_value
+        devicemgmt.GetNetworkInterfaces.return_value[
+            0
+        ].Info.HwAddress = "ff:ee:dd:cc:bb:aa"
         setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
@@ -1229,3 +1234,38 @@ async def test_reconfigure_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "5.6.7.8"
+
+
+async def test_reconfigure_flow_discovery_scope_mac(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test reconfiguring an entry keyed on a WS-Discovery scope MAC."""
+    entry, _, _ = await setup_onvif_integration(hass, unique_id="11:22:33:44:55:66")
+    # Without network interfaces the device is registered by serial number
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, SERIAL_NUMBER)}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+        patch("homeassistant.components.onvif.async_setup_entry", return_value=None),
+    ):
+        setup_mock_onvif_camera(
+            mock_onvif_camera, two_profiles=True, with_interfaces_not_implemented=True
+        )
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], RECONFIGURE_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "5.6.7.8"
+    assert entry.unique_id == "11:22:33:44:55:66"

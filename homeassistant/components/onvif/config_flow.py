@@ -194,8 +194,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 configure_unique_id=False
             )
             if not errors:
-                await self.async_set_unique_id(self.device_id)
-                self._abort_if_unique_id_mismatch()
+                if not self._is_same_device(reconfigure_entry):
+                    return self.async_abort(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
@@ -222,6 +222,20 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    @callback
+    def _is_same_device(self, entry: ConfigEntry) -> bool:
+        """Return whether the reached device belongs to the config entry."""
+        if self.device_id == entry.unique_id:
+            return True
+        # Entries created from WS-Discovery are keyed on the scope MAC, while
+        # their devices are registered with the MAC or serial the camera reports.
+        return any(
+            (DOMAIN, self.device_id) in device.identifiers
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
         )
 
     @override
