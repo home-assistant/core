@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import WIZ_EXCEPTIONS
+from .const import DOMAIN, WIZ_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,5 +67,9 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
                 power: float | None = await self._bulb.get_power()
                 return power
         except WIZ_EXCEPTIONS as ex:
-            raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"ip_address": ip_address},
+            ) from ex
         return None

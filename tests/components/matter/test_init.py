@@ -23,7 +23,7 @@ from homeassistant.components.matter import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -133,6 +133,92 @@ async def test_entry_setup_unload(
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16"
+)
+NEW_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-TemperatureOffset-513-16"
+)
+
+
+async def test_migrate_eve_temperature_offset_unique_id(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy EveTemperatureOffset entities are migrated to TemperatureOffset."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    migrated_entity = entity_registry.async_get(stale_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
+        )
+        is None
+    )
+    state = hass.states.get(stale_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_unique_id_conflict(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration replaces a stale generic TemperatureOffset entity."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    stale_generic_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        NEW_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="stale_generic_temperature_offset",
+    )
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get(stale_generic_entity.entity_id) is None
+    migrated_entity = entity_registry.async_get(eve_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    state = hass.states.get(eve_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_home_assistant_stop(
