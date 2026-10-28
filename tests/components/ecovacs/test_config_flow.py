@@ -27,7 +27,13 @@ from homeassistant.components.ecovacs.const import (
     InstanceMode,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_MODE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -638,4 +644,198 @@ async def test_reauth_mqtt_retry_after_device_verification(
     mock_authenticator.request_device_verification_code.assert_awaited_once()
     mock_authenticator.verify_device.assert_awaited_once_with("123456")
     assert mock_mqtt_client.verify_config.call_count == 2
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("mock_config_entry_data", "user_input"),
+    [
+        pytest.param(
+            STORED_ENTRY_DATA_CLOUD,
+            {CONF_COUNTRY: "DE"},
+            id="cloud",
+        ),
+        pytest.param(
+            STORED_ENTRY_DATA_SELF_HOSTED,
+            {
+                CONF_COUNTRY: "DE",
+                CONF_OVERRIDE_REST_URL: "https://ecovacs.local:8443",
+                CONF_OVERRIDE_MQTT_URL: "mqtts://ecovacs.local:8883",
+            },
+            id="self_hosted",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+    mock_config_entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+) -> None:
+    """Test reconfiguring the connection settings."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The already verified device ID is kept, so no new verification is required
+    assert (
+        mock_config_entry.data
+        == mock_config_entry_data | user_input | ACCOUNT_CREDENTIALS_DATA
+    )
+    mock_authenticator.request_device_verification_code.assert_not_called()
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(ClientError, {"base": "cannot_connect"}, id="cannot_connect"),
+        pytest.param(
+            InvalidAuthenticationError, {"base": "invalid_auth"}, id="invalid_auth"
+        ),
+        pytest.param(Exception, {"base": "unknown"}, id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_reconfigure_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+    side_effect: type[Exception],
+    errors: dict[str, str],
+) -> None:
+    """Test recovering from an error during reconfiguration."""
+    mock_authenticator.authenticate.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == errors
+    assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD
+    mock_setup_entry.assert_not_called()
+
+    mock_authenticator.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_COUNTRY] == "DE"
+
+
+@pytest.mark.parametrize(
+    "mock_config_entry_data",
+    [STORED_ENTRY_DATA_SELF_HOSTED | {CONF_VERIFY_MQTT_CERTIFICATE: False}],
+)
+@pytest.mark.usefixtures("mock_mqtt_client")
+async def test_reconfigure_self_hosted_invalid_url(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+) -> None:
+    """Test recovering from invalid URLs during reconfiguration."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_COUNTRY: "IT",
+            CONF_OVERRIDE_REST_URL: "bla://localhost:8000",
+            CONF_OVERRIDE_MQTT_URL: "mqtt://",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {
+        CONF_OVERRIDE_REST_URL: "invalid_url_schema_override_rest_url",
+        CONF_OVERRIDE_MQTT_URL: "invalid_url",
+    }
+    assert result["data_schema"] is not None
+    assert CONF_VERIFY_MQTT_CERTIFICATE in result["data_schema"].schema
+    mock_authenticator.authenticate.assert_not_called()
+
+    user_input = {
+        CONF_COUNTRY: "IT",
+        CONF_OVERRIDE_REST_URL: "http://localhost:9000",
+        CONF_OVERRIDE_MQTT_URL: "mqtt://localhost:1884",
+        CONF_VERIFY_MQTT_CERTIFICATE: False,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        mock_config_entry.data
+        == STORED_ENTRY_DATA_SELF_HOSTED | user_input | ACCOUNT_CREDENTIALS_DATA
+    )
+    mock_setup_entry.assert_called_once()
+
+
+async def test_reconfigure_device_verification(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_authenticator: Mock,
+    mock_mqtt_client: Mock,
+) -> None:
+    """Test device verification and a MQTT retry during reconfiguration."""
+    mock_authenticator.authenticate.side_effect = [
+        DeviceVerificationRequiredError,
+        None,
+    ]
+    mock_mqtt_client.verify_config.side_effect = [MqttError, None]
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_verification"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "DE"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        mock_config_entry.data
+        == STORED_ENTRY_DATA_CLOUD | {CONF_COUNTRY: "DE"} | ACCOUNT_CREDENTIALS_DATA
+    )
+    # The verified device ID is reused, so no new verification code is required
+    mock_authenticator.request_device_verification_code.assert_awaited_once()
+    mock_authenticator.verify_device.assert_awaited_once_with("123456")
     mock_setup_entry.assert_called_once()

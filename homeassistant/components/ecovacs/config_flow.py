@@ -21,7 +21,12 @@ from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -216,6 +221,10 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=self._input
             )
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=self._input
+            )
         return self.async_create_entry(
             title=self._input[CONF_USERNAME],
             data=self._input,
@@ -249,19 +258,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-    def _show_auth_form(
-        self,
-        user_input: dict[str, Any] | None,
-        errors: dict[str, str],
-    ) -> ConfigFlowResult:
-        """Show the authentication form."""
+    def _connection_schema(self, errors: dict[str, str]) -> VolDictType:
+        """Return the schema of the connection settings."""
         schema: VolDictType = {
-            probatio.Required(CONF_USERNAME): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-            ),
-            probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-            ),
             probatio.Required(CONF_COUNTRY): selector.CountrySelector(),
         }
         if self._mode == InstanceMode.SELF_HOSTED:
@@ -279,6 +278,23 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 schema[
                     probatio.Optional(CONF_VERIFY_MQTT_CERTIFICATE, default=True)
                 ] = bool
+        return schema
+
+    def _show_auth_form(
+        self,
+        user_input: dict[str, Any] | None,
+        errors: dict[str, str],
+    ) -> ConfigFlowResult:
+        """Show the authentication form."""
+        schema: VolDictType = {
+            probatio.Required(CONF_USERNAME): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+            ),
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+            ),
+            **self._connection_schema(errors),
+        }
 
         if not user_input:
             user_input = {
@@ -353,6 +369,8 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self._finish_flow()
                 if self.source == SOURCE_REAUTH:
                     return self._show_reauth_form(user_input=None, errors=errors)
+                if self.source == SOURCE_RECONFIGURE:
+                    return self._show_reconfigure_form(self._input, errors)
                 return self._show_auth_form(self._input, errors)
 
         return self.async_show_form(
@@ -432,3 +450,48 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._finish_flow()
 
         return self._show_reauth_form(user_input, errors)
+
+    def _show_reconfigure_form(
+        self,
+        user_input: Mapping[str, Any],
+        errors: dict[str, str],
+    ) -> ConfigFlowResult:
+        """Show the reconfiguration form."""
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=probatio.Schema(self._connection_schema(errors)),
+                suggested_values=user_input,
+            ),
+            description_placeholders={CONF_USERNAME: self._input[CONF_USERNAME]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        entry = self._get_reconfigure_entry()
+        self._input = dict(entry.data)
+        if CONF_OVERRIDE_REST_URL in entry.data:
+            self._mode = InstanceMode.SELF_HOSTED
+        errors: dict[str, str] = {}
+        if user_input:
+            authenticator = await self._async_set_input(self._input | user_input)
+            try:
+                errors = await _validate_input(
+                    self.hass,
+                    self._input,
+                    self._device_id,
+                    authenticator,
+                )
+            except DeviceVerificationRequiredError:
+                errors = await self._async_request_device_verification_code(
+                    authenticator
+                )
+                if not errors:
+                    return await self.async_step_device_verification()
+            if not errors:
+                return self._finish_flow()
+
+        return self._show_reconfigure_form(entry.data | (user_input or {}), errors)
