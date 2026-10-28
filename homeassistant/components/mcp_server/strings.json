@@ -12,6 +12,11 @@
       }
     }
   },
+  "exceptions": {
+    "snapshot_error": {
+      "message": "Error reading the Assist context snapshot: {error}"
+    }
+  },
   "options": {
     "error": {
       "llm_api_required": "Select at least one LLM API or expose all LLM APIs."
