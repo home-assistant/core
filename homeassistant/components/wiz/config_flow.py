@@ -192,6 +192,11 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
             if bulb_info is not None:
                 await self.async_set_unique_id(bulb_info[1])
                 self._abort_if_unique_id_mismatch()
+                # The update listener is only registered after a successful setup
+                if reconfigure_entry.update_listeners:
+                    return self.async_update_and_abort(
+                        reconfigure_entry, data_updates=user_input
+                    )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
