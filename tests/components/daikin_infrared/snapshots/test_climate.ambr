@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_entities[False][climate.daikin_ac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'silence',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'none',
+        'eco',
+        'boost',
+      ]),
+      <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+        'off',
+        'on',
+      ]),
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+        'off',
+        'on',
+      ]),
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_infrared', '01JTEST0000000000000000001')]>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.daikin_ac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'daikin_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 953>,
+    'translation_key': 'daikin_ac',
+    'unique_id': '01JTEST0000000000000000001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[False][climate.daikin_ac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'silence',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin AC',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'none',
+        'eco',
+        'boost',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
+      <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
+        'off',
+        'on',
+      ]),
+      <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
+        'off',
+        'on',
+      ]),
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 24.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.daikin_ac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
