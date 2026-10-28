@@ -2,6 +2,11 @@
 
 from typing import TYPE_CHECKING, Any
 
+from music_assistant_models.constants import (
+    PLAYER_CONTROL_FAKE,
+    PLAYER_CONTROL_NATIVE,
+    PLAYER_CONTROL_NONE,
+)
 from music_assistant_models.player import Player
 from music_assistant_models.player_queue import PlayerQueue
 
@@ -24,9 +29,6 @@ PLAYER_KEYS = (
     "volume_muted",
     "group_volume",
     "group_volume_muted",
-    "power_control",
-    "volume_control",
-    "mute_control",
     "active_sound_mode",
     "needs_setup",
     "setup_reason",
@@ -42,6 +44,8 @@ SOURCE_KEYS = (
     "can_repeat",
 )
 OPTION_KEYS = ("key", "type", "read_only", "value")
+CONTROL_KEYS = ("power_control", "volume_control", "mute_control")
+BUILTIN_CONTROLS = {PLAYER_CONTROL_NATIVE, PLAYER_CONTROL_NONE, PLAYER_CONTROL_FAKE}
 QUEUE_KEYS = (
     "active",
     "available",
@@ -67,8 +71,14 @@ def _player_diagnostics(player: Player, queue: PlayerQueue | None) -> dict[str, 
         ),
         None,
     )
+    queue_data = queue.to_dict() if queue else None
     return {
         **{key: data[key] for key in PLAYER_KEYS},
+        # Controls can be delegated to another player, referenced by its player id
+        **{
+            key: data[key] if data[key] in BUILTIN_CONTROLS else "delegated"
+            for key in CONTROL_KEYS
+        },
         "device_info": {key: data["device_info"][key] for key in DEVICE_INFO_KEYS},
         "supported_features": sorted(data["supported_features"]),
         "group_member_count": len(data["group_members"]),
@@ -81,7 +91,7 @@ def _player_diagnostics(player: Player, queue: PlayerQueue | None) -> dict[str, 
         "options": [
             {key: option[key] for key in OPTION_KEYS} for option in data["options"]
         ],
-        "queue": {key: queue.to_dict()[key] for key in QUEUE_KEYS} if queue else None,
+        "queue": {key: queue_data[key] for key in QUEUE_KEYS} if queue_data else None,
     }
 
 
