@@ -95,6 +95,10 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             self._camera_id, self._is_streaming, self._session_changed
         )
 
+    @override
+    async def async_refresh_providers(self, *, write_state: bool = True) -> None:
+        """Skip provider discovery, it would open a live session for every camera."""
+
     def _is_streaming(self) -> bool:
         """Return whether a viewer is using the stream."""
         stream = self.stream

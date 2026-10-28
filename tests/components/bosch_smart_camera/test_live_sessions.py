@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import dataclass, field
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
@@ -21,6 +21,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.bosch_smart_camera.const import DOMAIN
 from homeassistant.components.bosch_smart_camera.coordinator import SCAN_INTERVAL
 from homeassistant.components.camera import DATA_COMPONENT, async_get_stream_source
+from homeassistant.components.camera.webrtc import (
+    CameraWebRTCProvider,
+    async_register_webrtc_provider,
+)
 from homeassistant.components.stream import Stream
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -765,3 +769,22 @@ async def test_removed_camera_cancels_open(
 
     assert request.done()
     assert not mock_config_entry.runtime_data.live_sessions.camera_ids
+
+
+async def test_provider_discovery_does_not_open_sessions(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_live: LiveMocks,
+) -> None:
+    """Test a registered WebRTC provider does not open a live session at setup."""
+    provider = MagicMock(spec=CameraWebRTCProvider)
+    provider.domain = "test"
+    provider.async_is_supported.return_value = True
+    assert await async_setup_component(hass, "camera", {})
+    async_register_webrtc_provider(hass, provider)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID)
+    mock_live.open.assert_not_called()
+    provider.async_is_supported.assert_not_called()
