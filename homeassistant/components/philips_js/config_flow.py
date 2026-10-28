@@ -202,6 +202,11 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self._async_prepare_user_input(user_input)
         ):
             self._abort_if_unique_id_mismatch()
+            # A loaded entry is reloaded by its update listener
+            if reconfigure_entry.update_listeners:
+                return self.async_update_and_abort(
+                    reconfigure_entry, data_updates=self._current
+                )
             return self.async_update_reload_and_abort(
                 reconfigure_entry, data_updates=self._current
             )
