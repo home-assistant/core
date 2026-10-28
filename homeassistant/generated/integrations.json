@@ -2685,16 +2685,33 @@
       "supported_by": "renault"
     },
     "daikin": {
-      "name": "Daikin AC",
-      "integration_type": "device",
-      "categories": [
-        "climate.heat_pumps_air_conditioning"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Daikin",
+      "integrations": {
+        "daikin": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Daikin AC"
+        },
+        "daikin_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "Daikin Infrared"
+        }
+      }
     },
     "danfoss_air": {
       "name": "Danfoss Air",

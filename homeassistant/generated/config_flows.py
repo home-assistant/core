@@ -160,6 +160,7 @@ FLOWS = {
         "crownstone",
         "cync",
         "daikin",
+        "daikin_infrared",
         "data_grand_lyon",
         "datadog",
         "deako",
