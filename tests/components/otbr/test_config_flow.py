@@ -1,6 +1,7 @@
 """Test the OpenThread Border Router config flow."""
 
 import asyncio
+from collections.abc import Generator
 from http import HTTPStatus
 import re
 from typing import Any
@@ -1240,6 +1241,16 @@ async def test_hassio_discovery_reload(
         assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
 
 
+@pytest.fixture(name="fast_border_agent_discovery")
+def fast_border_agent_discovery_fixture() -> Generator[None]:
+    """Shorten Thread router discovery so block_till_done does not wait 30s."""
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        yield
+
+
 async def _setup_user_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Set up a config entry created by the user flow."""
     mock_integration(hass, MockModule("hassio"))
@@ -1261,6 +1272,7 @@ async def _setup_user_entry(hass: HomeAssistant) -> MockConfigEntry:
     "get_border_agent_id",
     "get_extended_address",
     "get_coprocessor_version",
+    "fast_border_agent_discovery",
 )
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     """Test the reconfigure flow."""
@@ -1285,6 +1297,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     "get_active_dataset_tlvs",
     "get_extended_address",
     "get_coprocessor_version",
+    "fast_border_agent_discovery",
 )
 async def test_reconfigure_flow_setup_retry(
     hass: HomeAssistant, get_border_agent_id: AsyncMock
@@ -1329,6 +1342,7 @@ async def test_reconfigure_flow_setup_retry(
     "get_active_dataset_tlvs",
     "get_extended_address",
     "get_coprocessor_version",
+    "fast_border_agent_discovery",
 )
 async def test_reconfigure_flow_cannot_connect(
     hass: HomeAssistant, get_border_agent_id: AsyncMock, error: type[Exception]
@@ -1362,6 +1376,7 @@ async def test_reconfigure_flow_cannot_connect(
     "get_border_agent_id",
     "get_extended_address",
     "get_coprocessor_version",
+    "fast_border_agent_discovery",
 )
 async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
     """Test the reconfigure flow when another entry uses the same router."""
@@ -1402,6 +1417,7 @@ async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
     "get_active_dataset_tlvs",
     "get_extended_address",
     "get_coprocessor_version",
+    "fast_border_agent_discovery",
 )
 async def test_reconfigure_flow_unique_id_mismatch(
     hass: HomeAssistant, get_border_agent_id: AsyncMock
