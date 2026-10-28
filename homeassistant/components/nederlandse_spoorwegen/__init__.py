@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
     """Set up Nederlandse Spoorwegen from a config entry."""
     coordinators: dict[str, NSDataUpdateCoordinator] = {}
 
@@ -35,14 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_reload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
     """Reload NS integration when options are updated."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

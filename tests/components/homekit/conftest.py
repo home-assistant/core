@@ -7,14 +7,13 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_capture_events
 
 
 @pytest.fixture

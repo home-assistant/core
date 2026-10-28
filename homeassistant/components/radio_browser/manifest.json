@@ -1,6 +1,7 @@
 {
   "domain": "radio_browser",
   "name": "Radio Browser",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/radio_browser",

@@ -56,6 +56,7 @@ SUPPORTED_EFFECTS = {
     ],
     LEDIrDeviceType.GENERIC_10_KEY: ["candle", "light"],
     LEDIrDeviceType.GENERIC_10_KEY_B708: ["candle", "light"],
+    LEDIrDeviceType.GENERIC_21_KEY: ["auto"],
 }
 
 
@@ -121,6 +122,20 @@ SUPPORTED_COLORS = {
         "aqua",
         "pink",
         "light_cyan",
+    ],
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        "red",
+        "green",
+        "blue",
+        "light_yellow",
+        "moccasin",
+        "yellow",
+        "orange",
+        "ghost_white",
+        "sky_blue",
+        "pink",
+        "light_green",
+        "floral_white",
     ],
 }
 

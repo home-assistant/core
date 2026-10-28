@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from airos.airos8 import AirOS8Data
 from airos.data import AirOSDataBaseClass
 
 from homeassistant.components.binary_sensor import (
@@ -15,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0

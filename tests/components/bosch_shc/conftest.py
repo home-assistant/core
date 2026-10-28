@@ -13,13 +13,17 @@ from boschshcpy import (
     CameraFrontLightService,
     CameraLightService,
     CameraNotificationService,
+    HeatingCircuitService,
     PowerSwitchService,
     PrivacyModeService,
+    RoomClimateControlService,
     RoutingService,
     SHCBatteryDevice,
     SHCCamera360,
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
+    SHCClimateControl,
+    SHCHeatingCircuit,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -29,6 +33,7 @@ from boschshcpy import (
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCPresenceSimulationSystem,
+    SHCRoomThermostat2,
     SHCShutterContact,
     SHCShutterContact2,
     SHCShutterContact2Plus,
@@ -45,23 +50,30 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
+    SmokeSensitivityService,
+    SwitchConfiguration,
+    TerminalConfiguration,
     ValveTappetService,
     VibrationSensorService,
+    WallThermostatConfiguration,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import (
+    CONF_HOSTNAME,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -78,6 +90,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "1.1.1.1",
             CONF_SSL_CERTIFICATE: "cert",
             CONF_SSL_KEY: "key",
+            CONF_TOKEN: "token:hostname",
+            CONF_HOSTNAME: "hostname",
         },
         unique_id="test-mac",
     )
@@ -91,6 +105,8 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "camera_360",
         "camera_eyes",
         "camera_outdoor_gen2",
+        "climate_controls",
+        "heating_circuits",
         "light_switches_bsm",
         "micromodule_blinds",
         "micromodule_dimmers",
@@ -118,6 +134,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     # Not a list bucket — presence_simulation_system is a single optional
     # device on device_helper, not a device_helper.<x> list of devices.
     "presence_simulation_system": None,
+    "smoke_detection_system": None,
 }
 
 
@@ -324,6 +341,10 @@ def smart_plug_device(
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
+    enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -341,6 +362,13 @@ def smart_plug_device(
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
+    device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
+    device.state_after_power_outage = state_after_power_outage
     return device
 
 
@@ -350,6 +378,10 @@ def smart_plug_compact_device(
     supports_energy_saving_mode: bool = False,
     energy_saving_mode_enabled: bool = False,
     power_threshold: float | None = None,
+    enter_duration_seconds: int | None = None,
+    state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
+    | None = None,
+    led_brightness: int | None = None,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -366,6 +398,75 @@ def smart_plug_compact_device(
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
     device.power_threshold = power_threshold
+    device.enter_duration_seconds = enter_duration_seconds
+    device.supports_led_brightness = led_brightness is not None
+    device.led_brightness = led_brightness
+    device.led_brightness_min = 0
+    device.led_brightness_max = 100
+    device.led_brightness_step = 1
+    device.state_after_power_outage = state_after_power_outage
+    return device
+
+
+def climate_control_device(
+    device_id: str = "hdm:HomeMaticIP:rcc1",
+    summer_mode: bool = False,
+    supports_cooling: bool = False,
+    cooling_mode: bool = False,
+    operation_mode: RoomClimateControlService.OperationMode = RoomClimateControlService.OperationMode.AUTOMATIC,
+    supports_boost_mode: bool = True,
+    boost_mode: bool = False,
+    supports_eco: bool = True,
+    low: bool = False,
+    has_demand: bool = False,
+) -> SHCClimateControl:
+    """Build a minimal device double for the climate_controls bucket."""
+    device = create_autospec(SHCClimateControl, instance=True, spec_set=True)
+    device.name = "Room Climate"
+    device.id = device_id
+    device.room_id = "room1"
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "RoomClimateControl"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.temperature = 20.5
+    device.setpoint_temperature = 21.0
+    device.summer_mode = summer_mode
+    device.supports_cooling = supports_cooling
+    device.cooling_mode = cooling_mode
+    device.operation_mode = operation_mode
+    device.supports_boost_mode = supports_boost_mode
+    device.boost_mode = boost_mode
+    device.supports_eco = supports_eco
+    device.low = low
+    device.has_demand = has_demand
+    return device
+
+
+def heating_circuit_device(
+    device_id: str = "hdm:HomeMaticIP:hc1",
+    operation_mode: HeatingCircuitService.OperationMode = HeatingCircuitService.OperationMode.AUTOMATIC,
+    on: bool = False,
+    setpoint_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+) -> SHCHeatingCircuit:
+    """Build a minimal device double for the heating_circuits bucket."""
+    device = create_autospec(SHCHeatingCircuit, instance=True, spec_set=True)
+    device.name = "Floor Heating"
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "HeatingCircuit"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.setpoint_temperature = 22.0
+    device.operation_mode = operation_mode
+    device.on = on
+    device.setpoint_temperature_range = setpoint_temperature_range
     return device
 
 
@@ -377,9 +478,12 @@ def thermostat_device(
     valvestate: ValveTappetService.State = ValveTappetService.State.VALVE_ADAPTION_SUCCESSFUL,
     supports_silentmode: bool = False,
     silentmode: SilentModeService.State = SilentModeService.State.MODE_NORMAL,
+    offset: float | None = None,
+    step_size: float = 0.5,
+    spec: type[SHCThermostat] = SHCThermostat,
 ) -> SHCThermostat:
     """Build a minimal device double for the thermostats/roomthermostats/wallthermostats buckets."""
-    device = create_autospec(SHCThermostat, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"
@@ -389,11 +493,17 @@ def thermostat_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
-    device.child_lock = child_lock
-    device.position = position
-    device.valvestate = valvestate
-    device.supports_silentmode = supports_silentmode
-    device.silentmode = silentmode
+    if spec is SHCThermostat:
+        device.child_lock = child_lock
+        device.position = position
+        device.valvestate = valvestate
+        device.supports_silentmode = supports_silentmode
+        device.silentmode = silentmode
+    device.supports_temperature_offset = offset is not None
+    device.offset = offset
+    device.min_offset = -5.0
+    device.max_offset = 5.0
+    device.step_size = step_size
     return device
 
 
@@ -402,9 +512,21 @@ def thermostat_gen2_device(
     name: str = "Thermostat Gen2",
     supports_display_configuration: bool = False,
     humidity_warning_enabled: bool = False,
-) -> SHCThermostatGen2:
+    display_direction: DisplayDirection.Direction | None = None,
+    displayed_temperature: DisplayedTemperatureConfiguration.DisplayedTemperature
+    | None = None,
+    supports_display_direction: bool | None = None,
+    supports_displayed_temperature: bool | None = None,
+    valve_type: WallThermostatConfiguration.ValveType | None = None,
+    heater_type: WallThermostatConfiguration.HeaterType | None = None,
+    terminal_type: TerminalConfiguration.Type | None = None,
+    temperature: float = 21.0,
+    humidity: float | None = None,
+    terminal_temperature: float | None = None,
+    spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
+) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
-    device = create_autospec(SHCThermostatGen2, instance=True, spec_set=True)
+    device = create_autospec(spec, instance=True, spec_set=True)
     device.name = name
     device.id = device_id
     device.root_device_id = "test-mac"
@@ -414,8 +536,34 @@ def thermostat_gen2_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.supports_temperature_offset = False
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
+    device.supports_display_direction = (
+        display_direction is not None
+        if supports_display_direction is None
+        else supports_display_direction
+    )
+    device.display_direction = display_direction
+    device.supports_displayed_temperature = (
+        displayed_temperature is not None
+        if supports_displayed_temperature is None
+        else supports_displayed_temperature
+    )
+    device.displayed_temperature = displayed_temperature
+    if spec is SHCThermostatGen2:
+        device.supports_wall_thermostat_configuration = (
+            valve_type is not None or heater_type is not None
+        )
+        device.valve_type = valve_type
+        device.heater_type = heater_type
+    if spec is SHCRoomThermostat2:
+        device.supports_terminal_configuration = terminal_type is not None
+        device.terminal_type = terminal_type
+        device.temperature = temperature
+        device.supports_humidity = humidity is not None
+        device.humidity = humidity
+        device.terminal_temperature = terminal_temperature
     return device
 
 
@@ -471,6 +619,9 @@ def micromodule_relay_device(
     swap_outputs: bool = False,
     impulse_length: float | None = None,
     impulse_length_raises_key_error: bool = False,
+    switch_type: SwitchConfiguration.SwitchType | None = None,
+    actuator_type: SwitchConfiguration.ActuatorType | None = None,
+    output_mode: SwitchConfiguration.OutputMode | None = None,
 ) -> SHCMicromoduleRelay:
     """Build a minimal device double for the micromodule_relays bucket."""
     device = create_autospec(SHCMicromoduleRelay, instance=True, spec_set=True)
@@ -488,6 +639,9 @@ def micromodule_relay_device(
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
+    device.switch_type = switch_type
+    device.actuator_type = actuator_type
+    device.output_mode = output_mode
     if impulse_length_raises_key_error:
         type(device).impulse_length = PropertyMock(
             side_effect=KeyError("impulseLength")
@@ -662,6 +816,36 @@ class FakeAlarmService:
         """No-op counterpart to subscribe_callback."""
 
 
+class FakeSurveillanceAlarmService:
+    """Minimal double of the SurveillanceAlarm DeviceService callback API."""
+
+    id = "SurveillanceAlarm"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self.callbacks: dict[str, Any] = {}
+
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
+        """Remember the callback so tests can fire it."""
+        self.callbacks[entity] = callback
+
+    def unsubscribe_callback(self, entity: Any) -> None:
+        """Forget the callback."""
+        self.callbacks.pop(entity, None)
+
+
+def smoke_detection_system_device(
+    alarm: Any = None, triggered: set[str] | None = None
+) -> MagicMock:
+    """Build a minimal double of the smoke detection system."""
+    system = MagicMock()
+    system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.alarm = alarm
+    system.device_services = [FakeSurveillanceAlarmService()]
+    system.triggered_device_ids.return_value = triggered or set()
+    return system
+
+
 def motion_detector_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion Detector",
@@ -693,6 +877,7 @@ def motion_detector2_device(
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
+    smart_sensitivity: dict[str, str] | None = None,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -711,6 +896,11 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.get_smart_sensitivity.side_effect = lambda context: (
+        {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
+        if smart_sensitivity
+        else None
+    )
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:
@@ -724,6 +914,7 @@ def smoke_detector_device(
     supports_intrusion_alarm: bool = True,
     intrusion_alarm: bool = False,
     alarmstate: AlarmService.State = AlarmService.State.IDLE_OFF,
+    smoke_sensitivity: SmokeSensitivityService.SmokeSensitivityLevel | None = None,
 ) -> SHCSmokeDetector:
     """Build a minimal device double for the smoke_detectors bucket."""
     device = create_autospec(SHCSmokeDetector, instance=True, spec_set=True)
@@ -739,6 +930,7 @@ def smoke_detector_device(
     device.supports_intrusion_alarm = supports_intrusion_alarm
     device.intrusion_alarm = intrusion_alarm
     device.alarmstate = alarmstate
+    device.smoke_sensitivity = smoke_sensitivity
     return device
 
 

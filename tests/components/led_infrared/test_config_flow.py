@@ -4,6 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -18,10 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
-
 
 @pytest.fixture(autouse=True)
 def mock_toggle_gap() -> Generator[None]:
@@ -34,6 +36,7 @@ def mock_toggle_gap() -> Generator[None]:
     ("device_type", "device_name"),
     [
         (LEDIrDeviceType.GENERIC_13_KEY, "13-key remote"),
+        (LEDIrDeviceType.GENERIC_21_KEY, "21-key remote"),
         (LEDIrDeviceType.GENERIC_24_KEY, "24-key remote"),
         (LEDIrDeviceType.GENERIC_40_KEY, "40-key remote"),
         (LEDIrDeviceType.GENERIC_44_KEY, "44-key remote"),

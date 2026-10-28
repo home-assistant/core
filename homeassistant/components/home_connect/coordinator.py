@@ -33,16 +33,24 @@ from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOpti
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     API_DEFAULT_RETRY_AFTER,
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_INACTIVE,
     BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_READY,
     DOMAIN,
     FAVORITE_PROGRAMS,
+    PROGRAM_PROGRESS_EVENT_KEYS,
 )
 from .utils import get_dict_from_home_connect_error
 
@@ -70,6 +78,9 @@ class HomeConnectApplianceData:
         """Update data with data from other instance."""
         self.commands.clear()
         self.commands.update(other.commands)
+        for event_key in PROGRAM_PROGRESS_EVENT_KEYS:
+            if event_key not in other.events:
+                self.events.pop(event_key, None)
         self.events.update(other.events)
         self.info.connected = other.info.connected
         self.options.clear()
@@ -167,7 +178,19 @@ class HomeConnectRuntimeData:
                     assert appliance_coordinator
                     await appliance_coordinator.event_listener(event_message)
 
-            except (EventStreamInterruptedError, HomeConnectRequestError) as error:
+            except (HomeConnectApiError, OAuth2TokenRequestReauthError) as error:
+                _LOGGER.error("Error while listening for events: %s", error)
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
+                break
+            except (
+                EventStreamInterruptedError,
+                HomeConnectRequestError,
+                OAuth2TokenRequestBaseError,
+                # The token request leaves a bare TimeoutError unmapped
+                TimeoutError,
+            ) as error:
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
                     " continuing in %s seconds",
@@ -176,12 +199,6 @@ class HomeConnectRuntimeData:
                 )
                 await asyncio_sleep(retry_time)
                 retry_time = min(retry_time * 2, 3600)
-            except HomeConnectApiError as error:
-                _LOGGER.error("Error while listening for events: %s", error)
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
-                break
 
     @callback
     def async_add_global_listener(
@@ -268,6 +285,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
+        self._program_run_ended = False
 
     def _get_listeners_for_event_key(self, event_key: EventKey) -> list[CALLBACK_TYPE]:
         return [
@@ -278,6 +296,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
     async def event_listener(self, event_message: EventMessage) -> None:
         """Match event with listener for event type."""
+        # Clear before storing the items, as the message can
+        # already contain the progress of the new program run.
+        cleared_event_keys = self._clear_progress_of_ended_program_run(event_message)
 
         match event_message.type:
             case EventType.STATUS:
@@ -377,12 +398,79 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
                         listener()
 
+        # Notify after storing the message to avoid writing intermediate states
+        self._call_listeners_for_missing_event_keys(cleared_event_keys)
+
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
         """Call listener for event."""
         for event in event_message.data.items:
             for listener in self._get_listeners_for_event_key(event.key):
                 listener()
+
+    def _update_program_run(self, event_message: EventMessage) -> bool:
+        """Track the program run and return whether the message ends or replaces it."""
+        match event_message.type:
+            case EventType.STATUS:
+                if any(
+                    event.key == EventKey.BSH_COMMON_STATUS_OPERATION_STATE
+                    and event.value
+                    in (BSH_OPERATION_STATE_INACTIVE, BSH_OPERATION_STATE_READY)
+                    for event in event_message.data.items
+                ):
+                    self._program_run_ended = True
+                    return True
+            case EventType.NOTIFY:
+                program_event = next(
+                    (
+                        event
+                        for event in event_message.data.items
+                        if event.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                    ),
+                    None,
+                )
+                if program_event is None:
+                    return False
+                if not program_event.value:
+                    self._program_run_ended = True
+                    return True
+                # Progress received after the previous run ended
+                # belongs to the program that is starting now.
+                program_run_ended = self._program_run_ended
+                self._program_run_ended = False
+                previous_event = self.data.events.get(
+                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                )
+                return (
+                    not program_run_ended
+                    and previous_event is not None
+                    and bool(previous_event.value)
+                    and program_event.value != previous_event.value
+                )
+        return False
+
+    def _clear_progress_of_ended_program_run(
+        self, event_message: EventMessage
+    ) -> list[EventKey]:
+        """Remove the progress events of a program run that has ended."""
+        if not self._update_program_run(event_message):
+            return []
+        events = self.data.events
+        return [
+            event_key
+            for event_key in PROGRAM_PROGRESS_EVENT_KEYS
+            if events.pop(event_key, None) is not None
+        ]
+
+    @callback
+    def _call_listeners_for_missing_event_keys(
+        self, event_keys: list[EventKey]
+    ) -> None:
+        """Call the listeners of the event keys that are no longer available."""
+        for event_key in event_keys:
+            if event_key not in self.data.events:
+                for listener in self._get_listeners_for_event_key(event_key):
+                    listener()
 
     @callback
     def call_all_event_listeners(self) -> None:
@@ -577,6 +665,11 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 settings=settings,
                 status=status,
             )
+        )
+        operation_state = self.data.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        self._program_run_ended = operation_state is not None and (
+            operation_state.value
+            in (BSH_OPERATION_STATE_INACTIVE, BSH_OPERATION_STATE_READY)
         )
 
     async def get_options_definitions(

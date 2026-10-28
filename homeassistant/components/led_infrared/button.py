@@ -53,6 +53,14 @@ SUPPORTED_BUTTONS = {
     ],
     LEDIrDeviceType.GENERIC_10_KEY: GENERIC_10_KEY_BUTTONS,
     LEDIrDeviceType.GENERIC_10_KEY_B708: GENERIC_10_KEY_BUTTONS,
+    LEDIrDeviceType.GENERIC_21_KEY: [
+        "brightness_down",
+        "brightness_up",
+        "mode_down",
+        "mode_up",
+        "speed_down",
+        "speed_up",
+    ],
 }
 
 

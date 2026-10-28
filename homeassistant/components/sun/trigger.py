@@ -57,7 +57,7 @@ from .const import (
     ELEVATION_GOLDEN_HOUR_LOW,
     ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
-    STATE_ATTR_ELEVATION,
+    SunEntityStateAttribute,
 )
 
 # Names of solar events supported by the astral.sun module
@@ -80,14 +80,22 @@ CONF_OFFSET_TYPE = "offset_type"
 OFFSET_TYPE_BEFORE = "before"
 OFFSET_TYPE_AFTER = "after"
 
-# Offset options shared by the solar event triggers. A positive offset combined
-# with an offset type of "before" fires earlier than the event; "after" later.
+# Offset options shared by the solar event triggers. A negative offset fires
+# earlier than the event, a positive one later. Older configs set a positive
+# offset with an offset type, which is folded into the sign.
 _OFFSET_OPTIONS: dict[probatio.Marker, Any] = {
     probatio.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
-    probatio.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): probatio.In(
+    probatio.Optional(CONF_OFFSET_TYPE): probatio.In(
         {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
     ),
 }
+
+
+def _apply_offset_type(options: dict[str, Any]) -> dict[str, Any]:
+    if options.pop(CONF_OFFSET_TYPE, None) == OFFSET_TYPE_BEFORE:
+        options[CONF_OFFSET] = -options[CONF_OFFSET]
+    return options
+
 
 # Sun elevation at each twilight boundary.
 _TWILIGHT_ELEVATIONS = {
@@ -99,7 +107,9 @@ _TWILIGHT_ELEVATIONS = {
 # The sun is a singleton, so the elevation triggers always target sun.sun
 # instead of asking the user to pick an entity.
 _SUN_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
-_ELEVATION_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=STATE_ATTR_ELEVATION)}
+_ELEVATION_DOMAIN_SPECS = {
+    DOMAIN: DomainSpec(value_source=SunEntityStateAttribute.ELEVATION)
+}
 
 _ELEVATION_CHANGED_TRIGGER_SCHEMA = probatio.Schema(
     {
@@ -160,7 +170,11 @@ class SunElevationCrossedTrigger(
 
 
 _EVENT_TRIGGER_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_OPTIONS, default=dict): {**_OFFSET_OPTIONS}}
+    {
+        probatio.Required(CONF_OPTIONS, default=dict): probatio.All(
+            {**_OFFSET_OPTIONS}, _apply_offset_type
+        )
+    }
 )
 
 
@@ -188,10 +202,7 @@ class SunEventTrigger(Trigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._options = config.options or {}
-        offset = self._options.get(CONF_OFFSET) or timedelta(0)
-        if self._options.get(CONF_OFFSET_TYPE) == OFFSET_TYPE_BEFORE:
-            offset = -offset
-        self._offset = offset
+        self._offset: timedelta = self._options.get(CONF_OFFSET) or timedelta(0)
 
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime | None:
         """Return the next time this solar event occurs.
@@ -280,12 +291,15 @@ class SolarMidnightTrigger(SunEventTrigger):
 
 _DAWN_DUSK_TRIGGER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_OPTIONS, default=dict): {
-            probatio.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): probatio.In(
-                _TWILIGHT_ELEVATIONS
-            ),
-            **_OFFSET_OPTIONS,
-        }
+        probatio.Required(CONF_OPTIONS, default=dict): probatio.All(
+            {
+                probatio.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): probatio.In(
+                    _TWILIGHT_ELEVATIONS
+                ),
+                **_OFFSET_OPTIONS,
+            },
+            _apply_offset_type,
+        )
     }
 )
 
@@ -332,10 +346,15 @@ class DuskTrigger(SunDawnDuskTrigger):
 
 _GOLDEN_BLUE_HOUR_TRIGGER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_OPTIONS, default=dict): {
-            probatio.Optional(CONF_PERIOD, default=_PERIOD_ANY): probatio.In(_PERIODS),
-            **_OFFSET_OPTIONS,
-        }
+        probatio.Required(CONF_OPTIONS, default=dict): probatio.All(
+            {
+                probatio.Optional(CONF_PERIOD, default=_PERIOD_ANY): probatio.In(
+                    _PERIODS
+                ),
+                **_OFFSET_OPTIONS,
+            },
+            _apply_offset_type,
+        )
     }
 )
 

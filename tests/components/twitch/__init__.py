@@ -3,13 +3,12 @@
 from collections.abc import AsyncGenerator, AsyncIterator
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 from twitchAPI.object.base import TwitchObject
 
 from homeassistant.components.twitch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

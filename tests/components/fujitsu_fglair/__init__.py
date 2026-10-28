@@ -1,11 +1,10 @@
 """Tests for the Fujitsu HVAC (based on Ayla IOT) integration."""
 
 from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

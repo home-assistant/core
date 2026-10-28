@@ -4,7 +4,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
-import datetime
+import datetime as dt
 from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -88,7 +88,7 @@ class Segment:
     init: bytes
     # For detecting discontinuities across stream restarts
     stream_id: int
-    start_time: datetime.datetime
+    start_time: dt.datetime
     _stream_outputs: Iterable[StreamOutput]
     duration: float = 0
     parts: list[Part] = field(default_factory=list)
@@ -261,7 +261,7 @@ class IdleTimer:
             self._unsub()
 
     @callback
-    def fire(self, _now: datetime.datetime) -> None:
+    def fire(self, _now: dt.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None

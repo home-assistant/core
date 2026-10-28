@@ -14,6 +14,7 @@ CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
 
 ATTR_SOURCE = "source"
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)

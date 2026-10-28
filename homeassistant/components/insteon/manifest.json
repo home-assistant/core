@@ -2,6 +2,7 @@
   "domain": "insteon",
   "name": "Insteon",
   "after_dependencies": ["panel_custom"],
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@teharris1", "@ssyrell", "@connorgallopo"],
   "config_flow": true,
   "dependencies": ["http", "usb", "websocket_api"],

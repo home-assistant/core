@@ -19,6 +19,7 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
@@ -48,8 +49,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 SERVER_INFO = {
     "server_id": "1234",
@@ -847,11 +846,7 @@ async def test_reauth_flow(
     """Test reauth flow shows confirmation before auth."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"]["url"] == "http://localhost:8095"
@@ -875,11 +870,7 @@ async def test_reauth_with_manual_token(
     with patch(
         "homeassistant.components.music_assistant.config_flow._test_connection"
     ) as mock_test_connection:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -943,7 +934,7 @@ async def test_auth_manual_invalid_token(
         patch("homeassistant.components.music_assistant.config_flow._test_connection"),
         patch(
             "homeassistant.components.music_assistant.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -1779,3 +1770,96 @@ async def test_hassio_discovery_during_user_flow(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_get_server_info", "mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the reconfigure flow updates the server URL."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_TOKEN: "test_token"},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://192.168.1.10:8095"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: "http://192.168.1.10:8095",
+        CONF_TOKEN: "test_token",
+    }
+
+
+async def test_reconfigure_flow_different_server(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow aborts when the URL points to another server."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_server_info.return_value = ServerInfoMessage.from_dict(
+        {**SERVER_INFO, "server_id": "5678"}
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://192.168.1.10:8095"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_URL] == "http://localhost:8095"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            InvalidServerVersion("invalid_server_version"),
+            "invalid_server_version",
+            id="invalid_server_version",
+        ),
+        pytest.param(
+            CannotConnect("cannot_connect"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(MusicAssistantClientException("unknown"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: MusicAssistantClientException,
+    error: str,
+) -> None:
+    """Test the reconfigure flow shows errors and can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_server_info.side_effect = exception
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://192.168.1.10:8095"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_get_server_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: "http://192.168.1.10:8095"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_URL] == "http://192.168.1.10:8095"

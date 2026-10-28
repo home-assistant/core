@@ -5,6 +5,13 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import light, switch
 from homeassistant.const import (
@@ -19,13 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 

@@ -1,10 +1,10 @@
 """Test the Victron Remote Monitoring energy platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.victron_remote_monitoring import energy
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_energy_solar_forecast(

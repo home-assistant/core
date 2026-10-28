@@ -4,9 +4,10 @@ import statistics
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.min_max.const import DOMAIN, MinMaxEntityStateAttribute
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -14,19 +15,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]
@@ -64,8 +63,10 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.min_sensor")
 
     assert str(float(MIN_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
+    assert entity_ids[2] == state.attributes.get(
+        MinMaxEntityStateAttribute.MIN_ENTITY_ID
+    )
+    assert state.attributes.get(MinMaxEntityStateAttribute.ENTITY_ID) == entity_ids
 
 
 async def test_min_sensor(
@@ -94,7 +95,9 @@ async def test_min_sensor(
     state = hass.states.get("sensor.test_min")
 
     assert str(float(MIN_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert entity_ids[2] == state.attributes.get(
+        MinMaxEntityStateAttribute.MIN_ENTITY_ID
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entity = entity_registry.async_get("sensor.test_min")
@@ -124,7 +127,9 @@ async def test_max_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
 
     assert str(float(MAX_VALUE)) == state.state
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
@@ -305,9 +310,9 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MIN_ENTITY_ID) is None
     assert state.attributes.get("min_value") is None
-    assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MAX_ENTITY_ID) is None
     assert state.attributes.get("max_value") is None
     assert state.attributes.get("median") is None
 
@@ -316,23 +321,27 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state != STATE_UNKNOWN
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state != STATE_UNKNOWN
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MIN_ENTITY_ID) is None
     assert state.attributes.get("min_value") is None
-    assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MAX_ENTITY_ID) is None
     assert state.attributes.get("max_value") is None
 
 
@@ -418,6 +427,65 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
 
 
+@pytest.mark.parametrize(
+    ("device_class_1", "device_class_2", "expected_device_class"),
+    [
+        # Energy storage allows the measurement state class, so it is inherited
+        (
+            SensorDeviceClass.ENERGY_STORAGE,
+            SensorDeviceClass.ENERGY_STORAGE,
+            SensorDeviceClass.ENERGY_STORAGE,
+        ),
+        # Different device classes are never inherited
+        (SensorDeviceClass.ENERGY_STORAGE, SensorDeviceClass.ENERGY, None),
+        # Energy does not allow the measurement state class
+        (SensorDeviceClass.ENERGY, SensorDeviceClass.ENERGY, None),
+    ],
+)
+async def test_energy_device_class_not_inherited(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class_1: SensorDeviceClass,
+    device_class_2: SensorDeviceClass,
+    expected_device_class: SensorDeviceClass | None,
+) -> None:
+    """Test only a device class that allows measurement is inherited."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_energy",
+            "type": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2"],
+        }
+    }
+
+    for entity_id, value, device_class in (
+        ("sensor.test_1", 2.5, device_class_1),
+        ("sensor.test_2", 4.0, device_class_2),
+    ):
+        hass.states.async_set(
+            entity_id,
+            value,
+            {
+                ATTR_DEVICE_CLASS: device_class,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_energy")
+
+    assert state.state == "6.5"
+    assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
+    # This warning is what users see when the energy device class is inherited.
+    assert "which is impossible considering device class" not in caplog.text
+
+
 async def test_last_sensor(hass: HomeAssistant) -> None:
     """Test the last sensor."""
     config = {
@@ -439,7 +507,9 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
-        assert entity_id == state.attributes.get("last_entity_id")
+        assert entity_id == state.attributes.get(
+            MinMaxEntityStateAttribute.LAST_ENTITY_ID
+        )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
