@@ -70,7 +70,7 @@ from .const import (
 from .coordinator import NAMConfigEntry
 from .entity import NAMEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
