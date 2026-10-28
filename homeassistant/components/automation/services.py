@@ -4,13 +4,7 @@ from typing import TYPE_CHECKING
 
 import probatio
 
-from homeassistant.const import (
-    CONF_ID,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
@@ -19,14 +13,12 @@ from homeassistant.helpers.service import (
 )
 
 from .const import (
-    ATTR_VARIABLES,
-    CONF_SKIP_CONDITION,
-    CONF_STOP_ACTIONS,
     DATA_COMPONENT,
     DEFAULT_STOP_ACTIONS,
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
-    SERVICE_TRIGGER,
+    AutomationService,
+    AutomationServiceArgument,
 )
 from .helpers import async_get_blueprints
 from .util import async_process_config, async_process_single_config
@@ -40,8 +32,11 @@ async def _trigger_service_handler(
 ) -> None:
     """Handle forced automation trigger, e.g. from frontend."""
     await entity.async_trigger(
-        {**service_call.data[ATTR_VARIABLES], "trigger": {"platform": None}},
-        skip_condition=service_call.data[CONF_SKIP_CONDITION],
+        {
+            **service_call.data[AutomationServiceArgument.VARIABLES],
+            "trigger": {"platform": None},
+        },
+        skip_condition=service_call.data[AutomationServiceArgument.SKIP_CONDITION],
         context=service_call.context,
     )
 
@@ -73,20 +68,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the automation integration."""
     component = hass.data[DATA_COMPONENT]
     component.async_register_entity_service(
-        SERVICE_TRIGGER,
+        AutomationService.TRIGGER,
         {
-            probatio.Optional(ATTR_VARIABLES, default={}): dict,
-            probatio.Optional(CONF_SKIP_CONDITION, default=True): bool,
+            probatio.Optional(AutomationServiceArgument.VARIABLES, default={}): dict,
+            probatio.Optional(
+                AutomationServiceArgument.SKIP_CONDITION, default=True
+            ): bool,
         },
         _trigger_service_handler,
     )
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
-        SERVICE_TURN_OFF,
+        AutomationService.TOGGLE, None, "async_toggle"
+    )
+    component.async_register_entity_service(
+        AutomationService.TURN_ON, None, "async_turn_on"
+    )
+    component.async_register_entity_service(
+        AutomationService.TURN_OFF,
         {
             probatio.Optional(
-                CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS
+                AutomationServiceArgument.STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS
             ): cv.boolean
         },
         "async_turn_off",
@@ -96,7 +97,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        AutomationService.RELOAD,
         reload_helper.execute_service,
         schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
     )

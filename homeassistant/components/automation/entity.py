@@ -56,7 +56,6 @@ from homeassistant.util.dt import parse_datetime
 from .config import ValidationStatus
 from .const import (
     ATTR_SOURCE,
-    CONF_STOP_ACTIONS,
     DEFAULT_INITIAL_STATE,
     DEFAULT_STOP_ACTIONS,
     DOMAIN,
@@ -64,6 +63,7 @@ from .const import (
     LOGGER,
     AutomationEntityCapabilityAttribute,
     AutomationEntityStateAttribute,
+    AutomationServiceArgument,
 )
 from .trace import trace_automation
 
@@ -456,8 +456,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if CONF_STOP_ACTIONS in kwargs:
-            await self._async_disable(kwargs[CONF_STOP_ACTIONS])
+        if AutomationServiceArgument.STOP_ACTIONS in kwargs:
+            await self._async_disable(kwargs[AutomationServiceArgument.STOP_ACTIONS])
         else:
             await self._async_disable()
         self.async_write_ha_state()
