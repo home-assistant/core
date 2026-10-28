@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate, overload, override
+from typing import TYPE_CHECKING, Any, Concatenate, overload, override
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -161,9 +161,10 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
         work_area_attributes = self.work_area_attributes
-        assert work_area_attributes is not None
         device_info = self._attr_device_info
-        assert device_info is not None
+        if TYPE_CHECKING:
+            assert work_area_attributes is not None
+            assert device_info is not None
 
         parent_device = dr.async_get(coordinator.hass).async_get_or_create(
             config_entry_id=coordinator.config_entry.entry_id,
