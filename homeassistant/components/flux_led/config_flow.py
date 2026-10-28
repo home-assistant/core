@@ -250,6 +250,40 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                device = await self._async_try_connect(user_input[CONF_HOST], None)
+            except FLUX_LED_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
+            else:
+                # Some devices report a MAC address that is one off
+                if (
+                    (mac_address := device[ATTR_ID]) is not None
+                    and entry.unique_id
+                    and not mac_matches_by_one(
+                        dr.format_mac(mac_address), entry.unique_id
+                    )
+                ):
+                    return self.async_abort(reason="unique_id_mismatch")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
