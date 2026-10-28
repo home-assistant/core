@@ -116,7 +116,6 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(error)},
             ) from error
         return self._convert_weather_response(weather_report)
 
@@ -285,7 +284,6 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(error)},
             ) from error
         current_air_pollution = (
             self._get_current_air_pollution_data(air_pollution_report.current)
