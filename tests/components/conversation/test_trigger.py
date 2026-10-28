@@ -65,6 +65,7 @@ async def test_if_fires_on_event(
         context=context,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
+    assert service_response["conversation_id"] is not None
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
@@ -83,7 +84,7 @@ async def test_if_fires_on_event(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": ANY,
+            "conversation_id": service_response["conversation_id"],
             "device_id": None,
             "satellite_id": None,
             "language": "en",
