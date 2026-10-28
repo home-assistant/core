@@ -177,6 +177,9 @@ aio-ownet==0.1.0
 # homeassistant.components.wattwaechter
 aio-wattwaechter==1.3.0
 
+# homeassistant.components.abrp
+aioabrp==0.6.0
+
 # homeassistant.components.acaia
 aioacaia==0.2.2
 
@@ -755,7 +758,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_smart_camera
-bosch-shc-camera-client==0.6.0
+bosch-shc-camera-client==0.6.2
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.25
@@ -798,7 +801,7 @@ cached-ipaddress==1.1.2
 caldav==3.5.0a0
 
 # homeassistant.components.chef_iq
-chefiq-ble==1.0.1
+chefiq-ble==1.1.1
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
@@ -1749,7 +1752,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.15
+my-pv==0.0.16
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2311,6 +2314,9 @@ pyfirefly==0.1.12
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.49
+
+# homeassistant.components.flic_button
+pyflic-ble==0.2.5
 
 # homeassistant.components.flic
 pyflic==2.0.4
@@ -3236,7 +3242,7 @@ specialized-turbo[cloud]==0.8.4
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.3
 
-# homeassistant.components.spin_ble
+# homeassistant.components.exicom_spin_ble
 spinev-ble[bleak]==0.5.0
 
 # homeassistant.components.spotify
@@ -3547,7 +3553,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.3.2
+wiim==0.4.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1

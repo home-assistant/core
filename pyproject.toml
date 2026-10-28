@@ -881,6 +881,7 @@ mark-parentheses = false
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = ["homeassistant"]
+known-third-party = ["hassfest"]
 combine-as-imports = true
 split-on-trailing-comma = false
 
@@ -890,6 +891,9 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Keep Core's wrapper from shadowing the installed hassfest package.
+"script/hassfest/*" = ["INP001"]
 
 # Some utils have constants that benefit from being uppercase
 "homeassistant/util/*" = ["N806"]
