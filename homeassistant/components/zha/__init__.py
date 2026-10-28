@@ -283,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     @callback
     def update_config(event: Event) -> None:
         """Handle Core config update."""
-        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+        zha_gateway.update_local_timezone(ZoneInfo(hass.config.time_zone))
         zha_gateway.config.country_code = hass.config.country
 
     config_entry.async_on_unload(

@@ -345,11 +345,17 @@ async def test_timezone_update(
 
     assert hass.config.time_zone == "US/Pacific"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("US/Pacific")
+    assert gateway.application_controller.local_timezone == zoneinfo.ZoneInfo(
+        "US/Pacific"
+    )
 
     await hass.config.async_update(time_zone="America/New_York")
 
     assert hass.config.time_zone == "America/New_York"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")
+    assert gateway.application_controller.local_timezone == zoneinfo.ZoneInfo(
+        "America/New_York"
+    )
 
 
 async def test_setup_no_firmware_update_in_progress(
