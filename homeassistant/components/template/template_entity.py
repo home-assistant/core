@@ -154,7 +154,7 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
         self._handling_results = False
-        self._last_render_state: State | None = None
+        self._render_states: list[State] = []
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -422,11 +422,12 @@ class TemplateEntity(AbstractTemplateEntity):
         entity_id = event and event.data["entity_id"]
 
         if event and entity_id == self.entity_id:
+            new_state = event.data["new_state"]
             # Only count states written by a render, rate limited renders run later
-            if (
-                self._handling_results
-                or event.data["new_state"] is self._last_render_state
-            ):
+            if self._handling_results:
+                self._add_render_state(new_state)
+                self._self_ref_update_count += 1
+            elif any(new_state is state for state in self._render_states):
                 self._self_ref_update_count += 1
             else:
                 self._self_ref_update_count = 1
@@ -462,7 +463,7 @@ class TemplateEntity(AbstractTemplateEntity):
                 self.async_write_ha_state()
             finally:
                 self._handling_results = handling_results
-            self._last_render_state = self.hass.states.get(self.entity_id)
+            self._add_render_state(self.hass.states.get(self.entity_id))
             return
 
         if errors:
@@ -470,6 +471,15 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         self._async_preview_update()
+
+    @callback
+    def _add_render_state(self, state: State | None) -> None:
+        """Remember a state written by a render for loop detection."""
+        if state is None or any(state is known for known in self._render_states):
+            return
+        self._render_states.append(state)
+        # A loop is stopped after this many renders, older states can't be pending
+        del self._render_states[: -(len(self._template_attrs) + 1)]
 
     @callback
     def _async_preview_update(self) -> None:

@@ -1,10 +1,12 @@
 """Test template entity."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
 
 from homeassistant.components.template import template_entity
 from homeassistant.components.template.entity import AbstractTemplateEntity
@@ -263,3 +265,38 @@ async def test_self_referencing_template_after_external_updates(
         assert state.attributes["icon"] == f"mdi:brightness-{values[-1]}"
 
     assert "Template loop detected" not in caplog.text
+
+
+async def test_self_referencing_rate_limited_loop_with_unlimited_template(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rate limited loop is detected when another template renders first."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "test",
+                    # Iterating the domain makes this template rate limited
+                    "state": (
+                        "{{ ((states.sensor | selectattr('entity_id', 'eq',"
+                        " 'sensor.test') | map(attribute='state') | list"
+                        " + ['0'])[0] | int(0)) + 1 }}"
+                    ),
+                    "icon": "mdi:numeric-{{ states('sensor.test') }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(10):
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+    assert int(hass.states.get("sensor.test").state) < 5
