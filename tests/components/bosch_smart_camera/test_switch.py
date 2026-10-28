@@ -1,13 +1,16 @@
 """Test the Bosch Smart Camera switch platform."""
 
-from unittest.mock import AsyncMock
+import asyncio
+from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import BoschCameraConnectionError
 from bosch_shc_camera_client.cloud import CloudPutResult
 from bosch_shc_camera_client.states import CameraAccountStates
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.bosch_smart_camera.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -116,5 +119,92 @@ async def test_states_fetch_error(
     """Test a failing state fetch makes the setup retry."""
     mock_account_states.side_effect = BoschCameraConnectionError("down")
     await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_set_privacy_mode_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_privacy_mode: AsyncMock,
+    status: int,
+) -> None:
+    """Test a rejected token starts reauthentication."""
+    mock_set_privacy_mode.return_value = CloudPutResult(ok=False, status=status)
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch.object(mock_config_entry, "async_start_reauth") as mock_reauth,
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+
+    assert err.value.translation_key == "auth_failed"
+    mock_reauth.assert_called_once_with(hass)
+
+
+async def test_poll_during_write_keeps_written_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_privacy_mode: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that started before a write does not undo it."""
+    await setup_integration(hass, mock_config_entry)
+    release = asyncio.Event()
+    stale = {CAMERA_ID: CameraAccountStates(False, None)}
+
+    async def slow_states(*args: object, **kwargs: object) -> dict:
+        await release.wait()
+        return stale
+
+    mock_account_states.side_effect = slow_states
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    release.set()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    mock_account_states.side_effect = None
+    mock_account_states.return_value = {CAMERA_ID: CameraAccountStates(True, None)}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_camera_removed_during_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_privacy_mode: AsyncMock,
+    mock_list_cameras: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write that finishes after the camera was removed does not fail."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def remove_then_ok(*args: object) -> CloudPutResult:
+        mock_list_cameras.return_value = []
+        mock_account_states.return_value = {}
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return CloudPutResult(ok=True, status=204)
+
+    mock_set_privacy_mode.side_effect = remove_then_ok
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
 
     assert hass.states.get(ENTITY_ID) is None

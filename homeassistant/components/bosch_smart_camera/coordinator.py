@@ -65,6 +65,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             update_interval=SCAN_INTERVAL,
         )
         self.account_states: dict[str, CameraAccountStates] = {}
+        self._write_seq = 0
+        self._written_at: dict[str, int] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -84,9 +86,10 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         await self._oauth_session.async_ensure_token_valid()
         session = async_get_clientsession(self.hass)
         token = str(self._oauth_session.token[CONF_ACCESS_TOKEN])
+        started = self._write_seq
         try:
             cameras = await list_cameras(session, token)
-            self.account_states = await get_camera_account_states(session, token)
+            states = await get_camera_account_states(session, token)
         except BoschCameraAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
@@ -95,6 +98,16 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
+        # A response that predates a write must not undo it.
+        for camera_id, written in self._written_at.items():
+            if written > started and camera_id in self.account_states:
+                states[camera_id] = self.account_states[camera_id]
+        self.account_states = states
+        self._written_at = {
+            camera_id: written
+            for camera_id, written in self._written_at.items()
+            if written > started
+        }
         data = {camera.id: camera for camera in cameras}
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
@@ -135,14 +148,22 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             camera_id,
             enabled,
         )
+        if result.status in (401, 403):
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            )
         if not result.ok:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="privacy_mode_failed"
             )
+        # The camera may have been removed while the write was running.
+        if (state := self.account_states.get(camera_id)) is None:
+            return
         # The camera list is only polled every few minutes.
-        self.account_states[camera_id] = replace(
-            self.account_states[camera_id], privacy_mode=enabled
-        )
+        self._write_seq += 1
+        self._written_at[camera_id] = self._write_seq
+        self.account_states[camera_id] = replace(state, privacy_mode=enabled)
         self.async_update_listeners()
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
