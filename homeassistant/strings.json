@@ -64,7 +64,7 @@
         "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
-        "llm_hass_api": "Tools",
+        "llm_hass_api": "AI tools",
         "location": "Location",
         "longitude": "Longitude",
         "mode": "Mode",
