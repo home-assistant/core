@@ -477,6 +477,17 @@
         "name": "[%key:component::cover::entity_component::shade::name%]"
       }
     },
+    "event": {
+      "button_numbered": {
+        "name": "Button {number}"
+      },
+      "rocker_bottom": {
+        "name": "Rocker {rocker} bottom"
+      },
+      "rocker_top": {
+        "name": "Rocker {rocker} top"
+      }
+    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]",
