@@ -93,6 +93,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Set up Matter from a config entry."""
+    await er.async_migrate_entries(
+        hass, entry.entry_id, _migrate_eve_temperature_offset_unique_id
+    )
+
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
 
@@ -220,10 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                 ble_proxy = None
 
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
-
-    await er.async_migrate_entries(
-        hass, entry.entry_id, _migrate_eve_temperature_offset_unique_id
-    )
 
     setup_error: BaseException | None = None
     try:
