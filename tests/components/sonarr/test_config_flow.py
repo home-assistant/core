@@ -330,16 +330,23 @@ async def test_reconfigure_flow_errors(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(
+    "stored_url",
+    [
+        pytest.param("http://192.168.1.190:8989/", id="normalized"),
+        pytest.param("http://192.168.1.190:8989", id="migrated"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mock_sonarr_config_flow")
 async def test_reconfigure_flow_already_configured(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_integration: MockConfigEntry, stored_url: str
 ) -> None:
     """Test the reconfigure flow aborts when the URL is used by another entry."""
     MockConfigEntry(
         domain=DOMAIN,
         version=2,
         data={
-            CONF_URL: "http://192.168.1.190:8989/",
+            CONF_URL: stored_url,
             CONF_API_KEY: "other-api-key",
             CONF_VERIFY_SSL: False,
         },

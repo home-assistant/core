@@ -54,19 +54,24 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await sonarr.async_get_system_status()
 
 
+def _normalize_url(url: str) -> str:
+    """Add an explicit port to the URL.
+
+    This ensures aiopyarr does not fall back to its own service-port
+    default (which differs from the standard HTTP/HTTPS ports).
+    """
+    parsed = yarl.URL(url)
+    if parsed.explicit_port is None:
+        parsed = parsed.with_port(parsed.port)
+    return parsed.human_repr()
+
+
 def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     """Flatten the more options section and add an explicit port to the URL."""
     more_options = user_input.pop(CONF_MORE_OPTIONS, {})
     user_input[CONF_VERIFY_SSL] = more_options.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-
-    # Ensure an explicit port is present in the URL so that
-    # aiopyarr does not fall back to its own service-port default
-    # (which differs from the standard HTTP/HTTPS ports).
     if CONF_URL in user_input:
-        url = yarl.URL(user_input[CONF_URL])
-        if url.explicit_port is None:
-            url = url.with_port(url.port)
-        user_input[CONF_URL] = url.human_repr()
+        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
 
     return user_input
 
@@ -153,7 +158,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input = _normalize_user_input(user_input)
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+            # Stored URLs may predate normalization, e.g. migrated entries.
+            if any(
+                other.entry_id != entry.entry_id
+                and (url := other.data.get(CONF_URL)) is not None
+                and _normalize_url(url) == user_input[CONF_URL]
+                for other in self._async_current_entries(include_ignore=False)
+            ):
+                return self.async_abort(reason="already_configured")
 
             try:
                 await _validate_input(self.hass, user_input)
