@@ -138,10 +138,11 @@ class LiveSessions:
         await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _async_close(self, camera_id: str) -> None:
-        self._proxies.pop(camera_id, None)
+        proxy = self._proxies.pop(camera_id, None)
         if session := self._sessions.pop(camera_id, None):
             session.cancel_renewal()
-        await stop_tls_proxy(camera_id, self._ports, self._servers)
+        if proxy is not None:
+            await stop_tls_proxy(camera_id, self._ports, self._servers)
 
     async def _async_open(
         self,

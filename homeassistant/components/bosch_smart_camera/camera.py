@@ -1,6 +1,7 @@
 """Camera platform for the Bosch Smart Camera integration."""
 
 import asyncio
+from dataclasses import replace
 from typing import override
 
 from bosch_shc_camera_client.cameras import Camera as CameraData, CameraModel
@@ -136,8 +137,12 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         """Stop the stream, its worker keeps retrying a closed proxy otherwise."""
         if self._reopen_task:
             self._reopen_task.cancel()
+        await self.coordinator.live_sessions.async_close(self._camera_id)
         if (stream := self.stream) is not None:
-            stream.dynamic_stream_settings.preload_stream = False
+            # The settings object is cached per entity, so only the stream's copy changes.
+            stream.dynamic_stream_settings = replace(
+                stream.dynamic_stream_settings, preload_stream=False
+            )
             self.stream = None
             await stream.stop()
 

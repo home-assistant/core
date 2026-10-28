@@ -570,6 +570,38 @@ async def test_unload_stops_the_stream_worker(
     assert entity.stream is None
 
 
+async def test_removing_the_entity_closes_its_session_and_keeps_the_settings(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a removed camera releases its session without touching cached settings."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    entity = _entity(hass)
+    stream = await _watch(hass, preload=True)
+    settings = stream.dynamic_stream_settings
+
+    await entity.async_will_remove_from_hass()
+
+    assert CAMERA_ID not in entity.coordinator.live_sessions.camera_ids
+    assert settings.preload_stream is True
+    assert entity.stream is None
+
+
+async def test_close_all_releases_open_sessions(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test closing everything drops the sessions that still exist."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    await hass.async_block_till_done()
+    sessions = mock_config_entry.runtime_data.live_sessions
+    assert sessions.camera_ids
+
+    await sessions.async_close_all()
+
+    assert not sessions.camera_ids
+
+
 async def test_late_proxy_death_of_an_old_proxy_is_ignored(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
