@@ -179,6 +179,51 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self.onvif_config = reconfigure_entry.data | user_input
+            # An earlier attempt in this flow may have reached a different device
+            self.device_id = None
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
+            if not errors:
+                await self.async_set_unique_id(self.device_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        suggested_values = {
+            key: value
+            for key, value in (user_input or reconfigure_entry.data).items()
+            if key != CONF_PASSWORD
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(CONF_USERNAME, default=""): str,
+                        probatio.Optional(
+                            probatio.Secret(CONF_PASSWORD), default=""
+                        ): str,
+                    }
+                ),
+                suggested_values,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
     @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
