@@ -1,6 +1,7 @@
 """Calculates mold growth indication from temperature and humidity."""
 
 from collections.abc import Callable, Mapping
+from enum import StrEnum
 import logging
 import math
 from typing import TYPE_CHECKING, Any, override
@@ -50,10 +51,16 @@ from .const import (
     CONF_INDOOR_TEMP,
     CONF_OUTDOOR_TEMP,
     DEFAULT_NAME,
-    MoldIndicatorEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MoldIndicatorEntityStateAttribute(StrEnum):
+    """State attributes for mold indicator entities."""
+
+    DEWPOINT = "dewpoint"
+    ESTIMATED_CRITICAL_TEMP = "estimated_critical_temp"
 
 
 MAGNUS_K2 = 17.62
