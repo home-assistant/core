@@ -2131,7 +2131,6 @@ async def test_config_entry_precision_rounds_temperatures(
     hass.states.async_set(ENT_SENSOR, sensor_reading)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY)
     assert state.attributes["current_temperature"] == expected_current
@@ -2161,7 +2160,6 @@ async def test_config_entry_target_temp_step(
     hass.states.async_set(ENT_SENSOR, "20")
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY).attributes["target_temp_step"] == expected_step
 
