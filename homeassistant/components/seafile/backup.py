@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import suppress
 from functools import wraps
+from pathlib import PurePosixPath
 from time import monotonic
 from typing import Any, Concatenate, override
 
@@ -50,10 +51,9 @@ METADATA_SUFFIX = "_meta.json"
 CACHE_TTL = 300
 
 
-def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
-    """Return the names of the backup file and its metadata file."""
-    base_name = suggested_filename(backup).rsplit(".", 1)[0]
-    return f"{base_name}.tar", f"{base_name}{METADATA_SUFFIX}"
+def suggested_base_name(backup: AgentBackup) -> str:
+    """Return the name of the backup files without their suffix."""
+    return suggested_filename(backup).removesuffix(".tar")
 
 
 async def async_get_backup_agents(hass: HomeAssistant) -> list[BackupAgent]:
@@ -130,7 +130,7 @@ class SeafileBackupAgent(BackupAgent):
         self._cache_expiration = 0.0
 
     def _file_path(self, name: str) -> str:
-        return f"{self._path.rstrip('/')}/{name}"
+        return str(PurePosixPath(self._path, name))
 
     async def _async_list_backups(self) -> dict[str, tuple[AgentBackup, str]]:
         """Return the backups with the base name of their files."""
@@ -209,8 +209,8 @@ class SeafileBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup and its metadata."""
-        tar_name, metadata_name = suggested_filenames(backup)
-        base_name = tar_name.removesuffix(".tar")
+        base_name = suggested_base_name(backup)
+        tar_name = f"{base_name}.tar"
         replaces_backup = any(
             existing == base_name
             for _, existing in (await self._async_list_backups()).values()
@@ -232,7 +232,7 @@ class SeafileBackupAgent(BackupAgent):
             await self._client.upload_file(
                 self._library_id,
                 self._path,
-                metadata_name,
+                f"{base_name}{METADATA_SUFFIX}",
                 json_bytes(backup.as_dict()),
                 replace=True,
             )
