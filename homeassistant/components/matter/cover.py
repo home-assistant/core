@@ -85,22 +85,13 @@ class MatterCover(MatterEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, None if no position."""
-        if self._tilt_only:
-            # tilt-only covers have no lift axis, so tilt is the only closure
-            # indicator, even if a non-conformant device reports a lift position
-            if not self._entity_info.endpoint.has_attribute(
-                None,
-                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
-            ):
-                return None
-            position = self.current_cover_tilt_position
-        elif self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
-        ):
-            position = self.current_cover_position
-        else:
-            return None
-
+        # tilt-only covers have no lift axis, so tilt is the only closure
+        # indicator, even if a non-conformant device reports a lift position
+        position = (
+            self.current_cover_tilt_position
+            if self._tilt_only
+            else self.current_cover_position
+        )
         return position == 0 if position is not None else None
 
     @override
