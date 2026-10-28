@@ -64,8 +64,9 @@ class TrimlightCoordinator(DataUpdateCoordinator[TrimlightLightState]):
     @override
     async def _async_update_data(self) -> TrimlightLightState:
         """Fetch the current device state."""
+        previous_data = self.data
         try:
-            return await self.client.get_light_state()
+            state = await self.client.get_light_state()
         except TrimlightError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -75,6 +76,9 @@ class TrimlightCoordinator(DataUpdateCoordinator[TrimlightLightState]):
                     "name": self.config_entry.title,
                 },
             ) from err
+
+        # Keep newer optimistic state published while this read was in flight.
+        return state if self.data is previous_data else self.data
 
     async def async_set_state(
         self,

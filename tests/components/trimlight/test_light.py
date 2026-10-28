@@ -1,5 +1,6 @@
 """Tests for the Trimlight light platform."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import MagicMock
 
@@ -202,6 +203,51 @@ async def test_commands_do_not_postpone_polling(
             )
 
         assert mock_trimlight.get_light_state.await_count == expected_read_count
+
+
+async def test_command_during_poll(
+    hass: HomeAssistant,
+    mock_trimlight: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an older poll cannot replace a command, and the next poll reconciles."""
+    poll_started = asyncio.Event()
+    poll_returned = asyncio.Event()
+    write_requested = asyncio.Event()
+    reported_state = mock_trimlight.get_light_state.return_value
+
+    async def get_state() -> TrimlightLightState:
+        poll_started.set()
+        await write_requested.wait()
+        poll_returned.set()
+        return reported_state
+
+    async def set_state(**kwargs: bool | int | None) -> None:
+        write_requested.set()
+        # The library serializes the write behind the in-flight read.
+        await poll_returned.wait()
+        assert hass.states.get(ENTITY_ID).attributes[ATTR_RGB_COLOR] == (40, 50, 60)
+
+    mock_trimlight.get_light_state.side_effect = get_state
+    mock_trimlight.set_light_state.side_effect = set_state
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_RGB_COLOR: (40, 50, 60)},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_RGB_COLOR] == (40, 50, 60)
+
+    mock_trimlight.get_light_state.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_RGB_COLOR] == (10, 20, 30)
 
 
 @pytest.mark.parametrize(
