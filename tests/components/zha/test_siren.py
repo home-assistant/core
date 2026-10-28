@@ -109,7 +109,7 @@ async def test_siren(
                 warning=50,  # bitmask for default args
                 warning_duration=5,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
 
@@ -143,7 +143,7 @@ async def test_siren(
                 warning=2,  # bitmask for default args
                 warning_duration=5,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
 
@@ -185,7 +185,7 @@ async def test_siren(
                 warning=97,  # bitmask for passed args
                 warning_duration=10,
                 strobe_duty_cycle=0,
-                stobe_level=2,
+                strobe_level=2,
             )
         ]
         # test that the state has changed to on
