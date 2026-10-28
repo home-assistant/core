@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import UTC, date, datetime
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -32,7 +33,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 119
+SUPPORTED_FEATURES = 127
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -105,6 +106,23 @@ SUMMARY:Cheese
 DESCRIPTION:Any kind will do
 STATUS:NEEDS-ACTION
 DUE:20171126
+END:VTODO
+END:VCALENDAR"""
+
+
+TODO_OVERRIDE_FIRST = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTODO
+UID:b
+RECURRENCE-ID:20010108T090000Z
+SUMMARY:b
+END:VTODO
+BEGIN:VTODO
+UID:b
+DTSTART:20010101T090000Z
+RRULE:FREQ=WEEKLY
+SUMMARY:b
 END:VTODO
 END:VCALENDAR"""
 
@@ -337,6 +355,7 @@ async def test_supported_components(
         "description",
     ],
 )
+@pytest.mark.freeze_time("2023-11-25 12:00:00+00:00")
 async def test_add_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -368,7 +387,11 @@ async def test_add_item(
     await hass.async_block_till_done()
 
     assert calendar.add_todo.call_args
-    assert calendar.add_todo.call_args.kwargs == expcted_save_args
+    assert calendar.add_todo.call_args.kwargs == {
+        "created": datetime(2023, 11, 25, 12, tzinfo=UTC),
+        **expcted_save_args,
+    }
+    assert calendar.add_todo.call_args.kwargs["created"].tzinfo is UTC
 
     # Verify state was updated
     state = hass.states.get(TEST_ENTITY)
@@ -1269,3 +1292,683 @@ async def test_update_after_partial_delete(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
+
+
+def sorted_todo(uid: str, *lines: str) -> str:
+    """Return a VTODO with the given uid as its summary and extra lines."""
+    return "\n".join(
+        [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//E-Corp.//CalDAV Client//EN",
+            "BEGIN:VTODO",
+            f"UID:{uid}",
+            f"SUMMARY:{uid}",
+            *lines,
+            "END:VTODO",
+            "END:VCALENDAR",
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    ("items", "expected_order"),
+    [
+        pytest.param(
+            [
+                sorted_todo("c", "X-APPLE-SORT-ORDER:30"),
+                sorted_todo("a", "X-APPLE-SORT-ORDER:-10"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:020"),
+            ],
+            ["a", "b", "c"],
+            id="sort_order",
+        ),
+        pytest.param(
+            [
+                sorted_todo("c", "CREATED:20010102T000000Z"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("a"),
+            ],
+            ["a", "b", "c"],
+            id="creation_time",
+        ),
+        pytest.param(
+            [
+                sorted_todo("b", "X-APPLE-SORT-ORDER:150"),
+                sorted_todo("a", "CREATED:20010101T000140"),
+            ],
+            ["a", "b"],
+            id="creation_time_without_time_zone",
+        ),
+        pytest.param(
+            [
+                sorted_todo("b", "CREATED:99991231T235959"),
+                sorted_todo("a", "X-APPLE-SORT-ORDER:0"),
+            ],
+            ["a", "b"],
+            id="last_creation_time_without_time_zone",
+        ),
+        pytest.param(
+            [
+                sorted_todo("c", "X-APPLE-SORT-ORDER:1.5", "CREATED:20010101T000300Z"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:next", "CREATED:20010101T000200Z"),
+                sorted_todo("a", "CREATED:20010101T000100Z"),
+            ],
+            ["a", "b", "c"],
+            id="not_a_whole_number",
+        ),
+        pytest.param(
+            [
+                sorted_todo("b", "X-APPLE-SORT-ORDER:10"),
+                sorted_todo("a", "X-APPLE-SORT-ORDER:10"),
+            ],
+            ["b", "a"],
+            id="same_position",
+        ),
+    ],
+)
+async def test_todo_list_order(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    items: list[str],
+    expected_order: list[str],
+) -> None:
+    """Test the items are listed by their sort order, or else their creation time."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, item, calendar) for item in items
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == expected_order
+
+
+def saved_positions(dav_client: Mock) -> list[tuple[str, str | None]]:
+    """Return the uid and sort order of each saved item."""
+    saved = []
+    for call in dav_client.put.call_args_list:
+        lines = call.args[1].splitlines()
+        uid = next(
+            line.removeprefix("UID:") for line in lines if line.startswith("UID:")
+        )
+        position = next(
+            (
+                line.removeprefix("X-APPLE-SORT-ORDER:")
+                for line in lines
+                if line.startswith("X-APPLE-SORT-ORDER:")
+            ),
+            None,
+        )
+        saved.append((uid, position))
+    return saved
+
+
+@pytest.mark.parametrize(
+    ("todos", "move", "expected_saved", "expected_order"),
+    [
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:300"),
+            ],
+            {"uid": "c", "previous_uid": "a"},
+            [("c", "150")],
+            ["a", "c", "b"],
+            id="up",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:300"),
+            ],
+            {"uid": "a", "previous_uid": "b"},
+            [("a", "250")],
+            ["b", "a", "c"],
+            id="down",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:0"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:10000"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:20000"),
+            ],
+            {"uid": "c", "previous_uid": "a"},
+            [("c", "1024")],
+            ["a", "c", "b"],
+            id="large_gap",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:300"),
+            ],
+            {"uid": "c"},
+            [("c", "-924")],
+            ["c", "a", "b"],
+            id="to_top",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+            ],
+            {"uid": "a", "previous_uid": "b"},
+            [("a", "1224")],
+            ["b", "a"],
+            id="to_bottom",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:3500"),
+            ],
+            {"uid": "a", "previous_uid": "b"},
+            [("a", "3550")],
+            ["b", "a"],
+            id="to_bottom_before_now",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:5000"),
+            ],
+            {"uid": "a", "previous_uid": "b"},
+            [("a", "5001")],
+            ["b", "a"],
+            id="to_bottom_after_now",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:101"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:101"),
+                sorted_todo("d", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("e", "X-APPLE-SORT-ORDER:300"),
+                sorted_todo("f", "X-APPLE-SORT-ORDER:10000"),
+            ],
+            {"uid": "e", "previous_uid": "a"},
+            [("c", "175"), ("b", "150"), ("e", "125")],
+            ["a", "e", "b", "c", "d", "f"],
+            id="no_room",
+        ),
+        pytest.param(
+            [sorted_todo("a"), sorted_todo("b"), sorted_todo("c")],
+            {"uid": "c", "previous_uid": "a"},
+            [("b", "2048"), ("c", "1024")],
+            ["a", "c", "b"],
+            id="no_positions",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:100"),
+            ],
+            {"uid": "c", "previous_uid": "a"},
+            [("c", "150")],
+            ["a", "c", "b"],
+            id="same_position_as_previous",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:200"),
+            ],
+            {"uid": "b", "previous_uid": "a"},
+            [("b", "150")],
+            ["a", "b", "c"],
+            id="same_position_as_next",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "CREATED:20010101T000140Z"),
+                sorted_todo("b", "CREATED:20010101T000320Z"),
+            ],
+            {"uid": "b"},
+            [("b", "-924")],
+            ["b", "a"],
+            id="creation_time",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("x", "X-APPLE-SORT-ORDER:101", "STATUS:COMPLETED"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:102"),
+                sorted_todo("c", "X-APPLE-SORT-ORDER:300"),
+            ],
+            {"uid": "c", "previous_uid": "a"},
+            [("c", "101")],
+            ["a", "c", "b"],
+            id="completed_apart",
+        ),
+        pytest.param(
+            [
+                sorted_todo("x", "X-APPLE-SORT-ORDER:50", "STATUS:COMPLETED"),
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+            ],
+            {"uid": "a"},
+            [],
+            ["a"],
+            id="only_open_item",
+        ),
+        pytest.param(
+            [
+                sorted_todo("x", "X-APPLE-SORT-ORDER:100", "STATUS:COMPLETED"),
+                sorted_todo("a", "X-APPLE-SORT-ORDER:150"),
+                sorted_todo("y", "X-APPLE-SORT-ORDER:200", "STATUS:COMPLETED"),
+            ],
+            {"uid": "y"},
+            [("y", "-924")],
+            ["a"],
+            id="completed_item",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+            ],
+            {"uid": "b", "previous_uid": "a"},
+            [],
+            ["a", "b"],
+            id="same_place",
+        ),
+        pytest.param(
+            [
+                sorted_todo("a", "X-APPLE-SORT-ORDER:100"),
+                sorted_todo("b", "X-APPLE-SORT-ORDER:200"),
+            ],
+            {"uid": "a"},
+            [],
+            ["a", "b"],
+            id="already_on_top",
+        ),
+        pytest.param(
+            [sorted_todo("a", "X-APPLE-SORT-ORDER:100")],
+            {"uid": "a", "previous_uid": "a"},
+            [],
+            ["a"],
+            id="behind_itself",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2001-01-01 01:00:00+00:00")
+async def test_move_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+    todos: list[str],
+    move: dict[str, str],
+    expected_saved: list[tuple[str, str]],
+    expected_order: list[str],
+) -> None:
+    """Test moving an item saves the positions it needs."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, todo, calendar) for todo in todos
+    ]
+    dav_client.put.return_value.status = 204
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, **move}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    await hass.async_block_till_done()
+
+    assert saved_positions(dav_client) == expected_saved
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {"status": ["needs_action"]},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == expected_order
+
+
+async def test_move_item_keeps_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a new position keeps what vobject drops from the item."""
+    calendar.search.side_effect = lambda **kwargs: [
+        Todo(dav_client, None, sorted_todo("a"), calendar),
+        Todo(
+            dav_client,
+            None,
+            sorted_todo(
+                "b",
+                "SEQUENCE:3",
+                "X-APPLE-STRUCTURED-LOCATION;VALUE=URI:geo:52.5,13.4",
+            ),
+            calendar,
+        ),
+    ]
+    dav_client.put.return_value.status = 204
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    lines = dav_client.put.call_args.args[1].splitlines()
+    assert "SEQUENCE:3" in lines
+    assert any(line.endswith("13.4") for line in lines)
+
+
+@pytest.mark.freeze_time("2001-01-01 01:00:00+00:00")
+async def test_move_item_saves_resource_as_read(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a todo stored with a changed occurrence first is saved as it is."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:100"), calendar),
+        Todo(
+            dav_client,
+            None,
+            TODO_OVERRIDE_FIRST,
+            calendar,
+        ),
+    ]
+    dav_client.put.return_value.status = 204
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "b",
+            "previous_uid": "a",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    lines = dav_client.put.call_args.args[1].splitlines()
+    assert lines.index("X-APPLE-SORT-ORDER:1124") < lines.index("RRULE:FREQ=WEEKLY")
+    assert not calendar.get_todo_by_uid.called
+
+
+async def test_move_items_one_after_another(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a second move reads the list after the first one saved."""
+    events: list[str] = []
+    todos = [Todo(dav_client, None, sorted_todo(uid), calendar) for uid in "abc"]
+
+    def search(**kwargs: Any) -> list[Todo]:
+        events.append("read")
+        return todos
+
+    def put(*args: Any) -> MagicMock:
+        time.sleep(0.05)
+        events.append("save")
+        return MagicMock(status=204)
+
+    calendar.search.side_effect = search
+    dav_client.put.side_effect = put
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    events.clear()
+
+    client = await hass_ws_client(hass)
+    for uid in ("c", "b"):
+        await client.send_json_auto_id(
+            {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": uid}
+        )
+    assert (await client.receive_json())["success"]
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    assert events.index("save") < events.index("read", 1)
+
+
+async def test_move_item_in_place(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move that changes nothing doesn't read the list again."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:1"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:2"), calendar),
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    reads = calendar.search.call_count
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "a"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    await hass.async_block_till_done()
+
+    assert calendar.search.call_count == reads + 1
+
+
+async def test_update_after_move(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the list is read in full after a move the report doesn't show."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:1"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:2"), calendar),
+    ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    dav_client.put.return_value.status = 204
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    await hass.async_block_till_done()
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == ["b", "a"]
+
+
+async def test_update_after_partial_move(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the list is read in full after a move that failed halfway."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo(uid), calendar) for uid in ("a", "b", "c")
+    ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    dav_client.put.side_effect = [MagicMock(status=204), DAVError()]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    reads = calendar.search.call_count
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "c",
+            "previous_uid": "a",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["error"]["message"].startswith("CalDAV save error")
+    await hass.async_block_till_done()
+
+    assert calendar.search.call_count == reads + 2
+
+
+@pytest.mark.parametrize(
+    "move",
+    [{"uid": "unknown"}, {"uid": "a", "previous_uid": "unknown"}],
+    ids=["unknown_item", "unknown_previous_item"],
+)
+async def test_move_item_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+    move: dict[str, str],
+) -> None:
+    """Test moving an item that is not on the list."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a"), calendar),
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, **move}
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"] == {
+        "code": "failed",
+        "message": "Could not find To-do item unknown",
+    }
+    assert not dav_client.put.called
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        DAVError(),
+        caldav_requests.exceptions.ConnectionError(),
+        caldav_requests.exceptions.Timeout(),
+    ],
+    ids=["dav_error", "connection_error", "timeout"],
+)
+async def test_move_item_lookup_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+    error: Exception,
+) -> None:
+    """Test failure reading the list to move an item."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    calendar.search.side_effect = error
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "a"}
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "failed"
+    assert resp["error"]["message"].startswith("CalDAV lookup error")
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        DAVError(),
+        caldav_requests.exceptions.ConnectionError(),
+        caldav_requests.exceptions.Timeout(),
+    ],
+    ids=["dav_error", "connection_error", "timeout"],
+)
+async def test_move_item_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+    error: Exception,
+) -> None:
+    """Test failure saving the new position of an item."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:1"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:2"), calendar),
+    ]
+    dav_client.put.side_effect = error
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "failed"
+    assert resp["error"]["message"].startswith("CalDAV save error")
+
+
+async def test_move_item_past_unreadable_item(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move fails cleanly on an item whose position cannot be written."""
+    calendar.search.side_effect = lambda **kwargs: [
+        Todo(dav_client, None, sorted_todo("a"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "PRIORITY:high"), calendar),
+        Todo(dav_client, None, sorted_todo("c"), calendar),
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/move",
+            "entity_id": TEST_ENTITY,
+            "uid": "c",
+            "previous_uid": "a",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["error"]["code"] == "failed"
+    assert resp["error"]["message"].startswith("CalDAV lookup error")
+    assert not dav_client.put.called

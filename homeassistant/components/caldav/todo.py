@@ -1,10 +1,11 @@
 """CalDAV todo platform."""
 
 import asyncio
-from datetime import date, datetime, timedelta
+from contextlib import suppress
+from datetime import UTC, date, datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast, override
+from typing import Any, NamedTuple, cast, override
 
 from caldav.calendarobjectresource import CalendarObjectResource, Todo
 from caldav.collection import Calendar, SynchronizableCalendarObjectCollection
@@ -30,6 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=15)
 # A restored server may report no changes for a sync token it never issued
 MAX_SKIPPED_UPDATES = 3
+# Nextcloud Tasks and Tasks.org count X-APPLE-SORT-ORDER in seconds from 2001
+SORT_ORDER_EPOCH = datetime(2001, 1, 1, tzinfo=UTC)
+SORT_ORDER_GAP = 1024
 
 SUPPORTED_COMPONENT = "VTODO"
 TODO_STATUS_MAP = {
@@ -82,17 +86,103 @@ def _get_changes(calendar: Calendar, sync_token: str | None) -> tuple[bool, str 
     return changed, changes.sync_token
 
 
-def _get_todo_items(calendar: Calendar) -> list[TodoItem]:
-    """Fetch and parse todo items."""
+class _SortedTodo(NamedTuple):
+    """A todo with its position in the list."""
+
+    resource: CalendarObjectResource
+    data: str
+    item: TodoItem
+    position: int
+
+
+def _get_todos(calendar: Calendar) -> list[_SortedTodo]:
+    """Fetch and parse todo items, in list order."""
     results = cast(
         list[CalendarObjectResource],
         calendar.search(todo=True, include_completed=True),
     )
-    return [
-        todo_item
-        for resource in results
-        if (todo_item := _todo_item(resource)) is not None
-    ]
+    todos = []
+    for resource in results:
+        data = resource.data
+        if (todo_item := _todo_item(resource)) is not None:
+            position = _sort_position(resource.vobject_instance.vtodo)
+            todos.append(_SortedTodo(resource, data, todo_item, position))
+    return sorted(todos, key=lambda todo: todo.position)
+
+
+def _get_todo_items(calendar: Calendar) -> list[TodoItem]:
+    """Fetch and parse todo items."""
+    return [todo.item for todo in _get_todos(calendar)]
+
+
+def _sort_position(todo: Any) -> int:
+    """Return the position of a todo, its creation time if it has none."""
+    if (sort_order := get_attr_value(todo, "x_apple_sort_order")) is not None:
+        with suppress(ValueError):
+            return int(sort_order)
+    if isinstance(created := get_attr_value(todo, "created"), datetime):
+        return _seconds_since_epoch(created)
+    return 0
+
+
+def _seconds_since_epoch(value: datetime) -> int:
+    """Return a time as a position, one without a time zone as UTC."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return int((value - SORT_ORDER_EPOCH).total_seconds())
+
+
+def _set_position(todo: _SortedTodo, position: int) -> None:
+    """Write a position into the text of the todo, not into vobject's parse of it.
+
+    vobject drops what follows a comma in some values.
+    """
+    todo.resource.data = todo.data
+    todo.resource.icalendar_component["X-APPLE-SORT-ORDER"] = str(position)
+
+
+def _move_todo(
+    calendar: Calendar, uid: str, previous_uid: str | None
+) -> list[CalendarObjectResource]:
+    """Give a todo a position behind another one, and return the todos to save.
+
+    It goes between its new neighbors with room left on both sides. Where they
+    leave no room, it and the todos behind it are spread out up to the next
+    todo with room, or at the end up to now, where new todos are added. They
+    are returned from the back, so the moved todo takes its place once there
+    is room.
+    """
+    todos = _get_todos(calendar)
+    uids = [todo.item.uid for todo in todos]
+    for wanted in (uid, previous_uid):
+        if wanted is not None and wanted not in uids:
+            raise HomeAssistantError(f"Could not find To-do item {wanted}")
+    moved = todos.pop(uids.index(uid))
+    uids.remove(uid)
+    todos.insert(0 if previous_uid is None else uids.index(previous_uid) + 1, moved)
+    # Open and completed todos are ordered apart, as the to-do list card shows them
+    group = [todo for todo in todos if todo.item.status == moved.item.status]
+    index = group.index(moved)
+    before = group[index - 1].position if index else None
+    after = group[index + 1].position if index + 1 < len(group) else None
+    if before is None:
+        if after is None or moved.position < after:
+            return []
+        _set_position(moved, after - SORT_ORDER_GAP)
+        return [moved.resource]
+    if before < moved.position and (after is None or moved.position < after):
+        return []
+    spread = [moved]
+    limit = _seconds_since_epoch(dt_util.utcnow())
+    for todo in group[index + 1 :]:
+        if todo.position - before > len(spread):
+            limit = todo.position
+            break
+        spread.append(todo)
+    step = max(1, min(SORT_ORDER_GAP, (limit - before) // (len(spread) + 1)))
+    for count, todo in enumerate(spread, 1):
+        _set_position(todo, before + step * count)
+    return [todo.resource for todo in reversed(spread)]
 
 
 def _todo_item(resource: CalendarObjectResource) -> TodoItem | None:
@@ -137,6 +227,7 @@ class WebDavTodoListEntity(TodoListEntity):
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.MOVE_TODO_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
@@ -153,6 +244,7 @@ class WebDavTodoListEntity(TodoListEntity):
         self._skips_left = 0
         self._writes = 0
         self._writes_seen = 0
+        self._move_lock = asyncio.Lock()
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
@@ -177,7 +269,7 @@ class WebDavTodoListEntity(TodoListEntity):
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        item_data: dict[str, Any] = {}
+        item_data: dict[str, Any] = {"created": dt_util.utcnow()}
         if summary := item.summary:
             item_data["summary"] = summary
         if status := item.status:
@@ -289,3 +381,42 @@ class WebDavTodoListEntity(TodoListEntity):
             self._writes += 1
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
+
+    @override
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
+        """Move a To-do item behind another one, or to the top."""
+        if uid == previous_uid:
+            return
+        async with self._move_lock:
+            try:
+                todos = await self.hass.async_add_executor_job(
+                    _move_todo, self._calendar, uid, previous_uid
+                )
+            except (
+                caldav_requests.exceptions.ConnectionError,
+                caldav_requests.exceptions.Timeout,
+                DAVError,
+                ValueError,
+            ) as err:
+                raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
+            try:
+                for todo in todos:
+                    await self.hass.async_add_executor_job(
+                        partial(
+                            todo.save, increase_seqno=False, only_this_recurrence=False
+                        )
+                    )
+                    self._writes += 1
+            except (
+                caldav_requests.exceptions.ConnectionError,
+                caldav_requests.exceptions.Timeout,
+                DAVError,
+            ) as err:
+                raise HomeAssistantError(f"CalDAV save error: {err}") from err
+            finally:
+                if todos:
+                    self.hass.async_create_task(
+                        self.async_update_ha_state(force_refresh=True)
+                    )
