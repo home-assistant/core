@@ -31,7 +31,12 @@ from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
+from homeassistant.components.zwave_js.helpers import (
+    get_device_id,
+    get_device_id_ext,
+    get_endpoint_device_id,
+)
+from homeassistant.components.zwave_js.sensor import ZWaveNumericSensor
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -1655,6 +1660,601 @@ async def test_node_removed(
     assert node.node_id not in node_events.value_updates_disc_info
 
 
+async def test_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that labeled, colliding endpoints are split into endpoint child devices."""
+    node = climate_heatit_z_trm3
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+
+    # The air temperature sensors on endpoints 2-4 collide and each endpoint is labeled,
+    # so each endpoint gets its own child device named by its endpoint label.
+    expected_labels = {2: "Room Sensor", 3: "External Sensor", 4: "Floor Sensor"}
+    child_devices: dict[int, dr.ChildDeviceEntry] = {}
+    for endpoint, label in expected_labels.items():
+        child_device = device_registry.async_get_child_device_by_identifier(
+            get_endpoint_device_id(driver, node, node.endpoints[endpoint]),
+            integration.entry_id,
+        )
+        assert child_device
+        assert isinstance(child_device, dr.ChildDeviceEntry)
+        assert child_device.parent_device_id == node_device.id
+        assert child_device.name == label
+        child_devices[endpoint] = child_device
+
+    # The child devices appear in the parent's children list.
+    children = dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert {child.id for child in children} == {
+        child.id for child in child_devices.values()
+    }
+
+    # Each air temperature sensor lives on its endpoint child device.
+    for endpoint, slug in (
+        (2, "room_sensor"),
+        (3, "external_sensor"),
+        (4, "floor_sensor"),
+    ):
+        entity = entity_registry.async_get(
+            f"sensor.floor_thermostat_{slug}_air_temperature"
+        )
+        assert entity
+        assert entity.device_id == child_devices[endpoint].id
+
+    # The thermostat endpoint is labeled but does not collide, so the climate entity
+    # stays on the node device.
+    climate = entity_registry.async_get("climate.floor_thermostat")
+    assert climate
+    assert climate.device_id == node_device.id
+
+    # Removing the node cascades and removes the child devices along with the node device.
+    client.driver.controller.emit("node removed", {"node": node, "reason": 0})
+    await hass.async_block_till_done()
+    assert device_registry.async_get(node_device.id) is None
+    for child_device in child_devices.values():
+        assert device_registry.async_get(child_device.id) is None
+
+
+async def test_endpoint_group_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that endpoints in a non-main group share one endpoint child device."""
+    node = aeotec_zwa046
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+
+    # Each non-main endpoint group (the three clamps) becomes one child device.
+    clamp_devices: list[dr.ChildDeviceEntry] = []
+    for group_id, label in ((1, "Clamp 1"), (2, "Clamp 2"), (3, "Clamp 3")):
+        group = node.endpoint_groups[group_id]
+        child_device = device_registry.async_get_child_device_by_identifier(
+            get_endpoint_device_id(driver, node, group), integration.entry_id
+        )
+        assert child_device
+        assert isinstance(child_device, dr.ChildDeviceEntry)
+        assert child_device.parent_device_id == node_device.id
+        assert child_device.name == label
+        clamp_devices.append(child_device)
+
+    # Only the three clamp groups produce child devices; the main-device "Total" group
+    # stays on the node device.
+    children = dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert {child.id for child in children} == {child.id for child in clamp_devices}
+
+    # Clamp 1 holds the entities of both its endpoints (consumption and production).
+    clamp_1_entities = er.async_entries_for_device(
+        entity_registry, clamp_devices[0].id, include_disabled_entities=True
+    )
+    clamp_1_endpoints = {entry.unique_id.split("-")[2] for entry in clamp_1_entities}
+    assert clamp_1_endpoints == {"1", "2"}
+
+    # The main-device "Total" group endpoints (7-10) stay on the node device. Endpoint 7
+    # carries meter (command class 50) values, so its value IDs contain "-50-7-".
+    node_entities = er.async_entries_for_device(
+        entity_registry, node_device.id, include_disabled_entities=True
+    )
+    assert any("-50-7-" in entry.unique_id for entry in node_entities)
+
+
+async def test_endpoint_group_child_device_name_disambiguation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test equivalent values on one group child device are disambiguated by label.
+
+    A Clamp group child device covers two endpoints whose "Reset accumulated values"
+    buttons would otherwise share a name. They are disambiguated using each endpoint's
+    label with the redundant group-label prefix removed (the child device is already
+    named by the group label).
+    """
+    node = aeotec_zwa046
+    clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert clamp1_device
+
+    reset_names = {
+        entry.original_name
+        for entry in er.async_entries_for_device(
+            entity_registry, clamp1_device.id, include_disabled_entities=True
+        )
+        if entry.domain == Platform.BUTTON
+        and (entry.original_name or "").startswith("Reset accumulated values")
+    }
+    assert reset_names == {
+        "Reset accumulated values Consumption",
+        "Reset accumulated values Production",
+    }
+
+
+async def test_endpoint_child_device_pruned_on_reinterview(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test stale endpoint child devices are pruned and surviving entities move to parent.
+
+    When the air temperature sensors on endpoints 3 and 4 disappear on re-interview,
+    endpoint 2 no longer collides, so its child device is pruned. The endpoint 2 sensor
+    entity must end up on the parent node device while preserving its entity registry
+    entry (entity_id, any customizations).
+    """
+    node = climate_heatit_z_trm3
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+    room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
+    )
+    assert room_sensor_device
+
+    # The endpoint 2 sensor lives on its child device before re-interview.
+    entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+    room_sensor = entity_registry.async_get(entity_id)
+    assert room_sensor
+    assert room_sensor.device_id == room_sensor_device.id
+
+    # Re-interview with the air temperature sensors on endpoints 3 and 4 removed, so
+    # endpoint 2 no longer collides.
+    new_state = deepcopy(climate_heatit_z_trm3_state)
+    # The ready event model requires string name/location (the fixture leaves them null).
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
+    new_state["values"] = [
+        value
+        for value in new_state["values"]
+        if not (value["commandClass"] == 49 and value["endpoint"] in (3, 4))
+    ]
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The endpoint 2 child device is pruned since it no longer collides.
+    assert device_registry.async_get(room_sensor_device.id) is None
+    # Its sensor entity was moved to the parent node device before the child device was
+    # removed, preserving the registry entry (same entity_id).
+    room_sensor = entity_registry.async_get(entity_id)
+    assert room_sensor is not None
+    assert room_sensor.device_id == node_device.id
+    # The live state is still present — the ready handler re-discovered the value on the
+    # parent node device.
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_endpoint_child_device_regrouped_on_reinterview(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    aeotec_zwa046_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test an entity whose endpoint child device changes moves to the new child device.
+
+    When a re-interview changes the "Clamp 1" group's id, its endpoints move to a
+    different child device and the old child device is pruned. Across the full
+    re-interview sequence (interview started, then ready) the entity ends up on the new
+    child device while preserving its entity registry entry (entity_id, customizations):
+    the surviving entry is staged on the parent before the old child is removed, so it is
+    not deleted with the child device, and rediscovery then moves it to the new child.
+    """
+    node = aeotec_zwa046
+    driver = client.driver
+
+    old_clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert old_clamp1_device
+    clamp1_entries = er.async_entries_for_device(
+        entity_registry, old_clamp1_device.id, include_disabled_entities=True
+    )
+    assert clamp1_entries
+    entity_id = clamp1_entries[0].entity_id
+    entity_registry.async_update_entity(entity_id, name="Custom name")
+
+    # The interview-started event removes the live entities first, matching a real
+    # re-interview, so rediscovery on ready is not rejected as a duplicate.
+    node.receive_event(
+        Event(
+            "interview started",
+            {
+                "source": "node",
+                "event": "interview started",
+                "nodeId": node.node_id,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Re-interview with the "Clamp 1" group's id changed from 1 to 5, so its endpoints
+    # move to a different child device.
+    new_state = deepcopy(aeotec_zwa046_state)
+    # The ready event model requires string name/location (the fixture leaves them null).
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
+    for group in new_state["endpointGroups"]:
+        if group["id"] == 1:
+            group["id"] = 5
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The old child device is pruned since its group id no longer exists.
+    assert device_registry.async_get(old_clamp1_device.id) is None
+    # The entity moved to the new group's child device, keeping the same entity_id and
+    # user customization instead of being deleted along with the old child device.
+    new_clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoint_groups[5]),
+        integration.entry_id,
+    )
+    assert new_clamp1_device
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == new_clamp1_device.id
+    assert entry.name == "Custom name"
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_endpoint_child_device_regroup_stages_entity_on_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    aeotec_zwa046_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a surviving entity is staged on the parent before a stale child is removed.
+
+    This isolates the staging safety net: only a ready event is emitted (no interview
+    started), so the live entity is never removed and rediscovery cannot immediately
+    re-home it to the new child device. The entity registry entry must still be staged
+    on the parent node device so it survives the removal of the old child device with its
+    entity_id and customizations intact, rather than being deleted alongside it.
+    """
+    node = aeotec_zwa046
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+    old_clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert old_clamp1_device
+    clamp1_entries = er.async_entries_for_device(
+        entity_registry, old_clamp1_device.id, include_disabled_entities=True
+    )
+    assert clamp1_entries
+    entity_id = clamp1_entries[0].entity_id
+    entity_registry.async_update_entity(entity_id, name="Custom name")
+
+    # Re-interview with the "Clamp 1" group's id changed from 1 to 5, emitting only
+    # ready, so the old child device is pruned while the live entity is still registered.
+    new_state = deepcopy(aeotec_zwa046_state)
+    # The ready event model requires string name/location (the fixture leaves them null).
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
+    for group in new_state["endpointGroups"]:
+        if group["id"] == 1:
+            group["id"] = 5
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The old child device is pruned since its group id no longer exists.
+    assert device_registry.async_get(old_clamp1_device.id) is None
+    # The entry was staged on the parent node device, so it survives with the same
+    # entity_id and user customization instead of being deleted with the old child.
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == node_device.id
+    assert entry.name == "Custom name"
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_endpoint_child_device_regroup_stages_suffixed_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zw164_siren_state: NodeDataType,
+) -> None:
+    """Test a suffixed-unique-id entity is staged on the parent during a ready-only regroup.
+
+    Notification binary sensors append a state key to the base value unique id. When a
+    labeled endpoint child is pruned in a ready-only regroup, such an entity must still be
+    staged on the parent node device (matched by its base value id), not deleted with the
+    child device.
+    """
+    driver = client.driver
+
+    # Label endpoints 3-5 so their colliding "Battery maintenance status" notification
+    # sensors split into per-endpoint child devices.
+    setup_state = deepcopy(aeotec_zw164_siren_state)
+    setup_state["name"] = ""
+    setup_state["location"] = ""
+    labels = {3: "Doorbell 1", 4: "Doorbell 2", 5: "Doorbell 3"}
+    for endpoint in setup_state["endpoints"]:
+        if endpoint["index"] in labels:
+            endpoint["endpointLabel"] = labels[endpoint["index"]]
+    node = Node(client, deepcopy(setup_state))
+    driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://test.org"},
+        unique_id=str(driver.controller.home_id),
+    )
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.zwave_js.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), entry.entry_id
+    )
+    assert node_device
+    doorbell_1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[3]), entry.entry_id
+    )
+    assert doorbell_1_device
+    # The notification binary sensors on endpoint 3 have a state-key suffix
+    # ("...Battery maintenance status.10"), so their unique id carries a second ".".
+    suffixed_entity_ids = [
+        entry_.entity_id
+        for entry_ in er.async_entries_for_device(
+            entity_registry, doorbell_1_device.id, include_disabled_entities=True
+        )
+        if entry_.unique_id.count(".") > 1
+    ]
+    assert suffixed_entity_ids
+
+    # Re-interview (ready only) with endpoints 3-5 moved into a non-main endpoint group,
+    # so the per-endpoint children are pruned in favour of a single group child.
+    regrouped_state = deepcopy(setup_state)
+    regrouped_state["endpointGroups"] = [
+        {
+            "id": 1,
+            "label": "Doorbells",
+            "isMainDevice": False,
+            "endpointIndices": [3, 4, 5],
+        }
+    ]
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": regrouped_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The suffixed entities were staged on the parent node device, so their registry
+    # entries survive the pruning of the per-endpoint child instead of being deleted.
+    assert device_registry.async_get(doorbell_1_device.id) is None
+    for suffixed_entity_id in suffixed_entity_ids:
+        staged_entry = entity_registry.async_get(suffixed_entity_id)
+        assert staged_entry is not None
+        assert staged_entry.device_id == node_device.id
+
+
+async def test_endpoint_child_device_late_value(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a value discovered after node ready lands on its endpoint child device.
+
+    Endpoint 2 already has a child device (its air temperature collides with endpoints 3
+    and 4). A value added later on endpoint 2 must be placed on that child device, not on
+    the parent node device.
+    """
+    node = climate_heatit_z_trm3
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+
+    node.receive_event(
+        Event(
+            type="value added",
+            data={
+                "source": "node",
+                "event": "value added",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Humidity",
+                    "propertyName": "Humidity",
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "label": "Humidity",
+                        "ccSpecific": {"sensorType": 5, "scale": 0},
+                        "unit": "%",
+                        "stateful": True,
+                        "secret": False,
+                    },
+                    "value": 42,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    humidity_entries = [
+        entry
+        for entry in er.async_entries_for_device(
+            entity_registry, child_device.id, include_disabled_entities=True
+        )
+        if "-49-2-Humidity" in entry.unique_id
+    ]
+    assert len(humidity_entries) == 1
+    assert humidity_entries[0].device_id == child_device.id
+
+
+async def test_child_device_entity_metadata_rediscovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that entities on endpoint child devices are re-created after rediscovery.
+
+    A metadata update that triggers rediscovery must remove the entity and re-add it on
+    the same endpoint child device, rather than leaving it gone until the next reload.
+    """
+    node = climate_heatit_z_trm3
+
+    room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert room_sensor_device
+
+    entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+    sensor_entry = entity_registry.async_get(entity_id)
+    assert sensor_entry is not None
+    assert sensor_entry.device_id == room_sensor_device.id
+    assert hass.states.get(entity_id) is not None
+
+    # Trigger metadata-based rediscovery for the endpoint 2 air temperature sensor.
+    # should_rediscover_on_metadata_update normally returns False; patch it to True so
+    # the rediscovery path is exercised without a real qualifying metadata change.
+    with patch.object(
+        ZWaveNumericSensor, "should_rediscover_on_metadata_update", return_value=True
+    ):
+        node.receive_event(
+            Event(
+                "metadata updated",
+                {
+                    "source": "node",
+                    "event": "metadata updated",
+                    "nodeId": node.node_id,
+                    "args": {
+                        "commandClassName": "Multilevel Sensor",
+                        "commandClass": 49,
+                        "endpoint": 2,
+                        "property": "Air temperature",
+                        "propertyName": "Air temperature",
+                        "metadata": {
+                            "type": "number",
+                            "readable": True,
+                            "writeable": False,
+                            "label": "Air temperature",
+                            "ccSpecific": {"sensorType": 1, "scale": 0},
+                            "unit": "°C",
+                            "stateful": True,
+                            "secret": False,
+                        },
+                    },
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+    # The entity must be re-created on the same child device (not gone until reload).
+    assert hass.states.get(entity_id) is not None
+    new_entry = entity_registry.async_get(entity_id)
+    assert new_entry is not None
+    assert new_entry.device_id == room_sensor_device.id
+
+
 async def test_replace_same_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2004,6 +2604,184 @@ async def test_replace_different_node(
         (DOMAIN, device_id),
         (DOMAIN, multisensor_6_device_id_ext),
     }
+
+
+async def test_replace_node_with_children(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test replacing a node that has endpoint child devices.
+
+    The old child devices use node-id based identifiers that would collide with the
+    replacement node's child devices (reparenting is rejected). They are removed during
+    node registration so the replacement's child devices and their entities can be
+    created under the new parent device.
+    """
+    node = climate_heatit_z_trm3
+    node_id = node.node_id
+    driver = client.driver
+    air_temperature_entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+
+    old_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
+    )
+    assert old_room_sensor_device
+    assert entity_registry.async_get(air_temperature_entity_id)
+
+    # The event models require string name/location (the fixture leaves them null).
+    removed_state = deepcopy(climate_heatit_z_trm3_state)
+    removed_state["name"] = ""
+    removed_state["location"] = ""
+    # Replacement node: same node id and endpoints, different hardware signature.
+    state = deepcopy(removed_state)
+    state["manufacturerId"] = climate_heatit_z_trm3_state["manufacturerId"] + 1
+
+    client.driver.receive_event(
+        Event(
+            type="node removed",
+            data={
+                "source": "controller",
+                "event": "node removed",
+                "reason": 3,
+                "node": removed_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # When the node is replaced, a non-ready node added event is emitted first.
+    client.driver.receive_event(
+        Event(
+            type="node added",
+            data={
+                "source": "controller",
+                "event": "node added",
+                "node": {
+                    "nodeId": node_id,
+                    "index": 0,
+                    "status": 4,
+                    "ready": False,
+                    "isSecure": False,
+                    "interviewAttempts": 1,
+                    "endpoints": [{"nodeId": node_id, "index": 0, "deviceClass": None}],
+                    "values": [],
+                    "deviceClass": None,
+                    "commandClasses": [],
+                    "interviewStage": "None",
+                    "statistics": {
+                        "commandsTX": 0,
+                        "commandsRX": 0,
+                        "commandsDroppedRX": 0,
+                        "commandsDroppedTX": 0,
+                        "timeoutResponse": 0,
+                    },
+                    "isControllerNode": False,
+                },
+                "result": {},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    client.driver.receive_event(
+        Event(
+            type="ready",
+            data={
+                "source": "node",
+                "event": "ready",
+                "nodeId": node_id,
+                "nodeState": state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The old child's node-based identifier was freed during registration, so the
+    # replacement's endpoint 2 child device is created under the new parent device
+    # (restored from the removed old child, keeping the same device id) and carries the
+    # rediscovered air temperature entity.
+    new_node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert new_node_device
+    new_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
+    )
+    assert new_room_sensor_device
+    assert new_room_sensor_device.id == old_room_sensor_device.id
+    assert new_room_sensor_device.parent_device_id == new_node_device.id
+    entry = entity_registry.async_get(air_temperature_entity_id)
+    assert entry is not None
+    assert entry.device_id == new_room_sensor_device.id
+
+
+async def test_replace_node_with_children_while_stopped(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a node with children replaced while Home Assistant was stopped.
+
+    No node-removed event fires for an offline replacement, so the stale child devices
+    must be reconciled during node registration on the ready event. Otherwise they keep
+    their node-based identifiers and the replacement's child devices (and entities) are
+    rejected.
+    """
+    node = climate_heatit_z_trm3
+    node_id = node.node_id
+    driver = client.driver
+    air_temperature_entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+
+    old_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
+    )
+    assert old_room_sensor_device
+
+    # Different hardware signature, same node id. Only a ready event fires, as on startup
+    # after an offline replacement (no node removed / node added events).
+    state = deepcopy(climate_heatit_z_trm3_state)
+    state["name"] = ""
+    state["location"] = ""
+    state["manufacturerId"] = climate_heatit_z_trm3_state["manufacturerId"] + 1
+
+    client.driver.receive_event(
+        Event(
+            type="ready",
+            data={
+                "source": "node",
+                "event": "ready",
+                "nodeId": node_id,
+                "nodeState": state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The stale child was reconciled during registration, so the replacement's endpoint 2
+    # child device is created under the new parent device (restored from the removed old
+    # child, keeping the same device id) and carries the rediscovered entity.
+    new_node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert new_node_device
+    new_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
+    )
+    assert new_room_sensor_device
+    assert new_room_sensor_device.id == old_room_sensor_device.id
+    assert new_room_sensor_device.parent_device_id == new_node_device.id
+    entry = entity_registry.async_get(air_temperature_entity_id)
+    assert entry is not None
+    assert entry.device_id == new_room_sensor_device.id
 
 
 async def test_node_model_change(

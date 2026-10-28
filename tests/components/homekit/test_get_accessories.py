@@ -306,6 +306,18 @@ def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:
             {ATTR_DEVICE_CLASS: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS},
         ),
         (
+            "OzoneSensor",
+            "sensor.air_quality_ozone",
+            "40",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.OZONE},
+        ),
+        (
+            "SulphurDioxideSensor",
+            "sensor.air_quality_sulphur_dioxide",
+            "20",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.SULPHUR_DIOXIDE},
+        ),
+        (
             "CarbonMonoxideSensor",
             "sensor.co",
             "2",

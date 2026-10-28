@@ -26,6 +26,7 @@ known-first-party = [
     "script",
 ]
 known-third-party = [
+    "hassfest",
     "syrupy",
     "pytest",
     "probatio",
