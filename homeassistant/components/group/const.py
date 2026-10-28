@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 CONF_HIDE_MEMBERS = "hide_members"
 CONF_IGNORE_NON_NUMERIC = "ignore_non_numeric"
+CONF_GROUP_TYPE = "group_type"
 
 DOMAIN = "group"
 DATA_COMPONENT: HassKey[EntityComponent[Group]] = HassKey(DOMAIN)
