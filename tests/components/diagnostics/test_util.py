@@ -127,7 +127,6 @@ def test_device_entry_as_dict() -> None:
         "_cache",
         "_composite_subentries",
         "_pending_move",
-        "_suggested_area",
         "composite_device_id",
         "composite_primary_config_entry",
         "has_composite_identifiers",
