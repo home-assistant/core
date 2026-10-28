@@ -301,6 +301,11 @@ async def test_subentry_unsupported_model(
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
         ("gpt-6-luna", ["none", "low", "medium", "high", "xhigh", "max"]),
+        pytest.param(
+            "gpt-6.1-terra",
+            ["none", "low", "medium", "high", "xhigh", "max"],
+            id="terra",
+        ),
         ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
@@ -338,15 +343,23 @@ async def test_subentry_reasoning_effort_list(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("gpt-6-luna", id="luna"),
+        pytest.param("gpt-6.1-terra", id="terra"),
+    ],
+)
 @pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
 @pytest.mark.parametrize("reasoning_effort", ["none", "low"])
-async def test_subentry_luna_reasoning_effort(
+async def test_subentry_reasoning_effort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    model: str,
     subentry_type: str,
     reasoning_effort: str,
 ) -> None:
-    """Test that Luna reasoning effort can be selected and saved."""
+    """Test that reasoning effort can be selected and saved."""
     subentry = next(
         entry
         for entry in mock_config_entry.subentries.values()
@@ -356,7 +369,7 @@ async def test_subentry_luna_reasoning_effort(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: "gpt-6-luna"}
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: model}
     )
     assert result["step_id"] == "model"
 
@@ -366,7 +379,7 @@ async def test_subentry_luna_reasoning_effort(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     saved = mock_config_entry.subentries[subentry.subentry_id].data
-    assert saved[CONF_CHAT_MODEL] == "gpt-6-luna"
+    assert saved[CONF_CHAT_MODEL] == model
     assert saved[CONF_REASONING_EFFORT] == reasoning_effort
 
 
