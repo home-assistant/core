@@ -166,6 +166,10 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             suggested_values = user_input
         else:
             host, _, port = entry.data[CONF_HOST].rpartition(":")
+            if not port.isdigit():
+                # Older entries can store the host without a port
+                host = entry.data[CONF_HOST]
+                port = "443" if entry.data[CONF_SSL] else "80"
             suggested_values = {**entry.data, CONF_HOST: host, CONF_PORT: int(port)}
 
         return self.async_show_form(

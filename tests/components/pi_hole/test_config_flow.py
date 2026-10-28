@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DEFAULT_NAME, DOMAIN
@@ -395,3 +395,28 @@ async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "5.6.7.8:80"
+
+
+@pytest.mark.parametrize(
+    ("use_ssl", "port"),
+    [
+        pytest.param(False, 80, id="http"),
+        pytest.param(True, 443, id="https"),
+    ],
+)
+async def test_reconfigure_flow_host_without_port(
+    hass: HomeAssistant, use_ssl: bool, port: int
+) -> None:
+    """Test the reconfigure form for an entry whose host has no port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_WITH_API_KEY, CONF_HOST: "pi.hole", CONF_SSL: use_ssl},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_HOST) == "pi.hole"
+    assert get_schema_suggested_value(schema, CONF_PORT) == port
