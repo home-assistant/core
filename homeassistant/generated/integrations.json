@@ -4018,6 +4018,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "glinet": {
+      "name": "GL.iNet",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "globalcache": {
       "name": "Global Cach\u00e9",
       "integrations": {
