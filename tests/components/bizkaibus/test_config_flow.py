@@ -126,6 +126,41 @@ async def test_import_flow_accepts_multicharacter_route_id_string(
     }
 
 
+async def test_import_flow_accepts_whitespace_and_comma_separated_route_ids(
+    hass: HomeAssistant,
+) -> None:
+    """Test imported route IDs are split and trimmed before filtering."""
+    lines = [
+        SimpleNamespace(id="A1", route="Route A1"),
+        SimpleNamespace(id="B2", route="Route B2"),
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.bizkaibus.async_setup_entry", return_value=None
+        ),
+    ):
+        _mock_api(
+            mock_api_class,
+            lines=lines,
+            timetable=SimpleNamespace(id="stop_1234", name="Central Station"),
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: " A1, B2 "},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
+    assert result["options"][CONF_LINE_IDS] == ["A1", "B2"]
+    assert result["options"][CONF_LINES] == {"A1": "Route A1", "B2": "Route B2"}
+
+
 async def test_user_flow_with_offline_stop(hass: HomeAssistant) -> None:
     """Test the user flow recovers when the stop comes back online."""
     stop_id = "9999"

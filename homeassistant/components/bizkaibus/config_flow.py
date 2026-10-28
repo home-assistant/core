@@ -46,8 +46,16 @@ def _normalize_route_ids(route_ids: str | list[str] | None) -> list[str]:
     if route_ids is None:
         return []
     if isinstance(route_ids, str):
-        return [route_ids]
-    return [route_id for route_id in route_ids if route_id is not None]
+        route_ids = [route_ids]
+
+    normalized_route_ids: list[str] = []
+    for route_id in route_ids:
+        for cleaned_route_id in str(route_id).split(","):
+            cleaned_route_id = cleaned_route_id.strip()
+            if cleaned_route_id:
+                normalized_route_ids.append(cleaned_route_id)
+
+    return list(dict.fromkeys(normalized_route_ids))
 
 
 def _lines_schema(
@@ -367,8 +375,12 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         route_ids = _normalize_route_ids(
             info.get(CONF_LINE_IDS, info.get(OLD_CONF_ROUTE_ID))
         )
-
-        route_ids = [route_id for route_id in route_ids if route_id in line_ids]
+        line_ids_set = {str(line_id).strip() for line_id in line_ids}
+        route_ids = [
+            route_id
+            for route_id in dict.fromkeys(route_ids)
+            if route_id in line_ids_set
+        ]
 
         if route_ids:
             imported_options: dict[str, Any] = {
