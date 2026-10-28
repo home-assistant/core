@@ -114,8 +114,8 @@ pandas==2.3.3
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
-Brotli>=1.2.0
+# Brotli 1.2.1 fixes CVE
+Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.14.1
@@ -246,10 +246,9 @@ bitstring<5
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
-# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
 # https://github.com/home-assistant/core/issues/185645
-# https://github.com/c-ares/c-ares/pull/1256
-pycares==5.0.1
+pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0

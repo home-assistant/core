@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import (
@@ -13,14 +13,19 @@ from onedrive_personal_sdk.exceptions import (
     OneDriveException,
 )
 
+from homeassistant.components.backup import async_get_manager
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -167,6 +172,78 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
+
+    if entry.version == 1 and entry.minor_version == 2:
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        # Microsoft returns drive IDs with inconsistent casing
+        drive_id = entry.unique_id.upper()
+        if (
+            other_entry := hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, drive_id
+            )
+        ) and other_entry.entry_id != entry.entry_id:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="duplicate_drive",
+                translation_placeholders={"title": other_entry.title},
+            )
+
+        entity_registry = er.async_get(hass)
+
+        @callback
+        def _uppercase_drive_id(
+            entity_entry: er.RegistryEntry,
+        ) -> dict[str, str] | None:
+            if entity_entry.unique_id.startswith(drive_id):
+                return None
+            new_unique_id = drive_id + entity_entry.unique_id[len(drive_id) :]
+            # A casing flip may have created a duplicate, keep the older entity
+            if (
+                (
+                    existing_entity_id := entity_registry.async_get_entity_id(
+                        entity_entry.domain, DOMAIN, new_unique_id
+                    )
+                )
+                and (existing_entity := entity_registry.async_get(existing_entity_id))
+                and existing_entity.config_entry_id == entry.entry_id
+            ):
+                if existing_entity.created_at <= entity_entry.created_at:
+                    entity_registry.async_remove(entity_entry.entity_id)
+                    return None
+                entity_registry.async_remove(existing_entity_id)
+            return {"new_unique_id": new_unique_id}
+
+        await er.async_migrate_entries(hass, entry.entry_id, _uppercase_drive_id)
+        device_registry = dr.async_get(hass)
+        # A casing flip may have created duplicate devices, keep the oldest
+        if devices := sorted(
+            dr.async_entries_for_config_entry(device_registry, entry.entry_id),
+            key=lambda device: device.created_at,
+        ):
+            device, *duplicates = devices
+            for duplicate in duplicates:
+                for entity_entry in er.async_entries_for_device(
+                    entity_registry, duplicate.id, include_disabled_entities=True
+                ):
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, device_id=device.id
+                    )
+                device_registry.async_remove_device(duplicate.id)
+            device_registry.async_update_device(
+                device.id, new_identifiers={(DOMAIN, drive_id)}
+            )
+        if entry.unique_id != drive_id:
+            async_get_manager(hass).async_rename_agent(
+                f"{DOMAIN}.{entry.unique_id}",
+                f"{DOMAIN}.{drive_id}",
+                # No other config entry has the drive ID, checked above
+                overwrite_orphaned_settings=True,
+            )
+        hass.config_entries.async_update_entry(
+            entry, unique_id=drive_id, minor_version=3
+        )
+        _LOGGER.debug("Migration to version 1.3 successful")
 
 
 async def _get_onedrive_client(
