@@ -519,3 +519,38 @@ async def test_config_flow_codec_not_found(
         result["flow_id"], get_config_entry_data
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_config_flow_duplicate_configuration(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test that duplicate resource config aborts the flow."""
+
+    aioclient_mock.get(
+        "http://localhost", status=HTTPStatus.OK, json={"items": [{"key": "on"}]}
+    )
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], get_config_entry_data
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY

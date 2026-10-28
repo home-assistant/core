@@ -88,9 +88,13 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {key: value for key, value in user_input.items() if key in MATCH_ON}
-            )
+            # Custom matching used since a resource without CONF_PARAM would fail if there was already
+            # a resource with CONF_PARAM since CONF_PARAM would not be in user_input
+            if any(
+                all(entry.data.get(key) == user_input.get(key) for key in MATCH_ON)
+                for entry in self._async_current_entries(include_ignore=False)
+            ):
+                return self.async_abort(reason="already_configured")
             rest = create_rest_data_from_config_entry(self.hass, user_input)
             try:
                 await rest.async_update(log_errors=False)
