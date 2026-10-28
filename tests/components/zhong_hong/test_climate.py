@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     FAN_LOW,
-    FAN_MEDIUM,
+    FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -455,7 +455,7 @@ async def test_commands_in_a_row_are_read_back_once(
 
     assert mock_gateway.query_all_status_calls == 1
 
-    commands = (FAN_HIGH, FAN_LOW, FAN_MEDIUM)
+    commands = (FAN_HIGH, FAN_LOW, FAN_MIDDLE)
     for fan_mode in commands:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -586,9 +586,10 @@ async def test_every_fan_mode_has_a_name(
 ) -> None:
     """Test every speed the entity offers is named in the interface.
 
-    The climate component names three of the five speeds the gateway can
-    address. The other two have to be named here, or they reach the user as
-    the keys themselves.
+    The climate component names low, middle, and high. medium_low and
+    medium_high have no name there, so they are named here. middle is named
+    here as well, so the stored value stays middle while the label reads
+    Medium.
     """
     await setup_integration(hass, mock_config_entry)
 
@@ -616,13 +617,12 @@ async def test_every_fan_mode_has_a_name(
 
     assert fan_modes == ALL_FAN_MODES
 
-    # The two the component has no name for are named here, and only those
-    # two: the others are left to it, which is what lets them keep the names
-    # it gives them.
+    # medium_low and medium_high have no component name. middle is relabeled
+    # here: the component calls the same stored value Middle.
     assert {mode: named_here.get(f"{by_integration}{mode}") for mode in fan_modes} == {
         FAN_LOW: None,
         FAN_MEDIUM_LOW: "Medium low",
-        FAN_MEDIUM: None,
+        FAN_MIDDLE: "Medium",
         FAN_MEDIUM_HIGH: "Medium high",
         FAN_HIGH: None,
     }
@@ -631,7 +631,7 @@ async def test_every_fan_mode_has_a_name(
     } == {
         FAN_LOW: "Low",
         FAN_MEDIUM_LOW: None,
-        FAN_MEDIUM: "Medium",
+        FAN_MIDDLE: "Middle",
         FAN_MEDIUM_HIGH: None,
         FAN_HIGH: "High",
     }
