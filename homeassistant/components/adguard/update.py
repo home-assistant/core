@@ -83,7 +83,6 @@ class AdGuardHomeUpdate(AdGuardHomeEntity[AdGuardHomeUpdateCoordinator], UpdateE
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="install_update_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         self.hass.config_entries.async_schedule_reload(
             self.coordinator.config_entry.entry_id
