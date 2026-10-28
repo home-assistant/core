@@ -51,14 +51,29 @@
       },
       "entry_type": "Library",
       "initiate_flow": {
+        "reconfigure": "Reconfigure library",
         "user": "Add library"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "backup": "[%key:component::seafile::config_subentries::library::step::user::data::backup%]",
+            "backup_path": "[%key:component::seafile::config_subentries::library::step::user::data::backup_path%]"
+          },
+          "data_description": {
+            "backup": "[%key:component::seafile::config_subentries::library::step::user::data_description::backup%]",
+            "backup_path": "[%key:component::seafile::config_subentries::library::step::user::data_description::backup_path%]"
+          }
+        },
         "user": {
           "data": {
+            "backup": "Store backups",
+            "backup_path": "Backup folder",
             "library_id": "Library"
           },
           "data_description": {
+            "backup": "Make this library available as a backup location in Home Assistant.",
+            "backup_path": "The folder in the library to store backups in. It is created when the first backup is uploaded.",
             "library_id": "The library to add. Encrypted libraries are not supported."
           }
         }
