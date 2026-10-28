@@ -26,6 +26,6 @@ class ScriptEntityStateAttribute(StrEnum):
 
     LAST_TRIGGERED = "last_triggered"
     MODE = "mode"
-    CUR = "current"
+    CURRENT = "current"
     MAX = "max"
     LAST_ACTION = "last_action"

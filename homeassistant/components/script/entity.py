@@ -70,7 +70,7 @@ class BaseScriptEntity(ToggleEntity, ABC):
         {
             ScriptEntityStateAttribute.LAST_TRIGGERED,
             ScriptEntityStateAttribute.MODE,
-            ScriptEntityStateAttribute.CUR,
+            ScriptEntityStateAttribute.CURRENT,
             ScriptEntityStateAttribute.MAX,
             ScriptEntityStateAttribute.LAST_ACTION,
         }
@@ -281,7 +281,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         attrs: dict[str, Any] = {
             ScriptEntityStateAttribute.LAST_TRIGGERED: script.last_triggered,
             ScriptEntityStateAttribute.MODE: script.script_mode,
-            ScriptEntityStateAttribute.CUR: script.runs,
+            ScriptEntityStateAttribute.CURRENT: script.runs,
         }
         if script.supports_max:
             attrs[ScriptEntityStateAttribute.MAX] = script.max_runs

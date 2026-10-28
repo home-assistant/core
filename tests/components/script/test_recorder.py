@@ -66,7 +66,7 @@ async def test_exclude_attributes(
         for state in entity_states:
             assert ScriptEntityStateAttribute.LAST_TRIGGERED not in state.attributes
             assert ScriptEntityStateAttribute.MODE not in state.attributes
-            assert ScriptEntityStateAttribute.CUR not in state.attributes
+            assert ScriptEntityStateAttribute.CURRENT not in state.attributes
             assert ScriptEntityStateAttribute.LAST_ACTION not in state.attributes
             assert ScriptEntityStateAttribute.MAX not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes
