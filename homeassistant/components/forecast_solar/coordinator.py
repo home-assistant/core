@@ -181,4 +181,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         try:
             return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
