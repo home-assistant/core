@@ -16,8 +16,6 @@ from .entity import SeafileEntity
 
 PARALLEL_UPDATES = 0
 
-EMPTY_TRASH = ButtonEntityDescription(key="empty_trash", translation_key="empty_trash")
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,13 +34,15 @@ async def async_setup_entry(
 class SeafileEmptyTrashButton(SeafileEntity, ButtonEntity):
     """Button to empty the trash of a Seafile library."""
 
-    entity_description = EMPTY_TRASH
+    entity_description = ButtonEntityDescription(
+        key="empty_trash", translation_key="empty_trash"
+    )
 
     def __init__(
         self, coordinator: SeafileDataUpdateCoordinator, subentry: ConfigSubentry
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, subentry, EMPTY_TRASH.key)
+        super().__init__(coordinator, subentry, self.entity_description.key)
 
     @override
     async def async_press(self) -> None:
