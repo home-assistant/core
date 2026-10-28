@@ -429,7 +429,7 @@ async def test_sensor_invalid_auth_during_startup(
     await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "Authentication failed"
+    assert mock_config_entry.error_reason_translation_key == "invalid_auth"
     assert all(state.state == STATE_UNAVAILABLE for state in hass.states.async_all())
 
 

@@ -1361,7 +1361,7 @@ hole==0.9.2
 holidays==0.107
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260930.5
+home-assistant-frontend==20261028.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -2585,7 +2585,7 @@ pyotgw==2.2.3
 pyotp==2.10.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.3.0
+pyoverkiz[nexity]==2.3.1
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
