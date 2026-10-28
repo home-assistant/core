@@ -317,7 +317,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "2.2.2.2"}
@@ -367,7 +367,7 @@ async def test_reconfigure_errors(
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "2.2.2.2"}
