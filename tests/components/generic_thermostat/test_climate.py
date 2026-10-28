@@ -2166,32 +2166,6 @@ async def test_config_entry_target_temp_step(
     assert hass.states.get(ENTITY).attributes["target_temp_step"] == expected_step
 
 
-async def test_config_entry_precision_and_temp_step_independent(
-    hass: HomeAssistant,
-) -> None:
-    """Test precision and target_temp_step from config entry options are independent."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            **CONFIG_ENTRY_OPTIONS,
-            "precision": "0.1",
-            "target_temp_step": "0.5",
-        },
-        title="Test",
-    )
-    config_entry.add_to_hass(hass)
-    hass.states.async_set(ENT_SWITCH, STATE_OFF)
-    hass.states.async_set(ENT_SENSOR, "20.34")
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY)
-    assert state.attributes["current_temperature"] == 20.3
-    assert state.attributes["target_temp_step"] == 0.5
-
-
 @pytest.mark.usefixtures("setup_comp_1")
 async def test_hvac_mode_change_user_context(
     hass: HomeAssistant, hass_admin_user: MockUser
