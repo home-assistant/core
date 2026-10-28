@@ -24,7 +24,7 @@ async def async_get_config_entry_diagnostics(
         },
         "device": {
             "model": device.model,
-            "type": device.type.name,
+            "type": device.type.name if device.type is not None else None,
             "available": device.available,
             "music_mode": device.bulb.music_mode,
             "is_nightlight_supported": device.is_nightlight_supported,
