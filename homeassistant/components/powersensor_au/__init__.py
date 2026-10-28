@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) -> None:
     """Set up integration from a config entry."""
     with_solar = ROLE_SOLAR in entry.data[CFG_ROLES].values()
     vhh = VirtualHousehold(with_solar, logger=_LOGGER)
@@ -51,19 +51,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) 
     # from dispatcher.plugs / dispatcher.sensors when it loads.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: PowersensorConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     # Stop events before unloading platforms: the platform's listeners are only
     # removed after this returns, so an event arriving while a platform resets
     # would add entities to it that are never removed.
     await entry.runtime_data.dispatcher.disconnect()
     await entry.runtime_data.devices.stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
