@@ -48,6 +48,7 @@ homeassistant.components.actiontec.*
 homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
+homeassistant.components.aerosmart.*
 homeassistant.components.aftership.*
 homeassistant.components.ai_task.*
 homeassistant.components.air_quality.*
@@ -552,6 +553,7 @@ homeassistant.components.schlage.*
 homeassistant.components.scorpiontrack.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
+homeassistant.components.seafile.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
@@ -567,6 +569,7 @@ homeassistant.components.sftp_storage.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
+homeassistant.components.silvercrest_infrared.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
 homeassistant.components.siren.*

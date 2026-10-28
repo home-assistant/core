@@ -40,9 +40,7 @@ rules:
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: Recovery from errors in the background polling loops is not logged.
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow:
     status: exempt

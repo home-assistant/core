@@ -11,7 +11,7 @@ DOMAIN: Final = "spin_ble"
 MANUFACTURER: Final = "Exicom"
 MODEL: Final = "Spin"
 
-PLATFORMS: Final = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONNECTION_MODE: Final = "connection_mode"
 CONF_SERIAL: Final = "serial"
