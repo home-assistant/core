@@ -23,6 +23,7 @@ from zha.application.const import (
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import async_is_bindable_target, get_matched_clusters
+from zha.exceptions import ZHAException
 from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
@@ -372,10 +373,14 @@ async def websocket_add_group(
     group_name: str = msg[GROUP_NAME]
     group_id: int | None = msg.get(GROUP_ID)
     members: list[GroupMemberReference] | None = msg.get(ATTR_MEMBERS)
-    group = await zha_gateway.gateway.async_create_zigpy_group(
-        group_name, members, group_id
-    )
-    assert group
+    try:
+        group = await zha_gateway.gateway.async_create_zigpy_group(
+            group_name, members, group_id
+        )
+    except ZHAException as err:
+        connection.send_error(msg[ID], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
     connection.send_result(
         msg[ID], zha_gateway.group_proxies[group.group_id].group_info
     )

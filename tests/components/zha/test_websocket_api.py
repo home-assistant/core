@@ -606,6 +606,22 @@ async def test_add_group(hass: HomeAssistant, zha_client) -> None:
         assert group["name"] == FIXTURE_GRP_NAME or group["name"] == "new_group"
 
 
+async def test_add_group_duplicate_name(zha_client) -> None:
+    """Test adding a group with a name that is already used."""
+    await zha_client.send_json(
+        {ID: 12, TYPE: "zha/group/add", GROUP_NAME: FIXTURE_GRP_NAME}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
+    assert msg["error"]["message"] == (
+        f"A group named '{FIXTURE_GRP_NAME}' already exists"
+    )
+
+
 async def test_remove_group(zha_client) -> None:
     """Test removing a new ZHA zigbee group."""
 
