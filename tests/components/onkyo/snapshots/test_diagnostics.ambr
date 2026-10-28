@@ -30,10 +30,5 @@
       'max_volume': 100,
       'volume_resolution': 80,
     }),
-    'zones': list([
-      'Main',
-      'Zone 2',
-      'Zone 3',
-    ]),
   })
 # ---
