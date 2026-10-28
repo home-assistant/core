@@ -31,6 +31,16 @@ from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=631): int,
+        probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
+        probatio.Required(CONF_SSL, default=False): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
+
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -205,18 +215,46 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an IPP printer."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except IPPConnectionUpgradeRequired:
+                errors["base"] = "connection_upgrade"
+            except IPPConnectionError, IPPResponseError:
+                _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except IPPVersionNotSupportedError:
+                errors["base"] = "ipp_version_error"
+            except IPPError:
+                _LOGGER.debug("IPP Error", exc_info=True)
+                errors["base"] = "ipp_error"
+            else:
+                await self.async_set_unique_id(info[CONF_UUID] or info[CONF_SERIAL])
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={**user_input, CONF_UUID: info[CONF_UUID]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
     def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=631): int,
-                    probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
-                    probatio.Required(CONF_SSL, default=False): bool,
-                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
-                }
-            ),
+            data_schema=DATA_SCHEMA,
             errors=errors or {},
         )
