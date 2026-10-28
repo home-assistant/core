@@ -97,7 +97,7 @@ def config_entry_fixture(hass: HomeAssistant, config) -> ConfigEntry:
 def mock_setup_entry() -> Iterator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.vesync.async_setup_entry", return_value=True
+        "homeassistant.components.vesync.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
