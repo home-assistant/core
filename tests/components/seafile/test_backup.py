@@ -1,5 +1,6 @@
 """Test the Seafile backup agent."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from io import StringIO
 import json
@@ -18,7 +19,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DATA_MANAGER, DOMAIN as BACKUP_DOMAIN
 from homeassistant.components.seafile.backup import (
     CACHE_TTL,
     UPLOAD_CHUNK_SIZE,
@@ -461,6 +462,38 @@ async def test_agents_list_cached(
 
     # The mocked server still lists the backup.
     assert len(result["backups"]) == 1
+    assert mock_seafile_client.get_directory.await_count == 2
+
+
+async def test_agents_list_finishing_after_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_seafile_client: AsyncMock,
+) -> None:
+    """Test a listing that finishes after a delete doesn't bring the backup back."""
+    listing = mock_seafile_client.get_directory.return_value
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def listing_once_released(*args: Any, **kwargs: Any) -> DirectoryListing:
+        # Only the first listing waits, the one for the delete returns at once.
+        if mock_seafile_client.get_directory.await_count == 1:
+            started.set()
+            await release.wait()
+        return listing
+
+    mock_seafile_client.get_directory.side_effect = listing_once_released
+    agent = hass.data[DATA_MANAGER].backup_agents[AGENT_ID]
+    slow_list = hass.async_create_task(agent.async_list_backups())
+    await started.wait()
+
+    await agent.async_delete_backup(TEST_BACKUP.backup_id)
+    release.set()
+    # The listing started before the delete, so it still contains the backup.
+    assert len(await slow_list) == 1
+
+    result = await _ws_request(hass, hass_ws_client, {"type": "backup/info"})
+    assert result["backups"] == []
     assert mock_seafile_client.get_directory.await_count == 2
 
 

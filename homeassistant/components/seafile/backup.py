@@ -128,6 +128,7 @@ class SeafileBackupAgent(BackupAgent):
         self.unique_id = subentry.subentry_id
         self._cache: dict[str, tuple[AgentBackup, str]] = {}
         self._cache_expiration = 0.0
+        self._cache_version = 0
 
     def _file_path(self, name: str) -> str:
         return str(PurePosixPath(self._path, name))
@@ -136,9 +137,13 @@ class SeafileBackupAgent(BackupAgent):
         """Return the backups with the base name of their files."""
         if monotonic() < self._cache_expiration:
             return self._cache
-        self._cache = await self._async_read_backups()
-        self._cache_expiration = monotonic() + CACHE_TTL
-        return self._cache
+        version = self._cache_version
+        backups = await self._async_read_backups()
+        # Don't overwrite an upload or delete that finished while reading.
+        if version == self._cache_version:
+            self._cache = backups
+            self._cache_expiration = monotonic() + CACHE_TTL
+        return backups
 
     async def _async_read_backups(self) -> dict[str, tuple[AgentBackup, str]]:
         """Read the backups in the folder from the server."""
@@ -246,6 +251,7 @@ class SeafileBackupAgent(BackupAgent):
                     )
             raise
         self._cache[backup.backup_id] = (backup, base_name)
+        self._cache_version += 1
 
     @handle_backup_errors
     @override
@@ -286,6 +292,7 @@ class SeafileBackupAgent(BackupAgent):
             [f"{base_name}.tar", f"{base_name}{METADATA_SUFFIX}"],
         )
         self._cache.pop(backup_id, None)
+        self._cache_version += 1
 
     @handle_backup_errors
     @override
