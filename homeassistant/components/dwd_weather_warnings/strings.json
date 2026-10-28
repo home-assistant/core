@@ -61,7 +61,7 @@
   },
   "exceptions": {
     "position_error": {
-      "message": "Error fetching position: {error}"
+      "message": "An error occurred while fetching the position of {entity_id}"
     }
   }
 }
