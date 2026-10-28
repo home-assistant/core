@@ -41,7 +41,9 @@
           "keep_alive": "Trigger the heater periodically to keep devices from losing state.",
           "max_cycle_duration": "Once switched on, the maximum amount of time that can elapse before it will be switched off.",
           "min_cycle_duration": "Once switched on, the minimum amount of time that must elapse before it may be switched off.",
-          "target_sensor": "Temperature sensor that reflects the current temperature."
+          "precision": "Precision used to round the displayed current and target temperatures. If not set, it depends on the temperature unit.",
+          "target_sensor": "Temperature sensor that reflects the current temperature.",
+          "target_temp_step": "Step size used when adjusting the target temperature. If not set, it matches the precision."
         },
         "description": "Create a climate entity that controls the temperature via a switch and sensor.",
         "title": "Create generic thermostat"
@@ -78,7 +80,9 @@
           "keep_alive": "[%key:component::generic_thermostat::config::step::user::data_description::keep_alive%]",
           "max_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data_description::max_cycle_duration%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data_description::min_cycle_duration%]",
-          "target_sensor": "[%key:component::generic_thermostat::config::step::user::data_description::target_sensor%]"
+          "precision": "[%key:component::generic_thermostat::config::step::user::data_description::precision%]",
+          "target_sensor": "[%key:component::generic_thermostat::config::step::user::data_description::target_sensor%]",
+          "target_temp_step": "[%key:component::generic_thermostat::config::step::user::data_description::target_temp_step%]"
         }
       },
       "presets": {
