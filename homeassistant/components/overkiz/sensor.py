@@ -557,16 +557,13 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
-    # Oven (ogp:Oven) - current stage of the cooking cycle. This reflects
-    # cooking progress, not device diagnostics, so it stays a primary entity
-    # (no diagnostic category), consistent with the remaining time sensor.
+    # Oven (ogp:Oven) - current stage of the cooking cycle
     OverkizSensorDescription(
         key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
         name="Cycle stage",
         native_value=str,
     ),
-    # Oven (ogp:Oven) - recommended target temperature for the selected mode.
-    # The appliance advertises per-mode advisory values; they are not enforced.
+    # Oven (ogp:Oven) - recommended target temperature for the selected mode
     OverkizSensorDescription(
         key=OverkizState.CORE_RECOMMENDED_TARGET_TEMPERATURE,
         name="Recommended temperature",
@@ -678,9 +675,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_RECIPE,
         name="Recipe",
         native_value=str,
-        # The running recipe is operational cooking state rather than device
-        # diagnostics, so it has no diagnostic category; it stays disabled by
-        # default because it is only populated during a guided cooking program.
         entity_registry_enabled_default=False,
     ),
 ]

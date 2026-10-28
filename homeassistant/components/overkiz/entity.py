@@ -154,16 +154,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
 
 
 class OverkizExecutableEntity(OverkizDescriptiveEntity):
-    """A descriptive entity whose availability honors ogp:UnavailableFeaturesState.
-
-    Some OGP appliances (e.g. ovens) refuse every remote command unless the
-    appliance has been switched to its Wi-Fi/remote mode on the device itself.
-    They advertise this through a blanket ogp:UnavailableFeaturesState entry
-    (feature "*", command "*", cause "localControl"). While that block is
-    active, control entities (number/select/button) are marked unavailable.
-    Feature-scoped entries (e.g. cause "modeConstraint") are ignored, so
-    controls stay available while the appliance is remotely operable.
-    """
+    """Descriptive entity unavailable while the device blocks remote control."""
 
     @property
     @override

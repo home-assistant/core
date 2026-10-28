@@ -83,11 +83,7 @@ def device_state_changed_event(
 
 
 def oven_local_control_event(device_url: str) -> DeviceStateChangedEvent:
-    """Build an event where the oven advertises a blanket localControl block.
-
-    While this block is active the oven refuses every remote command, so its
-    control entities must become unavailable.
-    """
+    """Build an event where the oven blocks remote control (localControl)."""
     return device_state_changed_event(
         device_url,
         [
@@ -108,11 +104,7 @@ def oven_local_control_event(device_url: str) -> DeviceStateChangedEvent:
 
 
 def oven_remote_control_event(device_url: str) -> DeviceStateChangedEvent:
-    """Build an event where the oven only advertises ignored modeConstraint blocks.
-
-    Feature-scoped modeConstraint entries do not block remote operation, so the
-    control entities must be available again.
-    """
+    """Build an event where the oven only advertises modeConstraint blocks."""
     return device_state_changed_event(
         device_url,
         [

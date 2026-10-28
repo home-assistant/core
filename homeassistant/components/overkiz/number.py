@@ -42,9 +42,7 @@ class OverkizNumberDescription(NumberEntityDescription):
 
     min_value_state_name: str | None = None
     max_value_state_name: str | None = None
-    # Device attributes (not states) holding the absolute, device-advertised
-    # bounds. Unlike the per-mode *CurrentBound states, these are static and
-    # present while the appliance is idle, so they are read once at setup.
+    # Device attributes holding the absolute bounds.
     min_value_attribute_name: str | None = None
     max_value_attribute_name: str | None = None
     inverted: bool = False
@@ -52,8 +50,7 @@ class OverkizNumberDescription(NumberEntityDescription):
         Callable[[float, Callable[..., Awaitable[None]]], Awaitable[None]] | None
     ) = None
 
-    # Restrict this entity to the listed device types (UIWidget/UIClass).
-    # When omitted, the number applies to any device exposing the state.
+    # Restrict to these device types (UIWidget/UIClass).
     device_types: list[UIWidget | UIClass] | None = None
 
 
@@ -233,11 +230,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
-    # Oven (ogp:Oven) - target temperature. The absolute bounds are read from
-    # the device-advertised core:TargetTemperature{Lower,Upper}Bound attributes
-    # (the native_* values below are only a fallback for a setup that omits
-    # them). The per-mode advisory *CurrentBound states are exposed as
-    # diagnostic sensors instead: they are hints the oven does not enforce.
+    # Oven (ogp:Oven) - target temperature
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_TEMPERATURE,
         name="Target temperature",
@@ -252,10 +245,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         mode=NumberMode.BOX,
         device_types=[UIClass.OVEN],
     ),
-    # Oven (ogp:Oven) - target cooking time. The absolute bounds are read from
-    # the device-advertised core:TargetTime{Lower,Upper}Bound attributes
-    # (pyoverkiz has no OverkizAttribute member for these yet, so they are
-    # referenced by name); the native_* values are only a fallback.
+    # Oven (ogp:Oven) - target cooking time
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_TIME,
         name="Cooking duration",

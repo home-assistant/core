@@ -29,8 +29,7 @@ class OverkizButtonDescription(ButtonEntityDescription):
 
     press_args: list[OverkizStateType] | None = None
 
-    # Restrict this entity to the listed device types (UIWidget/UIClass).
-    # When omitted, the button applies to any device exposing the command.
+    # Restrict to these device types (UIWidget/UIClass).
     device_types: list[UIWidget | UIClass] | None = None
 
 
@@ -106,8 +105,7 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         icon="mdi:smoke-detector",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # Oven (ogp:Oven) - start/stop the selected cooking program.
-    # Scoped to ovens: the "stop" command is also used by covers.
+    # Oven (ogp:Oven) - start/stop
     OverkizButtonDescription(
         key=OverkizCommand.START,
         name="Start",

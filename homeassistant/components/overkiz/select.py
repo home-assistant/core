@@ -23,13 +23,10 @@ class OverkizSelectDescription(SelectEntityDescription):
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
 
-    # When set, the option list is read live from this device state (e.g. the
-    # oven advertises its supported modes in core:AvailableModesState) instead
-    # of the static description options.
+    # Device state holding the live option list, overriding `options`.
     options_state_name: str | None = None
 
-    # Restrict this entity to the listed device types (UIWidget/UIClass).
-    # When omitted, the select applies to any device exposing the state.
+    # Restrict to these device types (UIWidget/UIClass).
     device_types: list[UIWidget | UIClass] | None = None
 
 
@@ -127,8 +124,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         select_option=_select_option_active_zone,
         translation_key="active_zones",
     ),
-    # Oven (ogp:Oven) - cooking mode. Options are read live from the oven's
-    # core:AvailableModesState, so only modes the appliance supports are shown.
+    # Oven (ogp:Oven) - cooking mode
     OverkizSelectDescription(
         key=OverkizState.CORE_MODE,
         name="Mode",
@@ -188,11 +184,7 @@ class OverkizSelect(OverkizExecutableEntity, SelectEntity):
     @property
     @override
     def options(self) -> list[str]:
-        """Return the available options.
-
-        Read live from a device state when the description declares one,
-        otherwise fall back to the static options from the description.
-        """
+        """Return the available options."""
         if self.entity_description.options_state_name and (
             state := self.device.states.get(self.entity_description.options_state_name)
         ):

@@ -196,9 +196,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         device_types=[UIClass.OVEN],
     ),
-    # Oven (ogp:Oven) - target temperature reached (preheating done).
-    # This reflects cooking progress, not device diagnostics, so it stays a
-    # primary entity (no diagnostic category).
+    # Oven (ogp:Oven) - target temperature reached (preheating done)
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_TARGET_TEMPERATURE_REACHED,
         name="Temperature reached",
