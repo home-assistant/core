@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -199,20 +200,31 @@ async def test_number_dynamic_min_max(
     assert state.attributes["max"] == 4
 
 
+def _narrow_oven_bounds(setup: Setup) -> None:
+    """Advertise absolute bounds that differ from the defaults."""
+    attributes = setup.devices[0].attributes
+    attributes["core:TargetTemperatureLowerBound"].value = 40
+    attributes["core:TargetTemperatureUpperBound"].value = 250
+    attributes["core:TargetTimeLowerBound"].value = 120
+    attributes["core:TargetTimeUpperBound"].value = 18000
+
+
 async def test_oven_number_bounds_from_attributes(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
     """Test the oven controls read their bounds from device attributes."""
-    await setup_overkiz_integration(fixture=OVEN_TARGET_TEMPERATURE.fixture)
+    await setup_overkiz_integration(
+        fixture=OVEN_TARGET_TEMPERATURE.fixture, mutate=_narrow_oven_bounds
+    )
 
     temperature = hass.states.get(OVEN_TARGET_TEMPERATURE.entity_id)
-    assert temperature.attributes["min"] == 30
-    assert temperature.attributes["max"] == 275
+    assert temperature.attributes["min"] == 40
+    assert temperature.attributes["max"] == 250
 
     duration = hass.states.get(OVEN_COOKING_DURATION.entity_id)
-    assert duration.attributes["min"] == 60
-    assert duration.attributes["max"] == 36000
+    assert duration.attributes["min"] == 120
+    assert duration.attributes["max"] == 18000
 
 
 async def test_number_state_update(

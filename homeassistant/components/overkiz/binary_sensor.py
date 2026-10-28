@@ -213,15 +213,6 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
     ),
-    # Oven (ogp:Oven) - firmware update available on the appliance
-    OverkizBinarySensorDescription(
-        key=OverkizState.CORE_NEW_FIRMWARE_AVAILABLE,
-        name="Firmware update available",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        value_fn=bool,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_types=[UIClass.OVEN],
-    ),
 ]
 
 SUPPORTED_STATES = {

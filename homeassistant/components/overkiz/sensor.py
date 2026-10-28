@@ -4,7 +4,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast, override
 
-from pyoverkiz.enums import OverkizAttribute, OverkizState, UIClass, UIWidget
+from pyoverkiz.enums import (
+    OverkizAttribute,
+    OverkizCommandParam,
+    OverkizState,
+    UIClass,
+    UIWidget,
+)
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
@@ -49,6 +55,10 @@ class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
     native_value: Callable[[OverkizStateType], StateType] | None = None
+    # Report a value only while this device state has this value.
+    value_while: tuple[str, OverkizStateType] | None = None
+    # Device attribute holding the enum options, overriding `options`.
+    options_attribute_name: str | None = None
 
     # Restrict to these device types (UIWidget/UIClass).
     device_types: list[UIWidget | UIClass] | None = None
@@ -105,16 +115,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
         name="RSSI level",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_value=lambda value: round(cast(float, value)),
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    OverkizSensorDescription(
-        key=OverkizState.CORE_SIGNAL_QUALITY,
-        name="Signal quality",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -559,13 +559,17 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_while=(OverkizState.CORE_STARTED_STOPPED, OverkizCommandParam.STARTED),
         device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - current stage of the cooking cycle
     OverkizSensorDescription(
         key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
         name="Cycle stage",
-        native_value=str,
+        device_class=SensorDeviceClass.ENUM,
+        options=["analysis", "cooking", "end"],
+        options_attribute_name="core:SupportedCycleStages",
+        translation_key="cycle_stage",
         device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - recommended target temperature for the selected mode
@@ -575,7 +579,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(float, value),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -587,7 +590,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(float, value),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -599,7 +601,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(float, value),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -644,7 +645,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -656,7 +656,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -668,7 +667,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -680,7 +678,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_types=[UIClass.OVEN],
@@ -752,6 +749,12 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
+        if (value_while := self.entity_description.value_while) and (
+            (gate := self.device.states.get(value_while[0])) is None
+            or gate.value != value_while[1]
+        ):
+            return None
+
         state = self.device.states.get(self.entity_description.key)
 
         # Empty strings are not valid enum options, but 0 is a valid value
@@ -766,6 +769,19 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return None
 
         return state.value
+
+    @property
+    @override
+    def options(self) -> list[str] | None:
+        """Return the enum options."""
+        if self.entity_description.options_attribute_name and (
+            attribute := self.device.attributes.get(
+                self.entity_description.options_attribute_name
+            )
+        ):
+            return [str(option) for option in cast(list, attribute.value)]
+
+        return super().options
 
     @property
     @override
