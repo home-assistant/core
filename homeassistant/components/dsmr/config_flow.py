@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
@@ -274,8 +274,14 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not errors:
                     await self.async_set_unique_id(data[CONF_SERIAL_ID])
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(entry, data_updates=data)
+                    # The port now holds the full address; sensor.py would
+                    # otherwise prefix it with the legacy host.
+                    data.pop(CONF_HOST, None)
+                    return self.async_update_and_abort(entry, data=data)
 
+        suggested_port = entry.data[CONF_PORT]
+        if CONF_HOST in entry.data:
+            suggested_port = f"socket://{entry.data[CONF_HOST]}:{suggested_port}"
         fields: dict[probatio.Marker, Any] = {
             probatio.Required(CONF_PORT): SerialPortSelector()
         }
@@ -285,7 +291,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(fields),
-                {CONF_PORT: (user_input or entry.data)[CONF_PORT]},
+                {CONF_PORT: user_input[CONF_PORT] if user_input else suggested_port},
             ),
             errors=errors,
         )
