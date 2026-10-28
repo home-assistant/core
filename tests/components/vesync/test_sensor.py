@@ -138,8 +138,12 @@ async def test_eleva_300x_entity_registration(
     fan.sub_device_no = 0
     fan.device_name = "Levoit Eleva 300X"
     fan.device_type = "LAP-C341S-WEU"
+    fan.fan_levels = [1, 2, 3]
     fan.state = SimpleNamespace(
         connection_status="online",
+        device_status="on",
+        fan_level=1,
+        mode="manual",
         aqi=20,
         carbon_filter_life=95,
         pre_filter_life=90,
@@ -188,8 +192,12 @@ async def test_eleva_300x_sensors_not_registered_for_other_models(
     fan.sub_device_no = 0
     fan.device_name = "Other Levoit Purifier"
     fan.device_type = "LAP-V102S-AAS"
+    fan.fan_levels = [1, 2, 3]
     fan.state = SimpleNamespace(
         connection_status="online",
+        device_status="on",
+        fan_level=1,
+        mode="manual",
         aqi=20,
         carbon_filter_life=95,
         pre_filter_life=90,
