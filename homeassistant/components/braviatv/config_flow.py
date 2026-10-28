@@ -60,7 +60,13 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return uuid, f"{NICKNAME_PREFIX} {uuid[:6]}"
 
     async def async_connect_device(self) -> None:
-        """Connect to Bravia TV device from config."""
+        """Connect to Bravia TV device from config and enable Wake-on-LAN."""
+        assert self.client
+        await self._async_authenticate()
+        await self.client.set_wol_mode(True)
+
+    async def _async_authenticate(self) -> None:
+        """Authenticate with the Bravia TV without changing its settings."""
         assert self.client
 
         pin = self.device_config[CONF_PIN]
@@ -72,7 +78,6 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             client_id = self.device_config[CONF_CLIENT_ID]
             nickname = self.device_config[CONF_NICKNAME]
             await self.client.connect(pin=pin, clientid=client_id, nickname=nickname)
-        await self.client.set_wol_mode(True)
 
     async def async_create_device(self) -> ConfigFlowResult:
         """Create Bravia TV device from config."""
@@ -296,7 +301,8 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert self.client
                 try:
-                    await self.async_connect_device()
+                    # Wake-on-LAN was enabled when the entry was created
+                    await self._async_authenticate()
                     system_info = await self.client.get_system_info()
                 except BraviaAuthError:
                     errors["base"] = "invalid_auth"
@@ -305,11 +311,21 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 except BraviaError:
                     errors["base"] = "cannot_connect"
                 else:
-                    await self.async_set_unique_id(
-                        system_info[ATTR_CID].lower()
-                        or format_mac(system_info[ATTR_MAC])
-                    )
-                    self._abort_if_unique_id_mismatch()
+                    formatted_mac = format_mac(system_info[ATTR_MAC])
+                    if reconfigure_entry.unique_id:
+                        await self.async_set_unique_id(
+                            system_info[ATTR_CID].lower() or formatted_mac
+                        )
+                        self._abort_if_unique_id_mismatch()
+                    # Disabled entries are not migrated, so they can still have
+                    # an empty unique ID, which the migration sets later
+                    elif format_mac(reconfigure_entry.data[CONF_MAC]) != formatted_mac:
+                        return self.async_abort(reason="unique_id_mismatch")
+                    # A loaded entry is reloaded by its update listener
+                    if reconfigure_entry.update_listeners:
+                        return self.async_update_and_abort(
+                            reconfigure_entry, data_updates={CONF_HOST: host}
+                        )
                     return self.async_update_reload_and_abort(
                         reconfigure_entry, data_updates={CONF_HOST: host}
                     )
