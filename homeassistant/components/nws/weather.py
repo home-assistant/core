@@ -1,7 +1,7 @@
 """Support for NWS weather service."""
 
 from functools import partial
-from typing import Any, Required, TypedDict, cast, override
+from typing import Any, Literal, Required, TypedDict, cast, override
 
 from pynws import SimpleNWS
 
@@ -157,6 +157,20 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )
+
+    @callback
+    @override
+    def _async_subscription_started(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
+
+    @callback
+    @override
+    def _async_subscription_ended(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Keep the permanent forecast listeners, which already notify subscribers."""
 
     @property
     def nws(self) -> SimpleNWS:
