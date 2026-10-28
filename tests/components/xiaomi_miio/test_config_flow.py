@@ -1178,3 +1178,61 @@ async def test_reconfigure_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_reconfigure_entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry set up with a manual model stores the ID."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=None,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: None,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.unique_id == TEST_MAC
+
+
+async def test_reconfigure_entry_without_unique_id_already_configured(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring an entry without unique ID to another entry's device."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=None,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST2,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: None,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.unique_id is None
