@@ -63,6 +63,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -3833,6 +3834,47 @@ async def test_registry_hook_installed_when_readd_after_rename_aborts(
     assert entity_registry.async_get("sensor.renamed_milk") is not None
     assert len(hooks) == 1
     assert ("sensor", "bla") in hooks
+
+
+async def test_subscriptions_removed_when_add_aborted(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test topic subscriptions are removed when adding the entity is aborted.
+
+    The entity platform aborts the add when writing the first state fails. At
+    that point async_added_to_hass has already subscribed, and
+    async_will_remove_from_hass is not called, so the subscriptions and the
+    debug info must be cleaned up when the add is aborted. Otherwise messages
+    keep reaching an entity that is not attached to hass any more.
+    """
+    await mqtt_mock_entry()
+    config = {
+        "name": "milk",
+        "state_topic": "test-topic",
+        "availability_topic": "availability-topic",
+        "json_attributes_topic": "attributes-topic",
+        "unique_id": "very_unique",
+    }
+    with patch.object(
+        MqttEntity,
+        "async_write_ha_state",
+        side_effect=HomeAssistantError("Simulated state write failure"),
+    ):
+        async_fire_mqtt_message(
+            hass, "homeassistant/sensor/bla/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+    assert "Error adding entity sensor.milk" in caplog.text
+    assert hass.states.get("sensor.milk") is None
+    assert "sensor.milk" not in hass.data["mqtt"].debug_info_entities
+
+    async_fire_mqtt_message(hass, "test-topic", "1")
+    async_fire_mqtt_message(hass, "availability-topic", "online")
+    async_fire_mqtt_message(hass, "attributes-topic", '{"val": 1}')
+    await hass.async_block_till_done()
+    assert "Exception in" not in caplog.text
 
 
 async def test_unique_id_collission_has_priority(

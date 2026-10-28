@@ -539,6 +539,7 @@ class MqttAttributesMixin(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
+        self.async_on_remove(self._attributes_unsubscribe_topics)
         await super().async_added_to_hass()
         self._attributes_prepare_subscribe_topics()
         self._attributes_subscribe_topics()
@@ -599,13 +600,12 @@ class MqttAttributesMixin(Entity):
         """(Re)Subscribe to topics."""
         async_subscribe_topics_internal(self.hass, self._attributes_sub_state)
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe when removed."""
+    @callback
+    def _attributes_unsubscribe_topics(self) -> None:
+        """Unsubscribe from the attributes topics."""
         self._attributes_sub_state = async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
-        await super().async_will_remove_from_hass()
 
     @callback
     def _attributes_message_received(self, msg: ReceiveMessage) -> None:
@@ -651,6 +651,7 @@ class MqttAvailabilityMixin(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
+        self.async_on_remove(self._availability_unsubscribe_topics)
         await super().async_added_to_hass()
         self._availability_prepare_subscribe_topics()
         self._availability_subscribe_topics()
@@ -751,13 +752,12 @@ class MqttAvailabilityMixin(Entity):
         if not self.hass.is_stopping:
             self.async_write_ha_state()
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe when removed."""
+    @callback
+    def _availability_unsubscribe_topics(self) -> None:
+        """Unsubscribe from the availability topics."""
         self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
-        await super().async_will_remove_from_hass()
 
     @property
     @override
@@ -1892,6 +1892,7 @@ class MqttEntity(
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        self.async_on_remove(self._unsubscribe_topics_and_remove_debug_info)
         if self._update_registry_entity_id is not None:
             entity_registry = er.async_get(self.hass)
             entity_registry.async_update_entity(
@@ -1984,13 +1985,12 @@ class MqttEntity(
         await self._subscribe_topics()
         self.async_write_ha_state()
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe when removed."""
+    @callback
+    def _unsubscribe_topics_and_remove_debug_info(self) -> None:
+        """Unsubscribe from MQTT topics and remove the debug info."""
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        await super().async_will_remove_from_hass()
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
     @callback
