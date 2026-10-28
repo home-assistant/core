@@ -2,6 +2,7 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import MAX_RETRIES_AFTER_STARTUP
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
@@ -32,3 +33,19 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> None:
+    """Migrate an Airthings BLE config entry to the current version."""
+    if entry.minor_version < 2:
+        # Incomplete reads created a device with an empty address. Removing it
+        # also removes its entities, whose unique ids have an empty prefix.
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            if (dr.CONNECTION_BLUETOOTH, "") in device.connections:
+                device_registry.async_remove_device(device.id)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
