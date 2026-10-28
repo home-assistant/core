@@ -15,7 +15,7 @@ env:
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
   # If python version changes in the base image, update .python-version accordingly to match the new Python version.
-  BASE_IMAGE_VERSION: "2026.10.1"
+  BASE_IMAGE_VERSION: "2026.10.3"
   ARCHITECTURES: '["amd64", "aarch64"]'
   MACHINES: >-
     ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4", "odroid-m1",
