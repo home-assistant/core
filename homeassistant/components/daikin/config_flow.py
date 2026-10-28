@@ -172,8 +172,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input.get(CONF_PASSWORD),
                 )
                 if not errors:
-                    await self.async_set_unique_id(data.pop(KEY_MAC))
-                    self._abort_if_unique_id_mismatch()
+                    mac = data.pop(KEY_MAC)
+                    if entry.unique_id == entry.data[CONF_HOST]:
+                        # Host based unique IDs cannot identify the device, setup
+                        # migrates them once the device reports its MAC
+                        self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
+                    else:
+                        await self.async_set_unique_id(mac)
+                        self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(entry, data_updates=data)
 
         return self.async_show_form(

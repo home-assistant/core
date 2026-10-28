@@ -343,3 +343,47 @@ async def test_reconfigure_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure_host_based_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry with a host based unique ID keeps it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=HOST, data={CONF_HOST: HOST, KEY_MAC: HOST}
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "127.0.0.2"
+    # Left for the migration on setup, which renames the entities
+    assert entry.unique_id == HOST
+    assert entry.data[KEY_MAC] == HOST
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure_host_based_unique_id_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring a host based entry to the host of another entry aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=HOST, data={CONF_HOST: HOST, KEY_MAC: HOST}
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=MAC, data={CONF_HOST: "127.0.0.2", KEY_MAC: MAC}
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
