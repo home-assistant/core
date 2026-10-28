@@ -7,7 +7,7 @@ import logging
 from typing import Any, cast, override
 
 from caldav.calendarobjectresource import CalendarObjectResource, Todo
-from caldav.collection import Calendar
+from caldav.collection import Calendar, SynchronizableCalendarObjectCollection
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.http_sync import requests as caldav_requests
 
@@ -28,6 +28,8 @@ from .api import async_get_calendars, get_attr_value
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=15)
+# A restored server may report no changes for a sync token it never issued
+MAX_SKIPPED_UPDATES = 3
 
 SUPPORTED_COMPONENT = "VTODO"
 TODO_STATUS_MAP = {
@@ -60,6 +62,24 @@ async def async_setup_entry(
         ),
         True,
     )
+
+
+def _get_changes(calendar: Calendar, sync_token: str | None) -> tuple[bool, str | None]:
+    """Return whether a calendar changed since the sync token, and the new token.
+
+    A failed sync-collection report (RFC 6578) counts as changed.
+    """
+    try:
+        changes = cast(
+            SynchronizableCalendarObjectCollection,
+            calendar.get_objects_by_sync_token(sync_token, disable_fallback=True),
+        )
+    except (caldav_requests.exceptions.RequestException, DAVError) as err:
+        _LOGGER.debug("Cannot read the changes, reading all items: %s", err)
+        return True, None
+    # A token with second precision can stay the same, but the change is listed
+    changed = sync_token is None or changes.sync_token != sync_token or len(changes) > 0
+    return changed, changes.sync_token
 
 
 def _get_todo_items(calendar: Calendar) -> list[TodoItem]:
@@ -129,12 +149,30 @@ class WebDavTodoListEntity(TodoListEntity):
         self._calendar = calendar
         self._attr_name = (calendar_name or "Unknown").capitalize()
         self._attr_unique_id = f"{config_entry_id}-{calendar.id}"
+        self._sync_token: str | None = None
+        self._skips_left = 0
+        self._writes = 0
+        self._writes_seen = 0
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
-        self._attr_todo_items = await self.hass.async_add_executor_job(
+        changed, sync_token = await self.hass.async_add_executor_job(
+            _get_changes, self._calendar, self._sync_token
+        )
+        writes = self._writes
+        if not changed and self._skips_left and writes == self._writes_seen:
+            self._skips_left -= 1
+            return
+        todo_items = await self.hass.async_add_executor_job(
             _get_todo_items, self._calendar
         )
+        if not changed and todo_items != self._attr_todo_items:
+            # The report missed a change
+            sync_token = None
+        self._attr_todo_items = todo_items
+        self._sync_token = sync_token
+        self._skips_left = MAX_SKIPPED_UPDATES
+        self._writes_seen = writes
 
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -152,6 +190,7 @@ class WebDavTodoListEntity(TodoListEntity):
             await self.hass.async_add_executor_job(
                 partial(self._calendar.add_todo, **item_data),
             )
+            self._writes += 1
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (
@@ -208,6 +247,7 @@ class WebDavTodoListEntity(TodoListEntity):
                     obj_type="todo",
                 ),
             )
+            self._writes += 1
             # refreshing async otherwise it would take too much time
             self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (
@@ -246,5 +286,6 @@ class WebDavTodoListEntity(TodoListEntity):
                 DAVError,
             ) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+            self._writes += 1
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

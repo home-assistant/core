@@ -43,6 +43,7 @@ def mock_droplet() -> Generator[AsyncMock]:
         client.get_signal_quality.return_value = "strong_signal"
         client.get_server_status.return_value = "connected"
         client.get_flow_rate.return_value = 0.1
+        client.get_volume_delta.return_value = 1000
         client.get_low_leak.return_value = True
         client.get_high_leak.return_value = False
         client.get_manufacturer.return_value = MOCK_MANUFACTURER

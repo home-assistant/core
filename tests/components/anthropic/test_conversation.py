@@ -16,10 +16,8 @@ from anthropic.types import (
     CacheMissSystemChanged,
     CacheMissUnavailable,
     CitationCharLocation,
-    CitationCharLocationParam,
     CitationsConfig,
     CitationsWebSearchResultLocation,
-    CitationWebSearchResultLocationParam,
     Container,
     Diagnostics,
     DocumentBlock,
@@ -1278,6 +1276,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -1355,6 +1354,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -1700,7 +1700,9 @@ async def test_double_system_messages(
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
@@ -3622,43 +3624,43 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=54,
                                 length=26,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "This release iterates on some of"
                                             " the features we introduced in"
                                             " the last couple of releases,"
                                             " but also..."
                                         ),
-                                        encrypted_index="AAA==",
-                                        title="Home Assistant Release",
-                                        url="https://www.example.com/todays-news",
-                                    ),
+                                        "encrypted_index": "AAA==",
+                                        "title": "Home Assistant Release",
+                                        "url": "https://www.example.com/todays-news",
+                                    },
                                 ],
                             ),
                             CitationDetails(
                                 index=84,
                                 length=29,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "Breaking news from around the"
                                             " world today includes major"
                                             " events in technology, politics,"
                                             " and culture..."
                                         ),
-                                        encrypted_index="AQE=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text="Well, this happened...",
-                                        encrypted_index="AgI=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
+                                        "encrypted_index": "AQE=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": "Well, this happened...",
+                                        "encrypted_index": "AgI=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
                                 ],
                             ),
                         ],
@@ -3721,14 +3723,14 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=70,
                                 length=44,
                                 citations=[
-                                    CitationCharLocationParam(
-                                        type="char_location",
-                                        cited_text="Anthropic integration now supports web fetch tool.",
-                                        document_index=0,
-                                        document_title="Latest Home Assistant Release Notes",
-                                        start_char_index=56,
-                                        end_char_index=105,
-                                    ),
+                                    {
+                                        "type": "char_location",
+                                        "cited_text": "Anthropic integration now supports web fetch tool.",
+                                        "document_index": 0,
+                                        "document_title": "Latest Home Assistant Release Notes",
+                                        "start_char_index": 56,
+                                        "end_char_index": 105,
+                                    },
                                 ],
                             ),
                         ],
@@ -3869,7 +3871,9 @@ async def test_history_conversion(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = content
@@ -3898,7 +3902,9 @@ async def test_history_conversion_skips_whitespace_content(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [

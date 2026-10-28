@@ -2,17 +2,18 @@
 
 from collections.abc import Collection, Iterable
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.core import Event
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import EventData
-from ..queries import get_shared_event_datas
-from ..util import execute_stmt_lambda_element
+from ..queries import SELECT_SHARED_EVENT_DATAS, SELECT_SHARED_EVENT_DATAS_BY_HASH
+from ..util import execute_select
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -92,14 +93,18 @@ class EventDataManager(BaseLRUTableManager[EventData]):
         recorder thread.
         """
         results: dict[str, int | None] = {}
-        with session.no_autoflush:
-            for hashs_chunk in chunked_or_all(hashes, self.recorder.max_bind_vars):
-                for data_id, shared_data in execute_stmt_lambda_element(
-                    session, get_shared_event_datas(hashs_chunk), orm_rows=False
-                ):
-                    results[shared_data] = self._id_map[shared_data] = cast(
-                        int, data_id
-                    )
+        # A single cache miss is the common case on the write path
+        batches: Iterable[tuple[Select, dict[str, Any]]] = (
+            ((SELECT_SHARED_EVENT_DATAS_BY_HASH, {"hash": next(iter(hashes))}),)
+            if len(hashes) == 1
+            else (
+                (SELECT_SHARED_EVENT_DATAS, {"hashes": list(chunk)})
+                for chunk in chunked_or_all(hashes, self.recorder.max_bind_vars)
+            )
+        )
+        for stmt, params in batches:
+            for data_id, shared_data in execute_select(session, stmt, params):
+                results[shared_data] = self._id_map[shared_data] = cast(int, data_id)
 
         return results
 

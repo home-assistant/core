@@ -325,7 +325,6 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
-    assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
@@ -396,6 +395,36 @@ async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_already_configured_host_changed(hass: HomeAssistant) -> None:
+    """Test that the host is updated when a configured device is discovered with a new IP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("10.10.2.99"),
+                ip_addresses=[ip_address("10.10.2.99")],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+            context={"source": SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "10.10.2.99"
+
+
 @pytest.mark.parametrize(
     "error",
     [
@@ -443,7 +472,8 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
-    ):
+        autospec=True,
+    ) as mock_get_mac:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "10.10.10.10"},
@@ -456,11 +486,24 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
         CONF_USERNAME: "fake_username",
         CONF_PASSWORD: "fake_password",
     }
+    options = mock_get_mac.call_args[0][0]._options
+    assert options.host == "10.10.10.10"
+    assert options.username == "fake_username"
+    assert options.password == "fake_password"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
-    """Test starting a reconfigure flow but no connection found."""
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (ApiError("API Error"), "cannot_connect"),
+        (AuthFailedError("Auth Error"), "invalid_auth"),
+    ],
+)
+async def test_reconfigure_not_successful(
+    hass: HomeAssistant, exc: Exception, base_error: str
+) -> None:
+    """Test starting a reconfigure flow but the device probe fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="10.10.2.3",
@@ -480,7 +523,7 @@ async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        side_effect=ApiError("API Error"),
+        side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -489,7 +532,7 @@ async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": base_error}
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",

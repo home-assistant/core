@@ -5,8 +5,8 @@ https://contributors.home-assistant.io/core/quality-scale/unique-config-entry/
 
 import ast
 
-from script.hassfest import ast_parse_module
-from script.hassfest.model import Config, Integration
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
 
 
 def _has_method_call(module: ast.Module, name: str) -> bool:
