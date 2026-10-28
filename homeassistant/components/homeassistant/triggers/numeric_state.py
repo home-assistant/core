@@ -175,25 +175,13 @@ async def async_attach_trigger(
 
     @callback
     def is_ignored_state(state: State | None) -> bool:
-        """Return True if the state should be skipped instead of evaluated."""
-        if not ignore_invalid_states:
-            return False
-        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return True
-        if attribute is None:
-            return False
-        if attribute not in state.attributes:
-            return True
-        # A value template replaces the attribute value and may map it to a fallback
-        return value_template is None and state.attributes[attribute] in (
-            None,
-            STATE_UNAVAILABLE,
-            STATE_UNKNOWN,
+        """Return True if the entity is unknown or unavailable and should be skipped."""
+        return ignore_invalid_states and (
+            state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         )
 
     # Each entity that starts outside the range is already armed (ready to fire).
-    # Entities without a valid starting value stay unarmed, so their first valid
-    # value only sets the baseline.
+    # Ignored entities start unarmed, so their first valid value can't fire.
     for entity_id in entity_ids:
         if is_ignored_state(hass.states.get(entity_id)):
             continue
@@ -214,8 +202,13 @@ async def async_attach_trigger(
         from_s = event.data["old_state"]
         to_s = event.data["new_state"]
 
-        # Skipping keeps the armed state from the last valid value.
-        if to_s is None or is_ignored_state(to_s):
+        if to_s is None:
+            return
+
+        # Match the purpose-specific triggers: a change from an ignored state
+        # never fires, so the entity is disarmed until it has a valid value again.
+        if is_ignored_state(to_s):
+            armed_entities.discard(entity_id)
             return
 
         @callback
@@ -244,7 +237,7 @@ async def async_attach_trigger(
             entity_id: str, from_s: State | None, to_s: State | None
         ) -> bool:
             """Return True if the criteria are now met, False otherwise."""
-            # An attribute or template can still match while the entity is invalid
+            # A template can still match while the entity is unknown or unavailable
             if is_ignored_state(to_s):
                 return False
             try:

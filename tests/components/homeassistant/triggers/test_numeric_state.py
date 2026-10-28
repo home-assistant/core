@@ -2016,8 +2016,11 @@ async def test_template_variable(
     ("ignore_invalid_states", "before_setup", "after_setup", "expected_calls"),
     [
         pytest.param(False, [19], [STATE_UNAVAILABLE, 23], 1, id="crossing_default"),
-        pytest.param(True, [19], [STATE_UNAVAILABLE, 23], 1, id="crossing_ignore"),
-        pytest.param(True, [19], [STATE_UNKNOWN, 23], 1, id="crossing_unknown_ignore"),
+        pytest.param(True, [19], [STATE_UNAVAILABLE, 23], 0, id="crossing_ignore"),
+        pytest.param(True, [19], [STATE_UNKNOWN, 23], 0, id="crossing_unknown_ignore"),
+        pytest.param(
+            True, [19], [STATE_UNAVAILABLE, 19, 23], 1, id="recovered_then_crossing"
+        ),
         pytest.param(False, [23], [STATE_UNAVAILABLE, 23], 1, id="same_value_default"),
         pytest.param(True, [23], [STATE_UNAVAILABLE, 23], 0, id="same_value_ignore"),
         pytest.param(False, [24], [STATE_UNAVAILABLE, 23], 1, id="same_side_default"),
@@ -2065,63 +2068,31 @@ async def test_ignore_invalid_states(
 
 
 @pytest.mark.parametrize(
-    ("ignore_invalid_states", "before_setup", "after_setup", "expected_calls"),
+    ("ignore_invalid_states", "after_setup", "expected_calls"),
     [
         pytest.param(
             False,
-            [("on", {})],
-            [("on", {"temp": 23})],
+            [(STATE_UNAVAILABLE, {"temp": 23}), ("on", {"temp": 23})],
             1,
-            id="missing_at_start_default",
+            id="unavailable_entity_default",
         ),
         pytest.param(
             True,
-            [("on", {})],
-            [("on", {"temp": 23})],
+            [(STATE_UNAVAILABLE, {"temp": 23}), ("on", {"temp": 23})],
             0,
-            id="missing_at_start_ignore",
+            id="unavailable_entity_ignore",
         ),
         pytest.param(
             False,
-            [("on", {"temp": 23})],
             [("on", {"temp": None}), ("on", {"temp": 23})],
             1,
             id="none_value_default",
         ),
         pytest.param(
             True,
-            [("on", {"temp": 23})],
             [("on", {"temp": None}), ("on", {"temp": 23})],
-            0,
+            1,
             id="none_value_ignore",
-        ),
-        pytest.param(
-            True,
-            [("on", {"temp": 19})],
-            [("on", {"temp": None}), ("on", {"temp": 23})],
-            1,
-            id="crossing_ignore",
-        ),
-        pytest.param(
-            False,
-            [("on", {"temp": 23})],
-            [("on", {"temp": STATE_UNKNOWN}), ("on", {"temp": 23})],
-            1,
-            id="unknown_value_default",
-        ),
-        pytest.param(
-            True,
-            [("on", {"temp": 23})],
-            [("on", {"temp": STATE_UNKNOWN}), ("on", {"temp": 23})],
-            0,
-            id="unknown_value_ignore",
-        ),
-        pytest.param(
-            True,
-            [("on", {"temp": 23})],
-            [("on", {"temp": STATE_UNAVAILABLE}), ("on", {"temp": 23})],
-            0,
-            id="unavailable_value_ignore",
         ),
     ],
 )
@@ -2129,13 +2100,11 @@ async def test_ignore_invalid_states_attribute(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     ignore_invalid_states: bool,
-    before_setup: list[tuple[str, dict[str, int | str | None]]],
-    after_setup: list[tuple[str, dict[str, int | str | None]]],
+    after_setup: list[tuple[str, dict[str, int | None]]],
     expected_calls: int,
 ) -> None:
-    """Test a missing or None attribute is skipped when configured."""
-    for state, attributes in before_setup:
-        hass.states.async_set("test.entity", state, attributes)
+    """Test only the entity state is ignored, not the attribute value."""
+    hass.states.async_set("test.entity", "on", {"temp": 19})
     await hass.async_block_till_done()
 
     assert await async_setup_component(
@@ -2159,36 +2128,6 @@ async def test_ignore_invalid_states_attribute(
         hass.states.async_set("test.entity", state, attributes)
         await hass.async_block_till_done()
     assert len(service_calls) == expected_calls
-
-
-async def test_ignore_invalid_states_attribute_with_template(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
-) -> None:
-    """Test a value template can still map an invalid attribute to a value."""
-    hass.states.async_set("test.entity", "on", {"temp": 19})
-    await hass.async_block_till_done()
-
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "numeric_state",
-                    "entity_id": "test.entity",
-                    "attribute": "temp",
-                    "value_template": "{{ state.attributes.temp or 30 }}",
-                    "above": 22,
-                    "ignore_invalid_states": True,
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    hass.states.async_set("test.entity", "on", {"temp": None})
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
 
 
 @pytest.mark.parametrize(
