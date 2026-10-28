@@ -19,7 +19,7 @@
   },
   "exceptions": {
     "camera_image_error": {
-      "message": "Error getting new camera image from {entity_id}: {error}"
+      "message": "An error occurred while getting a new camera image from {entity_id}"
     },
     "camera_image_timeout": {
       "message": "Timeout getting camera image from {entity_id}"

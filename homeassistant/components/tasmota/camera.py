@@ -97,10 +97,7 @@ class TasmotaCamera(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="camera_image_error",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    "error": str(err),
-                },
+                translation_placeholders={"entity_id": self.entity_id},
             ) from err
 
         return None
