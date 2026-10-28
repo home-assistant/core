@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast, override
 
-from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
+from pyoverkiz.enums import OverkizAttribute, OverkizState, UIClass, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
@@ -49,6 +49,9 @@ class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
     native_value: Callable[[OverkizStateType], StateType] | None = None
+
+    # Restrict to these device types (UIWidget/UIClass).
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -556,12 +559,14 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: cast(int, value),
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - current stage of the cooking cycle
     OverkizSensorDescription(
         key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
         name="Cycle stage",
         native_value=str,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - recommended target temperature for the selected mode
     OverkizSensorDescription(
@@ -573,6 +578,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - lower advisory bound of the target temperature
     OverkizSensorDescription(
@@ -584,6 +590,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - upper advisory bound of the target temperature
     OverkizSensorDescription(
@@ -595,6 +602,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - recommended cooking duration for the selected mode
     OverkizSensorDescription(
@@ -605,6 +613,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - lower advisory bound of the cooking duration
     OverkizSensorDescription(
@@ -615,6 +624,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - upper advisory bound of the cooking duration
     OverkizSensorDescription(
@@ -625,6 +635,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - target food weight (used by Easy Cook recipes)
     OverkizSensorDescription(
@@ -636,6 +647,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - recommended food weight for the selected recipe
     OverkizSensorDescription(
@@ -647,6 +659,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - lower advisory bound of the target weight
     OverkizSensorDescription(
@@ -658,6 +671,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - upper advisory bound of the target weight
     OverkizSensorDescription(
@@ -669,6 +683,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
     # Oven (ogp:Oven) - currently selected Easy Cook recipe ("custom" when none)
     OverkizSensorDescription(
@@ -676,6 +691,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Recipe",
         native_value=str,
         entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
     ),
 ]
 
@@ -717,6 +733,11 @@ async def async_setup_entry(
             )
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
+            and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
+            )
         )
 
     async_add_entities(entities)

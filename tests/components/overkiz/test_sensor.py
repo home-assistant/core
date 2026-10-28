@@ -5,7 +5,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
+from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState, UIClass
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -372,3 +373,20 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+def _as_heating_system(setup: Setup) -> None:
+    """Present the oven as a non-oven device."""
+    setup.devices[0].ui_class = UIClass.HEATING_SYSTEM
+
+
+async def test_oven_sensors_scoped_to_ovens(
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the oven sensors are not created for a non-oven device."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_as_heating_system)
+
+    assert entity_registry.async_get("sensor.oven_remaining_time") is None
+    assert entity_registry.async_get("sensor.oven_recommended_temperature") is None
+    assert entity_registry.async_get("sensor.oven_signal_quality") is not None
