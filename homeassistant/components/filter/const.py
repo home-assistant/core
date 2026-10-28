@@ -1,7 +1,5 @@
 """The filter component constants."""
 
-from enum import StrEnum
-
 from homeassistant.const import Platform
 
 DOMAIN = "filter"
@@ -36,9 +34,3 @@ DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
-
-
-class FilterEntityStateAttribute(StrEnum):
-    """State attributes for filter entities."""
-
-    ENTITY_ID = "entity_id"

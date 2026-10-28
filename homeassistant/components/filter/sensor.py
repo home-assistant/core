@@ -4,6 +4,7 @@ from collections import Counter, deque
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 from functools import partial
 import logging
 from numbers import Number
@@ -75,10 +76,16 @@ from .const import (
     TIME_SMA_LAST,
     WINDOW_SIZE_UNIT_NUMBER_EVENTS,
     WINDOW_SIZE_UNIT_TIME,
-    FilterEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class FilterEntityStateAttribute(StrEnum):
+    """State attributes for filter entities."""
+
+    ENTITY_ID = "entity_id"
+
 
 FILTERS: Registry[str, type[Filter]] = Registry()
 
