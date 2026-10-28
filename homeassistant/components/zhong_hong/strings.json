@@ -30,8 +30,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "medium_high": "Medium high",
-              "medium_low": "Medium low"
+              "middle": "[%key:common::state::medium%]"
             }
           }
         }
@@ -79,9 +78,7 @@
       "options": {
         "high": "[%key:common::state::high%]",
         "low": "[%key:common::state::low%]",
-        "medium": "[%key:common::state::medium%]",
-        "medium_high": "Medium high",
-        "medium_low": "Medium low"
+        "middle": "[%key:common::state::medium%]"
       }
     }
   }

@@ -187,8 +187,7 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     )
     _attr_target_temperature_step = 1
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    # Two of the five speeds the gateway addresses have no name of their own in
-    # the climate component, so they are named here.
+    # Climate names the middle speed "Middle"; these strings show it as "Medium".
     _attr_translation_key = "air_conditioner"
 
     def __init__(
