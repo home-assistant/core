@@ -689,3 +689,47 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert entry.data[CONF_HOST] == "1.1.1.1"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry that never got a unique ID stores it."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "2.2.2.2"
+    assert entry.unique_id == "000004d2"
+
+
+async def test_reconfigure_entry_without_unique_id_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring an entry without unique ID to another entry's bridge."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**ENTRY_MOCK_DATA, CONF_HOST: "2.2.2.2"},
+        unique_id="000004d2",
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch.object(Smartbridge, "create_tls", return_value=MockBridge()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id is None

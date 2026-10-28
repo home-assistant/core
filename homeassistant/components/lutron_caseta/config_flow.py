@@ -79,6 +79,12 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             self.data = {**entry.data, CONF_HOST: user_input[CONF_HOST]}
             if lutron_id := await self.async_get_lutron_id():
                 await self.async_set_unique_id(lutron_id)
+                # Manually paired entries get their unique ID on first setup
+                if entry.unique_id is None:
+                    self._abort_if_unique_id_configured()
+                    return self.async_update_reload_and_abort(
+                        entry, unique_id=lutron_id, data_updates=user_input
+                    )
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     entry, data_updates=user_input
