@@ -138,9 +138,8 @@ def _iter_searchable_matches(
 
     Lower rank numbers sort first with heapq.nsmallest:
     - 0: exact match on domain or name
-    - 1: exact match on brand name
-    - 2: substring match on domain or name
-    - 3: substring match on brand name
+    - 1: all query words match domain or name
+    - 2: all query words match domain, name, or brand
     """
     sources: list[tuple[str, dict[str, Any], str]] = []
     if filter_type in (None, "integration"):
@@ -160,24 +159,26 @@ def _iter_searchable_matches(
             ).items()
         )
 
+    words = query.replace("_", " ").split()
+    seen: set[str] = set()
     for domain, meta, brand in sources:
         # Exclude YAML-only, hardware, virtual, and IoT-standard-only entries for now.
-        if not meta.get("config_flow"):
+        if domain in seen or not meta.get("config_flow"):
             continue
         name = (
             meta.get("name") or title_trans.get(f"component.{domain}.title") or domain
         )
-        dom_f, name_f = domain.casefold(), name.casefold()
-        if query in (dom_f, name_f):
-            rank = 0
-        elif query == brand:
-            rank = 1
-        elif query in dom_f or query in name_f:
-            rank = 2
-        elif brand and query in brand:
-            rank = 3
-        else:
+        name_f = name.casefold()
+        head = f"{domain} {name_f}".replace("_", " ")
+        if not all(word in f"{head} {brand}" for word in words):
             continue
+        seen.add(domain)
+        if query in (domain, name_f):
+            rank = 0
+        elif all(word in head for word in words):
+            rank = 1
+        else:
+            rank = 2
         yield (rank, name_f, domain, name)
 
 
