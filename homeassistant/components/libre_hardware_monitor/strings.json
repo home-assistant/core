@@ -48,8 +48,17 @@
     }
   },
   "exceptions": {
+    "connection_failed": {
+      "message": "Connection to Libre Hardware Monitor failed, will retry."
+    },
     "deprecated_version": {
       "message": "[%key:component::libre_hardware_monitor::common::deprecated_version%]"
+    },
+    "invalid_auth": {
+      "message": "Authentication with Libre Hardware Monitor failed."
+    },
+    "no_devices": {
+      "message": "No sensor data available from Libre Hardware Monitor, will retry."
     }
   }
 }
