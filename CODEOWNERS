@@ -571,6 +571,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/event/ @home-assistant/core
 /homeassistant/components/evohome/ @zxdavb
 /tests/components/evohome/ @zxdavb
+/homeassistant/components/exicom_spin_ble/ @Dr-Blank
+/tests/components/exicom_spin_ble/ @Dr-Blank
 /homeassistant/components/ezviz/ @RenierM26
 /tests/components/ezviz/ @RenierM26
 /homeassistant/components/faa_delays/ @ntilley905
@@ -1864,8 +1866,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/specialized_turbo/ @JamieMagee
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
-/homeassistant/components/spin_ble/ @Dr-Blank
-/tests/components/spin_ble/ @Dr-Blank
 /homeassistant/components/splunk/ @Bre77
 /tests/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck @joostlek

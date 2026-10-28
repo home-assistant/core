@@ -12,7 +12,11 @@ from homeassistant.components.sky_hub.device_tracker import async_setup_scanner
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import LAPTOP, PHONE, MockDevice
@@ -237,28 +241,44 @@ async def test_scan_failure(
     assert hass.states.get("device_tracker.laptop").state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("new_name", "expected_host_name", "expected_device_name"),
+    [
+        pytest.param("Work laptop", "Work laptop", "Work laptop", id="renamed"),
+        # The device keeps its name instead of falling back to the MAC address
+        pytest.param("", None, LAPTOP.name, id="name_removed"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_name_updated(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_router: MagicMock,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    new_name: str,
+    expected_host_name: str | None,
+    expected_device_name: str,
 ) -> None:
     """Test a device name change updates the existing tracker entity."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_router.async_get_skyhub_data.return_value = [
-        MockDevice(LAPTOP.mac, "Work laptop")
-    ]
+    mock_router.async_get_skyhub_data.return_value = [MockDevice(LAPTOP.mac, new_name)]
     freezer.tick(timedelta(seconds=31))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("device_tracker.laptop").state == STATE_HOME
-    assert (
-        hass.states.get("device_tracker.laptop").attributes["host_name"]
-        == "Work laptop"
-    )
+    state = hass.states.get("device_tracker.laptop")
+    assert state.state == STATE_HOME
+    assert state.attributes.get("host_name") == expected_host_name
+    assert state.attributes["friendly_name"] == expected_device_name
     assert len(hass.states.async_all("device_tracker")) == 1
+
+    registry_entry = entity_registry.async_get("device_tracker.laptop")
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name

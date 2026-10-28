@@ -11,9 +11,16 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components import device_tracker
 from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .const import ARP
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")
@@ -163,3 +170,73 @@ async def test_device_tracker_coordinator_update_failure(
     assert hass.states.get("device_tracker.desktop").state == STATE_UNAVAILABLE
 
     assert mock_opnsense_client.get_arp_table.call_count == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_device_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the hostname names the device, and hostname changes rename it."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A client without a hostname names its device by its MAC address
+    no_hostname_entity_id = "device_tracker.ff_ff_ff_ff_ff_ff"
+    hostname_entity_id = "device_tracker.desktop"
+    no_hostname_entry = entity_registry.async_get(no_hostname_entity_id)
+    hostname_entry = entity_registry.async_get(hostname_entity_id)
+    assert no_hostname_entry is not None
+    assert hostname_entry is not None
+    assert hostname_entry.original_name is None
+    no_hostname_device = device_registry.async_get(no_hostname_entry.device_id)
+    hostname_device = device_registry.async_get(hostname_entry.device_id)
+    assert no_hostname_device is not None
+    assert hostname_device is not None
+    assert no_hostname_device.name == "ff:ff:ff:ff:ff:ff"
+    assert hostname_device.name == "Desktop"
+    assert (
+        hass.states.get(no_hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "ff:ff:ff:ff:ff:ff"
+    )
+    assert (
+        hass.states.get(hostname_entity_id).attributes[ATTR_FRIENDLY_NAME] == "Desktop"
+    )
+
+    mock_opnsense_client.get_arp_table.return_value = [
+        {**ARP[0], "hostname": "Laptop"},
+        {**ARP[1], "hostname": "Workstation"},
+    ]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(no_hostname_device.id).name == "Laptop"
+    assert device_registry.async_get(hostname_device.id).name == "Workstation"
+    assert (
+        hass.states.get(no_hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Laptop"
+    )
+    assert (
+        hass.states.get(hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Workstation"
+    )
+
+    # Offline clients and clients losing their hostname keep their device name
+    mock_opnsense_client.get_arp_table.return_value = [ARP[0]]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(no_hostname_device.id).name == "Laptop"
+    assert device_registry.async_get(hostname_device.id).name == "Workstation"
+    state = hass.states.get(no_hostname_entity_id)
+    assert state.state == STATE_HOME
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Laptop"
+    state = hass.states.get(hostname_entity_id)
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Workstation"
