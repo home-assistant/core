@@ -917,14 +917,13 @@ def _statistic_ids_by_start(
     # One bind variable is used by metadata_id
     for start_ts_chunk in chunked_or_all(start_timestamps, max_bind_vars - 1):
         ids.update(
-            session.execute(
+            (start_ts, statistic_id)
+            for start_ts, statistic_id in session.execute(
                 select(table.start_ts, table.id).where(
                     table.metadata_id == metadata_id,
                     table.start_ts.in_(start_ts_chunk),
                 )
             )
-            .tuples()
-            .all()
         )
     return ids
 
