@@ -334,6 +334,7 @@ class SensorFilter(SensorEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        last_replayed: datetime | None = None
 
         if "recorder" in self.hass.config.components:
             history_list = []
@@ -395,6 +396,8 @@ class SensorFilter(SensorEntity):
             for state in history_list:
                 if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
                     self._update_filter_sensor_state(state, False)
+            if history_list:
+                last_replayed = history_list[-1].last_updated
 
         @callback
         def _async_hass_started(hass: HomeAssistant) -> None:
@@ -404,6 +407,13 @@ class SensorFilter(SensorEntity):
                     self.hass, [self._entity], self._update_filter_sensor_state_event
                 )
             )
+            # Changes made while starting were not tracked
+            if (
+                (state := hass.states.get(self._entity)) is not None
+                and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and (last_replayed is None or state.last_updated > last_replayed)
+            ):
+                self._update_filter_sensor_state(state)
 
         self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 

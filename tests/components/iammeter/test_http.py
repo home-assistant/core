@@ -4,20 +4,60 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.config import config_entries as config_entries_api
 from homeassistant.components.iammeter.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_INPUT
+
+
+async def test_http_timeout_recovery(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Recover the same entities after a transport timeout in the real library."""
+    endpoint = "http://192.0.2.1:80/monitorjson"
+    payload = {"SN": "http-meter", "Data": [230, 2, 460, 100, 10]}
+    aioclient_mock.get(endpoint, json=payload)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Meter", unique_id="http-meter", data=MOCK_INPUT
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "http-meter_Power"
+    )
+    original_entities = set(entity_registry.entities)
+    assert hass.states.get(entity_id).state == "460"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(endpoint, exc=TimeoutError())
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(endpoint, json={**payload, "Data": [230, 3, 690, 101, 10]})
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "690"
+    assert set(entity_registry.entities) == original_entities
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
 async def test_http_setup(
