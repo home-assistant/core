@@ -179,18 +179,17 @@ class BoschWifiCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
         """Fetch the signal strength of each camera."""
         token = await self._cameras.async_get_access_token()
         session = async_get_clientsession(self.hass)
-        try:
-            return {
-                camera_id: (
-                    await get_wifi_info(session, token, camera_id)
-                ).signal_strength
-                for camera_id in self._cameras.data
-            }
-        except BoschCameraAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="auth_failed"
-            ) from err
-        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="cannot_connect"
-            ) from err
+        data: dict[str, int | None] = {}
+        for camera_id in self._cameras.data:
+            try:
+                info = await get_wifi_info(session, token, camera_id)
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                # One failing camera must not hide the others; it stays unavailable.
+                _LOGGER.debug("Wi-Fi info of camera %s unavailable", camera_id)
+                continue
+            data[camera_id] = info.signal_strength
+        return data

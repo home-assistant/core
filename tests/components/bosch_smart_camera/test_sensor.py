@@ -163,10 +163,39 @@ async def test_camera_added_and_removed(
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.hall_wi_fi_signal_strength").state == STATE_UNKNOWN
+    freezer.tick(WIFI_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.hall_wi_fi_signal_strength").state == "72"
 
     mock_list_cameras.return_value = [other]
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_failing_camera_does_not_affect_others(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_wifi_info: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an error for one camera leaves the sensors of the others available."""
+    mock_list_cameras.return_value = [
+        *CAMERAS,
+        replace(CAMERAS[0], id=OTHER_ID, title="Hall"),
+    ]
+
+    async def wifi(session, token, camera_id):
+        if camera_id == CAMERA_ID:
+            raise BoschCameraConnectionError
+        return WifiInfo(signal_strength=55)
+
+    mock_get_wifi_info.side_effect = wifi
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.hall_wi_fi_signal_strength").state == "55"

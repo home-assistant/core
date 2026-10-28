@@ -73,6 +73,12 @@ class BoschWifiSensor(CoordinatorEntity[BoschWifiCoordinator], SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether the last poll returned a value for this camera."""
+        return super().available and self._camera_id in self.coordinator.data
+
+    @property
+    @override
     def native_value(self) -> int | None:
         """Return the signal strength in percent."""
         return self.coordinator.data.get(self._camera_id)
