@@ -7051,6 +7051,9 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
           "name": "Mitsubishi Comfort Cloud"
         }
       }
