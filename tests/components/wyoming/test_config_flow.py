@@ -11,6 +11,7 @@ from wyoming.info import Info
 
 from homeassistant import config_entries
 from homeassistant.components.wyoming.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -381,9 +382,10 @@ async def test_bad_config_entry(hass: HomeAssistant) -> None:
 async def test_reconfigure(
     hass: HomeAssistant,
     stt_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     user_input: dict[str, Any],
 ) -> None:
-    """Test reconfiguring the host and port."""
+    """Test reconfiguring the host and port of an entry that is not loaded."""
     result = await stt_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -395,10 +397,43 @@ async def test_reconfigure(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert stt_config_entry.data == user_input
+    assert stt_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_with_update_listener(
+    hass: HomeAssistant,
+    stt_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reconfiguring a loaded entry leaves the reload to its update listener."""
+    await hass.config_entries.async_setup(stt_config_entry.entry_id)
+    update_listener = AsyncMock()
+    stt_config_entry.add_update_listener(update_listener)
+
+    result = await stt_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert stt_config_entry.data == {"host": "1.1.1.1", "port": 4321}
+    assert stt_config_entry.state is ConfigEntryState.LOADED
+    assert len(update_listener.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert "has an update listener" not in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -83,6 +83,8 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             elif not service.get_name():
                 errors["base"] = "no_services"
+            elif entry.update_listeners:
+                return self.async_update_and_abort(entry, data_updates=user_input)
             else:
                 return self.async_update_reload_and_abort(
                     entry, data_updates=user_input
