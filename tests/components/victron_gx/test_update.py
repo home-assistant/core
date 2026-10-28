@@ -10,6 +10,8 @@ from victron_mqtt import (
     FirmwareUpdateErrorReason,
     FirmwareUpdateState,
     Hub as VictronVenusHub,
+    NotConnectedError,
+    PublishError,
 )
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -325,10 +327,32 @@ async def test_install_firmware_update_service(
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            FirmwareUpdateError(FirmwareUpdateErrorReason.ERROR_DURING_UPDATE),
+            "error_during_update",
+            id="firmware-error",
+        ),
+        pytest.param(
+            NotConnectedError("MQTT is disconnected"),
+            "not_connected",
+            id="disconnected",
+        ),
+        pytest.param(
+            PublishError("MQTT publish failed"),
+            "publish_failed",
+            id="publish-failed",
+        ),
+    ],
+)
 async def test_install_propagates_translated_failure_and_clears_progress(
     hass: HomeAssistant,
     init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
+    error: FirmwareUpdateError | NotConnectedError | PublishError,
+    translation_key: str,
 ) -> None:
     """Test a GX failure is translated and install progress is cleared."""
     victron_hub, config_entry = init_integration_with_update
@@ -349,7 +373,7 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         assert state is not None
         assert state.attributes[ATTR_IN_PROGRESS] is True
         assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
-        raise FirmwareUpdateError(FirmwareUpdateErrorReason.ERROR_DURING_UPDATE)
+        raise error
 
     with (
         patch.object(
@@ -367,7 +391,8 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         )
 
     assert err.value.translation_domain == "victron_gx"
-    assert err.value.translation_key == "error_during_update"
+    assert err.value.translation_key == translation_key
+    assert err.value.__cause__ is error
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False
