@@ -980,6 +980,42 @@ async def test_flex_tier_retry(
             },
             id="astra_invalid_none",
         ),
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6.1-sol",
+                CONF_REASONING_EFFORT: "none",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="sol_invalid_none",
+        ),
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6-sol",
+                CONF_REASONING_EFFORT: "none",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="gpt6_sol_none",
+        ),
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6.1-terra",
+                CONF_REASONING_EFFORT: "high",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="terra_reasoning",
+        ),
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-5-pro",
+                CONF_REASONING_EFFORT: "none",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="gpt5_pro_invalid_none",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")

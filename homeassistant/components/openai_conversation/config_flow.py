@@ -437,12 +437,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
             stored_effort = options.get(CONF_REASONING_EFFORT, default_effort)
             if stored_effort not in reasoning_options:
-                options[CONF_REASONING_EFFORT] = default_effort
+                stored_effort = default_effort
+                options[CONF_REASONING_EFFORT] = stored_effort
             step_schema.update(
                 {
                     probatio.Optional(
                         CONF_REASONING_EFFORT,
-                        default=default_effort,
+                        default=stored_effort,
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=reasoning_options,
@@ -452,8 +453,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     ),
                 }
             )
-        elif CONF_REASONING_EFFORT in options:
-            options.pop(CONF_REASONING_EFFORT)
+        else:
+            options.pop(CONF_REASONING_EFFORT, None)
 
         if model.startswith(("gpt-5.6", "gpt-6")):
             step_schema.update(
@@ -640,7 +641,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            ("gpt-6-luna", "gpt-6.1-terra"): [
+            ("gpt-6-luna", "gpt-6-sol", "gpt-6.1-terra"): [
                 "none",
                 "low",
                 "medium",

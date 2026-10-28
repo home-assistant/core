@@ -60,6 +60,7 @@ from openai.types.responses.tool_param import (
     ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
+from openai.types.shared import ReasoningEffort
 import probatio
 
 from homeassistant.components import conversation
@@ -551,14 +552,14 @@ class OpenAIBaseLLMEntity(Entity):
             stream=True,
         )
 
+        reasoning_effort: ReasoningEffort = (
+            options.get(CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT)
+            if not model_args["model"].startswith("gpt-5-pro")
+            else "high"  # GPT-5 pro only supports reasoning.effort: high
+        )
+
         if model_args["model"].startswith(("o", "gpt-5", "gpt-6")):
-            reasoning: Reasoning = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
-                if not model_args["model"].startswith("gpt-5-pro")
-                else "high",  # GPT-5 pro only supports reasoning.effort: high
-            }
+            reasoning: Reasoning = {"effort": reasoning_effort}
 
             reasoning_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
@@ -571,7 +572,10 @@ class OpenAIBaseLLMEntity(Entity):
 
             model_args["reasoning"] = reasoning
 
-        if not model_args["model"].startswith("gpt-6") and (not model_args["model"].startswith("gpt-5") or model_args["reasoning"]["effort"] == "none"):
+        if not model_args["model"].startswith(("gpt-5", "gpt-6")) or (
+            not model_args["model"].startswith(("gpt-6-astra", "gpt-6.1-sol"))
+            and reasoning_effort == "none"
+        ):
             model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
             model_args["temperature"] = options.get(
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE

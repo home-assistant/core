@@ -302,11 +302,21 @@ async def test_subentry_unsupported_model(
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
         ("gpt-6-luna", ["none", "low", "medium", "high", "xhigh", "max"]),
         pytest.param(
+            "gpt-6-sol",
+            ["none", "low", "medium", "high", "xhigh", "max"],
+            id="sol",
+        ),
+        pytest.param(
             "gpt-6.1-terra",
             ["none", "low", "medium", "high", "xhigh", "max"],
             id="terra",
         ),
         ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
+        pytest.param(
+            "gpt-6.1-sol",
+            ["low", "medium", "high", "xhigh", "max"],
+            id="sol-6.1",
+        ),
     ],
 )
 async def test_subentry_reasoning_effort_list(
@@ -381,6 +391,138 @@ async def test_subentry_reasoning_effort(
     saved = mock_config_entry.subentries[subentry.subentry_id].data
     assert saved[CONF_CHAT_MODEL] == model
     assert saved[CONF_REASONING_EFFORT] == reasoning_effort
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
+@pytest.mark.parametrize(
+    ("model", "stored_options", "expected_effort"),
+    [
+        pytest.param(
+            "gpt-6-astra",
+            {CONF_REASONING_EFFORT: "none"},
+            "low",
+            id="astra-invalid-none",
+        ),
+        pytest.param(
+            "gpt-6.1-sol",
+            {CONF_REASONING_EFFORT: "none"},
+            "low",
+            id="sol-6.1-invalid-none",
+        ),
+        pytest.param(
+            "gpt-6.1-terra",
+            {CONF_REASONING_EFFORT: "none"},
+            "none",
+            id="terra-preserve-none",
+        ),
+        pytest.param(
+            "gpt-6-luna",
+            {CONF_REASONING_EFFORT: "none"},
+            "none",
+            id="luna-preserve-none",
+        ),
+        pytest.param(
+            "gpt-6-sol",
+            {CONF_REASONING_EFFORT: "none"},
+            "none",
+            id="sol-preserve-none",
+        ),
+        pytest.param("gpt-6-astra", {}, "low", id="astra-missing-effort"),
+        pytest.param(
+            "gpt-6-astra",
+            {CONF_REASONING_EFFORT: "high"},
+            "high",
+            id="astra-preserve-high",
+        ),
+        pytest.param(
+            "gpt-5.2-pro",
+            {CONF_REASONING_EFFORT: "low"},
+            "medium",
+            id="5.2-pro-invalid-low",
+        ),
+        pytest.param("gpt-5.2-pro", {}, "medium", id="5.2-pro-missing-effort"),
+        pytest.param(
+            "gpt-5.2-pro",
+            {CONF_REASONING_EFFORT: "high"},
+            "high",
+            id="5.2-pro-preserve-high",
+        ),
+        pytest.param(
+            "gpt-5.4-pro",
+            {CONF_REASONING_EFFORT: "low"},
+            "medium",
+            id="5.4-pro-invalid-low",
+        ),
+        pytest.param("gpt-5.4-pro", {}, "medium", id="5.4-pro-missing-effort"),
+        pytest.param(
+            "gpt-5.4-pro",
+            {CONF_REASONING_EFFORT: "high"},
+            "high",
+            id="5.4-pro-preserve-high",
+        ),
+        pytest.param(
+            "gpt-5.5-pro",
+            {CONF_REASONING_EFFORT: "low"},
+            "medium",
+            id="5.5-pro-invalid-low",
+        ),
+        pytest.param("gpt-5.5-pro", {}, "medium", id="5.5-pro-missing-effort"),
+        pytest.param(
+            "gpt-5.5-pro",
+            {CONF_REASONING_EFFORT: "high"},
+            "high",
+            id="5.5-pro-preserve-high",
+        ),
+    ],
+)
+async def test_subentry_reasoning_effort_on_model_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    model: str,
+    stored_options: dict[str, str],
+    expected_effort: str,
+) -> None:
+    """Reset unsupported efforts and preserve supported efforts on model changes."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_RECOMMENDED: False,
+            CONF_CHAT_MODEL: "gpt-5.6",
+            **stored_options,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: model}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    effort_key = next(
+        key for key in result["data_schema"].schema if key == CONF_REASONING_EFFORT
+    )
+    assert effort_key.default() == expected_effort
+    assert (effort_key.description or {}).get(
+        "suggested_value", effort_key.default()
+    ) == expected_effort
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    saved = mock_config_entry.subentries[subentry.subentry_id].data
+    assert saved[CONF_CHAT_MODEL] == model
+    assert saved[CONF_REASONING_EFFORT] == expected_effort
 
 
 @pytest.mark.parametrize(
@@ -1153,7 +1295,7 @@ async def test_form_invalid_auth(
                 CONF_WEB_SEARCH_USER_LOCATION: False,
                 CONF_WEB_SEARCH_INLINE_CITATIONS: False,
             },
-        ), 
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
