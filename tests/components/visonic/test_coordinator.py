@@ -33,10 +33,7 @@ from homeassistant.components.visonic.const import (
 )
 from homeassistant.components.visonic.coordinator import VisonicCoordinator
 from homeassistant.components.visonic.direct import VisonicDirectConnection
-from homeassistant.components.visonic.exceptions import (
-    VisonicAuthException,
-    VisonicException,
-)
+from homeassistant.components.visonic.exceptions import VisonicAuthException
 from homeassistant.components.visonic.utils import get_alarm_panel_unique_ident
 from homeassistant.components.visonic.visonic_data_types import (
     VisonicConfigEntry,
@@ -574,7 +571,7 @@ async def command_coordinator(
 async def test_command_transport_failure(
     command_coordinator: VisonicCoordinator, error: Exception
 ) -> None:
-    """Expose communication failures with panel context and retain their cause."""
+    """Expose communication failures without retaining raw transport error chains."""
     with (
         patch.object(
             command_coordinator.connection, "send_command", side_effect=error
@@ -584,7 +581,8 @@ async def test_command_transport_failure(
         await command_coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
     assert type(raised.value) is HomeAssistantError
     assert str(raised.value) == "Unable to communicate with Visonic panel 1"
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     send.assert_awaited_once_with(AlarmPanelCommand.ARM_AWAY, "1234")
 
 
@@ -827,8 +825,8 @@ async def test_pushed_session_renewal_failure_and_recovery(
 
         assert not coordinator.last_update_success
         assert isinstance(coordinator.last_exception, UpdateFailed)
-        assert isinstance(coordinator.last_exception.__cause__, VisonicException)
-        assert coordinator.last_exception.__cause__.__cause__ is error
+        assert coordinator.last_exception.__cause__ is None
+        assert coordinator.last_exception.__suppress_context__
         assert coordinator.data is snapshot
         assert not cloud.login_success
         assert cloud.cloud_alarm is None
@@ -904,7 +902,8 @@ async def test_device_conversion_failure_preserves_faults_and_recovers(
 
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.__cause__ is error
+    assert coordinator.last_exception.__cause__ is None
+    assert coordinator.last_exception.__suppress_context__
     assert coordinator.data is snapshot
     assert snapshot.panelstate is not None
     assert snapshot.panelstate.battery_level == 0
@@ -1414,7 +1413,7 @@ async def test_my_update_data_wraps_failure(coordinator: DummyCoordinator) -> No
             "create_state_snapshot",
             AsyncMock(side_effect=RuntimeError("snapshot failed")),
         ),
-        pytest.raises(UpdateFailed, match="snapshot failed"),
+        pytest.raises(UpdateFailed, match="RuntimeError"),
     ):
         await coordinator.my_update_data()
 

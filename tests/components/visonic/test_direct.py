@@ -606,7 +606,7 @@ async def test_create_state_snapshot_connected(
         pytest.param(
             "160E89",
             "160E89",
-            "Panel 1 (Identifier 160E89, PowerMaster 30)",
+            "Panel 1 (PowerMaster 30)",
             id="known-ident",
         ),
         pytest.param("", None, "Panel 1 (PowerMaster 30)", id="unknown-ident"),
@@ -642,10 +642,10 @@ async def test_client_metadata_persisted_by_coordinator(
     assert entry.data[TEXT_PANEL_MODEL] == "PowerMaster 30"
     assert entry.data.get(CONF_PANEL_SERIAL) == expected_serial
     assert entry.title == expected_title
-    assert entry.runtime_data.coordinator.name == f"Visonic {expected_title}"
+    assert entry.runtime_data.coordinator.name == "Visonic panel 1"
     with caplog.at_level(logging.DEBUG, logger="homeassistant.components.visonic"):
         entry.runtime_data.coordinator.async_set_updated_data(VisonicCoordinatorData())
-    assert f"Manually updated Visonic {expected_title} data" in caplog.text
+    assert "Manually updated Visonic panel 1 data" in caplog.text
     register.assert_called_once_with("PowerMaster 30")
     await hass.async_block_till_done()
 

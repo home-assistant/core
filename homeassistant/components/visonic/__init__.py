@@ -13,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_PANEL_NUMBER,
+    CONF_PANEL_SERIAL,
     DOMAIN,
     PLATFORMS,
     TRANSLATE_EXCEPTION_AUTHORISATION_FAILURE,
@@ -20,7 +21,7 @@ from .const import (
 )
 from .coordinator import VisonicCoordinator
 from .exceptions import VisonicAuthException, VisonicException
-from .identity import resolved_connection_identity
+from .identity import redact_panel_identification, resolved_connection_identity
 from .visonic_data_types import (
     VisonicConfigEntry,
     VisonicCoordinatorData,
@@ -45,6 +46,9 @@ async def async_terminate_coordinator(coordinator: VisonicCoordinator | None) ->
 
 async def async_setup_entry(hass: HomeAssistant, entry: VisonicConfigEntry) -> None:
     """Set up a visonic panel from a config entry. This is the main entry point."""
+    title = redact_panel_identification(entry.title, entry.data.get(CONF_PANEL_SERIAL))
+    if title != entry.title:
+        hass.config_entries.async_update_entry(entry, title=title)
 
     async def close_connection(coordinator: VisonicCoordinator | None) -> None:
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -102,23 +106,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: VisonicConfigEntry) -> N
     except asyncio.CancelledError:
         await close_connection(vcd.coordinator)
         raise
-    except VisonicAuthException as error:
+    except VisonicAuthException:
         await close_connection(vcd.coordinator)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key=TRANSLATE_EXCEPTION_AUTHORISATION_FAILURE,
             translation_placeholders={"panel_id": str(panel_number)},
-        ) from error
+        ) from None
     except ConfigEntryAuthFailed, ConfigEntryNotReady:
         await close_connection(vcd.coordinator)
         raise
-    except (VisonicException, TimeoutError, ConnectionError, OSError) as error:
+    except VisonicException, TimeoutError, ConnectionError, OSError:
         await close_connection(vcd.coordinator)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key=TRANSLATE_EXCEPTION_INITIAL_CONNECTION_FAILURE,
             translation_placeholders={"panel_id": str(panel_number)},
-        ) from error
+        ) from None
 
     await close_connection(vcd.coordinator)
     raise ConfigEntryNotReady(

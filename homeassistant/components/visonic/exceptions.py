@@ -35,7 +35,7 @@ class VisonicException(HomeAssistantError):
             else self.message
         )
         if self.original_exception:
-            oe = repr(self.original_exception)
+            oe = type(self.original_exception).__name__
             return f"{base_msg} (caused by {oe})"
         return base_msg
 

@@ -280,7 +280,8 @@ async def test_command_library_failure(
         await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
     assert type(raised.value) is HomeAssistantError
     assert str(raised.value) == "Unable to communicate with Visonic panel 1"
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     request.assert_awaited_once()
 
 
@@ -304,7 +305,8 @@ async def test_command_authentication_failure(
         pytest.raises(VisonicAuthException) as raised,
     ):
         await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     request.assert_awaited_once()
 
 
@@ -440,7 +442,8 @@ async def test_command_session_renewal_is_bounded(
         await cloud.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
 
     assert type(raised.value) is HomeAssistantError
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     login.assert_awaited_once_with()
     original.arm_away.assert_awaited_once_with()
     assert replacement.arm_away.await_count == replacement_submissions
@@ -561,7 +564,10 @@ async def test_command_does_not_retry_ambiguous_submission(
     [
         pytest.param(ConnectionTimeoutError(), id="library-timeout"),
         pytest.param(TimeoutError(), id="logout-timeout"),
-        pytest.param(UndefinedBadRequestError("{'error': 10001}"), id="bad-request"),
+        pytest.param(
+            UndefinedBadRequestError("{'error': 10001, 'panel_serial': 'ABCDEF'}"),
+            id="bad-request",
+        ),
     ],
 )
 async def test_stop_cleans_up_after_logout_failure(
@@ -575,7 +581,8 @@ async def test_stop_cleans_up_after_logout_failure(
     assert not cloud.login_success
     assert cloud.cloud_alarm is None
     assert "Cloud panel logout failed" in caplog.text
-    assert f"({type(error).__name__}): {error}" in caplog.text
+    assert f"({type(error).__name__})" in caplog.text
+    assert "ABCDEF" not in caplog.text
 
 
 @pytest.fixture
@@ -1106,7 +1113,8 @@ async def test_expired_session_preserves_rejected_credentials(
     with pytest.raises(VisonicAuthException) as raised:
         await cloud.create_state_snapshot()
 
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
 
 
 @pytest.mark.parametrize(
@@ -1148,7 +1156,8 @@ async def test_snapshot_retry_failure_is_bounded(
     ):
         await cloud.create_state_snapshot()
 
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     login.assert_awaited_once_with()
     original.get_status.assert_awaited_once_with()
     original.panel_logout.assert_awaited_once_with()
@@ -1167,7 +1176,8 @@ async def test_session_renewal_communication_failure(
     ):
         await cloud.create_state_snapshot()
 
-    assert raised.value.__cause__ is error
+    assert raised.value.__cause__ is None
+    assert raised.value.__suppress_context__
     reconnect.assert_awaited_once_with()
     cloud.cloud_alarm.get_status.assert_awaited_once_with()
 
@@ -1178,7 +1188,7 @@ async def test_snapshot_wraps_unexpected_cloud_error(
     """Wrap unexpected cloud API errors as update failures."""
     cloud.cloud_alarm.get_status = AsyncMock(side_effect=RuntimeError("broken API"))
 
-    with pytest.raises(UpdateFailed, match="broken API"):
+    with pytest.raises(UpdateFailed, match="RuntimeError"):
         await cloud.create_state_snapshot()
 
 
@@ -1276,8 +1286,8 @@ async def test_cloud_metadata_persisted_by_coordinator(
     assert entry.data[TEXT_PANEL_MODEL] == "PowerMaster"
     assert entry.data[CONF_PANEL_SERIAL] == "ABCDEF"
     assert entry.data[CONF_CLOUD_APP_ID] == "app-token"
-    assert entry.title == "Panel 1 (Identifier ABCDEF, PowerMaster)"
-    assert entry.runtime_data.coordinator.name == f"Visonic {entry.title}"
+    assert entry.title == "Panel 1 (PowerMaster)"
+    assert entry.runtime_data.coordinator.name == "Visonic panel 1"
     assert connection.settings.panel_name == entry.title
 
 

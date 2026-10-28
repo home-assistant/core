@@ -1809,7 +1809,10 @@ async def test_single_cloud_panel_requires_settings(hass: HomeAssistant) -> None
     "error",
     [
         pytest.param(NotFoundError(), id="not-found"),
-        pytest.param(UndefinedBadRequestError("{'error': 10001}"), id="bad-request"),
+        pytest.param(
+            UndefinedBadRequestError("{'error': 10001, 'panel_serial': 'ABCDEF'}"),
+            id="bad-request",
+        ),
     ],
 )
 async def test_cloud_login_survives_logout_endpoint_failure(
@@ -1845,7 +1848,8 @@ async def test_cloud_login_survives_logout_endpoint_failure(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         api.panel_login.assert_awaited_once_with("ABCDEF", "1234")
         api.panel_logout.assert_awaited_once_with()
-    assert f"({type(error).__name__}): {error}" in caplog.text
+    assert f"({type(error).__name__})" in caplog.text
+    assert "ABCDEF" not in caplog.text
     await hass.async_block_till_done()
 
 

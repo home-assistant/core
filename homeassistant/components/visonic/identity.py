@@ -4,12 +4,20 @@ from collections.abc import Mapping
 from contextlib import suppress
 import ipaddress
 import os
+import re
 from typing import Any
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 from .const import CONF_PANEL_SERIAL
 from .visonic_types import DeviceType
+
+
+def redact_panel_identification(value: str, identification: str | None) -> str:
+    """Obfuscate a known panel identification, including embedded occurrences."""
+    if not identification:
+        return value
+    return re.sub(re.escape(identification), "**REDACTED**", value, flags=re.IGNORECASE)
 
 
 def normalize_serial_path(device: str) -> str:

@@ -23,8 +23,8 @@ from homeassistant.exceptions import HomeAssistantError
     [
         pytest.param(None, "", id="no-cause"),
         pytest.param(
-            ValueError("invalid panel response"),
-            " (caused by ValueError('invalid panel response'))",
+            ValueError("invalid panel response from ABCDEF"),
+            " (caused by ValueError)",
             id="with-cause",
         ),
     ],
@@ -36,7 +36,7 @@ def test_exception_metadata_and_formatting(
     original: ValueError | None,
     suffix: str,
 ) -> None:
-    """Preserve metadata and format optional codes and original exception details."""
+    """Preserve metadata without formatting sensitive original error payloads."""
     error = exception_type("Panel failed", code=code, original_exception=original)
 
     assert isinstance(error, VisonicException)

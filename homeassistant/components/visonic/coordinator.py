@@ -71,6 +71,7 @@ from .const import (
 )
 from .direct import VisonicDirectConnection
 from .exceptions import VisonicAuthException, VisonicException
+from .identity import redact_panel_identification
 from .utils import capitalize, get_alarm_panel_unique_ident, to_bool
 from .visonic_data_types import VisonicConfigEntry, VisonicCoordinatorData
 from .visonic_entity_types import AlarmPanelData
@@ -146,7 +147,9 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         super().__init__(
             hass,
             logger=LOGGER,
-            name=f"{capitalize(DOMAIN)} {entry.title}",
+            name=f"{capitalize(DOMAIN)} panel {panel_id}"
+            if isinstance(panel_id, int)
+            else f"{capitalize(DOMAIN)} panel",
             config_entry=entry,
             update_interval=timedelta(seconds=update_interval),
             update_method=self.my_update_data,
@@ -273,11 +276,7 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
         if metadata.serial is not None:
             data[CONF_PANEL_SERIAL] = metadata.serial
             self._entry_data = data
-            title = (
-                f"Panel {self.panel_id} (Identifier {metadata.serial}, {metadata.model})"
-                if isinstance(self.panel_id, int)
-                else f"Visonic {metadata.model or 'panel'} ({metadata.serial})"
-            )
+            title = f"Panel {self.panel_id} ({metadata.model or 'Unknown model'})"
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data=data, title=title
             )
@@ -295,7 +294,6 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data=data, title=title
             )
-        self.name = f"{capitalize(DOMAIN)} {title}"
         if self._device_type != DeviceType.CLOUD:
             self.set_alarm_device_information(
                 metadata.model if metadata.model is not None else UNDEFINED
@@ -407,9 +405,15 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
     @callback
     def _async_handle_authentication_failure(self, err: VisonicAuthException) -> None:
         """Publish lost authentication and request updated credentials."""
-        self.async_set_update_error(ConfigEntryAuthFailed(str(err)))
         if TYPE_CHECKING:
             assert self.config_entry is not None
+        self.async_set_update_error(
+            ConfigEntryAuthFailed(
+                redact_panel_identification(
+                    str(err), self.config_entry.data.get(CONF_PANEL_SERIAL)
+                )
+            )
+        )
         self.config_entry.async_start_reauth_if_available(self.hass)
 
     async def async_state_changed_callback(self) -> None:
@@ -449,11 +453,19 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             try:
                 snapshot = await self.create_state_snapshot()
             except VisonicAuthException as err:
-                raise ConfigEntryAuthFailed(str(err)) from err
+                if TYPE_CHECKING:
+                    assert self.config_entry is not None
+                raise ConfigEntryAuthFailed(
+                    redact_panel_identification(
+                        str(err), self.config_entry.data.get(CONF_PANEL_SERIAL)
+                    )
+                ) from None
             except UpdateFailed:
                 raise
-            except Exception as err:
-                raise UpdateFailed(str(err)) from err
+            except Exception as err:  # noqa: BLE001 - Do not expose raw panel errors.
+                raise UpdateFailed(
+                    f"Panel update failed ({type(err).__name__})"
+                ) from None
             if (
                 self._device_type == DeviceType.CLOUD
                 and snapshot.connected
@@ -472,7 +484,12 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
 
     async def create_state_snapshot(self) -> VisonicCoordinatorData:
         """Read an available whole-panel snapshot."""
-        snapshot = await self.connection.create_state_snapshot()
+        try:
+            snapshot = await self.connection.create_state_snapshot()
+        except VisonicAuthException, UpdateFailed:
+            raise
+        except Exception as err:  # noqa: BLE001 - Do not expose raw panel errors.
+            raise UpdateFailed(f"Panel update failed ({type(err).__name__})") from None
         if not snapshot.connected:
             raise UpdateFailed("Panel is disconnected")
         return snapshot
@@ -483,10 +500,10 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             return
         try:
             self.state_changed_callback()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 - Do not expose raw panel errors.
             raise VisonicException(
                 "Client not created properly", code=300, original_exception=err
-            ) from err
+            ) from None
 
     async def async_panel_connect(self) -> bool:
         """Connect through the selected backend."""
@@ -529,10 +546,10 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
             except VisonicAuthException as err:
                 self._async_handle_authentication_failure(err)
                 raise
-            except (TimeoutError, OSError, aiohttp.ClientError) as err:
+            except TimeoutError, OSError, aiohttp.ClientError:
                 raise HomeAssistantError(
                     f"Unable to communicate with Visonic panel {self.panel_id}"
-                ) from err
+                ) from None
 
     def get_panel_state(self) -> PanelStateData:
         """Return the whole-panel state for the alarm entity."""

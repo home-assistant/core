@@ -141,9 +141,7 @@ class VisonicCloudConnection(VisonicConnection):
                 aiohttp.ClientError,
             ) as err:
                 # Cleanup failures must not invalidate success
-                LOGGER.debug(
-                    "Cloud panel logout failed (%s): %s", type(err).__name__, err
-                )
+                LOGGER.debug("Cloud panel logout failed (%s)", type(err).__name__)
         self.login_success = False
         self.cloud_alarm = None
 
@@ -248,20 +246,20 @@ class VisonicCloudConnection(VisonicConnection):
                         raise
                     renewed = True
                     await self._async_panel_reconnect()
-        except (UnauthorizedError, SessionTokenError, UserAuthRequiredError) as err:
+        except UnauthorizedError, SessionTokenError, UserAuthRequiredError:
             raise HomeAssistantError(
                 f"Unable to communicate with Visonic panel {self.settings.panel_id}"
-            ) from err
-        except CLOUD_AUTH_ERRORS as ex:
+            ) from None
+        except CLOUD_AUTH_ERRORS:
             raise VisonicAuthException(
                 "Cloud Authentication Error - panel connection failure"
-            ) from ex
+            ) from None
         except VisonicAuthException:
             raise
-        except (Error, VisonicException) as err:
+        except Error, VisonicException:
             raise HomeAssistantError(
                 f"Unable to communicate with Visonic panel {self.settings.panel_id}"
-            ) from err
+            ) from None
 
         # schedule an update in 5 seconds time (if nothing else changes in between)
         self.callbacks.state_changed(5.0)
@@ -328,16 +326,16 @@ class VisonicCloudConnection(VisonicConnection):
                     # The login details are new so save them
                     self.save_connection_entry()
                     return True
-        except CLOUD_AUTH_ERRORS as ex:
+        except CLOUD_AUTH_ERRORS:
             raise VisonicAuthException(
                 "Cloud Authentication Error - panel connection failure"
-            ) from ex
+            ) from None
         except VisonicAuthException:
             raise
-        except Exception as ex:
+        except Exception:  # noqa: BLE001 - Do not expose raw panel errors.
             raise VisonicException(
                 "Cloud Connection Error - panel connection failure"
-            ) from ex
+            ) from None
 
         raise VisonicAuthException("Cloud credentials or panel user code were rejected")
 
@@ -378,12 +376,12 @@ class VisonicCloudConnection(VisonicConnection):
                 return await self._async_read_state_snapshot()
         except VisonicAuthException:
             raise
-        except CLOUD_AUTH_ERRORS as err:
-            raise VisonicAuthException("Cloud authentication failed") from err
-        except Exception as err:
+        except CLOUD_AUTH_ERRORS:
+            raise VisonicAuthException("Cloud authentication failed") from None
+        except Exception as err:  # noqa: BLE001 - Do not expose raw panel errors.
             raise UpdateFailed(
-                f"Error communicating with Visonic Cloud: {err}"
-            ) from err
+                f"Error communicating with Visonic Cloud ({type(err).__name__})"
+            ) from None
 
     async def _async_read_state_snapshot(self) -> VisonicCoordinatorData:
         """Read one complete snapshot while the session lock is held."""

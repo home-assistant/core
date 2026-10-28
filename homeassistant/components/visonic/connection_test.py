@@ -140,9 +140,8 @@ class ConnectionTest:
                 except (Error, OSError, TimeoutError, aiohttp.ClientError) as err:
                     # Cleanup failures must not invalidate successful authentication.
                     LOGGER.debug(
-                        "Cloud panel logout failed after successful login (%s): %s",
+                        "Cloud panel logout failed after successful login (%s)",
                         type(err).__name__,
-                        err,
                     )
         return None
 
