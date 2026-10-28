@@ -90,7 +90,7 @@ async def test_entry_diagnostics_with_fixtures_with_error(
 ) -> None:
     """Test config entry diagnostics."""
     await setup_integration(hass, config_entry_options)
-    mock_envoy.request.side_effect = EnvoyError("Test")
+    mock_envoy.fixture_collection.side_effect = EnvoyError("Test")
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     ) == snapshot(exclude=limit_diagnostic_attrs)
