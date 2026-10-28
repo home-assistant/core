@@ -119,21 +119,30 @@ class HarmonyData(HarmonySubscriberMixin):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connection_timeout",
-                translation_placeholders={"name": self.name, "address": self._address},
+                translation_placeholders={
+                    "name": self.name,
+                    "address": f"{self._address}:8088",
+                },
             ) from err
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={"name": self.name, "address": self._address},
+                translation_placeholders={
+                    "name": self.name,
+                    "address": f"{self._address}:8088",
+                },
             ) from err
         if not connected:
             await self._client.close()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"name": self.name, "address": self._address},
+                translation_placeholders={
+                    "name": self.name,
+                    "address": f"{self._address}:8088",
+                },
             )
 
     async def shutdown(self) -> None:
