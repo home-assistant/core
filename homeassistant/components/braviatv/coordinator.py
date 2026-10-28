@@ -405,14 +405,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             for cmd in command:
                 response = await self.client.send_command(cmd)
                 if not response:
-                    commands = await self.client.get_command_list()
-                    commands_keys = ", ".join(commands.keys())
-                    # Logging an error instead of raising a ValueError
-                    # https://github.com/home-assistant/core/pull/77329#discussion_r955768245
-                    _LOGGER.error(
-                        "Unsupported command: %s, list of available commands: %s",
-                        cmd,
-                        commands_keys,
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="unsupported_command",
+                        translation_placeholders={"command": cmd},
                     )
 
     @catch_braviatv_errors

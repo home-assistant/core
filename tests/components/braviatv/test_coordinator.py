@@ -100,3 +100,26 @@ async def test_async_play_media_invalid_media_type(hass: HomeAssistant) -> None:
 
     assert exc_info.value.translation_key == "invalid_media_type"
     assert exc_info.value.translation_placeholders == {"media_type": "music"}
+
+
+async def test_async_send_command_unsupported(hass: HomeAssistant) -> None:
+    """Test sending an unsupported command raises a validation error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+    )
+    client = AsyncMock()
+    client.send_command.return_value = False
+    coordinator = BraviaTVCoordinator(hass, config_entry, client)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await coordinator.async_send_command(["Foo", "Bar"], 2)
+
+    assert exc_info.value.translation_key == "unsupported_command"
+    assert exc_info.value.translation_placeholders == {"command": "Foo"}
+    client.send_command.assert_called_once_with("Foo")

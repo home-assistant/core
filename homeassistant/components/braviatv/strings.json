@@ -81,6 +81,9 @@
     "source_not_found": {
       "message": "The {source_type} \"{query}\" was not found"
     },
+    "unsupported_command": {
+      "message": "Unsupported command: {command}"
+    },
     "update_error": {
       "message": "Error updating data for {device}: {error}"
     },
