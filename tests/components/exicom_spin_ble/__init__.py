@@ -2,7 +2,10 @@
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.spin_ble.const import CONF_CONNECTION_MODE, ConnectionMode
+from homeassistant.components.exicom_spin_ble.const import (
+    CONF_CONNECTION_MODE,
+    ConnectionMode,
+)
 from homeassistant.core import HomeAssistant
 
 

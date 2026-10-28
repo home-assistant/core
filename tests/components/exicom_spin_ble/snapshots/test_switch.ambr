@@ -27,7 +27,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging',
-    'platform': 'spin_ble',
+    'platform': 'exicom_spin_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
