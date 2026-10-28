@@ -3,9 +3,15 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, override
+from typing import override
 
-from pyocat.models import MeasurementResponse, MlState, ModeId, StateResponse
+from pyocat.models import (
+    DeviceResponse,
+    MeasurementResponse,
+    MlState,
+    ModeId,
+    StateResponse,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,16 +30,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RuntimeData, WatercrystConfigEntry
-from .coordinator import WatercrystDataUpdateCoordinator
-from .entity import WatercrystEntity
+from . import WatercrystConfigEntry
+from .entity import WatercrystMeasurementsEntity, WatercrystStateEntity
 
 
 @dataclass(frozen=True, kw_only=True)
 class WatercrystSensorEntityDescription[DataT](SensorEntityDescription):
     """Describes a WATERCryst sensor entity."""
 
-    supported_fn: Callable[[RuntimeData], bool] = lambda _: True
+    supported_fn: Callable[[DeviceResponse], bool] = lambda _: True
     value_fn: Callable[[DataT], StateType | datetime]
 
 
@@ -156,45 +161,44 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
-    data = entry.runtime_data
-
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             *(
-                WatercrystSensor(entry, data.state, description)
+                WatercrystStateSensor(entry, coordinator, description)
                 for description in STATE_SENSORS
-                if description.supported_fn(data)
+                if description.supported_fn(coordinator.data)
             ),
             *(
-                WatercrystSensor(entry, data.measurements, description)
+                WatercrystMeasurementsSensor(entry, coordinator, description)
                 for description in MEASUREMENT_SENSORS
-                if description.supported_fn(data)
+                if description.supported_fn(coordinator.data)
             ),
         ]
     )
 
 
-# NOTE: The coordinator is supposed to be WatercrystDataUpdateCoordinator[DataT]
-#       but mypy reports an error that DataT is undefined.
-class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
-    SensorEntity, WatercrystEntity[CoordinatorT]
-):
-    """BIOCAT device sensor base class."""
+class WatercrystStateSensor(SensorEntity, WatercrystStateEntity):
+    """BIOCAT device state sensor."""
 
-    entity_description: WatercrystSensorEntityDescription[DataT]
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator updates."""
-        await super().async_added_to_hass()
-
-        if self.coordinator is not self._state:
-            remove_listener = self._state.async_add_listener(self.async_write_ha_state)
-            self.async_on_remove(remove_listener)
+    entity_description: WatercrystSensorEntityDescription[StateResponse]
 
     @override
     @property
     def native_value(self) -> StateType | datetime:
-        if self.coordinator.data is None:
+        if (data := self.coordinator.data) is None:
             return None
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(data)
+
+
+class WatercrystMeasurementsSensor(SensorEntity, WatercrystMeasurementsEntity):
+    """BIOCAT device measurements sensor."""
+
+    entity_description: WatercrystSensorEntityDescription[MeasurementResponse]
+
+    @override
+    @property
+    def native_value(self) -> StateType | datetime:
+        if (data := self.coordinator.data) is None:
+            return None
+        return self.entity_description.value_fn(data)

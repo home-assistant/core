@@ -1,6 +1,7 @@
 """BIOCAT device data update coordinators."""
 
-from asyncio import CancelledError, timeout
+from abc import abstractmethod
+from asyncio import CancelledError
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -12,10 +13,9 @@ from pyocat import (
     WTCApiTemporaryError,
     WTCApiUnauthorizedError,
 )
-from pyocat.models import MeasurementResponse, StateResponse
+from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -25,12 +25,12 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEVICE_INFO_POLLING_INTERVAL = timedelta(hours=24)
 STATE_POLLING_INTERVAL = timedelta(seconds=30)
 MEASUREMENTS_POLLING_INTERVAL = timedelta(seconds=60)
 
 
-class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
+class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
     """Base coordinator for WATERCryst BIOCAT Smart Home API."""
 
     def __init__(
@@ -42,7 +42,7 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
         config_entry: WatercrystConfigEntry,
         client: AsyncApiClient,
     ) -> None:
-        """Initializes the state data updater."""
+        """Initializes the base data update coordinator."""
         super().__init__(
             hass=hass,
             logger=logger,
@@ -56,8 +56,7 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
     @override
     async def _async_update_data(self) -> DataT:
         try:
-            async with timeout(10):
-                return await self._async_fetch_data()
+            return await self._async_fetch_data()
         except CancelledError:
             raise
         except (
@@ -78,7 +77,7 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
                 retry_after=60,
             ) from err
         except WTCApiUnauthorizedError as err:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed_unauthorized",
                 translation_placeholders={
@@ -86,12 +85,12 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
                 },
             ) from err
 
+    @abstractmethod
     async def _async_fetch_data(self) -> DataT:
         """Fetch data from API."""
-        raise NotImplementedError
 
 
-class WatercrystStateUpdateCoordinator(WatercrystDataUpdateCoordinator[StateResponse]):
+class WatercrystStateCoordinator(WatercrystBaseCoordinator[StateResponse]):
     """State data update coordinator."""
 
     def __init__(
@@ -100,7 +99,7 @@ class WatercrystStateUpdateCoordinator(WatercrystDataUpdateCoordinator[StateResp
         config_entry: WatercrystConfigEntry,
         client: AsyncApiClient,
     ) -> None:
-        """Initializes the state data updater."""
+        """Initializes the state data update coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -117,9 +116,7 @@ class WatercrystStateUpdateCoordinator(WatercrystDataUpdateCoordinator[StateResp
         return await self._client.get_state(locale=locale)
 
 
-class WatercrystMeasurementsUpdateCoordinator(
-    WatercrystDataUpdateCoordinator[MeasurementResponse]
-):
+class WatercrystMeasurementsCoordinator(WatercrystBaseCoordinator[MeasurementResponse]):
     """Measurements data update coordinator."""
 
     def __init__(
@@ -127,9 +124,8 @@ class WatercrystMeasurementsUpdateCoordinator(
         hass: HomeAssistant,
         config_entry: WatercrystConfigEntry,
         client: AsyncApiClient,
-        state: WatercrystStateUpdateCoordinator,
     ) -> None:
-        """Initializes the measurement data updater."""
+        """Initializes the measurement data update coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -138,14 +134,35 @@ class WatercrystMeasurementsUpdateCoordinator(
             config_entry=config_entry,
             client=client,
         )
-        self._state = state
 
     @override
     async def _async_fetch_data(self) -> MeasurementResponse:
-        if self._state.data is None or not self._state.data.online:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="measurements_update_failed",
-                retry_after=60,
-            )
         return await self._client.get_measurements()
+
+
+class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
+    """Watercryst update coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: WatercrystConfigEntry,
+        client: AsyncApiClient,
+        state: WatercrystStateCoordinator,
+        measurements: WatercrystMeasurementsCoordinator,
+    ) -> None:
+        """Initializes the data update coordinator."""
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            name=f"{DOMAIN}_device_info",
+            update_interval=DEVICE_INFO_POLLING_INTERVAL,
+            config_entry=config_entry,
+            client=client,
+        )
+        self.state = state
+        self.measurements = measurements
+
+    @override
+    async def _async_fetch_data(self) -> DeviceResponse:
+        return await self._client.get_device_info()
