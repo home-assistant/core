@@ -53,7 +53,11 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     diagnostics: dict[str, Any] = {
         "type": entry.data[CONF_TYPE],
-        "options": dict(entry.options),
+        "options": {
+            key: value
+            for key, value in entry.options.items()
+            if key in ("ffmpeg_arguments", "timeout")
+        },
     }
     # Camera entries only hold RTSP credentials and have no coordinator.
     if entry.data[CONF_TYPE] == ATTR_TYPE_CLOUD:
