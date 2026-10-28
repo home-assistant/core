@@ -7,7 +7,6 @@ from async_upnp_client.profiles.dlna import DmsDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SOURCE_ID
 from .dms import get_domain_data
 
 
@@ -40,7 +39,6 @@ async def async_get_config_entry_diagnostics(
     source = get_domain_data(hass).devices[entry.unique_id]
     device = source.device
     return {
-        "source_id": entry.data[CONF_SOURCE_ID],
         "available": source.available,
         "device": _device_diagnostics(device) if device else None,
     }
