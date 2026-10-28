@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
+from enum import StrEnum
 import logging
 from typing import override
 
@@ -59,10 +60,16 @@ from .const import (
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     DOMAIN,
-    DerivativeEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DerivativeEntityStateAttribute(StrEnum):
+    """State attributes for derivative entities."""
+
+    SOURCE = "source"
+
 
 # SI Metric prefixes
 UNIT_PREFIXES = {

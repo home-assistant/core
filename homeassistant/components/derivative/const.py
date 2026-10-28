@@ -1,7 +1,5 @@
 """Constants for the Derivative integration."""
 
-from enum import StrEnum
-
 DOMAIN = "derivative"
 
 CONF_ROUND_DIGITS = "round"
@@ -10,9 +8,3 @@ CONF_UNIT = "unit"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_MAX_SUB_INTERVAL = "max_sub_interval"
-
-
-class DerivativeEntityStateAttribute(StrEnum):
-    """State attributes for derivative entities."""
-
-    SOURCE = "source"
