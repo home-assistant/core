@@ -15,5 +15,5 @@ DEFAULT_NAME = "Mold Indicator"
 class MoldIndicatorEntityStateAttribute(StrEnum):
     """State attributes for mold indicator entities."""
 
+    CRITICAL_TEMP = "estimated_critical_temp"
     DEWPOINT = "dewpoint"
-    ESTIMATED_CRITICAL_TEMP = "estimated_critical_temp"

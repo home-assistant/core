@@ -438,7 +438,7 @@ class MoldIndicator(SensorEntity):
             MoldIndicatorEntityStateAttribute.DEWPOINT: (
                 round(dewpoint, 2) if dewpoint else None
             ),
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP: (
+            MoldIndicatorEntityStateAttribute.CRITICAL_TEMP: (
                 round(crit_temp, 2) if crit_temp else None
             ),
         }

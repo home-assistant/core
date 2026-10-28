@@ -142,10 +142,7 @@ async def test_invalidcalib(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
 
@@ -183,10 +180,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     hass.states.async_set(
@@ -198,10 +192,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     hass.states.async_set(
@@ -215,10 +206,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
 
@@ -250,9 +238,7 @@ async def test_calculation(hass: HomeAssistant) -> None:
     assert dewpoint < 9.3
 
     # assert temperature estimation
-    esttemp = moldind.attributes.get(
-        MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-    )
+    esttemp = moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP)
     assert esttemp
     assert esttemp > 14.9
     assert esttemp < 15.1
@@ -293,10 +279,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     hass.states.async_set(
@@ -313,10 +296,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     hass.states.async_set(
@@ -333,10 +313,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     hass.states.async_set(
@@ -352,9 +329,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     assert dewpoint > 4.5
     assert dewpoint < 4.6
 
-    esttemp = moldind.attributes.get(
-        MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-    )
+    esttemp = moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP)
     assert esttemp
     assert esttemp == 27.5
 
@@ -434,10 +409,7 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant, new_state: str) 
     assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is None
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
-        is None
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP) is None
     )
 
     # Recover by setting a valid value - should immediately work
@@ -452,9 +424,7 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant, new_state: str) 
         moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is not None
     )
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP)
         is not None
     )
 
@@ -532,8 +502,6 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
         moldind.attributes.get(MoldIndicatorEntityStateAttribute.DEWPOINT) is not None
     )
     assert (
-        moldind.attributes.get(
-            MoldIndicatorEntityStateAttribute.ESTIMATED_CRITICAL_TEMP
-        )
+        moldind.attributes.get(MoldIndicatorEntityStateAttribute.CRITICAL_TEMP)
         is not None
     )
