@@ -418,9 +418,10 @@ class WebDavTodoListEntity(TodoListEntity):
                 caldav_requests.exceptions.Timeout,
                 DAVError,
             ) as err:
+                # A save that failed may still have been applied
+                self._writes += 1
                 raise HomeAssistantError(f"CalDAV save error: {err}") from err
             finally:
-                if todos:
-                    self.hass.async_create_task(
-                        self.async_update_ha_state(force_refresh=True)
-                    )
+                self.hass.async_create_task(
+                    self.async_update_ha_state(force_refresh=True)
+                )

@@ -1766,6 +1766,7 @@ async def test_move_item_in_place(
         Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:1"), calendar),
         Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:2"), calendar),
     ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
     await hass.config_entries.async_setup(config_entry.entry_id)
     reads = calendar.search.call_count
 
@@ -1778,6 +1779,46 @@ async def test_move_item_in_place(
     await hass.async_block_till_done()
 
     assert calendar.search.call_count == reads + 1
+
+
+async def test_move_item_in_place_refreshes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a move that saves nothing still shows the order the server has."""
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:1"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:2"), calendar),
+    ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    calendar.search.return_value = [
+        Todo(dav_client, None, sorted_todo("a", "X-APPLE-SORT-ORDER:2"), calendar),
+        Todo(dav_client, None, sorted_todo("b", "X-APPLE-SORT-ORDER:1"), calendar),
+    ]
+    calendar.get_objects_by_sync_token.return_value = sync_report("token-2")
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "todo/item/move", "entity_id": TEST_ENTITY, "uid": "b"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    await hass.async_block_till_done()
+
+    assert not dav_client.put.called
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == ["b", "a"]
 
 
 @pytest.mark.parametrize(
@@ -1879,19 +1920,27 @@ async def test_update_after_move(
     assert [item["uid"] for item in result[TEST_ENTITY]["items"]] == ["b", "a"]
 
 
-async def test_update_after_partial_move(
+@pytest.mark.parametrize(
+    "put_result",
+    [
+        pytest.param([MagicMock(status=204), DAVError()], id="second_save_fails"),
+        pytest.param(caldav_requests.exceptions.Timeout(), id="first_save_times_out"),
+    ],
+)
+async def test_update_after_failed_move(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     dav_client: Mock,
     calendar: Mock,
     hass_ws_client: WebSocketGenerator,
+    put_result: list[Any] | Exception,
 ) -> None:
-    """Test the list is read in full after a move that failed halfway."""
+    """Test the list is read in full after a move whose saves failed."""
     calendar.search.return_value = [
         Todo(dav_client, None, sorted_todo(uid), calendar) for uid in ("a", "b", "c")
     ]
     calendar.get_objects_by_sync_token.return_value = sync_report("token-1")
-    dav_client.put.side_effect = [MagicMock(status=204), DAVError()]
+    dav_client.put.side_effect = put_result
     await hass.config_entries.async_setup(config_entry.entry_id)
     reads = calendar.search.call_count
 
