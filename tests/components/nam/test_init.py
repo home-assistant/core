@@ -1,6 +1,6 @@
 """Test init of Nettigo Air Monitor integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
@@ -14,12 +14,15 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import setup_integration
 
 
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_nam_client")
+async def test_async_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test a successful setup entry."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
@@ -28,58 +31,53 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("exc", [ApiError("API Error"), ClientError, TimeoutError])
-async def test_config_not_ready(hass: HomeAssistant, exc: Exception) -> None:
+async def test_config_not_ready(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam: MagicMock,
+    exc: Exception | type[Exception],
+) -> None:
     """Test for setup failure if the connection to the device fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
+    mock_nam.create.side_effect = exc
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=exc,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_auth_failed(hass: HomeAssistant) -> None:
+async def test_config_auth_failed(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: MagicMock
+) -> None:
     """Test for setup failure if the auth fails."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
+    mock_nam.create.side_effect = AuthFailedError("Authorization has failed")
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        side_effect=AuthFailedError("Authorization has failed"),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_nam_client")
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test successful unload of entry."""
-    entry = await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 
+@pytest.mark.usefixtures("mock_nam_client")
 async def test_remove_air_quality_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test remove air_quality entities from registry."""
     entity_registry.async_get_or_create(
@@ -98,7 +96,7 @@ async def test_remove_air_quality_entities(
         disabled_by=None,
     )
 
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     entry = entity_registry.async_get("air_quality.nettigo_air_monitor_sds011")
     assert entry is None
