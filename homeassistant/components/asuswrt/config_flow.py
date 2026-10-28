@@ -297,6 +297,9 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             if error is None:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
+                # A loaded entry is reloaded by its update listener
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data=data)
                 return self.async_update_reload_and_abort(entry, data=data)
             errors[CONF_BASE] = error
             suggested_values = data

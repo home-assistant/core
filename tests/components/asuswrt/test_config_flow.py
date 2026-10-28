@@ -24,7 +24,7 @@ from homeassistant.components.asuswrt.const import (
     PROTOCOL_TELNET,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -594,13 +594,16 @@ async def test_options_flow_http(hass: HomeAssistant, patch_setup_entry) -> None
     }
 
 
-@pytest.mark.usefixtures("connect_http", "patch_setup_entry")
-async def test_reconfigure(hass: HomeAssistant) -> None:
-    """Test reconfiguring the router connection."""
+@pytest.mark.usefixtures("connect_http_sens_detect")
+async def test_reconfigure(hass: HomeAssistant, connect_http: MagicMock) -> None:
+    """Test reconfiguring the router connection reloads the entry once."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=CONFIG_DATA_HTTP, unique_id=ROUTER_MAC_ADDR
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    connect_http.reset_mock()
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -626,6 +629,10 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         CONF_PROTOCOL: PROTOCOL_HTTPS,
         CONF_PORT: 443,
     }
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    # One connection to validate the input and one by the reloaded entry
+    assert connect_http.return_value.async_connect.await_count == 2
 
 
 @pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
