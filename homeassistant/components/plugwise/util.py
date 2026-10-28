@@ -211,10 +211,10 @@ def _async_defer_deprecation_check(
     _async_register_unsubscriber(
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
     )
+    # Not async_listen_once: _async_recheck unsubscribes, and a once listener
+    # has already removed itself by then.
     _async_register_unsubscriber(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, _async_homeassistant_started
-        )
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _async_homeassistant_started)
     )
 
 
