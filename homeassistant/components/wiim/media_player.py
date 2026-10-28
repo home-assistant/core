@@ -1,5 +1,6 @@
 """Support for WiiM Media Players."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from hashlib import sha256
@@ -185,7 +186,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_sound_mode_list = list(device.supported_equalizer_modes) or None
         self._attr_sound_mode = device.equalizer_mode
         self._equalizer_initialized = not device.supports_http_api
-        self._equalizer_initializing = False
+        self._equalizer_refresh_task: asyncio.Task[None] | None = None
+        self._equalizer_refresh_pending = False
         self._equalizer_retry_used = False
 
     @property
@@ -526,11 +528,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._update_ha_state_from_sdk_cache()
         if (
             not self._equalizer_initialized
-            and not self._equalizer_initializing
+            and self._equalizer_refresh_task is None
             and not self._equalizer_retry_used
         ):
             self._equalizer_retry_used = True
             self._handle_sdk_equalizer_update(self._device, initialize=True)
+        elif self._equalizer_refresh_pending:
+            self._handle_sdk_equalizer_update(self._device)
 
     @callback
     def _handle_sdk_av_transport_event(
@@ -584,16 +588,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self, _device: WiimDevice, *, initialize: bool = False
     ) -> None:
         """Read the current GEQ selection when the device reports an EQ change."""
+        if self._equalizer_refresh_task is not None:
+            self._equalizer_refresh_pending = True
+            return
         if not self._equalizer_initialized and not initialize:
             return
         initialize = not self._equalizer_initialized
-        if self._equalizer_initializing or (
-            not initialize and not self._attr_sound_mode_list
-        ):
+        self._equalizer_refresh_pending = False
+        if not initialize and not self._attr_sound_mode_list:
             return
-        self._equalizer_initializing = initialize
 
         async def _refresh() -> None:
+            self._equalizer_refresh_task = asyncio.current_task()
             try:
                 if initialize:
                     await self._device.async_refresh_equalizer()
@@ -603,12 +609,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
                 if initialize and self._equalizer_retry_used:
                     self._equalizer_initialized = True
+                if not initialize:
+                    self._equalizer_refresh_pending = True
                 LOGGER.debug("Unable to refresh GEQ for %s: %s", self.entity_id, err)
                 return
             finally:
-                self._equalizer_initializing = False
+                self._equalizer_refresh_task = None
             self._update_equalizer_from_sdk_cache()
             self.async_write_ha_state()
+            if self._equalizer_refresh_pending:
+                self._handle_sdk_equalizer_update(self._device)
 
         self._entry.async_create_background_task(
             self.hass, _refresh(), name=f"wiim_{self.entity_id}_refresh_equalizer"
@@ -779,6 +789,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._device.equalizer_event_callback = None
         self._device.av_transport_event_callback = None
         self._device.play_queue_event_callback = None
+        if self._equalizer_refresh_task is not None:
+            self._equalizer_refresh_task.cancel()
         LOGGER.debug(
             "Entity %s unregistered callbacks from WiimDevice %s",
             self.entity_id,

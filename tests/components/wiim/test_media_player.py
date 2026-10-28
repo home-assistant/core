@@ -1,5 +1,6 @@
 """Tests for the WiiM media player via services and the state machine."""
 
+from asyncio import CancelledError, Event as AsyncEvent
 from collections.abc import Callable
 from functools import partial
 from http import HTTPStatus
@@ -352,23 +353,137 @@ async def test_geq_change_notification(
 
 
 @pytest.mark.usefixtures("mock_wiim_controller", "mock_geq")
+async def test_geq_refresh_cancelled_on_disable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Cancel an in-flight GEQ read and discard queued refreshes on entity disable."""
+    await setup_integration(hass, mock_config_entry)
+    started = AsyncEvent()
+    release = AsyncEvent()
+    cancelled = AsyncEvent()
+
+    async def refresh() -> str:
+        started.set()
+        try:
+            await release.wait()
+        except CancelledError:
+            cancelled.set()
+            raise
+        mock_wiim_device.equalizer_mode = "Deep"
+        return "Deep"
+
+    mock_wiim_device.async_get_equalizer_mode.side_effect = refresh
+    mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+    await started.wait()
+    mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+    entity_registry.async_update_entity(
+        MEDIA_PLAYER_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert cancelled.is_set()
+    assert mock_wiim_device.equalizer_event_callback is None
+    assert mock_wiim_device.equalizer_mode == "Flat"
+    mock_wiim_device.async_get_equalizer_mode.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller", "mock_geq")
+async def test_geq_input_change_during_initialization(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+) -> None:
+    """Read the current preset after input and EQ events during initialization."""
+
+    async def initialize() -> None:
+        mock_wiim_device.play_mode = "Bluetooth"
+        mock_wiim_device.av_transport_event_callback(MagicMock(), [])
+        mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+        mock_wiim_device.equalizer_mode = "Flat"
+
+    async def refresh() -> str:
+        mock_wiim_device.equalizer_mode = "Deep"
+        return "Deep"
+
+    mock_wiim_device.async_refresh_equalizer.side_effect = initialize
+    mock_wiim_device.async_get_equalizer_mode.side_effect = refresh
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Bluetooth"
+    assert state.attributes[ATTR_SOUND_MODE] == "Deep"
+    mock_wiim_device.async_refresh_equalizer.assert_awaited_once_with()
+    mock_wiim_device.async_get_equalizer_mode.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller", "mock_geq")
+async def test_geq_refresh_coalesces_notifications(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+) -> None:
+    """Coalesce notifications during a current-mode read into one follow-up read."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def follow_up() -> str:
+        mock_wiim_device.equalizer_mode = "Deep"
+        return "Deep"
+
+    async def refresh() -> str:
+        mock_wiim_device.async_get_equalizer_mode.side_effect = follow_up
+        mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+        mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+        mock_wiim_device.equalizer_mode = "Flat"
+        return "Flat"
+
+    mock_wiim_device.async_get_equalizer_mode.side_effect = refresh
+    mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+    await hass.async_block_till_done()
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_SOUND_MODE] == "Deep"
+    assert mock_wiim_device.async_get_equalizer_mode.await_count == 2
+    mock_wiim_device.async_refresh_equalizer.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller", "mock_geq")
 async def test_geq_change_read_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
 ) -> None:
-    """An unsuccessful EQ event refresh keeps the device available and its selection."""
+    """Retry a failed input-change read on a general update without refetching presets."""
     await setup_integration(hass, mock_config_entry)
     mock_wiim_device.async_get_equalizer_mode.side_effect = WiimRequestException(
         "failed"
     )
-    mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+    mock_wiim_device.play_mode = "Bluetooth"
+    mock_wiim_device.av_transport_event_callback(MagicMock(), [])
     await hass.async_block_till_done()
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
     assert state.state == MediaPlayerState.IDLE
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Bluetooth"
     assert state.attributes[ATTR_SOUND_MODE] == "Flat"
     mock_wiim_device.async_get_equalizer_mode.assert_awaited_once_with()
+    mock_wiim_device.async_refresh_equalizer.assert_awaited_once_with()
+
+    async def refresh() -> str:
+        mock_wiim_device.equalizer_mode = "Deep"
+        return "Deep"
+
+    mock_wiim_device.async_get_equalizer_mode.side_effect = refresh
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_SOUND_MODE] == "Deep"
+    assert mock_wiim_device.async_get_equalizer_mode.await_count == 2
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_get_equalizer_mode.await_count == 2
     mock_wiim_device.async_refresh_equalizer.assert_awaited_once_with()
 
 
