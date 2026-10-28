@@ -426,3 +426,122 @@ async def test_reauth_flow_friendly_name_error(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PIN] == "4242"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_afsapi: AsyncMock, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the device address."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_WEBFSAPI_URL: "http://2.2.2.2:80/webfsapi",
+        CONF_PIN: "1234",
+    }
+
+
+async def test_reconfigure_flow_without_unique_id(
+    hass: HomeAssistant, mock_afsapi: AsyncMock
+) -> None:
+    """Test reconfiguring a device that does not report a radio ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+    mock_afsapi.get_radio_id.side_effect = FSNotImplementedError
+
+    result = await entry.start_reconfigure_flow(hass)
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_WEBFSAPI_URL] == "http://2.2.2.2:80/webfsapi"
+
+
+@pytest.mark.parametrize(
+    ("webfsapi_endpoint_error", "radio_id_error", "result_error"),
+    [
+        pytest.param(
+            FSConnectionError, None, "cannot_connect", id="endpoint_connection"
+        ),
+        pytest.param(ValueError, None, "unknown", id="endpoint_unknown"),
+        pytest.param(
+            None, FSConnectionError, "cannot_connect", id="radio_id_connection"
+        ),
+        pytest.param(None, InvalidPinError, "invalid_auth", id="radio_id_invalid_pin"),
+        pytest.param(None, ValueError, "unknown", id="radio_id_unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
+    config_entry: MockConfigEntry,
+    webfsapi_endpoint_error: type[Exception] | None,
+    radio_id_error: type[Exception] | None,
+    result_error: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    mock_afsapi.get_webfsapi_endpoint.side_effect = webfsapi_endpoint_error
+    mock_afsapi.get_radio_id.side_effect = radio_id_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": result_error}
+
+    mock_afsapi.get_webfsapi_endpoint.side_effect = None
+    mock_afsapi.get_radio_id.side_effect = None
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_WEBFSAPI_URL] == "http://2.2.2.2:80/webfsapi"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_afsapi: AsyncMock, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when pointed at a different device."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    mock_afsapi.get_radio_id.return_value = "other_radio_id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data[CONF_WEBFSAPI_URL] == "http://1.1.1.1:80/webfsapi"

@@ -60,17 +60,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            device_url = (
-                f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
-            )
-            try:
-                self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-            except FSConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_device_url(user_input)
+            if not errors:
                 self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 return await self._async_step_device_config_if_needed()
 
@@ -79,6 +70,61 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def _async_validate_device_url(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Resolve the webfsapi URL of the device and return any errors."""
+        device_url = f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
+        try:
+            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
+        except FSConnectionError:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device address."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input:
+            errors = await self._async_validate_device_url(user_input)
+            if not errors:
+                afsapi = AFSAPI(self._webfsapi_url, reconfigure_entry.data[CONF_PIN])
+                try:
+                    unique_id = await afsapi.get_radio_id()
+                except FSNotImplementedError:
+                    unique_id = None
+                except FSConnectionError:
+                    errors["base"] = "cannot_connect"
+                except InvalidPinError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                if not errors:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_WEBFSAPI_URL: self._webfsapi_url},
+                    )
+
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA,
+            user_input
+            or {
+                CONF_HOST: hostname_from_url(reconfigure_entry.data[CONF_WEBFSAPI_URL])
+            },
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=data_schema, errors=errors
         )
 
     @override
