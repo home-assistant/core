@@ -2,18 +2,11 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import suppress
-from functools import wraps
 from pathlib import PurePosixPath
 from time import monotonic
-from typing import Any, Concatenate, override
+from typing import Any, override
 
-from aioseafile import (
-    DirentType,
-    Seafile,
-    SeafileError,
-    SeafileNotFoundError,
-    SeafileTimeoutError,
-)
+from aioseafile import DirentType, Seafile, SeafileError, SeafileNotFoundError
 from yarl import URL
 
 from homeassistant.components.backup import (
@@ -41,6 +34,7 @@ from .const import (
     SUBENTRY_TYPE_LIBRARY,
 )
 from .coordinator import SeafileConfigEntry
+from .utils import SeafileErrorHandler
 
 # Uploads are split in requests of this size, so they pass proxies that limit
 # the request body size, such as Cloudflare (100 MB).
@@ -49,6 +43,13 @@ METADATA_SUFFIX = "_meta.json"
 # Lookups for download and delete reuse the listing, which downloads every
 # metadata file.
 CACHE_TTL = 300
+
+handle_backup_errors = SeafileErrorHandler(
+    BackupAgentError,
+    BACKUP_DOMAIN,
+    failed="agent_operation_failed",
+    timed_out="agent_operation_timed_out",
+)
 
 
 def suggested_base_name(backup: AgentBackup) -> str:
@@ -85,32 +86,6 @@ def async_register_backup_agents_listener(
             del hass.data[DATA_BACKUP_AGENT_LISTENERS]
 
     return remove_listener
-
-
-def handle_backup_errors[_R, **P](
-    func: Callable[Concatenate[SeafileBackupAgent, P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[SeafileBackupAgent, P], Coroutine[Any, Any, _R]]:
-    """Convert Seafile errors into backup agent errors."""
-
-    @wraps(func)
-    async def wrapper(
-        self: SeafileBackupAgent, *args: P.args, **kwargs: P.kwargs
-    ) -> _R:
-        try:
-            return await func(self, *args, **kwargs)
-        except SeafileTimeoutError as err:
-            raise BackupAgentError(
-                translation_domain=BACKUP_DOMAIN,
-                translation_key="agent_operation_timed_out",
-            ) from err
-        except SeafileError as err:
-            LOGGER.debug("Error during backup in %s: %s", func.__name__, err)
-            raise BackupAgentError(
-                translation_domain=BACKUP_DOMAIN,
-                translation_key="agent_operation_failed",
-            ) from err
-
-    return wrapper
 
 
 class SeafileBackupAgent(BackupAgent):
@@ -267,19 +242,9 @@ class SeafileBackupAgent(BackupAgent):
 
     async def _async_stream(self, link: URL) -> AsyncIterator[bytes]:
         """Stream a download, converting errors while it is read."""
-        try:
+        with handle_backup_errors:
             async for chunk in self._client.download(link):
                 yield chunk
-        except SeafileTimeoutError as err:
-            raise BackupAgentError(
-                translation_domain=BACKUP_DOMAIN,
-                translation_key="agent_operation_timed_out",
-            ) from err
-        except SeafileError as err:
-            raise BackupAgentError(
-                translation_domain=BACKUP_DOMAIN,
-                translation_key="agent_operation_failed",
-            ) from err
 
     @handle_backup_errors
     @override
