@@ -126,11 +126,7 @@ class HarmonyData(HarmonySubscriberMixin):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={
-                    "name": self.name,
-                    "address": self._address,
-                    "error": str(err),
-                },
+                translation_placeholders={"name": self.name, "address": self._address},
             ) from err
         if not connected:
             await self._client.close()
