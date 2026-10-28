@@ -205,6 +205,45 @@ async def test_check_access_unix_socket_or_missing_peername(
         auth_view._check_access(request)
 
 
+@pytest.mark.parametrize(
+    ("peername", "unix_socket", "expectation"),
+    [
+        pytest.param("", True, DefaultContext(), id="supervisor_unix_socket"),
+        pytest.param(("127.0.0.1", 52000), False, DefaultContext(), id="supervisor_ip"),
+        pytest.param(
+            ("192.168.1.10", 52000),
+            False,
+            pytest.raises(HTTPUnauthorized),
+            id="other_ip",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_unix_socket_env", "hassio_stubs")
+async def test_check_access_core_using_supervisor_socket(
+    hass: HomeAssistant,
+    peername: tuple[str, int] | str,
+    unix_socket: bool,
+    expectation: AbstractContextManager,
+) -> None:
+    """Test auth access checks are unchanged when Core calls Supervisor's socket."""
+    user = hass.data.get(DATA_SUPERVISOR_USER)
+    assert user is not None
+
+    auth_view = HassIOBaseAuth(hass)
+    request = MagicMock()
+    request.transport.get_extra_info.return_value = peername
+    request.__getitem__.return_value = user
+
+    with (
+        patch(
+            "homeassistant.components.hassio.auth.is_supervisor_unix_socket_request",
+            return_value=unix_socket,
+        ),
+        expectation,
+    ):
+        auth_view._check_access(request)
+
+
 async def test_password_no_user(hassio_client_supervisor: TestClient) -> None:
     """Test changing password for invalid user."""
     resp = await hassio_client_supervisor.post(

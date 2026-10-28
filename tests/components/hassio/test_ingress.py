@@ -1,19 +1,39 @@
 """The tests for the hassio component."""
 
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from aiohttp import web
 from aiohttp.hdrs import (
     CONTENT_TYPE,
     X_FORWARDED_FOR,
     X_FORWARDED_HOST,
     X_FORWARDED_PROTO,
 )
+from aiohttp.test_utils import TestClient
 from multidict import CIMultiDict
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.hassio.const import X_AUTH_TOKEN
+
+
+async def test_ingress_request_unix_socket(
+    hassio_unix_socket_client: TestClient,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+) -> None:
+    """Test ingress is forwarded over the Supervisor Unix socket."""
+    resp = await hassio_unix_socket_client.get(
+        "/api/hassio_ingress/a3_vl/test/beer/ping?index=1"
+    )
+
+    assert resp.status == HTTPStatus.OK
+    _, requests = supervisor_unix_socket
+    assert len(requests) == 1
+    assert requests[0].path_qs == "/ingress/a3_vl/test/beer/ping?index=1"
+    assert requests[0].headers["X-Hass-Source"] == "core.ingress"
+    assert requests[0].headers["X-Ingress-Path"] == "/api/hassio_ingress/a3_vl"
 
 
 @pytest.mark.parametrize(

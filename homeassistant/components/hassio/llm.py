@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.llm import LLM_API_HOME_ASSISTANT, LLMContext
 
-from .const import DATA_ADDONS_LIST, DATA_COMPONENT, DOMAIN
-from .handler import HassioAPIError
+from .const import DATA_ADDONS_LIST, DOMAIN
+from .handler import HassioAPIError, get_legacy_supervisor_client
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -75,7 +75,7 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
         else:
             command = f"/{source}/logs"
         try:
-            text: str = await hass.data[DATA_COMPONENT].send_command(
+            text: str = await get_legacy_supervisor_client(hass).send_command(
                 command,
                 method="get",
                 return_text=True,

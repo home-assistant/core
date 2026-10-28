@@ -28,7 +28,6 @@ if TYPE_CHECKING:
         SupervisorIssuesCoordinator,
         SupervisorJobsCoordinator,
     )
-    from .handler import HassIO
 
 
 DOMAIN = "hassio"
@@ -115,7 +114,6 @@ JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
 DATA_AUTO_UPDATE: HassKey[AutoUpdateManager] = HassKey("hassio_auto_update")
 
 
-DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CORE_INFO: HassKey[HomeAssistantInfo] = HassKey("hassio_core_info")
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO: HassKey[HostInfo] = HassKey("hassio_host_info")
@@ -158,9 +156,12 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
     "supervisor_issues"
 )
 DATA_KEY_MOUNTS = "mounts"
-DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 
 ENTRY_DATA_USER = "user"
+
+ENV_SUPERVISOR = "SUPERVISOR"
+ENV_SUPERVISOR_SOCKET = "SUPERVISOR_SOCKET"
+ENV_SUPERVISOR_TOKEN = "SUPERVISOR_TOKEN"
 
 OPTION_ADD_ON_BACKUP_BEFORE_UPDATE = "add_on_backup_before_update"
 OPTION_ADD_ON_BACKUP_RETAIN_COPIES = "add_on_backup_retain_copies"

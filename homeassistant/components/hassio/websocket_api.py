@@ -4,9 +4,9 @@ import logging
 from numbers import Number
 from typing import Any
 
+import probatio
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import CreateSessionOptions
-import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -31,7 +31,6 @@ from .const import (
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
-    DATA_COMPONENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -44,7 +43,7 @@ from .const import (
 )
 from .coordinator import get_addons_list
 from .exceptions import HassioNotReadyError
-from .handler import HassioAPIError, get_supervisor_client
+from .handler import HassioAPIError, get_legacy_supervisor_client, get_supervisor_client
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
@@ -121,7 +120,7 @@ async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to call Supervisor API."""
-    supervisor = hass.data[DATA_COMPONENT]
+    supervisor = get_legacy_supervisor_client(hass)
 
     command = msg[ATTR_ENDPOINT]
     payload = msg.get(ATTR_DATA, {})
