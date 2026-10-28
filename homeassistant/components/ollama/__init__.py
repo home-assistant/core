@@ -78,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> No
             else None
         ),
         verify=get_default_context(),
+        # Bound only the connect, so slow models can still take their time to answer
+        timeout=httpx2.Timeout(None, connect=DEFAULT_TIMEOUT),
     )
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
