@@ -71,12 +71,12 @@ from zha.zigbee.device import (
     BaseDevice,
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
-    Device,
     DeviceConfiguredEvent,
     DeviceEntityAddedEvent,
     DeviceEntityRemovedEvent,
     DeviceFirmwareInfoUpdatedEvent,
     ZHAEvent,
+    ZigbeeDevice,
 )
 from zha.zigbee.group import Group, GroupInfo, GroupMember
 import zhaquirks
@@ -566,7 +566,7 @@ class ZHADeviceProxy(EventBase):
         names: list[dict[str, str]] = []
         endpoints = (
             self.device.device.endpoints.items()
-            if isinstance(self.device, Device)
+            if isinstance(self.device, ZigbeeDevice)
             else ()
         )
         for endpoint in (ep for epid, ep in endpoints if epid):
@@ -1635,7 +1635,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
         # Green Power devices have no clusters
-        if not isinstance(zha_device, Device):
+        if not isinstance(zha_device, ZigbeeDevice):
             continue
         if skip_coordinator and zha_device.is_coordinator:
             continue

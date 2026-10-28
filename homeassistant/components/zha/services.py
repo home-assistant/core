@@ -32,7 +32,7 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
-from zha.zigbee.device import Device
+from zha.zigbee.device import ZigbeeDevice
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
@@ -197,13 +197,13 @@ def _get_gateway(service: ServiceCall) -> Gateway:
     return gateway_proxy.gateway
 
 
-def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> Device:
+def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
     """Return the Zigbee device, raising if it is missing or not a Zigbee device."""
     zha_device = zha_gateway.get_device(ieee)
     if zha_device is None:
         raise ValueError(f"Device with IEEE {ieee!s} not found")
 
-    if not isinstance(zha_device, Device):
+    if not isinstance(zha_device, ZigbeeDevice):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="not_zigbee_device",

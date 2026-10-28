@@ -13,7 +13,7 @@ from pytest_homeassistant.common import (
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.application import ControllerApplication
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
@@ -87,7 +87,7 @@ async def test_get_actions(
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test we get the expected actions from a ZHA device."""
 
@@ -176,7 +176,7 @@ async def test_action(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test for executing a ZHA device action."""
     await setup_zha()
@@ -349,7 +349,7 @@ async def test_action_without_type_is_invalid(hass: HomeAssistant) -> None:
 async def test_client_unique_id_suffix_stripped(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test that the `_CLIENT_` unique ID suffix is stripped."""
     assert await async_setup_component(

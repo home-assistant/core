@@ -27,8 +27,8 @@ from zha.application.const import (
 from zha.zigbee.device import (
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
-    Device,
     DeviceConfiguredEvent,
+    ZigbeeDevice,
 )
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -126,7 +126,7 @@ async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
@@ -282,7 +282,7 @@ async def test_device_info_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test the device info area_id reflects the registry device's effective area.
 
@@ -331,7 +331,7 @@ async def test_get_zha_config(zha_client) -> None:
 async def test_get_zha_config_with_alarm(
     hass: HomeAssistant,
     zha_client,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test getting ZHA custom configuration."""
 
@@ -1370,7 +1370,7 @@ async def test_websocket_bind_unbind_group_invalid_source(
 async def test_websocket_reconfigure(
     hass: HomeAssistant,
     zha_client: MockHAClientWebSocket,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test websocket API to re-interview a device."""
     gateway = get_zha_gateway(hass)

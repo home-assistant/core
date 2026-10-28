@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.siren import SirenLevel, WarningMode
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 import zigpy.zcl
 from zigpy.zcl.clusters import general, security
@@ -52,7 +52,7 @@ def siren_platform_only():
 async def test_siren(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test zha siren platform."""
 

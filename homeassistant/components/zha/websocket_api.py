@@ -24,7 +24,7 @@ from zha.application.const import (
 from zha.application.gateway import Gateway
 from zha.application.helpers import async_is_bindable_target, get_matched_clusters
 from zha.exceptions import ZHAException
-from zha.zigbee.device import Device
+from zha.zigbee.device import ZigbeeDevice
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
@@ -558,7 +558,7 @@ async def websocket_device_clusters(
     zha_device = zha_gateway.get_device(ieee)
     response_clusters = []
     # Green Power devices have no clusters
-    if isinstance(zha_device, Device):
+    if isinstance(zha_device, ZigbeeDevice):
         clusters_by_endpoint = zha_device.async_get_clusters()
         for ep_id, clusters in clusters_by_endpoint.items():
             for c_id, cluster in clusters[CLUSTER_TYPE_IN].items():
@@ -607,7 +607,7 @@ async def websocket_device_cluster_attributes(
     zha_device = zha_gateway.get_device(ieee)
     attributes = None
     # Green Power devices have no clusters
-    if isinstance(zha_device, Device):
+    if isinstance(zha_device, ZigbeeDevice):
         attributes = zha_device.async_get_cluster_attributes(
             endpoint_id, cluster_id, cluster_type
         )
@@ -655,7 +655,7 @@ async def websocket_device_cluster_commands(
     cluster_commands: list[dict[str, Any]] = []
     commands = None
     # Green Power devices have no clusters
-    if isinstance(zha_device, Device):
+    if isinstance(zha_device, ZigbeeDevice):
         commands = zha_device.async_get_cluster_commands(
             endpoint_id, cluster_id, cluster_type
         )
@@ -728,7 +728,7 @@ async def websocket_read_zigbee_cluster_attributes(
     success = {}
     failure = {}
     # Green Power devices have no clusters
-    if isinstance(zha_device, Device):
+    if isinstance(zha_device, ZigbeeDevice):
         cluster = zha_device.async_get_cluster(
             endpoint_id, cluster_id, cluster_type=cluster_type
         )
@@ -915,7 +915,7 @@ async def websocket_unbind_group(
 @callback
 def _async_get_zigbee_device(
     zha_gateway: Gateway, connection: ActiveConnection, msg_id: int, ieee: EUI64
-) -> Device | None:
+) -> ZigbeeDevice | None:
     """Return the Zigbee device, or send an error if it is missing or not Zigbee."""
     zha_device = zha_gateway.get_device(ieee)
     if zha_device is None:
@@ -924,7 +924,7 @@ def _async_get_zigbee_device(
         )
         return None
 
-    if not isinstance(zha_device, Device):
+    if not isinstance(zha_device, ZigbeeDevice):
         connection.send_error(
             msg_id,
             websocket_api.ERR_NOT_SUPPORTED,

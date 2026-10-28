@@ -11,7 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.exceptions import TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware import (
@@ -276,7 +276,7 @@ async def test_migration_baudrate_and_flow_control(
 async def test_zha_retry_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     mock_zigpy_connect: ControllerApplication,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

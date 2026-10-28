@@ -15,7 +15,7 @@ from zha.application.platforms.event.const import (
 )
 from zha.zigbee.device import DeviceEntityAddedEvent
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -102,7 +102,7 @@ def speed_up_radio_mgr() -> Generator[None]:
 async def _setup_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> ZHADeviceProxy:
     """Join a device that event entities can be added to."""
     await setup_zha()
@@ -177,7 +177,7 @@ async def _add_event(
 async def test_event_entity(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     event_class: type[FakeEvent],
     device_class: EventDeviceClass | None,
     event_types: list[str],
@@ -198,7 +198,7 @@ async def test_event_entity(
 async def test_event_triggered(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test events triggered by the zha entity are fired in Home Assistant."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
@@ -226,7 +226,7 @@ async def test_event_triggered(
 async def test_multiple_events(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test event entities on the same device are triggered independently."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
@@ -258,7 +258,7 @@ async def test_multiple_events(
 async def test_event_restored(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test the last event is restored when the entity is set up again."""
     mock_restore_cache_with_extra_data(
@@ -289,7 +289,7 @@ async def test_event_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test removing the entity stops listening to the zha entity."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)

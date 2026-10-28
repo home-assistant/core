@@ -3,7 +3,7 @@
 from typing import Any
 
 import probatio
-from zha.zigbee.device import Device
+from zha.zigbee.device import ZigbeeDevice
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.zcl.clusters.security import IasWd
 
@@ -159,7 +159,7 @@ async def async_get_actions(
     except KeyError, AttributeError:
         return []
     # Green Power devices have no clusters
-    if not isinstance(zha_device, Device):
+    if not isinstance(zha_device, ZigbeeDevice):
         return []
     cluster_ids = {
         cluster_id
