@@ -825,10 +825,16 @@ async def test_zeroconf_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("config_entry_domain", "client_id"),
+    ("config_entry_domain", "client_id", "disabled_by"),
     [
-        pytest.param("mqtt", "WWP-OTHER", id="other_client_id"),
-        pytest.param("other", MOCK_MQTT_CLIENT_ID, id="not_an_mqtt_device"),
+        pytest.param("mqtt", "wattwaechter-other", None, id="other_client_id"),
+        pytest.param("other", MOCK_MQTT_CLIENT_ID, None, id="not_an_mqtt_device"),
+        pytest.param(
+            "mqtt",
+            MOCK_MQTT_CLIENT_ID,
+            ConfigEntryDisabler.USER,
+            id="mqtt_disabled",
+        ),
     ],
 )
 async def test_user_flow_other_mqtt_device(
@@ -838,10 +844,11 @@ async def test_user_flow_other_mqtt_device(
     device_registry: dr.DeviceRegistry,
     config_entry_domain: str,
     client_id: str,
+    disabled_by: ConfigEntryDisabler | None,
 ) -> None:
-    """Test only an MQTT device of this device aborts the flow."""
+    """Test only a device of an enabled MQTT entry aborts the flow."""
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
-    owner_entry = MockConfigEntry(domain=config_entry_domain)
+    owner_entry = MockConfigEntry(domain=config_entry_domain, disabled_by=disabled_by)
     owner_entry.add_to_hass(hass)
     device_registry.async_get_or_create(
         config_entry_id=owner_entry.entry_id, identifiers={("mqtt", client_id)}

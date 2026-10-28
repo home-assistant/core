@@ -105,7 +105,9 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 identifiers={(MQTT_DOMAIN, self._mqtt_client_id)},
                 config_entry_id=entry.entry_id,
             )
-            for entry in self.hass.config_entries.async_entries(MQTT_DOMAIN)
+            for entry in self.hass.config_entries.async_entries(
+                MQTT_DOMAIN, include_ignore=False, include_disabled=False
+            )
         ):
             raise AbortFlow("already_configured_mqtt")
 
