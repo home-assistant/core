@@ -1963,12 +1963,9 @@ async def test_entity_service_call_exclude_group_entity(
     } == expected_entity_ids
 
 
-async def test_service_call_exclude(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_service_call_exclude(hass: HomeAssistant) -> None:
     """Test the exclude block of a target is passed on to the service call."""
     calls = async_mock_service(hass, "test_domain", "test_service")
-    entry = entity_registry.async_get_or_create("light", "test", "unique")
 
     await service.async_call_from_config(
         hass,
@@ -1978,7 +1975,7 @@ async def test_service_call_exclude(
                 "area_id": "kitchen",
                 "exclude": {
                     "area_id": "{{ 'pantry' }}",
-                    "entity_id": [entry.id, "light.static"],
+                    "entity_id": ["{{ 'light.rendered' }}", "light.static"],
                 },
             },
         },
@@ -1988,23 +1985,33 @@ async def test_service_call_exclude(
     assert dict(calls[0].data) == {
         "area_id": ["kitchen"],
         "exclude": {
-            "area_id": "pantry",
-            "entity_id": [entry.entity_id, "light.static"],
+            "area_id": ["pantry"],
+            "entity_id": ["light.rendered", "light.static"],
         },
     }
 
+
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param({"entity_id": "{{ 'invalid' }}"}, id="invalid_entity_id"),
+        pytest.param({"entity_id": "{{ 'Light.Kitchen' }}"}, id="uppercase_entity_id"),
+        pytest.param({"area_id": "{{ ['kitchen'] }}", "exclude": {}}, id="nested"),
+    ],
+)
+async def test_service_call_exclude_invalid(
+    hass: HomeAssistant, exclude: dict[str, Any]
+) -> None:
+    """Test a rendered exclude block is validated like a static one."""
     with pytest.raises(
         exceptions.HomeAssistantError,
-        match="Template rendered invalid excluded entity IDs",
+        match="Template rendered invalid exclude block",
     ):
         service.async_prepare_call_from_config(
             hass,
             {
                 "action": "test_domain.test_service",
-                "target": {
-                    "area_id": "kitchen",
-                    "exclude": {"entity_id": "{{ 'invalid' }}"},
-                },
+                "target": {"area_id": "kitchen", "exclude": exclude},
             },
         )
 
