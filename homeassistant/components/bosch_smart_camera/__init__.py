@@ -3,15 +3,21 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import BoschCameraConfigEntry, BoschCameraCoordinator
+from .coordinator import (
+    BoschCameraConfigEntry,
+    BoschCameraCoordinator,
+    BoschFirmwareCoordinator,
+)
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> None:
     """Set up Bosch Smart Camera from a config entry."""
     coordinator = BoschCameraCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
+    coordinator.firmware = BoschFirmwareCoordinator(hass, entry, coordinator)
+    await coordinator.firmware.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
