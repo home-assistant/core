@@ -64,7 +64,7 @@ def _async_migrate_interface_identifiers(
     migrated = {
         legacy_interface_identifier(
             interface.get("mac-address"), interface["name"]
-        ): interface_identifier(coordinator.serial_num, interface["name"])
+        ): interface_identifier(coordinator.interface_scope, interface["name"])
         for interface in coordinator.api.interfaces
         if interface.get("name")
     }
@@ -135,7 +135,7 @@ async def async_setup_entry(
         for interface in coordinator.api.interfaces:
             if name := interface.get("name"):
                 known_identifiers.add(
-                    (DOMAIN, interface_identifier(coordinator.serial_num, name))
+                    (DOMAIN, interface_identifier(coordinator.interface_scope, name))
                 )
 
         for device_entry in dr.async_entries_for_config_entry(

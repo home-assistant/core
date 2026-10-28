@@ -72,7 +72,7 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
         super().__init__(coordinator, description)
 
         name = interface["name"]
-        ident = interface_identifier(self._serial, name)
+        ident = interface_identifier(coordinator.interface_scope, name)
 
         self._attr_device_info = self._device_info(ident, name)
         self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(

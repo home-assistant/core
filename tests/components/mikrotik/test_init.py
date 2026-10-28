@@ -547,6 +547,27 @@ async def test_interfaces_of_different_routers_do_not_collide(
         } == {f"{serial_number}_ether1", f"{serial_number}_wireguard1"}
 
 
+async def test_interfaces_of_routers_without_serial_number_do_not_collide(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test routers without a serial number scope interfaces by config entry."""
+    routerboard_data = [{**ROUTERBOARD_DATA[0], ATTR_SERIAL_NUMBER: None}]
+
+    config_entries = [
+        await setup_mikrotik_entry(
+            hass,
+            interface_data=[WIREGUARD1_INTERFACE],
+            routerboard_data=routerboard_data,
+        )
+        for _ in range(2)
+    ]
+
+    for config_entry in config_entries:
+        assert entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{config_entry.entry_id}_wireguard1"
+        )
+
+
 async def test_interface_identifiers_are_migrated(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

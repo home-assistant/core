@@ -19,13 +19,13 @@ from .const import DOMAIN, LOGGER
 from .errors import CannotConnect, LoginError
 
 
-def interface_identifier(serial_number: str, name: str) -> str:
+def interface_identifier(scope: str, name: str) -> str:
     """Return the unique ID and device identifier of an interface.
 
     Interface names are unique within a router, while MAC addresses are not:
     software interfaces such as WireGuard have none, and VRRP peers share one.
     """
-    return f"{serial_number}_{name}"
+    return f"{scope}_{name}"
 
 
 def legacy_interface_identifier(mac_address: str | None, name: str) -> str:
