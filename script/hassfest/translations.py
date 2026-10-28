@@ -8,13 +8,13 @@ import re
 import string
 from typing import Any
 
+from hassfest.model import Config, Integration, IntegrationType
 import probatio
 from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
 
-from .model import Config, Integration, IntegrationType
 from .translation_data import generate_upload_data
 
 UNDEFINED = 0

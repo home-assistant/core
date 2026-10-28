@@ -27,6 +27,7 @@ from .const import (
     CONF_STATION,
     DEBOUNCE_TIME,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     LOCATION_CHANGE_THRESHOLD,
     OBSERVATION_VALID_TIME,
     RETRY_INTERVAL,
@@ -152,7 +153,10 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
                 start_time=utcnow() - UPDATE_TIME_PERIOD,
             )
         except (NwsNoDataError, ClientResponseError) as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="observation_update_error",
+            ) from err
         else:
             self.last_api_success_time = utcnow()
         finally:
@@ -172,7 +176,10 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             if not self.last_api_success_time or (
                 utcnow() - self.last_api_success_time > OBSERVATION_VALID_TIME
             ):
-                raise UpdateFailed(err) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="observation_update_error",
+                ) from err
             _LOGGER.debug(
                 "NWS observation update failed, but data still valid. Last success: %s",
                 self.last_api_success_time,

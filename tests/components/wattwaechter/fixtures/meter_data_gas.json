@@ -29,5 +29,10 @@
     "value": 0.42,
     "unit": "m³/h",
     "name": "Flow Rate"
+  },
+  "7-0:16.7.0": {
+    "value": 4.389,
+    "unit": "kW",
+    "name": "Power"
   }
 }
