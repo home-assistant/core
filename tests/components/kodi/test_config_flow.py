@@ -934,3 +934,70 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "2.2.2.2"
+
+
+async def test_reconfigure_credentials(hass: HomeAssistant) -> None:
+    """Test reconfigure validates a new host with updated credentials."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_kodi_success(),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ) as mock_get_connection,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+                CONF_PORT: 8080,
+                CONF_SSL: False,
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_get_connection.assert_called_once_with(
+        "2.2.2.2", 8080, None, "new_user", "new_password", False, session=ANY
+    )
+    assert entry.data[CONF_USERNAME] == "new_user"
+    assert entry.data[CONF_PASSWORD] == "new_password"
+
+
+async def test_reconfigure_closes_ws_connection(hass: HomeAssistant) -> None:
+    """Test the temporary WebSocket connection is closed after validation."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+    ws_connection = MockWSConnection()
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_kodi_success(),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            side_effect=[MockConnection(), ws_connection],
+        ),
+        patch.object(ws_connection, "close") as mock_close,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+                CONF_PORT: 8080,
+                CONF_SSL: False,
+                CONF_WS_PORT: 9090,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_close.assert_awaited_once()

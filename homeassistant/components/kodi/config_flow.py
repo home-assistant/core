@@ -83,6 +83,8 @@ async def validate_ws(hass: HomeAssistant, data):
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
+    finally:
+        await kwc.close()
 
 
 class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -315,13 +317,17 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(CONF_PORT): int,
                 probatio.Required(CONF_SSL): bool,
                 probatio.Optional(CONF_WS_PORT): int,
+                probatio.Optional(CONF_USERNAME): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
+        suggested_values = {
+            **(user_input or reconfigure_entry.data),
+            CONF_PASSWORD: None,
+        }
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                schema, user_input or reconfigure_entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
             errors=errors,
         )
 

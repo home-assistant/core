@@ -36,12 +36,15 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "ws_port": "WebSocket port"
         },
         "data_description": {
           "host": "[%key:component::kodi::config::step::user::data_description::host%]",
+          "password": "Leave empty to keep the current password.",
           "ws_port": "The WebSocket port (sometimes called TCP port in Kodi). Leave empty if WebSocket is not enabled."
         }
       },
