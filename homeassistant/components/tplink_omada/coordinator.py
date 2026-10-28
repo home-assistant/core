@@ -3,7 +3,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-import re
 from typing import TYPE_CHECKING, NamedTuple, override
 
 from tplink_omada_client import (
@@ -24,9 +23,10 @@ from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .config_flow import CONF_SITE
 from .const import DOMAIN
 
 if TYPE_CHECKING:
@@ -42,6 +42,7 @@ POLL_DEVICES = 300
 POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
+POLL_KNOWN_CLIENTS = 3600
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -253,8 +254,25 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
-            hass, config_entry, omada_client, "KnownClientsList", poll_delay=None
+            hass,
+            config_entry,
+            omada_client,
+            "KnownClientsList",
+            POLL_KNOWN_CLIENTS,
         )
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaWirelessClient]:
+        """Fetch known clients and remove trackers the controller dropped."""
+        clients = await super()._async_update_data()
+        if not clients:
+            # A successful but empty response is a controller glitch, not proof
+            # that every client is gone: keep the cached list so nothing is
+            # removed and trackers keep their data.
+            return self.data or {}
+
+        cleanup_client_trackers(self.hass, self.config_entry.runtime_data, clients)
+        return clients
 
     @override
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
@@ -332,54 +350,34 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
 
 
-_MAC_PATTERN = re.compile(
-    r"[0-9a-f]{12}"
-    r"|[0-9a-f]{2}([:-])(?:[0-9a-f]{2}\1){4}[0-9a-f]{2}"
-    r"|[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}",
-    re.IGNORECASE,
-)
-
-
-def _unique_id_to_mac(unique_id: str | None) -> str | None:
-    """Extract the client MAC address from a tracker unique ID."""
-    if not unique_id or not unique_id.startswith("scanner_"):
-        return None
-    # The format is scanner_<site_id>_<mac>. Strip the prefix and split from the
-    # right so site_ids that contain underscores are handled correctly.
-    remainder = unique_id.removeprefix("scanner_")
-    site_id, sep, mac = remainder.rpartition("_")
-    if not sep or not site_id or not _MAC_PATTERN.fullmatch(mac):
-        return None
-
-    # Validate the octet widths before normalizing: format_mac regroups digits,
-    # so a malformed "0-000-00-00-00-00" would otherwise become "00:00:00:00:00:00".
-    return dr.format_mac(mac)
-
-
 @callback
 def cleanup_client_trackers(
     hass: HomeAssistant,
     controller: OmadaSiteController,
+    known_clients: dict[str, OmadaWirelessClient] | None = None,
 ) -> None:
-    """Remove stale client tracker entities for the Omada integration."""
-    if not controller.known_clients_coordinator.last_update_success:
+    """Remove tracker entities for clients missing from the controller list."""
+    if known_clients is None:
+        known_clients = controller.known_clients_coordinator.data or {}
+    if not known_clients:
         return
 
-    known_clients = controller.known_clients_coordinator.data or {}
+    # Trackers are created as scanner_<site>_<client.mac>, with the MAC taken
+    # from the same client list, so comparing unique IDs avoids parsing them.
+    config_entry = controller.known_clients_coordinator.config_entry
+    prefix = f"scanner_{config_entry.data[CONF_SITE]}_"
+    known_unique_ids = {f"{prefix}{mac}" for mac in known_clients}
     entity_registry = er.async_get(hass)
-    entry_id = controller.known_clients_coordinator.config_entry.entry_id
-    known_macs = {dr.format_mac(mac) for mac in known_clients}
 
-    for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
         if entity.domain != DEVICE_TRACKER_DOMAIN:
             continue
-
-        client_mac = _unique_id_to_mac(entity.unique_id)
-        if client_mac is None:
+        if not entity.unique_id.startswith(prefix):
             continue
-
-        if (
-            client_mac not in known_macs
-            and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        ):
-            entity_registry.async_remove(entity.entity_id)
+        if entity.unique_id in known_unique_ids:
+            continue
+        if entity.disabled_by is not er.RegistryEntryDisabler.INTEGRATION:
+            continue
+        entity_registry.async_remove(entity.entity_id)

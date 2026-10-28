@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
 from .const import DOMAIN
-from .coordinator import OmadaClientsCoordinator, cleanup_client_trackers
+from .coordinator import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -122,9 +122,6 @@ async def async_setup_entry(
     @callback
     def _handle_known_clients_update() -> None:
         """Add trackers for clients that reappeared on the controller."""
-        # Clean up before adding so a tracker for a forgotten client does not
-        # hold the entity ID a same-named client needs.
-        cleanup_client_trackers(hass, controller)
         if entities := _new_trackers():
             async_add_entities(entities)
 
@@ -134,7 +131,6 @@ async def async_setup_entry(
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
     # tracked if the user enables the entity.
-    cleanup_client_trackers(hass, controller)
     async_add_entities(_new_trackers())
 
 
