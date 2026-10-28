@@ -339,12 +339,7 @@ async def test_clear_alarm_command_rejected(
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    with (
-        patch(
-            "homeassistant.components.satel_integra.alarm_control_panel.asyncio.sleep"
-        ),
-        pytest.raises(ServiceValidationError) as err,
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             ALARM_DOMAIN,
             SERVICE_ALARM_DISARM,

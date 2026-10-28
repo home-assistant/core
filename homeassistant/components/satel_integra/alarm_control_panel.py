@@ -1,6 +1,5 @@
 """Support for Satel Integra alarm, using ETHM module."""
 
-import asyncio
 from typing import override
 
 from satel_integra import AlarmState
@@ -140,8 +139,6 @@ class SatelIntegraAlarmPanel(
         )
 
         if clear_alarm_necessary:
-            # Wait 1s before clearing the alarm
-            await asyncio.sleep(1)
             await async_validate_command(
                 self._controller.clear_alarm(
                     code,
