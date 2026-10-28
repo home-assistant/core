@@ -11,13 +11,14 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.portainer import PortainerSystemStatus
+from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -53,7 +54,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 async def _validate_input(
     hass: HomeAssistant, data: dict[str, Any]
-) -> PortainerSystemStatus:
+) -> tuple[PortainerSystemStatus, list[Endpoint]]:
     """Validate the user input allows us to connect."""
 
     client = Portainer(
@@ -63,6 +64,7 @@ async def _validate_input(
     )
     try:
         system_status = await client.portainer_system_status()
+        endpoints = await client.get_endpoints()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
     except PortainerConnectionError as err:
@@ -71,7 +73,7 @@ async def _validate_input(
         raise PortainerTimeout from err
 
     _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
-    return system_status
+    return system_status, endpoints
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,7 +99,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                system_status = await _validate_input(self.hass, user_input)
+                system_status, endpoints = await _validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -111,7 +113,17 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(system_status.instance_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_URL], data=user_input
+                    title=user_input[CONF_URL],
+                    data=user_input,
+                    subentries=[
+                        ConfigSubentryData(
+                            data={},
+                            subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                            title=endpoint.name or f"Endpoint {endpoint.id}",
+                            unique_id=str(endpoint.id),
+                        )
+                        for endpoint in endpoints
+                    ],
                 )
 
         return self.async_show_form(
@@ -180,7 +192,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                system_status = await _validate_input(
+                system_status, _ = await _validate_input(
                     self.hass,
                     data={
                         **reconf_entry.data,
@@ -237,6 +249,9 @@ class EnvironmentSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="timeout_connect")
         except PortainerAuthenticationError:
             return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
         configured_endpoint_ids = {
             subentry.unique_id for subentry in entry.subentries.values()
