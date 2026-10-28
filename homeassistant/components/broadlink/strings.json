@@ -42,9 +42,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
+      }
+    },
+    "number": {
+      "max_temp": {
+        "name": "Maximum setpoint"
+      },
+      "min_temp": {
+        "name": "Minimum setpoint"
       }
     },
     "radio_frequency": {
@@ -111,6 +124,9 @@
     },
     "send_command_failed": {
       "message": "Failed to send command: {error}"
+    },
+    "setpoint_limits_inverted": {
+      "message": "The minimum setpoint ({min_temp} °C) cannot be higher than the maximum setpoint ({max_temp} °C)"
     },
     "setup_failed": {
       "message": "Failed to set up the device at {host}"

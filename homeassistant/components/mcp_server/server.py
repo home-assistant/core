@@ -20,6 +20,7 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.network import get_url
 
 from .const import STATELESS_LLM_API
 
@@ -227,6 +228,13 @@ async def create_server(
 
     return Server[Any](
         name="home-assistant",
+        icons=[
+            types.Icon(
+                src=f"{get_url(hass, require_current_request=True)}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ],
         on_list_prompts=handle_list_prompts,
         on_get_prompt=handle_get_prompt,
         on_list_resources=handle_list_resources,

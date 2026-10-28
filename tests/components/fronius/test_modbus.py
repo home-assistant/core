@@ -40,7 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_HOST, mock_responses, setup_fronius_integration
 
@@ -96,6 +96,7 @@ async def test_gen24_storage_mppt(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     float_mode: bool,
 ) -> None:
@@ -112,8 +113,8 @@ async def test_gen24_storage_mppt(
         )
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current", 8.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage", 402.1)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current_modbus", 8.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage_modbus", 402.1)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
     assert_state(hass, "sensor.gen24_storage_mppt_1_energy", 1000000)
     assert_state(hass, "sensor.gen24_storage_mppt_2_dc_power", 1650)
@@ -128,6 +129,22 @@ async def test_gen24_storage_mppt(
     entity_entry = entity_registry.async_get("sensor.gen24_storage_mppt_1_dc_power")
     assert entity_entry
     assert entity_entry.unique_id == "12345678-modbus-mppt_1_power_dc"
+    # Modbus and SolarAPI readings of a module share its child device
+    solar_api_entry = entity_registry.async_get(
+        "sensor.gen24_storage_mppt_1_dc_current"
+    )
+    assert solar_api_entry
+    assert solar_api_entry.unique_id == "12345678-current_dc"
+    assert entity_entry.device_id == solar_api_entry.device_id
+    mppt_1 = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-1"), config_entry.entry_id
+    )
+    assert mppt_1
+    assert entity_entry.device_id == mppt_1.id
+    # storage modules of a hybrid are children as well
+    assert device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-4"), config_entry.entry_id
+    )
 
     solar_net = config_entry.runtime_data
     assert len(solar_net.modbus.inverter_coordinators) == 1
@@ -172,8 +189,8 @@ async def test_verto_plus_five_modules(
 
     assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 800)
     assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 0)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current", 1.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage", 399.0)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current_modbus", 1.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage_modbus", 399.0)
     assert_state(hass, "sensor.gen24_storage_mppt_5_dc_power", 480)
     assert_state(hass, "sensor.gen24_storage_mppt_5_energy", 5000)
     assert_state(hass, "sensor.gen24_storage_pv_energy_total", 6000)
