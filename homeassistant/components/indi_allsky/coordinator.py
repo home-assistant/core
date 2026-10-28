@@ -359,7 +359,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                         isinstance(entry, dict)
                         and entry.get("unit") in ("°C", "°F", "K")
                         and entry.get("unit") != new_temp_unit
-                        and (not isinstance(val, dict) or "unit" not in val)
+                        and (not isinstance(val, dict) or val.get("unit") is None)
                         and (not isinstance(val, dict) or "value" in val)
                     ):
                         merged_sensors[key] = {**entry, "unit": new_temp_unit}
