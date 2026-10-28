@@ -1,7 +1,7 @@
 """Config flow to configure the Bravia TV integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -28,6 +28,7 @@ from .const import (
     CONF_USE_PSK,
     CONF_USE_SSL,
     DOMAIN,
+    LEGACY_CLIENT_ID,
     NICKNAME_PREFIX,
 )
 
@@ -269,3 +270,55 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self.device_config = {**entry_data}
         return await self.async_step_authorize()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host of a Bravia TV."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            if not is_host_valid(host):
+                errors[CONF_HOST] = "invalid_host"
+            else:
+                # Defaults match the coordinator for entries created before these keys
+                self.device_config = {
+                    CONF_USE_PSK: False,
+                    CONF_USE_SSL: False,
+                    CONF_CLIENT_ID: LEGACY_CLIENT_ID,
+                    CONF_NICKNAME: NICKNAME_PREFIX,
+                    **reconfigure_entry.data,
+                    CONF_HOST: host,
+                }
+                self.create_client()
+                if TYPE_CHECKING:
+                    assert self.client
+                try:
+                    await self.async_connect_device()
+                    system_info = await self.client.get_system_info()
+                except BraviaAuthError:
+                    errors["base"] = "invalid_auth"
+                except BraviaNotSupported:
+                    errors["base"] = "unsupported_model"
+                except BraviaError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    await self.async_set_unique_id(
+                        system_info[ATTR_CID].lower()
+                        or format_mac(system_info[ATTR_MAC])
+                    )
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry, data_updates={CONF_HOST: host}
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
