@@ -8,8 +8,8 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     account_id_from_token,
-    list_cameras,
 )
+from bosch_shc_camera_client.client import BoschCameraClient
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -58,8 +58,13 @@ class BoschCameraFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="oauth_error")
         await self.async_set_unique_id(account_id)
         self._abort_if_unique_id_configured()
+
+        async def _token() -> str:
+            return access_token
+
+        client = BoschCameraClient(async_get_clientsession(self.hass), _token)
         try:
-            await list_cameras(async_get_clientsession(self.hass), access_token)
+            await client.list_cameras()
         except BoschCameraAuthError:
             return self.async_abort(reason="invalid_auth")
         except BoschCameraConnectionError, BoschCameraInvalidResponseError:

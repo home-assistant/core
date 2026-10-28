@@ -12,9 +12,8 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
-    get_latest_event_image,
-    list_cameras,
 )
+from bosch_shc_camera_client.client import BoschCameraClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -46,6 +45,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
 
     config_entry: BoschCameraConfigEntry
     _oauth_session: OAuth2Session
+    _client: BoschCameraClient
 
     def __init__(
         self, hass: HomeAssistant, config_entry: BoschCameraConfigEntry
@@ -70,16 +70,20 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self._oauth_session = OAuth2Session(
             self.hass, self.config_entry, implementation
         )
+        self._client = BoschCameraClient(
+            async_get_clientsession(self.hass), self._async_get_token
+        )
+
+    async def _async_get_token(self) -> str:
+        """Return a fresh access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
     @override
     async def _async_update_data(self) -> dict[str, Camera]:
         """Fetch the camera list."""
-        await self._oauth_session.async_ensure_token_valid()
         try:
-            cameras = await list_cameras(
-                async_get_clientsession(self.hass),
-                str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-            )
+            cameras = await self._client.list_cameras()
         except BoschCameraAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
@@ -101,13 +105,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             cached = self._snapshots.get(camera_id)
             if cached and time.monotonic() - cached[0] < SNAPSHOT_TTL:
                 return cached[1]
-            await self._oauth_session.async_ensure_token_valid()
             try:
-                image = await get_latest_event_image(
-                    async_get_clientsession(self.hass),
-                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-                    camera_id,
-                )
+                image = await self._client.get_latest_event_image(camera_id)
             except (
                 BoschCameraAuthError,
                 BoschCameraConnectionError,
