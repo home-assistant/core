@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'bytes_received': 0,
+      'bytes_sent': 0,
+      'ip': '**REDACTED**',
+      'kibibytes_per_sec_received': None,
+      'kibibytes_per_sec_received_no_rollover': None,
+      'kibibytes_per_sec_sent': None,
+      'kibibytes_per_sec_sent_no_rollover': None,
+      'packets_per_sec_received': None,
+      'packets_per_sec_received_no_rollover': None,
+      'packets_per_sec_sent': None,
+      'packets_per_sec_sent_no_rollover': None,
+      'packets_received': 0,
+      'packets_sent': 0,
+      'port_mapping_number_of_entries': 0,
+      'uptime': 10,
+      'wan_status': 'Connected',
+    }),
+    'device': dict({
+      'device_type': 'urn:schemas-upnp-org:device:InternetGatewayDevice:1',
+      'force_poll': False,
+      'manufacturer': 'mock-manufacturer',
+      'model_name': 'mock-model-name',
+    }),
+    'entry_data': dict({
+      'location': '**REDACTED**',
+      'mac_address': '**REDACTED**',
+      'original_udn': '**REDACTED**',
+      'st': 'urn:schemas-upnp-org:device:InternetGatewayDevice:1',
+      'udn': '**REDACTED**',
+    }),
+    'entry_options': dict({
+    }),
+  })
+# ---
