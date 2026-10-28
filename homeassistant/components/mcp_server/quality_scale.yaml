@@ -102,7 +102,7 @@ rules:
   entity-translations:
     status: exempt
     comment: Service does not have entities
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Service does not have entities

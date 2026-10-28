@@ -18,8 +18,14 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Failed to call OTBR API"
+    },
     "border_agent_id_unsupported": {
       "message": "The OTBR does not support Border Agent ID"
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to the OTBR"
     }
   },
   "issues": {
