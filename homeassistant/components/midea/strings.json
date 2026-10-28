@@ -410,7 +410,7 @@
         "name": "Current energy consumption"
       },
       "dehydration_level": {
-        "name": "Dehydration level",
+        "name": "Spin level",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
@@ -419,10 +419,10 @@
         }
       },
       "dehydration_speed": {
-        "name": "Dehydration speed"
+        "name": "Spin speed"
       },
       "dehydration_time": {
-        "name": "Dehydration time"
+        "name": "Spin time"
       },
       "detergent": {
         "name": "Detergent",
@@ -825,7 +825,7 @@
           "color": "Color",
           "cook_wash": "Cook wash",
           "cotton": "Cotton and linen",
-          "dehydration_min": "Dehydration min",
+          "dehydration_min": "Spin min",
           "diy0": "DIY 0",
           "diy2": "DIY 2",
           "down_jacket": "Down jacket",
@@ -863,7 +863,7 @@
           "prevent_allergy": "Prevent allergy",
           "quick_wash": "Quick wash",
           "remove_mite_wash": "Remove mite wash",
-          "rinsing_dehydration": "Rinsing dehydration",
+          "rinsing_dehydration": "Rinse and spin",
           "self_wash_5": "Self wash 5",
           "self_wash_min": "Self wash min",
           "shirt": "Shirt",
