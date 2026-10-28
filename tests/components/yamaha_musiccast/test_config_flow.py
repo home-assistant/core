@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
@@ -426,6 +426,31 @@ async def test_reconfigure(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
     }
+
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_valid", "mock_valid_discovery_information"
+)
+async def test_reconfigure_with_update_listener(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a loaded entry leaves the reload to its update listener."""
+    update_listener = AsyncMock()
+    mock_reconfigure_entry.add_update_listener(update_listener)
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "127.0.0.1"
+    update_listener.assert_called_once()
+    mock_reload.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_valid_discovery_information")

@@ -71,12 +71,15 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_mismatch()
+                data_updates = {
+                    CONF_HOST: host,
+                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
+                }
+                # The update listener is only registered after a successful setup
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data_updates=data_updates)
                 return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={
-                        CONF_HOST: host,
-                        CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
-                    },
+                    entry, data_updates=data_updates
                 )
 
         return self.async_show_form(
