@@ -5,7 +5,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, UIClass
+from pyoverkiz.enums import (
+    OverkizAttribute,
+    OverkizCommand,
+    OverkizCommandParam,
+    OverkizState,
+    UIClass,
+)
 from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.components.number import (
@@ -36,6 +42,11 @@ class OverkizNumberDescription(NumberEntityDescription):
 
     min_value_state_name: str | None = None
     max_value_state_name: str | None = None
+    # Device attributes (not states) holding the absolute, device-advertised
+    # bounds. Unlike the per-mode *CurrentBound states, these are static and
+    # present while the appliance is idle, so they are read once at setup.
+    min_value_attribute_name: str | None = None
+    max_value_attribute_name: str | None = None
     inverted: bool = False
     set_native_value: (
         Callable[[float, Callable[..., Awaitable[None]]], Awaitable[None]] | None
@@ -222,13 +233,11 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
-    # Oven (ogp:Oven) - target temperature.
-    # The device enforces an absolute physical envelope and rejects anything
-    # outside it; the per-mode advisory bounds (exposed as diagnostic sensors)
-    # are not applied here on purpose: they are absent while the oven is idle
-    # and are only hints, so the oven accepts values outside them. The envelope
-    # below is kept wide enough to never reject a value the appliance advertises
-    # as valid in any mode.
+    # Oven (ogp:Oven) - target temperature. The absolute bounds are read from
+    # the device-advertised core:TargetTemperature{Lower,Upper}Bound attributes
+    # (the native_* values below are only a fallback for a setup that omits
+    # them). The per-mode advisory *CurrentBound states are exposed as
+    # diagnostic sensors instead: they are hints the oven does not enforce.
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_TEMPERATURE,
         name="Target temperature",
@@ -238,10 +247,15 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_min_value=30,
         native_max_value=275,
         native_step=5,
+        min_value_attribute_name=OverkizAttribute.CORE_TARGET_TEMPERATURE_LOWER_BOUND,
+        max_value_attribute_name=OverkizAttribute.CORE_TARGET_TEMPERATURE_UPPER_BOUND,
         mode=NumberMode.BOX,
         device_types=[UIClass.OVEN],
     ),
-    # Oven (ogp:Oven) - target cooking time (0 - 9h59)
+    # Oven (ogp:Oven) - target cooking time. The absolute bounds are read from
+    # the device-advertised core:TargetTime{Lower,Upper}Bound attributes
+    # (pyoverkiz has no OverkizAttribute member for these yet, so they are
+    # referenced by name); the native_* values are only a fallback.
     OverkizNumberDescription(
         key=OverkizState.CORE_TARGET_TIME,
         name="Cooking duration",
@@ -249,8 +263,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0,
-        native_max_value=35940,
+        native_max_value=36000,
         native_step=60,
+        min_value_attribute_name="core:TargetTimeLowerBound",
+        max_value_attribute_name="core:TargetTimeUpperBound",
         mode=NumberMode.BOX,
         device_types=[UIClass.OVEN],
     ),
@@ -340,6 +356,20 @@ class OverkizNumber(OverkizExecutableEntity, NumberEntity):
             )
         ):
             self._attr_native_max_value = cast(float, state.value)
+
+        if self.entity_description.min_value_attribute_name and (
+            attribute := self.device.attributes.get(
+                self.entity_description.min_value_attribute_name
+            )
+        ):
+            self._attr_native_min_value = cast(float, attribute.value)
+
+        if self.entity_description.max_value_attribute_name and (
+            attribute := self.device.attributes.get(
+                self.entity_description.max_value_attribute_name
+            )
+        ):
+            self._attr_native_max_value = cast(float, attribute.value)
 
     @property
     @override

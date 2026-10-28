@@ -1172,8 +1172,8 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35940,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 36000,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 60,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 60,
     }),
@@ -1212,8 +1212,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Cooking duration',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35940,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 36000,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 60,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 60,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,

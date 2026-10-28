@@ -522,7 +522,7 @@
     'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'binary_sensor.oven_temperature_reached',
     'has_entity_name': True,
     'hidden_by': None,

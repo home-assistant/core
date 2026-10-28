@@ -199,6 +199,22 @@ async def test_number_dynamic_min_max(
     assert state.attributes["max"] == 4
 
 
+async def test_oven_number_bounds_from_attributes(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the oven controls read their bounds from device attributes."""
+    await setup_overkiz_integration(fixture=OVEN_TARGET_TEMPERATURE.fixture)
+
+    temperature = hass.states.get(OVEN_TARGET_TEMPERATURE.entity_id)
+    assert temperature.attributes["min"] == 30
+    assert temperature.attributes["max"] == 275
+
+    duration = hass.states.get(OVEN_COOKING_DURATION.entity_id)
+    assert duration.attributes["min"] == 60
+    assert duration.attributes["max"] == 36000
+
+
 async def test_number_state_update(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
