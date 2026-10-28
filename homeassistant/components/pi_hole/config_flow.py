@@ -29,6 +29,28 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): probatio.Coerce(int),
+        probatio.Required(CONF_LOCATION): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL): bool,
+    }
+)
+
+
+def _config_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the config entry data for the user input."""
+    return {
+        CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+        CONF_LOCATION: user_input[CONF_LOCATION],
+        CONF_SSL: user_input[CONF_SSL],
+        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+        CONF_API_KEY: user_input[CONF_API_KEY],
+    }
+
 
 class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole config flow."""
@@ -47,13 +69,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._config = {
-                CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-                CONF_LOCATION: user_input[CONF_LOCATION],
-                CONF_SSL: user_input[CONF_SSL],
-                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                CONF_API_KEY: user_input[CONF_API_KEY],
-            }
+            self._config = _config_from_user_input(user_input)
 
             self._async_abort_entries_match(
                 {
@@ -125,6 +141,42 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             },
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Pi-hole connection."""
+        entry = self._get_reconfigure_entry()
+        errors = {}
+
+        if user_input is not None:
+            config = _config_from_user_input(user_input)
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: config[CONF_HOST],
+                    CONF_LOCATION: config[CONF_LOCATION],
+                }
+            )
+            self._config = {**entry.data, **config}
+            if not (errors := await self._async_try_connect()):
+                return self.async_update_reload_and_abort(entry, data_updates=config)
+            suggested_values = user_input
+        else:
+            host, _, port = entry.data[CONF_HOST].rpartition(":")
+            suggested_values = {**entry.data, CONF_HOST: host, CONF_PORT: int(port)}
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                {
+                    key: value
+                    for key, value in suggested_values.items()
+                    if key != CONF_API_KEY
+                },
             ),
             errors=errors,
         )
