@@ -32,6 +32,6 @@
         }),
       }),
     ]),
-    'webhook_configured': False,
+    'webhook_registered': False,
   })
 # ---

@@ -6,7 +6,6 @@ from typing import Any
 from switchbot_api import Device, Remote
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from . import SwitchbotCloudConfigEntry
@@ -30,7 +29,7 @@ async def async_get_config_entry_diagnostics(
             )
 
     return {
-        "webhook_configured": CONF_WEBHOOK_ID in entry.data,
+        "webhook_registered": entry.runtime_data.webhook_registered,
         "cloudhook_configured": CONF_CLOUDHOOK_URL in entry.data,
         "devices": [
             {
