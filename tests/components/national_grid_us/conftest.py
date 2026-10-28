@@ -96,22 +96,35 @@ def mock_costs() -> list[dict]:
     ]
 
 
-def make_api_mock() -> AsyncMock:
-    """Create a mock NationalGridClient."""
-    api = AsyncMock()
-    api.get_billing_account = AsyncMock(return_value=mock_billing_account())
-    api.get_ami_energy_usages = AsyncMock(
-        side_effect=lambda **kwargs: mock_ami_usages(kwargs["fuel_type"])
-    )
-    api.get_energy_usage_costs = AsyncMock(return_value=mock_costs())
-    return api
+def mock_linked_accounts() -> list[dict]:
+    """Return mock linked billing accounts for the config flow."""
+    return [{"billingAccountId": MOCK_ACCOUNT_ID}]
 
 
 @pytest.fixture
 def mock_national_grid_api() -> Generator[AsyncMock]:
-    """Mock the NationalGridClient."""
-    with patch(
-        "homeassistant.components.national_grid_us.coordinator.NationalGridClient",
-        return_value=make_api_mock(),
-    ) as mock_client:
-        yield mock_client.return_value
+    """Mock the NationalGridClient across the coordinator and config flow.
+
+    autospec keeps the mock's surface in step with the real client, so a
+    renamed or removed library method fails the tests instead of silently
+    passing.
+    """
+    with (
+        patch(
+            "homeassistant.components.national_grid_us.coordinator.NationalGridClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.national_grid_us.config_flow.NationalGridClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.__aenter__.return_value = client
+        client.get_billing_account.return_value = mock_billing_account()
+        client.get_ami_energy_usages.side_effect = lambda **kwargs: mock_ami_usages(
+            kwargs["fuel_type"]
+        )
+        client.get_energy_usage_costs.return_value = mock_costs()
+        client.get_linked_accounts.return_value = mock_linked_accounts()
+        yield client

@@ -1,6 +1,6 @@
 """Tests for the National Grid US sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -25,12 +25,7 @@ from .conftest import (
     MOCK_PASSWORD,
     MOCK_SERVICE_POINT,
     MOCK_USERNAME,
-    make_api_mock,
     mock_billing_account,
-)
-
-PATCH_CLIENT = (
-    "homeassistant.components.national_grid_us.coordinator.NationalGridClient"
 )
 
 
@@ -92,6 +87,7 @@ async def test_meter_devices_linked_to_account_device(
 async def test_cost_sensor_uses_date_not_month_across_year_boundary(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_national_grid_api: AsyncMock,
 ) -> None:
     """Test the cost sensor picks the most recent cost by date, not month number.
 
@@ -99,27 +95,23 @@ async def test_cost_sensor_uses_date_not_month_across_year_boundary(
     December (month=12) must not be returned over a more recent January
     (month=1) of the following year.
     """
-    api = make_api_mock()
-    api.get_energy_usage_costs = AsyncMock(
-        return_value=[
-            {
-                "fuelType": "ELECTRIC",
-                "month": 12,
-                "date": "2024-12-01",
-                "amount": 140.00,
-            },
-            {
-                "fuelType": "ELECTRIC",
-                "month": 1,
-                "date": "2025-01-01",
-                "amount": 120.50,
-            },
-        ]
-    )
+    mock_national_grid_api.get_energy_usage_costs.return_value = [
+        {
+            "fuelType": "ELECTRIC",
+            "month": 12,
+            "date": "2024-12-01",
+            "amount": 140.00,
+        },
+        {
+            "fuelType": "ELECTRIC",
+            "month": 1,
+            "date": "2025-01-01",
+            "amount": 120.50,
+        },
+    ]
 
-    with patch(PATCH_CLIENT, return_value=api):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ELECTRIC_COST)
     assert state is not None
@@ -129,6 +121,7 @@ async def test_cost_sensor_uses_date_not_month_across_year_boundary(
 async def test_shared_service_point_across_accounts_no_collision(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    mock_national_grid_api: AsyncMock,
 ) -> None:
     """Test meters sharing a service point across accounts do not collide.
 
@@ -152,16 +145,14 @@ async def test_shared_service_point_across_accounts_no_collision(
         entry.add_to_hass(hass)
         entries.append(entry)
 
-    def make_account_api() -> AsyncMock:
-        api = make_api_mock()
-        api.get_billing_account = AsyncMock(side_effect=mock_billing_account)
-        return api
+    # Return the billing account matching the requested account_id so each
+    # entry gets its own meters keyed by account_id + service point.
+    mock_national_grid_api.get_billing_account.side_effect = mock_billing_account
 
     # Setting up one entry sets up the integration, which loads every config
     # entry for the domain, so both accounts are configured in one call.
-    with patch(PATCH_CLIENT, side_effect=lambda **kwargs: make_account_api()):
-        await hass.config_entries.async_setup(entries[0].entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entries[0].entry_id)
+    await hass.async_block_till_done()
 
     device_1 = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}"), entries[0].entry_id
