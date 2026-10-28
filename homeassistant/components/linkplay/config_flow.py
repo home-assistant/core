@@ -150,7 +150,9 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(bridge.device.uuid)
+                await self.async_set_unique_id(
+                    bridge.device.uuid, raise_on_progress=False
+                )
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input

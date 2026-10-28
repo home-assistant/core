@@ -396,3 +396,38 @@ async def test_reconfigure_flow_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data == {CONF_HOST: HOST}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unique_id_mismatch_discovery_in_progress(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test reconfigure reports a mismatch when the other device is being discovered."""
+    mock_config_entry.add_to_hass(hass)
+    mock_linkplay_factory_bridge.return_value.device.uuid = "other_uuid"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address(HOST_REENTRY),
+            ip_addresses=[ip_address(HOST_REENTRY)],
+            hostname="other.local.",
+            name="other._linkplay._tcp.local.",
+            port=59152,
+            type="_linkplay._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST_REENTRY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == {CONF_HOST: HOST}
