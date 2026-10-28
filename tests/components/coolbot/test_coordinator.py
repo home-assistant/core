@@ -22,7 +22,7 @@ from homeassistant.components.coolbot.const import (
 from homeassistant.components.coolbot.coordinator import device_is_fresh
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -139,6 +139,36 @@ async def test_unloading_mid_reconnect_leaves_no_socket_open(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not mock_client.listeners
     mock_client.async_close.assert_awaited()
+
+
+async def test_stopping_home_assistant_closes_the_socket(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Entries are not unloaded on stop, so the coordinator tears down itself.
+
+    Otherwise the timer would keep starting passes during the stop, and a
+    reconnect among them would hold the stop up. An unload afterwards must
+    not try to remove the stop listener that has already run.
+    """
+    assert await setup_integration(hass, mock_config_entry)
+    mock_client.async_close.reset_mock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_client.async_close.assert_awaited_once()
+    assert not mock_client.listeners
+
+    mock_client.connected = False
+    await _tick(hass)
+    mock_client.async_connect.assert_awaited_once()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert "Unable to remove unknown job listener" not in caplog.text
 
 
 async def test_unloading_while_the_old_socket_closes_does_not_reconnect(

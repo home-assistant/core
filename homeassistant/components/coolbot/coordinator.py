@@ -8,8 +8,8 @@ from typing import override
 from pycoolbot import CoolbotAuthError, CoolbotClient, CoolbotDevice, CoolbotError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -55,6 +55,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: a listener behind that publishes from a socket no longer in use.
         self._remove_listener: CALLBACK_TYPE | None = None
         self._cancel_maintenance: CALLBACK_TYPE | None = None
+        #: Cleared when the stop event fires, since removing a one-time
+        #: listener that has already run logs an error.
+        self._unsub_stop: CALLBACK_TYPE | None = None
         #: The pass in flight, held so teardown can stop it: a pass that is
         #: reconnecting would otherwise install a client after teardown closed
         #: the last one, and nothing would ever close it.
@@ -94,6 +97,16 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         # reach this coordinator, and the timer and socket would outlive the
         # attempt. Home Assistant runs these when a setup fails too.
         self.config_entry.async_on_unload(self._async_teardown)
+        # Entries are not unloaded when Home Assistant stops, so without this
+        # the timer would go on starting passes and a reconnect would hold up
+        # the stop until the shared session closed underneath it.
+        self._unsub_stop = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_on_stop
+        )
+
+    async def _async_on_stop(self, _event: Event) -> None:
+        self._unsub_stop = None
+        await self._async_teardown()
 
     async def _async_connect(self) -> None:
         """Open a socket and listen to it.
@@ -399,6 +412,9 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
     async def _async_teardown(self) -> None:
         """Release everything setup acquired. Safe to call more than once."""
         self._closed = True
+        if self._unsub_stop is not None:
+            self._unsub_stop()
+            self._unsub_stop = None
         if self._cancel_maintenance is not None:
             self._cancel_maintenance()
             self._cancel_maintenance = None
