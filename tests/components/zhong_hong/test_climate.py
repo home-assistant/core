@@ -31,6 +31,8 @@ from homeassistant.components.zhong_hong.const import (
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
     DOMAIN,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -380,11 +382,13 @@ async def test_fan_modes_are_mapped(
     """Test the gateway's fan modes are offered under their HA names."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_gateway.push_status(build_status(fan_mode=StatusFanMode.MID))
+    mock_gateway.push_status(build_status(fan_mode=StatusFanMode.MIDHIGH))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_FAN_MODE] == FAN_MIDDLE
+    assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM_HIGH
+    # The two intermediate speeds used to reach the user under the names the
+    # protocol uses on the wire, because they had no mapping.
     assert state.attributes[ATTR_FAN_MODES] == ALL_FAN_MODES
 
 
@@ -582,8 +586,10 @@ async def test_every_fan_mode_has_a_name(
 ) -> None:
     """Test every speed the entity offers is named in the interface.
 
-    The climate component names middle "Middle". This integration relabels
-    that speed to "Medium"; high and low keep the component names.
+    The climate component names low, middle, and high. medium_low and
+    medium_high have no name there, so they are named here. middle is named
+    here as well, so the stored value stays middle while the label reads
+    Medium.
     """
     await setup_integration(hass, mock_config_entry)
 
@@ -611,17 +617,22 @@ async def test_every_fan_mode_has_a_name(
 
     assert fan_modes == ALL_FAN_MODES
 
-    # Middle is relabeled here. High and low are left to the climate component.
+    # medium_low and medium_high have no component name. middle is relabeled
+    # here: the component calls the same stored value Middle.
     assert {mode: named_here.get(f"{by_integration}{mode}") for mode in fan_modes} == {
         FAN_LOW: None,
+        FAN_MEDIUM_LOW: "Medium low",
         FAN_MIDDLE: "Medium",
+        FAN_MEDIUM_HIGH: "Medium high",
         FAN_HIGH: None,
     }
     assert {
         mode: named_by_component.get(f"{by_component}{mode}") for mode in fan_modes
     } == {
         FAN_LOW: "Low",
+        FAN_MEDIUM_LOW: None,
         FAN_MIDDLE: "Middle",
+        FAN_MEDIUM_HIGH: None,
         FAN_HIGH: "High",
     }
 
@@ -650,7 +661,7 @@ async def test_an_entity_without_options_offers_every_fan_mode(
     mock_gateway: FakeGateway,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an air conditioner offers high, middle, and low until options narrow them."""
+    """Test an air conditioner offers all five speeds until the options narrow them."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODES] == ALL_FAN_MODES

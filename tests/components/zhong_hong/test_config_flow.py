@@ -268,7 +268,7 @@ async def test_options_flow_opens_on_the_current_speeds(
     hass: HomeAssistant,
     mock_gateway: FakeGateway,
 ) -> None:
-    """Test the form opens on the speeds already saved, not on every speed."""
+    """Test the form opens on the speeds already saved, not on all five."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

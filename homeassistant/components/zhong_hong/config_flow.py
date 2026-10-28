@@ -158,10 +158,10 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
 class ZhongHongOptionsFlow(OptionsFlowWithReload):
     """Handle the ZhongHong options.
 
-    The fan speeds are chosen here because the protocol cannot report which
-    speeds a unit has: one that lacks a speed looks the same as one that never
-    ran at it. Choosing them drops the speeds a unit does not have, which
-    would otherwise be offered and do nothing when picked.
+    The fan speeds are chosen here because the protocol cannot report which of
+    its five speeds a unit has: one that lacks a speed looks the same as one
+    that never ran at it. Choosing them drops the speeds a unit does not have,
+    which would otherwise be offered and do nothing when picked.
     """
 
     async def async_step_init(
