@@ -131,14 +131,20 @@ async def test_geq_setup_retries(
     await fire_general_update(hass, mock_wiim_device)
     assert mock_wiim_device.async_refresh_equalizer.await_count == 2
 
+    mock_wiim_device.available = False
+    await fire_general_update(hass, mock_wiim_device)
+    mock_wiim_device.available = True
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 2
+
 
 @pytest.mark.usefixtures("mock_wiim_controller")
-async def test_geq_initialization_stops_after_two_failures(
+async def test_geq_initialization_retries_after_reconnect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
 ) -> None:
-    """Stop initialization retries after two failures without disabling playback."""
+    """Limit initialization to two attempts per connection and recover on reconnect."""
     mock_wiim_device.supports_http_api = True
     mock_wiim_device.async_refresh_equalizer.side_effect = TimeoutError
     await setup_integration(hass, mock_config_entry)
@@ -161,6 +167,43 @@ async def test_geq_initialization_stops_after_two_failures(
         state.attributes["supported_features"]
         & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
+
+    mock_wiim_device.available = False
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 2
+
+    mock_wiim_device.available = True
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 3
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 4
+    mock_wiim_device.equalizer_event_callback(mock_wiim_device)
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 4
+
+    async def refresh() -> None:
+        mock_wiim_device.supported_equalizer_modes = ("Flat", "Deep")
+        mock_wiim_device.equalizer_mode = "Deep"
+
+    mock_wiim_device.async_refresh_equalizer.side_effect = refresh
+    mock_wiim_device.available = False
+    await fire_general_update(hass, mock_wiim_device)
+    mock_wiim_device.available = True
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.IDLE
+    assert state.attributes[ATTR_SOUND_MODE_LIST] == ["Flat", "Deep"]
+    assert state.attributes[ATTR_SOUND_MODE] == "Deep"
+    assert (
+        state.attributes["supported_features"]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    assert mock_wiim_device.async_refresh_equalizer.await_count == 5
 
 
 @pytest.fixture
@@ -512,6 +555,12 @@ async def test_geq_not_supported(
     await fire_general_update(hass, mock_wiim_device)
     mock_wiim_device.equalizer_event_callback(mock_wiim_device)
     await hass.async_block_till_done()
+    assert mock_wiim_device.async_refresh_equalizer.await_count == refresh_count
+
+    mock_wiim_device.available = False
+    await fire_general_update(hass, mock_wiim_device)
+    mock_wiim_device.available = True
+    await fire_general_update(hass, mock_wiim_device)
     assert mock_wiim_device.async_refresh_equalizer.await_count == refresh_count
 
 
