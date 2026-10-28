@@ -25,7 +25,8 @@
               "drying": "mdi:hair-dryer",
               "external": "mdi:remote",
               "frost_protection": "mdi:snowflake",
-              "prog": "mdi:clock-outline"
+              "prog": "mdi:clock-outline",
+              "schedule": "mdi:calendar-clock"
             }
           }
         }
