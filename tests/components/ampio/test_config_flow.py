@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from ampio_mqtt import AmpioAuthError, AmpioConnectionError, AmpioTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.ampio.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ADMIN_SERVER_INFO, MSERV_MAC, SERVER_INFO, USER_INPUT
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

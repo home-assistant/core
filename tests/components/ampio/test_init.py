@@ -12,6 +12,7 @@ from ampio_mqtt import (
     ConnectionDied,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
 from homeassistant.config_entries import ConfigEntryState
@@ -33,8 +34,6 @@ from .conftest import (
     emit,
     object_identifier,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

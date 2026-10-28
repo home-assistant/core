@@ -1,6 +1,7 @@
 {
   "domain": "ampio",
   "name": "Ampio",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@pszypowicz"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ampio",

@@ -13,11 +13,10 @@ from unittest.mock import MagicMock, patch
 
 from ampio_mqtt import AmpioObject, AmpioServerInfo, parse_module_address
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ampio.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 MSERV_MAC = "47846"
 MSENS_MAC = 0xCB8F
@@ -195,6 +194,6 @@ def mock_client(mock_client_class: MagicMock) -> MagicMock:
 def mock_setup_entry() -> Generator[MagicMock]:
     """Patch the entry setup so config-flow tests don't run real setup."""
     with patch(
-        "homeassistant.components.ampio.async_setup_entry", return_value=True
+        "homeassistant.components.ampio.async_setup_entry", return_value=None
     ) as mock:
         yield mock

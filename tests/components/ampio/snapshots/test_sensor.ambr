@@ -9,9 +9,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_43')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -67,9 +67,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_44')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -125,9 +125,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_45')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -183,9 +183,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_46')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -241,9 +241,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_47')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -299,9 +299,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_48')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -356,9 +356,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_36')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -414,9 +414,9 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ampio', 'obj_37')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -466,7 +466,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -479,14 +479,14 @@
     }),
     'name': 'Object 43',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Object 44]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -499,14 +499,14 @@
     }),
     'name': 'Object 44',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Object 45]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -519,14 +519,14 @@
     }),
     'name': 'Object 45',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Object 46]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -539,14 +539,14 @@
     }),
     'name': 'Object 46',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Object 47]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -559,14 +559,14 @@
     }),
     'name': 'Object 47',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Object 48]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -579,14 +579,14 @@
     }),
     'name': 'Object 48',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Temperatura]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -599,14 +599,14 @@
     }),
     'name': 'Temperatura',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[child-Wilgotność]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -619,14 +619,14 @@
     }),
     'name': 'Wilgotność',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('ampio', 'module:0xCB8F')]>,
   })
 # ---
 # name: test_devices[device-Ampio module 0xCB8F]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -649,14 +649,14 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': <DeviceEntry identifiers=[('ampio', 'hub')]>,
   })
 # ---
 # name: test_devices[device-M-SERV]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'http://10.0.0.1',
     'connections': set({
     }),

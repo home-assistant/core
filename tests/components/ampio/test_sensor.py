@@ -12,6 +12,7 @@ from ampio_mqtt import (
     ObjectUpdated,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
@@ -31,8 +32,6 @@ from .conftest import (
     object_identifier,
     object_unique_id,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_ENTITY_ID = "sensor.ampio_module_0xcb8f_temperatura"
 HUMIDITY_ENTITY_ID = "sensor.ampio_module_0xcb8f_wilgotnosc"
