@@ -97,8 +97,15 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _abort_if_set_up_through_mqtt(self) -> None:
         """Abort if the device is already set up through MQTT discovery."""
-        if self._mqtt_client_id and dr.async_get(self.hass).async_get_devices(
-            identifiers={(MQTT_DOMAIN, self._mqtt_client_id)}
+        if not self._mqtt_client_id:
+            return
+        device_registry = dr.async_get(self.hass)
+        if any(
+            device_registry.async_get_devices(
+                identifiers={(MQTT_DOMAIN, self._mqtt_client_id)},
+                config_entry_id=entry.entry_id,
+            )
+            for entry in self.hass.config_entries.async_entries(MQTT_DOMAIN)
         ):
             raise AbortFlow("already_configured_mqtt")
 
@@ -196,6 +203,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        self._abort_if_set_up_through_mqtt()
         return self._create_entry()
 
     @override
