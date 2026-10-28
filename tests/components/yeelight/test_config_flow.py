@@ -980,7 +980,7 @@ async def test_reconfigure(
         _patch_discovery(),
         _patch_discovery_timeout(),
         patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -1009,7 +1009,7 @@ async def test_reconfigure_no_capabilities(hass: HomeAssistant) -> None:
         _patch_discovery_timeout(),
         _patch_discovery_interval(),
         patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -1047,7 +1047,7 @@ async def test_reconfigure_cannot_connect(
         _patch_discovery(),
         _patch_discovery_timeout(),
         patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
