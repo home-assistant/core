@@ -44,9 +44,7 @@
   "interviewAttempts": 0,
   "isFrequentListening": "1000ms",
   "maxDataRate": 100000,
-  "supportedDataRates": [
-    100000
-  ],
+  "supportedDataRates": [100000],
   "protocolVersion": 3,
   "supportsBeaming": false,
   "supportsSecurity": true,
@@ -103,9 +101,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99,
         "stateful": true,
@@ -164,9 +160,7 @@
         "ccSpecific": {
           "switchType": 2
         },
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "states": {
           "true": "Start",
           "false": "Stop"
@@ -191,9 +185,7 @@
         "ccSpecific": {
           "switchType": 2
         },
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "states": {
           "true": "Start",
           "false": "Stop"
@@ -698,9 +690,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": [
-        "1.10"
-      ]
+      "value": ["1.10"]
     },
     {
       "endpoint": 0,

@@ -1169,9 +1169,7 @@ def zvidar_cover_fixture(client, zvidar_state) -> Node:
 
 
 @pytest.fixture(name="simon_io_700_roller_blind")
-def simon_io_700_roller_blind_fixture(
-    client, simon_io_700_roller_blind_state
-) -> Node:
+def simon_io_700_roller_blind_fixture(client, simon_io_700_roller_blind_state) -> Node:
     """Mock a Simon IO 700 series roller blind node."""
     node = Node(client, copy.deepcopy(simon_io_700_roller_blind_state))
     client.driver.controller.nodes[node.node_id] = node
