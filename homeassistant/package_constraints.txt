@@ -37,10 +37,10 @@ gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==7.1.2
-hass-nabucasa==2.8.0
+hass-nabucasa==2.8.1
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260930.5
+home-assistant-frontend==20261028.0
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
@@ -258,21 +258,14 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
-# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
-# https://github.com/home-assistant/core/issues/185883
-# https://codeberg.org/obi/pysml/issues/33
-# Remove once pysml supports bitstring>=5
-bitstring<5
-
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
-# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
 # https://github.com/home-assistant/core/issues/185645
-# https://github.com/c-ares/c-ares/pull/1256
-pycares==5.0.1
+pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0

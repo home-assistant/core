@@ -39,6 +39,7 @@ from homeassistant.components.cloud.prefs import (
     GOOGLE_SETTINGS_VERSION,
     STORAGE_KEY,
 )
+from homeassistant.components.cloud.services import CloudService
 from homeassistant.const import (
     CONF_MODE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -124,18 +125,22 @@ async def test_remote_services(
     """Setup cloud component and test services."""
     cloud = hass.data[DATA_CLOUD]
 
-    assert hass.services.has_service(DOMAIN, "remote_connect")
-    assert hass.services.has_service(DOMAIN, "remote_disconnect")
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_CONNECT)
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_DISCONNECT)
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
-        await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_CONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
-        await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_DISCONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_disconnect.called
@@ -149,7 +154,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_connect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_CONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_connect.called is False
@@ -159,7 +167,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_DISCONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_disconnect.called is False
