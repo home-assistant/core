@@ -816,9 +816,10 @@ class ZHAGatewayProxy(EventBase):
 
         ieee = EUI64.convert(ieee_address)
 
-        assert ieee in self.device_proxies
+        # No proxy exists yet during setup, or for a device ZHA does not know
+        if (zha_device_proxy := self.device_proxies.get(ieee)) is None:
+            return
 
-        zha_device_proxy = self.device_proxies[ieee]
         entity_key = (entity_entry.domain, entity_entry.unique_id)
         if entity_key not in zha_device_proxy.device.platform_entities:
             return
