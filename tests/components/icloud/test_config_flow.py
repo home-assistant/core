@@ -1,15 +1,21 @@
 """Tests for the iCloud config flow."""
 
-from unittest.mock import MagicMock, Mock, patch
+from contextlib import contextmanager
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from pyicloud.const import AppleAuthError
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
+    PyiCloudServiceUnavailable,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
     CONF_REQUEST_NEW_CODE,
@@ -27,7 +33,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -45,7 +51,7 @@ from .const import (
 @pytest.fixture(name="icloud_bypass_setup", autouse=True)
 def icloud_bypass_setup_fixture():
     """Mock component setup."""
-    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=None):
         yield
 
 
@@ -135,6 +141,9 @@ def mock_controller_service_authenticated_no_device():
     ) as service_mock:
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.requires_2sa = False
+        # Pinned: a bare mock attribute is never "unknown", so the challenge
+        # test would pass whatever the delivery-route check did.
+        service_mock.return_value.two_factor_delivery_method = "trusted_device"
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
@@ -269,7 +278,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_INCLUDE_COMPLETED: True}
         )
@@ -450,6 +459,83 @@ async def test_no_device(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_device"
+
+
+@contextmanager
+def _service_rejecting_the_device_fetch(
+    error: Exception, delivery: str = "trusted_device"
+):
+    """Mock a service that authenticates but is turned down reading devices."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService"
+    ) as service_mock:
+        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.requires_2sa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=True)
+        # Pinned: a bare mock attribute is never "unknown", so the challenge
+        # test would pass whatever the delivery-route check did.
+        service_mock.return_value.two_factor_delivery_method = delivery
+        type(service_mock.return_value).devices = PropertyMock(side_effect=error)
+        yield service_mock
+
+
+async def _submit_user_form(hass: HomeAssistant) -> ConfigFlowResult:
+    """Start the user flow and submit the login form, as a user does."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+
+def _recover_device_fetch(service_mock: MagicMock) -> None:
+    """Let the device fetch succeed, as it does once iCloud answers again."""
+    type(service_mock.return_value).devices = PropertyMock(return_value=[MagicMock()])
+
+
+async def test_device_fetch_challenged_asks_for_a_code(hass: HomeAssistant) -> None:
+    """Test that a challenge while reading the devices asks for the code.
+
+    iCloud turns down a session when it is refreshed to read the devices
+    rather than while logging in, so the challenge arrives after the login
+    the flow already treated as successful.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
+    ):
+        result = await _submit_user_form(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "verification_code"
+
+
+async def test_device_fetch_rejected_returns_to_the_form(hass: HomeAssistant) -> None:
+    """Test that a rejection while reading the devices is reported.
+
+    The flow used to end on the unhandled exception, which left the user with
+    an error they could not act on and no way back to the password.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudAPIResponseException(
+            "Authentication required for Account.",
+            AppleAuthError.LOGIN_TOKEN_EXPIRED,
+        )
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("service")
@@ -968,6 +1054,103 @@ async def test_accept_terms_during_verification(hass: HomeAssistant) -> None:
         assert service_mock.call_args.kwargs["accept_terms"] is True
 
 
+async def test_terms_demanded_while_entering_a_flagged_code(
+    hass: HomeAssistant,
+) -> None:
+    """Test that accepting terms does not send a clean login back to code entry.
+
+    The challenge belongs to the session the terms demand discards. Leaving the
+    flag set would route the login that follows it to the code form again,
+    although nothing is asking for a code any more.
+    """
+    challenged = MagicMock(requires_2fa=False, requires_2sa=False)
+    challenged.two_factor_delivery_method = "sms"
+    type(challenged).devices = PropertyMock(
+        side_effect=PyiCloud2FARequiredException(USERNAME, Mock(spec=Response))
+    )
+    challenged.validate_2fa_code = Mock(
+        side_effect=PyiCloudAcceptTermsException("Terms not accepted")
+    )
+    clean = MagicMock(requires_2fa=False, requires_2sa=False)
+    clean.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[challenged, clean],
+    ):
+        result = await _submit_user_form(hass)
+        assert result["step_id"] == CONF_VERIFICATION_CODE
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_VERIFICATION_CODE: "0"}
+        )
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_terms_demanded_when_logging_in_again_without_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login without the stored session can ask for the terms."""
+    refused = MagicMock()
+    refused.authenticate.side_effect = PyiCloudAcceptTermsException("Terms")
+    accepted = MagicMock(requires_2fa=False, requires_2sa=False)
+    accepted.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            refused,
+            accepted,
+        ],
+    ):
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_consent_to_the_terms_is_kept_when_logging_in_again(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login without the stored session carries the given consent.
+
+    The terms are accepted, and the login that follows is then turned down for
+    its stored session. The login that replaces it must not ask again.
+    """
+    retry_service = MagicMock(requires_2fa=False, requires_2sa=False)
+    retry_service.devices = [MagicMock()]
+
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAcceptTermsException("Terms"),
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            retry_service,
+        ],
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["step_id"] == "accept_terms"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert service_mock.call_args_list[2].kwargs["accept_terms"] is True
+
+
 @pytest.mark.usefixtures("service_password_update")
 async def test_password_update(hass: HomeAssistant) -> None:
     """Test that password reauthentication works successfully."""
@@ -1088,3 +1271,173 @@ async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == CONF_TRUSTED_DEVICE
         makedirs_mock.assert_called_once()
+
+
+async def test_device_fetch_during_an_outage_keeps_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that iCloud being unavailable is reported without losing the session.
+
+    PyiCloudServiceUnavailable derives straight from PyiCloudException, so it
+    misses the handled set and used to escape as an unhandled flow error. It
+    is iCloud failing rather than refusing: the stored session is not at fault
+    and carries the trust token, so it has to survive the outage.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        service_mock.return_value.session.clear_persistence.assert_not_called()
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_device_fetch_challenge_with_no_route_asks_for_the_password(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a challenge from the fetch with no route goes to the password.
+
+    The same dead end the login path avoids: iCloud reports the challenge but
+    nothing can send a code for it, so the code entry form cannot be
+    completed. A fresh login raises the challenge again with a route behind
+    it.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloud2FARequiredException(USERNAME, Mock(spec=Response)),
+        delivery="unknown",
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "send_verification_code"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_device_fetch_unreachable_keeps_the_session(
+    hass: HomeAssistant,
+) -> None:
+    """Test that being unable to reach iCloud reading the devices is reported as such.
+
+    It says nothing about the credentials or the session, which has to
+    survive for the trust token it carries.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudConnectionException(reason="Connection error")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    service_mock.assert_called_once()
+
+
+async def test_retry_login_unreachable_is_a_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test that iCloud being unreachable on the second login is reported as such.
+
+    The stored session is rejected, so the flow logs in again without it; the
+    outage is then not a reason to blame the password or report an unknown
+    error.
+    """
+    retry_service = MagicMock()
+    retry_service.authenticate.side_effect = PyiCloudConnectionException(
+        reason="Connection error"
+    )
+    recovered_service = MagicMock(requires_2fa=False, requires_2sa=False)
+    recovered_service.devices = [MagicMock()]
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response)),
+            retry_service,
+            recovered_service,
+        ],
+    ):
+        result = await _submit_user_form(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_changed_credentials_after_an_outage_are_logged_in_again(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the login kept through an outage is not reused for new credentials.
+
+    The session survives an outage because it carries the trust token, but it
+    belongs to the account that was entered. If the user corrects the Apple ID
+    or the password on the same form, those have to be validated rather than
+    the old login being trusted for them.
+    """
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["errors"] == {"base": "unknown"}
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "other@me.com", CONF_PASSWORD: "other"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "other@me.com"
+    assert result["result"].unique_id == "other@me.com"
+    assert service_mock.call_count == 2
+    assert service_mock.call_args.args[:2] == ("other@me.com", "other")
+
+
+async def test_switching_to_a_configured_account_after_an_outage_is_refused(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the account submitted last is the one checked for duplicates."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_USERNAME: "other@me.com"},
+        unique_id="other@me.com",
+    ).add_to_hass(hass)
+
+    with _service_rejecting_the_device_fetch(
+        PyiCloudServiceUnavailable("iCloud is unavailable")
+    ) as service_mock:
+        result = await _submit_user_form(hass)
+        assert result["type"] is FlowResultType.FORM
+
+        _recover_device_fetch(service_mock)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "other@me.com", CONF_PASSWORD: "other"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -46,7 +46,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -105,6 +105,55 @@ async def test_chain(
 
         state = hass.states.get("sensor.test")
         assert state.state == "18.05"
+
+
+@pytest.mark.parametrize(
+    ("readings", "expected_states"),
+    [
+        pytest.param(
+            [("10", None), ("20", None), ("30", None)],
+            ["10.0", "11.0", "12.9"],
+            id="no_unit",
+        ),
+        pytest.param(
+            [("10", "W"), ("20", "W"), ("30", "W")],
+            ["10.0", "11.0", "12.9"],
+            id="constant_unit",
+        ),
+        pytest.param(
+            [("10", "W"), ("20", "W"), ("30", "kW"), ("40", "kW")],
+            ["10.0", "11.0", "30.0", "31.0"],
+            id="unit_change_resets_filters",
+        ),
+    ],
+)
+async def test_unit_of_measurement_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    readings: list[tuple[str, str | None]],
+    expected_states: list[str],
+) -> None:
+    """Test filters are reset before, not after, a reading with a new unit."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [{"filter": "lowpass", "time_constant": 10, "precision": 2}],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    states = []
+    for value, unit in readings:
+        hass.states.async_set(
+            "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: unit}
+        )
+        await hass.async_block_till_done()
+        states.append(hass.states.get("sensor.test").state)
+
+    assert states == expected_states
 
 
 async def test_from_config_entry(
@@ -311,6 +360,115 @@ async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.state == "18.0"
+
+
+POWER_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: "W",
+    ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+    ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+}
+
+
+@pytest.mark.parametrize(
+    ("recorded_states", "source_state", "expected_state"),
+    [
+        pytest.param(
+            [STATE_UNAVAILABLE], "-6", "-6.0", id="source_back_while_starting"
+        ),
+        pytest.param([], "-6", "-6.0", id="no_recorded_history"),
+        pytest.param(["5"], STATE_UNKNOWN, "5.0", id="source_unknown_at_start"),
+        pytest.param(["5"], STATE_UNAVAILABLE, "5.0", id="source_unavailable_at_start"),
+    ],
+)
+async def test_source_state_set_while_starting(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    recorded_states: list[str],
+    source_state: str,
+    expected_state: str,
+) -> None:
+    """Test the filter picks up a source state set before Home Assistant started."""
+    hass.set_state(CoreState.not_running)
+    fake_states = {
+        "sensor.test_monitored": [
+            State(
+                "sensor.test_monitored",
+                recorded_state,
+                POWER_ATTRIBUTES,
+                last_updated=dt_util.utcnow() - timedelta(hours=1),
+            )
+            for recorded_state in recorded_states
+        ]
+    }
+    with patch(
+        "homeassistant.components.recorder.history.get_last_state_changes",
+        return_value=fake_states,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "filter",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "filters": [{"filter": "throttle", "window_size": 1}],
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Not tracked yet, so this is only seen once Home Assistant has started
+    hass.states.async_set("sensor.test_monitored", source_state, POWER_ATTRIBUTES)
+    await hass.async_block_till_done()
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "W"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_replayed_source_state_not_filtered_twice(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the current source state is not filtered again if it was replayed."""
+    hass.states.async_set("sensor.test_monitored", "20")
+    fake_states = {
+        "sensor.test_monitored": [
+            State(
+                "sensor.test_monitored",
+                "10",
+                last_updated=dt_util.utcnow() - timedelta(minutes=1),
+            ),
+            hass.states.get("sensor.test_monitored"),
+        ]
+    }
+    with patch(
+        "homeassistant.components.recorder.history.get_last_state_changes",
+        return_value=fake_states,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "filter",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "filters": [
+                        {"filter": "lowpass", "window_size": 2, "time_constant": 10}
+                    ],
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # 10 * 0.9 + 20 * 0.1, filtering 20 again would give 11.9
+    assert hass.states.get("sensor.test").state == "11.0"
 
 
 async def test_setup(

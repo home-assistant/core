@@ -15,7 +15,7 @@ from homeassistant.const import CONF_DISKS, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SynoApi
+from .common import SynoApi
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
     SynologyDSMBaseEntity,
@@ -94,15 +94,6 @@ class SynoDSMBinarySensor(
     """Mixin for binary sensor specific attributes."""
 
     entity_description: SynologyDSMBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM binary_sensor entity."""
-        super().__init__(api, coordinator, description)
 
 
 class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):

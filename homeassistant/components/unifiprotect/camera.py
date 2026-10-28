@@ -57,6 +57,7 @@ def _create_rtsp_repair(
         hass,
         DOMAIN,
         f"rtsp_disabled_{public.id}",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
@@ -80,6 +81,9 @@ def _async_camera_entities(
     Stream URLs come from the public API because it carries the authoritative
     per-camera host (stacked consoles resolve correctly), SRTP-stripped for
     go2rtc.
+
+    Paths which can't tell whether a camera's RTSP repair issue is still valid
+    keep it, so a refresh of the issues doesn't delete it.
     """
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
@@ -113,8 +117,10 @@ def _async_camera_entities(
                     camera.display_name,
                 )
                 data.async_add_pending_camera_id(camera.id)
+                ir.async_keep_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
             continue
 
+        issue_id = f"rtsp_disabled_{public.id}"
         # Hybrid: a camera not yet in the private bootstrap (adopt race) is
         # skipped rather than built private-less — the adopt dispatch creates
         # it with its private fill, which would otherwise collide on unique_id.
@@ -123,10 +129,10 @@ def _async_camera_entities(
                 "Deferring camera %s until its private object is adopted",
                 public.display_name,
             )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
             continue
 
         streams = data.get_rtsps_streams(public.id)
-        issue_id = f"rtsp_disabled_{public.id}"
         tiers = public.hardware_stream_qualities()
         main_qualities = [q for q in _MAIN_QUALITIES if q in tiers]
         has_package = ChannelQuality.PACKAGE in tiers
@@ -139,6 +145,7 @@ def _async_camera_entities(
                 public.display_name,
                 tiers,
             )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
             continue
 
         # Active stream tiers come from the public ``rtsps_streams`` object.
@@ -189,6 +196,7 @@ def _async_camera_entities(
                 ),
                 public.display_name,
             )
+            ir.async_keep_issue(hass, DOMAIN, issue_id)
         else:
             _create_rtsp_repair(hass, entry, public)
     return entities
@@ -223,7 +231,16 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
 
-    async_add_entities(_async_camera_entities(hass, entry, data))
+    # Without the public bootstrap no cameras are enumerated, so the RTSP repair
+    # issues can't be checked
+    if not data.api.has_public_bootstrap:
+        return
+    # Cameras which are gone or no longer adopted leave issues to be deleted
+    with ir.async_refresh_issues(
+        hass, DOMAIN, issue_id_pattern="rtsp_disabled_", config_entry_id=entry.entry_id
+    ):
+        entities = _async_camera_entities(hass, entry, data)
+    async_add_entities(entities)
 
 
 _DISABLE_FEATURE = CameraEntityFeature(0)

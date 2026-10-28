@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
+    HAS_FAULT_LOG,
     METER_ENERGY,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
@@ -43,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -125,7 +127,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
-    device = SofarInverter(unit, serial_number=serial)
+    device = SofarInverter(
+        unit,
+        serial_number=serial,
+        has_fault_log=entry.data.get(HAS_FAULT_LOG, False),
+    )
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -169,10 +175,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
         await device.async_read_identity()
+        # Stored so a flaky read at a later setup never drops the log.
+        if device.has_fault_log and not entry.data.get(HAS_FAULT_LOG):
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, HAS_FAULT_LOG: True}
+            )
 
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **readings.device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
     # Until the masks settle the type, nothing is served or denied.

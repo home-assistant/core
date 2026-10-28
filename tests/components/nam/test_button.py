@@ -1,10 +1,11 @@
 """Test button of Nettigo Air Monitor integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -19,12 +20,17 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import init_integration
+from . import setup_integration
 
 
-async def test_button(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+@pytest.mark.usefixtures("mock_nam_client")
+async def test_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test states of the button."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("button.nettigo_air_monitor_restart")
     assert state
@@ -36,17 +42,16 @@ async def test_button(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-restart"
 
 
-async def test_button_press(hass: HomeAssistant) -> None:
+async def test_button_press(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+) -> None:
     """Test button press."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     now = dt_util.utcnow()
-    with (
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor.async_restart"
-        ) as mock_restart,
-        patch("homeassistant.core.dt_util.utcnow", return_value=now),
-    ):
+    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -55,7 +60,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    mock_restart.assert_called_once()
+    mock_nam_client.async_restart.assert_called_once()
 
     state = hass.states.get("button.nettigo_air_monitor_restart")
     assert state
@@ -63,20 +68,20 @@ async def test_button_press(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(("exc"), [ApiError("API Error"), ClientError, TimeoutError])
-async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
+async def test_button_press_exc(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+    exc: Exception | type[Exception],
+) -> None:
     """Test button press when exception occurs."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor.async_restart",
-            side_effect=exc,
-        ),
-        pytest.raises(
-            HomeAssistantError,
-            match="An error occurred while calling action for"
-            " button.nettigo_air_monitor_restart",
-        ),
+    mock_nam_client.async_restart.side_effect = exc
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while calling action for"
+        " button.nettigo_air_monitor_restart",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -86,22 +91,23 @@ async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
         )
 
 
-async def test_button_press_auth_error(hass: HomeAssistant) -> None:
+async def test_button_press_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+) -> None:
     """Test button press when auth error occurs."""
-    entry = await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_restart",
-        side_effect=AuthFailedError("auth error"),
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
-            blocking=True,
-        )
+    mock_nam_client.async_restart.side_effect = AuthFailedError("auth error")
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
+        blocking=True,
+    )
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -112,4 +118,4 @@ async def test_button_press_auth_error(hass: HomeAssistant) -> None:
 
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
-    assert flow["context"].get("entry_id") == entry.entry_id
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

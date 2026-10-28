@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -22,6 +24,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -35,8 +38,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_SUNNY,
     ATTR_MAP,
     CONDITIONS_MAP,
     CONF_TRACK_HOME,
@@ -84,8 +85,8 @@ def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
         name_appendix = "-hourly"
     if config.get(CONF_TRACK_HOME):
         return f"home{name_appendix}"
-
-    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
+    location = config[CONF_LOCATION]
+    return f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}{name_appendix}"
 
 
 def format_condition(condition: str) -> str:

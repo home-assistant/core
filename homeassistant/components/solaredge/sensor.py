@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_SERVICES, DOMAIN, LOGGER
 from .coordinator import (
     SolarEdgeDataService,
     SolarEdgeDetailsDataService,
@@ -295,6 +295,7 @@ async def async_setup_entry(
 
     api = entry.runtime_data[DATA_API_CLIENT]
     sensor_factory = SolarEdgeSensorFactory(hass, entry, entry.data[CONF_SITE_ID], api)
+    entry.runtime_data[DATA_SERVICES] = sensor_factory.all_services
 
     # Set up and refresh base services first
     for service in sensor_factory.all_services:

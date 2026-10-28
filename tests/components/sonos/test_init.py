@@ -72,7 +72,7 @@ async def test_configuring_sonos_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(
             hass,
@@ -88,7 +88,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(hass, sonos.DOMAIN, {})
         await hass.async_block_till_done()
@@ -118,12 +118,14 @@ async def test_upnp_disabled_discovery(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (
-        issue_registry.async_get_issue(
-            sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
-        )
-        is not None
-    )
+    issue_id = f"{UPNP_ISSUE_ID}_{soco.ip_address}"
+    issue = issue_registry.async_get_issue(sonos.DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(sonos.DOMAIN, issue_id) is None
 
 
 async def test_upnp_disabled_manual_hosts(

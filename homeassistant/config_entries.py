@@ -43,6 +43,7 @@ from .core import (
     HassJobType,
     HomeAssistant,
     callback,
+    verify_event_loop_thread,
 )
 from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowContext, FlowResult
 from .exceptions import (
@@ -316,7 +317,6 @@ class ConfigFlowContext(FlowContext, total=False):
 
     alternative_domain: str
     configuration_url: str
-    confirm_only: bool
     discovery_key: DiscoveryKey
     dismiss_protected: bool
     entry_id: str
@@ -351,6 +351,36 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
         raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
         )
+
+
+def _async_process_entry_method_result(
+    domain: str, method: str, result: bool | None
+) -> None:
+    """Raise if the return value of a config entry method means it failed.
+
+    Only custom integrations may still return a boolean. False and any other
+    value than a boolean or None are converted to a `ConfigEntryError`.
+    See https://github.com/home-assistant/architecture/discussions/1463
+    """
+    if result is None:
+        return
+    if isinstance(result, bool):
+        report_usage(
+            f"returns a boolean from {method}, which should return None",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
+            integration_domain=domain,
+        )
+        if result:
+            return
+    else:
+        _LOGGER.error(  # type: ignore[unreachable]
+            "%s.%s returned %r, which is not supported", domain, method, result
+        )
+    raise ConfigEntryError(
+        translation_domain=HOMEASSISTANT_DOMAIN,
+        translation_key=f"{method}_failed",
+    )
 
 
 class ConfigSubentryData(TypedDict):
@@ -994,18 +1024,10 @@ class ConfigEntry[_DataT = Any]:
                     hass, self
                 )  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if setup_result is None:
-                result = True
-            elif not isinstance(setup_result, bool):
-                logger.error(  # type: ignore[unreachable]
-                    "%s.async_setup_entry did not return None or a boolean",
-                    integration.domain,
-                )
-                result = False
-            else:
-                result = setup_result
+            _async_process_entry_method_result(
+                integration.domain, "async_setup_entry", setup_result
+            )
+            result = True
 
         except (
             asyncio.CancelledError,
@@ -1145,30 +1167,20 @@ class ConfigEntry[_DataT = Any]:
         if domain_is_integration:
             self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
 
-        result = False
         try:
             unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if unload_result is None:
-                result = True
-            else:
-                result = unload_result
-            assert isinstance(result, bool)
+            _async_process_entry_method_result(
+                integration.domain, "async_unload_entry", unload_result
+            )
 
             # Only do side effects if we unloaded the integration
             if domain_is_integration:
-                if result:  # type: ignore[unused-ignore]
-                    await self._async_process_on_unload(hass)
-                    if hasattr(self, "runtime_data"):
-                        object.__delattr__(self, "runtime_data")
+                await self._async_process_on_unload(hass)
+                if hasattr(self, "runtime_data"):
+                    object.__delattr__(self, "runtime_data")
 
-                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-                else:
-                    self._async_set_state(
-                        hass, ConfigEntryState.FAILED_UNLOAD, "Unload failed"
-                    )
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
         except Exception as exc:
             self.logger.exception(
@@ -1192,7 +1204,7 @@ class ConfigEntry[_DataT = Any]:
                 )
             return False
 
-        return result
+        return True
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
@@ -1321,19 +1333,11 @@ class ConfigEntry[_DataT = Any]:
             return False
 
         migration_result: bool | None = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        # Custom components can continue to return a boolean
-        # See https://github.com/home-assistant/architecture/discussions/1463
-        if migration_result is None:
-            migration_result = True
-        elif not isinstance(migration_result, bool):
-            self.logger.error(  # type: ignore[unreachable]
-                "%s.async_migrate_entry did not return None or a boolean", self.domain
-            )
-            return False
-        if migration_result:
-            hass.config_entries._async_schedule_save()  # noqa: SLF001
-
-        return migration_result
+        _async_process_entry_method_result(
+            integration.domain, "async_migrate_entry", migration_result
+        )
+        hass.config_entries._async_schedule_save()  # noqa: SLF001
+        return True
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
@@ -1576,18 +1580,6 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 
 class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
-
-
-def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
-    """Report non awaited platform forwards."""
-    report_usage(
-        f"calls {what} for integration {entry.domain} with "
-        f"title: {entry.title} and entry_id: {entry.entry_id}, "
-        f"during setup without awaiting {what}, which can cause "
-        "the setup lock to be released before the setup is done",
-        core_behavior=ReportBehavior.LOG,
-        breaks_in_ha_version="2025.1",
-    )
 
 
 class ConfigEntriesFlowManager(
@@ -2777,6 +2769,7 @@ class ConfigEntries:
         )
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_entry")
     def _async_update_entry(
         self,
         entry: ConfigEntry,
@@ -2805,7 +2798,6 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
@@ -2916,6 +2908,7 @@ class ConfigEntries:
         return self._async_update_entry(entry, subentries=subentries)
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_subentry")
     def async_update_subentry(
         self,
         entry: ConfigEntry,
@@ -2938,7 +2931,6 @@ class ConfigEntries:
         if subentry.subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry.subentry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_subentry")
         changed = False
         _setter = object.__setattr__
 
@@ -2991,17 +2983,14 @@ class ConfigEntries:
         in each integration. This is to ensure that all platforms are loaded
         before the entry is set up. This ensures that the config entry cannot
         be unloaded before all platforms are loaded.
-
-        This method is more efficient than async_forward_entry_setup as
-        it can load multiple platforms at once and does not require a separate
-        import executor job for each platform.
         """
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
 
-        if not entry.setup_lock.locked():
+        # A loaded entry's lock is held by another forward, so wait for it
+        if not entry.setup_lock.locked() or entry.state is ConfigEntryState.LOADED:
             async with entry.setup_lock:
                 if entry.state is not ConfigEntryState.LOADED:
                     raise OperationNotAllowed(
@@ -3013,11 +3002,15 @@ class ConfigEntries:
                 await self._async_forward_entry_setups_locked(entry, platforms)
         else:
             await self._async_forward_entry_setups_locked(entry, platforms)
-            # If the lock was held when we stated, and it was released during
-            # the platform setup, it means they did not await the setup call.
+            # If the lock was held when the forward started, and it was released
+            # during the platform setup, it means they did not await the setup call.
             if not entry.setup_lock.locked():
-                _report_non_awaited_platform_forwards(
-                    entry, "async_forward_entry_setups"
+                raise HomeAssistantError(
+                    "Detected code that calls async_forward_entry_setups during setup "
+                    f"for integration {entry.domain} with title: {entry.title} and "
+                    f"entry_id: {entry.entry_id}, without awaiting "
+                    "async_forward_entry_setups, which can cause the setup lock to be "
+                    "released before the setup is done"
                 )
 
     async def _async_forward_entry_setups_locked(
@@ -3142,77 +3135,66 @@ class ConfigEntries:
     @callback
     def async_update_issues(self) -> None:
         """Update unique id collision issues."""
-        issue_registry = ir.async_get(self.hass)
-        issues: set[str] = set()
+        with ir.async_refresh_issues(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            issue_id_pattern=f"{ISSUE_UNIQUE_ID_COLLISION}_",
+        ):
+            for (
+                domain,
+                unique_ids,
+            ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+                for unique_id, entries in unique_ids.items():
+                    # We might mutate the list of entries, so we need a copy to not mess up
+                    # the index
+                    entries = list(entries)
 
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != HOMEASSISTANT_DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
-            ):
-                continue
-            issues.add(issue.issue_id)
+                    # There's no need to raise an issue for ignored entries, we can
+                    # safely remove them once we no longer allow unique id collisions.
+                    # Iterate over a copy of the copy to allow mutating while iterating
+                    for entry in list(entries):
+                        if entry.source == SOURCE_IGNORE:
+                            entries.remove(entry)
 
-        for (
-            domain,
-            unique_ids,
-        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            for unique_id, entries in unique_ids.items():
-                # We might mutate the list of entries, so we need a copy to not mess up
-                # the index
-                entries = list(entries)
+                    if len(entries) < 2:
+                        continue
+                    issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
+                    titles = [f"'{entry.title}'" for entry in entries]
+                    translation_placeholders = {
+                        "domain": domain,
+                        "configure_url": f"/config/integrations/integration/{domain}",
+                        "unique_id": str(unique_id),
+                    }
+                    if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
+                        translation_key = "config_entry_unique_id_collision"
+                        translation_placeholders["titles"] = ", ".join(titles)
+                    else:
+                        translation_key = "config_entry_unique_id_collision_many"
+                        translation_placeholders["number_of_entries"] = str(len(titles))
+                        translation_placeholders["titles"] = ", ".join(
+                            titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                        )
+                        translation_placeholders["title_limit"] = str(
+                            UNIQUE_ID_COLLISION_TITLE_LIMIT
+                        )
 
-                # There's no need to raise an issue for ignored entries, we can
-                # safely remove them once we no longer allow unique id collisions.
-                # Iterate over a copy of the copy to allow mutating while iterating
-                for entry in list(entries):
-                    if entry.source == SOURCE_IGNORE:
-                        entries.remove(entry)
-
-                if len(entries) < 2:
-                    continue
-                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
-                issues.discard(issue_id)
-                titles = [f"'{entry.title}'" for entry in entries]
-                translation_placeholders = {
-                    "domain": domain,
-                    "configure_url": f"/config/integrations/integration/{domain}",
-                    "unique_id": str(unique_id),
-                }
-                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
-                    translation_key = "config_entry_unique_id_collision"
-                    translation_placeholders["titles"] = ", ".join(titles)
-                else:
-                    translation_key = "config_entry_unique_id_collision_many"
-                    translation_placeholders["number_of_entries"] = str(len(titles))
-                    translation_placeholders["titles"] = ", ".join(
-                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                    ir.async_create_issue(
+                        self.hass,
+                        HOMEASSISTANT_DOMAIN,
+                        issue_id,
+                        breaks_in_ha_version="2025.11.0",
+                        data={
+                            "issue_type": ISSUE_UNIQUE_ID_COLLISION,
+                            "unique_id": unique_id,
+                        },
+                        is_fixable=False,
+                        issue_domain=domain,
+                        severity=ir.IssueSeverity.ERROR,
+                        translation_key=translation_key,
+                        translation_placeholders=translation_placeholders,
                     )
-                    translation_placeholders["title_limit"] = str(
-                        UNIQUE_ID_COLLISION_TITLE_LIMIT
-                    )
 
-                ir.async_create_issue(
-                    self.hass,
-                    HOMEASSISTANT_DOMAIN,
-                    issue_id,
-                    breaks_in_ha_version="2025.11.0",
-                    data={
-                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
-                        "unique_id": unique_id,
-                    },
-                    is_fixable=False,
-                    issue_domain=domain,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=translation_key,
-                    translation_placeholders=translation_placeholders,
-                )
-
-                break  # Only create one issue per domain
-
-        for issue_id in issues:
-            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+                    break  # Only create one issue per domain
 
 
 @callback
@@ -3444,8 +3426,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def _set_confirm_only(
         self,
     ) -> None:
-        """Mark the config flow as only needing user confirmation to finish flow."""
-        self.context["confirm_only"] = True
+        """Deprecated no-op; the confirm only flag it used to set was never read."""
+        report_usage(
+            "calls _set_confirm_only, which is deprecated and has no effect",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
+            integration_domain=self.handler,
+        )
 
     @callback
     def _async_current_entries(
@@ -3488,7 +3475,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if flw["flow_id"] != self.flow_id
         ]
 
-    @data_entry_flow.flow_step
     async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow.
 
@@ -3508,7 +3494,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
 
-    @data_entry_flow.flow_step
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -3550,68 +3535,58 @@ class ConfigFlow(ConfigEntryBaseFlow):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
-    @data_entry_flow.flow_step
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a flow initialized by integration specific discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a flow initialized by USB discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

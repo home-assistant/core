@@ -1,8 +1,4 @@
 {
-  "common": {
-    "release_notes_installation_notice": "The update process can take a while, especially for battery powered devices. Please be patient and wait until the update process is fully completed. Do not remove power from the device while it's updating. The device may restart during the update process and be unavailable for several minutes.",
-    "release_notes_not_official_source": "Update provided by {update_source}. Installing this update is at your own risk and you may run into unexpected problems such as the need to re-add and factory reset your device."
-  },
   "config": {
     "abort": {
       "addon_get_discovery_info_failed": "Failed to get Matter Server app discovery info.",
@@ -158,6 +154,11 @@
         "name": "Temporary mute"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat",
@@ -252,6 +253,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "music_sync_sensitivity": {
+        "name": "Music sync sensitivity"
+      },
       "occupied_setback": {
         "name": "Occupied setback"
       },
@@ -266,6 +270,9 @@
       },
       "on_transition_time": {
         "name": "On transition time"
+      },
+      "power_on_color_temperature": {
+        "name": "Power-on color temperature"
       },
       "power_on_level": {
         "name": "Power-on level"
@@ -305,6 +312,13 @@
       }
     },
     "select": {
+      "blind_type": {
+        "name": "Blind type",
+        "state": {
+          "roller_shutter": "Roller shutter",
+          "venetian_blind": "Venetian blind"
+        }
+      },
       "clean_mode": {
         "name": "Clean mode"
       },
@@ -344,6 +358,15 @@
       },
       "mode": {
         "name": "Mode"
+      },
+      "music_sync_effect": {
+        "name": "Music sync effect",
+        "state": {
+          "dash": "Dash",
+          "flash": "Flash",
+          "pulse": "Pulse",
+          "stretch": "Stretch"
+        }
       },
       "power_level": {
         "name": "Power level (W)"
@@ -396,6 +419,13 @@
       },
       "temperature_level": {
         "name": "Temperature level"
+      },
+      "travel_time_mode": {
+        "name": "Travel time mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual": "Manual"
+        }
       },
       "water_heater_mode": {
         "name": "Water heater mode"
@@ -634,6 +664,20 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "setpoint_change_amount": {
+        "name": "Setpoint change amount"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "setpoint_change_timestamp": {
+        "name": "Last setpoint change"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
@@ -699,6 +743,9 @@
       "evse_charging_switch": {
         "name": "Enable charging"
       },
+      "music_sync": {
+        "name": "Music sync"
+      },
       "one_touch_locking": {
         "name": "One-touch locking"
       },
@@ -707,6 +754,9 @@
       },
       "privacy_mode_button": {
         "name": "Privacy mode button"
+      },
+      "reverse_motor_direction": {
+        "name": "Reverse motor direction"
       },
       "speaker_mute": {
         "name": "Mute"
@@ -746,6 +796,12 @@
     },
     "addon_stop_failed": {
       "message": "Failed to stop the Matter Server app."
+    },
+    "bitmap_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
+    },
+    "bitmap_write_not_supported": {
+      "message": "The device does not support changing {name}."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
 from paho.mqtt.client import MQTTMessage
 
@@ -22,12 +22,15 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
+    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
     TemplateVarsType,
+    UndefinedType,
     VolSchemaType,
 )
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 if TYPE_CHECKING:
     from .client import MQTT, Subscription
@@ -198,6 +201,19 @@ class DiscoveredDisabledEntity:
     discovery_data: DiscoveryInfoType
 
 
+class MqttChildDeviceConfig(TypedDict, total=False):
+    """Child device config of an MQTT entity."""
+
+    identifiers: Required[str | list[str]]
+    name: str
+
+
+class MqttDiscoveryChildDevice(MqttChildDeviceConfig):
+    """Child device with its components in a device discovery payload."""
+
+    components: Required[dict[str, dict[str, Any]]]
+
+
 class MqttOriginInfo(TypedDict, total=False):
     """Integration info of discovered entity."""
 
@@ -341,6 +357,44 @@ class MqttValueTemplateException(TemplateError):
         return self._message
 
 
+class _LastPayloadJson:
+    """The payload parsed last as JSON.
+
+    The client hands every subscriber of a topic the same payload object, so the
+    templates of all entities on that topic share one parse. Cleared after each
+    message by the client.
+    """
+
+    __slots__ = ("parsed", "payload")
+
+    def __init__(self) -> None:
+        self.payload: ReceivePayloadType | None = None
+        self.parsed: Any = UNDEFINED
+
+    def loads(self, payload: ReceivePayloadType) -> Any | UndefinedType:
+        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
+        if payload is self.payload:
+            return self.parsed
+        parsed: Any
+        try:
+            parsed = json_loads(payload)
+        except JSON_DECODE_EXCEPTIONS:
+            parsed = UNDEFINED
+        # A bytearray can change in place, so it is never kept.
+        if not isinstance(payload, bytearray):
+            self.payload = payload
+            self.parsed = parsed
+        return parsed
+
+    def clear(self) -> None:
+        """Drop the payload and its parse."""
+        self.payload = None
+        self.parsed = UNDEFINED
+
+
+LAST_PAYLOAD_JSON = _LastPayloadJson()
+
+
 class MqttValueTemplate:
     """Class for rendering MQTT value template with possible json values."""
 
@@ -370,6 +424,11 @@ class MqttValueTemplate:
         if self._value_template is None:
             return payload
 
+        value_json = (
+            UNDEFINED
+            if self._value_template.is_static
+            else LAST_PAYLOAD_JSON.loads(payload)
+        )
         values: dict[str, Any] = {}
 
         if variables is not None:
@@ -401,7 +460,7 @@ class MqttValueTemplate:
             try:
                 rendered_payload = (
                     self._value_template.async_render_with_possible_json_value(
-                        payload, variables=values
+                        payload, variables=values, value_json=value_json
                     )
                 )
             except TEMPLATE_ERRORS as exc:
@@ -427,7 +486,7 @@ class MqttValueTemplate:
         try:
             rendered_payload = (
                 self._value_template.async_render_with_possible_json_value(
-                    payload, default, variables=values
+                    payload, default, variables=values, value_json=value_json
                 )
             )
         except TEMPLATE_ERRORS as exc:
