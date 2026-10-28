@@ -1303,9 +1303,11 @@ TARGET_ID_FIELDS: VolDictType = {
     probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
 }
 
+TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
+
 TARGET_FIELDS: VolDictType = {
     **TARGET_ID_FIELDS,
-    probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 
@@ -1318,16 +1320,6 @@ def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
         raise probatio.Invalid("an exclude block requires a target to exclude from")
     return value
 
-
-ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(ATTR_ENTITY_ID): entity_ids,
-        probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
-    }
-)
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
@@ -1347,7 +1339,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(CONF_EXCLUDE): ENTITY_SERVICE_EXCLUDE_SCHEMA,
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1355,15 +1347,6 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
-    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): entity_ids_or_uuids,
-            probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
-        }
-    ),
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1402,7 +1385,7 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
-                entity_ids_or_uuids,
+                TARGET_ID_FIELDS[ATTR_ENTITY_ID],
                 dynamic_template,
                 probatio.All(list, template_complex),
             ),
