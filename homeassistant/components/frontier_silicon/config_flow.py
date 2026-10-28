@@ -96,6 +96,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             errors = await self._async_validate_device_url(user_input)
             if not errors:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 afsapi = AFSAPI(self._webfsapi_url, reconfigure_entry.data[CONF_PIN])
                 try:
                     unique_id = await afsapi.get_radio_id()
@@ -116,11 +117,13 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
                         data_updates={CONF_WEBFSAPI_URL: self._webfsapi_url},
                     )
 
+        webfsapi_url = urlparse(reconfigure_entry.data[CONF_WEBFSAPI_URL])
         data_schema = self.add_suggested_values_to_schema(
             STEP_USER_DATA_SCHEMA,
             user_input
             or {
-                CONF_HOST: hostname_from_url(reconfigure_entry.data[CONF_WEBFSAPI_URL])
+                CONF_HOST: webfsapi_url.hostname,
+                CONF_PORT: webfsapi_url.port or DEFAULT_PORT,
             },
         )
         return self.async_show_form(

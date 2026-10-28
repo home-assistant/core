@@ -545,3 +545,60 @@ async def test_reconfigure_flow_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert config_entry.data[CONF_WEBFSAPI_URL] == "http://1.1.1.1:80/webfsapi"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant, mock_afsapi: AsyncMock
+) -> None:
+    """Test reconfigure aborts when another entry uses the endpoint."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://2.2.2.2:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    ).add_to_hass(hass)
+    mock_afsapi.get_radio_id.side_effect = FSNotImplementedError
+
+    result = await entry.start_reconfigure_flow(hass)
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_WEBFSAPI_URL] == "http://1.1.1.1:80/webfsapi"
+
+
+@pytest.mark.parametrize(
+    ("webfsapi_url", "expected_port"),
+    [
+        pytest.param("http://1.1.1.1:8080/webfsapi", 8080, id="custom_port"),
+        pytest.param("http://1.1.1.1/webfsapi", 80, id="no_port"),
+    ],
+)
+async def test_reconfigure_flow_suggested_values(
+    hass: HomeAssistant, webfsapi_url: str, expected_port: int
+) -> None:
+    """Test the reconfigure form is prefilled from the stored URL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mock_radio_id",
+        data={CONF_WEBFSAPI_URL: webfsapi_url, CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values == {CONF_HOST: "1.1.1.1", CONF_PORT: expected_port}
