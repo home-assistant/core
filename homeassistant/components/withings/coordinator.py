@@ -342,6 +342,11 @@ class WithingsDeviceDataUpdateCoordinator(
     _default_update_interval = timedelta(hours=1)
 
     @override
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        # Webhooks aren't available for this datapoint, so we keep polling.
+
+    @override
     async def _internal_update_data(self) -> dict[str, Device]:
         """Update coordinator data."""
         devices = await self._client.get_devices()
