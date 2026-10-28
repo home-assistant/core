@@ -503,7 +503,7 @@ async def async_setup_entry(
         # (e.g. power/energy when a sensor is assigned ROLE_HOUSENET/ROLE_SOLAR,
         # or flow/volume when assigned ROLE_WATER).
         new_entities = [
-            PowersensorSensorEntity(mac_address, new_role, desc)
+            PowersensorSensorEntity(dispatcher, mac_address, desc)
             for desc in SENSOR_DESCRIPTIONS
             if desc.supported_roles is not None
             and new_role in desc.supported_roles
@@ -539,7 +539,7 @@ async def async_setup_entry(
     def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
         """Create entities for a newly discovered sensor."""
         new_sensors = [
-            PowersensorSensorEntity(sensor_mac, sensor_role, desc)
+            PowersensorSensorEntity(dispatcher, sensor_mac, desc)
             for desc in SENSOR_DESCRIPTIONS
             if desc.supported_roles is None or sensor_role in desc.supported_roles
         ]
@@ -563,12 +563,8 @@ async def async_setup_entry(
     def handle_discovered_plug(plug_mac: str) -> None:
         """Create entities for a newly discovered plug."""
         _LOGGER.debug("Plug discovered: %s", plug_mac)
-        # Plugs only ever report ROLE_APPLIANCE, so their role is known upfront.
         async_add_entities(
-            [
-                PowersensorPlugEntity(plug_mac, ROLE_APPLIANCE, desc)
-                for desc in PLUG_DESCRIPTIONS
-            ],
+            [PowersensorPlugEntity(plug_mac, desc) for desc in PLUG_DESCRIPTIONS],
         )
 
     entry.async_on_unload(
@@ -640,13 +636,11 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
     def __init__(
         self,
         mac: str,
-        role: str | None,
         description: PowersensorSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
             mac,
-            role,
             f"{DATA_UPDATE_SIGNAL_PREFIX}{mac}_{description.event}",
         )
         self._unrecognised_role: str | None = None
@@ -707,13 +701,25 @@ class PowersensorSensorEntity(PowersensorMeasurementEntity):
 
     _update_timeout = SENSOR_UPDATE_TIMEOUT
 
+    def __init__(
+        self,
+        dispatcher: PowersensorMessageDispatcher,
+        mac: str,
+        description: PowersensorSensorEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(mac, description)
+        self._dispatcher = dispatcher
+
     @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info for this sensor hardware unit.
 
         Only read when the entity is added; a later role change renames the
-        device from the platform's handle_role_update.
+        device from the platform's handle_role_update.  The name follows the
+        sensor's current role, not the one it had when the entity was created,
+        so an entity added after a rename cannot undo it.
         """
         # Deliberately no via_device_id.  A sensor is not tied to a plug: any
         # plug in range can relay it, and it moves to another after repeated
@@ -723,7 +729,9 @@ class PowersensorSensorEntity(PowersensorMeasurementEntity):
             identifiers={(DOMAIN, self._mac)},
             manufacturer="Powersensor",
             model="PowersensorSensor",
-            translation_key=_sensor_device_translation_key(self._role),
+            translation_key=_sensor_device_translation_key(
+                self._dispatcher.sensors[self._mac]
+            ),
             translation_placeholders={"id": self._mac},
         )
 
