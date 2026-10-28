@@ -13,6 +13,11 @@
       "token_unauthorized": "The token is invalid or unauthorized."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]"
+        }
+      },
       "user": {
         "data": {
           "access_token": "Personal Access Token",

@@ -48,19 +48,24 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return DEFAULT_COUNTRY
 
-    async def _validate_and_create_entry(
-        self, access_token: str, country_code: str
-    ) -> ConfigFlowResult:
-        """Create an entry for the flow."""
-        connect_client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
-
-        # To verify PAT, create an api to retrieve the device list.
+    async def _async_validate(
+        self, access_token: str, country_code: str, connect_client_id: str
+    ) -> None:
+        """Verify the PAT by retrieving the device list."""
         await ThinQApi(
             session=async_get_clientsession(self.hass),
             access_token=access_token,
             country_code=country_code,
             client_id=connect_client_id,
         ).async_get_device_list()
+
+    async def _validate_and_create_entry(
+        self, access_token: str, country_code: str
+    ) -> ConfigFlowResult:
+        """Create an entry for the flow."""
+        connect_client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
+
+        await self._async_validate(access_token, country_code, connect_client_id)
 
         # If verification is success, create entry.
         return self.async_create_entry(
@@ -106,5 +111,41 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={"pat_url": THINQ_PAT_URL},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the country."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                await self._async_validate(
+                    entry.data[CONF_ACCESS_TOKEN],
+                    user_input[CONF_COUNTRY],
+                    entry.data[CONF_CONNECT_CLIENT_ID],
+                )
+            except ThinQAPIException as exc:
+                errors["base"] = THINQ_ERRORS.get(exc.code, "token_unauthorized")
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_COUNTRY): CountrySelector(
+                            CountrySelectorConfig(countries=SUPPORTED_COUNTRIES)
+                        ),
+                    }
+                ),
+                user_input or entry.data,
+            ),
             errors=errors,
         )
