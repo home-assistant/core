@@ -167,3 +167,135 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
                 if self.data[channel] is not desired
             }
             self.async_set_updated_data(self.data)
+
+
+class ToneControl(StrEnum):
+    """Tone control of the main zone."""
+
+    BASS = "bass"
+    TREBLE = "treble"
+
+
+type ToneData = dict[ToneControl, int]
+
+
+class ToneCoordinator(DataUpdateCoordinator[ToneData]):
+    """Coordinator for the tone controls of the main zone.
+
+    The receiver reports them also in standby, but takes changes only while
+    the main zone is on.
+    """
+
+    config_entry: OnkyoConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OnkyoConfigEntry,
+        manager: ReceiverManager,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="onkyo_tone",
+            update_interval=None,
+        )
+
+        self.manager = manager
+
+        self.data: ToneData = {}
+        self.power_on = False
+
+        self._entities_added = False
+
+        self._query_state_unsub: CALLBACK_TYPE | None = None
+
+        manager.callbacks.connect.append(self._connect_callback)
+        manager.callbacks.disconnect.append(self._disconnect_callback)
+        manager.callbacks.update.append(self._update_callback)
+
+        config_entry.async_on_unload(self._cancel_pending)
+
+    async def _connect_callback(self, _reconnect: bool) -> None:
+        """Receiver (re)connected."""
+        await self._query_state()
+
+    async def _disconnect_callback(self) -> None:
+        """Receiver disconnected."""
+        self._cancel_pending()
+        self.power_on = False
+        self.async_set_updated_data(self.data)
+
+    def _cancel_pending(self) -> None:
+        """Cancel the pending work."""
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
+
+    async def _query_state(self) -> None:
+        """Query the receiver for the tone controls."""
+        await self.manager.write(query.Tone(Zone.MAIN))
+
+    def _query_state_delayed(self, delay: float) -> None:
+        """Query the state after a delay, restarting any pending delay."""
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
+
+        async def coro(_now: datetime) -> None:
+            self._query_state_unsub = None
+            await self._query_state()
+
+        self._query_state_unsub = async_call_later(self.hass, delay, coro)
+
+    @override
+    async def _async_update_data(self) -> ToneData:
+        """Respond to a data update request."""
+        await self._query_state()
+        return self.data
+
+    async def async_send_command(self, control: ToneControl, value: int) -> None:
+        """Send a tone command for one control."""
+        if control is ToneControl.BASS:
+            message = command.Tone(zone=Zone.MAIN, bass=value)
+        else:
+            message = command.Tone(zone=Zone.MAIN, treble=value)
+        await self.manager.write(message)
+
+    async def _update_callback(self, message: Status) -> None:
+        """New message from the receiver."""
+        data: ToneData
+        match message:
+            case status.Tone(zone=Zone.MAIN):
+                data = {
+                    ToneControl.BASS: message.bass,
+                    ToneControl.TREBLE: message.treble,
+                }
+            case status.NotAvailable(kind=Kind.TONE, zone=Zone.MAIN):
+                data = {}
+            case status.Power(zone=Zone.MAIN, param=param):
+                self.power_on = param is status.Power.Param.ON
+                if self.power_on:
+                    self._query_state_delayed(POWER_ON_QUERY_DELAY)
+                self.async_set_updated_data(self.data)
+                return
+            case _:
+                return
+
+        self.async_set_updated_data(data)
+
+        if not self._entities_added and data:
+            _LOGGER.debug(
+                "Discovered %s on %s (%s)",
+                self.name,
+                self.manager.info.model_name,
+                self.manager.info.host,
+            )
+            self._entities_added = True
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_tone",
+                self,
+            )
