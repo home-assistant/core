@@ -232,12 +232,6 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
-# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
-# https://github.com/home-assistant/core/issues/185883
-# https://codeberg.org/obi/pysml/issues/33
-# Remove once pysml supports bitstring>=5
-bitstring<5
-
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
