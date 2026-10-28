@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
 )
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
+from zigpy.application import ControllerApplication
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
@@ -20,13 +21,19 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN, device_action
-from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_gateway, get_zha_gateway_proxy
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from .conftest import (
+    FIXTURE_GRP_WITH_ENTITIES_ID,
+    SIG_EP_INPUT,
+    SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
+    SIG_EP_TYPE,
+)
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -51,6 +58,27 @@ def required_platforms_only():
         ),
     ):
         yield
+
+
+async def test_get_actions_group_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+) -> None:
+    """Test that ZHA group devices expose no ZHA device actions."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, group_proxy.device_id
+    )
+    # Entity based actions (e.g. from the switch domain) are fine, but the
+    # group device must not offer ZHA device actions (squawk/warn)
+    assert actions
+    assert not [action for action in actions if action["domain"] == DOMAIN]
 
 
 async def test_get_actions(

@@ -3,6 +3,7 @@
 from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Command
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -136,28 +137,40 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
+        if operation_mode == STATE_OFF:
+            await self.async_turn_away_mode_on()
+            return
+
+        commands: list[Command] = []
+
         if operation_mode == STATE_PERFORMANCE:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off()
-            await self.async_turn_boost_mode_on()
+                commands.extend(self._away_mode_off_commands())
+            commands.extend(self._boost_mode_commands(OverkizCommandParam.ON))
         elif operation_mode == STATE_ECO:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off()
+                commands.extend(self._away_mode_off_commands())
             if self.is_boost_mode_on:
-                await self.async_turn_boost_mode_off()
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_DHW_MODE, OverkizCommandParam.AUTO_MODE
+                commands.extend(self._boost_mode_commands(OverkizCommandParam.OFF))
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_DHW_MODE,
+                    parameters=[OverkizCommandParam.AUTO_MODE],
+                )
             )
         elif operation_mode == STATE_ELECTRIC:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off()
+                commands.extend(self._away_mode_off_commands())
             if self.is_boost_mode_on:
-                await self.async_turn_boost_mode_off()
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_DHW_MODE, OverkizCommandParam.MANUAL_ECO_INACTIVE
+                commands.extend(self._boost_mode_commands(OverkizCommandParam.OFF))
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_DHW_MODE,
+                    parameters=[OverkizCommandParam.MANUAL_ECO_INACTIVE],
+                )
             )
-        elif operation_mode == STATE_OFF:
-            await self.async_turn_away_mode_on()
+
+        await self.executor.async_execute_commands(commands)
 
     @override
     async def async_turn_away_mode_on(self) -> None:
@@ -181,15 +194,10 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         scratch based on datetime.now() and
         datetime.timedelta into the future.
 
-        If you execute `setAbsenceStartDate`,
-        `setAbsenceEndDate` and `setAbsenceMode`, the API
-        answers with "too many requests", as there's a polling
-        update after each command execution, and the device
+        All commands are sent as a single execution. Sent one
+        by one, each followed by a polling update, the API
+        answers with "too many requests" and the device
         becomes unavailable until the API is available again.
-        With `refresh_afterwards=False` on the first commands,
-        and `refresh_afterwards=True` only the last command,
-        the API is not choking and the transition is smooth
-        without the unavailability state.
         """
         now = dt_util.now()
         now_date = {
@@ -201,40 +209,37 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             "minute": now.minute,
             "second": now.second,
         }
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DATE_TIME,
-            now_date,
-            refresh_afterwards=False,
+        end_date = {**now_date, "year": now.year + 1}
+        await self.executor.async_execute_commands(
+            [
+                Command(name=OverkizCommand.SET_DATE_TIME, parameters=[now_date]),
+                Command(
+                    name=OverkizCommand.SET_ABSENCE_START_DATE, parameters=[now_date]
+                ),
+                Command(
+                    name=OverkizCommand.SET_ABSENCE_END_DATE, parameters=[end_date]
+                ),
+                Command(
+                    name=OverkizCommand.SET_ABSENCE_MODE,
+                    parameters=[OverkizCommandParam.PROG],
+                ),
+            ]
         )
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_START_DATE, now_date, refresh_afterwards=False
-        )
-        now_date["year"] = now_date["year"] + 1
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_END_DATE, now_date, refresh_afterwards=False
-        )
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE,
-            OverkizCommandParam.PROG,
-            refresh_afterwards=False,
-        )
-        await self.coordinator.async_refresh()
 
     @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_ABSENCE_MODE, OverkizCommandParam.OFF
-        )
+        await self.executor.async_execute_commands(self._away_mode_off_commands())
 
-    async def async_turn_boost_mode_on(self) -> None:
-        """Turn boost mode on."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_BOOST_MODE, OverkizCommandParam.ON
-        )
+    def _away_mode_off_commands(self) -> list[Command]:
+        """Return the commands that turn away mode off."""
+        return [
+            Command(
+                name=OverkizCommand.SET_ABSENCE_MODE,
+                parameters=[OverkizCommandParam.OFF],
+            )
+        ]
 
-    async def async_turn_boost_mode_off(self) -> None:
-        """Turn boost mode off."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_BOOST_MODE, OverkizCommandParam.OFF
-        )
+    def _boost_mode_commands(self, boost: OverkizCommandParam) -> list[Command]:
+        """Return the commands that turn boost mode on or off."""
+        return [Command(name=OverkizCommand.SET_BOOST_MODE, parameters=[boost])]

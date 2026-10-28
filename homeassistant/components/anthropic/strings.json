@@ -57,27 +57,19 @@
         "user": "Add AI task"
       },
       "step": {
-        "additional": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data::prompt_caching%]"
-          },
-          "data_description": {
-            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::chat_model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::prompt_caching%]"
-          },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::additional::title%]"
-        },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "name": "[%key:common::config_flow::data::name%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::init::data::prompt_caching%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data::recommended%]"
           },
           "data_description": {
+            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::chat_model%]",
             "name": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::name%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::prompt_caching%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::recommended%]"
-          },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
+          }
         },
         "model": {
           "data": {
@@ -127,31 +119,23 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "additional": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "Caching strategy"
-          },
-          "data_description": {
-            "chat_model": "The model to serve the responses.",
-            "prompt_caching": "Optimize your API cost and response times based on your usage."
-          },
-          "title": "Additional settings"
-        },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "[%key:common::config_flow::data::prompt%]",
+            "prompt_caching": "Caching strategy",
             "recommended": "Recommended model settings"
           },
           "data_description": {
+            "chat_model": "The model to serve the responses.",
             "llm_hass_api": "Allow the LLM to control Home Assistant.",
             "name": "The name of this configuration",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "prompt_caching": "Optimize your API cost and response times based on your usage.",
             "recommended": "Use default configuration"
-          },
-          "title": "Basic settings"
+          }
         },
         "model": {
           "data": {
