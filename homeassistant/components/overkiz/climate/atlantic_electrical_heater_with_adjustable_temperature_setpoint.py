@@ -125,6 +125,13 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation ie. heating, idle, off."""
         states = self.device.states
+        # core:RegulationModeState may never report increase, even while heating.
+        if (state := states.get(OverkizState.IO_CURRENT_WORKING_RATE)) and (
+            working_rate := state.value_as_float
+        ) is not None:
+            if self.hvac_mode == HVACMode.OFF:
+                return HVACAction.OFF
+            return HVACAction.HEATING if working_rate > 0 else HVACAction.IDLE
         if (
             state := states.get(OverkizState.CORE_REGULATION_MODE)
         ) and state.value_as_str:
