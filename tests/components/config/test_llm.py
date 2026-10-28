@@ -1248,6 +1248,21 @@ async def test_abort_flow_and_error_cases(
     )
     assert after_abort.error is True
 
+    MockConfigEntry(domain="sun", title="Sun").add_to_hass(hass)
+    single_abort = await start_tool.async_call(
+        hass,
+        llm.ToolInput(start_tool.name, {"domain": "sun"}),
+        llm_context,
+    )
+    assert single_abort.error is False
+    assert isinstance(abort_res := single_abort.data["result"], dict)
+    assert abort_res["type"] == "abort"
+    assert abort_res["reason"] == "single_instance_allowed"
+    assert (
+        abort_res["description"]
+        == "Already configured. Only a single configuration is possible."
+    )
+
 
 class _BaseOAuthTestFlow(ConfigFlow):
     """Base test flow providing auth and pick_implementation step methods."""
@@ -1318,6 +1333,13 @@ async def test_oauth_and_external_step_new_flow(
             return await step_action(self)
 
     with mock_config_flow(TEST_DOMAIN, OAuthUserFlow):
+        other_flow = OAuthUserFlow()
+        other_flow.hass = hass
+        other_flow.handler = TEST_DOMAIN
+        other_flow.flow_id = "01J00000000000000000009999"
+        other_flow.context = {"source": config_entries.SOURCE_ZEROCONF}
+        hass.config_entries.flow._async_add_flow_progress(other_flow)
+
         start_tool = StartFlowTool()
         res = await start_tool.async_call(
             hass,
@@ -1329,19 +1351,26 @@ async def test_oauth_and_external_step_new_flow(
             res.data["frontend_url"]
             == f"/config/integrations/dashboard/add?domain={TEST_DOMAIN}"
         )
-        assert (
-            hass.config_entries.flow.async_progress_by_handler(
-                TEST_DOMAIN, include_uninitialized=True
-            )
-            == []
+        remaining = hass.config_entries.flow.async_progress_by_handler(
+            TEST_DOMAIN, include_uninitialized=True
         )
+        assert [flw["flow_id"] for flw in remaining] == [other_flow.flow_id]
+        hass.config_entries.flow.async_abort(other_flow.flow_id)
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
 @pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+@pytest.mark.parametrize(
+    "step_action",
+    [
+        pytest.param(_step_external, id="external_step"),
+        pytest.param(_step_redirect_runtime_error, id="redirect_runtime_error"),
+    ],
+)
 async def test_oauth_and_external_step_on_configure_step(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
+    step_action: Callable[[_BaseOAuthTestFlow], Coroutine[Any, Any, ConfigFlowResult]],
 ) -> None:
     """Test flows hitting OAuth/external steps on step 2 abort cleanly and return a frontend URL."""
     mock_integration(hass, MockModule(TEST_DOMAIN))
@@ -1355,7 +1384,7 @@ async def test_oauth_and_external_step_on_configure_step(
             self, user_input: dict[str, Any] | None = None
         ) -> ConfigFlowResult:
             if user_input is not None:
-                return await self.async_step_auth()
+                return await step_action(self)
             return self.async_show_form(step_id="user")
 
     with mock_config_flow(TEST_DOMAIN, TwoStepOAuthFlow):
@@ -1368,6 +1397,37 @@ async def test_oauth_and_external_step_on_configure_step(
         )
         assert init_res.error is False
         assert isinstance(step1 := init_res.data["result"], dict)
+
+        with (
+            patch.object(
+                hass.config_entries.flow,
+                "async_init",
+                AsyncMock(side_effect=RuntimeError("unexpected error")),
+            ),
+            pytest.raises(RuntimeError, match="unexpected error"),
+        ):
+            await start_tool.async_call(
+                hass,
+                llm.ToolInput(start_tool.name, {"domain": TEST_DOMAIN}),
+                llm_context,
+            )
+
+        with (
+            patch.object(
+                hass.config_entries.flow,
+                "async_configure",
+                AsyncMock(side_effect=RuntimeError("unexpected error")),
+            ),
+            pytest.raises(RuntimeError, match="unexpected error"),
+        ):
+            await configure_tool.async_call(
+                hass,
+                llm.ToolInput(
+                    configure_tool.name,
+                    {"flow_id": step1["flow_id"], "user_input": {}},
+                ),
+                llm_context,
+            )
 
         step2_res = await configure_tool.async_call(
             hass,

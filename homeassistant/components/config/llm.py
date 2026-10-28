@@ -455,26 +455,6 @@ def _enrich_schema_fields(
     return fields  # type: ignore[return-value]
 
 
-def _format_menu_options(
-    raw_menu_options: Any,
-    trans: dict[str, str],
-    step_prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> JsonObjectType:
-    """Format and translate menu_options for a MENU flow step."""
-    menu_options_out: JsonObjectType = {}
-    for opt in raw_menu_options:
-        fallback = raw_menu_options[opt] if isinstance(raw_menu_options, dict) else opt
-        label = trans.get(f"{step_prefix}.menu_options.{opt}") or fallback
-        opt_desc = trans.get(f"{step_prefix}.menu_option_descriptions.{opt}")
-        label_str = _interpolate_placeholders(label, placeholders) or opt
-        if opt_desc_str := _interpolate_placeholders(opt_desc, placeholders):
-            menu_options_out[opt] = {"label": label_str, "description": opt_desc_str}
-        else:
-            menu_options_out[opt] = label_str
-    return menu_options_out
-
-
 def _build_external_step_error(domain: str) -> ToolResult:
     """Return an error ToolResult directing the user to complete OAuth/external setup in the UI."""
     frontend_url = f"/config/integrations/dashboard/add?domain={domain}"
@@ -566,9 +546,18 @@ async def _async_finalize_flow_step(
                     for err_field, err_val in err_source.items()
                 }
         elif flow_type is data_entry_flow.FlowResultType.MENU:
-            formatted["menu_options"] = _format_menu_options(
-                result.get("menu_options", []), trans, step_prefix, placeholders
-            )
+            raw_opts: Any = result.get("menu_options", [])
+            formatted["menu_options"] = {
+                opt: (
+                    _interpolate_placeholders(
+                        trans.get(f"{step_prefix}.menu_options.{opt}")
+                        or (raw_opts[opt] if isinstance(raw_opts, dict) else opt),
+                        placeholders,
+                    )
+                    or opt
+                )
+                for opt in raw_opts
+            }
         elif flow_type is data_entry_flow.FlowResultType.SHOW_PROGRESS:
             progress_action = result["progress_action"]
             formatted["progress_action"] = progress_action
@@ -635,11 +624,11 @@ class StartFlowTool(Tool):
         args = self.parameters(tool_input.tool_args)
         domain: str = args["domain"]
         flow_mgr = hass.config_entries.flow
+        context: config_entries.ConfigFlowContext = {
+            "source": config_entries.SOURCE_USER
+        }
         try:
-            result = await flow_mgr.async_init(
-                domain,
-                context={"source": config_entries.SOURCE_USER},
-            )
+            result = await flow_mgr.async_init(domain, context=context)
         except data_entry_flow.UnknownHandler:
             return _error_result(
                 f"Integration '{domain}' does not exist or does not support config flows."
@@ -648,15 +637,13 @@ class StartFlowTool(Tool):
             return _error_result(
                 f"Failed dependencies: {', '.join(err.failed_dependencies)}"
             )
-        except HomeAssistantError as err:
-            return _error_result(str(err))
         except RuntimeError as err:
             if str(err) not in _OAUTH_RUNTIME_ERRORS:
                 raise
             for flw in flow_mgr.async_progress_by_handler(
                 domain, include_uninitialized=True
             ):
-                if "step_id" not in flw:
+                if flw["context"] is context:
                     flow_mgr.async_abort(flw["flow_id"])
             return _build_external_step_error(domain)
 
@@ -787,10 +774,6 @@ class ConfigureFlowTool(Tool):
                 result = await flow_mgr.async_configure(flow_id, flow_input)
             except data_entry_flow.InvalidData as err:
                 return _error_result(f"Invalid input: {err.schema_errors}")
-            except data_entry_flow.UnknownFlow:
-                return _error_result(f"Flow '{short_flow_id}' not found.")
-            except HomeAssistantError as err:
-                return _error_result(str(err))
             except RuntimeError as err:
                 if str(err) not in _OAUTH_RUNTIME_ERRORS:
                     raise
