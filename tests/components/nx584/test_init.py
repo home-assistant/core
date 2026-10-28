@@ -15,7 +15,6 @@ from homeassistant.components.nx584.const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
     DOMAIN,
-    REQUEST_TIMEOUT,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME, CONF_PORT
@@ -80,9 +79,7 @@ async def test_setup_and_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data.client is mock_client.return_value
-    mock_client.assert_called_with(
-        f"http://{TEST_HOST}:{TEST_PORT}", timeout=REQUEST_TIMEOUT
-    )
+    mock_client.assert_called_with(f"http://{TEST_HOST}:{TEST_PORT}")
     assert hass.states.get("alarm_control_panel.nx584")
     assert hass.states.get("binary_sensor.front")
     mock_watcher.return_value.start.assert_called_once()
@@ -108,9 +105,7 @@ async def test_setup_entry_ipv6_host(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    mock_client.assert_called_with(
-        f"http://[fe80::1]:{TEST_PORT}", timeout=REQUEST_TIMEOUT
-    )
+    mock_client.assert_called_with(f"http://[fe80::1]:{TEST_PORT}")
 
 
 @pytest.mark.parametrize(
