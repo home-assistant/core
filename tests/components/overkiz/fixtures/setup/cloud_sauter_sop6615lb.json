@@ -237,11 +237,7 @@
         {
           "name": "core:AvailableOptionsState",
           "type": 10,
-          "value": [
-            "remotedGuide",
-            "booster",
-            "demo"
-          ]
+          "value": ["remotedGuide", "booster", "demo"]
         },
         {
           "name": "core:ActivatedOptionsState",
@@ -251,10 +247,7 @@
         {
           "name": "core:CycleStageSequenceState",
           "type": 10,
-          "value": [
-            "cooking",
-            "end"
-          ]
+          "value": ["cooking", "end"]
         },
         {
           "name": "core:CurrentCycleStageState",
@@ -277,32 +270,20 @@
           "value": [
             {
               "feature": "recipeControl",
-              "commands": [
-                "*"
-              ],
-              "states": [
-                "*"
-              ],
+              "commands": ["*"],
+              "states": ["*"],
               "cause": "modeConstraint"
             },
             {
               "feature": "weightControl",
-              "commands": [
-                "*"
-              ],
-              "states": [
-                "*"
-              ],
+              "commands": ["*"],
+              "states": ["*"],
               "cause": "modeConstraint"
             },
             {
               "feature": "dimming",
-              "commands": [
-                "*"
-              ],
-              "states": [
-                "*"
-              ],
+              "commands": ["*"],
+              "states": ["*"],
               "cause": "modeConstraint"
             }
           ]
@@ -313,12 +294,7 @@
         {
           "name": "core:SupportedIntensities",
           "type": 10,
-          "value": [
-            25,
-            50,
-            75,
-            100
-          ]
+          "value": [25, 50, 75, 100]
         },
         {
           "name": "ogp:Features",
@@ -530,11 +506,7 @@
         {
           "name": "core:SupportedOptions",
           "type": 10,
-          "value": [
-            "remotedGuide",
-            "booster",
-            "demo"
-          ]
+          "value": ["remotedGuide", "booster", "demo"]
         },
         {
           "name": "core:SupportedModesByCategory",
@@ -570,11 +542,7 @@
         {
           "name": "core:SupportedCycleStages",
           "type": 10,
-          "value": [
-            "analysis",
-            "cooking",
-            "end"
-          ]
+          "value": ["analysis", "cooking", "end"]
         }
       ],
       "enabled": true,
@@ -645,10 +613,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -724,10 +689,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "locked",
-              "unlocked"
-            ],
+            "values": ["locked", "unlocked"],
             "qualifiedName": "core:LockedUnlockedState"
           },
           {
@@ -744,10 +706,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -832,18 +791,12 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "started",
-              "stopped"
-            ],
+            "values": ["started", "stopped"],
             "qualifiedName": "core:StartedStoppedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {

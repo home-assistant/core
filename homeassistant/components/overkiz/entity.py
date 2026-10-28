@@ -173,12 +173,14 @@ class OverkizExecutableEntity(OverkizDescriptiveEntity):
             return False
 
         if features := self.device.states.get(OverkizState.OGP_UNAVAILABLE_FEATURES):
-            for entry in features.value or []:
-                if (
-                    isinstance(entry, dict)
-                    and entry.get("feature") == "*"
-                    and "*" in (entry.get("commands") or [])
-                ):
-                    return False
+            value = features.value
+            if isinstance(value, list):
+                for entry in value:
+                    if (
+                        isinstance(entry, dict)
+                        and entry.get("feature") == "*"
+                        and "*" in (entry.get("commands") or [])
+                    ):
+                        return False
 
         return True
