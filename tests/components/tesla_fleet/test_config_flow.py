@@ -1,7 +1,7 @@
 """Test the Tesla Fleet config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -1034,24 +1034,107 @@ async def test_reauth_account_mismatch(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    ("unique_id", "reason", "updated"),
-    [
-        pytest.param(UNIQUE_ID, "reconfigure_successful", True, id="success"),
-        pytest.param("baduid", "unique_id_mismatch", False, id="account_mismatch"),
-    ],
-)
 async def test_reconfigure(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    unique_id: str,
-    reason: str,
-    updated: bool,
+    mock_private_key,
 ) -> None:
-    """Test Tesla Fleet reconfiguration."""
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, version=1, data={})
+    """Test Tesla Fleet reconfiguration repeats registration with the same app."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("other_client_id", "other_client_secret"),
+        "other_cred",
+    )
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=UNIQUE_ID,
+        version=1,
+        data={"auth_implementation": "user_cred"},
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await old_entry.start_reconfigure_flow(hass)
+
+    # The stored application is used instead of offering a picker
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert parse_qs(urlparse(result["url"]).query)["client_id"] == ["user_client_id"]
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
+    ) as mock_api_class:
+        mock_api = AsyncMock()
+        mock_api.private_key = mock_private_key
+        mock_api.get_private_key = AsyncMock()
+        mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "0404aabb"
+        mock_api.partner.register.return_value = {
+            "response": {"public_key": "0404aabb"}
+        }
+        mock_api_class.return_value = mock_api
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "region"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_REGION: "eu"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "domain_input"
+
+        result = await _complete_registration(
+            hass, result["flow_id"], {CONF_DOMAIN: "example.com"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_api_class.call_args.kwargs["server"] == SERVERS["eu"]
+    mock_api.partner_login.assert_awaited_once_with(
+        "user_client_id", "user_client_secret", ANY
+    )
+    mock_api.partner.register.assert_awaited_once_with("example.com")
+    assert old_entry.data["auth_implementation"] == "user_cred"
+    assert old_entry.data["token"]["access_token"] == access_token
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+) -> None:
+    """Test Tesla Fleet reconfiguration with a different account."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="baduid",
+        version=1,
+        data={"auth_implementation": "user_cred"},
+    )
     old_entry.add_to_hass(hass)
 
     result = await old_entry.start_reconfigure_flow(hass)
@@ -1076,15 +1159,11 @@ async def test_reconfigure(
         },
     )
 
-    with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    assert ("token" in old_entry.data) is updated
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert result["reason"] == "unique_id_mismatch"
+    assert "token" not in old_entry.data
 
 
 @pytest.mark.usefixtures("current_request_with_host")
