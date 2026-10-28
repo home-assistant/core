@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
+from .const import CONFIG_ENTRY_DATA, TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="127.0.0.1",
@@ -422,6 +422,36 @@ async def test_reconfigure_flow_success(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_APP_SECRET] == NEW_APP_SECRET
     assert mock_config_entry.data[CONF_API_URL] == "eu"
+    mock_imou_openapi_client.async_close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_migrates_legacy_region_before_saving(
+    hass: HomeAssistant,
+    mock_imou_openapi_client: AsyncMock,
+) -> None:
+    """A legacy region is corrected before the submitted region is saved."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_DATA, CONF_API_URL: "eu"},
+        unique_id=CONFIG_ENTRY_DATA[CONF_APP_ID],
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert entry.minor_version == 2
+    assert entry.data[CONF_API_URL] == "na"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: "eu"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_API_URL] == "eu"
     mock_imou_openapi_client.async_close.assert_awaited_once()
 
 
