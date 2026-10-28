@@ -184,5 +184,4 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={"error": str(error)},
             ) from error
