@@ -1,6 +1,5 @@
 """The generic_hygrostat component."""
 
-from enum import StrEnum
 import logging
 
 import probatio
@@ -40,12 +39,6 @@ CONF_STALE_DURATION = "sensor_stale_duration"
 
 DEFAULT_TOLERANCE = 3
 DEFAULT_NAME = "Generic Hygrostat"
-
-
-class GenericHygrostatEntityStateAttribute(StrEnum):
-    """State attributes for generic hygrostat entities."""
-
-    SAVED_HUMIDITY = "saved_humidity"
 
 
 HYGROSTAT_SCHEMA = probatio.Schema(
