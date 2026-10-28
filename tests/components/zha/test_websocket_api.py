@@ -603,7 +603,9 @@ async def test_green_power_device_listings(hass: HomeAssistant, zha_client) -> N
     ],
 )
 async def test_green_power_device_clusters(
-    hass: HomeAssistant, zha_client, command: dict[str, Any]
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    command: dict[str, Any],
 ) -> None:
     """Test that a Green Power device has no clusters to list."""
     await _async_add_green_power_device(hass)
@@ -623,7 +625,11 @@ async def test_green_power_device_clusters(
     ],
 )
 async def test_read_zigbee_cluster_attribute(
-    hass: HomeAssistant, zha_client, ieee: str, read_calls: int, result: str
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    ieee: str,
+    read_calls: int,
+    result: str,
 ) -> None:
     """Test reading a cluster attribute value."""
     await _async_add_green_power_device(hass)
@@ -655,7 +661,7 @@ async def test_read_zigbee_cluster_attribute(
 
 
 async def test_get_zha_config_with_green_power_device(
-    hass: HomeAssistant, zha_client
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket
 ) -> None:
     """Test a Green Power device is skipped when looking for alarm clusters."""
     await _async_add_green_power_device(hass)

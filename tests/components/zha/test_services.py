@@ -164,7 +164,7 @@ async def test_cluster_service(
             DOMAIN, service, {"ieee": IEEE_SWITCH_DEVICE, **data}, blocking=True
         )
 
-    assert method_mock.mock_calls == [expected_call]
+    assert method_mock.await_args_list == [expected_call]
 
 
 @pytest.mark.parametrize(
