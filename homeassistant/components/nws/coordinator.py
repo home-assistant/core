@@ -156,7 +156,6 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="observation_update_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             self.last_api_success_time = utcnow()
@@ -180,7 +179,6 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="observation_update_error",
-                    translation_placeholders={"error": str(err)},
                 ) from err
             _LOGGER.debug(
                 "NWS observation update failed, but data still valid. Last success: %s",

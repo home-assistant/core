@@ -170,7 +170,7 @@ async def test_data_caching_error_observation(
 
     assert (
         "Error fetching NWS observation station ABC data: "
-        "Error updating observation data: Test" in caplog.text
+        "An error occurred while updating the observation data" in caplog.text
     )
 
 
@@ -192,7 +192,7 @@ async def test_no_data_error_observation(
 
     assert (
         "Error fetching NWS observation station ABC data: "
-        "Error updating observation data: Test" in caplog.text
+        "An error occurred while updating the observation data" in caplog.text
     )
 
 

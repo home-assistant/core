@@ -54,7 +54,7 @@
       "message": "No data returned."
     },
     "observation_update_error": {
-      "message": "Error updating observation data: {error}"
+      "message": "An error occurred while updating the observation data"
     }
   },
   "selector": {
