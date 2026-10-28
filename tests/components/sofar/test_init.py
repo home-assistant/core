@@ -16,6 +16,13 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
@@ -48,14 +55,6 @@ from . import (
     seed_pv_inverter,
     serve_meter_energy,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
 
@@ -465,6 +464,37 @@ async def test_setup_takes_the_type_once_the_masks_answer(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_keeps_meter_sensors_of_an_unsettled_type(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a silent restart keeps meter sensors before the masks answer."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    entry.add_to_hass(hass)
+    meter_sensors = [
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{MOCK_UNRECOGNIZED_SERIAL}_{key}",
+            config_entry=entry,
+        ).entity_id
+        for key in METER_ENERGY_KEYS
+    ]
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert all(
+        entity_registry.async_get(entity_id) is not None for entity_id in meter_sensors
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_setup_while_asleep_keeps_the_device_versions(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
@@ -693,9 +723,9 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    # Availability alone cannot tell a failed poll from one that reported
-    # every component as failed; only the logged error separates them.
+    # One coordinator error, not a warning per failed component.
     assert "No component answered" in caplog.text
+    assert "its entities are unavailable" not in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
@@ -703,6 +733,33 @@ async def test_every_component_failing_recovers_on_a_later_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "2.5"
+    assert "is available again" not in caplog.text
+
+
+async def test_component_failure_is_logged_once_until_it_recovers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a failing component warns once, then logs its recovery once."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
+    for _ in range(2):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("grid failed to refresh") == 1
+
+    unit.fail_read(0x0484, None)
+    for _ in range(2):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("grid is available again") == 1
 
 
 async def test_pv_strings_become_their_own_devices(

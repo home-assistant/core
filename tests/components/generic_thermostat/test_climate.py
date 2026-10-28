@@ -8,6 +8,17 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    assert_setup_component,
+    async_fire_time_changed,
+    async_mock_service,
+    get_fixture_path,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
@@ -59,17 +70,6 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    assert_setup_component,
-    async_fire_time_changed,
-    async_mock_service,
-    get_fixture_path,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 from tests.components.climate import common
 from tests.components.switch.common import MockSwitch
 

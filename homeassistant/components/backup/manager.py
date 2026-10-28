@@ -33,15 +33,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.async_iterator import AsyncIteratorReader
+from homeassistant.util.async_iterator import AsyncIteratorReader, async_close_iterator
 
 from . import util as backup_util
-from .agent import (
-    BackupAgent,
-    BackupAgentError,
-    BackupAgentPlatformProtocol,
-    LocalBackupAgent,
-)
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
@@ -60,6 +55,7 @@ from .const import (
 from .models import (
     AddonInfo,
     AgentBackup,
+    BackupAgentError,
     BackupError,
     BackupManagerError,
     BackupNotFound,
@@ -411,6 +407,28 @@ class BackupManager:
 
         await self.load_platforms()
 
+    @callback
+    def async_rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename a backup agent in the backup config and known backups.
+
+        Integrations call this when the ID of one of their backup agents changes,
+        for example when migrating the unique ID of a config entry. Raises
+        ValueError if the old agent ID is configured and the new agent ID is
+        already loaded or configured.
+        """
+        config = self.config.data
+        if (
+            old_agent_id in config.agents
+            or old_agent_id in config.create_backup.agent_ids
+        ) and (
+            new_agent_id in self.backup_agents
+            or new_agent_id in config.agents
+            or new_agent_id in config.create_backup.agent_ids
+        ):
+            raise ValueError(f"Backup agent {new_agent_id} already exists")
+        self.config.rename_agent(old_agent_id, new_agent_id)
+        self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
+
     @property
     def state(self) -> BackupManagerState:
         """Return the state of the backup manager."""
@@ -596,6 +614,16 @@ class BackupManager:
                 )
             agent = self.backup_agents[agent_id]
 
+            # Agents may open the stream multiple times, e.g. when retrying, and
+            # may not consume or close it if the upload fails
+            opened_streams: list[AsyncIterator[bytes]] = []
+
+            async def open_stream_and_track() -> AsyncIterator[bytes]:
+                """Open a stream and keep track of it."""
+                stream = await open_stream_func()
+                opened_streams.append(stream)
+                return stream
+
             latest_uploaded_bytes = 0
 
             @callback
@@ -629,12 +657,16 @@ class BackupManager:
             _emit_upload_progress()
             try:
                 await agent.async_upload_backup(
-                    open_stream=open_stream_func,
+                    open_stream=open_stream_and_track,
                     backup=_backup,
                     on_progress=on_upload_progress,
                 )
             finally:
                 upload_progress_debouncer.async_cancel()
+                for stream in opened_streams:
+                    await async_close_iterator(stream)
+                if streamer:
+                    await streamer.wait()
             self.async_on_backup_event(
                 UploadBackupEvent(
                     manager_state=self.state,
@@ -643,8 +675,6 @@ class BackupManager:
                     total_bytes=_backup.size,
                 )
             )
-            if streamer:
-                await streamer.wait()
 
         sync_backup_results = await asyncio.gather(
             *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
@@ -1296,6 +1326,9 @@ class BackupManager:
                     # create backup was successful, update
                     # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
+                    self.config.data.last_completed_automatic_backup_size = (
+                        written_backup.backup.size
+                    )
                     self.store.save()
                 backup_success = True
 
@@ -1614,7 +1647,10 @@ class BackupManager:
         except backup_util.DecryptError as err:
             raise BackupManagerError(str(err)) from err
         finally:
-            reader.close()
+            if isinstance(reader, AsyncIteratorReader):
+                await reader.aclose()
+            else:
+                reader.close()
 
 
 class KnownBackups:
@@ -1659,6 +1695,15 @@ class KnownBackups:
             failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
             failed_folders=list(failed_folders),
         )
+        self._manager.store.save()
+
+    def rename_failed_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename an agent in the failed agents of known backups."""
+        for backup in self._backups.values():
+            backup.failed_agent_ids = [
+                new_agent_id if agent_id == old_agent_id else agent_id
+                for agent_id in backup.failed_agent_ids
+            ]
         self._manager.store.save()
 
     def get(self, backup_id: str) -> KnownBackup | None:
@@ -2087,12 +2132,15 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         else:
             async_add_executor_job = self._hass.async_add_executor_job
             path = self.temp_backup_dir / f"{backup_id}.tar"
-            stream = await open_stream()
             await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
             f = await async_add_executor_job(path.open, "wb")
             try:
-                async for chunk in stream:
-                    await async_add_executor_job(f.write, chunk)
+                stream = await open_stream()
+                try:
+                    async for chunk in stream:
+                        await async_add_executor_job(f.write, chunk)
+                finally:
+                    await async_close_iterator(stream)
             finally:
                 await async_add_executor_job(f.close)
 

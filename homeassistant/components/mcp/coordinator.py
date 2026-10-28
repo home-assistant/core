@@ -8,7 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx2
-from mcp import McpError
+from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
@@ -40,9 +40,23 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
-TIMEOUT = 10
+TIMEOUT = 30
 
 type TokenManager = Callable[[], Awaitable[str]]
+
+
+async def _raise_on_post_error(response: httpx2.Response) -> None:
+    """Raise HTTPStatusError for error responses on POST requests."""
+    if response.request.method == "POST":
+        response.raise_for_status()
+
+
+def _first_exception(err: ExceptionGroup) -> Exception:
+    """Return the first leaf exception from a possibly nested ExceptionGroup."""
+    exc: Exception = err
+    while isinstance(exc, ExceptionGroup):
+        exc = exc.exceptions[0]
+    return exc
 
 
 def create_mcp_httpx_client(
@@ -64,6 +78,7 @@ def create_mcp_httpx_client(
         follow_redirects=True,
         headers={USER_AGENT: SERVER_SOFTWARE, **(headers or {})},
         auth=auth,
+        event_hooks={"response": [_raise_on_post_error]},
         **kwargs,
     )
 
@@ -84,33 +99,34 @@ async def mcp_client(
         token = await token_manager()
         headers["Authorization"] = f"Bearer {token}"
 
+    yielded = False
     try:
         async with (
             create_mcp_httpx_client(headers=headers) as http_client,
             streamable_http_client(url=url, http_client=http_client) as (
                 read_stream,
                 write_stream,
-                _,
             ),
             ClientSession(read_stream, write_stream) as session,
         ):
             result = await session.initialize()
+            yielded = True
             yield session, result
     except ExceptionGroup as streamable_err:
-        main_error = streamable_err.exceptions[0]
-        # Method not Allowed likely means this is not a streamable HTTP server,
-        # but it may be an SSE server. This is part of the MCP Transport
-        # backwards compatibility specification.
-        # We also handle other generic McpErrors since proxies may not respond
-        # consistently with a 405.
+        main_error = _first_exception(streamable_err)
+        # Method not Allowed or Not Found on the initial POST indicates this is
+        # not a streamable HTTP server, but it may be an SSE server. This is
+        # part of the MCP Transport backwards compatibility specification.
         if (
-            isinstance(main_error, httpx2.HTTPStatusError)
-            and main_error.response.status_code == 405
-        ) or isinstance(main_error, McpError):
+            not yielded
+            and isinstance(main_error, httpx2.HTTPStatusError)
+            and main_error.response.status_code in (404, 405)
+        ):
             _LOGGER.debug(
                 "Streamable HTTP client failed, attempting SSE client: %s", main_error
             )
             try:
+                # pylint: disable-next=contextmanager-generator-missing-cleanup
                 async with (
                     sse_client(
                         url=url,
@@ -123,7 +139,7 @@ async def mcp_client(
                     yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
-                raise sse_err.exceptions[0] from sse_err
+                raise _first_exception(sse_err) from sse_err
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err
@@ -139,10 +155,10 @@ def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
     declared = {
         field: value
         for field, value in (
-            ("read_only", remote.readOnlyHint),
-            ("destructive", remote.destructiveHint),
-            ("idempotent", remote.idempotentHint),
-            ("open_world", remote.openWorldHint),
+            ("read_only", remote.read_only_hint),
+            ("destructive", remote.destructive_hint),
+            ("idempotent", remote.idempotent_hint),
+            ("open_world", remote.open_world_hint),
         )
         if value is not None
     }
@@ -192,7 +208,7 @@ class ModelContextProtocolTool(llm.Tool):
                     result = await session.call_tool(
                         tool_input.tool_name, tool_input.tool_args
                     )
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -214,7 +230,7 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx2.HTTPError as error:
+        except (httpx2.HTTPError, MCPError) as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
@@ -222,8 +238,10 @@ class ModelContextProtocolTool(llm.Tool):
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
         return llm.ToolResult(
-            data=result.model_dump(exclude_unset=True, exclude_none=True),
-            error=bool(result.isError),
+            data=result.model_dump(
+                by_alias=True, exclude_unset=True, exclude_none=True
+            ),
+            error=bool(result.is_error),
         )
 
 
@@ -261,7 +279,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
                 ) as (session, _):
                     result = await session.list_tools()
-        except TimeoutError as error:
+        except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
             raise UpdateFailed(f"Timeout when listing tools: {error}") from error
         except OAuth2TokenRequestReauthError as error:
@@ -280,7 +298,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx2.HTTPError as err:
+        except (httpx2.HTTPError, MCPError) as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -288,10 +306,10 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = from_openapi(tool.inputSchema)
+                parameters = from_openapi(tool.input_schema)
             except Exception as err:
                 raise UpdateFailed(
-                    f"Error converting schema {err}: {tool.inputSchema}"
+                    f"Error converting schema {err}: {tool.input_schema}"
                 ) from err
             tools.append(
                 ModelContextProtocolTool(

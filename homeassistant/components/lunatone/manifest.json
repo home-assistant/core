@@ -11,7 +11,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["lunatone-rest-api-client==0.11.0"],
+  "requirements": ["lunatone-rest-api-client==0.11.2"],
   "zeroconf": [
     {
       "properties": {

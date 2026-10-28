@@ -116,7 +116,7 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         env:
-          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
           HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
@@ -291,30 +291,10 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204 # v3.0.1
+        uses: j178/prek-action@44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d # v3.1.0
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
-
-  zizmor:
-    name: Check GitHub Actions workflows
-    runs-on: ubuntu-26.04
-    permissions:
-      contents: read # To check out the repository
-    needs: [info]
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Run zizmor
-        uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204 # v3.0.1
-        with:
-          extra-args: --all-files zizmor
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
@@ -342,9 +322,10 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
-          args: hadolint ${{ matrix.file }}
+          dockerfile: ${{ matrix.file }}
+          no-color: true
 
   base:
     name: Prepare dependencies
@@ -492,6 +473,7 @@ jobs:
     if: |
       github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -800,7 +782,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
+        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
@@ -820,6 +802,7 @@ jobs:
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -832,6 +815,39 @@ jobs:
           python-version: ${{ needs.info.outputs.default_python }}
       - name: Build source distribution and wheel
         run: uv build packages/pytest-home-assistant --out-dir dist
+      - name: Install wheel and matching Home Assistant in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/pytest-package-venv"
+          uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" . dist/*.whl
+          cp -R packages/pytest-home-assistant/tests/standalone "${RUNNER_TEMP}/pytest-package-tests"
+      - name: Test installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_plugin.py"
+      - name: Test optional helpers and fixtures
+        run: |
+          for wheel in dist/*.whl; do
+            uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" \
+              "${wheel}[bluetooth,infrared,radio-frequency]"
+          done
+          cd "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/pytest-package-venv/bin/python" - <<'PY'
+          import importlib
+
+          for module in (
+              "pytest_homeassistant.plugins",
+              "pytest_homeassistant.components.bluetooth",
+              "pytest_homeassistant.components.infrared.common",
+              "pytest_homeassistant.components.radio_frequency.common",
+          ):
+              importlib.import_module(module)
+          PY
+
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_optional.py"
 
   prepare-pytest-full:
     name: Split tests for full run

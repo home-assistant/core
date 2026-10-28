@@ -1,19 +1,23 @@
 """Tests for the login flow."""
 
+import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientResponse, web
+from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI
+from pytest_homeassistant.typing import ClientSessionGenerator
 
+from homeassistant.auth import AuthManagerFlowManager
+from homeassistant.components.auth import indieauth
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from . import BASE_CONFIG, async_setup_auth
-
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
-from tests.typing import ClientSessionGenerator
 
 _TRUSTED_NETWORKS_CONFIG = {
     "type": "trusted_networks",
@@ -100,6 +104,93 @@ async def test_fetch_auth_providers_trusted_network(
     resp = await client.get("/auth/providers")
     assert resp.status == HTTPStatus.OK
     assert (await resp.json())["providers"] == expected
+
+
+async def test_fetch_auth_providers_skips_providers_that_cannot_start_login(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a provider that cannot be used right now is left off the list."""
+    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+        ".async_can_start_login",
+        return_value=False,
+    ):
+        resp = await client.get("/auth/providers")
+
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["providers"] == []
+
+
+async def test_login_flow_refuses_providers_that_cannot_start_login(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a provider left off the login screen can't be started directly."""
+    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+        ".async_can_start_login",
+        return_value=False,
+    ):
+        resp = await client.post(
+            "/auth/login_flow",
+            json={
+                "client_id": CLIENT_ID,
+                "handler": ["insecure_example", None],
+                "redirect_uri": CLIENT_REDIRECT_URI,
+            },
+        )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid handler specified"}
+
+
+async def test_login_flow_trusted_networks_from_trusted_network(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a trusted networks login can be started from a trusted network."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, [_TRUSTED_NETWORKS_CONFIG], custom_ip="192.168.0.1"
+    )
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["trusted_networks", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    "provider_configs",
+    [
+        pytest.param([_TRUSTED_NETWORKS_CONFIG], id="untrusted-network"),
+        pytest.param(BASE_CONFIG, id="not-configured"),
+    ],
+)
+async def test_login_flow_hides_unavailable_trusted_networks(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    provider_configs: list[dict[str, Any]],
+) -> None:
+    """Test trusted networks from outside is answered like it isn't configured."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, provider_configs, custom_ip="1.2.3.4"
+    )
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["trusted_networks", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid handler specified"}
 
 
 async def test_fetch_auth_providers_onboarding(
@@ -378,6 +469,173 @@ async def test_login_exist_user_ip_changes(
     assert resp.status == 400
     response = await resp.json()
     assert response == {"message": "IP address changed"}
+
+
+async def _async_post_while_held(
+    client: TestClient,
+    flow_id: str,
+    body: dict[str, str],
+    held: asyncio.Event,
+    release: asyncio.Event,
+) -> tuple[ClientResponse, ClientResponse]:
+    """Post to a flow twice, the second time while the first request is held."""
+    first = asyncio.create_task(client.post(f"/auth/login_flow/{flow_id}", json=body))
+    await held.wait()
+    second = await client.post(f"/auth/login_flow/{flow_id}", json=body)
+    release.set()
+    return await first, second
+
+
+@pytest.mark.parametrize(
+    ("owner", "held_name"),
+    [
+        pytest.param(AuthManagerFlowManager, "async_configure", id="running-step"),
+        # A finished flow is gone while its response is built.
+        pytest.param(indieauth, "verify_redirect_uri", id="building-response"),
+    ],
+)
+async def test_concurrent_requests_cannot_advance_the_same_flow(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    owner: object,
+    held_name: str,
+) -> None:
+    """Test a second request gets a conflict rather than racing the first one."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    held = asyncio.Event()
+    release = asyncio.Event()
+    original = getattr(owner, held_name)
+
+    async def held_call(*args: Any, **kwargs: Any) -> Any:
+        held.set()
+        await release.wait()
+        return await original(*args, **kwargs)
+
+    with (
+        patch.object(owner, held_name, held_call),
+        patch(
+            "homeassistant.components.http.ban.process_wrong_login"
+        ) as mock_process_wrong_login,
+    ):
+        first, second = await _async_post_while_held(
+            client,
+            flow_id,
+            {"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+            held,
+            release,
+        )
+
+    assert second.status == HTTPStatus.CONFLICT
+    assert await second.json() == {"message": "Flow request already in progress"}
+    assert first.status == HTTPStatus.OK
+    assert (await first.json())["type"] == "create_entry"
+    # A busy flow is not a failed login, so the client is not banned for it.
+    mock_process_wrong_login.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("first_input", "first_status"),
+    [
+        pytest.param(
+            {"username": "test-user", "password": "wrong-pass"},
+            HTTPStatus.OK,
+            id="invalid-password",
+        ),
+        # The step's schema rejects it, so async_configure raises.
+        pytest.param({"username": "test-user"}, HTTPStatus.BAD_REQUEST, id="raised"),
+    ],
+)
+async def test_flow_can_be_continued_after_a_request(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    first_input: dict[str, str],
+    first_status: HTTPStatus,
+) -> None:
+    """Test a flow is no longer busy once a request has finished."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    resp = await client.post(
+        f"/auth/login_flow/{flow_id}", json={"client_id": CLIENT_ID, **first_input}
+    )
+    assert resp.status == first_status
+
+    resp = await client.post(
+        f"/auth/login_flow/{flow_id}",
+        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+    )
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["type"] == "create_entry"
+
+
+@pytest.mark.parametrize(
+    ("counted_by", "login_input", "first_status"),
+    [
+        pytest.param(
+            "homeassistant.components.auth.login_flow.process_wrong_login",
+            {"username": "test-user", "password": "wrong-pass"},
+            HTTPStatus.OK,
+            id="invalid-password",
+        ),
+        pytest.param(
+            "homeassistant.components.http.ban.process_wrong_login",
+            {"username": "test-user"},
+            HTTPStatus.BAD_REQUEST,
+            id="malformed-input",
+        ),
+    ],
+)
+async def test_flow_stays_busy_until_a_failed_login_is_processed(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    counted_by: str,
+    login_input: dict[str, str],
+    first_status: HTTPStatus,
+) -> None:
+    """Test the next attempt waits until the previous failure has been counted."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+
+    held = asyncio.Event()
+    release = asyncio.Event()
+
+    async def held_process_wrong_login(_request: web.Request) -> None:
+        held.set()
+        await release.wait()
+
+    with patch(counted_by, held_process_wrong_login):
+        first, second = await _async_post_while_held(
+            client, flow_id, {"client_id": CLIENT_ID, **login_input}, held, release
+        )
+
+    assert second.status == HTTPStatus.CONFLICT
+    assert first.status == first_status
 
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host

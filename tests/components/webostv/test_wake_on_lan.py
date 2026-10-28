@@ -4,6 +4,8 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -29,9 +31,6 @@ from homeassistant.setup import async_setup_component
 from . import setup_webostv
 from .const import ENTITY_ID, HOST
 from .test_media_player import mock_scan_interval
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 

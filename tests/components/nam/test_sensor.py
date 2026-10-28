@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nettigo_air_monitor import ApiError
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
@@ -29,12 +34,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import INCOMPLETE_NAM_DATA, init_integration
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

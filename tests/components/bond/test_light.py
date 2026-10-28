@@ -5,6 +5,7 @@ from unittest.mock import call
 
 from bond_async import Action, DeviceType
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.services import (
@@ -42,8 +43,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def light(name: str):

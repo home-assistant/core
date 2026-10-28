@@ -1,9 +1,16 @@
 """Tests for the Backup integration."""
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Callable,
+    Coroutine,
+    Generator,
+)
 from dataclasses import replace
 from datetime import timedelta
+import inspect
 from io import BytesIO, StringIO
 import json
 from pathlib import Path
@@ -24,6 +31,8 @@ from unittest.mock import (
 from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from securetar import SecureTarArchive, SecureTarFile
 
 from homeassistant.components.backup import (
@@ -32,6 +41,8 @@ from homeassistant.components.backup import (
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
+    async_get_manager,
+    store,
 )
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
@@ -67,9 +78,6 @@ from .common import (
     setup_backup_integration,
     setup_backup_platform,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
     "test.txt",
@@ -3471,6 +3479,7 @@ async def test_restore_backup_agent_error(
 
 @pytest.mark.parametrize(
     (
+        "download_call_count",
         "open_call_count",
         "open_exception",
         "write_call_count",
@@ -3483,6 +3492,7 @@ async def test_restore_backup_agent_error(
     ),
     [
         (
+            0,
             1,
             OSError("Boom!"),
             0,
@@ -3495,6 +3505,7 @@ async def test_restore_backup_agent_error(
         ),
         (
             1,
+            1,
             None,
             1,
             OSError("Boom!"),
@@ -3506,6 +3517,7 @@ async def test_restore_backup_agent_error(
         ),
         (
             1,
+            1,
             None,
             1,
             None,
@@ -3516,6 +3528,7 @@ async def test_restore_backup_agent_error(
             0,
         ),
         (
+            1,
             1,
             None,
             1,
@@ -3531,6 +3544,7 @@ async def test_restore_backup_agent_error(
 async def test_restore_backup_file_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    download_call_count: int,
     open_call_count: int,
     open_exception: list[Exception | None],
     write_call_count: int,
@@ -3547,6 +3561,16 @@ async def test_restore_backup_file_error(
         remote_agents=["test.remote"],
         backups={"test.remote": [TEST_BACKUP_ABC123]},
     )
+    download_backup = mock_agents["test.remote"].async_download_backup.side_effect
+    streams: list[AsyncGenerator[bytes]] = []
+
+    async def download_and_track(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
+        """Download a backup and keep track of the stream."""
+        stream = await download_backup(backup_id, **kwargs)
+        streams.append(stream)
+        return stream
+
+    mock_agents["test.remote"].async_download_backup.side_effect = download_and_track
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -3604,7 +3628,13 @@ async def test_restore_backup_file_error(
         assert result["error"]["code"] == "unknown_error"
         assert result["error"]["message"] == "Unknown error"
 
-    assert mock_agents["test.remote"].async_download_backup.call_count == 1
+    assert (
+        mock_agents["test.remote"].async_download_backup.call_count
+        == download_call_count
+    )
+    assert all(
+        inspect.getasyncgenstate(stream) == inspect.AGEN_CLOSED for stream in streams
+    )
     assert validate_password_mock.call_count == validate_password_call_count
     assert open_mock.call_count == open_call_count
     assert open_mock.return_value.write.call_count == write_call_count
@@ -4297,3 +4327,190 @@ async def test_upload_progress_dropped_after_failed_upload(
 
     assert events == []
     assert manager.last_upload_events == {}
+
+
+@pytest.mark.usefixtures("generate_backup_id")
+async def test_failed_upload_closes_stream(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the stream opened by an agent is closed when the upload fails."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    streams: list[AsyncIterator[bytes]] = []
+
+    async def upload_and_fail(
+        *,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        **kwargs: Any,
+    ) -> None:
+        """Read the first chunk, then fail."""
+        stream = await open_stream()
+        streams.append(stream)
+        await anext(stream)
+        raise BackupAgentError("Boom!")
+
+    mock_agents["test.remote"].async_upload_backup.side_effect = upload_and_fail
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": ["test.remote"]}
+        )
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        await hass.async_block_till_done()
+
+    assert len(streams) == 1
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
+def _rename_agent_storage(
+    agents: dict[str, Any], agent_ids: list[str]
+) -> dict[str, Any]:
+    """Return backup storage with a known backup that failed for test.old."""
+    return {
+        "data": {
+            "backups": [
+                {
+                    "backup_id": "abc123",
+                    "failed_addons": [],
+                    "failed_agent_ids": ["test.old"],
+                    "failed_folders": [],
+                }
+            ],
+            "config": {
+                "agents": agents,
+                "automatic_backups_configured": True,
+                "create_backup": {
+                    "agent_ids": agent_ids,
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": True,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
+                "last_completed_automatic_backup_size": None,
+                "retention": {"copies": None, "days": None},
+                "schedule": {
+                    "days": [],
+                    "recurrence": "never",
+                    "state": "never",
+                    "time": None,
+                },
+            },
+        },
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "stored_agents",
+        "stored_agent_ids",
+        "expected_agents",
+        "expected_agent_ids",
+    ),
+    [
+        pytest.param(
+            {
+                "test.old": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                }
+            },
+            ["backup.local", "test.old"],
+            {
+                "test.new": {
+                    "protected": False,
+                    "retention": {"copies": 3, "days": None},
+                }
+            },
+            ["backup.local", "test.new"],
+            id="rename",
+        ),
+        pytest.param(
+            {"test.other": {"protected": False, "retention": None}},
+            ["test.other"],
+            {"test.other": {"protected": False, "retention": None}},
+            ["test.other"],
+            id="old_agent_not_configured",
+        ),
+        pytest.param(
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            {"test.new": {"protected": False, "retention": None}},
+            ["test.new"],
+            id="old_agent_not_configured_new_agent_configured",
+        ),
+    ],
+)
+async def test_rename_agent(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    stored_agents: dict[str, Any],
+    stored_agent_ids: list[str],
+    expected_agents: dict[str, Any],
+    expected_agent_ids: list[str],
+) -> None:
+    """Test renaming an agent updates the backup config and known backups."""
+    hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
+    await setup_backup_integration(hass)
+
+    async_get_manager(hass).async_rename_agent("test.old", "test.new")
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    stored_data = hass_storage[DOMAIN]["data"]
+    assert stored_data["config"]["agents"] == expected_agents
+    assert stored_data["config"]["create_backup"]["agent_ids"] == expected_agent_ids
+    assert stored_data["backups"][0]["failed_agent_ids"] == ["test.new"]
+
+
+@pytest.mark.parametrize(
+    ("stored_agents", "stored_agent_ids", "remote_agents"),
+    [
+        pytest.param(
+            {"test.new": {"protected": True, "retention": None}},
+            ["test.old"],
+            [],
+            id="new_agent_has_settings",
+        ),
+        pytest.param(
+            {},
+            ["test.old", "test.new"],
+            [],
+            id="new_agent_used_for_automatic_backups",
+        ),
+        pytest.param(
+            {},
+            ["test.old"],
+            ["test.new"],
+            id="new_agent_loaded",
+        ),
+    ],
+)
+async def test_rename_agent_already_exists(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    stored_agents: dict[str, Any],
+    stored_agent_ids: list[str],
+    remote_agents: list[str],
+) -> None:
+    """Test renaming an agent to an agent ID that already exists fails."""
+    hass_storage[DOMAIN] = _rename_agent_storage(stored_agents, stored_agent_ids)
+    await setup_backup_integration(hass, remote_agents=remote_agents)
+    manager = async_get_manager(hass)
+
+    with pytest.raises(ValueError, match="Backup agent test.new already exists"):
+        manager.async_rename_agent("test.old", "test.new")
+
+    assert manager.config.data.create_backup.agent_ids == stored_agent_ids
+    assert manager.known_backups.get("abc123").failed_agent_ids == ["test.old"]

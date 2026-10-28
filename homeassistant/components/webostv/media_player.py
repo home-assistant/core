@@ -18,6 +18,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -31,6 +32,7 @@ from .const import (
 )
 from .coordinator import WebOsTvConfigEntry
 from .entity import WebOsTvEntity, cmd
+from .helpers import get_mac_addresses
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SUPPORT_WEBOSTV = (
@@ -193,6 +195,12 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
         if serial_number := tv_info.system.get("serialNumber"):
             self._attr_device_info.serial_number = serial_number
+
+        if connections := {
+            (CONNECTION_NETWORK_MAC, mac)
+            for mac in get_mac_addresses(tv_info.connection).values()
+        }:
+            self._attr_device_info.connections = connections
 
         if tv_state.sound_output is not None:
             self._attr_extra_state_attributes = {

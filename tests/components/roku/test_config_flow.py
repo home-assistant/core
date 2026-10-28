@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rokuecp import Device as RokuDevice, RokuConnectionError
 
 from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
@@ -26,8 +27,6 @@ from . import (
     UPNP_FRIENDLY_NAME,
     UPNP_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 RECONFIGURE_HOST = "192.168.1.190"
 

@@ -6,7 +6,7 @@ from typing import cast, override
 
 import probatio
 
-from homeassistant.components.button import SERVICE_PRESS  # noqa: F401
+from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
@@ -14,7 +14,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DATA_INPUT_BUTTON, DOMAIN
+from .const import (
+    DATA_INPUT_BUTTON,
+    DOMAIN,
+    InputButtonEntityStateAttribute,
+    InputButtonService,
+)
 from .entity import InputButton
 from .services import async_setup_services
 
@@ -42,6 +47,14 @@ CONFIG_SCHEMA = probatio.Schema(
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_PRESS",
+    "STORAGE_FIELDS",
+    "InputButtonEntityStateAttribute",
+    "InputButtonService",
+]
 
 
 class InputButtonStorageCollection(collection.DictStorageCollection):

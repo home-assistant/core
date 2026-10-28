@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the Tailscale integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.const import (
@@ -11,8 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_tailscale_binary_sensors(

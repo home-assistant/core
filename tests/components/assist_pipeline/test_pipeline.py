@@ -10,6 +10,8 @@ from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service, flush_store
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import (
@@ -68,9 +70,6 @@ from .conftest import (
     MockWakeWordEntity,
     make_10ms_chunk,
 )
-
-from tests.common import MockConfigEntry, async_mock_service, flush_store
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -1322,7 +1321,7 @@ async def test_prefer_local_intents_match_failed(
     async def mock_converse(**kwargs: Any) -> conversation.ConversationResult:
         with (
             chat_session.async_get_chat_session(
-                hass, kwargs["conversation_id"]
+                hass, kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):
@@ -1974,7 +1973,9 @@ async def test_chat_log_tts_streaming(
                         yield {"content": chunk}
 
         with (
-            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            chat_session.async_get_chat_session(
+                hass, conversation_id, context=None
+            ) as session,
             conversation.async_get_chat_log(
                 hass,
                 session,

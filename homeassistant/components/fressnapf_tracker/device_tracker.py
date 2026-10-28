@@ -6,7 +6,10 @@ from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry, FressnapfTrackerDataUpdateCoordinator
+from .coordinator import (
+    FressnapfTrackerConfigEntry,
+    FressnapfTrackerDataUpdateCoordinator,
+)
 from .entity import FressnapfTrackerBaseEntity
 
 # Coordinator is used to centralize the data updates

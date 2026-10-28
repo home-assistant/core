@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from incomfortclient import FaultCode
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HEATER_STATUS
-
-from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.BINARY_SENSOR])

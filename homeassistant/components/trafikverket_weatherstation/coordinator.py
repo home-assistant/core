@@ -8,6 +8,7 @@ from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleWeatherStationsFound,
     NoWeatherStationFound,
+    UnknownError,
 )
 from pytrafikverket.models import WeatherStationInfoModel
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
@@ -53,6 +54,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfoModel]):
             weatherdata = await self._weather_api.async_get_weather(self._station)
         except InvalidAuthentication as error:
             raise ConfigEntryAuthFailed from error
-        except (NoWeatherStationFound, MultipleWeatherStationsFound) as error:
+        except (
+            NoWeatherStationFound,
+            MultipleWeatherStationsFound,
+            UnknownError,
+        ) as error:
             raise UpdateFailed from error
         return weatherdata

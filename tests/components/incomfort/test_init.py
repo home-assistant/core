@@ -8,6 +8,7 @@ from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
@@ -18,8 +19,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import MOCK_HEATER_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
