@@ -239,3 +239,31 @@ async def test_firmware_poll_uses_shared_token(
 
     mock_token.assert_awaited()
     assert mock_get_firmware_status.await_args.args[1] == "shared-token"
+
+
+async def test_firmware_failure_is_isolated_per_camera(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_firmware_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test one failing firmware request leaves the other cameras available."""
+    other = replace(CAMERAS[0], id="22222222-2222-2222-2222-222222222222", title="Hall")
+    mock_list_cameras.return_value = [*CAMERAS, other]
+    real_status = mock_get_firmware_status.return_value
+
+    async def _status(session: object, token: str, camera_id: str) -> object:
+        if camera_id == other.id:
+            raise BoschCameraConnectionError("down")
+        return real_status
+
+    mock_get_firmware_status.side_effect = _status
+    await setup_integration(hass, mock_config_entry)
+
+    garden = hass.states.get(ENTITY_ID)
+    hall = hass.states.get("update.hall_firmware")
+    assert garden is not None
+    assert garden.state != STATE_UNAVAILABLE
+    assert hall is not None
+    assert hall.state == STATE_UNAVAILABLE

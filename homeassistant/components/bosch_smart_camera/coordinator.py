@@ -183,16 +183,17 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
         """Fetch the firmware status of the known cameras."""
         session = async_get_clientsession(self.hass)
         token = await self.cameras.async_get_access_token()
-        try:
-            return {
-                camera_id: await get_firmware_status(session, token, camera_id)
-                for camera_id in self.cameras.data
-            }
-        except BoschCameraAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="auth_failed"
-            ) from err
-        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="cannot_connect"
-            ) from err
+        statuses: dict[str, FirmwareStatus] = {}
+        for camera_id in self.cameras.data:
+            try:
+                statuses[camera_id] = await get_firmware_status(
+                    session, token, camera_id
+                )
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                # Only this camera's entity goes unavailable.
+                _LOGGER.debug("Firmware status of %s unavailable", camera_id)
+        return statuses
