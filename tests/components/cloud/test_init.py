@@ -33,13 +33,13 @@ from homeassistant.components.cloud.const import (
     PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
     PREF_GOOGLE_SETTINGS_VERSION,
-    CloudService,
 )
 from homeassistant.components.cloud.prefs import (
     ALEXA_SETTINGS_VERSION,
     GOOGLE_SETTINGS_VERSION,
     STORAGE_KEY,
 )
+from homeassistant.components.cloud.services import CloudService
 from homeassistant.const import (
     CONF_MODE,
     EVENT_HOMEASSISTANT_STARTED,

@@ -1,9 +1,18 @@
 """Services for the Home Assistant Cloud integration."""
 
+from enum import StrEnum
+
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_CLOUD, DOMAIN, CloudService
+from .const import DATA_CLOUD, DOMAIN
+
+
+class CloudService(StrEnum):
+    """Store keys for cloud services."""
+
+    REMOTE_CONNECT = "remote_connect"
+    REMOTE_DISCONNECT = "remote_disconnect"
 
 
 async def _service_handler(service: ServiceCall) -> None:
