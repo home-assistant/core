@@ -1,5 +1,6 @@
 """Test System Monitor sensor."""
 
+from dataclasses import replace
 from datetime import timedelta
 import socket
 from types import SimpleNamespace
@@ -14,7 +15,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
-from homeassistant.components.systemmonitor.sensor import get_cpu_icon, get_ip_address
+from homeassistant.components.systemmonitor.sensor import (
+    get_all_network_interfaces,
+    get_cpu_icon,
+    get_ip_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -31,6 +36,39 @@ def test_ip_address_not_collected_yet() -> None:
         entity_description=SimpleNamespace(key="ipv4_address"),
     )
     assert get_ip_address(sensor) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_missing_ip_addresses_does_not_block_sensor_setup(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Missing address data must not prevent other sensors from loading."""
+
+    def discover_interfaces_with_missing_addresses(hass, psutil_wrapper):
+        interfaces = get_all_network_interfaces(hass, psutil_wrapper)
+        coordinator = mock_config_entry.runtime_data.coordinator
+        coordinator.data = replace(coordinator.data, addresses=None)
+        return interfaces
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.systemmonitor.sensor.get_all_network_interfaces",
+        side_effect=discover_interfaces_with_missing_addresses,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ip_sensor = hass.states.get("sensor.system_monitor_ipv4_address_eth0")
+    assert ip_sensor is not None
+    assert ip_sensor.state == STATE_UNKNOWN
+
+    memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
+    assert memory_sensor is not None
+    assert memory_sensor.state == "40.0"
 
 
 @pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
