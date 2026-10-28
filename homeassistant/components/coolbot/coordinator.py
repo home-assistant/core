@@ -10,7 +10,7 @@ from pycoolbot import CoolbotAuthError, CoolbotClient, CoolbotDevice, CoolbotErr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -69,10 +69,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         #: Set by teardown, so a connect still in flight closes its own client
         #: instead of handing over a socket that nothing will close.
         self._closed = False
-        #: Last known name and reporting state per device, keyed by unique id;
-        #: absent until a device first reports. The name is kept so a device
-        #: that drops out of the profile can still be named in a log line.
-        self._reporting: dict[str, tuple[str, bool]] = {}
         #: Name and hardware details last written to the device registry, per
         #: unique id, so an unchanged refresh does not touch the registry at all.
         self._device_details: dict[str, tuple[str, str, str | None, str | None]] = {}
@@ -209,7 +205,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
             # up by a reconnect or a ping must not keep a cooler that stopped
             # reporting showing its last reading for as long as it takes.
             if self.data:
-                self._log_staleness_transitions(self.data)
                 self.async_update_listeners()
             return
         self._maintenance_task = self.config_entry.async_create_task(
@@ -261,13 +256,14 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
         """
         return client is not None and client is not self._client
 
-    def _auth_error(self, err: CoolbotError) -> ConfigEntryAuthFailed:
+    def _auth_error(self, err: CoolbotError) -> ConfigEntryError:
         """Wrap a rejected login.
 
-        Home Assistant only starts a reauth flow when the integration has one,
-        so until reauth lands this fails setup without offering a repair.
+        Not ConfigEntryAuthFailed: that asks Home Assistant to start a reauth
+        flow, and this integration has none yet. Raising it would offer the user
+        a repair that cannot open. Swap it back when reauth lands.
         """
-        return ConfigEntryAuthFailed(
+        return ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="auth_failed",
             translation_placeholders={"error": str(err)},
@@ -302,7 +298,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 continue
             data[device.unique_id] = device
 
-        self._log_staleness_transitions(data)
         self._apply_late_device_details(data)
         return data
 
@@ -359,48 +354,6 @@ class CoolbotCoordinator(DataUpdateCoordinator[dict[str, CoolbotDevice]]):
                 model=details[1],
                 sw_version=details[2],
                 hw_version=details[3],
-            )
-
-    def _log_staleness_transitions(self, data: dict[str, CoolbotDevice]) -> None:
-        """Log once when a device stops reporting, and once when it recovers.
-
-        A device that has not reported yet is not an outage: the cloud replays a
-        cached snapshot on connect, so every device looks stale for the first few
-        seconds of a normal setup. Only a device that was reporting can stop,
-        whether it went stale or dropped out of the account's profile entirely.
-        """
-        for device in data.values():
-            if not device.is_provisioned:
-                continue
-            fresh = device_is_fresh(device)
-            known = self._reporting.get(device.unique_id)
-            if known is None:
-                if fresh:
-                    self._reporting[device.unique_id] = (device.name, True)
-                continue
-            # Rewritten even when the state is unchanged, so a cooler renamed
-            # in the account cannot have a later outage logged under a name it
-            # no longer carries.
-            self._reporting[device.unique_id] = (device.name, fresh)
-            if fresh is known[1]:
-                continue
-            self._log_transition(device.name, reporting=fresh)
-
-        # A device missing from a successful refresh has also stopped
-        # reporting: its entities go unavailable for want of any data, and
-        # nothing above sees it, because it is no longer in the mapping.
-        for unique_id, (name, was_fresh) in list(self._reporting.items()):
-            if was_fresh and unique_id not in data:
-                self._reporting[unique_id] = (name, False)
-                self._log_transition(name, reporting=False)
-
-    def _log_transition(self, name: str, *, reporting: bool) -> None:
-        """Log one device's change of reporting state."""
-        if reporting:
-            _LOGGER.info("%s is reporting again", name)
-        else:
-            _LOGGER.info(
-                "%s has stopped reporting; its readings are marked unavailable", name
             )
 
     @override

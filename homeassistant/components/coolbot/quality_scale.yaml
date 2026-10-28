@@ -56,13 +56,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: |
-      Service unavailability is logged by DataUpdateCoordinator. The
-      coordinator additionally logs once in each direction per device, for
-      both causes of a device becoming unavailable: readings going stale, and
-      the device dropping out of the account profile.
+  log-when-unavailable: todo
   parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done

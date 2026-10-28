@@ -516,7 +516,6 @@ async def test_staleness_is_rechecked_while_a_pass_is_held_up(
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A cooler goes unavailable on time even while a pass waits on the network.
 
@@ -544,7 +543,6 @@ async def test_staleness_is_rechecked_while_a_pass_is_held_up(
         await asyncio.sleep(0)
 
     assert hass.states.get(ROOM_TEMPERATURE).state == "unavailable"
-    assert "Walk-in cooler has stopped reporting" in caplog.text
     # Only the readings are stale; the service itself has not failed.
     assert mock_config_entry.runtime_data.last_update_success
 
@@ -601,7 +599,8 @@ async def test_auth_failure_during_maintenance_closes_the_socket(
 
     Nothing useful can happen until the password is fixed, so the socket must
     not be left open for however long that takes. No reauth flow starts yet;
-    that arrives in a follow-up PR.
+    that arrives in a follow-up PR, which is also why this does not raise
+    ConfigEntryAuthFailed: it would offer a repair that cannot open.
     """
     assert await setup_integration(hass, mock_config_entry)
     mock_client.async_close.reset_mock()
@@ -661,10 +660,7 @@ async def test_a_cancelled_first_refresh_closes_the_client(
 
 
 async def test_a_replaced_slot_does_not_resurrect_its_predecessor(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """A slot left unidentified by a timed-out replay is held back.
 
@@ -683,7 +679,6 @@ async def test_a_replaced_slot_does_not_resurrect_its_predecessor(
     await _tick(hass)
 
     assert mock_config_entry.runtime_data.data == {}
-    assert "Walk-in cooler has stopped reporting" in caplog.text
     assert (
         hass.states.get("sensor.walk_in_cooler_room_temperature").state == "unavailable"
     )
@@ -692,7 +687,6 @@ async def test_a_replaced_slot_does_not_resurrect_its_predecessor(
     mock_client.async_get_devices.return_value = [make_device()]
     await _tick(hass)
     assert set(mock_config_entry.runtime_data.data) == {"coolbot_aabbccddeeff"}
-    assert "Walk-in cooler is reporting again" in caplog.text
     assert (
         hass.states.get("sensor.walk_in_cooler_room_temperature").state != "unavailable"
     )
@@ -724,99 +718,21 @@ async def test_a_device_waits_for_its_mac_identity(
     )
 
 
-async def test_startup_replay_is_not_logged_as_an_outage(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
+async def test_a_device_dropping_out_of_the_profile_goes_unavailable(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """A device that has not reported yet is not an outage.
-
-    Readings are untrusted until the first live push, which normally lands
-    within 15s of setup; logging that as a failure and recovery would be noise
-    on every single startup.
-    """
-    mock_client.async_get_devices.return_value = [make_device(last_data_at=None)]
-    assert await setup_integration(hass, mock_config_entry)
-    assert "has stopped reporting" not in caplog.text
-
-    mock_client.async_get_devices.return_value = [make_device()]
-    await _tick(hass)
-    assert "is reporting again" not in caplog.text
-
-
-async def test_staleness_is_logged_once_in_each_direction(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A device going stale is logged once, and once again on recovery."""
-    assert await setup_integration(hass, mock_config_entry)
-
-    mock_client.async_get_devices.return_value = [
-        make_device(last_data_at=dt_util.utcnow() - timedelta(minutes=10))
-    ]
-    await _tick(hass)
-    assert "has stopped reporting" in caplog.text
-
-    caplog.clear()
-    await _tick(hass)
-    assert "has stopped reporting" not in caplog.text
-
-    mock_client.async_get_devices.return_value = [make_device()]
-    await _tick(hass)
-    assert "is reporting again" in caplog.text
-
-
-async def test_an_outage_is_logged_under_the_current_name(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A cooler renamed while healthy is logged by its current name later.
-
-    The remembered name exists so a device that dropped out of the profile can
-    still be named; it has to follow renames while the device is reporting, or
-    the eventual outage line points at a cooler that no longer exists.
-    """
-    assert await setup_integration(hass, mock_config_entry)
-
-    mock_client.async_get_devices.return_value = [make_device(name="Flower cooler")]
-    await _tick(hass)
-
-    mock_client.async_get_devices.return_value = []
-    await _tick(hass)
-    assert "Flower cooler has stopped reporting" in caplog.text
-
-
-async def test_a_device_dropping_out_of_the_profile_is_logged(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Vanishing from a refresh is the other way a device goes unavailable.
-
-    Nothing iterating the refreshed devices can see this one, since it is no
-    longer among them.
-    """
+    """Vanishing from a refresh is the other way a device goes unavailable."""
     assert await setup_integration(hass, mock_config_entry)
 
     mock_client.async_get_devices.return_value = [
         make_device(unique_id="coolbot_other", name="Other")
     ]
     await _tick(hass)
-    assert "Walk-in cooler has stopped reporting" in caplog.text
-
-    caplog.clear()
-    await _tick(hass)
-    assert "has stopped reporting" not in caplog.text
+    assert hass.states.get(ROOM_TEMPERATURE).state == "unavailable"
 
     mock_client.async_get_devices.return_value = [make_device()]
     await _tick(hass)
-    assert "Walk-in cooler is reporting again" in caplog.text
+    assert hass.states.get(ROOM_TEMPERATURE).state != "unavailable"
 
 
 async def test_the_account_profile_is_reread_periodically(
