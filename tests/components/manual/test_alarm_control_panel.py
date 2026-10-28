@@ -18,7 +18,9 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.manual.const import ManualEntityStateAttribute
+from homeassistant.components.manual.alarm_control_panel import (
+    ManualEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
