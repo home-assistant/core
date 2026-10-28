@@ -13,7 +13,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from zigpy.application import ControllerApplication
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.types import EUI64, NWK
 from zigpy.zcl.clusters import security
@@ -53,7 +53,7 @@ async def test_diagnostics_for_config_entry(
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
@@ -101,7 +101,7 @@ async def test_diagnostics_for_device(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for device."""

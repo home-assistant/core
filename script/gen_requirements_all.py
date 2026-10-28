@@ -11,15 +11,12 @@ import sys
 import tomllib
 from typing import Any
 
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Config, Integration
-from script.hassfest.requirements_util import (
-    EXCLUDED_REQUIREMENTS_ALL,
-    normalize_package_name,
-)
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
@@ -246,10 +243,9 @@ bitstring<5
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
-# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
 # https://github.com/home-assistant/core/issues/185645
-# https://github.com/c-ares/c-ares/pull/1256
-pycares==5.0.1
+pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0

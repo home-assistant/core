@@ -18,6 +18,15 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "abrp": {
+      "name": "A Better Routeplanner",
+      "integration_type": "hub",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "acaia": {
       "name": "Acaia",
       "integration_type": "device",
@@ -3435,12 +3444,26 @@
     },
     "flic": {
       "name": "Flic",
-      "integration_type": "hub",
-      "categories": [
-        "buttons_remotes"
-      ],
-      "config_flow": false,
-      "iot_class": "local_push"
+      "integrations": {
+        "flic": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        },
+        "flic_button": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        }
+      }
     },
     "flipr": {
       "name": "Flipr",
