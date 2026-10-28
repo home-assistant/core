@@ -65,20 +65,16 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = entry.runtime_data
 
-    entities: list[NationalGridSensor] = []
-
-    for meter_key, meter_data in coordinator.data.meters.items():
-        entities.extend(
-            NationalGridSensor(
-                coordinator=coordinator,
-                meter_key=meter_key,
-                entity_description=description,
-                meter_data=meter_data,
-            )
-            for description in SENSOR_DESCRIPTIONS
+    async_add_entities(
+        NationalGridSensor(
+            coordinator=coordinator,
+            meter_key=meter_key,
+            entity_description=description,
+            meter_data=meter_data,
         )
-
-    async_add_entities(entities)
+        for meter_key, meter_data in coordinator.data.meters.items()
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class NationalGridSensor(NationalGridEntity, SensorEntity):
@@ -115,5 +111,7 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        meter_data = self.coordinator.data.meters[self._meter_key]
+        meter_data = self.coordinator.data.meters.get(self._meter_key)
+        if meter_data is None:
+            return None
         return self.entity_description.value_fn(meter_data)
