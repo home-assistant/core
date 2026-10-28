@@ -178,11 +178,6 @@ class UnifiEntityLoader:
             if mac in api.clients or mac in always_restore:
                 continue
 
-            # An adopted network device keeps its client record from before
-            # adoption, which would bring its old client tracker back
-            if mac in api.devices:
-                continue
-
             client = api.clients_all.get(mac)
             if client is not None and not self._client_is_stale(client, now):
                 api.clients.process_raw([dict(client.raw)])
@@ -207,26 +202,13 @@ class UnifiEntityLoader:
         # controller when that list loaded. A failed fetch leaves it empty,
         # which would otherwise wipe every tracker and its device.
         prune_unlisted = bool(api.clients_all.values())
-        # A failed devices fetch can be swallowed, leaving the list empty, and a
-        # network device then can't be told apart from a client sharing its MAC
-        devices_loaded = bool(api.devices.values())
 
         pruned = 0
         for entity_id, mac in self._client_trackers():
             if mac in api.clients or mac in always_restore:
                 continue
 
-            # An adopted network device shares the MAC, so only its old client
-            # tracker goes, not the device
-            if mac in api.devices:
-                entity_registry.async_remove(entity_id)
-                pruned += 1
-                continue
-
             if mac not in api.clients_all and not prune_unlisted:
-                continue
-
-            if not devices_loaded:
                 continue
 
             self._remove_client(entity_registry, device_registry, entity_id, mac)
@@ -273,16 +255,16 @@ class UnifiEntityLoader:
 
     @callback
     def _prune_unlisted_devices(self) -> None:
-        """Remove devices whose MAC the controller no longer lists.
+        """Remove registry devices whose MAC the controller no longer lists.
 
-        Catches client devices without a tracker, such as those holding only a
-        link speed sensor, or nothing at all after their entities were removed,
-        and network devices removed from the controller.
+        The device registry holds both clients and network devices. This
+        catches devices of clients without a tracker, such as those holding
+        only a link speed sensor, or nothing at all after their entities were
+        removed, and network devices removed from the controller.
         """
         api = self.hub.api
-        # A failed fetch leaves its list empty, and network devices aren't
-        # necessarily in clients_all, so both lists have to be loaded before a
-        # device missing from them is taken as removed
+        # A failed fetch leaves its list empty, so both lists have to be loaded
+        # before a device missing from them is taken as removed
         if not api.clients_all.values() or not api.devices.values():
             return
 

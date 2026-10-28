@@ -13,7 +13,6 @@ from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
-    async_capture_events,
     async_fire_time_changed,
     snapshot_platform,
 )
@@ -709,14 +708,6 @@ async def test_restoring_client(
         ]
     ],
 )
-@pytest.mark.parametrize(
-    ("device_payload", "pruned"),
-    [
-        pytest.param([SWITCH_1], True, id="devices_loaded"),
-        # A network device could share a MAC with a client tracker
-        pytest.param([], False, id="devices_not_loaded"),
-    ],
-)
 async def test_pruning_stale_restored_clients(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -724,7 +715,6 @@ async def test_pruning_stale_restored_clients(
     config_entry: MockConfigEntry,
     config_entry_factory: ConfigEntryFactoryType,
     clients_all_payload: list[dict[str, Any]],
-    pruned: bool,
 ) -> None:
     """Restore recently seen inactive clients but prune stale and unlisted ones."""
     recent, stale = clients_all_payload
@@ -762,15 +752,15 @@ async def test_pruning_stale_restored_clients(
     assert not hass.states.get("device_tracker.stale")
 
     # Stale client and client absent from a loaded clients_all are pruned
-    # together with their device, once network devices are known
+    # together with their device
     for mac in (stale["mac"], absent_mac):
-        assert (entity_registry.async_get(entries[mac].entity_id) is None) is pruned
+        assert entity_registry.async_get(entries[mac].entity_id) is None
         assert (
             device_registry.async_get_device_by_connection(
                 (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
             )
             is None
-        ) is pruned
+        )
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
@@ -912,105 +902,6 @@ async def test_pruning_unlisted_devices(
     ):
         assert device_registry.async_get(devices[mac].id)
     assert device_registry.async_get(service.id)
-
-
-@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT_1]])
-@pytest.mark.parametrize(
-    ("device_payload", "client_tracker_removed"),
-    [
-        pytest.param([SWITCH_1], True, id="devices_loaded"),
-        # Device list did not load, the network device would look like a client
-        pytest.param([], False, id="devices_not_loaded"),
-    ],
-)
-@pytest.mark.parametrize(
-    "clients_all_payload",
-    [
-        # Network devices are usually not in clients_all
-        pytest.param(
-            [
-                {
-                    "hostname": "listed",
-                    "is_wired": True,
-                    "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                    "mac": "00:00:00:00:00:05",
-                }
-            ],
-            id="unlisted",
-        ),
-        # Record from when the network device was seen as a client
-        pytest.param(
-            [
-                {
-                    "hostname": "stale",
-                    "is_wired": True,
-                    "last_seen": 1562600145,
-                    "mac": SWITCH_1["mac"],
-                }
-            ],
-            id="stale",
-        ),
-        # Recent record from just before the network device was adopted
-        pytest.param(
-            [
-                {
-                    "hostname": "recent",
-                    "is_wired": True,
-                    "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-                    "mac": SWITCH_1["mac"],
-                }
-            ],
-            id="recent",
-        ),
-        # A DHCP reservation for the network device has no last_seen
-        pytest.param(
-            [
-                {
-                    "fixed_ip": "10.0.1.2",
-                    "is_wired": True,
-                    "mac": SWITCH_1["mac"],
-                    "name": "Switch reservation",
-                    "use_fixedip": True,
-                }
-            ],
-            id="dhcp_reservation",
-        ),
-    ],
-)
-async def test_pruning_keeps_network_device_with_client_tracker(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
-    config_entry_factory: ConfigEntryFactoryType,
-    client_tracker_removed: bool,
-) -> None:
-    """Remove a client tracker left on a network device but keep the device."""
-    # Tracker from when the network device was seen as a client
-    client_tracker = entity_registry.async_get_or_create(
-        TRACKER_DOMAIN,
-        DOMAIN,
-        f"site_id-{SWITCH_1['mac']}",
-        config_entry=config_entry,
-    )
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, SWITCH_1["mac"])},
-    )
-    # A removed device is restored with the same id when set up again, so
-    # check for the removal itself
-    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    await config_entry_factory()
-
-    assert (
-        entity_registry.async_get(client_tracker.entity_id) is None
-    ) is client_tracker_removed
-    assert not [
-        event
-        for event in events
-        if event.data["action"] == "remove" and event.data["device_id"] == device.id
-    ]
 
 
 @pytest.mark.parametrize(
