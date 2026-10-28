@@ -1308,3 +1308,32 @@ async def test_zha_group_cleanup_leaves_other_integrations_alone(
     detached_entry = entity_registry.async_get(foreign_entry.entity_id)
     assert detached_entry is not None
     assert detached_entry.device_id is None
+
+
+async def test_entity_registry_update_for_device_without_proxy(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a registry update for an entity of a device without a proxy is ignored."""
+    await setup_zha()
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(zha_const.DOMAIN, "00:11:22:33:44:55:66:77")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "sensor",
+        zha_const.DOMAIN,
+        "unknown_device_sensor",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    # An exception in the listener task fails the test at teardown
+    entity_registry.async_update_entity(
+        entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
