@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
@@ -753,7 +754,12 @@ async def mock_rpc_device():
                 current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
             )
 
+        async def _initialize() -> None:
+            # Yield like the network I/O of a real device
+            await asyncio.sleep(0)
+
         device = _mock_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)

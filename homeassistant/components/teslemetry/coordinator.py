@@ -66,6 +66,7 @@ ENERGY_LIVE_INTERVAL = timedelta(seconds=5)
 ENERGY_LIVE_LOCAL_MAX_BACKOFF = timedelta(minutes=1)
 ENERGY_CONFIG_INTERVAL = timedelta(seconds=30)
 LOCAL_STATUS_INTERVAL = timedelta(seconds=10)
+LOCAL_COMPONENTS_INTERVAL = timedelta(seconds=30)
 
 # Start of the day the energy history totals cover. Kept out of
 # ENERGY_HISTORY_FIELDS, which is the list of keys that become sensors.
@@ -675,3 +676,28 @@ class TeslemetryWallConnectorTotalsCoordinator(TeslemetryStreamTotalsCoordinator
                 PERIOD_START: self._period_start(event.date),
             }
         )
+
+
+class TeslemetryLocalComponentsCoordinator(TeslemetryLocalCoordinator[dict[str, Any]]):
+    """Class to poll the components of a locally paired Powerwall gateway."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        client: PowerwallClient,
+        site_id: int,
+    ) -> None:
+        """Initialize the local Powerwall components coordinator."""
+        super().__init__(
+            hass,
+            config_entry,
+            client,
+            f"Teslemetry Powerwall Components {site_id}",
+            LOCAL_COMPONENTS_INTERVAL,
+        )
+
+    @override
+    async def _async_fetch(self) -> dict[str, Any]:
+        """Fetch the gateway components."""
+        return await self.client.get_components()

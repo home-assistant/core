@@ -135,6 +135,16 @@
       ],
       "supported_by": "opower"
     },
+    "aerosmart": {
+      "name": "aerosmart",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation",
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "aftership": {
       "name": "AfterShip",
       "integration_type": "service",
@@ -1334,6 +1344,15 @@
             "hubs_protocols.smart_home_hubs"
           ],
           "name": "Bosch SHC"
+        },
+        "bosch_smart_camera": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "security_safety.cameras"
+          ],
+          "name": "Bosch Smart Camera"
         },
         "home_connect": {
           "integration_type": "hub",
@@ -3508,11 +3527,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
@@ -7922,7 +7941,7 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "nyt_games": {
@@ -9281,6 +9300,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "rainbowminer": {
+      "name": "RainbowMiner",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.monitoring"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rainforest_automation": {
       "name": "Rainforest Automation",
       "integrations": {
@@ -9967,6 +9995,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "categories": [
@@ -10259,6 +10296,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "silvercrest_infrared": {
+      "name": "SilverCrest Infrared",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "simplefin": {
       "name": "SimpleFin",
@@ -10672,6 +10718,16 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "soma": {
       "name": "Soma Connect",
@@ -12578,7 +12634,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"

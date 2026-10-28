@@ -47,14 +47,28 @@
           "starting": "Starting"
         }
       }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
     }
   },
   "exceptions": {
     "cannot_read": {
       "message": "Could not read the charger: {error}"
     },
+    "cannot_send": {
+      "message": "Could not send the command to the charger: {error}"
+    },
+    "command_rejected": {
+      "message": "The charger refused the command. It will not start charging without a vehicle plugged in, or stop with no session in progress."
+    },
     "device_not_found": {
       "message": "Could not find the charger with address {address}. {reason}"
+    },
+    "unloading": {
+      "message": "The command was not sent because the integration is unloading."
     }
   },
   "options": {
