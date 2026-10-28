@@ -20,6 +20,8 @@ from homeassistant.const import (
     CONF_FOR,  # noqa: F401
     CONF_PLATFORM,  # noqa: F401
     CONF_VALUE_TEMPLATE,  # noqa: F401
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -52,6 +54,7 @@ class NumericStateTriggerArgument(StrEnum):
     BELOW = "below"
     ENTITY_ID = "entity_id"
     FOR = "for"
+    IGNORE_INVALID_STATES = "ignore_invalid_states"
     PLATFORM = "platform"
     VALUE_TEMPLATE = "value_template"
 
@@ -96,6 +99,9 @@ _TRIGGER_SCHEMA = probatio.All(
                 NumericStateTriggerArgument.FOR
             ): cv.positive_time_period_template,
             probatio.Optional(NumericStateTriggerArgument.ATTRIBUTE): cv.match_all,
+            probatio.Optional(
+                NumericStateTriggerArgument.IGNORE_INVALID_STATES, default=False
+            ): cv.boolean,
         }
     ),
     probatio.AtLeastOne(
@@ -137,6 +143,9 @@ async def async_attach_trigger(
     armed_entities: set[str] = set()
     period: dict[str, timedelta] = {}
     attribute = config.get(NumericStateTriggerArgument.ATTRIBUTE)
+    ignore_invalid_states: bool = config[
+        NumericStateTriggerArgument.IGNORE_INVALID_STATES
+    ]
     job = HassJob(action, f"numeric state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]
@@ -164,8 +173,21 @@ async def async_attach_trigger(
             hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
 
+    @callback
+    def is_ignored_state(state: State | None) -> bool:
+        """Return True if the state should be skipped instead of evaluated."""
+        if not ignore_invalid_states:
+            return False
+        if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return True
+        return attribute is not None and state.attributes.get(attribute) is None
+
     # Each entity that starts outside the range is already armed (ready to fire).
+    # Entities without a valid starting value stay unarmed, so their first valid
+    # value only sets the baseline.
     for entity_id in entity_ids:
+        if is_ignored_state(hass.states.get(entity_id)):
+            continue
         try:
             if not check_numeric_state(entity_id, None, entity_id):
                 armed_entities.add(entity_id)
@@ -183,7 +205,8 @@ async def async_attach_trigger(
         from_s = event.data["old_state"]
         to_s = event.data["new_state"]
 
-        if to_s is None:
+        # Skipping keeps the armed state from the last valid value.
+        if to_s is None or is_ignored_state(to_s):
             return
 
         @callback
@@ -212,6 +235,9 @@ async def async_attach_trigger(
             entity_id: str, from_s: State | None, to_s: State | None
         ) -> bool:
             """Return True if the criteria are now met, False otherwise."""
+            # An attribute or template can still match while the entity is invalid
+            if is_ignored_state(to_s):
+                return False
             try:
                 return check_numeric_state(entity_id, from_s, to_s)
             except exceptions.ConditionError:

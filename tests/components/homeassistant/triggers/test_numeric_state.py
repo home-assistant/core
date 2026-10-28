@@ -22,6 +22,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
@@ -2009,3 +2010,213 @@ async def test_template_variable(
         assert len(service_calls) == 1
     else:
         assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("ignore_invalid_states", "before_setup", "after_setup", "expected_calls"),
+    [
+        pytest.param(False, [19], [STATE_UNAVAILABLE, 23], 1, id="crossing_default"),
+        pytest.param(True, [19], [STATE_UNAVAILABLE, 23], 1, id="crossing_ignore"),
+        pytest.param(True, [19], [STATE_UNKNOWN, 23], 1, id="crossing_unknown_ignore"),
+        pytest.param(False, [23], [STATE_UNAVAILABLE, 23], 1, id="same_value_default"),
+        pytest.param(True, [23], [STATE_UNAVAILABLE, 23], 0, id="same_value_ignore"),
+        pytest.param(False, [24], [STATE_UNAVAILABLE, 23], 1, id="same_side_default"),
+        pytest.param(True, [24], [STATE_UNAVAILABLE, 23], 0, id="same_side_ignore"),
+        pytest.param(False, [STATE_UNKNOWN], [23], 1, id="unknown_at_start_default"),
+        pytest.param(True, [STATE_UNKNOWN], [23], 0, id="unknown_at_start_ignore"),
+        pytest.param(False, [], [STATE_UNKNOWN, 23], 1, id="missing_at_start_default"),
+        pytest.param(True, [], [STATE_UNKNOWN, 23], 0, id="missing_at_start_ignore"),
+        pytest.param(True, [STATE_UNKNOWN], [19, 23], 1, id="baseline_then_crossing"),
+    ],
+)
+async def test_ignore_invalid_states(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    ignore_invalid_states: bool,
+    before_setup: list[int | str],
+    after_setup: list[int | str],
+    expected_calls: int,
+) -> None:
+    """Test unknown and unavailable states are skipped when configured."""
+    for state in before_setup:
+        hass.states.async_set("test.entity", state)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 22,
+                    "ignore_invalid_states": ignore_invalid_states,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    for state in after_setup:
+        hass.states.async_set("test.entity", state)
+        await hass.async_block_till_done()
+    assert len(service_calls) == expected_calls
+
+
+@pytest.mark.parametrize(
+    ("ignore_invalid_states", "before_setup", "after_setup", "expected_calls"),
+    [
+        pytest.param(
+            False,
+            [("on", {})],
+            [("on", {"temp": 23})],
+            1,
+            id="missing_at_start_default",
+        ),
+        pytest.param(
+            True,
+            [("on", {})],
+            [("on", {"temp": 23})],
+            0,
+            id="missing_at_start_ignore",
+        ),
+        pytest.param(
+            False,
+            [("on", {"temp": 23})],
+            [("on", {"temp": None}), ("on", {"temp": 23})],
+            1,
+            id="none_value_default",
+        ),
+        pytest.param(
+            True,
+            [("on", {"temp": 23})],
+            [("on", {"temp": None}), ("on", {"temp": 23})],
+            0,
+            id="none_value_ignore",
+        ),
+        pytest.param(
+            True,
+            [("on", {"temp": 19})],
+            [("on", {"temp": None}), ("on", {"temp": 23})],
+            1,
+            id="crossing_ignore",
+        ),
+    ],
+)
+async def test_ignore_invalid_states_attribute(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    ignore_invalid_states: bool,
+    before_setup: list[tuple[str, dict[str, int | None]]],
+    after_setup: list[tuple[str, dict[str, int | None]]],
+    expected_calls: int,
+) -> None:
+    """Test a missing or None attribute is skipped when configured."""
+    for state, attributes in before_setup:
+        hass.states.async_set("test.entity", state, attributes)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "attribute": "temp",
+                    "above": 22,
+                    "ignore_invalid_states": ignore_invalid_states,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    for state, attributes in after_setup:
+        hass.states.async_set("test.entity", state, attributes)
+        await hass.async_block_till_done()
+    assert len(service_calls) == expected_calls
+
+
+@pytest.mark.parametrize(
+    ("trigger_options", "after_setup", "expected_calls"),
+    [
+        pytest.param(
+            {},
+            [("23", {"temp": 23})],
+            1,
+            id="state_no_invalid",
+        ),
+        pytest.param(
+            {},
+            [
+                ("23", {"temp": 23}),
+                (STATE_UNAVAILABLE, {"temp": 23}),
+                ("23", {"temp": 23}),
+            ],
+            0,
+            id="state_invalid",
+        ),
+        pytest.param(
+            {"attribute": "temp"},
+            [
+                ("23", {"temp": 23}),
+                (STATE_UNAVAILABLE, {"temp": 23}),
+                ("23", {"temp": 23}),
+            ],
+            0,
+            id="attribute_invalid",
+        ),
+        pytest.param(
+            {"value_template": "{{ state.attributes.temp }}"},
+            [
+                ("23", {"temp": 23}),
+                (STATE_UNAVAILABLE, {"temp": 23}),
+                ("23", {"temp": 23}),
+            ],
+            0,
+            id="template_invalid",
+        ),
+    ],
+)
+async def test_ignore_invalid_states_cancels_for(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, str],
+    after_setup: list[tuple[str, dict[str, int]]],
+    expected_calls: int,
+) -> None:
+    """Test an invalid state cancels a pending for period."""
+    hass.states.async_set("test.entity", "19", {"temp": 19})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 22,
+                    "for": {"seconds": 5},
+                    "ignore_invalid_states": True,
+                    **trigger_options,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Coming back in range does not restart the period without a fresh crossing
+    for state, attributes in after_setup:
+        hass.states.async_set("test.entity", state, attributes)
+        await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == expected_calls
