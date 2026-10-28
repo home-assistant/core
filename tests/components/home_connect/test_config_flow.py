@@ -303,12 +303,13 @@ async def test_reauth_flow_with_different_account(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    ("access_token", "reason", "refresh_token"),
+    ("access_token", "reason", "refresh_token", "entry_state"),
     [
         pytest.param(
             FAKE_ACCESS_TOKEN,
             "reconfigure_successful",
             "new-refresh-token",
+            ConfigEntryState.LOADED,
             id="success",
         ),
         pytest.param(
@@ -319,6 +320,7 @@ async def test_reauth_flow_with_different_account(
             ),
             "wrong_account",
             FAKE_REFRESH_TOKEN,
+            ConfigEntryState.NOT_LOADED,
             id="different_account",
         ),
     ],
@@ -331,6 +333,7 @@ async def test_reconfigure_flow(
     access_token: str,
     reason: str,
     refresh_token: str,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test reconfigure flow re-runs OAuth for the same account."""
     config_entry.add_to_hass(hass)
@@ -364,10 +367,12 @@ async def test_reconfigure_flow(
         "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     assert config_entry.data["token"]["refresh_token"] == refresh_token
+    assert config_entry.state is entry_state
 
 
 @pytest.mark.usefixtures("current_request_with_host")
