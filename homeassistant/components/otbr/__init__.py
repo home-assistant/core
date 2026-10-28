@@ -73,7 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None
         aiohttp.ClientError,
         TimeoutError,
     ) as err:
-        raise ConfigEntryNotReady("Unable to connect") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
     await update_unique_id(hass, entry, border_agent_id)
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)

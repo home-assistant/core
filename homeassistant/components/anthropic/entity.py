@@ -958,14 +958,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
         model = options[CONF_CHAT_MODEL]
 
-        model_args = MessageCreateParamsStreaming(
-            model=model,
-            messages=messages,
-            max_tokens=options[CONF_MAX_TOKENS],
-            system=system.content,
-            stream=True,
-            container=container_id,
-        )
+        model_args: MessageCreateParamsStreaming = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": options[CONF_MAX_TOKENS],
+            "system": system.content,
+            "stream": True,
+            "container": container_id,
+        }
 
         if options[CONF_PROMPT_CACHING] != PromptCaching.OFF:
             model_args["diagnostics"] = {
@@ -1119,7 +1119,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
 
         if structure:
-            model_args.setdefault("output_config", OutputConfigParam())["format"] = (
+            model_args.setdefault("output_config", {})["format"] = (
                 JSONOutputFormatParam(
                     type="json_schema",
                     schema=anthropic.transform_schema(
