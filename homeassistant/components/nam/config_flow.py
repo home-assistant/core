@@ -138,6 +138,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery()
 
         await self.async_set_unique_id(format_mac(nam.mac))
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
 
@@ -155,8 +156,6 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.auth_enabled is True:
             return await self.async_step_credentials()
-
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
