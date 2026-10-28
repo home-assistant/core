@@ -6,7 +6,6 @@ import probatio
 
 from homeassistant.const import CONF_OPTIONS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -27,7 +26,9 @@ _HVAC_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_HVAC_MODE): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [probatio.Coerce(HVACMode)]
+                probatio.EnsureList(),
+                probatio.NonEmpty(),
+                [probatio.Coerce(HVACMode)],
             ),
         },
     }

@@ -36,7 +36,7 @@ IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> None:
     """Set up IronOS from a config entry."""
     if IRON_OS_KEY not in hass.data:
         session = async_get_clientsession(hass)
@@ -62,14 +62,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        await hass.data[IRON_OS_KEY].async_shutdown()
-        hass.data.pop(IRON_OS_KEY)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            await hass.data[IRON_OS_KEY].async_shutdown()
+            hass.data.pop(IRON_OS_KEY)

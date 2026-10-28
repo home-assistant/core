@@ -9,6 +9,7 @@ from aiovodafone.exceptions import (
     ModelNotSupported,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.vodafone_station.const import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_HOST, TEST_PASSWORD, TEST_TYPE, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_user(

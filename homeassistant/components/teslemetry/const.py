@@ -4,6 +4,11 @@ from enum import StrEnum
 import logging
 
 DOMAIN = "teslemetry"
+LABS_CHARGE_ON_SOLAR_FEATURE = "charge_on_solar"
+CHARGE_ON_SOLAR_SWITCH_KEY = "charge_on_solar"
+CHARGE_ON_SOLAR_LOWER_LIMIT_KEY = "charge_on_solar_lower_limit"
+CHARGE_ON_SOLAR_LOWER_LIMIT_DEFAULT = 20
+CHARGE_LIMIT_SOC_KEY = "charge_state_charge_limit_soc"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -18,11 +23,13 @@ VEHICLE_KEY_FILE = "tesla_vehicle.key"
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
 BLE_PARENT_LOCK_KEY = f"{DOMAIN}_ble_parent_lock"
 BLE_DISCONNECT_TIMEOUT = 10
+BLE_ADVERTISEMENT_TIMEOUT = 5
 
 SUBENTRY_TYPE_ENERGY_SITE = "energy_site"
 CONF_SITE_ID = "site_id"
 POWERWALL_KEY_FILE = "tesla_powerwall.key"
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
+ISSUE_GATEWAY_NOT_FOUND = "gateway_not_found"
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",

@@ -34,7 +34,6 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_user()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
     @override
@@ -78,7 +77,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, "")
                     ): str,
-                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                     probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),

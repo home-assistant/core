@@ -16,6 +16,14 @@
       }
     }
   },
+  "exceptions": {
+    "duplicate_options": {
+      "message": "Options for {entity_id} contain duplicates: {duplicates}."
+    },
+    "invalid_option": {
+      "message": "Option {option} is not valid for {entity_id}. Valid options are: {options}."
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",

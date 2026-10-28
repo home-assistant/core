@@ -1,6 +1,7 @@
 {
   "domain": "powerfox",
   "name": "Powerfox Cloud",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerfox",

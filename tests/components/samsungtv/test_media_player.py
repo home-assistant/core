@@ -14,6 +14,11 @@ from async_upnp_client.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
@@ -85,12 +90,6 @@ from .const import (
     ENTRYDATA_LEGACY,
     ENTRYDATA_WEBSOCKET,
     SAMPLE_DEVICE_INFO_WIFI,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
 )
 
 ENTITY_ID = f"{MP_DOMAIN}.mock_title"
@@ -1023,8 +1022,9 @@ async def test_media_previous_track(hass: HomeAssistant, remote_legacy: Mock) ->
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
-async def test_turn_on_wol(hass: HomeAssistant) -> None:
-    """Test turn on."""
+async def test_turn_on_without_turnon_with_mac(hass: HomeAssistant) -> None:
+    """Test turn on is not supported even when a MAC address is configured."""
+    await async_setup_component(hass, "homeassistant", {})
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRYDATA_WEBSOCKET,
@@ -1033,14 +1033,10 @@ async def test_turn_on_wol(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.samsungtv.entity.send_magic_packet"
-    ) as mock_send_magic_packet:
+    with pytest.raises(ServiceNotSupported, match="does not support action"):
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
         )
-        await hass.async_block_till_done()
-    assert mock_send_magic_packet.called
 
 
 async def test_turn_on_without_turnon(hass: HomeAssistant, remote_legacy: Mock) -> None:

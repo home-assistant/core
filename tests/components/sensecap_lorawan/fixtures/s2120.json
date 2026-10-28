@@ -1,0 +1,17 @@
+{
+  "source": "Synthetic frame using the SenseCAP decoder protocol test vectors.",
+  "f_port": 3,
+  "payload": "0100d732000186a019002302010e0000303927934c00570001869f",
+  "expected": {
+    "temperature": 21.5,
+    "humidity": 50.0,
+    "illuminance": 100000.0,
+    "uv_index": 2.5,
+    "wind_speed": 12.6,
+    "wind_direction": 270.0,
+    "wind_gust": 31.32,
+    "precipitation_intensity": 12.345,
+    "precipitation": 99.999,
+    "atmospheric_pressure": 1013.1
+  }
+}

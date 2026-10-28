@@ -143,12 +143,12 @@ class GeniusHeatingZone(GeniusZone):
     _min_temp: float
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.data.get("temperature")
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._zone.data["setpoint"]
 
@@ -163,8 +163,8 @@ class GeniusHeatingZone(GeniusZone):
         return self._max_temp
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement used by the zone."""
         return UnitOfTemperature.CELSIUS
 
     async def async_set_temperature(self, **kwargs) -> None:

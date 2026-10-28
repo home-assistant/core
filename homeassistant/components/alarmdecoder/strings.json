@@ -24,6 +24,19 @@
         },
         "title": "Configure connection settings"
       },
+      "reconfigure": {
+        "data": {
+          "device_baudrate": "[%key:component::alarmdecoder::config::step::protocol::data::device_baudrate%]",
+          "device_path": "[%key:component::alarmdecoder::config::step::protocol::data::device_path%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::alarmdecoder::config::step::protocol::data_description::host%]",
+          "port": "[%key:component::alarmdecoder::config::step::protocol::data_description::port%]"
+        },
+        "title": "Change connection settings"
+      },
       "user": {
         "data": {
           "protocol": "Protocol"
@@ -71,7 +84,7 @@
         "data": {
           "zone_number": "Zone number"
         },
-        "description": "Enter the zone number you'd like to to add, edit, or remove.",
+        "description": "Enter the zone number you'd like to add, edit, or remove.",
         "title": "[%key:component::alarmdecoder::options::step::init::title%]"
       }
     }
