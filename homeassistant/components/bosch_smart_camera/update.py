@@ -40,6 +40,7 @@ async def async_setup_entry(
 class BoschFirmware(CoordinatorEntity[BoschFirmwareCoordinator], UpdateEntity):
     """The firmware of a camera, which Bosch installs on its own."""
 
+    _attr_auto_update = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
     _attr_supported_features = UpdateEntityFeature.PROGRESS

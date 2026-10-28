@@ -76,6 +76,7 @@ async def test_update_available_and_installing(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes["latest_version"] == "9.40.30"
+    assert state.attributes["auto_update"] is True
     assert state.attributes["in_progress"] is False
 
     mock_get_firmware_status.return_value = replace(AVAILABLE, updating=True)
