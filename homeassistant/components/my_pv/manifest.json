@@ -17,6 +17,6 @@
   "iot_class": "local_polling",
   "loggers": ["my_pv"],
   "quality_scale": "silver",
-  "requirements": ["my-pv==0.0.15"],
+  "requirements": ["my-pv==0.0.16"],
   "zeroconf": ["_mypv._tcp.local."]
 }
