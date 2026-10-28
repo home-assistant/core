@@ -279,8 +279,6 @@ dispatch_battery_power:
       required: true
       selector:
         number:
-          min: -100000
-          max: 100000
           unit_of_measurement: W
           mode: box
     duration:

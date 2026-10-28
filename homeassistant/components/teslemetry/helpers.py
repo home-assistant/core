@@ -9,7 +9,6 @@ from aiopowerwall import (
     PowerwallAuthenticationError,
     PowerwallClient,
     PowerwallCommandError,
-    PowerwallError,
     PowerwallNotSupportedError,
 )
 from tesla_fleet_api.exceptions import TeslaFleetError
@@ -26,6 +25,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
 
 GATEWAY_OUT_OF_RANGE = 11
+BATTERY_DISPATCH_COMMANDS = frozenset(
+    {"dispatch_battery_power", "resume_battery_operation"}
+)
 
 
 class PowerwallKeyRejectedError(Exception):
@@ -127,10 +129,20 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
-async def handle_local_command(command: Awaitable[None]) -> None:
-    """Handle a command sent to a local Powerwall gateway."""
+def fail_over_unless_gateway_rejected(
+    err: BaseException | None, backend: Any, method: str
+) -> bool:
+    """Fail over to the cloud unless the gateway rejected a battery dispatch command."""
+    # The cloud sends these commands to the same gateway, so it would reject them too
+    return not (
+        isinstance(err, PowerwallCommandError) and method in BATTERY_DISPATCH_COMMANDS
+    )
+
+
+async def handle_energy_command(command: Awaitable[dict[str, Any]]) -> None:
+    """Handle a command routed to the local Powerwall gateway or the cloud."""
     try:
-        await command
+        await handle_command(command)
     except PowerwallNotSupportedError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -144,13 +156,6 @@ async def handle_local_command(command: Awaitable[None]) -> None:
                 translation_domain=DOMAIN,
                 translation_key="local_command_out_of_range",
             ) from e
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="local_command_failed",
-        ) from e
-    except PowerwallError as e:
-        # pylint: disable-next=home-assistant-log-and-raise
-        LOGGER.error("Local Powerwall gateway command failed: %s", e)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="local_command_failed",

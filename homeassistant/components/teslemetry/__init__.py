@@ -107,6 +107,7 @@ from .helpers import (
     async_get_ble_parent,
     async_update_device_sw_version,
     create_powerwall_client,
+    fail_over_unless_gateway_rejected,
     flatten,
 )
 from .models import (
@@ -541,7 +542,11 @@ async def _async_resolve_energy_site_api(
             hass, DOMAIN, _gateway_issue_id(cloud_energy_site.energy_site_id)
         )
     local_energy_site = PowerwallEnergySite(powerwall_client)
-    return EnergySiteRouter(local_energy_site, cloud_energy_site)
+    return EnergySiteRouter(
+        local_energy_site,
+        cloud_energy_site,
+        on_result=fail_over_unless_gateway_rejected,
+    )
 
 
 async def _async_rediscover_gateway(
