@@ -1,7 +1,6 @@
 """Test the OpenThread Border Router config flow."""
 
 import asyncio
-from collections.abc import Generator
 from http import HTTPStatus
 import re
 from typing import Any
@@ -1239,16 +1238,6 @@ async def test_hassio_discovery_reload(
 
         assert len(callback.mock_calls) == 2
         assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
-
-
-@pytest.fixture(name="fast_border_agent_discovery")
-def fast_border_agent_discovery_fixture() -> Generator[None]:
-    """Shorten Thread router discovery so block_till_done does not wait 30s."""
-    with patch(
-        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
-        0.1,
-    ):
-        yield
 
 
 async def _setup_user_entry(hass: HomeAssistant) -> MockConfigEntry:
