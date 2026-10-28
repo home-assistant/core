@@ -1984,7 +1984,7 @@ async def test_scanner_entity_default_device_info_new_device(
 
     mock_report_usage.assert_called_once()
     assert mock_report_usage.call_args.kwargs["integration_domain"] == TEST_DOMAIN
-    assert mock_report_usage.call_args.kwargs["breaks_in_ha_version"] == "2027.5.0"
+    assert mock_report_usage.call_args.kwargs["breaks_in_ha_version"] == "2028.11.0"
     entity_id = entity_registry.async_get_entity_id(DOMAIN, TEST_DOMAIN, "scanner")
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
