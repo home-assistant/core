@@ -23,7 +23,9 @@ PROBLEM_SENSOR = "binary_sensor.123456789012_problem"
 @pytest.fixture(autouse=True)
 def platforms() -> Generator[None]:
     """Set up only the binary sensor platform."""
-    with patch("homeassistant.components.spin_ble.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch(
+        "homeassistant.components.exicom_spin_ble.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
         yield
 
 

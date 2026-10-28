@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from spinev_ble import SpinEvError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.spin_ble.const import (
+from homeassistant.components.exicom_spin_ble.const import (
     CONF_CONNECTION_MODE,
     DEFAULT_CONNECTION_MODE,
     DOMAIN,
@@ -37,7 +37,7 @@ def patch_discovered(
 ) -> Iterator[None]:
     """Pretend the Bluetooth manager has seen exactly these devices."""
     with patch(
-        "homeassistant.components.spin_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.exicom_spin_ble.config_flow.async_discovered_service_info",
         return_value=service_infos,
     ):
         yield

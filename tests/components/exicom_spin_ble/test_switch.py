@@ -21,7 +21,7 @@ from spinev_ble import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.spin_ble.const import (
+from homeassistant.components.exicom_spin_ble.const import (
     CHARGING_INTERVAL,
     COMMAND_SETTLE_TIME,
     IDLE_INTERVAL,
@@ -51,7 +51,7 @@ CHARGING_SWITCH = "switch.123456789012_charging"
 @pytest.fixture(autouse=True)
 def platforms() -> Generator[None]:
     """Set up only the switch platform."""
-    with patch("homeassistant.components.spin_ble.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.exicom_spin_ble.PLATFORMS", [Platform.SWITCH]):
         yield
 
 
