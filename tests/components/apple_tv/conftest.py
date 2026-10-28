@@ -9,6 +9,7 @@ from pyatv.const import (
     FeatureName,
     FeatureState,
     KeyboardFocusState,
+    OperatingSystem,
     PairingRequirement,
     Protocol,
 )
@@ -260,6 +261,8 @@ def mock_atv() -> AsyncMock:
     atv.device_info.model = DeviceModel.Gen4K
     atv.device_info.raw_model = "AppleTV6,2"
     atv.device_info.version = "15.0"
+    atv.device_info.build_number = "19J346"
+    atv.device_info.operating_system = OperatingSystem.TvOS
     atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
     return atv
 

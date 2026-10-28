@@ -1,0 +1,506 @@
+# serializer version: 1
+# name: test_diagnostics[air_conditioner]
+  dict({
+    'country': 'KR',
+    'devices': list([
+      dict({
+        'connected': True,
+        'device_type': 'DEVICE_AIR_CONDITIONER',
+        'last_update_success': True,
+        'locations': dict({
+        }),
+        'model_name': 'PAC_910604_WW',
+        'properties': dict({
+          'absolute_hour_to_start': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': 13,
+          }),
+          'absolute_minute_to_start': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': 14,
+          }),
+          'air_clean_operation_mode': dict({
+            'profile': dict({
+              'r': list([
+              ]),
+              'type': 'enum',
+              'w': list([
+                'START',
+                'STOP',
+              ]),
+            }),
+            'status': None,
+          }),
+          'air_con_operation_mode': dict({
+            'profile': dict({
+              'r': list([
+                'POWER_ON',
+                'POWER_OFF',
+              ]),
+              'type': 'enum',
+              'w': list([
+                'POWER_ON',
+                'POWER_OFF',
+              ]),
+            }),
+            'status': 'POWER_ON',
+          }),
+          'cool_target_temperature_c': dict({
+            'profile': dict({
+              'r': dict({
+              }),
+              'type': 'range',
+              'unit': 'C',
+              'w': dict({
+                'max': 30,
+                'min': 18,
+                'step': 1,
+              }),
+            }),
+            'status': None,
+          }),
+          'cool_target_temperature_f': dict({
+            'profile': dict({
+              'r': dict({
+              }),
+              'type': 'range',
+              'unit': 'F',
+              'w': dict({
+                'max': 86,
+                'min': 64,
+                'step': 2,
+              }),
+            }),
+            'status': None,
+          }),
+          'current_job_mode': dict({
+            'profile': dict({
+              'r': list([
+                'AIR_CLEAN',
+                'COOL',
+                'AIR_DRY',
+              ]),
+              'type': 'enum',
+              'w': list([
+                'AIR_CLEAN',
+                'COOL',
+                'AIR_DRY',
+              ]),
+            }),
+            'status': 'COOL',
+          }),
+          'current_temperature_c': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 25,
+          }),
+          'current_temperature_f': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 77,
+          }),
+          'filter_lifetime': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 540,
+          }),
+          'humidity': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 40,
+          }),
+          'monitoring_enabled': dict({
+            'profile': dict({
+              'r': list([
+                'ON_WORKING',
+                'ALWAYS',
+              ]),
+              'type': 'enum',
+              'w': list([
+                'ON_WORKING',
+                'ALWAYS',
+              ]),
+            }),
+            'status': 'ON_WORKING',
+          }),
+          'notification': dict({
+            'profile': dict({
+              'r': list([
+                'WATER_IS_FULL',
+              ]),
+              'type': 'enum',
+              'w': list([
+              ]),
+            }),
+            'status': None,
+          }),
+          'pm1': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 12,
+          }),
+          'pm10': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 7,
+          }),
+          'pm2': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 24,
+          }),
+          'power_save_enabled': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'boolean',
+              'w': True,
+            }),
+            'status': False,
+          }),
+          'relative_hour_to_start': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': None,
+          }),
+          'relative_hour_to_stop': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': None,
+          }),
+          'relative_minute_to_start': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': None,
+          }),
+          'relative_minute_to_stop': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': True,
+            }),
+            'status': None,
+          }),
+          'target_temperature_c': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 19,
+          }),
+          'target_temperature_f': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 66,
+          }),
+          'temperature_unit': dict({
+            'profile': dict({
+              'r': list([
+                'C',
+                'F',
+              ]),
+              'type': 'enum',
+              'w': list([
+              ]),
+            }),
+            'status': 'C',
+          }),
+          'total_pollution': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 3,
+          }),
+          'used_time': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'number',
+              'w': False,
+            }),
+            'status': 180,
+          }),
+          'wind_rotate_left_right': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'boolean',
+              'w': True,
+            }),
+            'status': False,
+          }),
+          'wind_rotate_up_down': dict({
+            'profile': dict({
+              'r': True,
+              'type': 'boolean',
+              'w': True,
+            }),
+            'status': False,
+          }),
+          'wind_strength': dict({
+            'profile': dict({
+              'r': list([
+                'LOW',
+                'MID',
+                'HIGH',
+                'AUTO',
+              ]),
+              'type': 'enum',
+              'w': list([
+                'LOW',
+                'MID',
+                'HIGH',
+                'AUTO',
+              ]),
+            }),
+            'status': 'MID',
+          }),
+        }),
+        'reportable': True,
+        'sub_id': None,
+      }),
+    ]),
+  })
+# ---
+# name: test_diagnostics[washer]
+  dict({
+    'country': 'KR',
+    'devices': list([
+      dict({
+        'connected': True,
+        'device_type': 'DEVICE_WASHER',
+        'last_update_success': True,
+        'locations': dict({
+          'main': dict({
+            'current_state': dict({
+              'profile': dict({
+                'r': list([
+                  'DISPENSING',
+                  'END',
+                  'RUNNING',
+                  'FROZEN_PREVENT_RUNNING',
+                  'PAUSE',
+                  'PREWASH',
+                  'DETECTING',
+                  'INITIAL',
+                  'SOAKING',
+                  'DRYING',
+                  'FROZEN_PREVENT_PAUSE',
+                  'FROZEN_PREVENT_INITIAL',
+                  'REFRESHING',
+                  'RINSING',
+                  'STEAM_SOFTENING',
+                  'DETERGENT_AMOUNT',
+                  'POWER_OFF',
+                  'RESERVED',
+                  'RINSE_HOLD',
+                  'ERROR',
+                  'SPINNING',
+                  'ADD_DRAIN',
+                ]),
+                'type': 'enum',
+                'w': list([
+                ]),
+              }),
+              'status': 'POWER_OFF',
+            }),
+            'cycle_count': dict({
+              'profile': dict({
+                'r': True,
+                'type': 'number',
+                'w': False,
+              }),
+              'status': 10,
+            }),
+            'detergent_setting': dict({
+              'profile': dict({
+                'r': list([
+                  'NORMAL',
+                ]),
+                'type': 'string',
+                'w': list([
+                ]),
+              }),
+              'status': None,
+            }),
+            'relative_hour_to_start': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 19,
+                  'min': 1,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                  'except': list([
+                  ]),
+                  'max': 19,
+                  'min': 1,
+                  'step': 1,
+                }),
+              }),
+              'status': 0,
+            }),
+            'relative_minute_to_start': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 30,
+                  'min': 0,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                }),
+              }),
+              'status': 0,
+            }),
+            'remain_hour': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 30,
+                  'min': 0,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                }),
+              }),
+              'status': 0,
+            }),
+            'remain_minute': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 59,
+                  'min': 0,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                }),
+              }),
+              'status': 45,
+            }),
+            'remote_control_enabled': dict({
+              'profile': dict({
+                'r': True,
+                'type': 'boolean',
+                'w': False,
+              }),
+              'status': False,
+            }),
+            'total_hour': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 30,
+                  'min': 0,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                }),
+              }),
+              'status': 0,
+            }),
+            'total_minute': dict({
+              'profile': dict({
+                'r': dict({
+                  'except': list([
+                  ]),
+                  'max': 59,
+                  'min': 0,
+                  'step': 1,
+                }),
+                'type': 'range',
+                'w': dict({
+                }),
+              }),
+              'status': 50,
+            }),
+            'washer_operation_mode': dict({
+              'profile': dict({
+                'r': list([
+                ]),
+                'type': 'enum',
+                'w': list([
+                  'START',
+                  'STOP',
+                  'POWER_OFF',
+                  'POWER_ON',
+                ]),
+              }),
+              'status': None,
+            }),
+          }),
+        }),
+        'model_name': 'FAFXU22027',
+        'properties': dict({
+          'notification': dict({
+            'profile': dict({
+              'r': list([
+                'WASHING_IS_COMPLETE',
+                'ERROR_DURING_WASHING',
+              ]),
+              'type': 'enum',
+              'w': list([
+              ]),
+            }),
+            'status': None,
+          }),
+        }),
+        'reportable': True,
+        'sub_id': None,
+      }),
+    ]),
+  })
+# ---

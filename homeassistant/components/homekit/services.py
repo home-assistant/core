@@ -62,7 +62,11 @@ async def _async_handle_homekit_unpair(service: ServiceCall) -> None:
     dev_reg = dr.async_get(hass)
     for device_id in referenced.referenced_devices:
         if not (dev_reg_ent := dev_reg.async_get(device_id)):
-            raise HomeAssistantError(f"No device found for device id: {device_id}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device_id": device_id},
+            )
         if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
             # A child device carries no HomeKit pairing; only its parent can.
             continue
@@ -78,7 +82,9 @@ async def _async_handle_homekit_unpair(service: ServiceCall) -> None:
         ]
         if not matching_instances:
             raise HomeAssistantError(
-                f"No homekit accessory found for device id: {device_id}"
+                translation_domain=DOMAIN,
+                translation_key="accessory_not_found",
+                translation_placeholders={"device_id": device_id},
             )
         for homekit in matching_instances:
             homekit.async_unpair()
