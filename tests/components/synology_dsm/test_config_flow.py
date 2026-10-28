@@ -611,9 +611,25 @@ RECONFIGURED_DATA = {
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure(hass: HomeAssistant, service: MagicMock) -> None:
+async def test_reconfigure(
+    hass: HomeAssistant, service_with_filestation: MagicMock
+) -> None:
     """Test reconfiguring the connection settings."""
-    entry = _reconfigure_entry()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: 5001,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+            CONF_DEVICE_TOKEN: DEVICE_TOKEN,
+        },
+        options={CONF_BACKUP_PATH: "ha_backup", CONF_BACKUP_SHARE: "/ha_backup"},
+        unique_id=SERIAL,
+    )
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
@@ -621,14 +637,18 @@ async def test_reconfigure(hass: HomeAssistant, service: MagicMock) -> None:
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
-    with _patch_dsm(service):
+    with _patch_dsm(service_with_filestation):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=RECONFIGURE_INPUT
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == RECONFIGURED_DATA
-    assert entry.options == {CONF_BACKUP_PATH: None, CONF_BACKUP_SHARE: None}
+    assert entry.data == {**RECONFIGURED_DATA, CONF_DEVICE_TOKEN: DEVICE_TOKEN}
+    assert entry.options == {
+        CONF_BACKUP_PATH: "ha_backup",
+        CONF_BACKUP_SHARE: "/ha_backup",
+    }
+    service_with_filestation.file.get_shared_folders.assert_not_called()
 
 
 async def test_reconfigure_legacy_entry_without_verify_ssl(hass: HomeAssistant) -> None:
