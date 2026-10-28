@@ -1,132 +1,70 @@
 """Common utilities for Vallox tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from vallox_websocket_api import MetricData
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from vallox_websocket_api import MetricData, MetricValue
 
 from homeassistant.components.vallox.const import DOMAIN
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
-DEFAULT_HOST = "192.168.100.50"
-DEFAULT_NAME = "Vallox"
-
-
-@pytest.fixture
-def default_host() -> str:
-    """Return the default host used in the default mock entry."""
-    return DEFAULT_HOST
-
-
-@pytest.fixture
-def default_name() -> str:
-    """Return the default name used in the default mock entry."""
-    return DEFAULT_NAME
+from . import TEST_HOST, TEST_NAME
 
 
 @pytest.fixture
 def mock_entry(
-    hass: HomeAssistant, default_host: str, default_name: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    fetch_metric_data_mock: AsyncMock,
 ) -> MockConfigEntry:
-    """Create mocked Vallox config entry fixture."""
-    return create_mock_entry(hass, default_host, default_name)
+    """Add the mocked Vallox config entry to Home Assistant."""
+    mock_config_entry.add_to_hass(hass)
+    return mock_config_entry
 
 
-def create_mock_entry(hass: HomeAssistant, host: str, name: str) -> MockConfigEntry:
-    """Create mocked Vallox config entry."""
-    vallox_mock_entry = MockConfigEntry(
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: host,
-            CONF_NAME: name,
-        },
+        title=TEST_NAME,
+        data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME},
     )
-    vallox_mock_entry.add_to_hass(hass)
-
-    return vallox_mock_entry
 
 
 @pytest.fixture
-async def setup_vallox_entry(
-    hass: HomeAssistant, default_host: str, default_name: str
-) -> None:
-    """Define a fixture to set up Vallox."""
-    await do_setup_vallox_entry(hass, default_host, default_name)
-
-
-async def do_setup_vallox_entry(hass: HomeAssistant, host: str, name: str) -> None:
-    """Set up the Vallox component."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            CONF_HOST: host,
-            CONF_NAME: name,
-        },
-    )
-    await hass.async_block_till_done()
-
-
-@pytest.fixture
-async def init_reconfigure_flow(
-    hass: HomeAssistant, mock_entry, setup_vallox_entry
-) -> tuple[MockConfigEntry, ConfigFlowResult]:
-    """Initialize a config entry and a reconfigure flow for it."""
-    result = await mock_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    # original entry
-    assert mock_entry.data["host"] == "192.168.100.50"
-
-    return (mock_entry, result)
-
-
-@pytest.fixture
-def default_metrics():
+def default_metrics() -> dict[str, MetricValue]:
     """Return default Vallox metrics."""
-    return {
-        "A_CYC_MACHINE_MODEL": 3,
-        "A_CYC_APPL_SW_VERSION_1": 2,
-        "A_CYC_APPL_SW_VERSION_2": 0,
-        "A_CYC_APPL_SW_VERSION_3": 16,
-        "A_CYC_UUID0": 5,
-        "A_CYC_UUID1": 6,
-        "A_CYC_UUID2": 7,
-        "A_CYC_UUID3": 8,
-        "A_CYC_UUID4": 9,
-        "A_CYC_UUID5": 10,
-        "A_CYC_UUID6": 11,
-        "A_CYC_UUID7": 12,
-        "A_CYC_BOOST_TIMER": 0,
-        "A_CYC_FIREPLACE_TIMER": 0,
-        "A_CYC_EXTRA_TIMER": 0,
-        "A_CYC_MODE": 0,
-        "A_CYC_STATE": 0,
-        "A_CYC_FILTER_CHANGED_YEAR": 24,
-        "A_CYC_FILTER_CHANGED_MONTH": 2,
-        "A_CYC_FILTER_CHANGED_DAY": 16,
-        "A_CYC_FILTER_CHANGE_INTERVAL": 120,
-        "A_CYC_TOTAL_FAULT_COUNT": 0,
-        "A_CYC_FAULT_CODE": 0,
-        "A_CYC_FAULT_ACTIVITY": 0,
-        "A_CYC_FAULT_FIRST_DATE": 0,
-        "A_CYC_FAULT_LAST_DATE": 0,
-        "A_CYC_FAULT_SEVERITY": 0,
-        "A_CYC_FAULT_COUNT": 0,
-        "A_CYC_HOME_SPEED_SETTING": 30,
-        "A_CYC_AWAY_SPEED_SETTING": 10,
-        "A_CYC_BOOST_SPEED_SETTING": 80,
-    }
+    return load_json_object_fixture("metrics.json", DOMAIN)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
+def mock_vallox_client(
+    default_metrics: dict[str, MetricValue],
+) -> Generator[AsyncMock]:
+    """Return a mocked Vallox client used by both the integration and config flow."""
+    with (
+        patch("homeassistant.components.vallox.Vallox", autospec=True) as mock_class,
+        patch("homeassistant.components.vallox.config_flow.Vallox", new=mock_class),
+    ):
+        client = mock_class.return_value
+        client.fetch_metric_data.return_value = MetricData(default_metrics)
+        yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.vallox.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def fetch_metric_data_mock(default_metrics):
     """Stub the Vallox fetch_metric_data method."""
     with patch(
