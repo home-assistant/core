@@ -55,6 +55,14 @@ class BoschFirmware(CoordinatorEntity[BoschFirmwareCoordinator], UpdateEntity):
             name=coordinator.cameras.data[camera_id].title,
         )
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Follow the installed version published by the camera list."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.cameras.async_add_listener(self.async_write_ha_state)
+        )
+
     @property
     @override
     def installed_version(self) -> str | None:

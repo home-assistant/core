@@ -33,12 +33,12 @@ AVAILABLE = FirmwareStatus("9.40.25", "9.40.30", False, False)
 
 
 @pytest.fixture(autouse=True)
-def mock_token_valid() -> Generator[None]:
+def mock_token_valid() -> Generator[AsyncMock]:
     """Keep the token valid while the tests advance time by hours."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
-    ):
-        yield
+    ) as mock:
+        yield mock
 
 
 async def test_up_to_date(
@@ -176,3 +176,44 @@ async def test_camera_added_and_removed(
     await hass.async_block_till_done()
     state = hass.states.get("update.hall_firmware")
     assert state is None or state.state == STATE_UNAVAILABLE
+
+
+async def test_installed_version_follows_camera_list(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new firmware version shows up without a firmware refresh."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_list_cameras.return_value = [replace(CAMERAS[0], firmware_version="9.40.30")]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["installed_version"] == "9.40.30"
+
+
+async def test_firmware_poll_uses_shared_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_firmware_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the firmware poll takes its token from the camera coordinator."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch.object(
+        mock_config_entry.runtime_data,
+        "async_get_access_token",
+        AsyncMock(return_value="shared-token"),
+    ) as mock_token:
+        freezer.tick(FIRMWARE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_token.assert_awaited()
+    assert mock_get_firmware_status.await_args.args[1] == "shared-token"

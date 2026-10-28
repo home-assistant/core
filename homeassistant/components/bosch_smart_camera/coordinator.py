@@ -100,6 +100,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self._sync_devices(data)
         return data
 
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token, refreshing it at most once at a time."""
+        await self._oauth_session.async_ensure_token_valid()
+        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
+
     async def async_get_snapshot(self, camera_id: str) -> bytes | None:
         """Return the image of the camera's latest event, cached briefly."""
         async with self._snapshot_locks[camera_id]:
@@ -153,7 +158,6 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
     """Fetch the firmware status of every camera of the account."""
 
     config_entry: BoschCameraConfigEntry
-    _oauth_session: OAuth2Session
     cameras: BoschCameraCoordinator
 
     def __init__(
@@ -173,21 +177,10 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
         self.cameras = cameras
 
     @override
-    async def _async_setup(self) -> None:
-        """Resolve the OAuth2 implementation."""
-        implementation = await async_get_config_entry_implementation(
-            self.hass, self.config_entry
-        )
-        self._oauth_session = OAuth2Session(
-            self.hass, self.config_entry, implementation
-        )
-
-    @override
     async def _async_update_data(self) -> dict[str, FirmwareStatus]:
         """Fetch the firmware status of the known cameras."""
-        await self._oauth_session.async_ensure_token_valid()
         session = async_get_clientsession(self.hass)
-        token = str(self._oauth_session.token[CONF_ACCESS_TOKEN])
+        token = await self.cameras.async_get_access_token()
         try:
             return {
                 camera_id: await get_firmware_status(session, token, camera_id)
