@@ -1232,6 +1232,8 @@
     'name_by_user': None,
     'serial_number': 'SERIAL0000004',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

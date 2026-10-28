@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'chargerid',
     'sw_version': 'v2.65',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

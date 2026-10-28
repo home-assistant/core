@@ -89,6 +89,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '0.14.4',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -182,6 +184,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '0.14.4',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

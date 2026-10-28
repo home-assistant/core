@@ -27,6 +27,8 @@
       'name_by_user': None,
       'serial_number': '1029384756',
       'sw_version': '1.5.1.5',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -55,6 +57,8 @@
       'name_by_user': None,
       'serial_number': '2938475610',
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -83,6 +87,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('sunsynk', '1029384756')]>,
     }),
   ])

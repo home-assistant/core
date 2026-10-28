@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'Dummy_Appliance_1',
     'sw_version': '31.17',
+    'translation_key': 'freezer',
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

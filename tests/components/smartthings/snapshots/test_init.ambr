@@ -29,6 +29,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -59,6 +61,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -89,6 +93,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -135,6 +141,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '000.059.00008',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -169,6 +177,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -199,6 +209,8 @@
     'name_by_user': None,
     'serial_number': 'a4367b4d2bbfde94',
     'sw_version': '4.5.20',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -229,6 +241,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -259,6 +273,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -289,6 +305,8 @@
     'name_by_user': None,
     'serial_number': 'D44867FFFEB37584',
     'sw_version': '2.00.09',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -319,6 +337,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -349,6 +369,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -383,6 +405,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -417,6 +441,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -447,6 +473,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -477,6 +505,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'ARTIK051_TVTL_18K_12200115',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -507,6 +537,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AVT-WW-TP1-22-TOUCHOTN_12240702',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -537,6 +569,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'ASM-KR-TP1-22-ACMB1M_16240426',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -567,6 +601,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'ASA-WW-TP1-24-PACCOM_14240625',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -597,6 +633,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AEH-WW-TP1-22-AE6000_17240903',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -627,6 +665,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -657,6 +697,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'ARTIK051_PRAC_20K_11230313',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -687,6 +729,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'ARA-WW-TP1-22-COMMON_11240702',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -717,6 +761,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -747,6 +793,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP2X-20-COOKTOP_40230515',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -777,6 +825,8 @@
     'name_by_user': None,
     'serial_number': 'B8C878DX900290H',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -807,6 +857,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AHD-WW-TP1-22-COMMON_40230419',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -837,6 +889,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP2-20-MICROWAVE-OTR_40230125',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -867,6 +921,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1X-21-OVEN_40211229',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -897,6 +953,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1-22-OVEN-1_40250221',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -927,6 +985,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -957,6 +1017,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20230413.181729',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -987,6 +1049,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'A-RFWW-TP2-21-COMMON_20220110',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1017,6 +1081,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20240616.213423',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1047,6 +1113,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'A-RFWW-TP1-22-REV1_20241030',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1077,6 +1145,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'A-RFWW-TP1-24-T4-COM_20250706',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1107,6 +1177,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1137,6 +1209,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20260120.215157',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1167,6 +1241,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1197,6 +1273,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20250317.1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1227,6 +1305,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20250317.1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1257,6 +1337,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '20250317.1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1287,6 +1369,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'A-VSWW-TP1-23-VS9700_51250514',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1317,6 +1401,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_DW_A51_20_COMMON_30230714',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1347,6 +1433,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_DW_TP1_21_COMMON_30250513',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1377,6 +1465,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'AMF-WW-TP1-22-COMMON_30230323',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1407,6 +1497,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_DF_TP2_20_COMMON_30230807',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1437,6 +1529,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1467,6 +1561,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1497,6 +1593,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_TP1_21_COMMON_30250508',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1527,6 +1625,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_TP2_20_COMMON_30230804',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1557,6 +1657,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1587,6 +1689,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'DA_WM_TP1_21_COMMON_30240927',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1617,6 +1721,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1647,6 +1753,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1677,6 +1785,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '250206213001',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1707,6 +1817,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '250206151734',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1737,6 +1849,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '250308073247',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1767,6 +1881,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1797,6 +1913,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1831,6 +1949,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1861,6 +1981,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1891,6 +2013,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1925,6 +2049,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1955,6 +2081,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1985,6 +2113,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2015,6 +2145,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2045,6 +2177,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.122.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2075,6 +2209,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.122.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2105,6 +2241,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'HW-Q80RWWB-1012.6',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2139,6 +2277,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2169,6 +2309,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.11',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
@@ -2199,6 +2341,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.7',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
@@ -2233,6 +2377,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
@@ -2263,6 +2409,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2293,6 +2441,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'V310XXU1AWK1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2323,6 +2473,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2357,6 +2509,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2387,6 +2541,8 @@
     'name_by_user': None,
     'serial_number': '510802250905784',
     'sw_version': '9.3.26',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('smartthings', '8ea8d2a4-4f93-4b49-94b8-c9cafd4ffedb')]>,
   })
 # ---
@@ -2421,6 +2577,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2451,6 +2609,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '6004971003',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2481,6 +2641,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'SKY40147',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2511,6 +2673,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2545,6 +2709,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2575,6 +2741,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2605,6 +2773,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2635,6 +2805,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.3.1 Build 240621 Rel.162048',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2665,6 +2837,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'SAT-iMX8M23WWC-1010.5',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2695,6 +2869,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'SAT-MT8532D24WWC-1016.0',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2725,6 +2901,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'latest',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2755,6 +2933,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': 'T-KTMAKUC-1290.3',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2785,6 +2965,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2815,6 +2997,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2845,6 +3029,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2879,6 +3065,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -2917,6 +3105,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '000.055.00005',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

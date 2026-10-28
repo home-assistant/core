@@ -34,6 +34,8 @@
     'name_by_user': None,
     'serial_number': '11223344',
     'sw_version': '0.6.8',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -72,6 +74,8 @@
     'name_by_user': None,
     'serial_number': '11223344',
     'sw_version': '0.6.8',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -110,6 +114,8 @@
     'name_by_user': None,
     'serial_number': '11223344',
     'sw_version': '0.6.8',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -148,6 +154,8 @@
     'name_by_user': None,
     'serial_number': '11223344',
     'sw_version': '0.6.8',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -186,6 +194,8 @@
     'name_by_user': None,
     'serial_number': '11223344',
     'sw_version': '0.6.8',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

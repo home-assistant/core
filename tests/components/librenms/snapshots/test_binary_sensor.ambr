@@ -27,6 +27,8 @@
       'name_by_user': None,
       'serial_number': 'C01yyyyyyxxxxxx',
       'sw_version': '22.0.1 MR-1-Build490',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -55,6 +57,8 @@
       'name_by_user': None,
       'serial_number': '7529936145YFW',
       'sw_version': 'CXNZJ.250.038',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -83,6 +87,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': '6.18.37-haos (Home Assistant OS 18.1)',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -111,6 +117,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
   ])

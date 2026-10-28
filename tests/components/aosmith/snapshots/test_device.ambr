@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'serial',
     'sw_version': '2.14',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

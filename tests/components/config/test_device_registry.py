@@ -82,6 +82,8 @@ async def test_list_devices(
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": None,
         },
         {
@@ -109,6 +111,8 @@ async def test_list_devices(
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": dev1,
         },
     ]
@@ -149,6 +153,8 @@ async def test_list_devices(
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": None,
         }
     ]
@@ -188,6 +194,8 @@ def _storage_device_v1_12(
         "primary_config_entry": primary_config_entry,
         "serial_number": None,
         "sw_version": None,
+        "translation_key": None,
+        "translation_placeholders": None,
         "via_device_id": None,
     }
 
@@ -1081,6 +1089,8 @@ async def test_list_devices_with_child_devices(
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": None,
         },
         {

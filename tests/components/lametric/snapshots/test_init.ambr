@@ -34,6 +34,8 @@
     'name_by_user': None,
     'serial_number': 'SA110405124500W00BS9',
     'sw_version': '2.2.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -72,6 +74,8 @@
     'name_by_user': None,
     'serial_number': 'SA52100000123TBNC',
     'sw_version': '3.0.13',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -106,6 +110,8 @@
     'name_by_user': None,
     'serial_number': 'SA52100000000TBNC',
     'sw_version': '3.2.7',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -144,6 +150,8 @@
     'name_by_user': None,
     'serial_number': 'SA000000000000W00BS9',
     'sw_version': '2.3.9',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

@@ -96,6 +96,10 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': 'n_ch_power_strip',
+    'translation_placeholders': dict({
+      'number_of_sockets': '2',
+    }),
     'via_device_id': None,
   })
 # ---
@@ -196,6 +200,10 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': 'n_ch_power_strip',
+    'translation_placeholders': dict({
+      'number_of_sockets': '2',
+    }),
     'via_device_id': None,
   })
 # ---

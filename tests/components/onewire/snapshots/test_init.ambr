@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -56,6 +58,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -86,6 +90,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -116,6 +122,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -146,6 +154,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('onewire', '1F.111111111111')]>,
   })
 # ---
@@ -176,6 +186,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -206,6 +218,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -236,6 +250,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -266,6 +282,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -296,6 +314,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -326,6 +346,8 @@
     'name_by_user': None,
     'serial_number': '222222222222',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -356,6 +378,8 @@
     'name_by_user': None,
     'serial_number': '222222222223',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -386,6 +410,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -416,6 +442,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -446,6 +474,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -476,6 +506,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -506,6 +538,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -536,6 +570,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -566,6 +602,8 @@
     'name_by_user': None,
     'serial_number': '222222222222',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -596,6 +634,8 @@
     'name_by_user': None,
     'serial_number': '333333333333',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -626,6 +666,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -656,6 +698,8 @@
     'name_by_user': None,
     'serial_number': '111111111111',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -686,6 +730,8 @@
     'name_by_user': None,
     'serial_number': '111111111112',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -716,6 +762,8 @@
     'name_by_user': None,
     'serial_number': '111111111113',
     'sw_version': '3.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

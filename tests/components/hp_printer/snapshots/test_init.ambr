@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'TH12A3B4CD',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

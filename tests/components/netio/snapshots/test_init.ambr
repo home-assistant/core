@@ -30,6 +30,8 @@
     'name_by_user': None,
     'serial_number': '24A42C39F87E',
     'sw_version': '3.1.4',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

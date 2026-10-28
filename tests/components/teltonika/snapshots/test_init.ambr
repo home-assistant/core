@@ -34,6 +34,8 @@
     'name_by_user': None,
     'serial_number': '1234567890',
     'sw_version': 'RUTX_R_00.07.17.3',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

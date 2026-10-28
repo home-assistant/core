@@ -30,6 +30,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('squeezebox', '12345678-1234-1234-1234-123456789012')]>,
   })
 # ---
@@ -68,6 +70,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

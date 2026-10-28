@@ -81,6 +81,8 @@
     'name_by_user': None,
     'serial_number': 'GW24L1A02987',
     'sw_version': '1.0.4 (229)',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -166,6 +168,8 @@
     'name_by_user': None,
     'serial_number': 'GW24L1A02987',
     'sw_version': '1.0.4 (229)',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

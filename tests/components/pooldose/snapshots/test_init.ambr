@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'TEST123456789',
     'sw_version': '1.30 (SW v2.10, API v1)',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'XXXXXXXXXXXX',
     'sw_version': '3.14.14 (31 May 2016) unknown',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -56,6 +58,8 @@
     'name_by_user': None,
     'serial_number': 'XXXX',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -86,6 +90,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -116,6 +122,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

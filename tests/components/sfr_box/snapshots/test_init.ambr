@@ -31,6 +31,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
   ])

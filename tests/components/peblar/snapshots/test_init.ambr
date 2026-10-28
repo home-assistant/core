@@ -34,6 +34,8 @@
     'name_by_user': None,
     'serial_number': '23-45-A4O-MOF',
     'sw_version': '1.6.1+1+WL-1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

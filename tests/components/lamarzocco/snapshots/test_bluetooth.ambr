@@ -44,6 +44,8 @@
     'name_by_user': None,
     'serial_number': 'GS012345',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -188,6 +190,8 @@
     'name_by_user': None,
     'serial_number': 'MR012345',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

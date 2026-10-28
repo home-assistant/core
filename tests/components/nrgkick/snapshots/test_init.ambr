@@ -30,6 +30,8 @@
     'name_by_user': None,
     'serial_number': 'TEST123456',
     'sw_version': '4.1.0.0',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

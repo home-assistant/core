@@ -31,6 +31,8 @@
       'name_by_user': None,
       'serial_number': '0987654329',
       'sw_version': 'PUR00111',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -63,6 +65,8 @@
       'name_by_user': None,
       'serial_number': '1234567890',
       'sw_version': 'SKY30046',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -91,6 +95,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': 'V17',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('sensibo', 'ABC999111')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -123,6 +129,8 @@
       'name_by_user': None,
       'serial_number': '0987654321',
       'sw_version': 'PUR00111',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
   ])

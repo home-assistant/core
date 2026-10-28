@@ -75,6 +75,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:30:d5:d4')]>,
   })
 # ---
@@ -105,6 +107,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:30:d5:d4')]>,
   })
 # ---
@@ -135,6 +139,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
@@ -165,6 +171,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -195,6 +203,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
@@ -225,6 +235,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
@@ -255,6 +267,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -285,6 +299,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -315,6 +331,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -345,6 +363,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -375,6 +395,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -405,6 +427,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -435,6 +459,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -465,6 +491,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -495,6 +523,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:16:0e')]>,
   })
 # ---
@@ -525,6 +555,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -555,6 +587,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:00:f1:62')]>,
   })
 # ---
@@ -585,6 +619,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -615,6 +651,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -645,6 +683,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
@@ -675,6 +715,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -705,6 +747,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -735,6 +779,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -765,6 +811,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -795,6 +843,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -825,6 +875,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -855,6 +907,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -885,6 +939,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -915,6 +971,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -945,6 +1003,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:60:40')]>,
   })
 # ---
@@ -975,6 +1035,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
@@ -1005,6 +1067,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
@@ -1035,6 +1099,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1065,6 +1131,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
@@ -1095,6 +1163,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1125,6 +1195,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '12:34:56:80:bb:26')]>,
   })
 # ---
@@ -1155,6 +1227,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1185,6 +1259,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1215,6 +1291,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1245,6 +1323,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('netatmo', '91763b24c43d3e344f424e8b')]>,
   })
 # ---
@@ -1275,6 +1355,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1305,6 +1387,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1335,6 +1419,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1365,6 +1451,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -1395,6 +1483,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

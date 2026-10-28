@@ -34,6 +34,8 @@
     'name_by_user': None,
     'serial_number': 'GS012345',
     'sw_version': 'v1.17',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

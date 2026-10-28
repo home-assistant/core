@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': '123a4b5c-678d-9e0f-a123-4b567c8d901e',
     'sw_version': '1.1.2',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

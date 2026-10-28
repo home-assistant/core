@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'W1122333044455',
     'sw_version': '1.7.1-stable',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -56,6 +58,8 @@
     'name_by_user': None,
     'serial_number': 'W2233304445566',
     'sw_version': '1.7.1-stable',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

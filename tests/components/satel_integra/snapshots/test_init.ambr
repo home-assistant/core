@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.24 (2025-03-12)',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

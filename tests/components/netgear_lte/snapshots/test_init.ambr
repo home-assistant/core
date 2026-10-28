@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'FFFFFFFFFFFFF',
     'sw_version': 'EC25AFFDR07A09M4G',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

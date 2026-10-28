@@ -30,6 +30,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.2.3',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -60,6 +62,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '4.54',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('homee', '00055511EECC')]>,
   })
 # ---

@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'echo_test_serial_number',
     'sw_version': 'echo_test_software_version',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

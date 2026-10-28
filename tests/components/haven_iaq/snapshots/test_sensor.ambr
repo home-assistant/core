@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'TEST-CAM-0001',
     'sw_version': 'test-firmware',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -674,6 +676,8 @@
     'name_by_user': None,
     'serial_number': 'TEST-RAM-0001',
     'sw_version': 'test-firmware',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

@@ -31,6 +31,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': '2.0.0 (7400)',
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
   ])

@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': '19239',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -56,6 +58,8 @@
     'name_by_user': None,
     'serial_number': '58717',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -86,6 +90,8 @@
     'name_by_user': None,
     'serial_number': '97358',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -116,6 +122,8 @@
     'name_by_user': None,
     'serial_number': '19239',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -146,6 +154,8 @@
     'name_by_user': None,
     'serial_number': '58717',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -176,6 +186,8 @@
     'name_by_user': None,
     'serial_number': '97358',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -206,6 +218,8 @@
     'name_by_user': None,
     'serial_number': '116682',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -236,6 +250,8 @@
     'name_by_user': None,
     'serial_number': '172555',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -266,6 +282,8 @@
     'name_by_user': None,
     'serial_number': '18894',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -296,6 +314,8 @@
     'name_by_user': None,
     'serial_number': '230952',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -326,6 +346,8 @@
     'name_by_user': None,
     'serial_number': '284942',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---
@@ -356,6 +378,8 @@
     'name_by_user': None,
     'serial_number': '328518',
     'sw_version': None,
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('wmspro', '01JWMSPRO00000000000000000')]>,
   })
 # ---

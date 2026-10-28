@@ -27,6 +27,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -55,6 +57,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': None,
     }),
     DeviceRegistryEntrySnapshot({
@@ -83,6 +87,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -111,6 +117,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -139,6 +147,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -167,6 +177,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -195,6 +207,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -223,6 +237,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -251,6 +267,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -279,6 +297,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -307,6 +327,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -335,6 +357,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
     DeviceRegistryEntrySnapshot({
@@ -363,6 +387,8 @@
       'name_by_user': None,
       'serial_number': None,
       'sw_version': None,
+      'translation_key': None,
+      'translation_placeholders': None,
       'via_device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     }),
   ])

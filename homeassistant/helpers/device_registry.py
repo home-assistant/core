@@ -82,7 +82,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 
 CLEANUP_DELAY = 10
 
@@ -703,6 +703,9 @@ class DeviceEntry(BaseDeviceEntry):
     # Suggested area is deprecated and will be removed from DeviceEntry in HA Core 2026.9.
     _suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
+    # Manufacturer and model are stored untranslated; the frontend translates them
+    translation_key: str | None = attr.ib(default=None)
+    translation_placeholders: Mapping[str, str] | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # Transient pending move target (config_entry_id, config_subentry_id) initiated by
     # add_config_entry_id and completed by a subsequent remove_config_entry_id. It is
@@ -791,6 +794,8 @@ class DeviceEntry(BaseDeviceEntry):
             "primary_config_entry": self.config_entry_id,
             "serial_number": self.serial_number,
             "sw_version": self.sw_version,
+            "translation_key": self.translation_key,
+            "translation_placeholders": self.translation_placeholders,
             "via_device_id": self.via_device_id,
         }
 
@@ -826,6 +831,8 @@ class DeviceEntry(BaseDeviceEntry):
                 "primary_config_entry": self.config_entry_id,
                 "serial_number": self.serial_number,
                 "sw_version": self.sw_version,
+                "translation_key": self.translation_key,
+                "translation_placeholders": self.translation_placeholders,
                 "via_device_id": self.via_device_id,
             }
         )
@@ -1413,6 +1420,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 4):
             # Version 3.4 adds child devices, introduced in 2026.9
             old_data.setdefault("child_devices", [])
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 5):
+            # Version 3.5 adds the translation key and placeholders, introduced in
+            # 2026.11
+            for device in old_data["devices"]:
+                device["translation_key"] = None
+                device["translation_placeholders"] = None
 
         if old_major_version > 3:
             raise NotImplementedError
@@ -2476,8 +2490,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         serial_number: str | UndefinedType | None = UNDEFINED,
         suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
-        translation_key: str | None = None,
-        translation_placeholders: Mapping[str, str] | None = None,
+        translation_key: str | UndefinedType | None = UNDEFINED,
+        translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
         **kwargs: Any,
     ) -> DeviceEntry:
@@ -2625,12 +2639,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         name = self._resolve_device_info_name(config_entry, device_info)
-        validated_fields["manufacturer"] = self._resolve_translated_field(
-            config_entry, device_info, "manufacturer", validated_fields["manufacturer"]
-        )
-        validated_fields["model"] = self._resolve_translated_field(
-            config_entry, device_info, "model", validated_fields["model"]
-        )
+        # Stored untranslated so conditions and selectors match in every language
+        translation_key = device_info.translation_key
+        translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
+        if translation_key is not UNDEFINED:
+            placeholders = device_info.translation_placeholders
+            translation_placeholders = (
+                None
+                if placeholders is UNDEFINED or placeholders is None
+                else dict(placeholders)
+            )
         entry_type = device_info.entry_type
         suggested_area = device_info.suggested_area
 
@@ -2862,6 +2880,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             has_composite_identifiers=has_composite_identifiers,
             new_config_subentry_id=config_subentry_id,
             suggested_area=suggested_area,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
             via_device_id=via_device_id,
             **identifiers_connections,
             **validated_fields,
@@ -2877,41 +2897,28 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def _resolve_device_info_name(
         self, config_entry: ConfigEntry, device_info: DeviceInfo | ChildDeviceInfo
     ) -> str | UndefinedType | None:
-        """Return the name of a device info, translated if it has a translation key."""
-        return self._resolve_translated_field(
-            config_entry, device_info, "name", device_info.name
-        )
+        """Return the name of a device info, translated if it has a translation key.
 
-    @callback
-    def _resolve_translated_field(
-        self,
-        config_entry: ConfigEntry,
-        device_info: DeviceInfo | ChildDeviceInfo,
-        field: Literal["manufacturer", "model", "name"],
-        value: str | UndefinedType | None,
-    ) -> str | UndefinedType | None:
-        """Return a device info field, translated if its translation key has it.
-
-        Without a translation of the field, the value is kept. A name without a
-        translation and without a value falls back to the translation key.
+        Without a translation, the given name is kept; without a given name, the
+        name falls back to the translation key.
         """
         translation_key = device_info.translation_key
         if not isinstance(translation_key, str) or not translation_key:
-            return value
+            return device_info.name
         translations = translation.async_get_cached_translations(
             self.hass, self.hass.config.language, "device", config_entry.domain
         )
-        translated_value = translations.get(
-            f"component.{config_entry.domain}.device.{translation_key}.{field}"
+        translated_name = translations.get(
+            f"component.{config_entry.domain}.device.{translation_key}.name"
         )
-        if translated_value is None:
-            if field == "name" and not isinstance(value, str):
-                return translation_key
-            return value
+        if translated_name is None:
+            if isinstance(device_info.name, str):
+                return device_info.name
+            return translation_key
         translation_placeholders = device_info.translation_placeholders
         return self._substitute_name_placeholders(
             config_entry.domain,
-            translated_value,
+            translated_name,
             {}
             if translation_placeholders is UNDEFINED or translation_placeholders is None
             else translation_placeholders,
@@ -3333,6 +3340,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Can be removed when suggested_area is removed from DeviceEntry
         suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
+        translation_key: str | UndefinedType | None = UNDEFINED,
+        translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
         """Private update device attributes.
@@ -3735,6 +3744,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("has_composite_identifiers", has_composite_identifiers),
             ("serial_number", serial_number),
             ("sw_version", sw_version),
+            ("translation_key", translation_key),
+            ("translation_placeholders", translation_placeholders),
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
@@ -4570,6 +4581,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     has_composite_identifiers=device["has_composite_identifiers"],
                     serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
+                    translation_key=device["translation_key"],
+                    translation_placeholders=device["translation_placeholders"],
                     via_device_id=device["via_device_id"],
                 )
 

@@ -26,6 +26,8 @@
     'name_by_user': None,
     'serial_number': 'BAT002',
     'sw_version': 'V1.20',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('zinvolt', 'ZVG011025120088')]>,
   })
 # ---
@@ -56,6 +58,8 @@
     'name_by_user': None,
     'serial_number': 'ZVG011025120088',
     'sw_version': 'V1.20',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

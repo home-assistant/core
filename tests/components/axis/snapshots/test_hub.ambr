@@ -30,6 +30,8 @@
     'name_by_user': None,
     'serial_number': '00:40:8c:12:34:56',
     'sw_version': '9.10.1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -64,6 +66,8 @@
     'name_by_user': None,
     'serial_number': '00:40:8c:12:34:56',
     'sw_version': '9.80.1',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

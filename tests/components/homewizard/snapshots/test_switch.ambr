@@ -80,6 +80,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -164,6 +166,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -249,6 +253,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -333,6 +339,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -417,6 +425,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -502,6 +512,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -586,6 +598,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -670,6 +684,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -754,6 +770,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '2.03',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -838,6 +856,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---
@@ -922,6 +942,8 @@
     'name_by_user': None,
     'serial_number': '5c2fafabcdef',
     'sw_version': '3.06',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': None,
   })
 # ---

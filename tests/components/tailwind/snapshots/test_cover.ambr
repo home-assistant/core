@@ -79,6 +79,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---
@@ -162,6 +164,8 @@
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '10.10',
+    'translation_key': None,
+    'translation_placeholders': None,
     'via_device_id': <DeviceEntry identifiers=[('tailwind', '_3c_e9_e_6d_21_84_')]>,
   })
 # ---

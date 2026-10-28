@@ -421,6 +421,8 @@ async def test_loading_from_storage(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": "serial_no",
                     "sw_version": "version",
+                    "translation_key": "translation_key",
+                    "translation_placeholders": {"placeholder": "value"},
                     "via_device_id": None,
                 }
             ],
@@ -502,6 +504,8 @@ async def test_loading_from_storage(
         name="name",
         serial_number="serial_no",
         sw_version="version",
+        translation_key="translation_key",
+        translation_placeholders={"placeholder": "value"},
     )
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
@@ -559,6 +563,8 @@ async def test_migration_from_1_1(
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                 },
                 # Invalid entry type
                 {
@@ -571,6 +577,8 @@ async def test_migration_from_1_1(
                     "model": None,
                     "name": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                 },
             ],
             "deleted_devices": [
@@ -584,6 +592,8 @@ async def test_migration_from_1_1(
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                 }
             ],
         },
@@ -648,6 +658,8 @@ async def test_migration_from_1_1(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -676,6 +688,8 @@ async def test_migration_from_1_1(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -730,6 +744,8 @@ async def test_migration_from_1_2(
                     "name": "name",
                     "name_by_user": None,
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -747,6 +763,8 @@ async def test_migration_from_1_2(
                     "name_by_user": None,
                     "name": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -811,6 +829,8 @@ async def test_migration_from_1_2(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -839,6 +859,8 @@ async def test_migration_from_1_2(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -876,6 +898,8 @@ async def test_migration_fom_1_3(
                     "name": "name",
                     "name_by_user": None,
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -893,6 +917,8 @@ async def test_migration_fom_1_3(
                     "name_by_user": None,
                     "name": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -957,6 +983,8 @@ async def test_migration_fom_1_3(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -985,6 +1013,8 @@ async def test_migration_fom_1_3(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1023,6 +1053,8 @@ async def test_migration_from_1_4(
                     "name_by_user": None,
                     "serial_number": None,
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1041,6 +1073,8 @@ async def test_migration_from_1_4(
                     "name": None,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1105,6 +1139,8 @@ async def test_migration_from_1_4(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1133,6 +1169,8 @@ async def test_migration_from_1_4(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1172,6 +1210,8 @@ async def test_migration_from_1_5(
                     "name_by_user": None,
                     "serial_number": None,
                     "sw_version": "version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1191,6 +1231,8 @@ async def test_migration_from_1_5(
                     "name": None,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1255,6 +1297,8 @@ async def test_migration_from_1_5(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1283,6 +1327,8 @@ async def test_migration_from_1_5(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1323,6 +1369,8 @@ async def test_migration_from_1_6(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1343,6 +1391,8 @@ async def test_migration_from_1_6(
                     "name": None,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1407,6 +1457,8 @@ async def test_migration_from_1_6(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1435,6 +1487,8 @@ async def test_migration_from_1_6(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1476,6 +1530,8 @@ async def test_migration_from_1_7(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1497,6 +1553,8 @@ async def test_migration_from_1_7(
                     "name": None,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1561,6 +1619,8 @@ async def test_migration_from_1_7(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 {
@@ -1589,6 +1649,8 @@ async def test_migration_from_1_7(
                     "primary_config_entry": "234567",
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1633,6 +1695,8 @@ async def test_migration_from_1_10(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1716,6 +1780,8 @@ async def test_migration_from_1_10(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1777,6 +1843,8 @@ async def test_migration_from_1_11(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1859,6 +1927,8 @@ async def test_migration_from_1_11(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": "new_version",
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -1956,6 +2026,8 @@ async def test_migration_from_1_12(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": "SERIAL",
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 # Composite device spanning several subentries of one config entry ->
@@ -1988,6 +2060,8 @@ async def test_migration_from_1_12(
                     "primary_config_entry": config_entry_3.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 # Single (config entry, subentry) device -> keeps its id, no legacy ref
@@ -2013,6 +2087,8 @@ async def test_migration_from_1_12(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -2147,6 +2223,8 @@ async def test_migration_detaches_via_device_of_dropped_parent(
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": None,
         }
         return device | overrides
@@ -2227,6 +2305,8 @@ async def test_migration_clears_via_device_self_reference(
                     "primary_config_entry": entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     # Buggy self-reference that the migration must clear
                     "via_device_id": device_id,
                 }
@@ -2291,6 +2371,8 @@ async def test_migration_clears_composite_via_device_self_reference(
                     "primary_config_entry": entry_1.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     # Buggy self-reference remapped to each split by the 3.2 migration
                     "via_device_id": composite_id,
                 }
@@ -2358,6 +2440,8 @@ async def test_migration_collapses_multi_subentry_device(
                     "primary_config_entry": entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -3527,6 +3611,8 @@ async def test_async_get_device_composite_reuses_pre_migration_id(
                     "primary_config_entry": entry_a.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -3725,6 +3811,8 @@ async def test_migration_drops_device_without_config_entries(
                     "primary_config_entry": None,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
                 # Normal single-config-entry device -> kept
@@ -3750,6 +3838,8 @@ async def test_migration_drops_device_without_config_entries(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 },
             ],
@@ -6380,6 +6470,8 @@ async def test_migration_remaps_via_device_id_to_split(
             "primary_config_entry": entries[0],
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": via,
         }
 
@@ -6497,6 +6589,8 @@ async def test_migration_from_3_1_rewrites_stale_via_device_id(
             "primary_config_entry": config_entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": via,
         }
 
@@ -6658,6 +6752,8 @@ async def test_migration_split_disabled_by_follows_config_entry(
                     "primary_config_entry": entry_enabled.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -6722,6 +6818,8 @@ async def test_disabled_by_not_reconciled_without_composite_split(
                     "primary_config_entry": entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -6828,6 +6926,8 @@ async def test_composite_lineage_not_restored_after_remove(
                     "primary_config_entry": entry_a.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -7928,6 +8028,8 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -8201,75 +8303,37 @@ async def test_device_name_without_translation(
 
 
 @pytest.mark.parametrize(
-    (
-        "translation_key",
-        "translations",
-        "placeholders",
-        "expected_manufacturer",
-        "expected_model",
-    ),
+    ("translation_key", "placeholders", "expected_placeholders"),
     [
-        (None, None, None, "Manufacturer Bla", "Model Bla"),
-        ("test_device", {}, None, "Manufacturer Bla", "Model Bla"),
-        (
+        pytest.param(None, None, None, id="no_translation_key"),
+        pytest.param("test_device", None, None, id="translation_key"),
+        pytest.param(
             "test_device",
-            {
-                "component.test.device.test_device.manufacturer": "English maker",
-                "component.test.device.test_device.model": "English model",
-            },
-            None,
-            "English maker",
-            "English model",
-        ),
-        (
-            "test_device",
-            {
-                "component.test.device.test_device.model": "English model",
-            },
-            None,
-            "Manufacturer Bla",
-            "English model",
-        ),
-        (
-            "test_device",
-            {
-                "component.test.device.test_device.manufacturer": "English maker",
-            },
-            None,
-            "English maker",
-            "Model Bla",
-        ),
-        (
-            "test_device",
-            {
-                "component.test.device.test_device.model": (
-                    "English model {placeholder}"
-                ),
-            },
             {"placeholder": "special"},
-            "Manufacturer Bla",
-            "English model special",
+            {"placeholder": "special"},
+            id="translation_key_with_placeholders",
         ),
     ],
 )
-async def test_device_manufacturer_model_translation(
+async def test_device_translation_key_stored(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     translation_key: str | None,
-    translations: dict[str, str] | None,
     placeholders: dict[str, str] | None,
-    expected_manufacturer: str,
-    expected_model: str,
+    expected_placeholders: dict[str, str] | None,
 ) -> None:
-    """Test device manufacturer and model are translated with the translation key."""
-    config_entry_1 = MockConfigEntry()
-    config_entry_1.add_to_hass(hass)
+    """Test the translation key is stored and manufacturer and model are not translated."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
-        return_value=translations,
+        return_value={
+            "component.test.device.test_device.manufacturer": "Translated maker",
+            "component.test.device.test_device.model": "Translated model",
+        },
     ):
-        entry1 = device_registry.async_get_or_create(
-            config_entry_id=config_entry_1.entry_id,
+        entry = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
             manufacturer="Manufacturer Bla",
             model="Model Bla",
@@ -8277,40 +8341,20 @@ async def test_device_manufacturer_model_translation(
             translation_key=translation_key,
             translation_placeholders=placeholders,
         )
-    assert entry1.manufacturer == expected_manufacturer
-    assert entry1.model == expected_model
-    assert entry1.name == "Device Bla"
+    assert entry.manufacturer == "Manufacturer Bla"
+    assert entry.model == "Model Bla"
+    assert entry.name == "Device Bla"
+    assert entry.translation_key == translation_key
+    assert entry.translation_placeholders == expected_placeholders
+    assert entry.dict_repr["translation_key"] == translation_key
+    assert entry.dict_repr["translation_placeholders"] == expected_placeholders
 
 
-async def test_device_manufacturer_model_translation_without_value(
+async def test_device_manufacturer_model_independent_of_language(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a translation supplies manufacturer and model when none is given."""
-    config_entry_1 = MockConfigEntry()
-    config_entry_1.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
-        return_value={
-            "component.test.device.test_device.manufacturer": "English maker",
-            "component.test.device.test_device.model": "English model",
-        },
-    ):
-        entry1 = device_registry.async_get_or_create(
-            config_entry_id=config_entry_1.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-            translation_key="test_device",
-        )
-    assert entry1.manufacturer == "English maker"
-    assert entry1.model == "English model"
-    assert entry1.name == "test_device"
-
-
-async def test_device_manufacturer_model_translation_follows_language(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test manufacturer and model are updated with the language on the next call."""
+    """Test manufacturer and model do not change with the language."""
 
     def async_get_cached_translations(
         hass: HomeAssistant,
@@ -8331,36 +8375,75 @@ async def test_device_manufacturer_model_translation_follows_language(
             },
         }[language]
 
-    config_entry_1 = MockConfigEntry()
-    config_entry_1.add_to_hass(hass)
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.helpers.device_registry.translation.async_get_cached_translations",
         side_effect=async_get_cached_translations,
     ):
         entry1 = device_registry.async_get_or_create(
-            config_entry_id=config_entry_1.entry_id,
+            config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-            manufacturer="English maker",
-            model="English model",
+            manufacturer="Manufacturer Bla",
+            model="Model Bla",
             name="Device Bla",
             translation_key="test_device",
         )
-        assert entry1.manufacturer == "English maker"
-        assert entry1.model == "English model"
-
         hass.config.language = "de"
         entry2 = device_registry.async_get_or_create(
-            config_entry_id=config_entry_1.entry_id,
+            config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-            manufacturer="English maker",
-            model="English model",
+            manufacturer="Manufacturer Bla",
+            model="Model Bla",
             name="Device Bla",
             translation_key="test_device",
         )
-    assert entry2.id == entry1.id
-    assert entry2.manufacturer == "German maker"
-    assert entry2.model == "German model"
-    assert entry2.name == "Device Bla"
+    assert entry2 is entry1
+    assert entry2.manufacturer == "Manufacturer Bla"
+    assert entry2.model == "Model Bla"
+
+
+async def test_device_translation_key_updated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the translation key is kept when omitted and cleared when set to None."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=connections,
+        name="Device Bla",
+        translation_key="test_device",
+        translation_placeholders={"placeholder": "special"},
+    )
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=connections,
+        name="Device Bla",
+    )
+    assert entry.translation_key == "test_device"
+    assert entry.translation_placeholders == {"placeholder": "special"}
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=connections,
+        name="Device Bla",
+        translation_key="other_device",
+    )
+    assert entry.translation_key == "other_device"
+    assert entry.translation_placeholders is None
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=connections,
+        name="Device Bla",
+        translation_key=None,
+    )
+    assert entry.translation_key is None
+    assert entry.translation_placeholders is None
 
 
 @pytest.mark.parametrize(
@@ -8936,6 +9019,8 @@ def _composite_device_storage(
                     "primary_config_entry": entry_a.entry_id,
                     "serial_number": "SERIAL",
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -9469,6 +9554,8 @@ async def test_loading_from_storage_with_legacy_duplicates(
             "primary_config_entry": entry_id,
             "serial_number": None,
             "sw_version": None,
+            "translation_key": None,
+            "translation_placeholders": None,
             "via_device_id": None,
         }
 
@@ -12430,6 +12517,8 @@ async def test_migration_3_3_to_3_4(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -12445,7 +12534,7 @@ async def test_migration_3_3_to_3_4(
     assert not registry.child_devices
 
     await flush_store(registry._store)
-    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == 4
+    assert hass_storage[dr.STORAGE_KEY]["minor_version"] == dr.STORAGE_VERSION_MINOR
     assert hass_storage[dr.STORAGE_KEY]["data"]["child_devices"] == []
 
 
@@ -12799,6 +12888,8 @@ async def test_async_cleanup_removes_child_device_with_stale_config_entry(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
@@ -13234,6 +13325,8 @@ async def test_legacy_undefined_disabled_deleted_device_restored_as_child(
                     "primary_config_entry": mock_config_entry.entry_id,
                     "serial_number": None,
                     "sw_version": None,
+                    "translation_key": None,
+                    "translation_placeholders": None,
                     "via_device_id": None,
                 }
             ],
