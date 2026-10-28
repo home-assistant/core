@@ -43,7 +43,11 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      The tests patch methods of the library instead of using a mocked
+      library client. They should be rewritten to use a mock client.
 
   # Gold
   devices: done
