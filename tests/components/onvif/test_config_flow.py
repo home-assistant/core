@@ -1138,7 +1138,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
             "homeassistant.components.onvif.config_flow.get_device"
         ) as mock_onvif_camera,
         patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
-        patch("homeassistant.components.onvif.async_setup_entry", return_value=True),
+        patch("homeassistant.components.onvif.async_setup_entry", return_value=None),
     ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         setup_mock_device(mock_device)
@@ -1207,7 +1207,7 @@ async def test_reconfigure_flow_errors(
             "homeassistant.components.onvif.config_flow.get_device"
         ) as mock_onvif_camera,
         patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
-        patch("homeassistant.components.onvif.async_setup_entry", return_value=True),
+        patch("homeassistant.components.onvif.async_setup_entry", return_value=None),
     ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True, **camera_kwargs)
         setup_mock_device(mock_device)
