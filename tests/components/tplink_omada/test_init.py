@@ -343,6 +343,7 @@ async def test_cleanup_preserves_trackers_when_known_clients_fetch_fails(
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cleanup keeps trackers when the known clients fetch fails."""
@@ -362,6 +363,7 @@ async def test_cleanup_preserves_trackers_when_known_clients_fetch_fails(
     site_client.get_known_clients.side_effect = OmadaClientException("boom")
     await _async_poll_known_clients(hass, freezer)
     site_client.get_known_clients.assert_called()
+    assert "Error fetching Omada API Data - KnownClientsList data" in caplog.text
     assert entity_registry.async_get(stale_tracker.entity_id) is not None
 
     # A successful fetch lets the next poll remove the stale tracker
