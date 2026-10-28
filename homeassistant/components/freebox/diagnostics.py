@@ -9,12 +9,14 @@ from .router import FreeboxConfigEntry
 STORAGE_KEYS_TO_OMIT = {
     "dev_uuid",
     "label",
+    "name",
     "path",
     "serial",
     "set_name",
     "set_uuid",
     "uuid",
 }
+HOME_ENDPOINTS_TO_OMIT = {"disk", "pin"}
 
 
 def _omit(data: Any, keys: set[str]) -> Any:
@@ -43,8 +45,8 @@ def _home_node(node: dict[str, Any]) -> dict[str, Any]:
                 "value": endpoint.get("value"),
             }
             for endpoint in node.get("show_endpoints", [])
-            # The alarm PIN code is exposed as an endpoint value
-            if endpoint["name"] != "pin"
+            # Alarm PIN code and camera recording volume label
+            if endpoint["name"] not in HOME_ENDPOINTS_TO_OMIT
         ],
     }
 
