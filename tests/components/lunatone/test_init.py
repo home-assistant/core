@@ -436,7 +436,11 @@ async def test_sensors_coordinator_removes_stale_device(
     unique_id = mock_config_entry.unique_id
     assert unique_id is not None
 
-    mock_lunatone_sensors.data.sensors.pop()
+    mock_lunatone_sensors.data.sensors = [
+        sensor
+        for sensor in mock_lunatone_sensors.data.sensors
+        if sensor.dali_sensor_address is None
+    ]
 
     freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)

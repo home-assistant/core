@@ -1,18 +1,27 @@
 """Test ZHA entities."""
 
 from collections.abc import Callable, Coroutine
+from typing import Any
 
 from pytest_homeassistant.common import MockConfigEntry
+from zigpy.application import ControllerApplication
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.const import DOMAIN
-from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_gateway, get_zha_gateway_proxy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from .conftest import (
+    FIXTURE_GRP_WITH_ENTITIES_ID,
+    FIXTURE_GRP_WITH_ENTITIES_NAME,
+    SIG_EP_INPUT,
+    SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
+    SIG_EP_TYPE,
+)
 
 
 async def test_device_registry_via_device(
@@ -96,3 +105,42 @@ async def test_device_registry_via_device_without_entities(
     )
     assert reg_device is not None
     assert reg_device.via_device_id == coordinator_device.id
+
+
+async def test_group_entity_name_and_device_info(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that group entities use group device info and return None for name."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    # Find the group entity
+    entity_entries = er.async_entries_for_device(
+        entity_registry, group_proxy.device_id, include_disabled_entities=True
+    )
+    assert len(entity_entries) > 0
+
+    # The entity should use the group device name (friendly name = group name)
+    entity = hass.states.get(entity_entries[0].entity_id)
+    assert entity is not None
+    assert entity.name == FIXTURE_GRP_WITH_ENTITIES_NAME
+
+    # Verify device info points to the group device
+    device = device_registry.async_get(group_proxy.device_id)
+    assert device is not None
+    config_entry_id = gateway_proxy.config_entry.entry_id
+    expected_identifier = (
+        f"{config_entry_id}_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}"
+    )
+    assert group_proxy.device_identifier == expected_identifier
+    assert ("zha", expected_identifier) in device.identifiers
+    assert device.manufacturer == "Zigbee"
+    assert device.model == "Group"
+    assert device.entry_type == dr.DeviceEntryType.SERVICE

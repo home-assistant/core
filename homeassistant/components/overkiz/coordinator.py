@@ -27,6 +27,8 @@ from pyoverkiz.models import (
     DeviceStateChangedEvent,
     ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    Gateway,
+    GatewayEvent,
     Place,
 )
 
@@ -80,6 +82,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         *,
         client: OverkizClient,
         devices: list[Device],
+        gateways: list[Gateway],
         places: Place | None,
     ) -> None:
         """Initialize global data updater."""
@@ -95,6 +98,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.executions: dict[str, set[OverkizDeviceCommand]] = {}
+        # A gateway reports its devices' states from cache while it is
+        # unreachable, so nothing in the device payload reveals the outage.
+        self.unreachable_gateways: set[str] = {
+            gateway.gateway_id for gateway in gateways if gateway.alive is False
+        }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -208,6 +216,22 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
 
 
+@EVENT_HANDLERS.register(EventName.GATEWAY_DOWN)
+async def on_gateway_down(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway down event."""
+    coordinator.unreachable_gateways.add(event.gateway_id)
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_ALIVE)
+async def on_gateway_alive(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway alive event."""
+    coordinator.unreachable_gateways.discard(event.gateway_id)
+
+
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
 async def on_device_available(
     coordinator: OverkizDataUpdateCoordinator, event: DeviceEvent
@@ -245,6 +269,12 @@ async def on_device_state_changed(
     """Handle device state changed event."""
     if event.device_url not in coordinator.devices:
         return
+
+    # GATEWAY_ALIVE is the only other way out of unreachable_gateways, so a
+    # missed one would strand every entity on that gateway indefinitely.
+    coordinator.unreachable_gateways.discard(
+        coordinator.devices[event.device_url].identifier.gateway_id
+    )
 
     for state in event.device_states:
         device = coordinator.devices[event.device_url]
