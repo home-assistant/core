@@ -32,6 +32,7 @@ from homematicip.device import (
     TiltVibrationSensor,
     WallMountedThermostatPro,
     WaterSensor,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -230,6 +231,20 @@ WALL_THERMOSTAT_DESCRIPTIONS: tuple[
     ),
 )
 
+WATER_SUPPLY_STOP_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WaterSupplyStop],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="water_alarm",
+        translation_key="water_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        channel_value_fn=lambda channel: channel.waterAlarmActive,
+        channel=1,
+        channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
+    ),
+)
+
 BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
@@ -252,6 +267,7 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
     (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
     (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
     (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
+    (WaterSupplyStop,): WATER_SUPPLY_STOP_DESCRIPTIONS,
 }
 
 

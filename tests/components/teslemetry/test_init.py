@@ -57,6 +57,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.lock import LockState
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -79,6 +80,7 @@ from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    LABS_CHARGE_ON_SOLAR_FEATURE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -2236,6 +2238,7 @@ def test_stream_topic_allowlist() -> None:
         "site_info",
         "tariff_content_v2",
         "energy_totals",
+        "wall_connector_totals",
     ]
 
 
@@ -3141,6 +3144,52 @@ async def test_user_subentry_persists_across_reload(hass: HomeAssistant) -> None
     assert len(subentries) == 1
     assert subentries[0].subentry_id == subentry_id
     assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+
+async def test_labs_charge_on_solar_toggle_triggers_reload(
+    hass: HomeAssistant,
+) -> None:
+    """Test labs charge-on-solar feature toggle schedules an integration reload."""
+    assert await async_setup_component(hass, "labs", {})
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await async_update_preview_feature(
+            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_charge_on_solar_settings_removed_with_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the charge-on-solar settings are stored per entry and removed with it."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, True)
+    entry = await setup_platform(hass, [Platform.NUMBER])
+    storage_key = f"{DOMAIN}.charge_on_solar.{entry.entry_id}"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+        blocking=True,
+    )
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[storage_key]["data"] == {
+        VIN: {"enabled": None, "lower_limit": 35, "charge_limit_soc": None}
+    }
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert storage_key not in hass_storage
 
 
 # A paired site's local live_status reading.

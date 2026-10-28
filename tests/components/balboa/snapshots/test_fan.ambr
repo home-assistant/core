@@ -9,7 +9,7 @@
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('balboa', 'ef:ef:ef:c0:ff:ee')]>,
     'disabled_by': None,

@@ -6,7 +6,7 @@ from blockchain import exchangerates
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS
+from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -15,8 +15,8 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import API_ERRORS
 from .const import DEFAULT_CURRENCY, DOMAIN, INTEGRATION_TITLE
+from .coordinator import API_ERRORS
 
 
 def _get_currencies() -> list[str]:
@@ -83,8 +83,5 @@ class BitcoinConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=INTEGRATION_TITLE,
-            data={
-                CONF_CURRENCY: currency,
-                CONF_DISPLAY_OPTIONS: import_data[CONF_DISPLAY_OPTIONS],
-            },
+            data={CONF_CURRENCY: currency},
         )

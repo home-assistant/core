@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from zha.application.const import ZHA_EVENT
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 import zigpy.profiles.zha
 from zigpy.zcl.clusters import general
 
@@ -52,7 +52,7 @@ def sensor_platform_only():
 async def mock_devices(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ):
     """IAS device fixture."""
 

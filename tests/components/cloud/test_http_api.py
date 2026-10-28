@@ -2710,22 +2710,27 @@ async def test_login_view_dispatch_event(
     assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "login"}
 
 
-async def test_logout_view_dispatch_event(
+@pytest.mark.usefixtures("setup_cloud")
+async def test_cloud_events_server_initiated_logout(
+    hass: HomeAssistant,
     cloud: MagicMock,
-    setup_cloud: None,
-    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test dispatching event while logging out."""
-    cloud_client = await hass_client()
+    """Test a logout started by hass_nabucasa itself is pushed to subscribers."""
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/subscribe_events"})
+    response = await client.receive_json()
+    assert response["success"]
 
-    with patch(
-        "homeassistant.components.cloud.http_api.async_dispatcher_send"
-    ) as async_dispatcher_send_mock:
-        await cloud_client.post("/api/cloud/logout")
+    # Like the IoT logout action or a failed token refresh, not via the logout view
+    await cloud.logout()
+    # The pong ends the wait if no event was sent
+    await client.send_json({"id": 6, "type": "ping"})
 
-    assert async_dispatcher_send_mock.call_count == 1
-    assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
-    assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
+    event = await client.receive_json()
+    assert event["id"] == 5
+    assert event["event"] == {"type": "logout"}
+    assert await client.receive_json() == {"id": 6, "type": "pong"}
 
 
 @pytest.mark.usefixtures("cloud", "setup_cloud")
@@ -2756,6 +2761,10 @@ async def test_cloud_events_subscription(
     event = await client.receive_json()
     assert event["id"] == 5
     assert event["event"] == {"type": "logout"}
+
+    # The pong is the next message, so the logout event was sent only once
+    await client.send_json({"id": 6, "type": "ping"})
+    assert await client.receive_json() == {"id": 6, "type": "pong"}
 
 
 @pytest.mark.usefixtures("setup_cloud")

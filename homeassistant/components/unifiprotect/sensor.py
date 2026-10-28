@@ -49,11 +49,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
-    EventEntityMixin,
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectEventMixin,
     ProtectNVREntity,
     T,
     async_all_device_entities,
@@ -91,13 +89,6 @@ class ProtectSensorEntityDescription(
     def _rounded_value(self, precision: int, getter: Callable[[T], Any], obj: T) -> Any:
         """Round value to precision if set."""
         return None if (v := getter(obj)) is None else round(v, precision)
-
-
-@dataclass(frozen=True, kw_only=True)
-class ProtectSensorEventEntityDescription(
-    ProtectEventMixin[T], SensorEntityDescription
-):
-    """Describes UniFi Protect Sensor entity."""
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -224,8 +215,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
-        ufp_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_value="mic_volume",
+        ufp_public_enabled_fn=operator.attrgetter("feature_flags.has_mic"),
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -248,7 +239,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value="lcd_message.text",
+        ufp_public_value="lcd_message_text",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -909,14 +900,3 @@ class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):
 
 class ProtectNVRSensor(BaseProtectSensor, ProtectNVREntity):
     """A Ubiquiti UniFi Protect Sensor."""
-
-
-class ProtectEventSensor(EventEntityMixin, SensorEntity):
-    """A UniFi Protect Device Sensor with access tokens."""
-
-    entity_description: ProtectSensorEventEntityDescription
-    _state_attrs = (
-        "_attr_available",
-        "_attr_native_value",
-        "_attr_extra_state_attributes",
-    )
