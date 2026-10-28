@@ -3,6 +3,7 @@
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import suppress
 from functools import wraps
+from time import monotonic
 from typing import Any, Concatenate, override
 
 from aioseafile import (
@@ -44,6 +45,9 @@ from .coordinator import SeafileConfigEntry
 # the request body size, such as Cloudflare (100 MB).
 UPLOAD_CHUNK_SIZE = 50 * 1024 * 1024
 METADATA_SUFFIX = "_meta.json"
+# Lookups for download and delete reuse the listing, which downloads every
+# metadata file.
+CACHE_TTL = 300
 
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -122,12 +126,22 @@ class SeafileBackupAgent(BackupAgent):
         self._path: str = subentry.data[CONF_BACKUP_PATH]
         self.name = f"{entry.title} - {subentry.title}"
         self.unique_id = subentry.subentry_id
+        self._cache: dict[str, tuple[AgentBackup, str]] = {}
+        self._cache_expiration = 0.0
 
     def _file_path(self, name: str) -> str:
         return f"{self._path.rstrip('/')}/{name}"
 
     async def _async_list_backups(self) -> dict[str, tuple[AgentBackup, str]]:
         """Return the backups with the base name of their files."""
+        if monotonic() < self._cache_expiration:
+            return self._cache
+        self._cache = await self._async_read_backups()
+        self._cache_expiration = monotonic() + CACHE_TTL
+        return self._cache
+
+    async def _async_read_backups(self) -> dict[str, tuple[AgentBackup, str]]:
+        """Read the backups in the folder from the server."""
         try:
             listing = await self._client.get_directory(
                 self._library_id, self._path, entry_type=DirentType.FILE
@@ -135,10 +149,13 @@ class SeafileBackupAgent(BackupAgent):
         except SeafileNotFoundError:
             # The folder is created with the first backup.
             return {}
+        names = {entry.name for entry in listing.entries}
+        # A backup is only complete when both of its files are there.
         base_names = [
             entry.name.removesuffix(METADATA_SUFFIX)
             for entry in listing.entries
             if entry.name.endswith(METADATA_SUFFIX)
+            and f"{entry.name.removesuffix(METADATA_SUFFIX)}.tar" in names
         ]
         results = await gather_with_limited_concurrency(
             4,
@@ -193,6 +210,11 @@ class SeafileBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup and its metadata."""
         tar_name, metadata_name = suggested_filenames(backup)
+        base_name = tar_name.removesuffix(".tar")
+        replaces_backup = any(
+            existing == base_name
+            for _, existing in (await self._async_list_backups()).values()
+        )
         if self._path != "/":
             await self._client.create_directory(self._library_id, self._path)
         await self._client.upload_file(
@@ -215,12 +237,15 @@ class SeafileBackupAgent(BackupAgent):
                 replace=True,
             )
         except SeafileError:
-            # Don't leave a backup file behind that is never listed.
-            with suppress(SeafileError):
-                await self._client.delete_items(
-                    self._library_id, self._path, [tar_name]
-                )
+            # Don't leave a backup file behind that is never listed, but keep
+            # one that belongs to an existing backup.
+            if not replaces_backup:
+                with suppress(SeafileError):
+                    await self._client.delete_items(
+                        self._library_id, self._path, [tar_name]
+                    )
             raise
+        self._cache[backup.backup_id] = (backup, base_name)
 
     @handle_backup_errors
     @override
@@ -260,6 +285,7 @@ class SeafileBackupAgent(BackupAgent):
             self._path,
             [f"{base_name}.tar", f"{base_name}{METADATA_SUFFIX}"],
         )
+        self._cache.pop(backup_id, None)
 
     @handle_backup_errors
     @override

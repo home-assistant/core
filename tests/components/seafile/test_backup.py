@@ -4,10 +4,15 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, _Call, call, patch
 
 from aiohttp import ClientPayloadError
-from aioseafile import SeafileConnectionError, SeafileNotFoundError, SeafileTimeoutError
+from aioseafile import (
+    DirectoryListing,
+    SeafileConnectionError,
+    SeafileNotFoundError,
+    SeafileTimeoutError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -15,6 +20,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.components.seafile.backup import (
+    CACHE_TTL,
     UPLOAD_CHUNK_SIZE,
     async_register_backup_agents_listener,
 )
@@ -165,6 +171,12 @@ async def test_agents_list_backups(
             backup_listing(f"{BACKUP_BASE_NAME}.tar"),
             id="metadata_missing",
         ),
+        pytest.param(
+            "get_directory",
+            "return_value",
+            backup_listing(f"{BACKUP_BASE_NAME}_meta.json"),
+            id="backup_file_missing",
+        ),
     ],
 )
 async def test_agents_list_backups_empty(
@@ -252,18 +264,37 @@ async def test_agents_upload_to_library_root(
     assert mock_seafile_client.upload_file.await_args_list[0].args[1] == "/"
 
 
+@pytest.mark.parametrize(
+    ("listing", "expected_deletes"),
+    [
+        pytest.param(
+            backup_listing(),
+            [call(LIBRARY_ID, BACKUP_PATH, [f"{BACKUP_BASE_NAME}.tar"])],
+            id="new_backup",
+        ),
+        pytest.param(
+            backup_listing(f"{BACKUP_BASE_NAME}.tar", f"{BACKUP_BASE_NAME}_meta.json"),
+            [],
+            id="replaced_backup",
+        ),
+    ],
+)
 async def test_agents_upload_metadata_failed(
     hass_client: ClientSessionGenerator,
     mock_seafile_client: AsyncMock,
+    listing: DirectoryListing,
+    expected_deletes: list[_Call],
 ) -> None:
-    """Test the backup file is removed when its metadata can't be stored."""
+    """Test a new backup file is removed when its metadata can't be stored.
+
+    An existing backup that was uploaded again is kept.
+    """
+    mock_seafile_client.get_directory.return_value = listing
     mock_seafile_client.upload_file.side_effect = [None, SeafileConnectionError]
 
     await _upload(hass_client)
 
-    mock_seafile_client.delete_items.assert_awaited_once_with(
-        LIBRARY_ID, BACKUP_PATH, [f"{BACKUP_BASE_NAME}.tar"]
-    )
+    assert mock_seafile_client.delete_items.await_args_list == expected_deletes
 
 
 async def test_agents_upload(
@@ -405,6 +436,32 @@ async def test_agents_delete(
         BACKUP_PATH,
         [f"{BACKUP_BASE_NAME}.tar", f"{BACKUP_BASE_NAME}_meta.json"],
     )
+
+
+async def test_agents_list_cached(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_seafile_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the listing is cached and kept up to date by deletes."""
+    await _ws_request(hass, hass_ws_client, {"type": "backup/info"})
+    await _ws_request(
+        hass,
+        hass_ws_client,
+        {"type": "backup/delete", "backup_id": TEST_BACKUP.backup_id},
+    )
+    result = await _ws_request(hass, hass_ws_client, {"type": "backup/info"})
+
+    assert result["backups"] == []
+    assert mock_seafile_client.get_directory.await_count == 1
+
+    freezer.tick(CACHE_TTL + 1)
+    result = await _ws_request(hass, hass_ws_client, {"type": "backup/info"})
+
+    # The mocked server still lists the backup.
+    assert len(result["backups"]) == 1
+    assert mock_seafile_client.get_directory.await_count == 2
 
 
 async def test_agents_delete_not_found(
