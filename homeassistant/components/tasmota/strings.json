@@ -17,6 +17,14 @@
       }
     }
   },
+  "exceptions": {
+    "camera_image_error": {
+      "message": "An error occurred while getting a new camera image from {entity_id}"
+    },
+    "camera_image_timeout": {
+      "message": "Timeout getting camera image from {entity_id}"
+    }
+  },
   "issues": {
     "topic_duplicated": {
       "description": "Several Tasmota devices are sharing the topic {topic}.\n\nTasmota devices with this problem: {offenders}.",

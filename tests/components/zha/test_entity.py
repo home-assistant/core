@@ -5,7 +5,7 @@ from typing import Any
 
 from pytest_homeassistant.common import MockConfigEntry
 from zigpy.application import ControllerApplication
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -28,7 +28,7 @@ async def test_device_registry_via_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a ZHA device links to the coordinator device via via_device_id."""
@@ -69,7 +69,7 @@ async def test_device_registry_via_device_without_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a ZHA device without entities links to the coordinator device."""

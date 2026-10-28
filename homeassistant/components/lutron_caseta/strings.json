@@ -82,8 +82,14 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Connection failed to {host}"
+    },
     "invalid_certificate": {
       "message": "Invalid certificate used to connect to bridge at {host}"
+    },
+    "setup_timeout": {
+      "message": "Timed out on {step} for {host}"
     }
   }
 }
