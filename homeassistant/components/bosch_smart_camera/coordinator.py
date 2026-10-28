@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import defaultdict
+from dataclasses import replace
 from datetime import timedelta
 import logging
 import time
@@ -14,6 +15,11 @@ from bosch_shc_camera_client.cameras import (
     Camera,
     get_latest_event_image,
     list_cameras,
+)
+from bosch_shc_camera_client.cloud import cloud_set_privacy_mode
+from bosch_shc_camera_client.states import (
+    CameraAccountStates,
+    get_camera_account_states,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -58,6 +64,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self.account_states: dict[str, CameraAccountStates] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -75,11 +82,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
     async def _async_update_data(self) -> dict[str, Camera]:
         """Fetch the camera list."""
         await self._oauth_session.async_ensure_token_valid()
+        session = async_get_clientsession(self.hass)
+        token = str(self._oauth_session.token[CONF_ACCESS_TOKEN])
         try:
-            cameras = await list_cameras(
-                async_get_clientsession(self.hass),
-                str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
-            )
+            cameras = await list_cameras(session, token)
+            self.account_states = await get_camera_account_states(session, token)
         except BoschCameraAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
@@ -118,6 +125,25 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
+
+    async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
+        """Switch the privacy mode of a camera and update the cached state."""
+        await self._oauth_session.async_ensure_token_valid()
+        result = await cloud_set_privacy_mode(
+            async_get_clientsession(self.hass),
+            str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+            camera_id,
+            enabled,
+        )
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="privacy_mode_failed"
+            )
+        # The camera list is only polled every few minutes.
+        self.account_states[camera_id] = replace(
+            self.account_states[camera_id], privacy_mode=enabled
+        )
+        self.async_update_listeners()
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
         """Remove devices of cameras no longer in the account, refresh the rest."""
