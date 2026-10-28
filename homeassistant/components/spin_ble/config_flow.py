@@ -137,7 +137,6 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
             # lose the charger until it is added by hand.
             errors["base"] = "cannot_connect"
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={"name": self._serial},
