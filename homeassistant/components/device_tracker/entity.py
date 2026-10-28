@@ -600,7 +600,7 @@ class ScannerEntity(
         """Describe the tracked device for an integration which does not.
 
         To be removed in HA Core 2027.5, integrations should provide device info
-        with the MAC address of the tracked device.
+        with the MAC address of the tracked device as a connection.
         """
         if TYPE_CHECKING:
             assert self.mac_address is not None
