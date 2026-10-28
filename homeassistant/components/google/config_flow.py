@@ -223,9 +223,14 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(primary_calendar.id)
 
         if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
+            reconfigure_entry = self._get_reconfigure_entry()
+            # Legacy entries get their unique ID on a successful setup
+            if reconfigure_entry.unique_id:
+                self._abort_if_unique_id_mismatch()
+            else:
+                self._abort_if_unique_id_configured()
             return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data=data
+                reconfigure_entry, unique_id=primary_calendar.id, data=data
             )
 
         if found := self.hass.config_entries.async_entry_for_domain_unique_id(
