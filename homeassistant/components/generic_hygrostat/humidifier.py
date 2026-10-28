@@ -54,7 +54,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import HYGROSTAT_SCHEMA
+from .const import (
     CONF_AWAY_FIXED,
     CONF_AWAY_HUMIDITY,
     CONF_DRY_TOLERANCE,
@@ -68,7 +69,6 @@ from . import (
     CONF_STALE_DURATION,
     CONF_TARGET_HUMIDITY,
     CONF_WET_TOLERANCE,
-    HYGROSTAT_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
