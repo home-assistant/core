@@ -1060,3 +1060,121 @@ async def test_reauth(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+
+
+def _checksum_error() -> DeviceException:
+    """Return a device exception caused by a wrong token."""
+    error = DeviceException({})
+    error.__cause__ = ChecksumError({})
+    return error
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_CLOUD_USERNAME: None,
+            const.CONF_CLOUD_PASSWORD: None,
+            const.CONF_CLOUD_COUNTRY: None,
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the host and token."""
+    new_token = "abcdefabcdefabcdefabcdefabcdefab"
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: new_token},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        const.CONF_CLOUD_USERNAME: None,
+        const.CONF_CLOUD_PASSWORD: None,
+        const.CONF_CLOUD_COUNTRY: None,
+        const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+        CONF_HOST: TEST_HOST2,
+        CONF_TOKEN: new_token,
+        CONF_MODEL: TEST_MODEL,
+        CONF_MAC: TEST_MAC,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(DeviceException({}), "cannot_connect", id="cannot_connect"),
+        pytest.param(_checksum_error(), "wrong_token", id="wrong_token"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    side_effect: Exception | type[Exception],
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == TEST_HOST2
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the host points to another device."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=get_mock_info(mac_address=TEST_MAC2),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST2, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_reconfigure_entry.data[CONF_HOST] == TEST_HOST

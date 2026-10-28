@@ -328,6 +328,45 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="select", data_schema=select_schema, errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host and token."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            connect_device_class = ConnectXiaomiDevice(self.hass)
+            try:
+                await connect_device_class.async_connect_device(
+                    user_input[CONF_HOST], user_input[CONF_TOKEN]
+                )
+            except AuthException:
+                errors["base"] = "wrong_token"
+            except SetupException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception in connect Xiaomi device")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(
+                    format_mac(connect_device_class.device_info.mac_address)
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DEVICE_CONFIG, {CONF_HOST: (user_input or entry.data)[CONF_HOST]}
+            ),
+            errors=errors,
+            description_placeholders={
+                "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
+            },
+        )
+
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
