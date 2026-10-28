@@ -116,47 +116,12 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the entity-based configuration step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            location_entity = user_input[CONF_LOCATION_ENTITY]
-
-            registry = er.async_get(self.hass)
-            entity_entry = registry.async_get(location_entity)
-            if entity_entry is None:
-                errors["base"] = "entity_not_found"
-            elif entity_entry.disabled_by is not None:
-                errors["base"] = "entity_disabled"
-            else:
-                state = self.hass.states.get(location_entity)
-                if (
-                    state is None
-                    or (coordinates := get_state_coordinates(state)) is None
-                ):
-                    errors["base"] = "entity_no_coordinates"
-                else:
-                    data = {
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_LOCATION_ENTITY: entity_entry.id,
-                    }
-                    self._async_abort_entries_match(
-                        {CONF_LOCATION_ENTITY: entity_entry.id}
-                    )
-                    try:
-                        await validate_input(
-                            self.hass,
-                            {
-                                CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LOCATION: {
-                                    CONF_LATITUDE: coordinates.latitude,
-                                    CONF_LONGITUDE: coordinates.longitude,
-                                },
-                            },
-                        )
-                        return self.async_create_entry(title=location_entity, data=data)
-                    except CannotConnect:
-                        errors["base"] = "cannot_connect"
-                    except Exception:
-                        _LOGGER.exception("Unexpected exception")
-                        errors["base"] = "unknown"
+        if user_input is not None and (
+            data := await self._async_validate_entity(user_input, errors)
+        ):
+            return self.async_create_entry(
+                title=user_input[CONF_LOCATION_ENTITY], data=data
+            )
 
         data_schema = probatio.Schema(
             {
@@ -171,6 +136,135 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="entity", data_schema=data_schema, errors=errors
+        )
+
+    async def _async_validate_entity(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> dict[str, Any] | None:
+        """Validate the entity input and return the entry data."""
+        location_entity = user_input[CONF_LOCATION_ENTITY]
+
+        registry = er.async_get(self.hass)
+        entity_entry = registry.async_get(location_entity)
+        if entity_entry is None:
+            errors["base"] = "entity_not_found"
+            return None
+        if entity_entry.disabled_by is not None:
+            errors["base"] = "entity_disabled"
+            return None
+        state = self.hass.states.get(location_entity)
+        if state is None or (coordinates := get_state_coordinates(state)) is None:
+            errors["base"] = "entity_no_coordinates"
+            return None
+
+        self._async_abort_entries_match({CONF_LOCATION_ENTITY: entity_entry.id})
+        try:
+            await validate_input(
+                self.hass,
+                {
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: coordinates.latitude,
+                        CONF_LONGITUDE: coordinates.longitude,
+                    },
+                },
+            )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return {
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_LOCATION_ENTITY: entity_entry.id,
+            }
+        return None
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the API key and the station or entity."""
+        entry = self._get_reconfigure_entry()
+        if location_registry_id := entry.data.get(CONF_LOCATION_ENTITY):
+            return await self._async_reconfigure_entity(
+                user_input, location_registry_id
+            )
+        return await self._async_reconfigure_location(user_input)
+
+    async def _async_reconfigure_location(
+        self, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Reconfigure an entry for a specific location.
+
+        The location is not reconfigurable as it is the unique ID of the entry.
+        """
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                info = await validate_input(
+                    self.hass, {**user_input, CONF_LOCATION: entry.data[CONF_LOCATION]}
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_STATION: info["title"],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Optional(CONF_STATION): str,
+                    }
+                ),
+                user_input or {CONF_STATION: entry.data[CONF_STATION]},
+            ),
+            errors=errors,
+        )
+
+    async def _async_reconfigure_entity(
+        self, user_input: dict[str, Any] | None, location_registry_id: str
+    ) -> ConfigFlowResult:
+        """Reconfigure an entry that follows an entity."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None and (
+            data := await self._async_validate_entity(user_input, errors)
+        ):
+            return self.async_update_reload_and_abort(entry, data_updates=data)
+
+        suggested_values: dict[str, Any] = {}
+        if entity_entry := er.async_get(self.hass).async_get(location_registry_id):
+            suggested_values[CONF_LOCATION_ENTITY] = entity_entry.entity_id
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_LOCATION_ENTITY): EntitySelector(
+                            EntitySelectorConfig(
+                                domain=["person", "device_tracker", "zone"],
+                            )
+                        ),
+                    }
+                ),
+                user_input or suggested_values,
+            ),
+            errors=errors,
         )
 
 

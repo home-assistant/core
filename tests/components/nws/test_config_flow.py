@@ -466,3 +466,210 @@ async def test_form_entity_already_configured(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
+async def test_reconfigure_location(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry for a specific location."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ABC",
+        data={
+            CONF_API_KEY: "test",
+            CONF_LOCATION: {CONF_LATITUDE: 35, CONF_LONGITUDE: -90},
+            CONF_STATION: "XYZ",
+        },
+        unique_id="35.0_-90.0",
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_API_KEY: "new_key",
+        CONF_LOCATION: {CONF_LATITUDE: 35, CONF_LONGITUDE: -90},
+        CONF_STATION: "ABC",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(aiohttp.ClientError, "cannot_connect", id="cannot_connect"),
+        pytest.param(ValueError, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_location_errors(
+    hass: HomeAssistant,
+    mock_simple_nws_config: MagicMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test reconfiguring a location entry recovers from errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ABC",
+        data={
+            CONF_API_KEY: "test",
+            CONF_LOCATION: {CONF_LATITUDE: 35, CONF_LONGITUDE: -90},
+            CONF_STATION: "ABC",
+        },
+        unique_id="35.0_-90.0",
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+    mock_instance = mock_simple_nws_config.return_value
+    mock_instance.set_station.side_effect = side_effect
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key", CONF_STATION: "ABC"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_instance.set_station.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_key", CONF_STATION: "ABC"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "new_key"
+
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
+async def test_reconfigure_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reconfiguring an entry that follows an entity."""
+    old_entry = entity_registry.async_get_or_create("person", "person", "old_user")
+    new_entry = entity_registry.async_get_or_create("person", "person", "new_user")
+    hass.states.async_set(
+        new_entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=old_entry.entity_id,
+        data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: old_entry.id},
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key", CONF_LOCATION_ENTITY: new_entry.entity_id},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_API_KEY: "new_key",
+        CONF_LOCATION_ENTITY: new_entry.id,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(aiohttp.ClientError, "cannot_connect", id="cannot_connect"),
+        pytest.param(ValueError, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_entity_errors(
+    hass: HomeAssistant,
+    mock_simple_nws_config: MagicMock,
+    entity_registry: er.EntityRegistry,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test reconfiguring an entity entry recovers from errors."""
+    entity_entry = entity_registry.async_get_or_create("person", "person", "user")
+    hass.states.async_set(
+        entity_entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=entity_entry.entity_id,
+        data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entity_entry.id},
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+    mock_instance = mock_simple_nws_config.return_value
+    mock_instance.set_station.side_effect = side_effect
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key", CONF_LOCATION_ENTITY: entity_entry.entity_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_instance.set_station.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new_key", CONF_LOCATION_ENTITY: entity_entry.entity_id},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "new_key"
+
+
+@pytest.mark.usefixtures("mock_simple_nws_config", "mock_setup_entry")
+async def test_reconfigure_entity_already_configured(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reconfiguring to an entity another entry follows aborts."""
+    own_entity = entity_registry.async_get_or_create("person", "person", "own")
+    other_entity = entity_registry.async_get_or_create("person", "person", "other")
+    hass.states.async_set(
+        other_entity.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: other_entity.id},
+        version=2,
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: own_entity.id},
+        version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: other_entity.entity_id},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_LOCATION_ENTITY] == own_entity.id
