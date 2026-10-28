@@ -164,11 +164,11 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         device_info = self._attr_device_info
         if TYPE_CHECKING:
             assert work_area_attributes is not None
-            assert device_info is not None
+            assert isinstance(device_info, DeviceInfo)
 
-        parent_device = dr.async_get(coordinator.hass).async_get_or_create(
+        parent_device = dr.async_get(coordinator.hass).async_get_or_create_from_info(
             config_entry_id=coordinator.config_entry.entry_id,
-            **device_info,
+            device_info=device_info,
         )
         if work_area_id == 0:
             self._attr_device_info = ChildDeviceInfo(
