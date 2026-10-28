@@ -585,3 +585,175 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_SCREENCAP_INTERVAL] == 1
         assert config_entry.options[CONF_TURN_OFF_COMMAND] == "off"
         assert config_entry.options[CONF_TURN_ON_COMMAND] == "on"
+
+
+RECONFIGURE_HOST = "127.0.0.2"
+RECONFIGURE_INPUT = {
+    CONF_HOST: RECONFIGURE_HOST,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_MORE_OPTIONS: {},
+}
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "flow_input", "expected_data"),
+    [
+        pytest.param(
+            CONFIG_ADB_SERVER,
+            {CONF_HOST: RECONFIGURE_HOST, CONF_PORT: 5556, CONF_MORE_OPTIONS: {}},
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: 5556,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+            },
+            id="adb_server_to_python_adb",
+        ),
+        pytest.param(
+            CONFIG_PYTHON_ADB,
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {
+                    CONF_ADB_SERVER_IP: "127.0.0.3",
+                    CONF_ADB_SERVER_PORT: 5038,
+                },
+            },
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+                CONF_ADB_SERVER_IP: "127.0.0.3",
+                CONF_ADB_SERVER_PORT: 5038,
+            },
+            id="python_adb_to_adb_server",
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    flow_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test reconfiguring the connection settings."""
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)),
+        PATCH_SETUP_ENTRY,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=flow_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    ("flow_input", "connect_kwargs", "error"),
+    [
+        pytest.param(
+            RECONFIGURE_INPUT,
+            {"return_value": (None, "Error")},
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            RECONFIGURE_INPUT, {"side_effect": TypeError}, "unknown", id="unknown"
+        ),
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {
+                    CONF_ADB_SERVER_IP: "127.0.0.1",
+                    CONF_ADBKEY: ADBKEY,
+                },
+            },
+            {"return_value": (MockConfigDevice(), None)},
+            "key_and_server",
+            id="key_and_server",
+        ),
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
+            },
+            {"return_value": (MockConfigDevice(), None)},
+            "adbkey_not_file",
+            id="adbkey_not_file",
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    flow_input: dict[str, Any],
+    connect_kwargs: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors during reconfiguration and recovering from them."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_PYTHON_ADB, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(CONNECT_METHOD, **connect_kwargs):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=flow_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)),
+        PATCH_SETUP_ENTRY,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=RECONFIGURE_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**CONFIG_PYTHON_ADB, CONF_HOST: RECONFIGURE_HOST}
+
+
+@pytest.mark.parametrize(
+    ("eth_mac", "wifi_mac"),
+    [
+        pytest.param(None, WIFI_MAC, id="different_device"),
+        pytest.param(INVALID_MAC, None, id="invalid_mac"),
+    ],
+)
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, eth_mac: str | None, wifi_mac: str | None
+) -> None:
+    """Test reconfiguring to a different device aborts."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_PYTHON_ADB, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        CONNECT_METHOD, return_value=(MockConfigDevice(eth_mac, wifi_mac), None)
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=RECONFIGURE_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == CONFIG_PYTHON_ADB

@@ -122,6 +122,27 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             errors={"base": error} if error else None,
         )
 
+    async def _async_validate_adb_options(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, Any], str | None]:
+        """Flatten the more options section and validate the ADB options."""
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
+
+        adb_key = user_input.get(CONF_ADBKEY)
+        if CONF_ADB_SERVER_IP in user_input:
+            if adb_key:
+                return user_input, "key_and_server"
+        else:
+            user_input.pop(CONF_ADB_SERVER_PORT, None)
+
+        if adb_key:
+            if not await self.hass.async_add_executor_job(_is_file, adb_key):
+                return user_input, "adbkey_not_file"
+
+        return user_input, None
+
     async def _async_check_connection(
         self, user_input: dict[str, Any]
     ) -> tuple[str | None, str | None]:
@@ -161,22 +182,11 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input is not None:
-            user_input = user_input.copy()
-            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
-            user_input.update(more_options)
+            user_input, error = await self._async_validate_adb_options(user_input)
+            if error:
+                return self._show_setup_form(user_input, error)
 
             host = user_input[CONF_HOST]
-            adb_key = user_input.get(CONF_ADBKEY)
-            if CONF_ADB_SERVER_IP in user_input:
-                if adb_key:
-                    return self._show_setup_form(user_input, "key_and_server")
-            else:
-                user_input.pop(CONF_ADB_SERVER_PORT, None)
-
-            if adb_key:
-                if not await self.hass.async_add_executor_job(_is_file, adb_key):
-                    return self._show_setup_form(user_input, "adbkey_not_file")
-
             self._async_abort_entries_match({CONF_HOST: host})
             error, unique_id = await self._async_check_connection(user_input)
             if error is None:
@@ -192,6 +202,63 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self._show_setup_form(user_input, error)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data, error = await self._async_validate_adb_options(
+                {**user_input, CONF_DEVICE_CLASS: entry.data[CONF_DEVICE_CLASS]}
+            )
+            if error is None:
+                error, unique_id = await self._async_check_connection(data)
+            if error is None:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                # Replace the data so cleared optional settings are removed
+                return self.async_update_reload_and_abort(entry, data=data)
+            errors["base"] = error
+        else:
+            user_input = {
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_PORT: entry.data[CONF_PORT],
+                CONF_MORE_OPTIONS: {
+                    key: entry.data[key]
+                    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT)
+                    if key in entry.data
+                },
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): probatio.Port(),
+                        probatio.Required(CONF_MORE_OPTIONS): section(
+                            probatio.Schema(
+                                {
+                                    probatio.Optional(CONF_ADBKEY): str,
+                                    probatio.Optional(CONF_ADB_SERVER_IP): str,
+                                    probatio.Optional(
+                                        CONF_ADB_SERVER_PORT,
+                                        default=DEFAULT_ADB_SERVER_PORT,
+                                    ): probatio.Port(),
+                                }
+                            ),
+                            SectionConfig(collapsed=True),
+                        ),
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
 
     @staticmethod
     @callback
