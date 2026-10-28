@@ -870,7 +870,13 @@ async def websocket_bind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_zigbee_device(source_ieee)
+    if (
+        source_device := _async_get_zigbee_device(
+            zha_gateway, connection, msg[ID], source_ieee
+        )
+    ) is None:
+        return
+
     await source_device.async_bind_to_group(group_id, bindings)
     connection.send_result(msg[ID])
 
@@ -895,9 +901,38 @@ async def websocket_unbind_group(
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
-    source_device = zha_gateway.get_zigbee_device(source_ieee)
+    if (
+        source_device := _async_get_zigbee_device(
+            zha_gateway, connection, msg[ID], source_ieee
+        )
+    ) is None:
+        return
+
     await source_device.async_unbind_from_group(group_id, bindings)
     connection.send_result(msg[ID])
+
+
+@callback
+def _async_get_zigbee_device(
+    zha_gateway: Gateway, connection: ActiveConnection, msg_id: int, ieee: EUI64
+) -> Device | None:
+    """Return the Zigbee device, or send an error if it is missing or not Zigbee."""
+    zha_device = zha_gateway.get_device(ieee)
+    if zha_device is None:
+        connection.send_error(
+            msg_id, websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
+        )
+        return None
+
+    if not isinstance(zha_device, Device):
+        connection.send_error(
+            msg_id,
+            websocket_api.ERR_NOT_SUPPORTED,
+            f"Device {ieee} is not a Zigbee device",
+        )
+        return None
+
+    return zha_device
 
 
 async def async_binding_operation(
