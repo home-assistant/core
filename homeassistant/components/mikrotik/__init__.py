@@ -70,6 +70,22 @@ def _async_migrate_interface_identifiers(
     }
 
     entity_registry = er.async_get(hass)
+    # the stale-device cleanup used to remove the devices of interfaces without
+    # a MAC address, taking their entities along; restore them so they keep
+    # their customisations when migrated below
+    for (domain, platform, unique_id), deleted_entry in list(
+        entity_registry.deleted_entities.items()
+    ):
+        if (
+            platform == DOMAIN
+            and deleted_entry.config_entry_id == config_entry.entry_id
+            and (new_unique_id := migrated.get(unique_id))
+            and not entity_registry.async_get_entity_id(domain, DOMAIN, new_unique_id)
+        ):
+            entity_registry.async_get_or_create(
+                domain, DOMAIN, unique_id, config_entry=config_entry
+            )
+
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     ):

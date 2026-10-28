@@ -610,3 +610,50 @@ async def test_interface_identifiers_are_migrated(
     migrated_device = device_registry.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {(DOMAIN, f"{TEST_SERIAL_NUMBER}_ether1")}
+
+
+async def test_removed_interface_entities_are_restored_and_migrated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test entities removed by the old stale-device cleanup keep their settings."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "_wireguard1")}
+    )
+    entity = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        "_wireguard1",
+        config_entry=entry,
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity(
+        entity.entity_id, new_entity_id="binary_sensor.vpn", name="VPN"
+    )
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("binary_sensor.vpn") is None
+
+    command = build_mock_command(
+        {
+            MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
+            MIKROTIK_SERVICES[ROUTERBOARD]: ROUTERBOARD_DATA,
+            MIKROTIK_SERVICES[INTERFACE]: [WIREGUARD1_INTERFACE],
+        }
+    )
+
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=command):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    restored_entity = entity_registry.async_get("binary_sensor.vpn")
+    assert restored_entity is not None
+    assert restored_entity.id == entity.id
+    assert restored_entity.unique_id == f"{TEST_SERIAL_NUMBER}_wireguard1"
+    assert restored_entity.name == "VPN"
+    assert restored_entity.device_id is not None
