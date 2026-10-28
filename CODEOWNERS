@@ -24,6 +24,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
+/packages/hassfest/ @home-assistant/core
 /packages/pylint-home-assistant/ @home-assistant/core
 /packages/pytest-home-assistant/ @home-assistant/core
 /script/ @home-assistant/core
@@ -1715,6 +1716,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core
 /tests/components/script/ @home-assistant/core
+/homeassistant/components/seafile/ @erwindouna
+/tests/components/seafile/ @erwindouna
 /homeassistant/components/search/ @home-assistant/core
 /tests/components/search/ @home-assistant/core
 /homeassistant/components/season/ @frenck

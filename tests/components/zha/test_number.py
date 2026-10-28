@@ -5,7 +5,7 @@ from unittest.mock import call, patch
 
 import pytest
 from zhaquirks.builder import NumberDeviceClass, QuirkBuilder
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
@@ -50,7 +50,7 @@ def number_platform_only():
 async def test_number(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA number platform."""
 
@@ -155,7 +155,7 @@ async def test_number(
 async def test_number_quirks_v2_metadata(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test that mode and device_class from quirks v2 metadata are passed through."""
     (

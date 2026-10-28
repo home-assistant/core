@@ -50,6 +50,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving data from Electricity Maps: {error}"
+    }
+  },
   "selector": {
     "location": {
       "options": {

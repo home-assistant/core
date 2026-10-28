@@ -6,13 +6,14 @@ from collections.abc import Callable, Coroutine
 from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any
-from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from zha.application.const import (
+    ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
@@ -27,11 +28,12 @@ from zha.application.const import (
 from zha.zigbee.device import (
     ClusterBindEvent,
     ClusterConfigureReportingEvent,
-    Device,
     DeviceConfiguredEvent,
+    ZigbeeDevice,
 )
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
@@ -39,10 +41,13 @@ import zigpy.util
 from zigpy.zcl.clusters import closures, general, security
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
+from zigpy.zgp.types import ApplicationID, SrcID
+from zigpy.zgp.util import synthetic_ieee
 
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
     TYPE_RESULT,
 )
 from homeassistant.components.zha import DOMAIN
@@ -80,6 +85,8 @@ from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
+GREEN_POWER_SRC_ID = SrcID(0x12345678)
+IEEE_GREEN_POWER_DEVICE = str(synthetic_ieee(GREEN_POWER_SRC_ID))
 
 if TYPE_CHECKING:
     from zigpy.application import ControllerApplication
@@ -120,7 +127,7 @@ async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
@@ -276,7 +283,7 @@ async def test_device_info_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test the device info area_id reflects the registry device's effective area.
 
@@ -325,7 +332,7 @@ async def test_get_zha_config(zha_client) -> None:
 async def test_get_zha_config_with_alarm(
     hass: HomeAssistant,
     zha_client,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test getting ZHA custom configuration."""
 
@@ -507,6 +514,164 @@ async def test_list_groupable_devices(
     assert len(device_endpoints) == 0
 
 
+async def _async_add_green_power_device(
+    hass: HomeAssistant,
+) -> ZigpyGreenPowerDevice:
+    """Join a Green Power device."""
+    gateway = get_zha_gateway(hass)
+    zigpy_gpd = ZigpyGreenPowerDevice(
+        gateway.application_controller,
+        application_id=ApplicationID.SrcID,
+        src_id=GREEN_POWER_SRC_ID,
+    )
+    gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
+    gateway.get_or_create_device(zigpy_gpd)
+    await gateway.async_device_initialized(zigpy_gpd)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    return zigpy_gpd
+
+
+async def test_green_power_device_listings(hass: HomeAssistant, zha_client) -> None:
+    """Test that a Green Power device does not break device-wide listings."""
+    zigpy_gpd = await _async_add_green_power_device(hass)
+
+    assert zigpy_gpd.ieee in get_zha_gateway_proxy(hass).device_proxies
+
+    await zha_client.send_json({ID: 10, TYPE: "zha/devices"})
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert str(zigpy_gpd.ieee) in {device[ATTR_IEEE] for device in msg["result"]}
+
+    await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    groupable = {endpoint["device"][ATTR_IEEE] for endpoint in msg["result"]}
+    assert IEEE_GROUPABLE_DEVICE in groupable
+    assert str(zigpy_gpd.ieee) not in groupable
+
+    await zha_client.send_json(
+        {ID: 12, TYPE: "zha/devices/bindable", ATTR_IEEE: IEEE_SWITCH_DEVICE}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert str(zigpy_gpd.ieee) not in {device[ATTR_IEEE] for device in msg["result"]}
+
+    # A GPD source has no clusters to bind from, not even to the coordinator
+    await zha_client.send_json(
+        {ID: 13, TYPE: "zha/devices/bindable", ATTR_IEEE: str(zigpy_gpd.ieee)}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == []
+
+    # A GPD target has no clusters to bind to, so nothing is sent
+    await zha_client.send_json(
+        {
+            ID: 14,
+            TYPE: "zha/devices/bind",
+            ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_TARGET_IEEE: str(zigpy_gpd.ieee),
+        }
+    )
+    msg = await zha_client.receive_json()
+    assert msg["success"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param({TYPE: "zha/devices/clusters"}, id="clusters"),
+        pytest.param(
+            {
+                TYPE: "zha/devices/clusters/attributes",
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: 6,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+            },
+            id="attributes",
+        ),
+        pytest.param(
+            {
+                TYPE: "zha/devices/clusters/commands",
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: 6,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+            },
+            id="commands",
+        ),
+    ],
+)
+async def test_green_power_device_clusters(
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    command: dict[str, Any],
+) -> None:
+    """Test that a Green Power device has no clusters to list."""
+    await _async_add_green_power_device(hass)
+
+    await zha_client.send_json({ID: 5, ATTR_IEEE: IEEE_GREEN_POWER_DEVICE, **command})
+    msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == []
+
+
+@pytest.mark.parametrize(
+    ("ieee", "read_calls", "result"),
+    [
+        pytest.param(IEEE_SWITCH_DEVICE, 1, "True", id="zigbee"),
+        pytest.param(IEEE_GREEN_POWER_DEVICE, 0, "None", id="green_power"),
+    ],
+)
+async def test_read_zigbee_cluster_attribute(
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    ieee: str,
+    read_calls: int,
+    result: str,
+) -> None:
+    """Test reading a cluster attribute value."""
+    await _async_add_green_power_device(hass)
+    cluster = (
+        get_zha_gateway(hass)
+        .get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
+        .async_get_cluster(1, general.OnOff.cluster_id)
+    )
+
+    with patch.object(
+        cluster, "read_attributes", AsyncMock(return_value=({0: True}, {}))
+    ) as read_mock:
+        await zha_client.send_json(
+            {
+                ID: 5,
+                TYPE: "zha/devices/clusters/attributes/value",
+                ATTR_IEEE: ieee,
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+                ATTR_ATTRIBUTE: 0,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == result
+    assert read_mock.call_count == read_calls
+
+
+async def test_get_zha_config_with_green_power_device(
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket
+) -> None:
+    """Test a Green Power device is skipped when looking for alarm clusters."""
+    await _async_add_green_power_device(hass)
+
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+    msg = await zha_client.receive_json()
+
+    assert msg["result"] == BASE_CUSTOM_CONFIGURATION
+
+
 async def test_add_group(hass: HomeAssistant, zha_client) -> None:
     """Test adding and getting a new ZHA zigbee group."""
     await zha_client.send_json(
@@ -547,6 +712,22 @@ async def test_add_group(hass: HomeAssistant, zha_client) -> None:
 
     for group in groups:
         assert group["name"] == FIXTURE_GRP_NAME or group["name"] == "new_group"
+
+
+async def test_add_group_duplicate_name(zha_client) -> None:
+    """Test adding a group with a name that is already used."""
+    await zha_client.send_json(
+        {ID: 12, TYPE: "zha/group/add", GROUP_NAME: FIXTURE_GRP_NAME}
+    )
+
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 12
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
+    assert msg["error"]["message"] == (
+        f"A group named '{FIXTURE_GRP_NAME}' already exists"
+    )
 
 
 async def test_remove_group(zha_client) -> None:
@@ -1195,9 +1376,16 @@ async def test_websocket_bind_unbind_devices(
     ]
 
 
-@pytest.mark.parametrize("command_type", ["bind", "unbind"])
+@pytest.mark.parametrize(
+    ("command_type", "method"),
+    [
+        ("bind", "async_bind_to_group"),
+        ("unbind", "async_unbind_from_group"),
+    ],
+)
 async def test_websocket_bind_unbind_group(
     command_type: str,
+    method: str,
     hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
@@ -1205,19 +1393,9 @@ async def test_websocket_bind_unbind_group(
     """Test websocket API for binding and unbinding devices to groups."""
 
     test_group_id = 0x0001
-    gateway_mock = MagicMock()
+    device = get_zha_gateway(hass).get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
 
-    with patch(
-        "homeassistant.components.zha.websocket_api.get_zha_gateway",
-        return_value=gateway_mock,
-    ):
-        device_mock = MagicMock()
-        bind_mock = AsyncMock()
-        unbind_mock = AsyncMock()
-        device_mock.async_bind_to_group = bind_mock
-        device_mock.async_unbind_from_group = unbind_mock
-        gateway_mock.get_device = MagicMock()
-        gateway_mock.get_device.return_value = device_mock
+    with patch.object(device, method, AsyncMock()) as method_mock:
         await zha_client.send_json(
             {
                 ID: 27,
@@ -1239,16 +1417,55 @@ async def test_websocket_bind_unbind_group(
     assert msg["id"] == 27
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    if command_type == "bind":
-        assert bind_mock.mock_calls == [call(test_group_id, ANY)]
-    elif command_type == "unbind":
-        assert unbind_mock.mock_calls == [call(test_group_id, ANY)]
+    assert method_mock.mock_calls == [call(test_group_id, ANY)]
+
+
+@pytest.mark.parametrize("command_type", ["bind", "unbind"])
+@pytest.mark.parametrize(
+    ("source_ieee", "error_code"),
+    [
+        pytest.param("28:6d:97:00:01:04:11:8c", ERR_NOT_FOUND, id="missing"),
+        pytest.param(IEEE_GREEN_POWER_DEVICE, ERR_NOT_SUPPORTED, id="green_power"),
+    ],
+)
+async def test_websocket_bind_unbind_group_invalid_source(
+    command_type: str,
+    source_ieee: str,
+    error_code: str,
+    hass: HomeAssistant,
+    zha_client,
+) -> None:
+    """Test binding a group fails for a missing or Green Power source device."""
+    await _async_add_green_power_device(hass)
+
+    await zha_client.send_json(
+        {
+            ID: 27,
+            TYPE: f"zha/groups/{command_type}",
+            ATTR_SOURCE_IEEE: source_ieee,
+            GROUP_ID: 0x0001,
+            BINDINGS: [
+                {
+                    ATTR_ENDPOINT_ID: 1,
+                    ID: 6,
+                    ATTR_NAME: "OnOff",
+                    ATTR_TYPE: "out",
+                },
+            ],
+        }
+    )
+    msg = await zha_client.receive_json()
+
+    assert msg["id"] == 27
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == error_code
 
 
 async def test_websocket_reconfigure(
     hass: HomeAssistant,
     zha_client: MockHAClientWebSocket,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test websocket API to re-interview a device."""
     gateway = get_zha_gateway(hass)

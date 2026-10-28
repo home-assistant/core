@@ -730,6 +730,7 @@ FLOWS = {
         "scorpiontrack",
         "scrape",
         "screenlogic",
+        "seafile",
         "season",
         "sense",
         "sensecap_lorawan",
