@@ -153,7 +153,6 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title=title, data=self.info)
 
-        self._set_confirm_only()
         self.context.update({"title_placeholders": {"device": title}})
         return self.async_show_form(
             step_id="confirm_discovery",
