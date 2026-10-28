@@ -26,7 +26,11 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -45,6 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 
 type HomeAssistantYellowConfigEntry = ConfigEntry[HomeAssistantYellowData]
 
+__all__ = [
+    "DOMAIN",
+    "RADIO_DEVICE",
+]
+
 
 @dataclass
 class HomeAssistantYellowData:
@@ -57,12 +66,15 @@ class HomeAssistantYellowData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant Yellow config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_hassio",
+        )
 
     try:
         os_info = get_os_info(hass)
@@ -72,7 +84,11 @@ async def async_setup_entry(
     if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_board",
+            translation_placeholders={"board": str(os_info.get("board"))},
+        )
 
     firmware = ApplicationType(entry.data[FIRMWARE])
 
@@ -127,19 +143,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantYellowConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -178,13 +194,8 @@ async def async_migrate_entry(
                 minor_version=4,
             )
 
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
-
-        return True
-
-    # This means the user has downgraded from a future version
-    return False
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )

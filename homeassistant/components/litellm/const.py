@@ -7,6 +7,9 @@ from homeassistant.helpers import llm
 
 DOMAIN = "litellm"
 LOGGER = logging.getLogger(__package__)
+CONF_STT_CUSTOM_PROMPT_KEYWORDS = "custom_prompt_keywords"
+CONF_STT_KEYWORDS = "keywords"
+CONF_STT_PROMPT = "prompt"
 
 # LiteLLM proxies may run without authentication. The OpenAI client requires a
 # non-empty API key, so we send a placeholder when the user did not provide one.

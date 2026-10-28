@@ -1,6 +1,7 @@
 {
   "domain": "epson",
   "name": "Epson",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@pszafer"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epson",

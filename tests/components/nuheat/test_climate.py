@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -16,8 +18,6 @@ from .mocks import (
     _get_mock_thermostat_schedule_hold_unavailable,
     _get_mock_thermostat_schedule_temporary_hold,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_climate_thermostat_run(hass: HomeAssistant) -> None:

@@ -95,7 +95,6 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry_internal(discovery_info)
 
-        self._set_confirm_only()
         placeholders = {"name": discovery_info.name}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

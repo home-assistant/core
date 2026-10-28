@@ -34,7 +34,7 @@
       "message": "Entry not loaded"
     },
     "grpc_error": {
-      "message": "Failed to communicate with Google Assistant"
+      "message": "Failed to send command `{command}` to Google Assistant"
     }
   },
   "options": {

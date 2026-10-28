@@ -13,7 +13,7 @@ from pylamarzocco.const import (
     WidgetType,
 )
 from pylamarzocco.devices import LaMarzoccoMachine
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import BrewByWeightDoses, PreBrewing, SteamBoilerLevel
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -79,12 +79,16 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         select_option_fn=lambda machine, option: machine.set_steam_level(
             STEAM_LEVEL_HA_TO_LM[option]
         ),
-        current_option_fn=lambda machine: STEAM_LEVEL_LM_TO_HA[
-            cast(
-                SteamBoilerLevel,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
-            ).target_level
-        ],
+        current_option_fn=lambda machine: (
+            STEAM_LEVEL_LM_TO_HA[
+                cast(
+                    SteamBoilerLevel,
+                    machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+                ).target_level
+            ]
+            if WidgetType.CM_STEAM_BOILER_LEVEL in machine.dashboard.config
+            else None
+        ),
         supported_fn=(
             lambda coordinator: (
                 coordinator.device.dashboard.model_name
@@ -198,7 +202,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                 await self.entity_description.select_option_fn(
                     self.coordinator.device, option
                 )
-            except RequestNotSuccessful as exc:
+            except (LaMarzoccoError, TimeoutError) as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="select_option_error",

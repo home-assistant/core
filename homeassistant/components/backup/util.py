@@ -213,7 +213,8 @@ def validate_password_stream(
 
 def _get_expected_archives(backup: AgentBackup) -> set[str]:
     """Get the expected archives in the backup."""
-    expected_archives = set()
+    # Supervisor specific config, not in the metadata (since Supervisor 2026.03.3)
+    expected_archives = {"supervisor"}
     if backup.homeassistant_included:
         expected_archives.add("homeassistant")
     for addon in backup.addons:
@@ -480,11 +481,16 @@ class _CipherBackupStreamer:
         return writer
 
     async def wait(self) -> None:
-        """Wait for the worker threads to finish."""
+        """Stop the worker threads, wait for them to finish and close the streams.
+
+        This must be called also when the stream is not fully consumed, or a
+        worker thread may be blocked forever.
+        """
         for worker in self._workers:
             worker.reader.abort()
             worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
+        await asyncio.gather(*(worker.reader.aclose() for worker in self._workers))
 
 
 class DecryptedBackupStreamer(_CipherBackupStreamer):

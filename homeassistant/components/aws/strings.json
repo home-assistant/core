@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "config_removed": {
+      "message": "The AWS configuration has been removed from configuration.yaml"
+    },
+    "credential_validation_failed": {
+      "message": "Failed to validate one or more AWS credentials"
+    }
+  }
+}

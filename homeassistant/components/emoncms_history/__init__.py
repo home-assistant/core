@@ -31,7 +31,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                 probatio.Required(CONF_URL): cv.string,
                 probatio.Required(CONF_INPUTNODE): cv.positive_int,
                 probatio.Required(CONF_WHITELIST): cv.entity_ids,

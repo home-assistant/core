@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.playstation_network.config_flow import (
     PSNAWPAuthenticationError,
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import NPSSO_TOKEN, NPSSO_TOKEN_INVALID_JSON, PSN_ID
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_ADVANCED_STEP = {CONF_NPSSO: NPSSO_TOKEN}
 

@@ -2,9 +2,10 @@
 
 import json
 
+from hassfest.model import IntegrationType
+
 from homeassistant.util import slugify
 from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
-from script.hassfest.model import IntegrationType
 
 from .const import COMPONENT_DIR
 from .error import ExitApp
@@ -101,7 +102,7 @@ def gather_new_integration(determine_auth: bool) -> Info:
 
 Valid values are {", ".join(SUPPORTED_IOT_CLASSES)}
 
-More info @ https://developers.home-assistant.io/docs/creating_integration_manifest#iot-class
+More info @ https://contributors.home-assistant.io/core/integrations/manifest/#iot_class
 """
             ),
             "validators": [
@@ -143,9 +144,9 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                         " To intentionally leave it"
                         " unset, type 'omit'."
                         "\n\nMore info @ "
-                        "https://developers.home-assistant.io"
-                        "/docs/creating_integration_manifest"
-                        "/#integration-type\n"
+                        "https://contributors.home-assistant.io"
+                        "/core/integrations/manifest"
+                        "/#integration_type\n"
                     ),
                     "validators": [
                         [

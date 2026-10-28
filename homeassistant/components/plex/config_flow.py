@@ -170,7 +170,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
                 probatio.Optional(
-                    CONF_TOKEN,
+                    probatio.Secret(CONF_TOKEN),
                     description={"suggested_value": previous_input.get(CONF_TOKEN)},
                 ): str,
             }

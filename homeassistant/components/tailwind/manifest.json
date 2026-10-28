@@ -1,6 +1,7 @@
 {
   "domain": "tailwind",
   "name": "Tailwind",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dhcp": [

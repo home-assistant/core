@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_rpc_ledstrip_palette_select[select.test_name_ledstrip_0_effect_palette-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rainbow',
+        'fire',
+        'ocean',
+        'monochrome',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC-ledstrip:0')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_name_ledstrip_0_effect_palette',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Effect palette',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Effect palette',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'effect_palette',
+    'unique_id': '123456789ABC-ledstrip:0-ledstrip_palette',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_ledstrip_palette_select[select.test_name_ledstrip_0_effect_palette-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Ledstrip 0 Effect palette',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'rainbow',
+        'fire',
+        'ocean',
+        'monochrome',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_name_ledstrip_0_effect_palette',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ocean',
+  })
+# ---

@@ -23,6 +23,6 @@ NETWORK_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             ATTR_CONFIGURED_ADAPTERS, default=DEFAULT_CONFIGURED_ADAPTERS
-        ): probatio.Schema(probatio.All(cv.ensure_list, [cv.string])),
+        ): probatio.Schema(probatio.All(probatio.EnsureList(), [cv.string])),
     }
 )

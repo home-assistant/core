@@ -1,14 +1,16 @@
 """Config flow for the my-PV integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -30,7 +32,7 @@ HOST_SCHEMA: Final = probatio.Schema(
 )
 AUTH_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -86,12 +88,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password_needed = False
 
-        device = MyPVLocalDevice(self._host)
+        device = MyPVLocalDevice(self._host, session=async_get_clientsession(self.hass))
         try:
             if not await device.connect():
                 return self.async_abort(reason="cannot_connect")
         except MyPVAuthenticationError:
             password_needed = True
+        except MyPVDeviceNotSupportedError:
+            return self.async_abort(reason="unsupported_device")
         finally:
             await device.disconnect()
 
@@ -112,7 +116,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -135,23 +138,25 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password_needed = False
 
-            device = MyPVLocalDevice(host)
+            device = MyPVLocalDevice(host, session=async_get_clientsession(self.hass))
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 password_needed = True
+            except MyPVDeviceNotSupportedError:
+                return self.async_abort(reason="unsupported_device")
             finally:
                 await device.disconnect()
-
-            if not errors and password_needed:
-                self._host = host
-                self._device_model = device.model
-                return await self.async_step_auth()
 
             if not errors:
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
+
+                if password_needed:
+                    self._host = host
+                    self._device_model = device.model
+                    return await self.async_step_auth()
 
                 title = f"my-PV {device.model} {device.serial_number[6:]}"
                 data = {
@@ -177,7 +182,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._host
             password = user_input[CONF_PASSWORD]
 
-            device = MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
@@ -209,6 +216,54 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=self.context["title_placeholders"],
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            user_input = {**reauth_entry.data, **user_input}
+            host = user_input[CONF_HOST]
+            password = user_input[CONF_PASSWORD]
+
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
+            try:
+                if not await device.connect():
+                    errors[CONF_BASE] = "cannot_connect"
+            except MyPVAuthenticationError:
+                errors[CONF_PASSWORD] = "invalid_password"
+            finally:
+                await device.disconnect()
+
+            if not errors:
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                data = {
+                    CONF_PASSWORD: password,
+                }
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data
+                )
+
+        data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
             description_placeholders=self.context["title_placeholders"],

@@ -14,11 +14,7 @@ import probatio
 from homeassistant.components import conversation, stt, tts, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    chat_session,
-    config_validation as cv,
-    entity_registry as er,
-)
+from homeassistant.helpers import chat_session, entity_registry as er
 from homeassistant.util import language as language_util
 
 from .const import (
@@ -29,20 +25,16 @@ from .const import (
     SAMPLE_RATE,
     SAMPLE_WIDTH,
 )
-from .error import PipelineNotFound
-from .pipeline import (
-    KEY_ASSIST_PIPELINE,
+from .error import PipelineError, PipelineNotFound
+from .models import (
     AudioSettings,
-    DeviceAudioQueue,
-    PipelineError,
     PipelineEvent,
     PipelineEventType,
-    PipelineInput,
-    PipelineRun,
     PipelineStage,
     WakeWordSettings,
-    async_get_pipeline,
 )
+from .pipeline import PipelineInput, PipelineRun, async_get_pipeline
+from .runtime import KEY_ASSIST_PIPELINE, DeviceAudioQueue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,10 +71,10 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 probatio.Optional("timeout"): probatio.Any(int, float),
             },
         ),
-        cv.key_value_schemas(
+        probatio.TaggedUnion(
             "start_stage",
             {
-                PipelineStage.WAKE_WORD: probatio.Schema(
+                PipelineStage.WAKE_WORD.value: probatio.Schema(
                     {
                         probatio.Required("input"): {
                             probatio.Required("sample_rate"): int,
@@ -100,7 +92,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     },
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.STT: probatio.Schema(
+                PipelineStage.STT.value: probatio.Schema(
                     {
                         probatio.Required("input"): {
                             probatio.Required("sample_rate"): int,
@@ -109,11 +101,11 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     },
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.INTENT: probatio.Schema(
+                PipelineStage.INTENT.value: probatio.Schema(
                     {probatio.Required("input"): {"text": str}},
                     extra=probatio.ALLOW_EXTRA,
                 ),
-                PipelineStage.TTS: probatio.Schema(
+                PipelineStage.TTS.value: probatio.Schema(
                     {probatio.Required("input"): {"text": str}},
                     extra=probatio.ALLOW_EXTRA,
                 ),
@@ -236,8 +228,9 @@ async def websocket_run(
         audio_settings=audio_settings or AudioSettings(),
     )
 
+    # The intent stage checks the owner with the input of the user.
     with chat_session.async_get_chat_session(
-        hass, msg.get("conversation_id")
+        hass, msg.get("conversation_id"), context=None
     ) as session:
         input_args["session"] = session
         pipeline_input = PipelineInput(**input_args)

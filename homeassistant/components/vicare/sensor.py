@@ -38,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     VICARE_BAR,
@@ -435,7 +434,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         value_getter=lambda api: api.getGasSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -478,7 +476,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             api.getGasSummaryConsumptionDomesticHotWaterLastSevenDays()
         ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -513,7 +510,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerSummaryConsumptionHeatingLastSevenDays(),
         unit_getter=lambda api: api.getPowerSummaryConsumptionHeatingUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -582,7 +578,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             api.getPowerSummaryConsumptionDomesticHotWaterLastSevenDays()
         ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
-        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1023,6 +1018,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             "sensordriven",
             "silent",
             "forcedlevelfour",
+            "sensoroverride",
         ],
     ),
     ViCareSensorEntityDescription(
@@ -1164,6 +1160,40 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         value_getter=lambda api: api.getFuelNeed(),
         unit_getter=lambda api: api.getFuelUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ash_level",
+        translation_key="ash_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getAshLevel(),
+    ),
+    ViCareSensorEntityDescription(
+        key="air_flap_primary_position",
+        translation_key="air_flap_primary_position",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getAirFlapsPrimaryPosition(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="air_flap_secondary_position",
+        translation_key="air_flap_secondary_position",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getAirFlapsSecondaryPosition(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="boiler_circuit_pump_power",
+        translation_key="boiler_circuit_pump_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getBoilerCuircuitPumpCurrentLevel(),
     ),
     ViCareSensorEntityDescription(
         key="hydraulic_separator_temperature",
@@ -1642,10 +1672,11 @@ class ViCareSensor(ViCareCoordinatorEntity, SensorEntity):
                             vicare_unit
                         ]
 
-    @property
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        with suppress(PyViCareNotSupportedFeatureError):
-            return self.entity_description.value_getter(self._api)
-        return None
+    def _read_value(self) -> None:
+        """Read the sensor value from the API."""
+        # Both context managers swallow read failures, so clear first rather
+        # than republish the previous value.
+        self._attr_native_value = None
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_native_value = self.entity_description.value_getter(self._api)

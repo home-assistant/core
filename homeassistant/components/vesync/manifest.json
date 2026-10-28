@@ -1,6 +1,11 @@
 {
   "domain": "vesync",
   "name": "VeSync",
+  "categories": [
+    "climate.air_purifiers_humidifiers",
+    "plugs_switches",
+    "appliances_cleaning.cooking"
+  ],
   "codeowners": [
     "@markperdue",
     "@webdjoe",
