@@ -11,15 +11,16 @@ from . import ChefIqConfigEntry
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ChefIqConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
+    """Return diagnostics for a config entry.
+
+    The entry title is left out on purpose: users can rename it, so it may
+    hold personal information. The Bluetooth address identifies the probe.
+    """
     address = entry.unique_id
     assert address is not None
     service_info = async_last_service_info(hass, address, connectable=False)
     return {
-        "entry": {
-            "title": entry.title,
-            "unique_id": address,
-        },
+        "address": address,
         "advertisement": None
         if service_info is None
         else {

@@ -14,8 +14,9 @@ from . import ADDRESS, CHEFIQ_STATUS_SERVICE_INFO, TITLE
 async def test_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the config entry diagnostics include the latest advertisement."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS, title=TITLE)
+    """Test the diagnostics include the latest advertisement but not the title."""
+    # A user-edited title may hold personal information; it must not be exported.
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS, title="Backyard smoker")
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -24,7 +25,7 @@ async def test_diagnostics(
     await hass.async_block_till_done()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
-        "entry": {"title": TITLE, "unique_id": ADDRESS},
+        "address": ADDRESS,
         "advertisement": {
             "name": "CQ60",
             "rssi": -60,
@@ -44,6 +45,6 @@ async def test_diagnostics_without_advertisement(
     await hass.async_block_till_done()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == {
-        "entry": {"title": TITLE, "unique_id": ADDRESS},
+        "address": ADDRESS,
         "advertisement": None,
     }
