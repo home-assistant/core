@@ -850,7 +850,7 @@ async def test_reconfigure(hass: HomeAssistant, unique_id: str | None) -> None:
     with (
         _patch_discovery(),
         _patch_wifibulb(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -886,7 +886,7 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     with (
         _patch_discovery(),
         _patch_wifibulb(),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
