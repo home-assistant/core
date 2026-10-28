@@ -3,6 +3,8 @@
 import logging
 from typing import Any
 
+from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 import switchbot
 
 from homeassistant.components import bluetooth
@@ -471,12 +473,21 @@ def _migrate_deprecated_model_type(
     """Resolve a deprecated sensor type from its BLE advertisement."""
     model_migrations = DEPRECATED_MODEL_TYPE_MIGRATIONS[sensor_type]
     address = _entry_address(entry).upper()
+    advertisements: list[tuple[BLEDevice, AdvertisementData]] = []
     if service_info := bluetooth.async_last_service_info(
         hass, address, connectable=True
     ) or bluetooth.async_last_service_info(hass, address, connectable=False):
-        parsed_adv = switchbot.parse_advertisement_data(
-            service_info.device, service_info.advertisement
+        advertisements.append((service_info.device, service_info.advertisement))
+    # The model is only in the scan response, which passive scanners never
+    # receive, so the best advertisement may come from one that lacks it.
+    advertisements.extend(
+        (scanner_device.ble_device, scanner_device.advertisement)
+        for scanner_device in bluetooth.async_scanner_devices_by_address(
+            hass, address, connectable=False
         )
+    )
+    for device, advertisement in advertisements:
+        parsed_adv = switchbot.parse_advertisement_data(device, advertisement)
         if parsed_adv and (adv_model := parsed_adv.data.get("modelName")):
             return model_migrations.get(adv_model)
     return None
@@ -509,7 +520,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
                 hass, entry, sensor_type
             ):
                 new_data[CONF_SENSOR_TYPE] = migrated_type
-            else:
+            # Curtain and ceiling light are still valid types, so an unknown
+            # model keeps them instead of blocking setup.
+            elif sensor_type not in HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL:
                 address = _entry_address(entry)
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,

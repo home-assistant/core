@@ -401,6 +401,24 @@ WOCURTAIN3_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+# Passive scanners never receive the scan response carrying the model.
+WOCURTAIN3_PASSIVE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="AA:BB:CC:DD:EE:FF",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    service_data={},
+    service_uuids=[],
+    rssi=-50,
+    source="passive_proxy",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", None),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 WOBLINDTILT_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoBlindTilt",
     address="AA:BB:CC:DD:EE:FF",

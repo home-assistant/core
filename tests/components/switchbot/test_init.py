@@ -10,7 +10,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 import switchbot
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothScannerDevice,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
@@ -36,6 +39,7 @@ from . import (
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
+    WOCURTAIN3_PASSIVE_SERVICE_INFO,
     WOCURTAIN3_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
@@ -441,9 +445,7 @@ async def test_migrate_meter_pro_co2_without_advertisement(
     mock_service_info.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "sensor_type", ["hygrometer", "curtain", "ceiling_light", "plug"]
-)
+@pytest.mark.parametrize("sensor_type", ["hygrometer", "plug"])
 async def test_migrate_deprecated_model_device_not_in_range(
     hass: HomeAssistant,
     sensor_type: str,
@@ -473,6 +475,100 @@ async def test_migrate_deprecated_model_device_not_in_range(
     assert entry.data == original_data
     assert entry.options == {}
     assert entry.unique_id == "aabbccddeeff"
+
+
+@pytest.mark.parametrize("sensor_type", ["curtain", "ceiling_light"])
+@pytest.mark.parametrize(
+    "service_info",
+    [
+        pytest.param(None, id="not_in_range"),
+        pytest.param(WOCURTAIN3_PASSIVE_SERVICE_INFO, id="passive_advertisement"),
+    ],
+)
+async def test_migrate_unknown_model_keeps_valid_sensor_type(
+    hass: HomeAssistant,
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak | None,
+) -> None:
+    """Test a still valid sensor type is kept when the model is unknown."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: sensor_type,
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.bluetooth.async_last_service_info",
+            return_value=service_info,
+        ),
+        patch_async_setup_entry(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.data[CONF_SENSOR_TYPE] == sensor_type
+    assert entry.unique_id == "aabbccddeeff"
+
+
+async def test_migrate_model_from_other_scanner(hass: HomeAssistant) -> None:
+    """Test the model is resolved from a scanner other than the best one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "curtain",
+        },
+        unique_id="aabbccddeeff",
+        version=1,
+        minor_version=2,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.bluetooth.async_last_service_info",
+            return_value=WOCURTAIN3_PASSIVE_SERVICE_INFO,
+        ),
+        patch(
+            "homeassistant.components.switchbot.bluetooth.async_scanner_devices_by_address",
+            return_value=[
+                BluetoothScannerDevice(
+                    MagicMock(),
+                    WOCURTAIN3_PASSIVE_SERVICE_INFO.device,
+                    WOCURTAIN3_PASSIVE_SERVICE_INFO.advertisement,
+                ),
+                BluetoothScannerDevice(
+                    MagicMock(),
+                    WOCURTAIN3_SERVICE_INFO.device,
+                    WOCURTAIN3_SERVICE_INFO.advertisement,
+                ),
+            ],
+        ) as mock_scanner_devices,
+        patch_async_setup_entry(),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.data[CONF_SENSOR_TYPE] == "curtain_3"
+    mock_scanner_devices.assert_called_once_with(
+        hass, "AA:BB:CC:DD:EE:FF", connectable=False
+    )
 
 
 async def test_migration_retries_when_device_returns(
