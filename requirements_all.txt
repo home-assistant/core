@@ -798,7 +798,7 @@ cached-ipaddress==1.1.2
 caldav==3.5.0a0
 
 # homeassistant.components.chef_iq
-chefiq-ble==1.1.0
+chefiq-ble==1.1.1
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
