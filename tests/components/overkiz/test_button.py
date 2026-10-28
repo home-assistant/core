@@ -6,6 +6,8 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import OverkizState
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -74,6 +76,16 @@ STEP_NEGATIVE = FixtureDevice(
     "rts://1234-1234-6362/16752757",
     "button.palm_court_led_strip_brightness_down",
 )
+OVEN_START = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "button.oven_start",
+)
+OVEN_STOP = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "button.oven_stop",
+)
 
 SNAPSHOT_FIXTURES = [
     MY_POSITION,
@@ -81,6 +93,7 @@ SNAPSHOT_FIXTURES = [
     VELUX_WINDOW,
     GATE,
     STEP_POSITIVE,
+    OVEN_START,
 ]
 
 
@@ -251,3 +264,64 @@ async def test_button_alias_without_translation(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Loft Window Ventilation position"
     assert state.attributes[ATTR_ICON] == "mdi:star"
     assert "Unsupported goToAlias type ventilation (55299)" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("device", "command_name"),
+    [
+        pytest.param(OVEN_START, "start", id="start"),
+        pytest.param(OVEN_STOP, "stop", id="stop"),
+    ],
+)
+async def test_oven_start_stop(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    command_name: str,
+) -> None:
+    """Test the oven start/stop buttons send the matching command."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: device.entity_id},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=device.device_url,
+        command_name=command_name,
+    )
+
+
+def _block_local_control(setup: Setup) -> None:
+    """Simulate an oven that has not been switched to its Wi-Fi/remote mode."""
+    state = setup.devices[0].states[OverkizState.OGP_UNAVAILABLE_FEATURES]
+    state.value = [
+        {"feature": "*", "commands": ["*"], "states": ["*"], "cause": "localControl"}
+    ]
+
+
+async def test_oven_control_available_when_remotely_operable(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the oven control buttons are available without a localControl block."""
+    await setup_overkiz_integration(fixture=OVEN_START.fixture)
+
+    assert hass.states.get(OVEN_START.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_oven_control_unavailable_during_local_control(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a blanket localControl block makes the oven control buttons unavailable."""
+    await setup_overkiz_integration(
+        fixture=OVEN_START.fixture, mutate=_block_local_control
+    )
+
+    assert hass.states.get(OVEN_START.entity_id).state == STATE_UNAVAILABLE

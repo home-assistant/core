@@ -19,6 +19,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfRatio,
     UnitOfSpeed,
@@ -101,6 +102,16 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
         name="RSSI level",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_value=lambda value: round(cast(float, value)),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_SIGNAL_QUALITY,
+        name="Signal quality",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -537,6 +548,137 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Oven (ogp:Oven) - time left on the running cooking cycle
+    OverkizSensorDescription(
+        key=OverkizState.CORE_REMAINING_TIME,
+        name="Remaining time",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    # Oven (ogp:Oven) - current stage of the cooking cycle
+    OverkizSensorDescription(
+        key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
+        name="Cycle stage",
+        native_value=str,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Oven (ogp:Oven) - recommended target temperature for the selected mode.
+    # The appliance advertises per-mode advisory values; they are not enforced.
+    OverkizSensorDescription(
+        key=OverkizState.CORE_RECOMMENDED_TARGET_TEMPERATURE,
+        name="Recommended temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - lower advisory bound of the target temperature
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_TEMPERATURE_CURRENT_LOWER_BOUND,
+        name="Minimum temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - upper advisory bound of the target temperature
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_TEMPERATURE_CURRENT_UPPER_BOUND,
+        name="Maximum temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - recommended cooking duration for the selected mode
+    OverkizSensorDescription(
+        key=OverkizState.CORE_RECOMMENDED_TARGET_TIME,
+        name="Recommended duration",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - lower advisory bound of the cooking duration
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_TIME_CURRENT_LOWER_BOUND,
+        name="Minimum duration",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - upper advisory bound of the cooking duration
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_TIME_CURRENT_UPPER_BOUND,
+        name="Maximum duration",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - target food weight (used by Easy Cook recipes)
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_WEIGHT,
+        name="Target weight",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - recommended food weight for the selected recipe
+    OverkizSensorDescription(
+        key=OverkizState.CORE_RECOMMENDED_TARGET_WEIGHT,
+        name="Recommended weight",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - lower advisory bound of the target weight
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_WEIGHT_CURRENT_LOWER_BOUND,
+        name="Minimum weight",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - upper advisory bound of the target weight
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_WEIGHT_CURRENT_UPPER_BOUND,
+        name="Maximum weight",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Oven (ogp:Oven) - currently selected Easy Cook recipe ("custom" when none)
+    OverkizSensorDescription(
+        key=OverkizState.CORE_RECIPE,
+        name="Recipe",
+        native_value=str,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 

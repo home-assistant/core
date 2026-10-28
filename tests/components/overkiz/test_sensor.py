@@ -76,12 +76,19 @@ YUTAKI = FixtureDevice(
     "sensor.my_house_yutaki_outdoor_ambient_temperature",
 )
 
+OVEN = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "sensor.oven_remaining_time",
+)
+
 SNAPSHOT_FIXTURES = [
     TEMPERATURE_SENSOR,
     TEMPERATURE_SENSOR_LOCAL,
     HOMEKIT_STACK,
     COZYTOUCH_DHW,
     YUTAKI,
+    OVEN,
 ]
 
 

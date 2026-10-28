@@ -2,9 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, UIClass
+from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -13,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity
+from .entity import OverkizExecutableEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -21,6 +22,15 @@ class OverkizSelectDescription(SelectEntityDescription):
     """Class to describe an Overkiz select entity."""
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
+
+    # When set, the option list is read live from this device state (e.g. the
+    # oven advertises its supported modes in core:AvailableModesState) instead
+    # of the static description options.
+    options_state_name: str | None = None
+
+    # Restrict this entity to the listed device types (UIWidget/UIClass).
+    # When omitted, the select applies to any device exposing the state.
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 def _select_option_open_closed_pedestrian(
@@ -117,6 +127,17 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         select_option=_select_option_active_zone,
         translation_key="active_zones",
     ),
+    # Oven (ogp:Oven) - cooking mode. Options are read live from the oven's
+    # core:AvailableModesState, so only modes the appliance supports are shown.
+    OverkizSelectDescription(
+        key=OverkizState.CORE_MODE,
+        name="Mode",
+        options_state_name=OverkizState.CORE_AVAILABLE_MODES,
+        select_option=lambda option, execute_command: execute_command(
+            OverkizCommand.SET_MODE, option
+        ),
+        device_types=[UIClass.OVEN],
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
@@ -149,15 +170,35 @@ async def async_setup_entry(
             )
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
+            and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
+            )
         )
 
     async_add_entities(entities)
 
 
-class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
+class OverkizSelect(OverkizExecutableEntity, SelectEntity):
     """Representation of an Overkiz Select entity."""
 
     entity_description: OverkizSelectDescription
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the available options.
+
+        Read live from a device state when the description declares one,
+        otherwise fall back to the static options from the description.
+        """
+        if self.entity_description.options_state_name and (
+            state := self.device.states.get(self.entity_description.options_state_name)
+        ):
+            return [str(option) for option in cast(list, state.value) or []]
+
+        return self.entity_description.options or []
 
     @property
     @override

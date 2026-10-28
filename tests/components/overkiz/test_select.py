@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -41,11 +42,17 @@ ACTIVE_ZONES = FixtureDevice(
     "io://1234-1234-6233/2155276",
     "select.willow_house_protexiom_active_zones",
 )
+OVEN_MODE = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "select.oven_mode",
+)
 
-# One representative setup per fixture file; both expose select entities.
+# One representative setup per fixture file; each exposes select entities.
 SNAPSHOT_FIXTURES = [
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "setup/local_somfy_tahoma_v2_europe.json",
+    "setup/cloud_sauter_sop6615lb.json",
 ]
 
 
@@ -113,6 +120,13 @@ async def test_select_entities_snapshot(
             None,
             id="active_zones_off",
         ),
+        pytest.param(
+            OVEN_MODE,
+            "pizza",
+            "setMode",
+            ["pizza"],
+            id="oven_mode",
+        ),
     ],
 )
 async def test_select_option(
@@ -167,3 +181,31 @@ async def test_select_unavailability(
     )
 
     assert hass.states.get(OPEN_CLOSED_PEDESTRIAN.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_mode_options_from_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the oven mode options are read live from core:AvailableModesState."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    state = hass.states.get(OVEN_MODE.entity_id)
+    assert state
+    assert state.state == "defrost"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "defrost",
+        "bottomHeat",
+        "bottomFan",
+        "conventional",
+        "conventionalFan",
+        "fannedGrill",
+        "keepingWarm",
+        "fanCooking",
+        "combinedHeat",
+        "bread",
+        "drying",
+        "pizza",
+        "eco",
+        "auto",
+    ]

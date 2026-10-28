@@ -1,0 +1,914 @@
+{
+  "gateways": [
+    {
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "4.13"
+      },
+      "gatewayId": "1234-5678-9123"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "ogp://1234-5678-9123/16000211",
+      "available": true,
+      "type": 1,
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Oven"
+        },
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ErrorState",
+          "type": 11,
+          "value": {
+            "key": "internal",
+            "message": "NO_ERROR"
+          }
+        },
+        {
+          "name": "core:Private1State",
+          "type": 11,
+          "value": {
+            "PROGRAMMED_COOKING": 0,
+            "START_TIME": 65535,
+            "DELAY_START": 0
+          }
+        },
+        {
+          "name": "core:Private2State",
+          "type": 11,
+          "value": {
+            "LOCK_ERROR": 0,
+            "CAVITY_SENSOR_ERROR": 0,
+            "HUMIDITY_SENSOR_ERROR": 0,
+            "NTC_SENSOR_ERROR": 0,
+            "OVERHEATING": 0,
+            "POWER_SUPPLY_LOST": 0,
+            "SECU_STATE": 5,
+            "SECU_ERROR": 0,
+            "LOCK_STATE_PEC": 0,
+            "STEAM_GENERATOR_ERROR": 0
+          }
+        },
+        {
+          "name": "core:Private3State",
+          "type": 11,
+          "value": {
+            "STEAM_GENERATOR_EMPTY": 0,
+            "OVEN_TOO_HOT_TO_START_ICS_OR_LT": 0
+          }
+        },
+        {
+          "name": "core:Private4State",
+          "type": 11,
+          "value": {
+            "RECOMMENDED_INSERTION_LEVEL": 4
+          }
+        },
+        {
+          "name": "core:Private5State",
+          "type": 11,
+          "value": {
+            "Product_Familly": "OVEN",
+            "Product_Familly_Class": "PYRO_LX",
+            "Product_Config_Filename": "PCF3",
+            "Product_Commercial_Ref": "SOP6615LB",
+            "Product_ID": "UNDEF_0"
+          }
+        },
+        {
+          "name": "core:Private6State",
+          "type": 11,
+          "value": {
+            "RECIPE": 0,
+            "GUIDE_TYPE": 255,
+            "GUIDE_LABEL_ID": 65535,
+            "RECIPE_CATEGORY": 255,
+            "GUIDE_PARAM_TYPE": 0,
+            "GUIDE_DISH_TYPE": 255,
+            "GUIDE_SIZE": 255,
+            "PREHEATING": 0
+          }
+        },
+        {
+          "name": "core:FirmwareRevisionState",
+          "type": 3,
+          "value": "326"
+        },
+        {
+          "name": "core:FirmwareHashState",
+          "type": 3,
+          "value": "133"
+        },
+        {
+          "name": "core:IntensityState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:LightIntensityState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 35.0
+        },
+        {
+          "name": "core:TargetTemperatureReachedState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:TargetTemperatureCurrentLowerBoundState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureCurrentUpperBoundState",
+          "type": 2,
+          "value": 50.0
+        },
+        {
+          "name": "core:RecommendedTargetTemperatureState",
+          "type": 2,
+          "value": 35.0
+        },
+        {
+          "name": "core:ModeState",
+          "type": 3,
+          "value": "defrost"
+        },
+        {
+          "name": "core:AvailableModesState",
+          "type": 10,
+          "value": [
+            "defrost",
+            "bottomHeat",
+            "bottomFan",
+            "conventional",
+            "conventionalFan",
+            "fannedGrill",
+            "keepingWarm",
+            "fanCooking",
+            "combinedHeat",
+            "bread",
+            "drying",
+            "pizza",
+            "eco",
+            "auto"
+          ]
+        },
+        {
+          "name": "core:OpenState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:LockedUnlockedState",
+          "type": 3,
+          "value": "unlocked"
+        },
+        {
+          "name": "core:RecipeState",
+          "type": 3,
+          "value": "custom"
+        },
+        {
+          "name": "core:AvailableRecipesState",
+          "type": 10,
+          "value": [
+            "pizza",
+            "rareBeef",
+            "mediumRareBeef",
+            "wellDoneBeef",
+            "rareLamb",
+            "wellDoneLamb",
+            "pork",
+            "chicken",
+            "fish",
+            "vegetables",
+            "saltTart",
+            "sweetTart",
+            "cake",
+            "cookies",
+            "souffle"
+          ]
+        },
+        {
+          "name": "core:TargetWeightState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:TargetTimeState",
+          "type": 1,
+          "value": 1800
+        },
+        {
+          "name": "core:RemainingTimeState",
+          "type": 1,
+          "value": 1800,
+          "lastUpdateTime": 1793170363000
+        },
+        {
+          "name": "core:RunningTimerState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:AvailableOptionsState",
+          "type": 10,
+          "value": [
+            "remotedGuide",
+            "booster",
+            "demo"
+          ]
+        },
+        {
+          "name": "core:ActivatedOptionsState",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:CycleStageSequenceState",
+          "type": 10,
+          "value": [
+            "cooking",
+            "end"
+          ]
+        },
+        {
+          "name": "core:CurrentCycleStageState",
+          "type": 3,
+          "value": "end"
+        },
+        {
+          "name": "core:StartedStoppedState",
+          "type": 3,
+          "value": "stopped"
+        },
+        {
+          "name": "core:TimezoneState",
+          "type": 3,
+          "value": "Europe/Paris"
+        },
+        {
+          "name": "ogp:UnavailableFeaturesState",
+          "type": 10,
+          "value": [
+            {
+              "feature": "recipeControl",
+              "commands": [
+                "*"
+              ],
+              "states": [
+                "*"
+              ],
+              "cause": "modeConstraint"
+            },
+            {
+              "feature": "weightControl",
+              "commands": [
+                "*"
+              ],
+              "states": [
+                "*"
+              ],
+              "cause": "modeConstraint"
+            },
+            {
+              "feature": "dimming",
+              "commands": [
+                "*"
+              ],
+              "states": [
+                "*"
+              ],
+              "cause": "modeConstraint"
+            }
+          ]
+        }
+      ],
+      "label": "Oven",
+      "attributes": [
+        {
+          "name": "core:SupportedIntensities",
+          "type": 10,
+          "value": [
+            25,
+            50,
+            75,
+            100
+          ]
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "identification"
+            },
+            {
+              "name": "private"
+            },
+            {
+              "name": "diagnosis"
+            },
+            {
+              "name": "firmware",
+              "commandLess": true
+            },
+            {
+              "name": "time"
+            },
+            {
+              "name": "start"
+            },
+            {
+              "name": "stop"
+            },
+            {
+              "name": "openingDetection"
+            },
+            {
+              "name": "lockUnlock",
+              "commandLess": true
+            },
+            {
+              "name": "modeControl"
+            },
+            {
+              "name": "cycleStage"
+            },
+            {
+              "name": "optionControl"
+            },
+            {
+              "name": "recipeControl"
+            },
+            {
+              "name": "temperatureControl"
+            },
+            {
+              "name": "timeControl"
+            },
+            {
+              "name": "weightControl"
+            },
+            {
+              "name": "featureAvailability"
+            },
+            {
+              "name": "dimming",
+              "commandLess": true
+            }
+          ]
+        },
+        {
+          "name": "core:SupportedRecipes",
+          "type": 10,
+          "value": [
+            "fish",
+            "chicken",
+            "pork",
+            "rareBeef",
+            "mediumRareBeef",
+            "wellDoneBeef",
+            "rareLamb",
+            "mediumRareLamb",
+            "wellDoneLamb",
+            "saltTart",
+            "sweetTart",
+            "pizza",
+            "vegetables",
+            "cookies",
+            "cake",
+            "souffle",
+            "custom"
+          ]
+        },
+        {
+          "name": "core:TargetTimeUpperBound",
+          "type": 1,
+          "value": 36000
+        },
+        {
+          "name": "core:SupportedRecipesByCategory",
+          "type": 10,
+          "value": [
+            {
+              "category": "automatic",
+              "recipes": [
+                "fish",
+                "chicken",
+                "pork",
+                "rareBeef",
+                "mediumRareBeef",
+                "wellDoneBeef",
+                "rareLamb",
+                "mediumRareLamb",
+                "wellDoneLamb",
+                "saltTart",
+                "sweetTart",
+                "pizza",
+                "vegetables",
+                "cookies",
+                "cake",
+                "souffle",
+                "custom"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "core:TargetWeightLowerBound",
+          "type": 1,
+          "value": 50
+        },
+        {
+          "name": "core:TargetTemperatureUpperBound",
+          "type": 1,
+          "value": 275
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Brandt_UBB_OGP_Smart_Oven"
+        },
+        {
+          "name": "core:TargetTimeLowerBound",
+          "type": 1,
+          "value": 60
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "SOP6615LB-1"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Brandt"
+        },
+        {
+          "name": "core:SupportedModes",
+          "type": 10,
+          "value": [
+            "defrost",
+            "bottomHeat",
+            "bottomFan",
+            "conventional",
+            "conventionalFan",
+            "grillMedium",
+            "grillStrong",
+            "grillPower",
+            "fannedGrill",
+            "keepingWarm",
+            "fanCooking",
+            "combinedHeat",
+            "delicateFood",
+            "shabbat",
+            "bread",
+            "eco",
+            "auto",
+            "lowTemperature",
+            "catalyticCleaning",
+            "pyrolitic90Cleaning",
+            "pyrolitic105Cleaning",
+            "pyrolitic120Cleaning",
+            "pyroliticAutoCleaning",
+            "guidedCooking",
+            "guidedCookingMicrowave",
+            "guidedDefrostingMicrowave",
+            "ecoConventional",
+            "ecoFan",
+            "booster",
+            "pyroliticExpressCleaning",
+            "pizza",
+            "catalyticExpressCleaning",
+            "drying",
+            "guidedSteam",
+            "microwave",
+            "defrostingMicrowave",
+            "keepingWarmMicrowave",
+            "fanCookingMicrowave",
+            "grillMicrowave",
+            "grillVariableMicrowave",
+            "conventionalMicrowave",
+            "heatAndHoldMicrowave",
+            "steam",
+            "defrostingSteam",
+            "keepingWarmSteam",
+            "fanSteam",
+            "grillFanSteam",
+            "conventionalSteam",
+            "conventionalFanSteam",
+            "cleaningSteam",
+            "emptyingSteam",
+            "descalingSteam"
+          ]
+        },
+        {
+          "name": "core:SupportedOptions",
+          "type": 10,
+          "value": [
+            "remotedGuide",
+            "booster",
+            "demo"
+          ]
+        },
+        {
+          "name": "core:SupportedModesByCategory",
+          "type": 10,
+          "value": [
+            {
+              "category": "conventionnal",
+              "modes": [
+                "defrost",
+                "bottomHeat",
+                "bottomFan",
+                "conventional",
+                "conventionalFan"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "core:SubsetId",
+          "type": 3,
+          "value": "1986-9292-8338"
+        },
+        {
+          "name": "core:TargetWeightUpperBound",
+          "type": 1,
+          "value": 6000
+        },
+        {
+          "name": "core:TargetTemperatureLowerBound",
+          "type": 1,
+          "value": 30
+        },
+        {
+          "name": "core:SupportedCycleStages",
+          "type": 10,
+          "value": [
+            "analysis",
+            "cooking",
+            "end"
+          ]
+        }
+      ],
+      "enabled": true,
+      "controllableName": "ogp:Oven",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "activateOption",
+            "nparams": 1
+          },
+          {
+            "commandName": "deactivateOption",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "sendPrivate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRecipe",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetWeight",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTimezone",
+            "nparams": 1
+          },
+          {
+            "commandName": "start",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActivatedOptionsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActivePartitionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "available",
+              "unavailable"
+            ],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableModesState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableOptionsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableRecipesState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AvailableTargetTemperaturesState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CurrentCycleStageState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CycleStageSequenceState"
+          },
+          {
+            "eventBased": true,
+            "type": "DiscreteState",
+            "values": [
+              "accessLimitation",
+              "internal",
+              "obstacleProtection",
+              "transportBusy",
+              "deviceNoAnswer",
+              "cancelled",
+              "deprecated",
+              "interrupted",
+              "thermalProtection",
+              "maintenanceRequired",
+              "alreadyUpToDate",
+              "notSupported",
+              "hardwareError",
+              "accessDenied",
+              "updateError",
+              "resourceAlreadyExist"
+            ],
+            "qualifiedName": "core:ErrorEventState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareHashState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareRevisionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:IntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LightIntensityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "locked",
+              "unlocked"
+            ],
+            "qualifiedName": "core:LockedUnlockedState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NewFirmwareAvailableState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "closed",
+              "open"
+            ],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:OpenState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private10State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private4State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private5State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private6State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private7State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private8State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private9State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RecipeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RecommendedOptionsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RecommendedTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RecommendedTargetTimeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RecommendedTargetWeightState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RemainingTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RunningTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SignalQualityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "started",
+              "stopped"
+            ],
+            "qualifiedName": "core:StartedStoppedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "available",
+              "unavailable"
+            ],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureCurrentLowerBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureCurrentUpperBoundState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TargetTemperatureReachedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTimeCurrentLowerBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTimeCurrentUpperBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTimeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetWeightCurrentLowerBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetWeightCurrentUpperBoundState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetWeightState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimezoneState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "ogp:UnavailableFeaturesState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicOven",
+        "uiProfiles": [
+          "StatefulStartStopOven",
+          "StatefulStartStop",
+          "StartStop",
+          "StatefulThermostat",
+          "Thermostat",
+          "LockStatus"
+        ],
+        "uiClass": "Oven",
+        "qualifiedName": "ogp:Oven",
+        "type": "ACTUATOR"
+      }
+    }
+  ]
+}

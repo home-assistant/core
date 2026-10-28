@@ -151,3 +151,34 @@ class OverkizDescriptiveEntity(OverkizEntity):
         else:
             # Fall back to the device name, not the device class name.
             self._attr_name = None
+
+
+class OverkizExecutableEntity(OverkizDescriptiveEntity):
+    """A descriptive entity whose availability honors ogp:UnavailableFeaturesState.
+
+    Some OGP appliances (e.g. ovens) refuse every remote command unless the
+    appliance has been switched to its Wi-Fi/remote mode on the device itself.
+    They advertise this through a blanket ogp:UnavailableFeaturesState entry
+    (feature "*", command "*", cause "localControl"). While that block is
+    active, control entities (number/select/button) are marked unavailable.
+    Feature-scoped entries (e.g. cause "modeConstraint") are ignored, so
+    controls stay available while the appliance is remotely operable.
+    """
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+
+        if features := self.device.states.get(OverkizState.OGP_UNAVAILABLE_FEATURES):
+            for entry in features.value or []:
+                if (
+                    isinstance(entry, dict)
+                    and entry.get("feature") == "*"
+                    and "*" in (entry.get("commands") or [])
+                ):
+                    return False
+
+        return True

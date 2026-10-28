@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -155,6 +156,72 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         name="Tilt",
         icon="mdi:angle-acute",
         value_fn=bool,
+    ),
+    # Oven (ogp:Oven) - door
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_OPEN,
+        name="Door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_fn=bool,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - cooking in progress
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_STARTED_STOPPED,
+        name="Cooking",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_fn=lambda state: state == OverkizCommandParam.STARTED,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - door lock (on = unlocked)
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_LOCKED_UNLOCKED,
+        name="Lock",
+        device_class=BinarySensorDeviceClass.LOCK,
+        value_fn=lambda state: state == OverkizCommandParam.UNLOCKED,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - error
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_ERROR,
+        name="Problem",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=(
+            lambda state: (
+                isinstance(state, dict)
+                and state.get("message") not in (None, "NO_ERROR")
+            )
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - target temperature reached (preheating done)
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_TARGET_TEMPERATURE_REACHED,
+        name="Temperature reached",
+        value_fn=bool,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - cooking timer running
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_RUNNING_TIMER,
+        name="Timer",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_fn=bool,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - firmware update available on the appliance
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_NEW_FIRMWARE_AVAILABLE,
+        name="Firmware update available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        value_fn=bool,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_types=[UIClass.OVEN],
     ),
 ]
 

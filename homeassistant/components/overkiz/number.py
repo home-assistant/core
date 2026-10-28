@@ -5,7 +5,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 from typing import cast, override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, UIClass
+from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -21,7 +22,7 @@ from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
 from .cover import SUPPORTED_DEVICES as SUPPORTED_COVER_DEVICES
-from .entity import OverkizDescriptiveEntity
+from .entity import OverkizExecutableEntity
 
 BOOST_MODE_DURATION_DELAY = 1
 OPERATING_MODE_DELAY = 3
@@ -39,6 +40,10 @@ class OverkizNumberDescription(NumberEntityDescription):
     set_native_value: (
         Callable[[float, Callable[..., Awaitable[None]]], Awaitable[None]] | None
     ) = None
+
+    # Restrict this entity to the listed device types (UIWidget/UIClass).
+    # When omitted, the number applies to any device exposing the state.
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 async def _async_set_native_value_boost_mode_duration(
@@ -217,6 +222,35 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
+    # Oven (ogp:Oven) - target temperature.
+    # The device enforces an absolute physical envelope and rejects anything
+    # outside it; the per-mode advisory bounds are not applied here on purpose
+    # (they are UI hints and can be tighter than values the oven accepts).
+    OverkizNumberDescription(
+        key=OverkizState.CORE_TARGET_TEMPERATURE,
+        name="Target temperature",
+        command=OverkizCommand.SET_TARGET_TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=35,
+        native_max_value=275,
+        native_step=5,
+        mode=NumberMode.BOX,
+        device_types=[UIClass.OVEN],
+    ),
+    # Oven (ogp:Oven) - target cooking time (0 - 9h59)
+    OverkizNumberDescription(
+        key=OverkizState.CORE_TARGET_TIME,
+        name="Cooking duration",
+        command=OverkizCommand.SET_TARGET_TIME,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=35940,
+        native_step=60,
+        mode=NumberMode.BOX,
+        device_types=[UIClass.OVEN],
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
@@ -248,6 +282,12 @@ async def async_setup_entry(
             if not device.supports_command(description.command):
                 continue
 
+            if description.device_types is not None and not (
+                device.widget in description.device_types
+                or device.ui_class in description.device_types
+            ):
+                continue
+
             # Mirror the cover's position inversion.
             if description.key == OverkizState.CORE_MEMORIZED_1_POSITION and (
                 cover_description := (
@@ -270,7 +310,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
+class OverkizNumber(OverkizExecutableEntity, NumberEntity):
     """Representation of an Overkiz Number."""
 
     entity_description: OverkizNumberDescription

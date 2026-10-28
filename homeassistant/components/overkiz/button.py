@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from typing import override
 
-from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, UIClass
+from pyoverkiz.enums.ui import UIWidget
 from pyoverkiz.models import SupportedAlias
 from pyoverkiz.types import StateType as OverkizStateType
 
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizEntity
+from .entity import OverkizEntity, OverkizExecutableEntity
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,10 @@ class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 
     press_args: list[OverkizStateType] | None = None
+
+    # Restrict this entity to the listed device types (UIWidget/UIClass).
+    # When omitted, the button applies to any device exposing the command.
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
@@ -101,6 +106,20 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         icon="mdi:smoke-detector",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Oven (ogp:Oven) - start/stop the selected cooking program.
+    # Scoped to ovens: the "stop" command is also used by covers.
+    OverkizButtonDescription(
+        key=OverkizCommand.START,
+        name="Start",
+        icon="mdi:play",
+        device_types=[UIClass.OVEN],
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.STOP,
+        name="Stop",
+        icon="mdi:stop",
+        device_types=[UIClass.OVEN],
+    ),
 ]
 
 SUPPORTED_COMMANDS = {
@@ -141,7 +160,11 @@ async def async_setup_entry(
                     OverkizAliasButton(device.device_url, data.coordinator, alias)
                     for alias in device.get_most_featured_aliases().values()
                 )
-            elif description := SUPPORTED_COMMANDS.get(command):
+            elif (description := SUPPORTED_COMMANDS.get(command)) and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
+            ):
                 entities.append(
                     OverkizButton(device.device_url, data.coordinator, description)
                 )
@@ -149,7 +172,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
+class OverkizButton(OverkizExecutableEntity, ButtonEntity):
     """Representation of an Overkiz Button."""
 
     entity_description: OverkizButtonDescription

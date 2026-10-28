@@ -57,12 +57,23 @@ TOWEL_DRYER_DRYING_DURATION = FixtureDevice(
     "io://1234-5678-5643/5237136#1",
     "number.my_home_bathroom_towel_dryer_drying_duration",
 )
+OVEN_TARGET_TEMPERATURE = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "number.oven_target_temperature",
+)
+OVEN_COOKING_DURATION = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "number.oven_cooking_duration",
+)
 
 SNAPSHOT_FIXTURES = [
     MEMORIZED_POSITION,
     OFFICE_BLINDS_MEMORIZED_POSITION,
     EXPECTED_NUMBER_OF_SHOWER,
     COMFORT_ROOM_TEMPERATURE,
+    OVEN_TARGET_TEMPERATURE,
 ]
 
 
@@ -109,6 +120,18 @@ async def test_number_entities_snapshot(
             90,
             "setDryingDuration",
             id="towel_dryer_drying_duration",
+        ),
+        pytest.param(
+            OVEN_TARGET_TEMPERATURE,
+            180,
+            "setTargetTemperature",
+            id="oven_target_temperature",
+        ),
+        pytest.param(
+            OVEN_COOKING_DURATION,
+            1200,
+            "setTargetTime",
+            id="oven_cooking_duration",
         ),
     ],
 )
