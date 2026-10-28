@@ -560,6 +560,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return self._device is not None and self._device.profile_device.available
 
     @property
+    def device(self) -> DmrDevice | None:
+        """Return the connected DMR device, if any."""
+        return self._device
+
+    @property
     @override
     def unique_id(self) -> str:
         """Report the UDN (Unique Device Name) as this entity's unique ID."""

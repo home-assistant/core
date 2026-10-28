@@ -18,6 +18,15 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "abrp": {
+      "name": "A Better Routeplanner",
+      "integration_type": "hub",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "acaia": {
       "name": "Acaia",
       "integration_type": "device",
@@ -134,6 +143,16 @@
         "energy.meters_monitoring"
       ],
       "supported_by": "opower"
+    },
+    "aerosmart": {
+      "name": "aerosmart",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation",
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "aftership": {
       "name": "AfterShip",
@@ -1334,6 +1353,15 @@
             "hubs_protocols.smart_home_hubs"
           ],
           "name": "Bosch SHC"
+        },
+        "bosch_smart_camera": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "security_safety.cameras"
+          ],
+          "name": "Bosch Smart Camera"
         },
         "home_connect": {
           "integration_type": "hub",
@@ -3151,11 +3179,28 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "everything_smart_home": {
+      "name": "Everything Smart Home",
+      "integration_type": "virtual",
+      "categories": [
+        "diy_makers.boards_hardware"
+      ],
+      "supported_by": "esphome"
+    },
     "evil_genius_labs": {
       "name": "Evil Genius Labs",
       "integration_type": "device",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "exicom_spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3416,12 +3461,26 @@
     },
     "flic": {
       "name": "Flic",
-      "integration_type": "hub",
-      "categories": [
-        "buttons_remotes"
-      ],
-      "config_flow": false,
-      "iot_class": "local_push"
+      "integrations": {
+        "flic": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        },
+        "flic_button": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        }
+      }
     },
     "flipr": {
       "name": "Flipr",
@@ -3499,11 +3558,11 @@
     },
     "folder": {
       "name": "Folder",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "folder_watcher": {
@@ -6003,6 +6062,12 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "ledvance": {
+      "name": "LEDVANCE",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "legrand": {
       "name": "Legrand",
       "integration_type": "virtual",
@@ -7913,7 +7978,7 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "nyt_games": {
@@ -9272,6 +9337,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "rainbowminer": {
+      "name": "RainbowMiner",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.monitoring"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rainforest_automation": {
       "name": "Rainforest Automation",
       "integrations": {
@@ -9958,6 +10032,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "categories": [
@@ -10250,6 +10333,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "silvercrest_infrared": {
+      "name": "SilverCrest Infrared",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "simplefin": {
       "name": "SimpleFin",
@@ -10664,6 +10756,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solyx_energy_cloud": {
+      "name": "Solyx Energy Cloud",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "soma": {
       "name": "Soma Connect",
       "integration_type": "hub",
@@ -10802,15 +10904,6 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "spin_ble": {
-      "name": "Spin EV Charger",
-      "integration_type": "device",
-      "categories": [
-        "energy.ev_charging"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "splunk": {
       "name": "Splunk",
@@ -12569,7 +12662,7 @@
       "iot_class": "cloud_polling"
     },
     "wattwaechter": {
-      "name": "WattW\u00e4chter Plus",
+      "name": "WattW\u00e4chter",
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
