@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from zhaquirks.builder import QuirkBuilder
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
@@ -522,7 +522,7 @@ async def async_test_pi_heating_demand(
 async def test_sensor(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     cluster_id,
     entity_suffix,
     test_func,
@@ -638,7 +638,7 @@ async def test_sensor(
 async def test_sensor_name(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     translation_key: str | None,
     fallback_name: str,
     device_class: SensorDeviceClass | None,
