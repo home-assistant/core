@@ -3179,6 +3179,14 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "everything_smart_home": {
+      "name": "Everything Smart Home",
+      "integration_type": "virtual",
+      "categories": [
+        "diy_makers.boards_hardware"
+      ],
+      "supported_by": "esphome"
+    },
     "evil_genius_labs": {
       "name": "Evil Genius Labs",
       "integration_type": "device",
@@ -6053,6 +6061,12 @@
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "ledvance": {
+      "name": "LEDVANCE",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "legrand": {
       "name": "Legrand",
