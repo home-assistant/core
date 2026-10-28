@@ -557,6 +557,7 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
     [
         "{{ dict.clear(states.sensor.test.attributes) }}",
         "{{ dict.pop(states.sensor.test.attributes, 'a') }}",
+        "{{ dict.popitem(states.sensor.test.attributes) }}",
         "{{ dict.setdefault(states.sensor.test.attributes, 'b', 2) }}",
         "{{ dict.update(states.sensor.test.attributes, {'b': 2}) }}",
     ],
