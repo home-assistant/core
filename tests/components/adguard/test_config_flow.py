@@ -11,7 +11,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.adguard.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryDisabler
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 FIXTURE_STATUS = {
@@ -454,6 +455,52 @@ async def test_reconfigure(
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
     }
+
+
+async def test_reconfigure_migrates_disabled_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a disabled legacy entry is migrated before its host changes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        disabled_by=ConfigEntryDisabler.USER,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "adguard_127.0.0.1_3000_sensor_dns_queries",
+        config_entry=entry,
+    )
+    aioclient_mock.get(
+        "http://192.168.1.2:3001/control/status",
+        json=FIXTURE_STATUS,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 3001,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.minor_version == 2
+    assert entry.data[CONF_HOST] == "192.168.1.2"
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated
+    assert migrated.unique_id == f"{entry.entry_id}_dns_queries"
 
 
 async def test_reconfigure_without_credentials(

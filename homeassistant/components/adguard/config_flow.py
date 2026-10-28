@@ -242,6 +242,9 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = error
             else:
+                # Disabled entries are not migrated on setup, and the
+                # migration matches entities by the current host and port.
+                await reconfigure_entry.async_migrate(self.hass)
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={
