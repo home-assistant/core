@@ -180,7 +180,16 @@ async def async_attach_trigger(
             return False
         if state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return True
-        return attribute is not None and state.attributes.get(attribute) is None
+        if attribute is None:
+            return False
+        if attribute not in state.attributes:
+            return True
+        # A value template replaces the attribute value and may map it to a fallback
+        return value_template is None and state.attributes[attribute] in (
+            None,
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        )
 
     # Each entity that starts outside the range is already armed (ready to fire).
     # Entities without a valid starting value stay unarmed, so their first valid

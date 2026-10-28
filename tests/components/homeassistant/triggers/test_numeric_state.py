@@ -2102,14 +2102,35 @@ async def test_ignore_invalid_states(
             1,
             id="crossing_ignore",
         ),
+        pytest.param(
+            False,
+            [("on", {"temp": 23})],
+            [("on", {"temp": STATE_UNKNOWN}), ("on", {"temp": 23})],
+            1,
+            id="unknown_value_default",
+        ),
+        pytest.param(
+            True,
+            [("on", {"temp": 23})],
+            [("on", {"temp": STATE_UNKNOWN}), ("on", {"temp": 23})],
+            0,
+            id="unknown_value_ignore",
+        ),
+        pytest.param(
+            True,
+            [("on", {"temp": 23})],
+            [("on", {"temp": STATE_UNAVAILABLE}), ("on", {"temp": 23})],
+            0,
+            id="unavailable_value_ignore",
+        ),
     ],
 )
 async def test_ignore_invalid_states_attribute(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     ignore_invalid_states: bool,
-    before_setup: list[tuple[str, dict[str, int | None]]],
-    after_setup: list[tuple[str, dict[str, int | None]]],
+    before_setup: list[tuple[str, dict[str, int | str | None]]],
+    after_setup: list[tuple[str, dict[str, int | str | None]]],
     expected_calls: int,
 ) -> None:
     """Test a missing or None attribute is skipped when configured."""
@@ -2138,6 +2159,36 @@ async def test_ignore_invalid_states_attribute(
         hass.states.async_set("test.entity", state, attributes)
         await hass.async_block_till_done()
     assert len(service_calls) == expected_calls
+
+
+async def test_ignore_invalid_states_attribute_with_template(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a value template can still map an invalid attribute to a value."""
+    hass.states.async_set("test.entity", "on", {"temp": 19})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "attribute": "temp",
+                    "value_template": "{{ state.attributes.temp or 30 }}",
+                    "above": 22,
+                    "ignore_invalid_states": True,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("test.entity", "on", {"temp": None})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
 
 
 @pytest.mark.parametrize(
