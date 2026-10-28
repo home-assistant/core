@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from flux_led.scanner import FluxLEDDiscovery
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -898,7 +899,16 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
-async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "discovery",
+    [
+        pytest.param(FLUX_DISCOVERY, id="full_udp_response"),
+        pytest.param(FLUX_DISCOVERY_PARTIAL, id="partial_udp_response"),
+    ],
+)
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, discovery: FluxLEDDiscovery
+) -> None:
     """Test reconfiguring aborts when a different device is found."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -909,7 +919,7 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
 
     result = await config_entry.start_reconfigure_flow(hass)
 
-    with _patch_discovery(), _patch_wifibulb():
+    with _patch_discovery(device=discovery), _patch_wifibulb():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )

@@ -340,6 +340,8 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             # identifying the device as the chip model number
             # AKA `HF-LPB100-ZJ200`
             return device
+        # Keep the MAC address from a partial UDP response
+        discovery = discovery or device
         bulb = async_wifi_bulb_for_host(host, discovery=device)
         bulb.discovery = discovery
         try:
