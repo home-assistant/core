@@ -265,12 +265,8 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
     async def _async_update_data(self) -> dict[str, OmadaWirelessClient]:
         """Fetch known clients and remove trackers the controller dropped."""
         clients = await super()._async_update_data()
-        if not clients:
-            # A successful but empty response is a controller glitch, not proof
-            # that every client is gone: keep the cached list so nothing is
-            # removed and trackers keep their data.
-            return self.data or {}
-
+        # An empty response is a controller glitch, not proof that every client
+        # is gone; cleanup ignores it and keeps the trackers.
         cleanup_client_trackers(self.hass, self.config_entry.runtime_data, clients)
         return clients
 

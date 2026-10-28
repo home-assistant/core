@@ -524,7 +524,7 @@ async def test_preserved_tracker_recreated_when_client_returns(
 
 async def test_cleanup_keeps_trackers_on_empty_known_clients(
     hass: HomeAssistant,
-    mock_omada_client: MagicMock,
+    mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -534,15 +534,16 @@ async def test_cleanup_keeps_trackers_on_empty_known_clients(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    tracker = entity_registry.async_get_or_create(
-        domain="device_tracker",
-        platform=DOMAIN,
-        unique_id="scanner_Default_55-55-55-55-55-55",
-        config_entry=mock_config_entry,
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    removed_mac = "2C-71-FF-ED-34-83"
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"scanner_Default_{removed_mac}"
     )
+    assert tracker_entity_id is not None
+    tracker = entity_registry.async_get(tracker_entity_id)
+    assert tracker is not None
 
-    site_client = mock_omada_client.get_site_client.return_value
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = None
     site_client.get_known_clients.return_value = _get_no_known_clients()
 
     # A successful but empty response is a controller glitch: keep the tracker.
