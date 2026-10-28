@@ -47,7 +47,6 @@ async def async_setup_entry(
         raise PlatformNotReady(
             translation_domain=DOMAIN,
             translation_key="firmware_info_error",
-            translation_placeholders={"error": str(err)},
         ) from err
 
     # Skip when the update is blocked on this boot device (e.g. CM4 without
