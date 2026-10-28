@@ -43,6 +43,8 @@ DLNA_PATH_FILTER: Final = ["id", "upnp:class", "dc:title"]
 DLNA_SORT_CRITERIA: Final = ["+upnp:class", "+upnp:originalTrackNumber", "+dc:title"]
 # Upper bound on children fetched across pages for one browse
 MAX_BROWSE_CHILDREN: Final = 10000
+# Times to restart a paged browse if the container changes part way through
+MAX_BROWSE_ATTEMPTS: Final = 3
 
 PROTOCOL_HTTP: Final = "http-get"
 PROTOCOL_RTSP: Final = "rtsp-rtp-udp"

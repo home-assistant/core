@@ -38,6 +38,7 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA,
     LOGGER,
+    MAX_BROWSE_ATTEMPTS,
     MAX_BROWSE_CHILDREN,
     MEDIA_CLASS_MAP,
     PATH_OBJECT_ID_FLAG,
@@ -448,7 +449,7 @@ class DmsDeviceSource:
                     continue
 
             # Nothing was found via search, fall back to iterating children
-            result = await self._async_browse_all_children(
+            result = await self._async_browse_direct_children_paged(
                 object_id, metadata_filter=DLNA_PATH_FILTER
             )
 
@@ -497,7 +498,7 @@ class DmsDeviceSource:
             object_id, metadata_filter=DLNA_BROWSE_FILTER
         )
 
-        children = await self._async_browse_all_children(
+        children = await self._async_browse_direct_children_paged(
             object_id,
             metadata_filter=DLNA_BROWSE_FILTER,
             sort_criteria=self._sort_criteria,
@@ -507,21 +508,36 @@ class DmsDeviceSource:
         media.not_shown = max(0, children.total_matches - len(children.result))
         return media
 
-    async def _async_browse_all_children(
+    async def _async_browse_direct_children_paged(
         self, object_id: str, **kwargs: Any
     ) -> DmsDevice.BrowseResult:
-        """Browse direct children, requesting more pages if the server caps them."""
+        """Browse direct children, requesting more pages if the server limits them."""
         assert self._device
 
-        children = await self._device.async_browse_direct_children(object_id, **kwargs)
-        wanted = min(children.total_matches, MAX_BROWSE_CHILDREN)
-        while 0 < len(children.result) < wanted:
-            page = await self._device.async_browse_direct_children(
-                object_id, starting_index=len(children.result), **kwargs
+        for _ in range(MAX_BROWSE_ATTEMPTS):
+            children = await self._device.async_browse_direct_children(
+                object_id, requested_count=MAX_BROWSE_CHILDREN, **kwargs
             )
-            if not page.result:
+            wanted = min(children.total_matches, MAX_BROWSE_CHILDREN)
+            returned = page_returned = children.number_returned
+            while page_returned > 0 and returned < wanted:
+                page = await self._device.async_browse_direct_children(
+                    object_id,
+                    starting_index=returned,
+                    requested_count=wanted - returned,
+                    **kwargs,
+                )
+                if page.update_id != children.update_id:
+                    # Container changed while paging, so start again
+                    break
+                page_returned = page.number_returned
+                returned += page_returned
+                children.result.extend(page.result)
+            else:
                 break
-            children.result.extend(page.result)
+
+        # Servers may return more than requested
+        del children.result[MAX_BROWSE_CHILDREN:]
         return children
 
     @catch_request_errors
