@@ -38,11 +38,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if host is not None:
-            try:
-                device_info = await Twinkly(
-                    host, async_get_clientsession(self.hass), timeout=DEVICE_TIMEOUT
-                ).get_details()
-            except TimeoutError, ClientError:
+            if (device_info := await self._async_get_device_info(host)) is None:
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
@@ -55,6 +51,42 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=Schema(schema), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            device_info = await self._async_get_device_info(user_input[CONF_HOST])
+            if device_info is None:
+                errors[CONF_HOST] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(device_info["mac"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                Schema({Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def _async_get_device_info(self, host: str) -> dict[str, Any] | None:
+        """Fetch the device details, or None if the device cannot be reached."""
+        try:
+            return await Twinkly(
+                host, async_get_clientsession(self.hass), timeout=DEVICE_TIMEOUT
+            ).get_details()
+        except TimeoutError, ClientError:
+            return None
 
     @override
     async def async_step_dhcp(
