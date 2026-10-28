@@ -13,6 +13,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from zha.application.const import (
+    ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
     ATTR_ENDPOINT_ID,
@@ -575,6 +576,94 @@ async def test_green_power_device_listings(hass: HomeAssistant, zha_client) -> N
     )
     msg = await zha_client.receive_json()
     assert msg["success"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        pytest.param({TYPE: "zha/devices/clusters"}, id="clusters"),
+        pytest.param(
+            {
+                TYPE: "zha/devices/clusters/attributes",
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: 6,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+            },
+            id="attributes",
+        ),
+        pytest.param(
+            {
+                TYPE: "zha/devices/clusters/commands",
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: 6,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+            },
+            id="commands",
+        ),
+    ],
+)
+async def test_green_power_device_clusters(
+    hass: HomeAssistant, zha_client, command: dict[str, Any]
+) -> None:
+    """Test that a Green Power device has no clusters to list."""
+    await _async_add_green_power_device(hass)
+
+    await zha_client.send_json({ID: 5, ATTR_IEEE: IEEE_GREEN_POWER_DEVICE, **command})
+    msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == []
+
+
+@pytest.mark.parametrize(
+    ("ieee", "read_calls", "result"),
+    [
+        pytest.param(IEEE_SWITCH_DEVICE, 1, "True", id="zigbee"),
+        pytest.param(IEEE_GREEN_POWER_DEVICE, 0, "None", id="green_power"),
+    ],
+)
+async def test_read_zigbee_cluster_attribute(
+    hass: HomeAssistant, zha_client, ieee: str, read_calls: int, result: str
+) -> None:
+    """Test reading a cluster attribute value."""
+    await _async_add_green_power_device(hass)
+    cluster = (
+        get_zha_gateway(hass)
+        .get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
+        .async_get_cluster(1, general.OnOff.cluster_id)
+    )
+
+    with patch.object(
+        cluster, "read_attributes", AsyncMock(return_value=({0: True}, {}))
+    ) as read_mock:
+        await zha_client.send_json(
+            {
+                ID: 5,
+                TYPE: "zha/devices/clusters/attributes/value",
+                ATTR_IEEE: ieee,
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+                ATTR_ATTRIBUTE: 0,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == result
+    assert read_mock.call_count == read_calls
+
+
+async def test_get_zha_config_with_green_power_device(
+    hass: HomeAssistant, zha_client
+) -> None:
+    """Test a Green Power device is skipped when looking for alarm clusters."""
+    await _async_add_green_power_device(hass)
+
+    await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
+    msg = await zha_client.receive_json()
+
+    assert msg["result"] == BASE_CUSTOM_CONFIGURATION
 
 
 async def test_add_group(hass: HomeAssistant, zha_client) -> None:

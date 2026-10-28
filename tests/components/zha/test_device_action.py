@@ -13,10 +13,11 @@ from pytest_homeassistant.common import (
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.application import ControllerApplication
-from zigpy.device import ZigbeeDevice
+from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice, ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
+from zigpy.zgp.types import ApplicationID, SrcID
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -79,6 +80,30 @@ async def test_get_actions_group_device(
     # group device must not offer ZHA device actions (squawk/warn)
     assert actions
     assert not [action for action in actions if action["domain"] == DOMAIN]
+
+
+async def test_get_actions_green_power_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+) -> None:
+    """Test that Green Power devices expose no ZHA device actions."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_gpd = ZigpyGreenPowerDevice(
+        gateway.application_controller,
+        application_id=ApplicationID.SrcID,
+        src_id=SrcID(0x12345678),
+    )
+    gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
+    gateway.get_or_create_device(zigpy_gpd)
+    await gateway.async_device_initialized(zigpy_gpd)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_proxy = get_zha_gateway_proxy(hass).device_proxies[zigpy_gpd.ieee]
+    assert device_proxy.device_id is not None
+
+    assert await device_action.async_get_actions(hass, device_proxy.device_id) == []
 
 
 async def test_get_actions(
