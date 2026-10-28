@@ -1,0 +1,200 @@
+"""Test the Bosch Smart Camera light platform."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
+from bosch_shc_camera_client.cameras import (
+    BoschCameraAuthError,
+    BoschCameraConnectionError,
+    BoschCameraInvalidResponseError,
+    Camera,
+    CameraModel,
+)
+from bosch_shc_camera_client.cloud import CameraLightSetResult
+from bosch_shc_camera_client.states import LightState
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+from .conftest import CAMERA_ID, CAMERAS
+
+pytestmark = pytest.mark.usefixtures("setup_credentials")
+
+ENTITY_ID = "light.garden_camera_light"
+GEN1 = Camera(CAMERA_ID, "Garden", "OUTDOOR", CameraModel.EYES_OUTDOOR, "7.91.56")
+OFF = LightState(False, False, 0.5)
+ON = LightState(True, True, 0.5)
+MODULE = "homeassistant.components.bosch_smart_camera.coordinator"
+
+
+@pytest.fixture(autouse=True)
+def mock_gen1(mock_list_cameras: AsyncMock) -> None:
+    """Make the account hold a Gen1 outdoor camera."""
+    mock_list_cameras.return_value = [GEN1]
+
+
+@pytest.fixture
+def mock_get_light() -> Generator[AsyncMock]:
+    """Mock the light state of the library."""
+    with patch(f"{MODULE}.get_light_state", autospec=True, return_value=OFF) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_set_light() -> Generator[AsyncMock]:
+    """Mock the light write of the library."""
+    with patch(
+        f"{MODULE}.cloud_set_camera_light",
+        autospec=True,
+        return_value=CameraLightSetResult(ok=True, status=204),
+    ) as mock:
+        yield mock
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_light_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the light is created for a Gen1 outdoor camera."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert entity_registry.async_get(ENTITY_ID).unique_id == CAMERA_ID
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_no_light_for_other_models(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+) -> None:
+    """Test cameras without the Gen1 light get no light entity."""
+    mock_list_cameras.return_value = list(CAMERAS)
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.async_entity_ids(LIGHT_DOMAIN) == []
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_turn_on_and_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_set_light: AsyncMock
+) -> None:
+    """Test the light writes to the camera and shows the new state."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert mock_set_light.await_args.args[1:4] == (
+        "fake-access-token",
+        CAMERA_ID,
+        True,
+    )
+    assert mock_set_light.await_args.kwargs == {
+        "gen2": False,
+        "last_front_intensity": 0.5,
+    }
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert mock_set_light.await_args.args[3] is False
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_intensity_defaults_to_full(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    mock_set_light: AsyncMock,
+) -> None:
+    """Test an unknown intensity is sent as full intensity."""
+    mock_get_light.return_value = LightState(False, False, None)
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    assert mock_set_light.await_args.kwargs["last_front_intensity"] == 1.0
+
+
+@pytest.mark.usefixtures("mock_get_light")
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        BoschCameraAuthError("rejected"),
+        BoschCameraConnectionError("offline"),
+        CameraLightSetResult(ok=False, status=400),
+    ],
+)
+async def test_write_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_light: AsyncMock,
+    side_effect: Exception | CameraLightSetResult,
+) -> None:
+    """Test a failed write raises and leaves the state untouched."""
+    await setup_integration(hass, mock_config_entry)
+    if isinstance(side_effect, Exception):
+        mock_set_light.side_effect = side_effect
+    else:
+        mock_set_light.return_value = side_effect
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert err.value.translation_key == "light_failed"
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+async def test_unavailable_without_light_state(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_get_light: AsyncMock
+) -> None:
+    """Test the light is unavailable when the coordinator has no state for it."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator.light_states.clear()
+    coordinator.async_update_listeners()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("error", "state"),
+    [
+        (BoschCameraAuthError("rejected"), ConfigEntryState.SETUP_ERROR),
+        (BoschCameraConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
+        (BoschCameraInvalidResponseError("bad"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_light_state_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    error: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test errors while reading the light state fail the update."""
+    mock_get_light.side_effect = error
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state

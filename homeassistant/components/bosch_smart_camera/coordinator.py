@@ -12,9 +12,12 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
+    CameraModel,
     get_latest_event_image,
     list_cameras,
 )
+from bosch_shc_camera_client.cloud import cloud_set_camera_light
+from bosch_shc_camera_client.states import LightState, get_light_state
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -58,6 +61,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self.light_states: dict[str, LightState] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -89,6 +93,24 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         data = {camera.id: camera for camera in cameras}
+        try:
+            self.light_states = {
+                camera.id: await get_light_state(
+                    async_get_clientsession(self.hass),
+                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+                    camera.id,
+                )
+                for camera in cameras
+                if camera.model is CameraModel.EYES_OUTDOOR
+            }
+        except BoschCameraAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except (BoschCameraConnectionError, BoschCameraInvalidResponseError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
@@ -118,6 +140,34 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
+
+    async def async_set_light(self, camera_id: str, on: bool) -> None:
+        """Switch the light of a camera and remember the new state."""
+        await self._oauth_session.async_ensure_token_valid()
+        try:
+            result = await cloud_set_camera_light(
+                async_get_clientsession(self.hass),
+                str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+                camera_id,
+                on,
+                gen2=False,
+                last_front_intensity=self.light_states[camera_id].front_light_intensity
+                or 1.0,
+            )
+        except (BoschCameraAuthError, BoschCameraConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            ) from err
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            )
+        self.light_states[camera_id] = LightState(
+            front_light_on=on,
+            wallwasher_on=on,
+            front_light_intensity=self.light_states[camera_id].front_light_intensity,
+        )
+        self.async_update_listeners()
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
         """Remove devices of cameras no longer in the account, refresh the rest."""
