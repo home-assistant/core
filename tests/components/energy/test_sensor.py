@@ -7,7 +7,11 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from pytest_homeassistant.typing import WebSocketGenerator
 
@@ -35,10 +39,16 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    restore_state,
+)
+from homeassistant.helpers.json import json_bytes
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 from homeassistant.util.unit_conversion import _WH_TO_CAL, _WH_TO_J
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
@@ -1480,6 +1490,305 @@ async def test_cost_sensor_rename(
     assert msg["result"]["cost_sensors"] == {
         "sensor.gas_consumption": "sensor.renamed_cost"
     }
+
+
+FIXED_PRICE_GRID_SOURCE = {
+    "type": "grid",
+    "stat_energy_from": "sensor.energy_consumption",
+    "stat_cost": None,
+    "entity_energy_price": None,
+    "number_energy_price": 2,
+    "cost_adjustment_day": 0,
+}
+ENERGY_TOTAL_INCREASING_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+    ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+}
+ENERGY_TOTAL_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+    ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+    ATTR_LAST_RESET: "2022-04-01T00:00:00+00:00",
+}
+
+
+def _fixed_price_grid_storage(hass_storage: dict[str, Any]) -> None:
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(FIXED_PRICE_GRID_SOURCE)
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+
+
+@pytest.mark.parametrize(
+    ("energy_attributes", "startup_energy", "startup_cost", "next_cost"),
+    [
+        pytest.param(
+            ENERGY_TOTAL_INCREASING_ATTRIBUTES,
+            "109",
+            "18.0",  # 0 EUR + (109-100) kWh * 2 EUR/kWh
+            "56.0",  # 18 EUR + (128-109) kWh * 2 EUR/kWh
+            id="total_increasing",
+        ),
+        pytest.param(ENERGY_TOTAL_ATTRIBUTES, "109", "18.0", "56.0", id="total"),
+        pytest.param(
+            ENERGY_TOTAL_INCREASING_ATTRIBUTES,
+            "4",
+            "8.0",  # Meter was reset while stopped: 0 EUR + (4-0) kWh * 2 EUR/kWh
+            "256.0",  # 8 EUR + (128-4) kWh * 2 EUR/kWh
+            id="meter_reset_while_stopped",
+        ),
+        pytest.param(
+            ENERGY_TOTAL_INCREASING_ATTRIBUTES,
+            "-1",
+            "0.0",  # Invalid reading, keep the restored reading
+            "56.0",  # 0 EUR + (128-100) kWh * 2 EUR/kWh
+            id="negative_reading",
+        ),
+    ],
+)
+async def test_cost_sensor_restore_state(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    energy_attributes: dict[str, Any],
+    startup_energy: str,
+    startup_cost: str,
+    next_cost: str,
+) -> None:
+    """Test energy used while stopped is priced from the last priced reading."""
+    _fixed_price_grid_storage(hass_storage)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("sensor.energy_consumption_cost", "10.0"),
+                {
+                    "native_value": 10.0,
+                    "native_unit_of_measurement": "EUR",
+                    "last_energy_sensor_state": {
+                        "entity_id": "sensor.energy_consumption",
+                        "state": "100",
+                        "attributes": energy_attributes,
+                    },
+                },
+            )
+        ],
+    )
+    hass.states.async_set(
+        "sensor.energy_consumption", startup_energy, energy_attributes
+    )
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == startup_cost
+    assert state.attributes[ATTR_LAST_RESET] == dt_util.utcnow().isoformat()
+
+    hass.states.async_set("sensor.energy_consumption", "128", energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == next_cost
+    assert state.attributes[ATTR_LAST_RESET] == dt_util.utcnow().isoformat()
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param(
+            {"native_value": 10.0, "native_unit_of_measurement": "EUR"},
+            id="periodic_save",
+        ),
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_energy_sensor_state": None,
+            },
+            id="no_energy_state",
+        ),
+        pytest.param(
+            {
+                "native_value": 10.0,
+                "native_unit_of_measurement": "EUR",
+                "last_energy_sensor_state": {"state": "100"},
+            },
+            id="invalid_energy_state",
+        ),
+    ],
+)
+async def test_cost_sensor_restore_invalid_data(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    extra_data: dict[str, Any],
+) -> None:
+    """Test the cost sensor starts from the first reading without a restored one."""
+    _fixed_price_grid_storage(hass_storage)
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.energy_consumption_cost", "10.0"), extra_data)]
+    )
+    hass.states.async_set(
+        "sensor.energy_consumption", "109", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_LAST_RESET] == dt_util.utcnow().isoformat()
+
+
+@pytest.mark.parametrize(
+    ("core_state", "stored_cost", "stored_energy_state"),
+    [
+        # Readings while stopping are priced on the next start
+        pytest.param(CoreState.stopping, 20.0, "10", id="stopping"),
+        pytest.param(CoreState.running, 30.0, None, id="periodic_save"),
+    ],
+)
+async def test_cost_sensor_saves_restore_data(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    core_state: CoreState,
+    stored_cost: float,
+    stored_energy_state: str | None,
+) -> None:
+    """Test only the save made while stopping stores the last priced reading."""
+    _fixed_price_grid_storage(hass_storage)
+    hass.states.async_set(
+        "sensor.energy_consumption", "0", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await setup_integration(hass)
+    hass.states.async_set(
+        "sensor.energy_consumption", "10", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await hass.async_block_till_done()
+
+    hass.set_state(core_state)
+    hass.states.async_set(
+        "sensor.energy_consumption", "15", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await hass.async_block_till_done()
+    [stored_state] = restore_state.async_get(hass).async_get_stored_states()
+    hass.set_state(CoreState.running)
+
+    extra_data = json_loads(json_bytes(stored_state.extra_data.as_dict()))
+    assert extra_data["native_value"] == stored_cost
+    assert extra_data.get("last_energy_sensor_state", {}).get("state") == (
+        stored_energy_state
+    )
+
+
+async def test_cost_sensor_readded_starts_over(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test energy used while costs were not tracked is not priced later."""
+    _fixed_price_grid_storage(hass_storage)
+    hass.states.async_set(
+        "sensor.energy_consumption", "100", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await setup_integration(hass)
+    hass.states.async_set(
+        "sensor.energy_consumption", "110", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_consumption_cost").state == "20.0"
+
+    manager = await async_get_manager(hass)
+    await manager.async_update(
+        {"energy_sources": [{**FIXED_PRICE_GRID_SOURCE, "number_energy_price": None}]}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_consumption_cost").state == "unavailable"
+
+    hass.states.async_set(
+        "sensor.energy_consumption", "400", ENERGY_TOTAL_INCREASING_ATTRIBUTES
+    )
+    await manager.async_update({"energy_sources": [FIXED_PRICE_GRID_SOURCE]})
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_consumption_cost").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("source_type", "first_unit", "second_unit", "readings"),
+    [
+        pytest.param(
+            "grid",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.WATT_HOUR,
+            ("110000", "112000"),
+            id="kwh_to_wh",
+        ),
+        pytest.param(
+            "water",
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfVolume.LITERS,
+            ("110000", "112000"),
+            id="m3_to_l",
+        ),
+        # Can't be converted, start over from the first reading in the new unit
+        pytest.param(
+            "gas",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            ("50", "52"),
+            id="kwh_to_m3",
+        ),
+    ],
+)
+async def test_cost_sensor_meter_unit_change(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    source_type: str,
+    first_unit: str,
+    second_unit: str,
+    readings: tuple[str, str],
+) -> None:
+    """Test a meter changing its unit is not priced as usage."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": source_type,
+            "stat_energy_from": "sensor.meter",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 2,
+            "cost_adjustment_day": 0,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    attributes = {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING}
+    hass.states.async_set(
+        "sensor.meter", "100", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await setup_integration(hass)
+    hass.states.async_set(
+        "sensor.meter", "110", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # Same reading in the new unit
+    hass.states.async_set(
+        "sensor.meter",
+        readings[0],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # 2 kWh or m³ used
+    hass.states.async_set(
+        "sensor.meter",
+        readings[1],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert float(hass.states.get("sensor.meter_cost").state) == pytest.approx(24.0)
 
 
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:
@@ -3024,6 +3333,68 @@ async def test_add_finished_resolved_on_abort(
     sensor.add_to_platform_abort()
 
     assert sensor.add_finished.done()
+
+
+@pytest.mark.parametrize(
+    ("source", "source_without_sensor", "unique_id", "entity_id"),
+    [
+        pytest.param(
+            FIXED_PRICE_GRID_SOURCE,
+            {**FIXED_PRICE_GRID_SOURCE, "number_energy_price": None},
+            "sensor.energy_consumption_grid_cost",
+            "sensor.energy_consumption_cost",
+            id="cost",
+        ),
+        pytest.param(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+            },
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                "stat_rate": "sensor.battery_power",
+            },
+            "energy_power_battery_inverted_sensor_battery_power",
+            "sensor.battery_power_inverted",
+            id="power",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_disabled_sensor_removed_from_config(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    source: data.SourceType,
+    source_without_sensor: data.SourceType,
+    unique_id: str,
+    entity_id: str,
+) -> None:
+    """Test removing a sensor the platform rejected because it is disabled."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        unique_id,
+        suggested_object_id=entity_id.removeprefix("sensor."),
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    await manager.async_update({"energy_sources": [source]})
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    await manager.async_update({"energy_sources": [source_without_sensor]})
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id).disabled_by is (
+        er.RegistryEntryDisabler.USER
+    )
 
 
 @pytest.mark.parametrize(

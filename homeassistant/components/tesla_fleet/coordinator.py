@@ -117,7 +117,32 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
-class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, Any]]):
+class TeslaFleetCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Base coordinator that logs a rate limit once until it clears."""
+
+    _rate_limit_logged = False
+
+    def _handle_rate_limited(self, err: RateLimited) -> dict[str, Any]:
+        """Back off after a 429 and keep the last data."""
+        log = LOGGER.debug if self._rate_limit_logged else LOGGER.warning
+        self._rate_limit_logged = True
+        if isinstance(err.data, dict) and (after := err.data.get("after")):
+            log("%s rate limited, will retry in %s seconds", self.name, after)
+            self.update_interval = timedelta(seconds=int(after))
+        else:
+            log("%s rate limited, will skip refresh", self.name)
+        return self.data
+
+    def _rate_limit_cleared(self) -> None:
+        """Log once when a refresh succeeds after a rate limit."""
+        if self._rate_limit_logged:
+            LOGGER.info("%s is no longer rate limited", self.name)
+            self._rate_limit_logged = False
+
+
+class TeslaFleetVehicleDataCoordinator(
+    RestoreDataUpdateCoordinator[dict[str, Any]], TeslaFleetCoordinator
+):
     """Class to manage fetching data from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -165,6 +190,7 @@ class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, An
             self.data["state"] = response["response"]["state"]
 
             if self.data["state"] != TeslaFleetState.ONLINE:
+                self._rate_limit_cleared()
                 return self.data
 
             response = await self.api.vehicle_data(endpoints=self.endpoints)
@@ -172,18 +198,10 @@ class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, An
 
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
+            self._rate_limit_cleared()
             return self.data
         except RateLimited as e:
-            if isinstance(e.data, dict) and (after := e.data.get("after")):
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    after,
-                )
-                self.update_interval = timedelta(seconds=int(after))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return self.data
+            return self._handle_rate_limited(e)
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
@@ -192,6 +210,7 @@ class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, An
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self._rate_limit_cleared()
         self.updated_once = True
 
         if self.api.pre2021 and data["state"] == TeslaFleetState.ONLINE:
@@ -215,7 +234,7 @@ class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, An
         return flatten(data)
 
 
-class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeslaFleetEnergySiteLiveCoordinator(TeslaFleetCoordinator):
     """Class to manage fetching energy site live status from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -248,16 +267,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.live_status())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and (after := e.data.get("after")):
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    after,
-                )
-                self.update_interval = timedelta(seconds=int(after))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return self.data
+            return self._handle_rate_limited(e)
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
@@ -274,6 +284,8 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             )
             return self.data
 
+        self._rate_limit_cleared()
+
         # Convert Wall Connectors from array to dict
         wall_connectors = data.get("wall_connectors")
         if not isinstance(wall_connectors, list):
@@ -288,7 +300,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return data
 
 
-class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeslaFleetEnergySiteHistoryCoordinator(TeslaFleetCoordinator):
     """Manage fetching energy site history from the Tesla Fleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -332,16 +344,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and (after := e.data.get("after")):
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    after,
-                )
-                self.update_interval = timedelta(seconds=int(after))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return self.data
+            return self._handle_rate_limited(e)
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
@@ -364,6 +367,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 translation_key="invalid_data",
             )
 
+        self._rate_limit_cleared()
+
         # Tesla omits a field instead of sending zero, so an omitted field is zero
         # only when the response has a reading; without one it stays unknown
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS)
@@ -378,7 +383,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         return output
 
 
-class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeslaFleetEnergySiteInfoCoordinator(TeslaFleetCoordinator):
     """Class to manage fetching energy site info from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -412,16 +417,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and (after := e.data.get("after")):
-                LOGGER.warning(
-                    "%s rate limited, will retry in %s seconds",
-                    self.name,
-                    after,
-                )
-                self.update_interval = timedelta(seconds=int(after))
-            else:
-                LOGGER.warning("%s rate limited, will skip refresh", self.name)
-            return self.data
+            return self._handle_rate_limited(e)
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e
@@ -430,5 +426,6 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self._rate_limit_cleared()
         self.updated_once = True
         return flatten(data)

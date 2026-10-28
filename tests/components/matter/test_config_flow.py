@@ -12,6 +12,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
+from homeassistant.components.matter.config_flow import (
+    total_memory as real_total_memory,
+)
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -60,7 +63,7 @@ ZEROCONF_INFO_UDP = ZeroconfServiceInfo(
 def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
-        "homeassistant.components.matter.async_setup_entry", return_value=True
+        "homeassistant.components.matter.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -69,7 +72,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
 def unload_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry unload."""
     with patch(
-        "homeassistant.components.matter.async_unload_entry", return_value=True
+        "homeassistant.components.matter.async_unload_entry", return_value=None
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -104,6 +107,16 @@ def addon_setup_time_fixture() -> Generator[int]:
         "homeassistant.components.matter.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
         yield addon_setup_time
+
+
+@pytest.fixture(name="total_memory", autouse=True)
+def total_memory_fixture() -> Generator[MagicMock]:
+    """Mock the physical memory of the host."""
+    with patch(
+        "homeassistant.components.matter.config_flow.total_memory",
+        return_value=4 * 1024**3,
+    ) as total_memory:
+        yield total_memory
 
 
 @pytest.fixture(name="not_onboarded")
@@ -485,6 +498,47 @@ async def test_zeroconf_not_onboarded_not_installed(
         "integration_created_addon": True,
     }
     assert setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "not_onboarded")
+async def test_zeroconf_not_onboarded_low_memory(
+    hass: HomeAssistant,
+    total_memory: MagicMock,
+    install_addon: AsyncMock,
+    zeroconf_info: ZeroconfServiceInfo,
+) -> None:
+    """Test Zeroconf discovery when not onboarded asks first on a host with little memory."""
+    total_memory.return_value = 903 * 1024**2
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf_info,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+    assert install_addon.call_count == 0
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    await hass.async_block_till_done()
+    assert install_addon.call_args == call("core_matter_server")
+
+
+def test_total_memory() -> None:
+    """Test the physical memory is page size times page count."""
+    with patch(
+        "homeassistant.components.matter.config_flow.os.sysconf",
+        side_effect=lambda name: {"SC_PAGE_SIZE": 4096, "SC_PHYS_PAGES": 2048}[name],
+    ):
+        assert real_total_memory() == 8 * 1024**2
 
 
 @pytest.mark.parametrize(

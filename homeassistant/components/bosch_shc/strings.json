@@ -84,9 +84,23 @@
       },
       "impulse_length": {
         "name": "Pulse length"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type",
+        "state": {
+          "normally_closed": "Normally closed",
+          "normally_open": "Normally open",
+          "unsupported": "Unsupported"
+        }
+      },
       "display_direction": {
         "name": "Display orientation",
         "state": {
@@ -101,12 +115,33 @@
           "setpoint": "Set temperature"
         }
       },
+      "heater_type": {
+        "name": "Heater type",
+        "state": {
+          "convector_active": "Active convector (with fan)",
+          "convector_passive": "Passive convector (without fan)",
+          "floor_heating": "Underfloor heating",
+          "floor_heating_low_energy": "Underfloor heating low energy",
+          "radiator": "Radiator",
+          "volt_free_heating": "Central heating"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "output_mode": {
+        "name": "Output mode",
+        "state": {
+          "attached": "Coupled",
+          "detached": "Disconnected on any key press",
+          "detached_long_press": "Disconnected on long press",
+          "detached_short_press": "Disconnected on short press",
+          "unsupported": "Unsupported"
         }
       },
       "siren_sound_level": {
@@ -117,12 +152,65 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
+      "smart_sensitivity_comfort_level": {
+        "name": "Sensitivity for other cases",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "smart_sensitivity_security_level": {
+        "name": "Sensitivity for alarm system",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
       "smoke_sensitivity": {
         "name": "Smoke sensitivity",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "state_after_power_outage": {
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "no_switch": "No switch",
+          "none": "None",
+          "pushbutton": "Push button",
+          "switch": "Rocker switch"
+        }
+      },
+      "terminal_type": {
+        "name": "Sensor connection",
+        "state": {
+          "floor_sensor_connected": "Floor sensor connected",
+          "floor_sensor_displayed": "Cable temperature sensor (without regulation)",
+          "floor_sensor_displayed_and_used_for_regulation": "Cable temperature sensor (with regulation)",
+          "floor_sensor_used_for_regulation": "Floor sensor used for regulation",
+          "not_connected": "Not used",
+          "outdoor_sensor_connected": "Outdoor temperature sensor",
+          "volt_free_sensor_connected": "Volt-free sensor connected",
+          "volt_free_sensor_connected_and_used_for_operation": "Potential-free contact"
+        }
+      },
+      "valve_type": {
+        "name": "Valve type",
+        "state": {
+          "normally_close": "Normally closed",
+          "normally_open": "Normally open"
         }
       },
       "vibration_sensitivity": {
@@ -142,6 +230,9 @@
       },
       "communication_quality": {
         "name": "Communication quality"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
       },
       "humidity_rating": {
         "name": "Humidity rating"
@@ -251,7 +342,7 @@
   },
   "exceptions": {
     "unsupported_hvac_mode": {
-      "message": "This room does not support the HVAC mode {hvac_mode}."
+      "message": "This entity does not support the HVAC mode {hvac_mode}."
     }
   }
 }

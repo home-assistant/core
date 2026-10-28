@@ -9,18 +9,20 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .agent_manager import AgentInfo, async_converse, async_get_agent, get_agent_manager
+from .agent_manager import async_converse, async_get_agent, get_agent_manager
 from .chat_log import (
     AssistantContent,
     AssistantContentDeltaDict,
     Attachment,
     ChatLog,
     Content,
+    ConversationBusyError,
     ConverseError,
     SystemContent,
     ToolResultContent,
@@ -33,11 +35,18 @@ from .const import (
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     ConversationEntityFeature,
+    ConversationService,
+    ConversationServiceArgument,
 )
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
-from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .models import (
+    AbstractConversationAgent,
+    AgentInfo,
+    ConversationInput,
+    ConversationResult,
+)
 from .services import async_setup_services
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 from .util import async_get_result_from_chat_log, get_config_intents
@@ -52,10 +61,13 @@ __all__ = [
     "Attachment",
     "ChatLog",
     "Content",
+    "ConversationBusyError",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
+    "ConversationService",
+    "ConversationServiceArgument",
     "ConversationTraceEventType",
     "ConverseError",
     "SystemContent",
@@ -256,11 +268,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)

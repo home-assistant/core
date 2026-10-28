@@ -35,6 +35,7 @@ from homeassistant.core import (
     ReleaseChannel,
     callback,
     get_release_channel,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
@@ -372,7 +373,10 @@ class DeviceInfoError(HomeAssistantError):
     """Raised when device info is invalid."""
 
     def __init__(
-        self, domain: str, device_info: Mapping[str, Any], message: str
+        self,
+        domain: str,
+        device_info: DeviceInfo | ChildDeviceInfo,
+        message: str,
     ) -> None:
         """Initialize error."""
         super().__init__(
@@ -411,19 +415,26 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
         )
 
 
-def _validate_device_info(
-    config_entry: ConfigEntry,
-    device_info: Mapping[str, Any],
-) -> None:
+def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) -> None:
     """Validate that a device info has enough information to match up a device."""
-    if not device_info.get("connections") and not device_info.get("identifiers"):
+    if (device_info.connections is UNDEFINED or not device_info.connections) and (
+        device_info.identifiers is UNDEFINED or not device_info.identifiers
+    ):
         raise DeviceInfoError(
             config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
     for field in ("manufacturer", "model", "name"):
-        if field in device_info and f"default_{field}" in device_info:
+        # The deprecated default_ fields are hidden from type checkers
+        if getattr(device_info, f"default_{field}") is UNDEFINED:
+            continue
+        # A translation key supplies the name
+        if getattr(device_info, field) is not UNDEFINED or (
+            field == "name"
+            and isinstance(device_info.translation_key, str)
+            and device_info.translation_key
+        ):
             raise DeviceInfoError(
                 config_entry.domain,
                 device_info,
@@ -2078,7 +2089,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[False],
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> DeviceEntry | None: ...
 
     @overload
@@ -2088,7 +2099,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[True] = True,
         include_main_devices: Literal[False],
-        include_composite_devices: Literal[False],
+        include_composite_devices: Literal[False] | None = None,
     ) -> ChildDeviceEntry | None: ...
 
     @overload
@@ -2096,19 +2107,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[False],
-        include_composite_devices: Literal[True] = True,
-    ) -> AnyDeviceEntry | None: ...
-
-    @overload
-    def async_get(
-        self,
-        device_id: str,
-        *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[True] = True,
-        include_composite_devices: bool = True,
+        include_child_devices: bool = True,
+        include_main_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None: ...
 
     @callback
@@ -2118,7 +2119,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: bool = True,
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
@@ -2134,8 +2135,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         With include_child_devices=False a child-device id resolves to None (the child
         is treated as absent) and the return type excludes children. With
         include_main_devices=False a main-device id resolves to None. With
-        include_composite_devices=False a composite-device id resolves to None.
+        include_composite_devices=False a composite-device id resolves to None;
+        it defaults to include_main_devices, as a composite stands in for a main
+        device, so excluding main devices alone guarantees a child device.
         """
+        if include_composite_devices is None:
+            include_composite_devices = include_main_devices
         if (
             include_main_devices
             and (device := self._device_data.get(device_id)) is not None
@@ -2452,7 +2457,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return name
 
     @callback
-    def async_get_or_create(  # noqa: C901
+    def async_get_or_create(
         self,
         *,
         config_entry_id: str,
@@ -2484,30 +2489,94 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         # Extract deprecated parameters, and reject any other unexpected keyword
         # argument.
-        created_at = kwargs.pop("created_at", UNDEFINED)
-        default_manufacturer = kwargs.pop("default_manufacturer", UNDEFINED)
-        default_model = kwargs.pop("default_model", UNDEFINED)
-        default_name = kwargs.pop("default_name", UNDEFINED)
-        modified_at = kwargs.pop("modified_at", UNDEFINED)
-        via_device = kwargs.pop("via_device", UNDEFINED)
+        deprecated = {
+            parameter: kwargs.pop(parameter)
+            for parameter in _DEPRECATED_DEVICE_INFO_PARAMETERS
+            if parameter in kwargs
+        }
         if kwargs:
             raise TypeError(
                 "async_get_or_create() got unexpected keyword arguments "
                 f"{', '.join(map(repr, kwargs))}"
             )
-
-        default_manufacturer = _validate_str(
-            "default_manufacturer", default_manufacturer
+        return self._async_get_or_create_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=DeviceInfo(
+                configuration_url=configuration_url,
+                # None and UNDEFINED both mean no connections or identifiers
+                connections=UNDEFINED if connections is None else connections,
+                entry_type=entry_type,
+                hw_version=hw_version,
+                identifiers=UNDEFINED if identifiers is None else identifiers,
+                manufacturer=manufacturer,
+                model=model,
+                model_id=model_id,
+                name=name,
+                serial_number=serial_number,
+                suggested_area=suggested_area,
+                sw_version=sw_version,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+                via_device_id=via_device_id,
+                **deprecated,
+            ),
         )
-        default_model = _validate_str("default_model", default_model)
+
+    @callback
+    def async_get_or_create_from_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
+        """Get device. Create if it doesn't exist.
+
+        To create or update a child device, use async_get_or_create_child_from_info.
+
+        If identifiers overlap with a child device, the method raises.
+        """
+        return self._async_get_or_create_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_from_info(  # noqa: C901
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
+        """Get device. Create if it doesn't exist."""
+        # The deprecated fields are hidden from type checkers
+        deprecated_values = {
+            parameter: getattr(device_info, parameter)
+            for parameter in _DEPRECATED_DEVICE_INFO_PARAMETERS
+        }
+        default_manufacturer = _validate_str(
+            "default_manufacturer", deprecated_values["default_manufacturer"]
+        )
+        default_model = _validate_str(
+            "default_model", deprecated_values["default_model"]
+        )
+        default_name = deprecated_values["default_name"]
+        via_device = deprecated_values["via_device"]
         validated_fields = _validate_device_info_fields(
-            configuration_url=configuration_url,
-            hw_version=hw_version,
-            manufacturer=manufacturer,
-            model=model,
-            model_id=model_id,
-            serial_number=serial_number,
-            sw_version=sw_version,
+            configuration_url=device_info.configuration_url,
+            hw_version=device_info.hw_version,
+            manufacturer=device_info.manufacturer,
+            model=device_info.model,
+            model_id=device_info.model_id,
+            serial_number=device_info.serial_number,
+            sw_version=device_info.sw_version,
         )
 
         if disabled_by is DeviceEntryDisabler.DEVICE:
@@ -2524,20 +2593,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # Validate before mutating the registry below. `via_device=None` (an explicit
         # "no via device") alongside a via_device_id is contradictory, so reject it too.
+        via_device_id = device_info.via_device_id
         if via_device is not UNDEFINED and via_device_id is not UNDEFINED:
             raise HomeAssistantError(
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
         # Report the deprecated parameters here, before any registry mutation.
-        deprecated_values = {
-            "created_at": created_at,
-            "default_manufacturer": default_manufacturer,
-            "default_model": default_model,
-            "default_name": default_name,
-            "modified_at": modified_at,
-            "via_device": via_device,
-        }
         for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
             if deprecated_values[parameter] is UNDEFINED:
                 continue
@@ -2562,37 +2624,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        if translation_key:
-            name = self._resolve_translated_name(
-                config_entry, translation_key, translation_placeholders
-            )
-
-        # Reconstruct a device info dict from the arguments, used for error
-        # reporting. It can hold deprecated keys, so it's not a DeviceInfo.
-        device_info: dict[str, Any] = {
-            key: val
-            for key, val in (
-                ("connections", connections),
-                ("default_manufacturer", default_manufacturer),
-                ("default_model", default_model),
-                ("default_name", default_name),
-                ("entry_type", entry_type),
-                ("identifiers", identifiers),
-                ("name", name),
-                ("suggested_area", suggested_area),
-                ("via_device", via_device),
-                ("via_device_id", via_device_id),
-                *validated_fields.items(),
-            )
-            if val is not UNDEFINED
-        }
+        name = self._resolve_device_info_name(config_entry, device_info)
+        entry_type = device_info.entry_type
+        suggested_area = device_info.suggested_area
 
         _validate_device_info(config_entry, device_info)
 
-        if identifiers is None or identifiers is UNDEFINED:
+        identifiers = device_info.identifiers
+        if identifiers is UNDEFINED:
             identifiers = set()
 
-        if connections is None or connections is UNDEFINED:
+        connections = device_info.connections
+        if connections is UNDEFINED:
             connections = set()
         else:
             connections = _normalize_connections(connections)
@@ -2806,7 +2849,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
@@ -2823,6 +2866,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         assert device
         self._live_device_ids.setdefault(device.config_entry_id, set()).add(device.id)
         return device
+
+    @callback
+    def _resolve_device_info_name(
+        self, config_entry: ConfigEntry, device_info: DeviceInfo | ChildDeviceInfo
+    ) -> str | UndefinedType | None:
+        """Return the name of a device info, translated if it has a translation key."""
+        if isinstance(translation_key := device_info.translation_key, str) and (
+            translation_key
+        ):
+            translation_placeholders = device_info.translation_placeholders
+            return self._resolve_translated_name(
+                config_entry,
+                translation_key,
+                None
+                if translation_placeholders is UNDEFINED
+                else translation_placeholders,
+            )
+        return device_info.name
 
     @callback
     def _resolve_translated_name(
@@ -2849,6 +2910,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
         name: str | UndefinedType | None = UNDEFINED,
@@ -2862,6 +2924,51 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
+        return self._async_get_or_create_child_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=ChildDeviceInfo(
+                identifiers=identifiers,
+                name=name,
+                parent_device_id=parent_device_id,
+                suggested_area=suggested_area,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            ),
+        )
+
+    @callback
+    def async_get_or_create_child_from_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get child device. Create if it doesn't exist.
+
+        If identifiers match those of an existing device, that device is converted to
+        a child device, preserving its id.
+        """
+        return self._async_get_or_create_child_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_child_from_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get child device. Create if it doesn't exist."""
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -2877,25 +2984,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        if translation_key:
-            name = self._resolve_translated_name(
-                config_entry, translation_key, translation_placeholders
-            )
-
-        # Reconstruct a child device info dict from the arguments, used for error
-        # reporting and conversion of an existing device to a child device.
-        device_info: dict[str, Any] = {
-            key: val
-            for key, val in (
-                ("identifiers", identifiers),
-                ("name", name),
-                ("parent_device_id", parent_device_id),
-                ("suggested_area", suggested_area),
-            )
-            if val is not UNDEFINED
-        }
-
         domain = config_entry.domain
+        name = self._resolve_device_info_name(config_entry, device_info)
+        identifiers = device_info.identifiers
+        parent_device_id = device_info.parent_device_id
+        suggested_area = device_info.suggested_area
 
         if not identifiers:
             raise DeviceInfoError(
@@ -3049,7 +3142,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             is_new=is_new,
             merge_identifiers=identifiers,
             name=name,
@@ -3069,7 +3162,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         device: DeviceEntry,
         parent: DeviceEntry,
         config_entry: ConfigEntry,
-        device_info: Mapping[str, Any],
+        device_info: ChildDeviceInfo,
     ) -> None:
         """Validate converting a device to a child device.
 
@@ -3106,6 +3199,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
     @callback
+    @verify_event_loop_thread("device_registry.async_get_or_create_child")
     def _async_convert_device_to_child(
         self,
         device: DeviceEntry,
@@ -3120,8 +3214,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         The caller must have validated the conversion with
         _async_validate_device_to_child_conversion.
         """
-        self.hass.verify_event_loop_thread("device_registry.async_get_or_create_child")
-
         # The update event reports the old values of every conceptually changed
         # field: the fields a child device does not have change to None / empty.
         changes: dict[str, Any] = {"parent_device_id": None}
@@ -3192,6 +3284,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return child_device
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_device")
     def _async_update_device(  # noqa: C901
         self,
         device_id: str,
@@ -3648,7 +3741,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_device")
         new = attr.evolve(old, **new_values)
         self._devices[device_id] = new
 
@@ -3713,6 +3805,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return new
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_child_device")
     def _async_update_child_device(
         self,
         child_device_id: str,
@@ -3850,7 +3943,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_child_device")
         new = attr.evolve(old, **new_values)
         self._child_devices[child_device_id] = new
 
@@ -4100,7 +4192,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
-        device_info: Mapping[str, Any],
+        device_info: DeviceInfo | ChildDeviceInfo,
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
     ) -> None:
@@ -4325,6 +4417,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._restore_composite_device(composite_id, remaining)
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device or child device from the device registry."""
         if (child_device := self._child_device_data.get(device_id)) is not None:
@@ -4336,7 +4429,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for underlying_id in underlying_ids:
                 self.async_remove_device(underlying_id)
             return
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         # Removing the parent removes its child devices
         for child in self._child_devices.get_children_for_device_id(device_id):
             self._async_remove_child_device(child)
@@ -4369,9 +4461,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def _async_remove_child_device(self, child_device: ChildDeviceEntry) -> None:
         """Remove a child device from the device registry."""
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         del self._child_devices[child_device.id]
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id
@@ -4834,8 +4926,8 @@ def async_get_device_and_config_entry_for_domain(
     device_id: str,
     *,
     domain: str,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
 
 

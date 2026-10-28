@@ -82,7 +82,7 @@ def denonavr_connect_fixture():
         ),
         patch(
             "homeassistant.components.denonavr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield

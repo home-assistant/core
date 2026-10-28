@@ -257,12 +257,64 @@ class MediaPlayerEnqueue(StrEnum):
     REPLACE = "replace"
 
 
+class MediaPlayerService(StrEnum):
+    """Store keys for media player services."""
+
+    BROWSE_MEDIA = "browse_media"
+    CLEAR_PLAYLIST = "clear_playlist"
+    JOIN = "join"
+    MEDIA_NEXT_TRACK = "media_next_track"
+    MEDIA_PAUSE = "media_pause"
+    MEDIA_PLAY = "media_play"
+    MEDIA_PLAY_PAUSE = "media_play_pause"
+    MEDIA_PREVIOUS_TRACK = "media_previous_track"
+    MEDIA_SEEK = "media_seek"
+    MEDIA_STOP = "media_stop"
+    PLAY_MEDIA = "play_media"
+    REPEAT_SET = "repeat_set"
+    SEARCH_MEDIA = "search_media"
+    SELECT_SOUND_MODE = "select_sound_mode"
+    SELECT_SOURCE = "select_source"
+    SHUFFLE_SET = "shuffle_set"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+    UNJOIN = "unjoin"
+    VOLUME_DOWN = "volume_down"
+    VOLUME_MUTE = "volume_mute"
+    VOLUME_SET = "volume_set"
+    VOLUME_UP = "volume_up"
+
+
+class MediaPlayerServiceArgument(StrEnum):
+    """Store keys for media player service arguments."""
+
+    ANNOUNCE = "announce"
+    ENQUEUE = "enqueue"
+    EXTRA = "extra"
+    GROUP_MEMBERS = "group_members"
+    IS_VOLUME_MUTED = "is_volume_muted"
+    MEDIA = "media"
+    MEDIA_CONTENT_ID = "media_content_id"
+    MEDIA_CONTENT_TYPE = "media_content_type"
+    MEDIA_FILTER_CLASSES = "media_filter_classes"
+    REPEAT = "repeat"
+    SEARCH_QUERY = "search_query"
+    SEEK_POSITION = "seek_position"
+    SHUFFLE = "shuffle"
+    SOUND_MODE = "sound_mode"
+    SOURCE = "source"
+    VOLUME_LEVEL = "volume_level"
+
+
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
-    probatio.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    probatio.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    probatio.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): probatio.Any(
-        cv.boolean, probatio.Coerce(MediaPlayerEnqueue)
-    ),
-    probatio.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
-    probatio.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
+    probatio.Required(MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE): cv.string,
+    probatio.Required(MediaPlayerServiceArgument.MEDIA_CONTENT_ID): cv.string,
+    probatio.Exclusive(
+        MediaPlayerServiceArgument.ENQUEUE, "enqueue_announce"
+    ): probatio.Any(cv.boolean, probatio.Coerce(MediaPlayerEnqueue)),
+    probatio.Exclusive(
+        MediaPlayerServiceArgument.ANNOUNCE, "enqueue_announce"
+    ): cv.boolean,
+    probatio.Optional(MediaPlayerServiceArgument.EXTRA, default={}): dict,
 }

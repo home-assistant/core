@@ -65,5 +65,10 @@
         "name": "Uptime"
       }
     }
+  },
+  "exceptions": {
+    "invalid_response": {
+      "message": "Invalid response received from the printer"
+    }
   }
 }

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -82,7 +83,6 @@ from .const import (
     PROTOCOL_311,
     SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
-    Platform,
 )
 from .models import (
     DATA_MQTT,
@@ -106,7 +106,7 @@ from .util import (
     async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
-    async_remove_mqtt_issues,
+    async_refresh_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -408,8 +408,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # messages on connect
     await mqtt_data.client.async_connect(client_available)
 
-    # setup platforms and discovery
-    await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
+    # setup platforms and discovery, this re-creates the issues of manually
+    # configured items which are still invalid, also those stored before a restart
+    with async_refresh_mqtt_issues(hass):
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
 
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
@@ -545,6 +547,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # when the entry is set up again
         if subscriptions := mqtt_client.subscriptions:
             mqtt_data.subscriptions_to_restore = subscriptions
-
-        # Remove repair issues
-        async_remove_mqtt_issues(hass, mqtt_data)

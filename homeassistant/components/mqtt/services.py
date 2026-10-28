@@ -41,7 +41,7 @@ from .models import (
 from .util import (
     async_check_config_schema,
     async_forward_entry_setup_and_setup_discovery,
-    async_remove_mqtt_issues,
+    async_refresh_mqtt_issues,
     mqtt_config_entry_enabled,
     platforms_from_config,
     valid_publish_topic,
@@ -159,25 +159,24 @@ async def _async_reload_config(call: ServiceCall) -> None:
     # Check the schema before continuing reload
     await async_check_config_schema(hass, config_yaml)
 
-    # Remove repair issues
-    async_remove_mqtt_issues(hass, mqtt_data)
+    # Reload handlers re-create issues of items which are still invalid
+    with async_refresh_mqtt_issues(hass):
+        mqtt_data.config = new_config
 
-    mqtt_data.config = new_config
+        # Reload the modern yaml platforms
+        mqtt_platforms = async_get_platforms(hass, DOMAIN)
+        tasks = [
+            create_eager_task(entity.async_remove())
+            for mqtt_platform in mqtt_platforms
+            for entity in list(mqtt_platform.entities.values())
+            if getattr(entity, "_discovery_data", None) is None
+            and mqtt_platform.config_entry
+            and mqtt_platform.domain in ENTITY_PLATFORMS
+        ]
+        await asyncio.gather(*tasks)
 
-    # Reload the modern yaml platforms
-    mqtt_platforms = async_get_platforms(hass, DOMAIN)
-    tasks = [
-        create_eager_task(entity.async_remove())
-        for mqtt_platform in mqtt_platforms
-        for entity in list(mqtt_platform.entities.values())
-        if getattr(entity, "_discovery_data", None) is None
-        and mqtt_platform.config_entry
-        and mqtt_platform.domain in ENTITY_PLATFORMS
-    ]
-    await asyncio.gather(*tasks)
-
-    for component in mqtt_data.reload_handlers.values():
-        component()
+        for component in mqtt_data.reload_handlers.values():
+            component()
 
     # Fire event
     hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)

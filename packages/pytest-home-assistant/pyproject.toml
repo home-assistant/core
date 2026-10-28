@@ -36,15 +36,15 @@ pytest_homeassistant = "pytest_homeassistant.bootstrap"
 
 [project.optional-dependencies]
 bluetooth = [
-  "aiohasupervisor==0.7.0",
+  "aiohasupervisor==0.8.1",
   "aiousbwatcher==1.1.2",
   "bluetooth-adapters==2.4.0",
   "bluetooth-auto-recovery==1.6.4",
   "bluetooth-data-tools==1.29.24",
   "habluetooth==7.1.2",
-  "serialx==1.14.0",
+  "serialx==1.15.1",
 ]
-infrared = ["infrared-protocols==10.3.0"]
+infrared = ["infrared-protocols==10.5.0"]
 radio-frequency = ["rf-protocols==4.3.0"]
 
 [project.urls]

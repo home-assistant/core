@@ -68,6 +68,17 @@
         },
         "description": "Select the gateway you want to control with Home Assistant."
       },
+      "somfy": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of your Somfy account (app).",
+          "username": "The username of your Somfy account (app)."
+        },
+        "description": "Enter your Somfy account credentials. All homes on your account will be discovered so you can choose one."
+      },
       "user": {
         "data": {
           "hub": "Server"
@@ -80,6 +91,20 @@
     }
   },
   "entity": {
+    "button": {
+      "go_to_alias_favorite1": {
+        "name": "My position"
+      },
+      "go_to_alias_partial": {
+        "name": "Partial position"
+      },
+      "go_to_alias_pedestrian": {
+        "name": "Pedestrian position"
+      },
+      "go_to_alias_ventilation": {
+        "name": "Ventilation position"
+      }
+    },
     "climate": {
       "overkiz": {
         "state_attributes": {
@@ -103,6 +128,18 @@
               "manual": "[%key:common::state::manual%]",
               "night": "Night",
               "prog": "Prog"
+            }
+          }
+        }
+      }
+    },
+    "cover": {
+      "cover": {
+        "state_attributes": {
+          "speed": {
+            "state": {
+              "default": "Default",
+              "slow": "Slow"
             }
           }
         }
@@ -209,6 +246,16 @@
   "exceptions": {
     "unsupported_set_position_and_tilt": {
       "message": "This device does not support setting position and tilt simultaneously."
+    }
+  },
+  "issues": {
+    "deprecated_low_speed_cover": {
+      "description": "The low speed cover `{entity_id}` is deprecated and will be removed. Use the `speed: slow` option of the open, close and set position actions on `{replacement_entity_id}` instead.\n\nUpdate your dashboards, templates, automations and scripts to use the main cover entity, then disable `{entity_id}` and restart Home Assistant to have it removed.",
+      "title": "Low speed cover entity is deprecated"
+    },
+    "deprecated_low_speed_cover_used": {
+      "description": "The low speed cover `{entity_id}` is deprecated and will be removed. Use the `speed: slow` option of the open, close and set position actions on `{replacement_entity_id}` instead.\n\nThe low speed cover is still used in the following automations or scripts:\n{items}\n\nUpdate these and any dashboards and templates to use the main cover entity, then disable `{entity_id}` and restart Home Assistant to have it removed.",
+      "title": "[%key:component::overkiz::issues::deprecated_low_speed_cover::title%]"
     }
   },
   "services": {
