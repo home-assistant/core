@@ -210,10 +210,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
             hass, entry.data, state_detection_rules=state_det_rules
         )
     except exceptions as exc:
-        raise ConfigEntryNotReady(exc) from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(exc)},
+        ) from exc
 
     if not aftv:
-        raise ConfigEntryNotReady(error_message)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(error_message)},
+        )
 
     async def async_close_connection(event: Event) -> None:
         """Close Android Debug Bridge connection on HA Stop."""

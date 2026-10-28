@@ -32,6 +32,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the device: {error}"
+    },
     "failed_send": {
       "message": "Failed to send command {cmd}"
     }
