@@ -749,7 +749,7 @@ bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.24
 
 # homeassistant.components.bluetti_modbus
-bluetti-modbus==0.52.0
+bluetti-modbus==0.57.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1527,7 +1527,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.10.5.160528
+knx-frontend==2026.10.29.192948
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite,postgres]==0.15.2
@@ -1689,7 +1689,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==14.0.0
+midea-local==15.0.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2083,7 +2083,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.11.0
+py-synologydsm-api==2.11.1
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.2
@@ -2753,7 +2753,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.10.0
+pystiebeleltron==0.10.1
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.8
@@ -3303,7 +3303,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.18.0
+systembridgeconnector==5.22.1
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
