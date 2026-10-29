@@ -1,6 +1,7 @@
 """Tests for Imou camera platform."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
@@ -14,10 +15,12 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
+from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.imou.camera import (
     CAMERA_STREAM_RESOLUTION_SD,
     PYIMOUAPI_LIVE_PROTOCOL,
     PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
+    STREAM_IDLE_CHECK,
 )
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
@@ -26,10 +29,11 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .const import create_online_device
 
-TEST_STREAM_URL = "https://example.com/live.m3u8"
+TEST_STREAM_URL = "rtsp://example.com/live"
 TEST_IMAGE_BYTES = b"fake-image-bytes"
 
 
@@ -183,6 +187,86 @@ async def test_camera_stream_source(
     assert call is not None
     assert call.args[1] == expected_resolution
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_idle_stream_is_dropped_so_the_next_open_fetches_again(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """After nobody is pulling, drop the Stream so the next open is a new ticket."""
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = MagicMock()
+    stream.outputs.return_value = {}
+    stream.stop = AsyncMock()
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+
+    stream.stop.assert_awaited_once()
+    assert camera.stream is None
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_watching_keeps_the_cached_stream(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_imou_ha_device_manager: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An active pull keeps the ticket; swapping it would cut the picture."""
+    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    camera = get_camera_from_entity_id(hass, entity_id)
+    stream = MagicMock()
+    stream.outputs.return_value = {"hls": object()}
+    stream.stop = AsyncMock()
+    camera.stream = stream
+
+    await async_get_stream_source(hass, entity_id)
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+    )
+    await hass.async_block_till_done()
+
+    stream.stop.assert_not_awaited()
+    assert camera.stream is stream
 
 
 @pytest.mark.parametrize(
