@@ -1556,7 +1556,7 @@
       "name": "Add precondition schedule"
     },
     "dispatch_battery_power": {
-      "description": "Charges or discharges the Powerwall at a set power for a set time over the local gateway connection.",
+      "description": "Charges or discharges the Powerwall at a set power for a set time.",
       "fields": {
         "device_id": {
           "description": "Energy site paired with its local Powerwall gateway.",
