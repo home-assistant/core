@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT, DOMAIN
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_firmware_update_context,
+    async_get_serial_port_via_device_id,
     async_is_firmware_update_in_progress,
     async_notify_firmware_info,
     async_register_firmware_info_callback,
@@ -24,6 +25,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 FIRMWARE_INFO_EZSP = FirmwareInfo(
@@ -368,3 +370,38 @@ async def test_firmware_callback_no_hardware_domain(
         await hass.async_block_till_done()
 
     assert "No hardware integration found for device" in caplog.text
+
+
+async def test_get_serial_port_via_device_id_local(hass: HomeAssistant) -> None:
+    """Test a local serial port is not connected through another device."""
+    assert (
+        async_get_serial_port_via_device_id(hass, "/dev/serial/by-id/device1") is None
+    )
+
+
+async def test_get_serial_port_via_device_id_esphome(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test an ESPHome serial proxy port is connected through the ESPHome device."""
+    esphome_entry = MockConfigEntry(domain="esphome", unique_id="11:22:33:44:55:66")
+    esphome_entry.add_to_hass(hass)
+
+    esphome_device = device_registry.async_get_or_create(
+        config_entry_id=esphome_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")},
+    )
+
+    # Sub-devices of the ESPHome device are ignored
+    device_registry.async_get_or_create(
+        config_entry_id=esphome_entry.entry_id,
+        identifiers={("esphome", "11:22:33:44:55:66_1")},
+        via_device_id=esphome_device.id,
+    )
+
+    assert (
+        async_get_serial_port_via_device_id(
+            hass,
+            f"esphome-hass://esphome/{esphome_entry.entry_id}?port_udev_id=some_id",
+        )
+        == esphome_device.id
+    )

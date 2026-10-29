@@ -154,6 +154,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             model=HARDWARE_NAME,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
+            via_device_id=config_entry.runtime_data.via_device_id,
         )
 
         # Use the cached firmware info if it exists
