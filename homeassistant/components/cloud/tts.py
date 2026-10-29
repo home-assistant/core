@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, AudioOutput, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
 import probatio
 
@@ -207,10 +207,8 @@ def _prepare_voice_args(
     hass: HomeAssistant,
     language: str,
     voice: str,
-    gender: str | None,
 ) -> dict:
     """Prepare voice arguments."""
-    gender = handle_deprecated_gender(hass, gender)
     style: str | None
     original_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
     if not style:
@@ -229,7 +227,6 @@ def _prepare_voice_args(
     return {
         "language": language,
         "voice": updated_voice,
-        "gender": gender,
         "style": style,
     }
 
@@ -349,8 +346,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.10.0.
-        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -433,7 +429,6 @@ class CloudTTSEntity(TextToSpeechEntity):
                             else DEFAULT_VOICES[language]
                         ),
                     ),
-                    gender=options.get(ATTR_GENDER),
                 ),
             )
         except VoiceError as err:
@@ -460,7 +455,6 @@ class CloudTTSEntity(TextToSpeechEntity):
                         else DEFAULT_VOICES[request.language]
                     ),
                 ),
-                gender=request.options.get(ATTR_GENDER),
             ),
         )
 
@@ -499,8 +493,7 @@ class CloudProvider(Provider):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.10.0.
-        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     @callback
     @override
@@ -571,7 +564,6 @@ class CloudProvider(Provider):
                             else DEFAULT_VOICES[language]
                         ),
                     ),
-                    gender=options.get(ATTR_GENDER),
                 ),
             )
         except VoiceError as err:
@@ -579,32 +571,6 @@ class CloudProvider(Provider):
             return (None, None)
 
         return options[ATTR_AUDIO_OUTPUT], data
-
-
-@callback
-def handle_deprecated_gender(
-    hass: HomeAssistant,
-    gender: Gender | str | None,
-) -> Gender | None:
-    """Handle deprecated gender."""
-    if gender is None:
-        return None
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_gender",
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        breaks_in_ha_version="2024.10.0",
-        translation_key="deprecated_gender",
-        translation_placeholders={
-            "integration_name": "Home Assistant Cloud",
-            "deprecated_option": "gender",
-            "replacement_option": "voice",
-        },
-    )
-    return Gender(gender)
 
 
 @callback
