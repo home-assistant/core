@@ -21,6 +21,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
+from homeassistant.util import language as language_util
 from homeassistant.util.hass_dict import HassKey
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
@@ -163,6 +164,8 @@ class _DefaultPipelineProcessor:
     """True if the conversation agent provides the response audio instead of TTS."""
     _agent_response_audio: bool = field(init=False, default=False)
     """True if the conversation agent has set the response audio."""
+    _pending_intent_start: PipelineEvent | None = field(init=False, default=None)
+    """Start of intent recognition, held back while the agent hears the user."""
     _invalidated: bool = field(init=False, default=False)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
@@ -379,22 +382,19 @@ class _DefaultPipelineProcessor:
                         code="wake-word-timeout", message="Wake word was not detected"
                     )
 
-    async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
+    async def prepare_speech_to_text(
+        self, metadata: stt.SpeechMetadata, engine: str, language: str
+    ) -> None:
         """Prepare speech-to-text."""
-        # pipeline.stt_engine can't be None or this function is not called
-        stt_provider = stt.async_get_speech_to_text_engine(
-            self.host.hass,
-            self.host.pipeline.stt_engine,  # type: ignore[arg-type]
-        )
+        stt_provider = stt.async_get_speech_to_text_engine(self.host.hass, engine)
 
         if stt_provider is None:
-            engine = self.host.pipeline.stt_engine
             raise SpeechToTextError(
                 code="stt-provider-missing",
                 message=f"No speech-to-text provider for: {engine}",
             )
 
-        metadata.language = self.host.pipeline.stt_language or self.host.language
+        metadata.language = language
 
         if not stt_provider.check_metadata(metadata):
             raise SpeechToTextError(
@@ -406,6 +406,24 @@ class _DefaultPipelineProcessor:
             )
 
         self.stt_provider = stt_provider
+
+    @callback
+    def _async_default_speech_to_text(self) -> tuple[str, str] | None:
+        """Return the default STT engine and its language for the run."""
+        hass = self.host.hass
+        if (engine := stt.async_default_engine(hass)) is None or (
+            stt_provider := stt.async_get_speech_to_text_engine(hass, engine)
+        ) is None:
+            return None
+
+        languages = language_util.matches(
+            self.host.language,
+            stt_provider.supported_languages,
+            country=hass.config.country,
+        )
+        if not languages:
+            return None
+        return (engine, languages[0])
 
     async def speech_to_text(
         self,
@@ -557,14 +575,28 @@ class _DefaultPipelineProcessor:
                 silence_seconds=self.host.audio_settings.silence_seconds
             )
 
+        async def agent_audio_stream() -> AsyncGenerator[bytes]:
+            async for chunk in self._speech_to_text_stream(
+                audio_stream=stream, stt_vad=stt_vad
+            ):
+                yield chunk
+            self._async_send_intent_start()
+
         return conversation.ConversationAudioInput(
             pcm_format=tts.PcmFormat(
                 sample_rate=SAMPLE_RATE,
                 sample_width=SAMPLE_WIDTH,
                 channels=SAMPLE_CHANNELS,
             ),
-            stream=self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
+            stream=agent_audio_stream(),
         )
+
+    @callback
+    def _async_send_intent_start(self) -> None:
+        """Send the start of intent recognition if it was held back."""
+        if (event := self._pending_intent_start) is not None:
+            self._pending_intent_start = None
+            self.host.process_event(event)
 
     @callback
     def _async_agent_user_content(self, delta: dict) -> None:
@@ -591,6 +623,7 @@ class _DefaultPipelineProcessor:
         self.tts_stream.async_set_audio_stream(pcm_format, audio_stream)
 
         # Satellites can play the response while the agent is speaking
+        self._async_send_intent_start()
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_PROGRESS,
@@ -684,20 +717,23 @@ class _DefaultPipelineProcessor:
 
         input_language = self._intent_input_language()
 
-        self.host.process_event(
-            PipelineEvent(
-                PipelineEventType.INTENT_START,
-                {
-                    "engine": self.intent_agent.id,
-                    "language": input_language,
-                    "intent_input": intent_input,
-                    "conversation_id": conversation_id,
-                    "device_id": self.host.device_id,
-                    "satellite_id": self.host.satellite_id,
-                    "prefer_local_intents": self.host.pipeline.prefer_local_intents,
-                },
-            )
+        intent_start = PipelineEvent(
+            PipelineEventType.INTENT_START,
+            {
+                "engine": self.intent_agent.id,
+                "language": input_language,
+                "intent_input": intent_input,
+                "conversation_id": conversation_id,
+                "device_id": self.host.device_id,
+                "satellite_id": self.host.satellite_id,
+                "prefer_local_intents": self.host.pipeline.prefer_local_intents,
+            },
         )
+        if audio is None:
+            self.host.process_event(intent_start)
+        else:
+            # Satellites keep listening until the agent has heard the user
+            self._pending_intent_start = intent_start
 
         try:
             if self.tts_stream and self.tts_stream.supports_streaming_input:
@@ -717,6 +753,7 @@ class _DefaultPipelineProcessor:
                     self._async_agent_user_content(delta)
                     return
 
+                self._async_send_intent_start()
                 self.host.process_event(
                     PipelineEvent(
                         PipelineEventType.INTENT_PROGRESS,
@@ -924,7 +961,11 @@ class _DefaultPipelineProcessor:
                         "speech", ""
                     )
                     # Agents that do not use the chat log only answer in their result.
-                    if chat_log.content[-1].role == "user" and speech:
+                    # With audio input, the turn may not even have a transcript.
+                    if speech and all(
+                        content.role == "user"
+                        for content in chat_log.content[chat_log.turn_start :]
+                    ):
                         chat_log.async_add_assistant_content_without_tools(
                             conversation.AssistantContent(
                                 agent_id=agent_id,
@@ -963,6 +1004,9 @@ class _DefaultPipelineProcessor:
                 code="intent-failed",
                 message="Unexpected error during intent recognition",
             ) from src_error
+        finally:
+            # The agent may not read the spoken audio to its end
+            self._async_send_intent_start()
 
         _LOGGER.debug("conversation result %s", conversation_result)
 
@@ -1300,16 +1344,25 @@ class _DefaultPipelineProcessor:
         ):
             await self.prepare_recognize_intent(request.session)
 
+        stt_engine = self.host.pipeline.stt_engine
+        stt_language = self.host.pipeline.stt_language or self.host.language
         if self.host.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
-            if self.host.pipeline.stt_engine is None:
-                if not (
+            if stt_engine is None:
+                if (
                     self.intent_agent is not None
                     and self.intent_agent.supports_audio_input
                 ):
+                    self._agent_audio_input = True
+                # Runs for a transcript only, like the answer to a question of a
+                # satellite, have no agent that can hear the user
+                elif self.host.end_stage == PipelineStage.STT and (
+                    default_stt := self._async_default_speech_to_text()
+                ):
+                    stt_engine, stt_language = default_stt
+                else:
                     raise PipelineRunValidationError(
                         "the pipeline does not support speech-to-text"
                     )
-                self._agent_audio_input = True
             if request.stt_metadata is None:
                 raise PipelineRunValidationError(
                     "stt_metadata is required for speech-to-text"
@@ -1354,7 +1407,13 @@ class _DefaultPipelineProcessor:
             <= end_stage_index
         ) and not self._agent_audio_input:
             assert request.stt_metadata is not None
-            prepare_tasks.append(self.prepare_speech_to_text(request.stt_metadata))
+            if TYPE_CHECKING:
+                assert stt_engine is not None
+            prepare_tasks.append(
+                self.prepare_speech_to_text(
+                    request.stt_metadata, stt_engine, stt_language
+                )
+            )
 
         if prepare_tasks:
             await asyncio.gather(*prepare_tasks)

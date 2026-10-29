@@ -19,24 +19,12 @@ class ConversationEntity(RestoreEntity):
     _attr_should_poll = False
     _attr_supported_features = ConversationEntityFeature(0)
     _attr_supports_streaming = False
-    _attr_supports_audio_input = False
-    _attr_supports_audio_output = False
     __last_activity: str | None = None
 
     @property
     def supports_streaming(self) -> bool:
         """Return if the entity supports streaming responses."""
         return self._attr_supports_streaming
-
-    @property
-    def supports_audio_input(self) -> bool:
-        """Return if the entity accepts the spoken audio of the user."""
-        return self._attr_supports_audio_input
-
-    @property
-    def supports_audio_output(self) -> bool:
-        """Return if the entity can respond with spoken audio."""
-        return self._attr_supports_audio_output
 
     @property
     @final

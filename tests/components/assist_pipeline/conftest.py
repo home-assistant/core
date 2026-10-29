@@ -194,8 +194,10 @@ class MockAudioConversationEntity(conversation.ConversationEntity):
     """Mock conversation agent that understands and responds with spoken audio."""
 
     _attr_name = "Audio Agent"
-    _attr_supports_audio_input = True
-    _attr_supports_audio_output = True
+    _attr_supported_features = (
+        conversation.ConversationEntityFeature.AUDIO_INPUT
+        | conversation.ConversationEntityFeature.AUDIO_OUTPUT
+    )
 
     def __init__(self) -> None:
         """Initialize the agent."""

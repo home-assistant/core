@@ -22,7 +22,12 @@ from homeassistant.helpers import (
 )
 
 from .chat_log import current_chat_log
-from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
+from .const import (
+    DATA_COMPONENT,
+    HOME_ASSISTANT_AGENT,
+    ConversationEntityFeature,
+    IntentSource,
+)
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -106,12 +111,14 @@ async def async_converse(
         raise ValueError(f"Agent {agent_id} not found")
 
     if audio is not None and not (
-        isinstance(agent, ConversationEntity) and agent.supports_audio_input
+        isinstance(agent, ConversationEntity)
+        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_INPUT
     ):
         raise ValueError(f"Agent {agent_id} does not support audio input")
 
     if audio_output is not None and not (
-        isinstance(agent, ConversationEntity) and agent.supports_audio_output
+        isinstance(agent, ConversationEntity)
+        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_OUTPUT
     ):
         raise ValueError(f"Agent {agent_id} does not support audio output")
 

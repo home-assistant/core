@@ -2838,26 +2838,45 @@ async def _audio_agent_input() -> AsyncGenerator[bytes]:
 
 
 @pytest.mark.parametrize(
-    ("supports_audio_input", "supports_audio_output", "expected_stt", "expected_tts"),
+    ("supported_features", "expected_stt", "expected_tts"),
     [
-        pytest.param(True, True, None, None, id="audio_input_and_output"),
-        pytest.param(True, False, None, "tts.test", id="audio_input"),
-        pytest.param(False, True, "stt.mock_stt", None, id="audio_output"),
-        pytest.param(False, False, "stt.mock_stt", "tts.test", id="text"),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_INPUT
+            | conversation.ConversationEntityFeature.AUDIO_OUTPUT,
+            None,
+            None,
+            id="audio_input_and_output",
+        ),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_INPUT,
+            None,
+            "tts.test",
+            id="audio_input",
+        ),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_OUTPUT,
+            "stt.mock_stt",
+            None,
+            id="audio_output",
+        ),
+        pytest.param(
+            conversation.ConversationEntityFeature(0),
+            "stt.mock_stt",
+            "tts.test",
+            id="text",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_from_audio_agent(
     hass: HomeAssistant,
     mock_audio_agent: MockAudioConversationEntity,
-    supports_audio_input: bool,
-    supports_audio_output: bool,
+    supported_features: conversation.ConversationEntityFeature,
     expected_stt: str | None,
     expected_tts: str | None,
 ) -> None:
     """Test the pipeline of an agent leaves out what the agent does itself."""
-    mock_audio_agent._attr_supports_audio_input = supports_audio_input
-    mock_audio_agent._attr_supports_audio_output = supports_audio_output
+    mock_audio_agent._attr_supported_features = supported_features
 
     pipeline = async_get_pipeline(hass, AUDIO_AGENT_ID)
 
@@ -2869,23 +2888,37 @@ async def test_pipeline_from_audio_agent(
 
 
 @pytest.mark.parametrize(
-    ("supports_audio_output", "response_audio"),
+    ("supported_features", "response_audio"),
     [
-        pytest.param(True, b"\x01\x02\x03\x04", id="response_audio"),
-        pytest.param(True, None, id="no_response_audio"),
-        pytest.param(False, None, id="text_to_speech"),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_INPUT
+            | conversation.ConversationEntityFeature.AUDIO_OUTPUT,
+            b"\x01\x02\x03\x04",
+            id="response_audio",
+        ),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_INPUT
+            | conversation.ConversationEntityFeature.AUDIO_OUTPUT,
+            None,
+            id="no_response_audio",
+        ),
+        pytest.param(
+            conversation.ConversationEntityFeature.AUDIO_INPUT,
+            None,
+            id="text_to_speech",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent(
     hass: HomeAssistant,
     mock_audio_agent: MockAudioConversationEntity,
-    supports_audio_output: bool,
+    supported_features: conversation.ConversationEntityFeature,
     response_audio: bytes | None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a conversation agent that receives the spoken audio."""
-    mock_audio_agent._attr_supports_audio_output = supports_audio_output
+    mock_audio_agent._attr_supported_features = supported_features
     mock_audio_agent.response_audio = response_audio
 
     events: list[assist_pipeline.PipelineEvent] = []
@@ -3020,8 +3053,48 @@ async def test_pipeline_audio_agent_needs_agent(
         **pipeline_input,
     )
 
-    with pytest.raises(PipelineRunValidationError, match=message):
+    # A transcript only falls back to the default STT engine, if there is one
+    with (
+        patch("homeassistant.components.stt.async_default_engine", return_value=None),
+        pytest.raises(PipelineRunValidationError, match=message),
+    ):
         await run_input.validate()
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_transcript_only(
+    hass: HomeAssistant,
+    mock_audio_agent: MockAudioConversationEntity,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test a transcript only uses the default STT engine, like for ask_question."""
+    events: list[assist_pipeline.PipelineEvent] = []
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        stt_metadata=_STT_METADATA,
+        stt_stream=_audio_agent_input(),
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=async_get_pipeline(hass, AUDIO_AGENT_ID),
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.STT,
+            event_callback=events.append,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        ),
+    )
+
+    await pipeline_input.validate()
+    await pipeline_input.execute()
+
+    stt_start = next(
+        event for event in events if event.type == PipelineEventType.STT_START
+    )
+    assert stt_start.data
+    assert stt_start.data["engine"] == stt.async_default_engine(hass)
+    stt_end = next(event for event in events if event.type == PipelineEventType.STT_END)
+    assert stt_end.data == {"stt_output": {"text": "test transcript"}}
+    assert not mock_audio_agent.received_audio
 
 
 @pytest.mark.usefixtures("init_audio_agent")
@@ -3088,6 +3161,10 @@ async def test_pipeline_audio_agent_vad_ends_audio(
     event_types = [event.type for event in events]
     assert event_types.index(PipelineEventType.STT_VAD_START) < event_types.index(
         PipelineEventType.STT_VAD_END
+    )
+    # Satellites keep listening until the end of the voice command
+    assert event_types.index(PipelineEventType.STT_VAD_END) < event_types.index(
+        PipelineEventType.INTENT_START
     )
     # The transcript of the agent comes after the end of the voice command
     assert event_types.index(PipelineEventType.STT_VAD_END) < event_types.index(
@@ -3157,3 +3234,47 @@ async def test_pipeline_audio_agent_skips_local_handling(
     assert intent_end.data
     assert intent_end.data["processed_locally"] is False
     assert any(event.type == PipelineEventType.TTS_END for event in events)
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_reply_without_chat_log(
+    hass: HomeAssistant, mock_chat_session: chat_session.ChatSession
+) -> None:
+    """Test the speech of an audio agent that adds no transcript is its reply."""
+    events: list[assist_pipeline.PipelineEvent] = []
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        stt_metadata=_STT_METADATA,
+        stt_stream=_audio_agent_input(),
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=async_get_pipeline(hass, AUDIO_AGENT_ID),
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        ),
+    )
+    await pipeline_input.validate()
+
+    response = intent.IntentResponse(language=hass.config.language)
+    response.async_set_speech("Agent response")
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(response=response),
+    ):
+        await pipeline_input.execute()
+
+    # Intent recognition still starts when the agent does not read the audio
+    assert [event.type for event in events] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.STT_START,
+        PipelineEventType.INTENT_START,
+        PipelineEventType.INTENT_END,
+        PipelineEventType.RUN_END,
+    ]
+    with conversation.async_get_chat_log(hass, mock_chat_session) as chat_log:
+        assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+            ("assistant", "Agent response"),
+        ]

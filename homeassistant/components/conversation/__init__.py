@@ -185,12 +185,13 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
+        features = ConversationEntityFeature(agent.supported_features or 0)
         return AgentInfo(
             id=agent.entity_id,
             name=name,
             supports_streaming=agent.supports_streaming,
-            supports_audio_input=agent.supports_audio_input,
-            supports_audio_output=agent.supports_audio_output,
+            supports_audio_input=ConversationEntityFeature.AUDIO_INPUT in features,
+            supports_audio_output=ConversationEntityFeature.AUDIO_OUTPUT in features,
         )
 
     manager = get_agent_manager(hass)

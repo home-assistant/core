@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.conversation import (
     ConversationAudioInput,
+    ConversationEntityFeature,
     ConversationInput,
     ConversationResult,
     async_converse,
@@ -69,15 +70,10 @@ async def test_async_converse_audio(hass: HomeAssistant, init_components) -> Non
     with (
         patch.object(
             DefaultAgent,
-            "supports_audio_input",
+            "supported_features",
             new_callable=PropertyMock,
-            return_value=True,
-        ),
-        patch.object(
-            DefaultAgent,
-            "supports_audio_output",
-            new_callable=PropertyMock,
-            return_value=True,
+            return_value=ConversationEntityFeature.AUDIO_INPUT
+            | ConversationEntityFeature.AUDIO_OUTPUT,
         ),
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
