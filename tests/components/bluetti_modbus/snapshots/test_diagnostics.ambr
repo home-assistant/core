@@ -76,6 +76,21 @@
       }),
     }),
     'raw_error': None,
+    'settings': dict({
+      'last_update_success': True,
+      'raw': dict({
+        'holding': dict({
+          '57016': 15,
+          '57017': 100,
+        }),
+      }),
+      'raw_error': None,
+      'values': dict({
+        'b_soc_high': 100,
+        'b_soc_low': 15,
+        'd_serial': '**REDACTED**',
+      }),
+    }),
     'values': dict({
       'ac_1_o_c': 0.4,
       'ac_1_o_v': 242.0,
