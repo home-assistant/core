@@ -127,7 +127,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     async def _async_reopen(self, stream: Stream) -> None:
         """Point a preloaded stream at a new session, retrying until it opens."""
-        while True:
+        while self.stream is stream and stream.dynamic_stream_settings.preload_stream:
             try:
                 source = await self.stream_source()
             except HomeAssistantError, TimeoutError:
@@ -135,6 +135,9 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 continue
             stream.update_source(str(source))
             return
+        if self.stream is stream:
+            self.stream = None
+            await stream.stop()
 
     @override
     async def async_will_remove_from_hass(self) -> None:

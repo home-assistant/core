@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Generator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -531,6 +531,31 @@ async def test_preloaded_stream_recovers_after_a_failed_reopen(
 
     assert _entity(hass).stream is stream
     assert "user" in stream.source
+
+
+async def test_reopen_gives_up_when_preload_is_switched_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a failing reopen ends and releases the stream once preload is off."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    entity = _entity(hass)
+    stream = await _watch(hass, viewer=False, preload=True)
+    mock_live.open.side_effect = BoschCameraConnectionError
+
+    with patch(f"{CAMERA_MODULE}.REOPEN_INTERVAL", 0.01):
+        mock_live.proxy_died[CAMERA_ID]()
+        await asyncio.sleep(0.03)
+        task = entity._reopen_task
+        assert task
+        assert not task.done()
+        stream.dynamic_stream_settings = replace(
+            stream.dynamic_stream_settings, preload_stream=False
+        )
+        async with asyncio.timeout(5):
+            await task
+
+    assert entity.stream is None
 
 
 async def test_unload_stops_the_reopen_retry(
