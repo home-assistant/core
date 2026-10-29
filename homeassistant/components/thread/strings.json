@@ -8,5 +8,13 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     }
+  },
+  "exceptions": {
+    "invalid_dataset": {
+      "message": "Invalid dataset"
+    },
+    "preferred_extended_address_required": {
+      "message": "Must set preferred extended address with preferred border agent ID"
+    }
   }
 }
