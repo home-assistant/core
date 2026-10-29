@@ -50,11 +50,13 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
+    CONF_COUNT,
     CONF_NAME,
     CONF_OFFSET,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_STRUCTURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -821,6 +823,27 @@ async def test_turn_on_off(
                 ]
             },
             id="zero_scale",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {**BASE_CONFIG, CONF_DATA_TYPE: DataType.STRING, CONF_COUNT: 2},
+                ]
+            },
+            id="string_data_type",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
+                        CONF_STRUCTURE: ">i",
+                        CONF_COUNT: 2,
+                    },
+                ]
+            },
+            id="custom_data_type",
         ),
     ],
 )

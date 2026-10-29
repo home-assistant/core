@@ -481,6 +481,20 @@ FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 WATER_HEATER_SCHEMA = probatio.All(
     BASE_STRUCT_SCHEMA.extend(
         {
+            # the target temperature is written as a number
+            probatio.Optional(CONF_DATA_TYPE, default=DataType.INT16): probatio.In(
+                [
+                    DataType.INT16,
+                    DataType.INT32,
+                    DataType.INT64,
+                    DataType.UINT16,
+                    DataType.UINT32,
+                    DataType.UINT64,
+                    DataType.FLOAT16,
+                    DataType.FLOAT32,
+                    DataType.FLOAT64,
+                ]
+            ),
             probatio.Required(CONF_TARGET_TEMP): cv.positive_int,
             probatio.Optional(
                 CONF_TARGET_TEMP_WRITE_REGISTERS, default=False
