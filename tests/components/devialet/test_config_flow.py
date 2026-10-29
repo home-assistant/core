@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
 from devialet.const import UrlSuffix
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -16,11 +17,10 @@ from . import (
     MOCK_USER_INPUT,
     MOCK_ZEROCONF_DATA,
     NAME,
+    SERIAL,
     mock_playing,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -52,6 +52,18 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    mock_playing(aioclient_mock)
+    with patch(
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_device_exists_abort(
@@ -87,19 +99,19 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
     with patch(
-        "homeassistant.components.devialet.async_setup_entry", return_value=True
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_zeroconf_devialet(
@@ -116,7 +128,7 @@ async def test_zeroconf_devialet(
 
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -124,13 +136,13 @@ async def test_zeroconf_devialet(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Livingroom"
     assert result2["data"] == {
         CONF_HOST: HOST,
         CONF_NAME: NAME,
     }
+    assert result2["result"].unique_id == SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -155,3 +167,17 @@ async def test_async_step_confirm(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    mock_playing(aioclient_mock)
+    with patch(
+        "homeassistant.components.devialet.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

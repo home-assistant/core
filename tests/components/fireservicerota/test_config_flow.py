@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF = {
     CONF_USERNAME: "my@email.address",
@@ -90,6 +89,24 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         )
         assert result["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch(
+            "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+        ) as mock_fsr,
+        patch(
+            "homeassistant.components.fireservicerota.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        mock_fsr.return_value.request_tokens.return_value = MOCK_TOKEN_INFO
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONF,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test the start of the config flow."""
@@ -100,7 +117,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         ) as mock_fsr,
         patch(
             "homeassistant.components.fireservicerota.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         mock_fireservicerota = mock_fsr.return_value
@@ -120,7 +137,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_CONF[CONF_USERNAME]
         assert result["data"] == {
@@ -135,6 +151,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
                 "created_at": 4321,
             },
         }
+        assert result["result"].unique_id == MOCK_CONF[CONF_USERNAME]
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -154,7 +171,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_fsr,
         patch(
             "homeassistant.components.fireservicerota.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_fireservicerota = mock_fsr.return_value

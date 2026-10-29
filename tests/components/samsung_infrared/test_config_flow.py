@@ -1,6 +1,10 @@
 """Tests for the Samsung Infrared config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID,
+)
 
 from homeassistant.components.samsung_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -12,9 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -112,6 +113,8 @@ async def test_user_flow_title_from_entity_name(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+    assert (
+        result["result"].unique_id == f"samsung_infrared_tv_{MOCK_INFRARED_ENTITY_ID}"
+    )

@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx2
 from openai import RateLimitError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def _async_get_audio_stream(data: bytes) -> AsyncIterable[bytes]:

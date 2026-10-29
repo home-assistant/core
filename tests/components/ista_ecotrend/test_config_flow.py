@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pyecotrend_ista import LoginError, ServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ista")
@@ -32,13 +31,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Max Istamann"
     assert result["data"] == {
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "26e93f1a-c828-11ea-87d0-0242ac130003"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -5,6 +5,7 @@ from ipaddress import ip_address
 
 from lektricowifi import DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lektrico.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -24,8 +25,6 @@ from .conftest import (
     MOCKED_DEVICE_TYPE,
     MOCKED_DEVICE_ZEROCONF_DATA,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_setup(hass: HomeAssistant, mock_device, mock_setup_entry) -> None:
@@ -130,7 +129,6 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
     assert result.get("step_id") == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
@@ -139,6 +137,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
         ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
     }
     assert result2["title"] == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
+    assert result2["result"].unique_id == MOCKED_DEVICE_SERIAL_NUMBER
 
 
 async def test_zeroconf_setup_already_exists(

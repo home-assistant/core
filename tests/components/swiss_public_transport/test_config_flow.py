@@ -7,6 +7,7 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
@@ -23,8 +24,6 @@ from homeassistant.components.swiss_public_transport.const import (
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -141,11 +140,11 @@ async def test_flow_user_init_data_success(
                 user_input=time_mode_input,
             )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == config_title
 
         assert result["data"] == {**user_input, **(time_mode_input or {})}
+        assert result["result"].unique_id == config_title
 
 
 @pytest.mark.parametrize(

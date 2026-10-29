@@ -1,10 +1,13 @@
 {
   "domain": "nx584",
   "name": "NX584",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nx584",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["nx584"],
   "quality_scale": "legacy",
-  "requirements": ["pynx584==0.8.2"]
+  "requirements": ["pynx584==0.9.0"]
 }

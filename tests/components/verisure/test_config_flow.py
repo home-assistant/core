@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from verisure import (
     Error as VerisureError,
     LoginError as VerisureLoginError,
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_single_installation(
@@ -51,7 +50,6 @@ async def test_full_user_flow_single_installation(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "ascending (12345th street)"
     assert result2.get("data") == {
@@ -59,6 +57,7 @@ async def test_full_user_flow_single_installation(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result2["result"].unique_id == "12345"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -95,7 +94,6 @@ async def test_full_user_flow_multiple_installations(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "descending (54321th street)"
     assert result3.get("data") == {
@@ -103,6 +101,7 @@ async def test_full_user_flow_multiple_installations(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result3["result"].unique_id == "54321"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -521,7 +520,7 @@ async def test_reauth_flow_errors(
         for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
     }
 
-    await hass.config_entries.flow.async_configure(
+    result6 = await hass.config_entries.flow.async_configure(
         result5["flow_id"],
         {
             "code": "654321",
@@ -529,6 +528,8 @@ async def test_reauth_flow_errors(
     )
     await hass.async_block_till_done()
 
+    assert result6.get("type") is FlowResultType.ABORT
+    assert result6.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -633,6 +634,7 @@ async def test_reauth_flow_invalid_auth_password_length(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_mfa_rate_limited(
     hass: HomeAssistant,
     mock_verisure_config_flow: MagicMock,
@@ -662,7 +664,30 @@ async def test_user_flow_mfa_rate_limited(
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "mfa_rate_limited"}
 
+    mock_verisure_config_flow.request_mfa.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    assert result3.get("step_id") == "mfa"
 
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {"code": "123456"}
+    )
+    assert result4.get("step_id") == "installation"
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"], {"giid": "12345"}
+    )
+    await hass.async_block_till_done()
+
+    assert result5.get("type") is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_mfa_rate_limited(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -693,6 +718,24 @@ async def test_reauth_flow_mfa_rate_limited(
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "mfa_rate_limited"}
 
+    mock_verisure_config_flow.request_mfa.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    assert result3.get("step_id") == "reauth_mfa"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {"code": "123456"}
+    )
+    await hass.async_block_till_done()
+
+    assert result4.get("type") is FlowResultType.ABORT
+    assert result4.get("reason") == "reauth_successful"
+
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow."""
@@ -701,7 +744,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.verisure.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

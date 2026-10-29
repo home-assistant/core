@@ -4,6 +4,12 @@ from enum import StrEnum
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, update
@@ -38,13 +44,6 @@ from .conftest import (
     setup_and_test_unique_id,
     setup_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    mock_restore_cache_with_extra_data,
-)
-from tests.conftest import WebSocketGenerator
 
 TEST_INSTALLED_SENSOR = "sensor.installed_update"
 TEST_LATEST_SENSOR = "sensor.latest_update"

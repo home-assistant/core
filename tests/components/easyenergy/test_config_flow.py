@@ -3,13 +3,12 @@
 from unittest.mock import MagicMock, patch
 
 from easyenergy import EasyEnergyConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(
@@ -35,10 +34,10 @@ async def test_full_user_flow(
             user_input={},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "easyEnergy"
     assert result2.get("data") == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert mock_easyenergy.energy_prices.call_count == 1
     assert len(mock_setup_entry.mock_calls) == 1

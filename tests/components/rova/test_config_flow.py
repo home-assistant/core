@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.components.rova.const import (
@@ -14,8 +15,6 @@ from homeassistant.components.rova.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 ZIP_CODE = "7991AD"
 HOUSE_NUMBER = "10"
@@ -39,7 +38,6 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     data = result.get("data")
@@ -47,6 +45,9 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
     assert data[CONF_ZIP_CODE] == ZIP_CODE
     assert data[CONF_HOUSE_NUMBER] == HOUSE_NUMBER
     assert data[CONF_HOUSE_NUMBER_SUFFIX] == HOUSE_NUMBER_SUFFIX
+    assert (
+        result["result"].unique_id == f"{ZIP_CODE}{HOUSE_NUMBER}{HOUSE_NUMBER_SUFFIX}"
+    )
 
 
 async def test_error_if_not_rova_area(

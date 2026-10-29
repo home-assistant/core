@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, call
 
+from music_assistant_client.helpers import LinkedUser
+from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.enums import MediaType
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
@@ -20,10 +22,12 @@ from homeassistant.components.music_assistant.services import (
     SERVICE_SEARCH,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .common import create_library_albums_from_fixture, setup_integration_from_fixtures
+
+MOCK_USER_ID = "abc123"
 
 
 async def test_search_action(
@@ -86,6 +90,55 @@ async def test_search_action_with_username(
         library_only=False,
         user="user_user",
     )
+
+
+@pytest.mark.parametrize(
+    ("user_id", "extra_data", "expected_user"),
+    [
+        pytest.param(
+            MOCK_USER_ID,
+            {},
+            LinkedUser(
+                provider=AuthProviderType.HOME_ASSISTANT,
+                user_id=MOCK_USER_ID,
+                required=False,
+            ),
+            id="calling user",
+        ),
+        pytest.param(None, {}, None, id="no calling user"),
+        pytest.param(
+            MOCK_USER_ID,
+            {ATTR_USERNAME: "user_user"},
+            "user_user",
+            id="explicit username wins",
+        ),
+    ],
+)
+async def test_search_action_acts_as_calling_user(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    user_id: str | None,
+    extra_data: dict[str, str],
+    expected_user: LinkedUser | str | None,
+) -> None:
+    """Test that the search action defaults to the user that called it."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.music.search = AsyncMock(return_value=SearchResults())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_SEARCH_NAME: "test",
+            **extra_data,
+        },
+        blocking=True,
+        return_response=True,
+        context=Context(user_id=user_id),
+    )
+
+    assert music_assistant_client.music.search.call_args.kwargs["user"] == expected_user
 
 
 async def test_search_action_with_unknown_username(

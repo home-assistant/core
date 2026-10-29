@@ -5,6 +5,8 @@ from unittest.mock import Mock
 
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -22,9 +24,6 @@ from . import (
     WATER_TIMER_SERVICE_INFO,
     WATER_TIMER_UNNAMED_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "constant_advertisements")
 
@@ -84,8 +83,8 @@ async def test_user_selection_replaces_ignored(hass: HomeAssistant) -> None:
         user_input={},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == WATER_TIMER_SERVICE_INFO.address
 
 
 async def test_failed_connect(

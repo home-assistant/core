@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.russound_rio.const import (
     CONF_ZONE_SOURCE_EXCLUSION,
@@ -28,8 +29,6 @@ from .const import (
     MOCK_TCP_STEP_INPUT,
     MODEL,
 )
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.20.17"),
@@ -301,8 +300,8 @@ async def test_user_flow_after_zeroconf_started(
         MOCK_TCP_STEP_INPUT,
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "00:11:22:33:44:55"
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
 

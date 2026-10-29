@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 from lunatone_rest_api_client.models import InfoData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -15,9 +16,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import BASE_IP, BASE_URL, MANUFACTURER, UUID, build_info_data, setup_integration
-
-from tests.common import MockConfigEntry
+from . import (
+    BASE_IP,
+    BASE_URL,
+    MANUFACTURER,
+    SERIAL_NUMBER,
+    UUID,
+    build_info_data,
+    setup_integration,
+)
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(BASE_IP),
@@ -37,12 +44,18 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(
-    ("info_data"),
-    [build_info_data(include_uuid=True), build_info_data(include_uuid=False)],
+    ("info_data", "expected_unique_id"),
+    [
+        (build_info_data(include_uuid=True), UUID.replace("-", "")),
+        (build_info_data(include_uuid=False), str(SERIAL_NUMBER)),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock, info_data: InfoData
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    info_data: InfoData,
+    expected_unique_id: str,
 ) -> None:
     """Test full user flow."""
     mock_lunatone_info.data = info_data
@@ -58,12 +71,13 @@ async def test_full_flow(
         result["flow_id"],
         {CONF_URL: BASE_URL},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
+    assert result["result"].unique_id == expected_unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
@@ -83,6 +97,14 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "missing_device_info"}
+
+    mock_lunatone_info.data = build_info_data()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: BASE_URL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_already_configured(

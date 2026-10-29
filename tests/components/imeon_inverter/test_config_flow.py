@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
 
 from .conftest import TEST_DISCOVER, TEST_SERIAL, TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_async_setup_entry")
 
@@ -168,10 +167,10 @@ async def test_ssdp(hass: HomeAssistant) -> None:
         result["flow_id"], user_input
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Imeon {TEST_SERIAL}"
     assert result["data"] == TEST_USER_INPUT
+    assert result["result"].unique_id == TEST_SERIAL
 
 
 async def test_ssdp_already_exist(

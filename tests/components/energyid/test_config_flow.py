@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
@@ -21,14 +22,21 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 # Test constants
 TEST_PROVISIONING_KEY = "test_prov_key"
 TEST_PROVISIONING_SECRET = "test_prov_secret"
 TEST_RECORD_NUMBER = "site_12345"
 TEST_RECORD_NAME = "My Test Site"
 MAX_POLLING_ATTEMPTS = 60
+
+
+def _mock_claimed_client() -> MagicMock:
+    """Return a mocked WebhookClient for a claimed device."""
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = TEST_RECORD_NUMBER
+    mock_client.recordName = TEST_RECORD_NAME
+    return mock_client
 
 
 @pytest.fixture(name="mock_polling_interval", autouse=True)
@@ -44,7 +52,7 @@ def mock_polling_interval_fixture() -> Generator[int]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.energyid.async_setup_entry", return_value=True
+        "homeassistant.components.energyid.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -330,6 +338,19 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "cannot_connect"
 
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
     """Test unexpected error during authentication."""
@@ -353,6 +374,19 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "unknown_auth_error"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_external_step_claimed_during_display(
@@ -471,11 +505,7 @@ async def test_config_flow_reauth_success(
         return_value=mock_client,
     ):
         # Start reauth flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
 
@@ -540,6 +570,18 @@ async def test_config_flow_client_response_error(
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == expected_error
 
+        mock_client.authenticate = AsyncMock(return_value=True)
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     """Test reauth flow when device needs to be claimed."""
@@ -566,11 +608,7 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
             return_value=mock_client,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         # Check initial reauth form
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -756,6 +794,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
     """Test that reauth flow shows error when authentication fails with 401."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=TEST_RECORD_NUMBER,
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
@@ -778,14 +817,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.config_flow.WebhookClient",
         return_value=mock_client,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_entry.entry_id,
-            },
-            data=mock_entry.data,
-        )
+        result = await mock_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
@@ -798,6 +830,20 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "invalid_auth"
+
+        mock_client.authenticate.side_effect = None
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
 
 
 async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:

@@ -1,13 +1,13 @@
 """Tests for the EnOcean switch platform."""
 
+from pytest_homeassistant.common import MockConfigEntry, assert_setup_component
+
 from homeassistant.components.enocean import DOMAIN
 from homeassistant.components.enocean.entity import combine_hex
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, assert_setup_component
 
 SWITCH_CONFIG = {
     "switch": [

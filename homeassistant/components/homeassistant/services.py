@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_EXCLUDE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import (
@@ -54,7 +55,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
-    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+    probatio.AtLeastOne(ATTR_ENTRY_ID, *cv.TARGET_ID_KEYS),
 )
 SCHEMA_RESTART = probatio.Schema(
     {probatio.Optional(ATTR_SAFE_MODE, default=False): bool}
@@ -140,10 +141,6 @@ async def _async_handle_core_service(call: ServiceCall) -> None:
     stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]]
 
     if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(hass):
-        _LOGGER.error(
-            "The system cannot %s while a database upgrade is in progress",
-            call.service,
-        )
         raise HomeAssistantError(
             f"The system cannot {call.service} while a database upgrade is in progress."
         )
@@ -156,6 +153,7 @@ async def _async_handle_core_service(call: ServiceCall) -> None:
     errors = await conf_util.async_check_ha_config_file(hass)
 
     if errors:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "The system cannot %s because the configuration is not valid: %s",
             call.service,
@@ -283,10 +281,6 @@ async def _async_handle_reload_all(call: ServiceCall) -> None:
     hass = call.hass
 
     if errors := await conf_util.async_check_ha_config_file(hass):
-        _LOGGER.error(
-            "The system cannot reload because the configuration is not valid: %s",
-            errors,
-        )
         raise HomeAssistantError(
             "Cannot quick reload all YAML configurations because the "
             f"configuration is not valid: {errors}"
@@ -321,7 +315,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     service_schema = probatio.Schema(
-        {ATTR_ENTITY_ID: cv.entity_ids}, extra=probatio.ALLOW_EXTRA
+        {
+            ATTR_ENTITY_ID: cv.entity_ids,
+            probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
+        },
+        extra=probatio.ALLOW_EXTRA,
     )
 
     hass.services.async_register(

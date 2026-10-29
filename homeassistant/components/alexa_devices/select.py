@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
-from aioamazondevices.structures import AmazonDropInStatus
+from aioamazondevices.structures import AmazonDevice, AmazonDropInStatus
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import AmazonConfigEntry, AmazonDevice, alexa_api_call
+from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity, AmazonServiceEntity
 
 PARALLEL_UPDATES = 1

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyopenweathermap import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import LATITUDE, LONGITUDE
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_API_KEY: "foo",
@@ -64,12 +63,12 @@ async def test_successful_config_flow(
         USER_INPUT,
     )
     await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == USER_INPUT[CONF_LOCATION][CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
+    assert result["result"].unique_id == f"{LATITUDE}-{LONGITUDE}"
 
     # validate entry state
     conf_entries = hass.config_entries.async_entries(DOMAIN)

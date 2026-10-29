@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from pvo import Status
@@ -14,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -24,6 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PvOutputConfigEntry, PVOutputDataUpdateCoordinator
@@ -35,7 +38,7 @@ PARALLEL_UPDATES = 0
 class PVOutputSensorEntityDescription(SensorEntityDescription):
     """Describes a PVOutput sensor entity."""
 
-    value_fn: Callable[[Status], int | float | None]
+    value_fn: Callable[[Status], int | float | datetime | None]
 
     # Not every uploader sends these values, so these sensors are only
     # created once the system reports a value for them.
@@ -59,6 +62,17 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_generation,
+    ),
+    PVOutputSensorEntityDescription(
+        key="last_reported",
+        translation_key="last_reported",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        # PVOutput reports the local time of the system without its timezone,
+        # assume the system is in the same timezone as Home Assistant
+        value_fn=lambda status: status.reported_datetime.replace(
+            tzinfo=dt_util.get_default_time_zone()
+        ),
     ),
     PVOutputSensorEntityDescription(
         key="normalized_output",
@@ -188,6 +202,6 @@ class PVOutputSensorEntity(
 
     @property
     @override
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> int | float | datetime | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)

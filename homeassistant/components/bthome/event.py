@@ -29,7 +29,6 @@ from .types import BTHomeConfigEntry
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(
         key=EVENT_CLASS_BUTTON,
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="button",
         event_types=[
             "press",
@@ -39,6 +38,7 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
             "long_double_press",
             "long_triple_press",
             "hold_press",
+            "hold_release",
         ],
         device_class=EventDeviceClass.BUTTON,
     ),

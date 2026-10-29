@@ -37,9 +37,9 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 2
-  HA_SHORT_VERSION: "2026.11"
+  CACHE_VERSION: 1
+  MYPY_CACHE_VERSION: 1
+  HA_SHORT_VERSION: "2026.12"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
   # - 10.3 and 10.6 are the versions currently phased out until 2027.3
@@ -69,7 +69,7 @@ env:
     tests/components/recorder
     tests/components/sensor
   UV_CACHE_DIR: /tmp/uv-cache
-  APT_CACHE_VERSION: 1
+  APT_CACHE_VERSION: 2
   SQLALCHEMY_WARN_20: 1
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
@@ -83,7 +83,7 @@ concurrency:
 jobs:
   info:
     name: Collect information & changes data
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       pull-requests: read # For paths-filter to detect changed files
@@ -116,15 +116,16 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         env:
-          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
           HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
           HASH_GEN_REQUIREMENTS: ${{ hashFiles('script/gen_requirements_all.py') }}
+          HASH_EDITABLE_PACKAGES: ${{ hashFiles('pyproject.toml', 'packages/hassfest/pyproject.toml', 'packages/hassfest/setup.py', '.github/actions/restore-or-build-venv/action.yml') }}
         run: |
           # Include HA_SHORT_VERSION to force the immediate creation
           # of a new uv cache entry after a version bump.
-          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
+          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}-${HASH_EDITABLE_PACKAGES}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: core
@@ -271,7 +272,7 @@ jobs:
 
   prek:
     name: Run prek checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -291,34 +292,14 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        uses: j178/prek-action@44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d # v3.1.0
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
 
-  zizmor:
-    name: Check GitHub Actions workflows
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read # To check out the repository
-    needs: [info]
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Run zizmor
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
-        with:
-          extra-args: --all-files zizmor
-
   lint-hadolint:
     name: Check ${{ matrix.file }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -342,13 +323,14 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
-          args: hadolint ${{ matrix.file }}
+          dockerfile: ${{ matrix.file }}
+          no-color: true
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs: [info]
@@ -377,7 +359,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -390,7 +372,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -409,7 +391,7 @@ jobs:
         timeout-minutes: 10
         uses: $/.github/actions/cache-apt-packages
         with:
-          packages: libturbojpeg
+          packages: libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python and restore venv
         id: python
@@ -420,6 +402,10 @@ jobs:
           python-cache-key: ${{ needs.info.outputs.python_cache_key }}
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+      - name: Test hassfest package
+        run: |
+          . venv/bin/activate
+          pytest -c packages/hassfest/pyproject.toml packages/hassfest/tests
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -427,7 +413,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -458,7 +444,7 @@ jobs:
 
   gen-copilot-instructions:
     name: Check copilot instructions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -482,9 +468,42 @@ jobs:
         run: |
           uv run --no-project python -m script.gen_copilot_instructions validate
 
+  build-pylint-package:
+    name: Build pylint-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pylint-home-assistant --out-dir dist
+      - name: Install wheel in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/package-venv"
+          uv pip install --python "${RUNNER_TEMP}/package-venv/bin/python" dist/*.whl
+      - name: Load installed Pylint plugin outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/package-venv/bin/pylint" \
+            --rcfile=/dev/null --load-plugins=pylint_home_assistant --list-msgs > /dev/null
+
   gen-recorder-db-versions:
     name: Check recorder database versions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -510,7 +529,7 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -533,7 +552,7 @@ jobs:
 
   audit-licenses:
     name: Audit licenses
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -569,7 +588,7 @@ jobs:
           . venv/bin/activate
           python -m script.licenses extract --output-file=licenses-${PYTHON_VERSION}.json
       - name: Upload licenses
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
           path: licenses-${{ matrix.python-version }}.json
@@ -582,7 +601,7 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -615,7 +634,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant
+          pylint --jobs 0 --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -628,7 +647,7 @@ jobs:
 
   pylint-tests:
     name: Check pylint on tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -662,7 +681,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint tests
+          pylint --jobs 0 tests packages/pytest-home-assistant/pytest_homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -675,7 +694,7 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -724,7 +743,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy --num-workers=4 homeassistant pylint
+          mypy --num-workers=4 homeassistant packages/pylint-home-assistant
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -737,7 +756,7 @@ jobs:
 
   benchmarks:
     name: Run benchmarks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write # OIDC token CodSpeed mints (no CODSPEED_TOKEN secret)
@@ -768,7 +787,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        uses: CodSpeedHQ/action@78102a468f96d8e0ccb92d0ec49425753fc42062 # v5.6.0
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
@@ -777,9 +796,101 @@ jobs:
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
 
+  build-hassfest-package:
+    name: Build hassfest package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build hassfest source distribution and wheel
+        run: uv build packages/hassfest --out-dir dist/hassfest
+      - name: Install wheel in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/hassfest-venv"
+          uv pip install --python "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            dist/hassfest/*.whl
+      - name: Check installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            "${GITHUB_WORKSPACE}/packages/hassfest/tests/check_package.py"
+
+  build-pytest-package:
+    name: Build pytest-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pytest-home-assistant --out-dir dist
+      - name: Install wheel and matching Home Assistant in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/pytest-package-venv"
+          uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" . dist/*.whl
+          cp -R packages/pytest-home-assistant/tests/standalone "${RUNNER_TEMP}/pytest-package-tests"
+      - name: Test installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_plugin.py"
+      - name: Test optional helpers and fixtures
+        run: |
+          for wheel in dist/*.whl; do
+            uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" \
+              "${wheel}[bluetooth,infrared,radio-frequency]"
+          done
+          cd "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/pytest-package-venv/bin/python" - <<'PY'
+          import importlib
+
+          for module in (
+              "pytest_homeassistant.plugins",
+              "pytest_homeassistant.components.bluetooth",
+              "pytest_homeassistant.components.infrared.common",
+              "pytest_homeassistant.components.radio_frequency.common",
+          ):
+              importlib.import_module(module)
+          PY
+
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_optional.py"
+
   prepare-pytest-full:
     name: Split tests for full run
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     if: |
@@ -800,7 +911,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
       - name: Set up Python and restore venv
@@ -857,7 +968,7 @@ jobs:
             steps.python.outputs.python-version }}-${{
             steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
@@ -865,7 +976,7 @@ jobs:
 
   pytest-full:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -896,7 +1007,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -913,7 +1024,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
       - name: Download pytest_buckets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: pytest_buckets
       - name: Compile English translations
@@ -934,7 +1045,13 @@ jobs:
           set -o pipefail
           cov_params=()
           if [[ "${SKIP_COVERAGE}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant")
+            if [[ "${TEST_GROUP}" == "1" ]]; then
+              # Also report never-imported files as 0%. Listing every file
+              # is slow, so only one group does it.
+              cov_params+=(--cov="homeassistant")
+            else
+              cov_params+=(--cov)
+            fi
             cov_params+=(--cov-report=xml)
             cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
@@ -956,14 +1073,14 @@ jobs:
               2>&1 | tee pytest-${PYTHON_VERSION}-${TEST_GROUP}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -976,7 +1093,7 @@ jobs:
           mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -988,7 +1105,7 @@ jobs:
 
   pytest-mariadb:
     name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     services:
@@ -1029,7 +1146,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libmariadb-dev-compat
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
@@ -1080,7 +1197,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses 1 \
+            --numprocesses logical \
+            --dist=loadfile \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1093,7 +1211,7 @@ jobs:
               2>&1 | tee pytest-${PYTHON_VERSION}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1101,7 +1219,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1115,7 +1233,7 @@ jobs:
           mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1126,7 +1244,7 @@ jobs:
 
   pytest-postgres:
     name: Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     services:
@@ -1170,7 +1288,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1228,7 +1346,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses 1 \
+            --numprocesses logical \
+            --dist=loadfile \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1241,7 +1360,7 @@ jobs:
               2>&1 | tee pytest-${PYTHON_VERSION}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1249,7 +1368,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1263,7 +1382,7 @@ jobs:
           mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1274,7 +1393,7 @@ jobs:
 
   pytest-sqlite:
     name: Run SQLite ${{ matrix.sqlite-group.version }} tests Python ${{ matrix.python-version }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -1304,7 +1423,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1374,7 +1493,7 @@ jobs:
               2>&1 | tee pytest-${PYTHON_VERSION}-sqlite-${EXPECTED_SQLITE_VERSION}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name:
             pytest-${{ github.run_number }}-${{ matrix.python-version }}-sqlite-${{
@@ -1387,7 +1506,7 @@ jobs:
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     needs:
@@ -1403,7 +1522,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1416,16 +1535,13 @@ jobs:
 
   pytest-partial:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
+    # Partial runs are short, so start the tests in parallel with the lint jobs
     needs:
       - info
       - base
-      - gen-requirements-all
-      - hassfest
-      - prek
-      - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
@@ -1447,7 +1563,7 @@ jobs:
           packages: >-
             bluez
             ffmpeg
-            libturbojpeg
+            libturbojpeg0
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
@@ -1512,14 +1628,14 @@ jobs:
               2>&1 | tee pytest-${PYTHON_VERSION}-${TEST_GROUP}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1532,7 +1648,7 @@ jobs:
           mv "junit.xml-tmp" "junit.xml"
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -1543,7 +1659,7 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     timeout-minutes: 10
@@ -1556,7 +1672,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
@@ -1568,7 +1684,7 @@ jobs:
 
   upload-test-results:
     name: Upload test results to Codecov
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs:
       - info
       - pytest-partial
@@ -1585,7 +1701,7 @@ jobs:
       && needs.info.outputs.skip_coverage != 'true' && !cancelled()
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov

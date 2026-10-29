@@ -9,6 +9,7 @@ from unittest.mock import ANY, DEFAULT, Mock
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
@@ -26,8 +27,6 @@ from .conftest import (
     MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 DUMMY_OBJECT_ID: Final = "123"
 

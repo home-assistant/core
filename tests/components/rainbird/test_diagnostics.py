@@ -1,6 +1,10 @@
 """Tests for the Rain Bird diagnostics."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -9,11 +13,6 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import mock_response
 from .test_calendar import SCHEDULE_RESPONSES
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

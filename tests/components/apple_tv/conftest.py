@@ -9,20 +9,20 @@ from pyatv.const import (
     FeatureName,
     FeatureState,
     KeyboardFocusState,
+    OperatingSystem,
     PairingRequirement,
     Protocol,
 )
 from pyatv.interface import FeatureInfo, Features, Playing, PushUpdater
 from pyatv.support import http
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True, name="mock_scan")
@@ -261,6 +261,8 @@ def mock_atv() -> AsyncMock:
     atv.device_info.model = DeviceModel.Gen4K
     atv.device_info.raw_model = "AppleTV6,2"
     atv.device_info.version = "15.0"
+    atv.device_info.build_number = "19J346"
+    atv.device_info.operating_system = OperatingSystem.TvOS
     atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
     return atv
 

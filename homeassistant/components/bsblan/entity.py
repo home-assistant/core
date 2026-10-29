@@ -2,6 +2,8 @@
 
 from typing import override
 
+from bsblan import State
+
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,10 +32,6 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
 class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
     """Defines a base BSBLan entity using the fast coordinator."""
 
-    def __init__(self, coordinator: BSBLanFastCoordinator, data: BSBLanData) -> None:
-        """Initialize BSBLan entity."""
-        super().__init__(coordinator, data)
-
 
 class BSBLanCircuitEntity(BSBLanEntity):
     """BSBLan entity belonging to a heating circuit sub-device."""
@@ -46,6 +44,7 @@ class BSBLanCircuitEntity(BSBLanEntity):
     ) -> None:
         """Initialize BSBLan circuit entity with sub-device info."""
         super().__init__(coordinator, data)
+        self._circuit = circuit
         mac = data.device.MAC
         host = coordinator.config_entry.data[CONF_HOST]
         port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
@@ -59,10 +58,15 @@ class BSBLanCircuitEntity(BSBLanEntity):
                 (DOMAIN, mac),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
-            manufacturer=main_info["manufacturer"],
-            model=main_info.get("model"),
-            model_id=main_info.get("model_id"),
+            manufacturer=main_info.manufacturer,
+            model=main_info.model,
+            model_id=main_info.model_id,
         )
+
+    @property
+    def _circuit_state(self) -> State:
+        """Return the state for this circuit."""
+        return self.coordinator.data.states[self._circuit]
 
 
 class BSBLanDualCoordinatorEntity(BSBLanEntity):
@@ -111,7 +115,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
                 (DOMAIN, mac),
                 config_entry_id=fast_coordinator.config_entry.entry_id,
             ),
-            manufacturer=main_info["manufacturer"],
-            model=main_info.get("model"),
-            model_id=main_info.get("model_id"),
+            manufacturer=main_info.manufacturer,
+            model=main_info.model,
+            model_id=main_info.model_id,
         )

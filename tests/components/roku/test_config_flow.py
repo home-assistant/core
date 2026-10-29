@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rokuecp import Device as RokuDevice, RokuConnectionError
 
 from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
@@ -24,9 +25,8 @@ from . import (
     MOCK_SSDP_DISCOVERY_INFO,
     NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
+    UPNP_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 RECONFIGURE_HOST = "192.168.1.190"
 
@@ -89,6 +89,7 @@ async def test_form(hass: HomeAssistant, mock_roku_config_flow: MagicMock) -> No
     assert result["result"].unique_id == "1GU48T017973"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
@@ -105,6 +106,13 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_roku_config_flow.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(
@@ -180,13 +188,13 @@ async def test_homekit_discovery(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME_ROKUTV
 
     assert "data" in result
     assert result["data"][CONF_HOST] == HOMEKIT_HOST
     assert result["data"][CONF_NAME] == NAME_ROKUTV
+    assert result["result"].unique_id == "YN00H5555555"
 
     # test abort on existing host
     discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
@@ -251,13 +259,13 @@ async def test_ssdp_discovery(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
+    assert result["result"].unique_id == UPNP_SERIAL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

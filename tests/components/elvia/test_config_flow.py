@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from elvia import error as ElviaError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.elvia.const import CONF_METERING_POINT_ID, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.components.recorder.core import Recorder
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
-
-from tests.common import MockConfigEntry
 
 TEST_API_TOKEN = "xxx-xxx-xxx-xxx"
 
@@ -42,13 +41,13 @@ async def test_single_metering_point(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1234"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "1234",
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,13 +91,13 @@ async def test_multiple_metering_points(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "5678"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "5678",
     }
+    assert result["result"].unique_id == "5678"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -230,6 +229,7 @@ async def test_form_exceptions(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
     # Simulate that the user gives up and closes the window...

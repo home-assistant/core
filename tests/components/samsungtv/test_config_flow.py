@@ -7,6 +7,7 @@ import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.exceptions import (
@@ -71,8 +72,6 @@ from .const import (
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
@@ -367,11 +366,11 @@ async def test_user_websocket_k_series_stays_on_websocket(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
     assert result2["data"][CONF_MODEL] == "UN55KU6290"
     assert result2["data"][CONF_PORT] == 8002
+    assert result2["result"].unique_id == "0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f"
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -454,6 +453,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
     with patch(
@@ -1461,6 +1461,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pairing"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "auth_missing"}
 
         assert remote.call_count == 2

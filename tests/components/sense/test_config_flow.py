@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import (
     SenseAPIException,
     SenseAPITimeoutException,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_flow_sense")
@@ -56,10 +55,10 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id == "test-email"
     mock_setup_entry.assert_called_once()
 
 

@@ -2,6 +2,7 @@
   "domain": "zha",
   "name": "Zigbee Home Automation",
   "after_dependencies": ["hassio", "onboarding"],
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
   "dependencies": ["file_upload", "homeassistant_hardware", "usb"],
@@ -23,7 +24,7 @@
     "universal_silabs_flasher",
     "serialx"
   ],
-  "requirements": ["zha==2.3.1", "zha-quirks==2.3.0"],
+  "requirements": ["zha==2.4.2", "zha-quirks==2.4.0"],
   "usb": [
     {
       "description": "*2652*",

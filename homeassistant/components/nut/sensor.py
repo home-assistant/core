@@ -39,6 +39,7 @@ AMBIENT_SENSORS = {
     "ambient.temperature.status",
 }
 BATTERY_CHARGER_STATUS_OPTIONS = [
+    "charged",
     "charging",
     "discharging",
     "floating",
@@ -911,8 +912,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     ),
     "ups.power": SensorEntityDescription(
         key="ups.power",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="ups_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,

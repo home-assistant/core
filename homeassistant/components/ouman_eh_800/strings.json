@@ -54,6 +54,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "summer_function": { "name": "Summer function" }
+    },
     "climate": {
       "heating_circuit": {
         "state_attributes": {

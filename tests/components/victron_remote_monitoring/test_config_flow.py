@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
@@ -14,8 +15,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _make_site(site_id: int, name: str = "ESS System") -> Mock:
@@ -57,13 +56,13 @@ async def test_full_flow_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_SITE_ID: str(site1.id)}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"VRM for {site1.name}"
     assert result["data"] == {
         CONF_API_TOKEN: "test_token",
         CONF_SITE_ID: site1.id,
     }
+    assert result["result"].unique_id == str(site1.id)
     assert mock_setup_entry.call_count == 1
 
 
@@ -249,12 +248,12 @@ async def test_select_site_duplicate_aborts(
     result_new2 = await hass.config_entries.flow.async_configure(
         result_new["flow_id"], {CONF_API_TOKEN: "token3"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_new2["type"] is FlowResultType.CREATE_ENTRY
     assert result_new2["data"] == {
         CONF_API_TOKEN: "token3",
         CONF_SITE_ID: other_site.id,
     }
+    assert result_new2["result"].unique_id == str(other_site.id)
 
 
 async def test_reauth_flow_success(

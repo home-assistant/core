@@ -7,6 +7,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusTimeoutError, ModbusUnit, ServerDeviceFailureError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from solaredged import SolarEdge
 
 from homeassistant.components.solaredge_modbus.config_flow import SECTION_MORE_OPTIONS
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, PORT, SERIAL_NUMBER, UNIT_ID, async_seed_unit, tcp_data
-
-from tests.common import MockConfigEntry
 
 TITLE = "SolarEdge SE10000H"
 SERIAL_PORT = "/dev/ttyUSB0"
@@ -395,6 +394,15 @@ async def test_reconfigure_flow_new_line_settings_cannot_connect(
     # retry rather than staying unloaded with nothing scheduled to fix it.
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
+    mock_modbus_unit.fail_read(40000, None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _serial_input(baudrate=9600)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_flow_new_line_settings_wrong_device(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
@@ -447,10 +455,12 @@ async def test_reconfigure_flow_new_line_settings_while_retrying(
     states: list[ConfigEntryState] = []
     probe = SolarEdge.async_probe
 
-    async def probe_watching_the_entry(unit: ModbusUnit) -> SolarEdge:
+    async def probe_watching_the_entry(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
         """Record whether the entry could still be reaching for the bus."""
         states.append(entry.state)
-        return await probe(unit)
+        return await probe(unit, assume_absent=assume_absent)
 
     result = await entry.start_reconfigure_flow(hass)
     with patch.object(SolarEdge, "async_probe", probe_watching_the_entry):
@@ -507,9 +517,9 @@ async def test_zeroconf_uses_the_announced_device_id(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == 2
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 @pytest.mark.parametrize(
@@ -532,9 +542,9 @@ async def test_zeroconf_falls_back_to_the_default_device_id(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == DEFAULT_UNIT_ID
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 async def test_zeroconf_known_inverter_that_moved_is_followed(

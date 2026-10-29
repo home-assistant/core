@@ -64,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:
     """Set up Homeworks from a config entry."""
 
     controller_id = entry.options[CONF_CONTROLLER_ID]
@@ -110,18 +110,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for keypad in entry.runtime_data.keypads.values():
-            keypad.unsubscribe()
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    for keypad in entry.runtime_data.keypads.values():
+        keypad.unsubscribe()
 
-        await hass.async_add_executor_job(entry.runtime_data.controller.stop)
-
-    return unload_ok
+    await hass.async_add_executor_job(entry.runtime_data.controller.stop)
 
 
 async def update_listener(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:

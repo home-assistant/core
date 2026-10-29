@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mystrom.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import DEVICE_MAC
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -47,10 +46,10 @@ async def test_form_combined(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myStrom Device"
     assert result2["data"] == {"host": "1.1.1.1"}
+    assert result2["result"].unique_id == DEVICE_MAC
 
 
 async def test_form_duplicates(

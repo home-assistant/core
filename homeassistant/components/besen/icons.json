@@ -5,5 +5,10 @@
         "default": "mdi:ev-plug-type2"
       }
     }
+  },
+  "services": {
+    "start_charging": {
+      "service": "mdi:battery-clock"
+    }
   }
 }

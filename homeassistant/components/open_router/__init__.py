@@ -1,7 +1,12 @@
 """The OpenRouter integration."""
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
-from python_open_router import OpenRouterClient, OpenRouterError
+from python_open_router import (
+    OpenRouterAuthenticationError,
+    OpenRouterClient,
+    OpenRouterConnectionError,
+    OpenRouterError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
@@ -10,14 +15,14 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_OUTPUT_MODALITIES, CONF_WEB_SEARCH, LOGGER
+from .const import CONF_OUTPUT_MODALITIES, CONF_WEB_SEARCH, DOMAIN, LOGGER
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
 type OpenRouterConfigEntry = ConfigEntry[AsyncOpenAI]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> None:
     """Set up OpenRouter from a config entry."""
     client = AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -33,18 +38,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         async for _ in client.with_options(timeout=10.0).models.list():
             break
     except AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        raise ConfigEntryError("Invalid API key") from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="invalid_api_key"
+        ) from err
     except OpenAIError as err:
-        raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    return True
 
 
 async def _async_update_listener(
@@ -54,14 +62,14 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -> None:
     """Unload OpenRouter."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: OpenRouterConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -86,9 +94,18 @@ async def async_migrate_entry(
         )
         try:
             models = {model.id: model for model in await client.get_models()}
+        except OpenRouterAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="invalid_api_key"
+            ) from err
+        except OpenRouterConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         except OpenRouterError as err:
-            LOGGER.error("Error fetching models during migration: %s", err)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="fetch_models_failed"
+            ) from err
 
         for subentry in entry.subentries.values():
             if subentry.subentry_type != "ai_task_data":
@@ -114,5 +131,3 @@ async def async_migrate_entry(
     LOGGER.info(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-
-    return True
