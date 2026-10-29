@@ -2689,6 +2689,27 @@ async def test_wan_status_entity(
         ),
         pytest.param([WAN_NETWORKS[0]], [WAN_GATEWAY], "online", id="online"),
         pytest.param([WAN_NETWORKS[0]], [], STATE_UNKNOWN, id="no_gateway"),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [{**WAN_GATEWAY, "type": "usw"}],
+            STATE_UNKNOWN,
+            id="no_gateway_type",
+        ),
+        pytest.param(
+            [WAN_NETWORKS[0]],
+            [
+                {
+                    **WAN_GATEWAY,
+                    "device_id": "mock-switch",
+                    "last_wan_status": {"WAN": "offline"},
+                    "mac": "00:00:00:00:02:02",
+                    "type": "usw",
+                },
+                WAN_GATEWAY,
+            ],
+            "online",
+            id="gateway_after_other_device",
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")

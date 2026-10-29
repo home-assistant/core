@@ -9,6 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from enum import StrEnum
 from functools import partial
 from typing import Literal, cast, override
 
@@ -24,6 +25,7 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
+    DeviceType,
     TypedDeviceTemperature,
     TypedDeviceUplink,
     TypedDeviceUptimeStatsWanMonitor,
@@ -308,33 +310,62 @@ WAN_INTERFACE_FN: dict[str, Callable[[Device], TypedDeviceWanInterface | None]] 
     "WAN5": lambda device: device.wan5,
     "WAN6": lambda device: device.wan6,
 }
-WAN_STATUSES = ["disabled", "no_link", "offline", "online"]
+GATEWAY_DEVICE_TYPES = {
+    DeviceType.CLOUD_GATEWAY,
+    DeviceType.DREAM_MACHINE,
+    DeviceType.NEXTGEN_GATEWAY,
+    DeviceType.SECURITY_GATEWAY,
+}
+
+
+class WanStatus(StrEnum):
+    """Status of a WAN network."""
+
+    DISABLED = "disabled"
+    NO_LINK = "no_link"
+    OFFLINE = "offline"
+    ONLINE = "online"
 
 
 @callback
-def async_wan_status_value_fn(hub: UnifiHub, network: Network) -> str | None:
-    """Retrieve the status of a WAN network from its gateway."""
-    if network.wan_type == "disabled":
-        return "disabled"
-    gateway = next(
+def async_gateway(hub: UnifiHub) -> Device | None:
+    """Return the gateway, the device terminating the WAN links of the site.
+
+    A site has a single gateway, identified by its device type.
+    """
+    return next(
         (
             device
             for device in hub.api.devices.values()
-            if device.last_wan_status is not None
+            if device.type in GATEWAY_DEVICE_TYPES
         ),
         None,
     )
-    if gateway is None or (group := network.wan_networkgroup) is None:
+
+
+@callback
+def async_wan_status_value_fn(hub: UnifiHub, network: Network) -> WanStatus | None:
+    """Retrieve the status of a WAN network from its gateway.
+
+    The network configuration only says how a WAN is set up. Whether its link is
+    up and whether it reaches the internet is only reported by the gateway, per
+    WAN group (WAN, WAN2, ...) as named by the network's wan_networkgroup.
+    """
+    if network.wan_type == "disabled":
+        return WanStatus.DISABLED
+    if (gateway := async_gateway(hub)) is None or (
+        group := network.wan_networkgroup
+    ) is None:
         return None
     if (
         (wan_interface_fn := WAN_INTERFACE_FN.get(group)) is None
         or (wan_interface := wan_interface_fn(gateway)) is None
         or wan_interface.get("up") is not True
     ):
-        return "no_link"
+        return WanStatus.NO_LINK
     if (gateway.last_wan_status or {}).get(group) != "online":
-        return "offline"
-    return "online"
+        return WanStatus.OFFLINE
+    return WanStatus.ONLINE
 
 
 @callback
@@ -954,7 +985,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         custom_subscribe=lambda api: api.devices.subscribe,
         device_info_fn=async_wan_device_info_fn,
         object_fn=lambda api, obj_id: api.networks[obj_id],
-        options=WAN_STATUSES,
+        options=[status.value for status in WanStatus],
         supported_fn=lambda hub, obj_id: hub.api.networks[obj_id].is_wan,
         unique_id_fn=lambda hub, obj_id: f"wan_status-{obj_id}",
         value_fn=async_wan_status_value_fn,
@@ -1084,7 +1115,7 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         await super().async_added_to_hass()
 
         if self.entity_description.custom_subscribe is not None:
-            # Only changes, a gateway added or removed is picked up on reload
+            # Only changes, a gateway adopted or removed is picked up on reload
             self.async_on_remove(
                 self.entity_description.custom_subscribe(self.api)(
                     self._async_custom_subscription_callback, ItemEvent.CHANGED
