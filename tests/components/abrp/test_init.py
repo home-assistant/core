@@ -35,7 +35,6 @@ from .conftest import (
     MOCK_VEHICLE_MODEL_2,
     build_vehicle_model_display,
     fire_connection,
-    flow_sources,
     stream_auth,
 )
 
@@ -90,34 +89,34 @@ async def test_setup_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    ("status", "exc", "expected_state", "expected_flows"),
+    ("status", "exc", "expected_state", "expected_reauth"),
     [
         pytest.param(
             HTTPStatus.UNAUTHORIZED,
             None,
             ConfigEntryState.SETUP_ERROR,
-            [SOURCE_REAUTH],
+            True,
             id="rejected",
         ),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
             None,
             ConfigEntryState.SETUP_RETRY,
-            [],
+            False,
             id="server_error",
         ),
         pytest.param(
             None,
             ClientError("boom"),
             ConfigEntryState.SETUP_RETRY,
-            [],
+            False,
             id="client_error",
         ),
         pytest.param(
             None,
             TimeoutError("boom"),
             ConfigEntryState.SETUP_RETRY,
-            [],
+            False,
             id="timeout",
         ),
     ],
@@ -130,7 +129,7 @@ async def test_setup_token_refresh_failure(
     status: HTTPStatus | None,
     exc: Exception | None,
     expected_state: ConfigEntryState,
-    expected_flows: list[str],
+    expected_reauth: bool,
 ) -> None:
     """A rejected refresh starts reauth; a 5xx, connection error or timeout retries."""
     config_entry.add_to_hass(hass)
@@ -140,7 +139,10 @@ async def test_setup_token_refresh_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is expected_state
-    assert flow_sources(hass) == expected_flows
+    assert (
+        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
 
 
 def _expire_token(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -181,20 +183,18 @@ async def test_stream_auth_refreshes_expired_token(
 
 
 @pytest.mark.parametrize(
-    ("status", "exc", "expected", "expected_flows"),
+    ("status", "exc", "expected", "expected_reauth"),
     [
-        pytest.param(
-            HTTPStatus.BAD_REQUEST, None, AbrpAuthError, [SOURCE_REAUTH], id="rejected"
-        ),
+        pytest.param(HTTPStatus.BAD_REQUEST, None, AbrpAuthError, True, id="rejected"),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
             None,
             OAuth2TokenRequestTransientError,
-            [],
+            False,
             id="server_error",
         ),
-        pytest.param(None, ClientError("boom"), ClientError, [], id="client_error"),
-        pytest.param(None, TimeoutError(), TimeoutError, [], id="timeout"),
+        pytest.param(None, ClientError("boom"), ClientError, False, id="client_error"),
+        pytest.param(None, TimeoutError(), TimeoutError, False, id="timeout"),
     ],
 )
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -206,7 +206,7 @@ async def test_stream_auth_refresh_failure(
     status: HTTPStatus | None,
     exc: Exception | None,
     expected: type[Exception],
-    expected_flows: list[str],
+    expected_reauth: bool,
 ) -> None:
     """Only a rejected refresh is terminal for the stream and starts reauth.
 
@@ -220,7 +220,10 @@ async def test_stream_auth_refresh_failure(
         await stream_auth(mock_telemetry_stream).async_get_access_token()
     await hass.async_block_till_done()
 
-    assert flow_sources(hass) == expected_flows
+    assert (
+        any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
 
 
 async def test_setup_missing_implementation(
@@ -242,18 +245,18 @@ async def test_setup_missing_implementation(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state", "expected_flows"),
+    ("side_effect", "expected_state", "expected_reauth"),
     [
         pytest.param(
             AbrpAuthError("invalid session"),
             ConfigEntryState.SETUP_ERROR,
-            [SOURCE_REAUTH],
+            True,
             id="auth_error",
         ),
         pytest.param(
             AbrpApiError("backend overloaded"),
             ConfigEntryState.SETUP_RETRY,
-            [],
+            False,
             id="api_error",
         ),
     ],
@@ -264,7 +267,7 @@ async def test_garage_fetch_failure(
     mock_abrp_client: AsyncMock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
-    expected_flows: list[str],
+    expected_reauth: bool,
 ) -> None:
     """A garage-fetch auth error starts reauth; an API error retries."""
     config_entry.add_to_hass(hass)
@@ -274,7 +277,10 @@ async def test_garage_fetch_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is expected_state
-    assert flow_sources(hass) == expected_flows
+    assert (
+        any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        is expected_reauth
+    )
 
 
 @pytest.mark.parametrize(

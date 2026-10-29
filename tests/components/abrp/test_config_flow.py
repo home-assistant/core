@@ -293,13 +293,37 @@ async def test_garage_fetch_error_aborts(
 
 
 @pytest.mark.parametrize(
-    ("sub", "expected_reason", "expected_access_token", "expected_setups"),
+    (
+        "sub",
+        "refresh_token",
+        "expected_reason",
+        "expected_access_token",
+        "expected_setups",
+    ),
     [
         pytest.param(
-            USER_SUB, "reauth_successful", "new-access-token", 1, id="same_account"
+            USER_SUB,
+            "mock-refresh-token",
+            "reauth_successful",
+            "new-access-token",
+            1,
+            id="same_account",
         ),
         pytest.param(
-            "other-sub", "wrong_account", "mock-access-token", 0, id="wrong_account"
+            "other-sub",
+            "mock-refresh-token",
+            "wrong_account",
+            "mock-access-token",
+            0,
+            id="wrong_account",
+        ),
+        pytest.param(
+            USER_SUB,
+            None,
+            "oauth_error",
+            "mock-access-token",
+            0,
+            id="missing_refresh_token",
         ),
     ],
 )
@@ -312,11 +336,12 @@ async def test_reauth(
     mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
     sub: str,
+    refresh_token: str | None,
     expected_reason: str,
     expected_access_token: str,
     expected_setups: int,
 ) -> None:
-    """Reauth updates the token, but only for the account the entry belongs to."""
+    """Reauth updates the token, but only with a usable token for the same account."""
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reauth_flow(hass)
@@ -327,7 +352,9 @@ async def test_reauth(
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _mock_token_post(aioclient_mock, build_id_token(sub), "new-access-token")
+    _mock_token_post(
+        aioclient_mock, build_id_token(sub), "new-access-token", refresh_token
+    )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

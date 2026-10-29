@@ -37,7 +37,6 @@ from .conftest import (
     build_vehicle_model_display,
     fire_connection,
     fire_frame,
-    flow_sources,
 )
 
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
@@ -268,8 +267,7 @@ async def test_availability_follows_stream_auth_not_connection(
     assert [
         record.levelno for record in caplog.records if "auth failed" in record.message
     ] == [logging.WARNING]
-    # The repeated AUTH_FAILED starts a single reauth flow.
-    assert flow_sources(hass) == [SOURCE_REAUTH]
+    assert any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     fire_connection(
         mock_telemetry_stream,

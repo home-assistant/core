@@ -75,8 +75,7 @@ class AbrpFlowHandler(
         refresh_token aborts as well: the entry could not outlive the access
         token, and the stream would retry it forever. On a new entry an empty
         garage aborts too: the garage is only re-read at setup, so such an entry
-        would load green and stay empty until a manual reload. Reauth skips the
-        garage check; an emptied garage then reloads with no entities.
+        would load green and stay empty until a manual reload.
         """
         try:
             identity = parse_unverified_identity(data["token"].get("id_token"))
