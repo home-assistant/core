@@ -382,6 +382,28 @@ async def test_zeroconf_discovery_in_progress(
     assert result["reason"] == "already_in_progress"
 
 
+async def test_user_flow_replaces_a_pending_discovery(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """Adding a discovered power station by hand ends its pending discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _user_input(host=NEW_HOST)
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**bluetti_data(), CONF_HOST: NEW_HOST}
+    assert result["result"].unique_id == SERIAL
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_zeroconf_updates_a_moved_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

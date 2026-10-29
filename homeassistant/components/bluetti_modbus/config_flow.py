@@ -75,8 +75,9 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert serial is not None
                 # Catches the same device already added under a different
-                # link (moved to a new address, for example).
-                await self.async_set_unique_id(serial)
+                # link (moved to a new address, for example). A pending
+                # discovery of it is replaced rather than blocking this setup.
+                await self.async_set_unique_id(serial, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=MODEL, data=user_input)
 
