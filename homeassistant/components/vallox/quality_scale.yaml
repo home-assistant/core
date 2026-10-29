@@ -107,9 +107,7 @@ rules:
     comment: >-
       (1) coordinator.py is at 90%: the UpdateFailed path is not tested, and no
       test expects SETUP_RETRY when the unit is offline.
-      (2) The fan's power-setting failure and unsupported-profile fan speed
-      error paths are not tested.
-      (3) No test explicitly unloads the entry.
+      (2) No test explicitly unloads the entry.
 
   # Gold
   devices:
