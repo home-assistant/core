@@ -1,5 +1,7 @@
 """Tests for the Sofar integration."""
 
+from datetime import datetime
+
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 
@@ -36,6 +38,8 @@ MOCK_SERIAL_INPUT = {
 }
 MOCK_SERIAL_ENTRY_DATA = {CONF_TYPE: TYPE_SERIAL, **MOCK_SERIAL_INPUT}
 
+FAULT_LOG_REGISTER = 0x1480
+
 
 def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
     """Encode ASCII across consecutive registers, two characters each."""
@@ -65,6 +69,16 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     unit.holding[0x0687] = 150  # solar_generation_total low word -> 15.0 kWh
     unit.holding[0x0684] = 0  # solar_generation_today high word
     unit.holding[0x0685] = 1000  # solar_generation_today low word -> 10.0 kWh
+
+
+def seed_fault_log(unit: MockModbusUnit, *entries: tuple[int, datetime]) -> None:
+    """Write the inverter's fault log, newest entry first."""
+    for number, (fault_id, when) in enumerate(entries):
+        address = FAULT_LOG_REGISTER + 4 * number
+        unit.holding[address] = fault_id
+        unit.holding[address + 1] = (when.year - 2000) << 8 | when.month
+        unit.holding[address + 2] = when.day << 8 | when.hour
+        unit.holding[address + 3] = when.minute << 8 | when.second
 
 
 def deny_meter_energy(unit: MockModbusUnit) -> None:

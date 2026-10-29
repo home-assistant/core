@@ -8,16 +8,21 @@ import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components.light import ATTR_TRANSITION
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
+from homeassistant.components.scene import (
+    DOMAIN as SCENE_DOMAIN,
+    STATES,
+    Scene,
+    SceneEntityStateAttribute,
+    SceneService,
+    SceneServiceArgument,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
 )
@@ -66,10 +71,11 @@ def _convert_states(states: dict[str, Any]) -> dict[str, State]:
 def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
     """Validate that entities and snapshot_entities do not overlap."""
     if (
-        CONF_SNAPSHOT not in value
-        or CONF_ENTITIES not in value
+        SceneServiceArgument.SNAPSHOT_ENTITIES not in value
+        or SceneServiceArgument.ENTITIES not in value
         or all(
-            entity_id not in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES]
+            entity_id not in value[SceneServiceArgument.SNAPSHOT_ENTITIES]
+            for entity_id in value[SceneServiceArgument.ENTITIES]
         )
     ):
         return value
@@ -77,8 +83,6 @@ def _ensure_no_intersection(value: dict[str, Any]) -> dict[str, Any]:
     raise probatio.Invalid("entities and snapshot_entities must not overlap")
 
 
-CONF_SCENE_ID = "scene_id"
-CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = "homeassistant_scene"
 EVENT_SCENE_RELOADED = "scene_reloaded"
 STATES_SCHEMA = probatio.All(dict, _convert_states)
@@ -106,20 +110,20 @@ PLATFORM_SCHEMA = probatio.Schema(
 )
 
 CREATE_SCENE_SCHEMA = probatio.All(
-    probatio.AtLeastOne(CONF_ENTITIES, CONF_SNAPSHOT),
+    probatio.AtLeastOne(
+        SceneServiceArgument.ENTITIES, SceneServiceArgument.SNAPSHOT_ENTITIES
+    ),
     _ensure_no_intersection,
     probatio.Schema(
         {
-            probatio.Required(CONF_SCENE_ID): cv.slug,
-            probatio.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
-            probatio.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
+            probatio.Required(SceneServiceArgument.SCENE_ID): cv.slug,
+            probatio.Optional(SceneServiceArgument.ENTITIES, default={}): STATES_SCHEMA,
+            probatio.Optional(
+                SceneServiceArgument.SNAPSHOT_ENTITIES, default=[]
+            ): cv.entity_ids,
         }
     ),
 )
-
-SERVICE_APPLY = "apply"
-SERVICE_CREATE = "create"
-SERVICE_DELETE = "delete"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +177,7 @@ async def async_setup_platform(
     _process_scenes_config(hass, async_add_entities, config)
 
     # This platform can be loaded multiple times. Only first time register the service.
-    if hass.services.has_service(SCENE_DOMAIN, SERVICE_RELOAD):
+    if hass.services.has_service(SCENE_DOMAIN, SceneService.RELOAD):
         return
 
     # Store platform for later.
@@ -212,18 +216,20 @@ async def async_setup_platform(
 
     # Cannot be moved: scene actions are registered by the scene platform
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    async_register_admin_service(hass, SCENE_DOMAIN, SERVICE_RELOAD, reload_config)
+    async_register_admin_service(hass, SCENE_DOMAIN, SceneService.RELOAD, reload_config)
 
     async def apply_service(call: ServiceCall) -> None:
         """Apply a scene."""
         reproduce_options = {}
 
-        if ATTR_TRANSITION in call.data:
-            reproduce_options[ATTR_TRANSITION] = call.data.get(ATTR_TRANSITION)
+        if SceneServiceArgument.TRANSITION in call.data:
+            reproduce_options[ATTR_TRANSITION] = call.data[
+                SceneServiceArgument.TRANSITION
+            ]
 
         await async_reproduce_state(
             hass,
-            call.data[CONF_ENTITIES].values(),
+            call.data[SceneServiceArgument.ENTITIES].values(),
             context=call.context,
             reproduce_options=reproduce_options,
         )
@@ -231,22 +237,22 @@ async def async_setup_platform(
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         SCENE_DOMAIN,
-        SERVICE_APPLY,
+        SceneService.APPLY,
         apply_service,
         probatio.Schema(
             {
-                probatio.Optional(ATTR_TRANSITION): probatio.All(
+                probatio.Optional(SceneServiceArgument.TRANSITION): probatio.All(
                     probatio.Coerce(float), probatio.Clamp(min=0, max=6553)
                 ),
-                probatio.Required(CONF_ENTITIES): STATES_SCHEMA,
+                probatio.Required(SceneServiceArgument.ENTITIES): STATES_SCHEMA,
             }
         ),
     )
 
     async def create_service(call: ServiceCall) -> None:
         """Create a scene."""
-        snapshot = call.data[CONF_SNAPSHOT]
-        entities = call.data[CONF_ENTITIES]
+        snapshot = call.data[SceneServiceArgument.SNAPSHOT_ENTITIES]
+        entities = call.data[SceneServiceArgument.ENTITIES]
 
         for entity_id in snapshot:
             if (state := hass.states.get(entity_id)) is None:
@@ -261,7 +267,9 @@ async def async_setup_platform(
             _LOGGER.warning("Empty scenes are not allowed")
             return
 
-        scene_config = SceneConfig(None, call.data[CONF_SCENE_ID], None, entities)
+        scene_config = SceneConfig(
+            None, call.data[SceneServiceArgument.SCENE_ID], None, entities
+        )
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         if (old := platform.entities.get(entity_id)) is not None:
             if not isinstance(old, HomeAssistantScene) or not old.from_service:
@@ -272,7 +280,7 @@ async def async_setup_platform(
 
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
-        SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
+        SCENE_DOMAIN, SceneService.CREATE, create_service, CREATE_SCENE_SCHEMA
     )
 
     async def delete_service(call: ServiceCall) -> None:
@@ -304,7 +312,7 @@ async def async_setup_platform(
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         SCENE_DOMAIN,
-        SERVICE_DELETE,
+        SceneService.DELETE,
         delete_service,
         cv.make_entity_service_schema({}),
     )
@@ -366,9 +374,11 @@ class HomeAssistantScene(Scene):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the scene state attributes."""
-        attributes: dict[str, Any] = {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        attributes: dict[str, Any] = {
+            SceneEntityStateAttribute.ENTITY_ID: list(self.scene_config.states)
+        }
         if (unique_id := self.unique_id) is not None:
-            attributes[CONF_ID] = unique_id
+            attributes[SceneEntityStateAttribute.ID] = unique_id
         return attributes
 
     @override

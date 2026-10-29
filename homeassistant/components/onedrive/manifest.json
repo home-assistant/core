@@ -1,7 +1,7 @@
 {
   "domain": "onedrive",
   "name": "OneDrive",
-  "after_dependencies": ["cloud"],
+  "after_dependencies": ["backup", "cloud"],
   "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@zweckj"],
   "config_flow": true,

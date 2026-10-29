@@ -21,6 +21,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalComponentsCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryVehicleDataCoordinator,
     TeslemetryWallConnectorTotalsCoordinator,
@@ -259,6 +260,27 @@ class TeslemetryEnergyLocalStatusEntity(
         self._attr_device_info = data.device
 
         super().__init__(data.local_status_coordinator)
+
+
+class TeslemetryEnergyLocalComponentsEntity(
+    TeslemetryRootEntity, CoordinatorEntity[TeslemetryLocalComponentsCoordinator]
+):
+    """Parent class for Teslemetry entities read from the local Powerwall components."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry local components entity."""
+
+        assert data.local_components_coordinator
+
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.local_components_coordinator)
 
 
 class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
