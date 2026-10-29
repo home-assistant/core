@@ -7,8 +7,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -52,8 +53,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 511>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -73,8 +75,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -117,8 +120,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -138,8 +142,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -182,8 +187,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -203,8 +209,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -247,8 +254,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -268,8 +276,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -312,8 +321,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -333,8 +343,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -377,8 +388,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -398,8 +410,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -442,8 +455,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -463,8 +477,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -507,8 +522,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -528,8 +544,9 @@
     'area_id': None,
     'capabilities': dict({
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),
@@ -572,8 +589,9 @@
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 271>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
+        <CoverSpeed.SLOW: 'slow'>,
+        <CoverSpeed.FAST: 'fast'>,
         'silent',
-        'fast',
         'default',
       ]),
     }),

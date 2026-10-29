@@ -23,14 +23,28 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverSpeed,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
+from .const import DOMAIN
 from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
+
+# Remove in 2027.6.0 together with their repair issues
+_DEPRECATED_SPEED_DEFAULT = "default"
+_DEPRECATED_SPEED_SILENT = "silent"
+
+_SPEED_TO_VELOCITY: dict[str, Velocity | None] = {
+    CoverSpeed.SLOW: Velocity.SILENT,
+    CoverSpeed.FAST: Velocity.FAST,
+    _DEPRECATED_SPEED_SILENT: Velocity.SILENT,
+    _DEPRECATED_SPEED_DEFAULT: None,
+}
 
 
 async def async_setup_entry(
@@ -82,11 +96,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SPEED
     )
-    _attr_supported_speeds = [
-        Velocity.SILENT.name.lower(),
-        Velocity.FAST.name.lower(),
-        Velocity.DEFAULT.name.lower(),
-    ]
+    _attr_supported_speeds = list(_SPEED_TO_VELOCITY)
 
     def __init__(
         self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
@@ -107,9 +117,21 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
         """Return pyvlx Velocity for the given speed string, or None for default."""
-        if speed in self._attr_supported_speeds:
-            return Velocity[speed.upper()]
-        return None
+        if speed is None:
+            return None
+        if speed in (_DEPRECATED_SPEED_DEFAULT, _DEPRECATED_SPEED_SILENT):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_speed_{speed}",
+                breaks_in_ha_version="2027.6.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_speed_{speed}",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        # The cover entity validated the speed against _attr_supported_speeds.
+        return _SPEED_TO_VELOCITY[speed]
 
     @property
     @override

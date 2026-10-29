@@ -33,8 +33,9 @@
                 'is_closed': False,
                 'supported_features': 271,
                 'supported_speeds': list([
-                  'silent',
+                  'slow',
                   'fast',
+                  'silent',
                   'default',
                 ]),
               }),
