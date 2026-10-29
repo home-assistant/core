@@ -551,6 +551,37 @@ async def test_setup_takes_the_type_once_the_masks_answer(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_polls_stored_readings_once_awake(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a silent restart polls readings the type does not predict."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_grid_frequency"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "50.0"
+
+
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_setup_while_asleep_keeps_meter_sensors_of_an_unsettled_type(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
@@ -1235,7 +1266,7 @@ async def test_setup_remembers_the_fault_log(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert ("fault_log" in entry.data[SERVED_COMPONENTS]) is log_stored
+    assert (FAULT_LOG in entry.data[SERVED_COMPONENTS]) is log_stored
     assert (
         entity_registry.async_get_entity_id(
             EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"

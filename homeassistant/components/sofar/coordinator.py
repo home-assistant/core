@@ -8,7 +8,7 @@ from typing import override
 
 from modbus_connection import ModbusError
 from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.device import READING_COMPONENTS, SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -116,7 +116,7 @@ class SofarRuntimeData:
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
-        if component in self.readings.device.expected_readings_components:
+        if component in READING_COMPONENTS:
             return self.readings
         return self.settings
 
