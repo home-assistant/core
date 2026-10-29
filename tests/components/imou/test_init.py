@@ -384,11 +384,8 @@ async def test_new_device_ability_ref_failure(
         mock_config_entry.runtime_data.last_exception.translation_key == translation_key
     )
     flows = mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
-    if starts_reauth:
-        assert any(flows)
-    else:
-        assert not any(flows)
-        assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
+    assert any(flows) is starts_reauth
+    assert hass.states.get("button.device_1_mute").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
