@@ -9,6 +9,7 @@ from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTimeout
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.sofar.config_flow import (
@@ -20,8 +21,9 @@ from homeassistant.components.sofar.const import (
     CONF_UNIT_ID,
     DEFAULT_NAME,
     DOMAIN,
-    HAS_FAULT_LOG,
+    FAULT_LOG,
     LAST_HANDLED_FAULT,
+    SERVED_COMPONENTS,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -320,10 +322,10 @@ async def _start_reconfigure(
 @pytest.mark.parametrize(
     "stored",
     [
-        pytest.param({}, id="no_fault_log_stored"),
+        pytest.param({}, id="nothing_stored"),
         pytest.param(
             {
-                HAS_FAULT_LOG: True,
+                SERVED_COMPONENTS: [FAULT_LOG],
                 LAST_HANDLED_FAULT: [3, "2026-10-09T18:30:05"],
             },
             id="handled_fault_stored",
@@ -590,7 +592,9 @@ async def test_reconfigure_new_line_settings(
 
 @pytest.mark.usefixtures("mock_get_unit")
 async def test_reconfigure_new_line_settings_silent_inverter(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test a failed probe puts the entry back on the bus it was taken off."""
     entry = _serial_entry()
@@ -610,11 +614,7 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "inverter_silent"}
-    assert entry.data == {
-        **MOCK_SERIAL_ENTRY_DATA,
-        HAS_FAULT_LOG: True,
-        LAST_HANDLED_FAULT: None,
-    }
+    assert entry.data == snapshot
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
@@ -630,7 +630,9 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -> None:
+async def test_reconfigure_new_line_settings_wrong_device(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test a different inverter on the new settings restores the entry."""
     entry = _serial_entry()
     entry.add_to_hass(hass)
@@ -650,11 +652,7 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert entry.data == {
-        **MOCK_SERIAL_ENTRY_DATA,
-        HAS_FAULT_LOG: True,
-        LAST_HANDLED_FAULT: None,
-    }
+    assert entry.data == snapshot
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
