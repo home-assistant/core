@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from goodwe import InverterError, SensorKind
+from goodwe.exceptions import RequestRejectedException
 from goodwe.sensor import Integer
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -29,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_HOST, TEST_PORT, TEST_SERIAL
@@ -177,17 +179,36 @@ async def test_switch_fast_charging(
     assert hass.states.get(FAST_CHARGING_ENTITY_ID).state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_error", "translation_key"),
+    [
+        (
+            InverterError("Failed to write setting"),
+            HomeAssistantError,
+            "write_failed",
+        ),
+        (
+            RequestRejectedException("ILLEGAL DATA VALUE"),
+            ServiceValidationError,
+            "setting_rejected",
+        ),
+    ],
+    ids=["inverter_error", "rejected"],
+)
 async def test_switch_fast_charging_write_error(
     hass: HomeAssistant,
     mock_inverter: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
+    expected_error: type[HomeAssistantError],
+    translation_key: str,
 ) -> None:
     """Test the state is not updated when writing the setting fails."""
     configure_settings(mock_inverter, {FAST_CHARGING: 0})
     await setup_integration(hass, mock_config_entry)
-    mock_inverter.write_setting.side_effect = InverterError("Failed to write setting")
+    mock_inverter.write_setting.side_effect = error
 
-    with pytest.raises(InverterError):
+    with pytest.raises(expected_error) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -195,6 +216,8 @@ async def test_switch_fast_charging_write_error(
             blocking=True,
         )
 
+    assert type(exc_info.value) is expected_error
+    assert exc_info.value.translation_key == translation_key
     mock_inverter.write_setting.assert_called_once_with(FAST_CHARGING, 1)
     assert hass.states.get(FAST_CHARGING_ENTITY_ID).state == STATE_OFF
 

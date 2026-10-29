@@ -58,5 +58,13 @@
         "name": "Fast charging"
       }
     }
+  },
+  "exceptions": {
+    "setting_rejected": {
+      "message": "The inverter rejected the value {value} ({reason})."
+    },
+    "write_failed": {
+      "message": "Failed to write the setting to the inverter."
+    }
   }
 }

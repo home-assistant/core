@@ -5,13 +5,16 @@ import logging
 from typing import Any, override
 
 from goodwe import Inverter, InverterError
+from goodwe.exceptions import RequestRejectedException
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,13 +113,28 @@ class InverterSwitchEntity(SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the setting on."""
-        await self._inverter.write_setting(self.entity_description.setting, 1)
+        await self._write_setting(1)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the setting off."""
-        await self._inverter.write_setting(self.entity_description.setting, 0)
+        await self._write_setting(0)
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def _write_setting(self, value: int) -> None:
+        """Write the setting value to the inverter."""
+        try:
+            await self._inverter.write_setting(self.entity_description.setting, value)
+        except RequestRejectedException as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setting_rejected",
+                translation_placeholders={"value": str(value), "reason": err.message},
+            ) from err
+        except InverterError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="write_failed"
+            ) from err
