@@ -718,6 +718,37 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"url": self.url},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server URL."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                server_info = await _get_server_info(self.hass, user_input[CONF_URL])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidServerVersion:
+                errors["base"] = "invalid_server_version"
+            except MusicAssistantClientException:
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(server_info.server_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
     @override
     @callback
     def async_remove(self) -> None:

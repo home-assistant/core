@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
+from . import Control4ConfigEntry, get_items_of_category
 from .const import (
     CONTROL4_COOL_SETPOINT_C,
     CONTROL4_COOL_SETPOINT_F,
@@ -33,7 +33,6 @@ from .const import (
     CONTROL4_HVAC_STATE,
     CONTROL4_SCALE,
 )
-from .coordinator import Control4DataUpdateCoordinator
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,29 +127,6 @@ class Control4Climate(Control4Entity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "thermostat"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
-
-    def __init__(
-        self,
-        runtime_data: Control4RuntimeData,
-        coordinator: Control4DataUpdateCoordinator,
-        name: str,
-        idx: int,
-        device_name: str | None,
-        device_manufacturer: str | None,
-        device_model: str | None,
-        device_id: int,
-    ) -> None:
-        """Initialize Control4 climate entity."""
-        super().__init__(
-            runtime_data,
-            coordinator,
-            name,
-            idx,
-            device_name,
-            device_manufacturer,
-            device_model,
-            device_id,
-        )
 
     @property
     @override

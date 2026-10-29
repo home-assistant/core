@@ -18,6 +18,15 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "abrp": {
+      "name": "A Better Routeplanner",
+      "integration_type": "hub",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "acaia": {
       "name": "Acaia",
       "integration_type": "device",
@@ -3170,11 +3179,28 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "everything_smart_home": {
+      "name": "Everything Smart Home",
+      "integration_type": "virtual",
+      "categories": [
+        "diy_makers.boards_hardware"
+      ],
+      "supported_by": "esphome"
+    },
     "evil_genius_labs": {
       "name": "Evil Genius Labs",
       "integration_type": "device",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "exicom_spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3435,12 +3461,26 @@
     },
     "flic": {
       "name": "Flic",
-      "integration_type": "hub",
-      "categories": [
-        "buttons_remotes"
-      ],
-      "config_flow": false,
-      "iot_class": "local_push"
+      "integrations": {
+        "flic": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        },
+        "flic_button": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "buttons_remotes"
+          ],
+          "name": "Flic"
+        }
+      }
     },
     "flipr": {
       "name": "Flipr",
@@ -6021,6 +6061,12 @@
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "ledvance": {
+      "name": "LEDVANCE",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "legrand": {
       "name": "Legrand",
@@ -9986,6 +10032,15 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "seafile": {
+      "name": "Seafile",
+      "integration_type": "service",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "season": {
       "integration_type": "service",
       "categories": [
@@ -10849,15 +10904,6 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "spin_ble": {
-      "name": "Spin EV Charger",
-      "integration_type": "device",
-      "categories": [
-        "energy.ev_charging"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "splunk": {
       "name": "Splunk",

@@ -1,11 +1,12 @@
 """The Watergate integration."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
 from aiohttp.web import Request, Response
-from watergate_local_api import WatergateLocalApiClient
+from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import WebhookEvent
 
 from homeassistant.components.http import HomeAssistantView
@@ -29,6 +30,9 @@ WEBHOOK_VALVE_TYPE = "valve"
 WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
 WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
 WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
+WEBHOOK_ONLINE_TYPE = "online"
+
+CLEAR_WEBHOOK_TIMEOUT = 10
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -82,6 +86,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     async_unregister(hass, webhook_id)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Best effort: an unreachable device must not block the unload.
+    try:
+        async with asyncio.timeout(CLEAR_WEBHOOK_TIMEOUT):
+            await entry.runtime_data.api.async_delete_webhook_url()
+    except (WatergateApiException, TimeoutError) as err:
+        _LOGGER.debug("Could not clear the webhook URL on the device: %s", err)
 
 
 def get_webhook_handler(
@@ -105,12 +115,18 @@ def get_webhook_handler(
 
         body_type = body.get("type")
 
+        if body_type == WEBHOOK_ONLINE_TYPE:
+            # The event carries no state, and it may have changed while the
+            # device was away, so fetch it instead of guessing.
+            await coordinator.async_request_refresh()
+            return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
+
         if not (coordinator_data := coordinator.data):
             pass
         elif body_type == WEBHOOK_VALVE_TYPE:
             coordinator_data.state.valve_state = data.state
         elif body_type == WEBHOOK_TELEMETRY_TYPE:
-            errors = data.errors or {}
+            errors = data.errors or []
             coordinator_data.telemetry.flow = (
                 data.flow if "flow" not in errors else None
             )

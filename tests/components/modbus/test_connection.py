@@ -149,11 +149,12 @@ async def test_a_serial_framing_over_a_socket_keeps_the_line_speed_asked_for(
 
     with (
         pytest.deprecated_call(),
-        pytest.raises(HomeAssistantError, match="different link settings"),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         async_get_unit(
             hass, entry, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
         )
+    assert exc_info.value.translation_key == "device_in_use"
 
 
 async def test_one_device_cannot_be_used_with_two_link_settings(
@@ -169,8 +170,9 @@ async def test_one_device_cannot_be_used_with_two_link_settings(
 
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
-    with pytest.raises(HomeAssistantError, match="different link settings"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         async_get_unit(hass, entry, ModbusTlsParams(host="1.2.3.4", port=502), 2)
+    assert exc_info.value.translation_key == "device_in_use"
 
 
 async def test_the_last_consumer_closes_the_connection(
@@ -303,11 +305,12 @@ async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
     await hass.config_entries.async_setup(entry.entry_id)
     async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
 
-    with pytest.raises(HomeAssistantError, match="different link settings"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         async with async_get_temporary_unit(
             hass, ModbusTlsParams(host="1.2.3.4", port=502), 2
         ):
             pass
+    assert exc_info.value.translation_key == "device_in_use"
 
     [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
     assert shared.consumers == 1

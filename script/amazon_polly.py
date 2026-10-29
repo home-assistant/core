@@ -8,8 +8,7 @@ from pathlib import Path
 from typing import Self
 
 import boto3
-
-from .hassfest.serializer import format_python_namespace
+from hassfest.serializer import format_python_namespace
 
 
 @dataclass(frozen=True)
