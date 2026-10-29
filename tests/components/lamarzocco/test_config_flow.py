@@ -704,6 +704,52 @@ async def test_reconfigure_flow_no_machines(
     assert dict(mock_config_entry.data) == data
 
 
+async def test_reconfigure_flow_accept_policy(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the privacy policy is accepted during reconfigure."""
+    mock_config_entry.add_to_hass(hass)
+    mock_cloud_client.list_things.side_effect = [
+        PolicyAcceptanceRequired(""),
+        mock_cloud_client.list_things.return_value,
+    ]
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "accept_policy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: True},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "machine_selection"
+
+    with patch(
+        "homeassistant.components.lamarzocco.config_flow.async_discovered_service_info",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MACHINE: "GS012345"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_cloud_client.accept_privacy_policy.assert_awaited_once_with(
+        profile_policy=False, commercial_policy=True
+    )
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
 async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
