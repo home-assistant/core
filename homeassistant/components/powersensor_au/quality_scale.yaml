@@ -1,0 +1,121 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration uses local push (mDNS/zeroconf discovery + UDP data
+      stream) and does not poll devices.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      Devices are discovered at runtime via mDNS, so there is nothing to
+      connect to during the config flow.
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: |
+      Setup only asks the user to confirm, so there are no parameters.
+  entity-unavailable:
+    status: done
+    comment: |
+      Device entities become unavailable when no update arrives within the
+      timeout.  The Virtual Household entities are deliberately always
+      available: they are an in-process calculation, and the device entities
+      they derive from already show when their data stops.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not use authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: done
+  discovery-update-info: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: done
+    comment: |
+      A plug's voltage and current entities are disabled by default: plugs
+      report every second, and most users only want power and energy.  A
+      sensor's Bluetooth signal strength stays enabled, as a diagnostic
+      entity: a weak signal is the most common reason a sensor drops out, and
+      an entity enabled only once that starts has no history to show it.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices:
+    status: done
+    comment: |
+      Devices are never removed automatically: sensors drop off the network
+      and reappear, so a removal would usually be undone moments later and
+      would discard the energy history recorded against their entities.
+      Instead, async_remove_config_entry_device lets the user delete a plug or
+      sensor once it has left the network (the library reports it lost after
+      a few minutes of silence).  A device still on the network is refused,
+      as it would come back with its next reading.  The household view is
+      never deleted, as it belongs to the installation rather than to one
+      device.  A deleted sensor's saved role is kept on purpose: the household
+      view's with_solar flag is rebuilt from saved roles at setup, so dropping
+      a solar sensor's role would make it report home use without solar.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not make HTTP requests; it talks to the plugs
+      over UDP.
+  strict-typing: todo

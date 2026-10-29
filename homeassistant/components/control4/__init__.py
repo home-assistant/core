@@ -21,7 +21,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN
+from .const import (
+    API_RETRY_TIMES,
+    CLIMATE_VARIABLES,
+    CONF_CONTROLLER_UNIQUE_ID,
+    CONTROL4_DIMMER_VARS,
+    CONTROL4_NON_DIMMER_VAR,
+    COVER_VARIABLES,
+    DOMAIN,
+    ROOM_VARIABLES,
+)
+from .coordinator import Control4DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +49,11 @@ class Control4RuntimeData:
     director_model: str
     director_sw_version: str
     ui_configuration: dict[str, Any] | None
+    climate_coordinator: Control4DataUpdateCoordinator
+    cover_coordinator: Control4DataUpdateCoordinator
+    dimmer_coordinator: Control4DataUpdateCoordinator
+    non_dimmer_coordinator: Control4DataUpdateCoordinator
+    room_coordinator: Control4DataUpdateCoordinator
 
 
 type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
@@ -132,6 +147,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
+    climate_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "climate", CLIMATE_VARIABLES
+    )
+    cover_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "cover", COVER_VARIABLES
+    )
+    dimmer_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "dimmer light", {*CONTROL4_DIMMER_VARS}
+    )
+    non_dimmer_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "non-dimmer light", {CONTROL4_NON_DIMMER_VAR}
+    )
+    room_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "room", ROOM_VARIABLES
+    )
+
     entry.runtime_data = Control4RuntimeData(
         account=account,
         controller_unique_id=controller_unique_id,
@@ -140,7 +171,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         director_model=director_model,
         director_sw_version=director_sw_version,
         ui_configuration=ui_configuration,
+        climate_coordinator=climate_coordinator,
+        cover_coordinator=cover_coordinator,
+        dimmer_coordinator=dimmer_coordinator,
+        non_dimmer_coordinator=non_dimmer_coordinator,
+        room_coordinator=room_coordinator,
     )
+
+    for coordinator in (
+        climate_coordinator,
+        cover_coordinator,
+        dimmer_coordinator,
+        non_dimmer_coordinator,
+        room_coordinator,
+    ):
+        await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -6,7 +6,6 @@ from datetime import datetime
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigValidationError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, event as ev
@@ -18,19 +17,13 @@ from homeassistant.util.async_ import create_eager_task
 
 from .client import async_subscribe_internal
 from .const import (
-    ATTR_EVALUATE_PAYLOAD,
-    ATTR_MESSAGE_EXPIRY_INTERVAL,
-    ATTR_PAYLOAD,
-    ATTR_QOS,
-    ATTR_RETAIN,
-    ATTR_TOPIC,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
     LOGGER,
-    SERVICE_DUMP,
-    SERVICE_PUBLISH,
+    MqttService,
+    MqttServiceArgument,
 )
 from .models import (
     DATA_MQTT,
@@ -52,20 +45,28 @@ from .util import (
 # Publish action call validation schema
 MQTT_PUBLISH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_TOPIC): valid_publish_topic,
-        probatio.Required(ATTR_PAYLOAD, default=None): probatio.Any(cv.string, None),
-        probatio.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
-        probatio.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        probatio.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        probatio.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
+        probatio.Required(MqttServiceArgument.TOPIC): valid_publish_topic,
+        probatio.Required(MqttServiceArgument.PAYLOAD, default=None): probatio.Any(
+            cv.string, None
+        ),
+        probatio.Optional(MqttServiceArgument.EVALUATE_PAYLOAD): cv.boolean,
+        probatio.Optional(
+            MqttServiceArgument.QOS, default=DEFAULT_QOS
+        ): valid_qos_schema,
+        probatio.Optional(
+            MqttServiceArgument.RETAIN, default=DEFAULT_RETAIN
+        ): cv.boolean,
+        probatio.Optional(
+            MqttServiceArgument.MESSAGE_EXPIRY_INTERVAL
+        ): cv.positive_time_period_dict,
     },
     required=True,
 )
 
 MQTT_DUMP_SCHEMA = probatio.Schema(
     {
-        probatio.Required("topic"): valid_subscribe_topic,
-        probatio.Optional("duration", default=5): int,
+        probatio.Required(MqttServiceArgument.TOPIC): valid_subscribe_topic,
+        probatio.Optional(MqttServiceArgument.DURATION, default=5): int,
     }
 )
 
@@ -73,7 +74,7 @@ MQTT_DUMP_SCHEMA = probatio.Schema(
 async def _async_publish_service(call: ServiceCall) -> None:
     """Handle MQTT publish service calls."""
     hass = call.hass
-    msg_topic: str = call.data[ATTR_TOPIC]
+    msg_topic: str = call.data[MqttServiceArgument.TOPIC]
 
     if not mqtt_config_entry_enabled(hass):
         raise ServiceValidationError(
@@ -83,13 +84,13 @@ async def _async_publish_service(call: ServiceCall) -> None:
         )
 
     mqtt_data = hass.data[DATA_MQTT]
-    payload: PublishPayloadType = call.data[ATTR_PAYLOAD]
-    evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
-    qos: int = call.data[ATTR_QOS]
-    retain: bool = call.data[ATTR_RETAIN]
+    payload: PublishPayloadType = call.data[MqttServiceArgument.PAYLOAD]
+    evaluate_payload: bool = call.data.get(MqttServiceArgument.EVALUATE_PAYLOAD, False)
+    qos: int = call.data[MqttServiceArgument.QOS]
+    retain: bool = call.data[MqttServiceArgument.RETAIN]
     message_expiry_interval: int | None = (
-        int(call.data[ATTR_MESSAGE_EXPIRY_INTERVAL].total_seconds())
-        if ATTR_MESSAGE_EXPIRY_INTERVAL in call.data
+        int(call.data[MqttServiceArgument.MESSAGE_EXPIRY_INTERVAL].total_seconds())
+        if MqttServiceArgument.MESSAGE_EXPIRY_INTERVAL in call.data
         else None
     )
 
@@ -115,7 +116,9 @@ async def _async_dump_service(call: ServiceCall) -> None:
     def collect_msg(msg: ReceiveMessage) -> None:
         messages.append((msg.topic, str(msg.payload).replace("\n", "")))
 
-    unsub = async_subscribe_internal(hass, call.data["topic"], collect_msg)
+    unsub = async_subscribe_internal(
+        hass, call.data[MqttServiceArgument.TOPIC], collect_msg
+    )
 
     def write_dump() -> None:
         with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
@@ -126,7 +129,7 @@ async def _async_dump_service(call: ServiceCall) -> None:
         unsub()
         await hass.async_add_executor_job(write_dump)
 
-    ev.async_call_later(hass, call.data["duration"], finish_dump)
+    ev.async_call_later(hass, call.data[MqttServiceArgument.DURATION], finish_dump)
 
 
 async def _async_reload_config(call: ServiceCall) -> None:
@@ -187,9 +190,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the actions for the MQTT component."""
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_PUBLISH, _async_publish_service, MQTT_PUBLISH_SCHEMA
+        hass, DOMAIN, MqttService.PUBLISH, _async_publish_service, MQTT_PUBLISH_SCHEMA
     )
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_DUMP, _async_dump_service, MQTT_DUMP_SCHEMA
+        hass, DOMAIN, MqttService.DUMP, _async_dump_service, MQTT_DUMP_SCHEMA
     )
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload_config)
+    async_register_admin_service(hass, DOMAIN, MqttService.RELOAD, _async_reload_config)

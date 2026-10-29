@@ -14,7 +14,7 @@ from pyipp import (
     IPPVersionNotSupportedError,
 )
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -24,12 +24,23 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=631): int,
+        probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
+        probatio.Required(CONF_SSL, default=False): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
@@ -205,18 +216,59 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an IPP printer."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except IPPConnectionUpgradeRequired:
+                errors["base"] = "connection_upgrade"
+            except IPPConnectionError, IPPResponseError:
+                _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except IPPVersionNotSupportedError:
+                errors["base"] = "ipp_version_error"
+            except IPPError:
+                _LOGGER.debug("IPP Error", exc_info=True)
+                errors["base"] = "ipp_error"
+            else:
+                if not self._is_same_printer(reconfigure_entry, info):
+                    return self.async_abort(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={**user_input, CONF_UUID: info[CONF_UUID]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
+    def _is_same_printer(self, entry: ConfigEntry, info: dict[str, Any]) -> bool:
+        """Return whether the printer info belongs to the config entry."""
+        if entry.unique_id == (info[CONF_UUID] or info[CONF_SERIAL]):
+            return True
+        # A UUID advertised over zeroconf is not always in the IPP response,
+        # so fall back to the serial number recorded on the device.
+        return bool(info[CONF_SERIAL]) and any(
+            device.serial_number == info[CONF_SERIAL]
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
+        )
+
     def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=631): int,
-                    probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
-                    probatio.Required(CONF_SSL, default=False): bool,
-                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
-                }
-            ),
+            data_schema=DATA_SCHEMA,
             errors=errors or {},
         )
