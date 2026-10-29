@@ -19,7 +19,7 @@ import requests.exceptions
 import urllib3.exceptions
 
 from homeassistant import config as conf_util
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_DOMAIN,
@@ -43,7 +43,6 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
@@ -51,7 +50,6 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
@@ -61,8 +59,6 @@ from .const import (
     CLIENT_ERROR_V1,
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
-    COMPONENT_CONFIG_SCHEMA_CONNECTION,
-    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,
@@ -104,7 +100,6 @@ from .const import (
     WRITE_ERROR,
     WROTE_MESSAGE,
 )
-from .issue import async_create_deprecated_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,8 +164,9 @@ _CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     }
 )
 
-_INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+INFLUX_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
+        probatio.Optional(CONF_PRECISION): probatio.In(["ms", "s", "us", "ns"]),
         probatio.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         probatio.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         probatio.Optional(
@@ -198,13 +194,8 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     }
 )
 
-INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
-    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS
-)
-
-
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(INFLUX_SCHEMA, validate_version_specific_config)},
+    {DOMAIN: INFLUX_SCHEMA},
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -505,37 +496,6 @@ def get_influx_connection(  # noqa: C901
         databases = [db["name"] for db in query_v1(TEST_QUERY_V1)]
 
     return InfluxClient(databases, write_v1, query_v1, close_v1)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the InfluxDB component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass, config[DOMAIN]))
-
-    return True
-
-
-async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
-    """Import YAML configuration into a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and (reason := result["reason"]) != "single_instance_allowed"
-    ):
-        async_create_deprecated_yaml_issue(hass, error=reason)
-        return
-
-    # If we are here, the entry already exists (single instance allowed)
-    if config.keys() & (
-        {k.schema for k in COMPONENT_CONFIG_SCHEMA_CONNECTION} - {CONF_PRECISION}
-    ):
-        async_create_deprecated_yaml_issue(hass)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
