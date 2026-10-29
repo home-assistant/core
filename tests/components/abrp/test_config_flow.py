@@ -290,3 +290,51 @@ async def test_garage_fetch_error_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    ("sub", "expected_reason", "expected_access_token", "expected_setups"),
+    [
+        pytest.param(
+            USER_SUB, "reauth_successful", "new-access-token", 1, id="same_account"
+        ),
+        pytest.param(
+            "other-sub", "wrong_account", "mock-access-token", 0, id="wrong_account"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    sub: str,
+    expected_reason: str,
+    expected_access_token: str,
+    expected_setups: int,
+) -> None:
+    """Reauth updates the token, but only for the account the entry belongs to."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
+    _mock_token_post(aioclient_mock, build_id_token(sub), "new-access-token")
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert config_entry.data["token"]["access_token"] == expected_access_token
+    # Reauth must not re-read the garage; setup does that on reload.
+    mock_abrp_client.assert_not_called()
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == expected_setups

@@ -6,7 +6,8 @@
       "cannot_connect": "Failed to connect to A Better Routeplanner.",
       "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_vehicles": "No vehicles were found on this A Better Routeplanner account."
+      "no_vehicles": "No vehicles were found on this A Better Routeplanner account.",
+      "wrong_account": "The account you signed in with does not match the account being re-authenticated. Please sign in with the same A Better Routeplanner account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -20,6 +21,10 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The A Better Routeplanner integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -63,7 +68,7 @@
   },
   "exceptions": {
     "abrp_session_invalid": {
-      "message": "A Better Routeplanner rejected the authentication session."
+      "message": "A Better Routeplanner rejected the authentication session; please re-authenticate."
     },
     "abrp_update_failed": {
       "message": "Failed to fetch vehicle data from A Better Routeplanner."

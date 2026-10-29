@@ -1,5 +1,6 @@
 """Config flow for the A Better Routeplanner integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -11,7 +12,7 @@ from aioabrp import (
     parse_unverified_identity,
 )
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -50,6 +51,20 @@ class AbrpFlowHandler(
             )
         return await super().async_step_user(user_input)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a successful OAuth2 authorization.
@@ -58,9 +73,10 @@ class AbrpFlowHandler(
         id_token — one the ``openid`` scope guarantees — aborts rather than
         binding the entry to an unverified account. A token without a
         refresh_token aborts as well: the entry could not outlive the access
-        token, and the stream would retry it forever. An empty garage aborts
-        too: the garage is only re-read at setup, so such an entry would load
-        green and stay empty until a manual reload.
+        token, and the stream would retry it forever. On a new entry an empty
+        garage aborts too: the garage is only re-read at setup, so such an entry
+        would load green and stay empty until a manual reload. Reauth skips the
+        garage check; an emptied garage then reloads with no entities.
         """
         try:
             identity = parse_unverified_identity(data["token"].get("id_token"))
@@ -69,6 +85,13 @@ class AbrpFlowHandler(
         if not data["token"].get("refresh_token"):
             return self.async_abort(reason="oauth_error")
         await self.async_set_unique_id(identity.subject)
+
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=data
+            )
+
         self._abort_if_unique_id_configured()
 
         title = (

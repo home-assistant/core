@@ -223,6 +223,13 @@ def mock_config_entry_with_vehicles(
     )
 
 
+def flow_sources(hass: HomeAssistant) -> list[str]:
+    """Return the sources of the config flows in progress."""
+    return [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ]
+
+
 def fire_frame(
     mock_telemetry_stream: MagicMock, vehicle_id: int, telemetry: Telemetry
 ) -> None:
