@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
 from homeassistant.components.llama_cpp.const import (
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,7 +140,9 @@ def mock_chat_log(hass: HomeAssistant) -> Generator[conversation.ChatLog]:
             "homeassistant.components.conversation.chat_log.ChatLog",
             MockChatLog,
         ),
-        chat_session.async_get_chat_session(hass, "mock-conversation-id") as session,
+        chat_session.async_get_chat_session(
+            hass, "mock-conversation-id", context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         yield chat_log

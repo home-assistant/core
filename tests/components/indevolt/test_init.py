@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.indevolt.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import setup_integration
 from .conftest import DEVICE_MAPPING, TEST_DEVICE_SN_GEN2
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)

@@ -1,6 +1,7 @@
 {
   "domain": "python_script",
   "name": "Python Scripts",
+  "categories": ["diy_makers"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "loggers": ["RestrictedPython"],

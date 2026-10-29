@@ -46,20 +46,8 @@
     "start": {
       "service": "mdi:play"
     },
-    "start_pause": {
-      "service": "mdi:play-pause"
-    },
     "stop": {
       "service": "mdi:stop"
-    },
-    "toggle": {
-      "service": "mdi:play-pause"
-    },
-    "turn_off": {
-      "service": "mdi:stop"
-    },
-    "turn_on": {
-      "service": "mdi:play"
     }
   },
   "triggers": {

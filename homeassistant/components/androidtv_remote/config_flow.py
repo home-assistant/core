@@ -99,6 +99,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         default_host = user_input.get(CONF_HOST, probatio.UNDEFINED)
         if self.source == SOURCE_RECONFIGURE:
             default_host = self._get_reconfigure_entry().data[CONF_HOST]
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
             data_schema=probatio.Schema(

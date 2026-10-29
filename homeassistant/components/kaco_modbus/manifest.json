@@ -1,6 +1,7 @@
 {
   "domain": "kaco_modbus",
   "name": "KACO Modbus",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
   "dependencies": ["modbus"],

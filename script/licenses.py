@@ -194,17 +194,18 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
+    "pyelftools",  # Public domain (Unlicense)
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "tempora",  # https://github.com/jaraco/tempora/issues/61
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
 # fmt: off
-TODO = {
-    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
+TODO: dict[str, AwesomeVersion] = {
 }
 # fmt: on
 

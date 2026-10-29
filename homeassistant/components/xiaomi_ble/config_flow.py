@@ -23,6 +23,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -230,7 +231,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={
@@ -256,7 +257,6 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self._async_get_or_create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -269,7 +269,6 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._async_get_or_create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm_slow",
             description_placeholders=self.context["title_placeholders"],
@@ -354,7 +353,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_get_encryption_key_4_5_choose_method()
 
         # Otherwise there wasn't actually encryption so abort
-        return self.async_abort(reason="reauth_successful")
+        return self.async_abort(
+            reason="reauth_successful", translation_domain=HOMEASSISTANT_DOMAIN
+        )
 
     def _async_get_or_create_entry(
         self, bindkey: str | None = None

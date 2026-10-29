@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests.exceptions
 import requests_mock
 
@@ -17,8 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from .helpers import trigger_plex_update, wait_for_debouncer
-
-from tests.common import async_fire_time_changed
 
 LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complete"}]}
 

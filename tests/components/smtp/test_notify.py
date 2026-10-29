@@ -1,16 +1,21 @@
 """The tests for the notify smtp platform."""
 
+import errno
 import gzip
 from pathlib import Path
 import re
 from smtplib import SMTPException, SMTPServerDisconnected
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiosmtplib
+from aiosmtplib import (
+    SMTPAuthenticationError,
+    SMTPException as aiosmtplib_SMTPException,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -29,15 +34,13 @@ from homeassistant.components.smtp.const import (
     DOMAIN,
 )
 from homeassistant.components.smtp.notify import MailNotificationService
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import create_client_context
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 class MockSMTP(MailNotificationService):
@@ -92,11 +95,6 @@ EMAIL_DATA = [
     ),
     (
         "Test msg",
-        {"html": HTML, "images": ["tests/testing_config/notify/test_not_exists.jpg"]},
-        "Content-Type: multipart/related",
-    ),
-    (
-        "Test msg",
         {"html": HTML, "images": ["tests/testing_config/notify/test.pdf"]},
         "Content-Type: multipart/related",
     ),
@@ -109,7 +107,6 @@ EMAIL_DATA = [
     ids=[
         "Tests when sending text message and images.",
         "Tests when sending text message, HTML Template and images.",
-        "Tests when image does not exist at mentioned location.",
         "Tests when image type cannot be detected or is of wrong type.",
     ],
 )
@@ -158,6 +155,36 @@ def test_sending_insecure_files_fails(
     )
     assert exc.value.translation_placeholders["url"]
     assert exc.value.translation_placeholders["file_name"] == "test.jpg"
+
+
+def test_file_not_found(
+    hass: HomeAssistant,
+    message,
+) -> None:
+    """Verify if we cannot send messages when file is not found."""
+    sample_email = "<mock@mock>"
+    message.hass = hass
+    hass.config.allowlist_external_dirs.add(str(Path("tests/testing_config").resolve()))
+    with (
+        patch(
+            "builtins.open",
+            side_effect=FileNotFoundError(
+                errno.ENOENT,
+                "No such file or directory",
+                "tests/testing_config/notify/test.jpg",
+            ),
+        ),
+        patch("email.utils.make_msgid", return_value=sample_email),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
+        _result, _ = message.send_message(
+            "Test msg", data={"images": ["tests/testing_config/notify/test.jpg"]}
+        )
+    assert exc.value.translation_key == "os_read_not_found"
+    assert exc.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc.value.translation_placeholders == {
+        "path": "tests/testing_config/notify/test.jpg"
+    }
 
 
 def test_send_text_message(hass: HomeAssistant, message) -> None:
@@ -266,8 +293,8 @@ async def test_notify_send_message(
 @pytest.mark.parametrize(
     ("exception", "translation_key", "call_count"),
     [
-        (aiosmtplib.SMTPAuthenticationError(0, ""), "authentication_error", 1),
-        (aiosmtplib.SMTPException(""), "send_mail_connection_error", 2),
+        (SMTPAuthenticationError(0, ""), "authentication_error", 1),
+        (aiosmtplib_SMTPException(""), "send_mail_connection_error", 2),
     ],
 )
 @pytest.mark.usefixtures("make_msgid", "smtp")
@@ -303,6 +330,48 @@ async def test_notify_send_message_exceptions(
 
     assert e.value.translation_key == translation_key
     assert aiosmtplib.__aenter__.return_value.send_message.call_count == call_count
+
+
+@pytest.mark.usefixtures("make_msgid", "smtp")
+async def test_notify_send_message_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aiosmtplib: AsyncMock,
+) -> None:
+    """Test authentication error starts reauth flow."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    aiosmtplib.__aenter__.return_value.send_message.side_effect = (
+        SMTPAuthenticationError(0, "")
+    )
+
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+            },
+            blocking=True,
+        )
+
+    assert e.value.translation_key == "authentication_error"
+    assert aiosmtplib.__aenter__.return_value.send_message.call_count == 1
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == config_entry.entry_id
 
 
 @pytest.mark.parametrize("exception", [SMTPServerDisconnected, SMTPException])
@@ -436,8 +505,8 @@ async def test_smtp_send_message_camera_source(
     assert config_entry.state is ConfigEntryState.LOADED
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+            "homeassistant.components.smtp.helpers.async_get_media_image",
+            return_value=media_source.MediaImage(b"I play the sax\n", "image/jpeg"),
         ) as mock_get_image,
     ):
         await hass.services.async_call(
@@ -460,7 +529,9 @@ async def test_smtp_send_message_camera_source(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    mock_get_image.assert_called_once_with(
+        hass, "media-source://camera/camera.demo_camera"
+    )
     msg = aiosmtplib.__aenter__.return_value.send_message.call_args[0][0]
     assert msg.as_string() == snapshot
 
@@ -481,8 +552,8 @@ async def test_smtp_send_message_image_source(
 
     assert config_entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+        "homeassistant.components.smtp.helpers.async_get_media_image",
+        return_value=media_source.MediaImage(b"\x89PNG", "image/jpeg"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
@@ -511,7 +582,7 @@ async def test_smtp_send_message_image_source(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_with(hass, "image.test")
+    mock_get_image.assert_called_with(hass, "media-source://image/image.test")
     msg = aiosmtplib.__aenter__.return_value.send_message.call_args[0][0]
     assert msg.as_string() == snapshot
 
@@ -606,9 +677,56 @@ async def test_smtp_send_message_media_source_not_supported(
             blocking=True,
         )
     assert err.value.translation_key == "media_source_not_supported"
+
+
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
+async def test_smtp_send_message_os_read_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment read errors."""
+    assert await async_setup_component(hass, "media_source", {})
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT, "No such file or directory", "/media/screenshot.jpg"
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+        ) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": (
+                                "media-source://media_source/local/screenshot.jpg"
+                            ),
+                            "media_content_type": "image/jpeg",
+                        },
+                        ATTR_FILENAME: "screenshot.jpg",
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "os_read_not_found"
     assert err.value.translation_placeholders == {
-        "media_content_id": "media-source://xbox/123456789/"
+        "path": str(Path("tests/testing_config/media/screenshot.jpg").resolve())
     }
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.usefixtures("smtp", "aiosmtplib")
@@ -626,8 +744,8 @@ async def test_smtp_send_message_media_source_missing_filename(
     assert config_entry.state is ConfigEntryState.LOADED
     with (
         patch(
-            "homeassistant.components.image.async_get_image",
-            return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+            "homeassistant.components.smtp.helpers.async_get_media_image",
+            return_value=media_source.MediaImage(b"\x89PNG", "image/jpeg"),
         ) as mock_get_image,
         pytest.raises(
             ServiceValidationError,
@@ -650,7 +768,7 @@ async def test_smtp_send_message_media_source_missing_filename(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_once_with(hass, "media-source://image/image.test")
     assert err.value.translation_key == "media_source_missing_filename"
     assert err.value.translation_placeholders == {
         "media_content_id": "media-source://image/image.test"

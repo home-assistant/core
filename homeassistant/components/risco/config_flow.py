@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_USERNAME,
 )
@@ -45,15 +44,15 @@ _LOGGER = logging.getLogger(__name__)
 CLOUD_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 LOCAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=1000): int,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 HA_STATES = [
@@ -234,13 +233,6 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 probatio.Required(CONF_MORE_OPTIONS): section(
                     probatio.Schema(
                         {
-                            # Polling interval is user-configurable,
-                            # which is no longer allowed
-                            # pylint: disable-next=home-assistant-config-flow-polling-field
-                            probatio.Required(
-                                CONF_SCAN_INTERVAL,
-                                default=self._data[CONF_SCAN_INTERVAL],
-                            ): int,
                             probatio.Required(
                                 CONF_CONCURRENCY,
                                 default=self._data[CONF_CONCURRENCY],

@@ -13,6 +13,8 @@ This file is responsible for testing:
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -22,15 +24,11 @@ import probatio
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_SLAVE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -73,12 +71,14 @@ from homeassistant.components.modbus.const import (
     DOMAIN,
     RTUOVERTCP,
     SERIAL,
-    SERVICE_STOP,
-    SERVICE_WRITE_COIL,
-    SERVICE_WRITE_REGISTER,
     TCP,
     UDP,
     DataType,
+)
+from homeassistant.components.modbus.schemas import CONFIG_SCHEMA
+from homeassistant.components.modbus.services import (
+    ModbusService,
+    ModbusServiceArgument,
 )
 from homeassistant.components.modbus.validators import (
     check_config,
@@ -93,7 +93,7 @@ from homeassistant.components.modbus.validators import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_STATE,
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COUNT,
@@ -109,14 +109,14 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -128,8 +128,6 @@ from .conftest import (
     TEST_PORT_TCP,
     ReadResult,
 )
-
-from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")
@@ -196,6 +194,14 @@ async def test_nan_validator() -> None:
         nan_validator("x15")
     with pytest.raises(probatio.Invalid):
         nan_validator("not a hex string")
+
+
+async def test_tcp_hub_without_host_is_invalid() -> None:
+    """Test the hub type selects the schema that reports the error."""
+    with pytest.raises(
+        probatio.Invalid, match=r"required key not provided at 'modbus\[0\]\.host'"
+    ):
+        CONFIG_SCHEMA({DOMAIN: {CONF_TYPE: TCP, CONF_PORT: 502}})
 
 
 @pytest.mark.parametrize(
@@ -932,27 +938,27 @@ SERVICE = "service"
     "do_write",
     [
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: 15,
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: [1, 2, 3],
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTERS,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: False,
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COIL,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: [True, False, True],
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COILS,
         },
     ],
@@ -968,8 +974,8 @@ SERVICE = "service"
 @pytest.mark.parametrize(
     "do_slave",
     [
-        ATTR_SLAVE,
-        ATTR_UNIT,
+        ModbusServiceArgument.SLAVE,
+        ModbusServiceArgument.UNIT,
     ],
 )
 async def test_pb_service_write(
@@ -997,9 +1003,9 @@ async def test_pb_service_write(
     }
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
         do_slave: 17,
-        ATTR_ADDRESS: 16,
+        ModbusServiceArgument.ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
     mock_modbus_with_pymodbus.reset_mock()
@@ -1008,7 +1014,9 @@ async def test_pb_service_write(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ModbusServiceArgument.ADDRESS],
+    )
     assert func_name[do_write[FUNC]].call_args.kwargs == {
         DEVICE_ID: 17,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
@@ -1061,10 +1069,10 @@ async def mock_modbus_read_pymodbus_fixture(
     assert caplog.text == ""
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return mock_pymodbus
 
 
@@ -1173,6 +1181,247 @@ async def test_pymodbus_close_fail(
     # Close() is called as part of teardown
 
 
+async def test_unreachable_device_does_not_hold_startup(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test entities waiting for a device that never connects do not hold up startup."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                    }
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.connect.return_value = False
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+
+    # the entities start waiting for the first connection
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+
+    # startup wraps up by waiting for foreground tasks, that wait must not be one
+    async with asyncio.timeout(1):
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_aborted_add_cancels_first_update(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an entity whose add is aborted does not run its first update later."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                    }
+                ],
+            }
+        ]
+    }
+    # the platform aborts the add when restoring the last state fails, which
+    # happens after the first update has been scheduled
+    with mock.patch(
+        "homeassistant.components.modbus.sensor.ModbusRegisterSensor.async_get_last_sensor_data",
+        side_effect=ValueError("restore failed"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    caplog.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
+    assert hass.states.get(entity_id) is None
+
+
+async def test_renamed_entity_keeps_polling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test an entity keeps polling on its schedule after a rename."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_UNIQUE_ID: "renamed_sensor",
+                    }
+                ],
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "0"
+
+    new_entity_id = f"{SENSOR_DOMAIN}.renamed"
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get(new_entity_id).state == "0"
+
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x2A])
+    # The rename does not schedule an extra update
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(new_entity_id).state == "0"
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(new_entity_id).state == "42"
+
+
+async def test_overlapping_updates_keep_one_poll_timer(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test an update overlapping a poll does not start a second polling loop."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SCAN_INTERVAL: 10,
+                    }
+                ],
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    start = dt_util.utcnow()
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "0"
+
+    # hold the next poll on the device, so an update requested now overlaps it
+    release_poll = asyncio.Event()
+    result = mock_pymodbus.read_holding_registers.return_value
+
+    async def _held_read(*args: object, **kwargs: object) -> ReadResult:
+        await release_poll.wait()
+        return result
+
+    mock_pymodbus.read_holding_registers.side_effect = _held_read
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await asyncio.sleep(0)
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {ATTR_ENTITY_ID: entity_id}
+    )
+    await asyncio.sleep(0)
+    release_poll.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=25))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+
+
+async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
+    """Let the entities start waiting for the first connection."""
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+
+async def _stop_hub(hass: HomeAssistant) -> None:
+    """Stop the hub, which also releases every wait for its connection."""
+    await hass.services.async_call(
+        DOMAIN,
+        ModbusService.STOP,
+        {ModbusServiceArgument.HUB: TEST_MODBUS_NAME},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "steps",
+    [
+        pytest.param(
+            [_stop_hub, _fire_first_connect_timer], id="stopped_before_the_wait"
+        ),
+        pytest.param(
+            [_fire_first_connect_timer, _stop_hub], id="stopped_while_waiting"
+        ),
+    ],
+)
+async def test_stop_cancels_pending_first_update(
+    hass: HomeAssistant,
+    mock_pymodbus: mock.AsyncMock,
+    steps: list[Callable[[HomeAssistant], Awaitable[None]]],
+) -> None:
+    """Test stopping the hub cancels an update still waiting for the first connection."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                    }
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.connect.return_value = False
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+
+    for step in steps:
+        await step(hass)
+
+    # an update that survived the stop would run against the closed hub and
+    # write the entity unavailable
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
 async def test_pymodbus_connect_fail(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus
 ) -> None:
@@ -1247,7 +1496,9 @@ async def test_delay(
         freezer.tick(timedelta(seconds=1, microseconds=999999))
         now = dt_util.utcnow()
         async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+        # the hub sleeps the delay in a background task, so waiting for those
+        # before the delay has passed would wait forever
+        await hass.async_block_till_done(wait_background_tasks=now > time_after_delay)
         if now > time_sensor_active:
             if now <= time_after_delay:
                 assert hass.states.get(entity_id).state in (
@@ -1298,19 +1549,21 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 
     await mock_modbus.reset()
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
     }
-    await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
+    await hass.services.async_call(DOMAIN, ModbusService.STOP, data, blocking=True)
     await hass.async_block_till_done()
     assert mock_modbus.close.called
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_SLAVE: 17,
-        ATTR_ADDRESS: 16,
-        ATTR_STATE: True,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.SLAVE: 17,
+        ModbusServiceArgument.ADDRESS: 16,
+        ModbusServiceArgument.STATE: True,
     }
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ModbusService.WRITE_COIL, data, blocking=True
+    )
 
 
 @pytest.mark.parametrize("do_config", [{}])
@@ -1325,13 +1578,13 @@ async def test_integration_reload(
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1347,7 +1600,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1363,7 +1616,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1389,7 +1642,7 @@ async def test_integration_reload_failed(
         mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
         mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     assert "Modbus reloading" in caplog.text
@@ -1409,7 +1662,7 @@ async def test_integration_setup_failed(
         hass.data[DOMAIN][TEST_MODBUS_NAME].async_setup = mock.AsyncMock(
             return_value=False
         )
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
 
@@ -1506,15 +1759,15 @@ async def test_check_default_slave(
     "do_write",
     [
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: 15,
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: False,
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COIL,
         },
     ],
@@ -1547,8 +1800,8 @@ async def test_pb_service_write_no_slave(
     }
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_ADDRESS: 16,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
     mock_modbus_with_pymodbus.reset_mock()
@@ -1557,7 +1810,9 @@ async def test_pb_service_write_no_slave(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ModbusServiceArgument.ADDRESS],
+    )
     assert func_name[do_write[FUNC]].call_args.kwargs == {
         DEVICE_ID: 1,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],

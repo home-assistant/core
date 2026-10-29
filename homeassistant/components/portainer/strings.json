@@ -49,6 +49,31 @@
       }
     }
   },
+  "config_subentries": {
+    "environment": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "config_entry_not_loaded": "Cannot add an environment while the Portainer integration is not loaded.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "no_new_environments": "All available environments on this Portainer server have already been added.",
+        "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Environment",
+      "initiate_flow": {
+        "user": "Add environment"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "endpoint_id": "Environment"
+          },
+          "description": "Select a Portainer environment to add as a device in Home Assistant.",
+          "title": "Add a Portainer environment"
+        }
+      }
+    }
+  },
   "device": {
     "unknown_container": {
       "name": "Unknown container"
@@ -56,16 +81,25 @@
   },
   "entity": {
     "binary_sensor": {
+      "container_out_of_memory": {
+        "name": "Out of memory"
+      },
       "status": {
         "name": "Status"
       }
     },
     "button": {
+      "build_cache_prune": {
+        "name": "Prune build cache"
+      },
       "images_prune": {
         "name": "Prune unused images"
       },
       "kill_container": {
         "name": "Kill container"
+      },
+      "networks_prune": {
+        "name": "Prune unused networks"
       },
       "pause_container": {
         "name": "Pause container"
@@ -78,6 +112,9 @@
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "update_stack": {
+        "name": "Update stack"
       },
       "volumes_prune": {
         "name": "Prune unused volumes"
@@ -126,6 +163,12 @@
           "starting": "Starting",
           "unhealthy": "Unhealthy"
         }
+      },
+      "container_restart_count": {
+        "name": "Restart count"
+      },
+      "container_started_at": {
+        "name": "Started"
       },
       "container_state": {
         "name": "State",
@@ -232,12 +275,18 @@
     "update": {
       "container_image_update": {
         "name": "Image update available"
+      },
+      "server_update": {
+        "name": "Update"
       }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance."
+    },
+    "instance_id_failed": {
+      "message": "Failed to fetch the Portainer instance ID."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate."
@@ -250,6 +299,24 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "description": "Prunes the build cache on a Portainer endpoint.",
+      "fields": {
+        "all": {
+          "description": "If true (default), prune all unused build cache. If false, only prune dangling build cache.",
+          "name": "All"
+        },
+        "device_id": {
+          "description": "The endpoint to prune the build cache on.",
+          "name": "[%key:component::portainer::services::prune_images::fields::device_id::name%]"
+        },
+        "until": {
+          "description": "Only prune build cache that was last used longer ago than this duration. If not provided, build cache of any age is pruned.",
+          "name": "[%key:component::portainer::services::prune_images::fields::until::name%]"
+        }
+      },
+      "name": "Prune build cache"
+    },
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
       "fields": {
@@ -262,7 +329,7 @@
           "name": "Endpoint"
         },
         "until": {
-          "description": "Prune images unused for at least this time duration in the past. If not provided, all unused images will be pruned.",
+          "description": "Only prune images created longer ago than this duration. If not provided, images of any age are pruned.",
           "name": "Until"
         }
       },

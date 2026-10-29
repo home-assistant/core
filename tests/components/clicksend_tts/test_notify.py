@@ -6,14 +6,13 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component
 import requests_mock
 
 from homeassistant.components import notify
 from homeassistant.components.clicksend_tts import notify as cs_tts
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 # Infos from https://developers.clicksend.com/docs/rest/v3/#testing
 TEST_USERNAME = "nocredit"

@@ -11,8 +11,11 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 
-from homeassistant.components import camera, image, tts
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components import tts
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
@@ -91,18 +94,14 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 )
         if file := params.pop(ATTR_ATTACH_FILE, None):
             media_content_id: str = file["media_content_id"]
-            if media_content_id.startswith("media-source://camera/"):
-                entity_id = media_content_id.removeprefix("media-source://camera/")
-                attachment = (
-                    await camera.async_get_image(self.hass, entity_id)
-                ).content
-            elif media_content_id.startswith("media-source://image/"):
-                entity_id = media_content_id.removeprefix("media-source://image/")
-                attachment = (await image.async_get_image(self.hass, entity_id)).content
-            elif media_content_id.startswith("media-source://tts/"):
+            if media_content_id.startswith("media-source://tts/"):
                 _, attachment = await tts.async_get_media_source_audio(
                     self.hass, media_content_id
                 )
+            elif media_image := await async_get_media_image(
+                self.hass, media_content_id
+            ):
+                attachment = media_image.content
             else:
                 media = await async_resolve_media(
                     self.hass, file["media_content_id"], None
