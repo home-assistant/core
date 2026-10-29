@@ -45,11 +45,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_ARMING_BLOCKED
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 from .helpers import (
@@ -330,7 +332,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = config_entry.runtime_data
-    entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
+    entities: list[HomematicipGenericEntity] = [
+        HomematicipCloudConnectionSensor(hap),
+        HomematicipArmingBlockedSensor(hap),
+    ]
     for device in hap.home.devices:
         if isinstance(device, AccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
@@ -462,6 +467,51 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     def available(self) -> bool:
         """Sensor is always available."""
         return True
+
+
+class HomematicipArmingBlockedSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of a refused arming attempt of the alarm control panel."""
+
+    entity_description = BinarySensorEntityDescription(
+        key="arming_blocked",
+        translation_key="arming_blocked",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, hap: HomematicipHAP) -> None:
+        """Initialize the arming blocked sensor."""
+        super().__init__(
+            hap,
+            hap.home,
+            feature_id=self.entity_description.key,
+            use_description_name=True,
+        )
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        # the access point is registered before the platforms are set up
+        return DeviceInfo(identifiers={(DOMAIN, self._home.id)})
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the last arming attempt was refused."""
+        return self._hap.arming_blocked
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ARMING_BLOCKED.format(self._hap.config_entry.entry_id),
+                self.async_write_ha_state,
+            )
+        )
 
 
 class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
