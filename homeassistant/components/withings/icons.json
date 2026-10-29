@@ -152,5 +152,10 @@
         }
       }
     }
+  },
+  "services": {
+    "backfill_weight_statistics": {
+      "service": "mdi:database-import"
+    }
   }
 }

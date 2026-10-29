@@ -338,6 +338,30 @@
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication with Withings failed. Please reauthenticate."
+    },
+    "invalid_weight_unit": {
+      "message": "The weight sensor's statistics have an unsupported unit. Resolve the unit issue in Developer tools > Statistics before importing weight history."
+    },
+    "recorder_required": {
+      "message": "The Recorder integration must be enabled to import weight statistics."
+    },
+    "weight_history_failed": {
+      "message": "Could not retrieve weight history from Withings. No statistics were imported."
+    },
+    "weight_sensor_required": {
+      "message": "Enable the existing weight sensor and include it in Recorder before importing weight statistics."
+    }
+  },
+  "services": {
+    "backfill_weight_statistics": {
+      "description": "Imports all available historical weight measurements into the existing weight sensor's statistics. Existing hours are preserved. The current and previous hour are excluded.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Withings account to import weight history for.",
+          "name": "Account"
+        }
+      },
+      "name": "Backfill weight statistics"
     }
   }
 }
