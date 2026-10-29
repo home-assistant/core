@@ -133,6 +133,9 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             except HomeAssistantError, TimeoutError:
                 await asyncio.sleep(REOPEN_INTERVAL)
                 continue
+            if not stream.dynamic_stream_settings.preload_stream:
+                # Preload was switched off while the session opened.
+                break
             stream.update_source(str(source))
             return
         if self.stream is stream:

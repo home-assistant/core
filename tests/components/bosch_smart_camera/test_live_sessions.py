@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import dataclass, field, replace
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bosch_shc_camera_client.cameras import (
@@ -554,6 +555,29 @@ async def test_reopen_gives_up_when_preload_is_switched_off(
         )
         async with asyncio.timeout(5):
             await task
+
+    assert entity.stream is None
+
+
+async def test_reopen_releases_the_stream_when_preload_ends_mid_open(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a reopen finishing after preload was switched off releases the stream."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    entity = _entity(hass)
+    stream = await _watch(hass, viewer=False, preload=True)
+    real = mock_live.open.side_effect
+
+    async def _open_then_switch_off(*args: Any, **kwargs: Any) -> Any:
+        stream.dynamic_stream_settings = replace(
+            stream.dynamic_stream_settings, preload_stream=False
+        )
+        return await real(*args, **kwargs)
+
+    mock_live.open.side_effect = _open_then_switch_off
+    mock_live.proxy_died[CAMERA_ID]()
+    await hass.async_block_till_done()
 
     assert entity.stream is None
 
