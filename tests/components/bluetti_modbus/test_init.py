@@ -114,11 +114,15 @@ async def test_built_in_battery_entity_keeps_its_entity_id(
 ) -> None:
     """An entity set up on the power station moves to the battery as it was."""
     mock_config_entry.add_to_hass(hass)
+    power_station = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, SERIAL)}
+    )
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         f"{SERIAL}_b_v",
         config_entry=mock_config_entry,
+        device_id=power_station.id,
         suggested_object_id="balco_260_battery_voltage",
     )
 
