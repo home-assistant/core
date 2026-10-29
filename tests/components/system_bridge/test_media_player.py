@@ -1,13 +1,18 @@
 """Tests for the System Bridge media player platform."""
 
+import base64
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.media_control import MediaAction, MediaControl
+from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.media import Media
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -97,3 +102,92 @@ async def test_media_control(
     )
 
     mock_websocket_client.media_control.assert_awaited_once_with(expected)
+
+
+async def test_media_player_image_data_url(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test media player entity picture with a data URL thumbnail."""
+    b64_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    png_bytes = base64.b64decode(b64_png)
+    data_url = f"data:image/png;base64,{b64_png}"
+
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail=data_url,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/png"
+    assert await resp.read() == png_bytes
+
+
+async def test_media_player_image_http_url(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test media player entity picture with an HTTP URL thumbnail."""
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail="https://example.com/cover.jpg",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("entity_picture") == "https://example.com/cover.jpg"
+
+
+@pytest.mark.parametrize(
+    "thumbnail",
+    [
+        pytest.param("data:text/plain;base64,aGVsbG8=", id="unsupported_mime"),
+        pytest.param("data:image/png;base64,invalid!@#$", id="invalid_base64"),
+        pytest.param("data:image/png,not_base64", id="missing_base64"),
+        pytest.param("invalid_string", id="invalid_string"),
+        pytest.param(None, id="none"),
+    ],
+)
+async def test_media_player_image_invalid_or_none(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    thumbnail: str | None,
+) -> None:
+    """Test media player entity picture is absent for invalid thumbnails."""
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Test Song",
+            thumbnail=thumbnail,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.NOT_FOUND
