@@ -11,6 +11,7 @@ from systembridgeconnector.models.media_control import (
     MediaRepeat,
 )
 from systembridgeconnector.models.modules.audio import AudioDevice
+from systembridgeconnector.models.modules.media import Media, MediaPlayer
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -46,6 +47,8 @@ STATUS_PAUSED: Final[str] = "PAUSED"
 REPEAT_NONE: Final[str] = "NONE"
 REPEAT_TRACK: Final[str] = "TRACK"
 REPEAT_LIST: Final[str] = "LIST"
+
+SOURCE_AUTOMATIC: Final[str] = "Automatic"
 
 MEDIA_STATUS_MAP: Final[dict[str, MediaPlayerState]] = {
     STATUS_CHANGING: MediaPlayerState.IDLE,
@@ -132,6 +135,8 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
 
     entity_description: MediaPlayerEntityDescription
 
+    _picked_player_id: str | None = None
+
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
@@ -158,29 +163,31 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         features = MediaPlayerEntityFeature(0)
 
-        data = self._systembridge_data
-        if data.media.is_previous_enabled:
+        media = self._media
+        if media.is_previous_enabled:
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-        if data.media.is_next_enabled:
+        if media.is_next_enabled:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if data.media.is_pause_enabled or data.media.is_play_enabled:
+        if media.is_pause_enabled or media.is_play_enabled:
             features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
-        if data.media.is_stop_enabled:
+        if media.is_stop_enabled:
             features |= MediaPlayerEntityFeature.STOP
-        if data.media.is_seek_enabled:
+        if media.is_seek_enabled:
             features |= MediaPlayerEntityFeature.SEEK
-        if data.media.volume is not None:
+        if media.volume is not None:
             features |= (
                 MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_STEP
             )
         # Windows reports shuffle and repeat but can't set them, and only
         # Linux reports the player
-        if data.media.player is not None:
-            if data.media.shuffle is not None:
+        if self._systembridge_data.media.player is not None:
+            if media.shuffle is not None:
                 features |= MediaPlayerEntityFeature.SHUFFLE_SET
-            if data.media.repeat is not None:
+            if media.repeat is not None:
                 features |= MediaPlayerEntityFeature.REPEAT_SET
+        if self._systembridge_data.media.players:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
 
         return features
 
@@ -190,31 +197,62 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         return self.coordinator.data
 
     @property
+    def _picked_player(self) -> MediaPlayer | None:
+        """Return the picked player, or None to follow the backend's pick."""
+        return next(
+            (
+                player
+                for player in self._systembridge_data.media.players
+                if player.id == self._picked_player_id
+            ),
+            None,
+        )
+
+    @property
+    def _media(self) -> Media | MediaPlayer:
+        """Return the picked player's details, or the backend's when it's gone."""
+        return self._picked_player or self._systembridge_data.media
+
+    @property
+    @override
+    def source(self) -> str:
+        """Name of the picked player."""
+        if (player := self._picked_player) is None:
+            return SOURCE_AUTOMATIC
+        return player.name
+
+    @property
+    @override
+    def source_list(self) -> list[str]:
+        """Names of the players that can be picked."""
+        return [
+            SOURCE_AUTOMATIC,
+            *(player.name for player in self._systembridge_data.media.players),
+        ]
+
+    @property
     @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        if self._systembridge_data.media.status is None:
+        if self._media.status is None:
             return None
-        return MEDIA_STATUS_MAP.get(
-            self._systembridge_data.media.status,
-            MediaPlayerState.IDLE,
-        )
+        return MEDIA_STATUS_MAP.get(self._media.status, MediaPlayerState.IDLE)
 
     @property
     @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._systembridge_data.media.duration is None:
+        if self._media.duration is None:
             return None
-        return int(self._systembridge_data.media.duration)
+        return int(self._media.duration)
 
     @property
     @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._systembridge_data.media.position is None:
+        if self._media.position is None:
             return None
-        return int(self._systembridge_data.media.position)
+        return int(self._media.position)
 
     @property
     @override
@@ -228,51 +266,74 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._systembridge_data.media.title
+        return self._media.title or None
 
     @property
     @override
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self._systembridge_data.media.artist
+        return self._media.artist or None
 
     @property
     @override
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return self._systembridge_data.media.album_title
+        return self._media.album_title
 
     @property
     @override
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        return self._systembridge_data.media.album_artist
+        return self._media.album_artist
 
     @property
     @override
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        return self._systembridge_data.media.track_number
+        return self._media.track_number
 
     @property
     @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self._systembridge_data.media.volume
+        return self._media.volume
 
     @property
     @override
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
-        return self._systembridge_data.media.shuffle
+        return self._media.shuffle
 
     @property
     @override
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        if self._systembridge_data.media.repeat is None:
+        if self._media.repeat is None:
             return RepeatMode.OFF
-        return MEDIA_REPEAT_MAP.get(self._systembridge_data.media.repeat)
+        return MEDIA_REPEAT_MAP.get(self._media.repeat)
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Pick the player to show and control."""
+        if source == SOURCE_AUTOMATIC:
+            self._picked_player_id = None
+        else:
+            player = next(
+                (
+                    player
+                    for player in self._systembridge_data.media.players
+                    if player.name == source
+                ),
+                None,
+            )
+            if player is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="media_player_not_found",
+                    translation_placeholders={"name": source},
+                )
+            self._picked_player_id = player.id
+        self.async_write_ha_state()
 
     @override
     async def async_media_play(self) -> None:
@@ -331,7 +392,9 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         )
 
     async def _async_media_control(self, model: MediaControl) -> None:
-        """Send a media control command."""
+        """Send a media control command, to the picked player if there is one."""
+        if (player := self._picked_player) is not None:
+            model.player = player.id
         try:
             response = await self.coordinator.websocket_client.media_control(model)
         except ConnectionClosedException as e:

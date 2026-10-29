@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -37,6 +38,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     RepeatMode,
 )
 from homeassistant.const import (
@@ -179,7 +181,13 @@ async def test_media_without_player(
 
     await coordinator.async_handle_module(
         Module.MEDIA,
-        replace(FIXTURE_MEDIA, player=None, volume=None, is_seek_enabled=None),
+        replace(
+            FIXTURE_MEDIA,
+            player=None,
+            players=[],
+            volume=None,
+            is_seek_enabled=None,
+        ),
     )
     await hass.async_block_till_done()
 
@@ -248,13 +256,84 @@ async def test_audio_control(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_select_unknown_source(hass: HomeAssistant) -> None:
-    """Test picking an output that isn't reported raises."""
-    with pytest.raises(ServiceValidationError, match="No audio device named Speakers"):
+async def test_media_player_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test picking a player shows its details and sends it the controls."""
+    coordinator = mock_config_entry.runtime_data
+    vlc = FIXTURE_MEDIA.players[0]
+    spotify = replace(
+        vlc, id="spotify", name="Spotify", status="PAUSED", title="Song", volume=0.2
+    )
+    await coordinator.async_handle_module(
+        Module.MEDIA, replace(FIXTURE_MEDIA, players=[vlc, spotify])
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Spotify"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.PAUSED
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Song"
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_websocket_client.media_control.assert_awaited_once_with(
+        MediaControl(action=MediaAction.PLAY.value, player="spotify")
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Automatic"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic"
+    assert state.attributes[ATTR_MEDIA_TITLE] == FIXTURE_MEDIA.title
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "source", "message"),
+    [
+        pytest.param(
+            DEFAULT_OUTPUT_ENTITY_ID,
+            "Speakers",
+            "No audio device named Speakers",
+            id="audio",
+        ),
+        pytest.param(
+            ENTITY_ID,
+            "Spotify",
+            "No media player named Spotify",
+            id="media",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_select_unknown_source(
+    hass: HomeAssistant, entity_id: str, source: str, message: str
+) -> None:
+    """Test picking a source that isn't reported raises."""
+    with pytest.raises(ServiceValidationError, match=message):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: DEFAULT_OUTPUT_ENTITY_ID, ATTR_INPUT_SOURCE: "Speakers"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
             blocking=True,
         )
 
