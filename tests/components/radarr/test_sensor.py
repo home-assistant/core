@@ -96,7 +96,7 @@ async def test_windows(
             "rootfolder-duplicate-names",
             {
                 "movies": ("Movies", "263.10"),
-                "media_kids_movies": ("media_Kids_Movies", "93.13"),
+                "movies_2": ("Movies_2", "93.13"),
             },
             id="linux_duplicate_names",
         ),
@@ -104,7 +104,7 @@ async def test_windows(
             "rootfolder-duplicate-names-windows",
             {
                 "movies": ("Movies", "263.10"),
-                "e_kids_movies": ("E:_Kids_Movies", "93.13"),
+                "movies_2": ("Movies_2", "93.13"),
             },
             id="windows_duplicate_names",
         ),
@@ -115,6 +115,24 @@ async def test_windows(
                 "movies": ("Movies", "263.10"),
             },
             id="overlapping_names",
+        ),
+        pytest.param(
+            "rootfolder-similar-paths",
+            {
+                "movies": ("Movies", "263.10"),
+                "movies_2": ("Movies_2", "93.13"),
+                "movies_3": ("Movies_3", "46.57"),
+            },
+            id="similar_paths",
+        ),
+        pytest.param(
+            "rootfolder-suffix-taken",
+            {
+                "movies_2": ("Movies_2", "46.57"),
+                "movies": ("Movies", "263.10"),
+                "movies_2_2": ("Movies_2_2", "93.13"),
+            },
+            id="suffix_already_taken",
         ),
     ],
 )

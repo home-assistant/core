@@ -3,7 +3,6 @@
 from collections.abc import Callable
 import dataclasses
 from datetime import UTC, datetime
-import re
 from typing import Any, Generic, override
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
@@ -37,9 +36,9 @@ def get_folder_names(mounts: list[RootFolder]) -> list[str]:
     names: list[str] = []
     for mount in mounts:
         name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
-        if name in names:
-            # Only repeated names use the full path, so existing unique IDs don't change
-            name = "_".join(part for part in re.split(r"[/\\]", mount.path) if part)
+        # Only repeated names get the root folder ID, so existing unique IDs don't change
+        while name in names:
+            name = f"{name}_{mount.id}"
         names.append(name)
     return names
 
