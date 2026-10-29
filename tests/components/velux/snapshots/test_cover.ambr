@@ -9,8 +9,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -55,8 +53,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -77,8 +73,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -122,8 +116,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -144,8 +136,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -189,8 +179,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -211,8 +199,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -256,8 +242,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -278,8 +262,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -323,8 +305,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -345,8 +325,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -390,8 +368,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -412,8 +388,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -457,8 +431,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -479,8 +451,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -524,8 +494,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,
@@ -546,8 +514,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -591,8 +557,6 @@
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
-        'silent',
-        'default',
       ]),
     }),
     'context': <ANY>,

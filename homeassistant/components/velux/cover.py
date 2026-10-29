@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverSpeed,
 )
@@ -35,15 +36,15 @@ from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
-# Remove in 2027.6.0 together with their repair issues
-_DEPRECATED_SPEED_DEFAULT = "default"
-_DEPRECATED_SPEED_SILENT = "silent"
-
-_SPEED_TO_VELOCITY: dict[str, Velocity | None] = {
+_SPEED_TO_VELOCITY: dict[str, Velocity] = {
     CoverSpeed.SLOW: Velocity.SILENT,
     CoverSpeed.FAST: Velocity.FAST,
-    _DEPRECATED_SPEED_SILENT: Velocity.SILENT,
-    _DEPRECATED_SPEED_DEFAULT: None,
+}
+
+# Remove in 2027.6.0 together with their repair issues
+_DEPRECATED_SPEED_TO_VELOCITY: dict[str, Velocity | None] = {
+    "silent": Velocity.SILENT,
+    "default": None,
 }
 
 
@@ -96,7 +97,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SPEED
     )
-    _attr_supported_speeds = list(_SPEED_TO_VELOCITY)
+    # Remove the deprecated speeds in 2027.6.0, they are only listed so the
+    # cover entity passes them on instead of dropping them.
+    _attr_supported_speeds = [*_SPEED_TO_VELOCITY, *_DEPRECATED_SPEED_TO_VELOCITY]
 
     def __init__(
         self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
@@ -115,11 +118,20 @@ class VeluxCover(VeluxEntity, CoverEntity):
             case RollerShutter():
                 self._attr_device_class = CoverDeviceClass.SHUTTER
 
+    # Remove in 2027.6.0 when the deprecated speeds are removed
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes without the deprecated speeds."""
+        return {
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY)
+        }
+
     def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
         """Return pyvlx Velocity for the given speed string, or None for default."""
         if speed is None:
             return None
-        if speed in (_DEPRECATED_SPEED_DEFAULT, _DEPRECATED_SPEED_SILENT):
+        if speed in _DEPRECATED_SPEED_TO_VELOCITY:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -130,6 +142,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
                 translation_key=f"deprecated_speed_{speed}",
                 translation_placeholders={"entity_id": self.entity_id},
             )
+            return _DEPRECATED_SPEED_TO_VELOCITY[speed]
         # The cover entity validated the speed against _attr_supported_speeds.
         return _SPEED_TO_VELOCITY[speed]
 

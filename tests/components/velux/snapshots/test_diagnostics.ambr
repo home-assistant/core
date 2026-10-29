@@ -35,8 +35,6 @@
                 'supported_speeds': list([
                   'slow',
                   'fast',
-                  'silent',
-                  'default',
                 ]),
               }),
               'entity_id': 'cover.test_window',
