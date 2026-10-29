@@ -2546,24 +2546,52 @@ async def test_stt_vad_enabled_based_on_audio_processing(
 
 
 @pytest.mark.parametrize(
-    ("is_vad_enabled", "speech_result", "expected_events"),
+    (
+        "is_vad_enabled",
+        "chunks_to_read",
+        "speech_result",
+        "expected_events",
+        "expected_vad_end_data",
+    ),
     [
         pytest.param(
             True,
+            1,
             stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS),
             [PipelineEventType.STT_VAD_END, PipelineEventType.STT_END],
+            [{"timestamp": 0}],
             id="vad_enabled",
         ),
         pytest.param(
+            True,
+            3,
+            stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS),
+            [PipelineEventType.STT_VAD_END, PipelineEventType.STT_END],
+            [{"timestamp": 20}],
+            id="vad_enabled_multiple_chunks",
+        ),
+        pytest.param(
+            True,
+            0,
+            stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS),
+            [PipelineEventType.STT_VAD_END, PipelineEventType.STT_END],
+            [{"timestamp": 0}],
+            id="vad_enabled_no_chunks",
+        ),
+        pytest.param(
             False,
+            3,
             stt.SpeechResult("test_result", stt.SpeechResultState.SUCCESS),
             [PipelineEventType.STT_END],
+            [],
             id="vad_disabled",
         ),
         pytest.param(
             True,
+            3,
             stt.SpeechResult(None, stt.SpeechResultState.ERROR),
             [PipelineEventType.STT_VAD_END, PipelineEventType.ERROR],
+            [{"timestamp": 20}],
             id="provider_error",
         ),
     ],
@@ -2575,8 +2603,10 @@ async def test_stt_vad_events_for_provider_endpointing(
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     mock_chat_session: chat_session.ChatSession,
     is_vad_enabled: bool,
+    chunks_to_read: int,
     speech_result: stt.SpeechResult,
     expected_events: list[PipelineEventType],
+    expected_vad_end_data: list[dict[str, int]],
 ) -> None:
     """Test VAD end is sent when the provider ends the voice command."""
 
@@ -2585,11 +2615,12 @@ async def test_stt_vad_events_for_provider_endpointing(
         while True:
             yield make_10ms_chunk(b"speech!!")
 
-    async def process_one_chunk(
+    async def process_chunks(
         metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:
-        async for _chunk in stream:
-            break
+        stream_iter = aiter(stream)
+        for _ in range(chunks_to_read):
+            await anext(stream_iter)
         return speech_result
 
     pipeline_store = pipeline_data.pipeline_store
@@ -2620,9 +2651,7 @@ async def test_stt_vad_events_for_provider_endpointing(
                 prefers_noise_reduction_enabled=False,
             ),
         ) as mock_get_audio_processing,
-        patch.object(
-            mock_stt_provider, "async_process_audio_stream", process_one_chunk
-        ),
+        patch.object(mock_stt_provider, "async_process_audio_stream", process_chunks),
     ):
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             session=mock_chat_session,
@@ -2656,6 +2685,9 @@ async def test_stt_vad_events_for_provider_endpointing(
             PipelineEventType.ERROR,
         )
     ] == expected_events
+    assert [
+        event.data for event in events if event.type == PipelineEventType.STT_VAD_END
+    ] == expected_vad_end_data
 
 
 async def test_invalid_pipeline_does_not_create_tts_stream(
