@@ -755,6 +755,41 @@ async def test_bluetooth_discovery_errors(
     }
 
 
+async def test_bluetooth_discovery_accept_policy_machine_not_found(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test discovery aborts when the machine is missing after accepting the policy."""
+    service_info = get_bluetooth_service_info(
+        ModelName.GS3_MP, mock_lamarzocco.serial_number
+    )
+    things = deepcopy(mock_cloud_client.list_things.return_value)
+    things[0].serial_number = "GS98765"
+    mock_cloud_client.list_things.side_effect = [PolicyAcceptanceRequired(""), things]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=service_info,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "accept_policy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "machine_not_found"
+
+
 async def test_dhcp_discovery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
