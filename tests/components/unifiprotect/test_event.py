@@ -2848,14 +2848,22 @@ async def test_sensor_event_entities(
         assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
 
 
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        pytest.param({SensorFeatureCapability.OPEN}, id="no_smoke"),
+        pytest.param(set(), id="no_flags"),
+    ],
+)
 async def test_sensor_event_entities_need_smoke_capability(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     ufp: MockUFPFixture,
     sensor: Sensor,
+    capabilities: set[SensorFeatureCapability],
 ) -> None:
     """A sensor without the smoke capability gets no sensor event entities."""
-    setup_public_sensor(ufp, capabilities={SensorFeatureCapability.OPEN})
+    setup_public_sensor(ufp, capabilities=capabilities)
     await init_entry(hass, ufp, [sensor])
 
     assert not registered_keys(entity_registry, Platform.EVENT, sensor.mac)
@@ -2866,6 +2874,7 @@ async def test_sensor_event_entities_need_smoke_capability(
     [
         pytest.param(_SMOKE, _SENSOR_EVENT_KEYS, id="smoke"),
         pytest.param({SensorFeatureCapability.OPEN}, set(), id="no_smoke"),
+        pytest.param(set(), set(), id="no_flags"),
     ],
 )
 async def test_sensor_adopted_before_public_mirror(
@@ -2877,7 +2886,7 @@ async def test_sensor_adopted_before_public_mirror(
     capabilities: set[SensorFeatureCapability],
     expected: set[str],
 ) -> None:
-    """A sensor adopted before its public object waits for its feature flags.
+    """A sensor adopted before its public object stays unavailable until it arrives.
 
     Entities the flags rule out are removed on the next setup.
     """
@@ -2948,7 +2957,11 @@ async def test_sensor_adopted_after_public_mirror(
             EventType.SENSOR_ALARM, SensorAlarmType.CO, "alarm", "co", id="co"
         ),
         pytest.param(
-            EventType.SENSOR_SMOKE_TEST, None, "maintenance", "test", id="test"
+            EventType.SENSOR_SMOKE_TEST,
+            None,
+            "maintenance",
+            "self_test",
+            id="self_test",
         ),
         pytest.param(
             EventType.SENSOR_SMOKE_BATTERY_LOW,
@@ -3135,42 +3148,11 @@ async def test_sensor_alarm_first_seen_ended(
     assert state.attributes["event_type"] == "smoke"
 
 
-async def test_sensor_event_entities_keep_types_without_flags(
-    hass: HomeAssistant,
-    entity_registry: EntityRegistry,
-    sensor: Sensor,
-    ufp_public_only: MockUFPFixture,
-    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
-    fixed_now: datetime,
-) -> None:
-    """A sensor that stops advertising smoke keeps its types and still fires."""
-    public = make_public_sensor(sensor, capabilities=_SMOKE)
-    ufp_public_only.api.public_bootstrap.sensors[sensor.id] = public
-    await setup_public_only()
-    entity_id = _sensor_event_entity_id(entity_registry, sensor, "alarm")
-
-    public.supports.side_effect = lambda capability: False
-    ufp_public_only.devices_ws_subscription(public_device_ws_message(public))
-    ufp_public_only.events_msg(
-        _sensor_event(
-            sensor, EventType.SENSOR_ALARM, fixed_now, alarm_type=SensorAlarmType.SMOKE
-        ),
-        EventChange.STARTED,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.attributes["event_types"] == ["smoke", "co"]
-    assert state.attributes["event_type"] == "smoke"
-
-
 @pytest.mark.parametrize(
-    ("capabilities", "expected"),
+    "capabilities",
     [
-        pytest.param({SensorFeatureCapability.OPEN}, set(), id="ruled_out"),
-        pytest.param(set(), _SENSOR_EVENT_KEYS, id="flags_pending"),
+        pytest.param({SensorFeatureCapability.OPEN}, id="no_smoke"),
+        pytest.param(set(), id="no_flags"),
     ],
 )
 async def test_unsupported_sensor_event_entities_removed(
@@ -3179,9 +3161,8 @@ async def test_unsupported_sensor_event_entities_removed(
     ufp: MockUFPFixture,
     sensor: Sensor,
     capabilities: set[SensorFeatureCapability],
-    expected: set[str],
 ) -> None:
-    """Setup removes event entities the flags rule out, not while flags are pending."""
+    """Setup removes event entities of sensors without the smoke capability."""
     for key in _SENSOR_EVENT_KEYS:
         entity_registry.async_get_or_create(
             Platform.EVENT, DOMAIN, f"{sensor.mac}_{key}", config_entry=ufp.entry
@@ -3189,62 +3170,7 @@ async def test_unsupported_sensor_event_entities_removed(
     setup_public_sensor(ufp, capabilities=capabilities)
     await init_entry(hass, ufp, [sensor], regenerate_ids=False)
 
-    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == expected
-
-
-@pytest.mark.parametrize(
-    ("key", "attr", "supported", "event_types", "ignored"),
-    [
-        pytest.param(
-            "alarm",
-            "supported_alarm_types",
-            frozenset({SensorAlarmType.SMOKE}),
-            ["smoke"],
-            (EventType.SENSOR_ALARM, SensorAlarmType.CO),
-            id="alarm",
-        ),
-        pytest.param(
-            "maintenance",
-            "supported_event_types",
-            frozenset({EventType.SENSOR_ALARM, EventType.SENSOR_SMOKE_TEST}),
-            ["test"],
-            (EventType.SENSOR_CO_FAULT, None),
-            id="maintenance",
-        ),
-    ],
-)
-async def test_sensor_event_entities_follow_supported_types(
-    hass: HomeAssistant,
-    entity_registry: EntityRegistry,
-    sensor: Sensor,
-    ufp_public_only: MockUFPFixture,
-    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
-    fixed_now: datetime,
-    key: str,
-    attr: str,
-    supported: frozenset[Any],
-    event_types: list[str],
-    ignored: tuple[EventType, SensorAlarmType | None],
-) -> None:
-    """The entities offer only the types uiprotect derives from the feature flags."""
-    public = make_public_sensor(sensor, capabilities=_SMOKE)
-    ufp_public_only.api.public_bootstrap.sensors[sensor.id] = public
-    await setup_public_only()
-    entity_id = _sensor_event_entity_id(entity_registry, sensor, key)
-
-    setattr(type(public), attr, supported)
-    ufp_public_only.devices_ws_subscription(public_device_ws_message(public))
-    event_type, alarm_type = ignored
-    ufp_public_only.events_msg(
-        _sensor_event(sensor, event_type, fixed_now, alarm_type=alarm_type),
-        EventChange.STARTED,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["event_types"] == event_types
-    assert state.attributes["event_type"] is None
+    assert not registered_keys(entity_registry, Platform.EVENT, sensor.mac)
 
 
 async def test_sensor_without_public_mirror_at_setup(

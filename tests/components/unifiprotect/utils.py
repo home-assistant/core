@@ -487,10 +487,6 @@ def make_public_sensor(
     """
     public = Mock(spec=PublicSensor)
     bind_public_device_properties(public, PublicSensor)
-    # Derived from ``supports`` below, so they follow the capability map.
-    mock_type = type(public)
-    mock_type.supported_alarm_types = PublicSensor.supported_alarm_types
-    mock_type.supported_event_types = PublicSensor.supported_event_types
     public.id = sensor.id
     public.mac = sensor.mac
     public.name = sensor.name

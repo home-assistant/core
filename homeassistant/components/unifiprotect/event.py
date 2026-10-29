@@ -28,7 +28,6 @@ from homeassistant.components.event import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
@@ -37,7 +36,6 @@ from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
     ATTR_SMART_DETECT_TYPES,
-    DOMAIN,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -55,6 +53,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEventMixin,
     _async_capability_supported,
+    async_remove_unsupported_sense_entities,
 )
 
 PARALLEL_UPDATES = 0
@@ -693,46 +692,12 @@ class ProtectSensorEventEntityDescription(ProtectPublicEventEntityDescription):
     """Describes a sensor event entity driven by the public events WS."""
 
     ufp_event_type_fn: Callable[[ProtectEvent], str | None]
-    # The event types the sensor's feature flags imply, per uiprotect.
-    ufp_supported_types_fn: Callable[[PublicSensor], list[str]]
 
 
 class ProtectSensorEventEntity(ProtectDevicePublicEventEntity):
-    """A sensor event entity that fires the mapped type of each public event.
-
-    The event types follow the sensor's feature flags; an empty set keeps the
-    previous types (setup removes entities the flags rule out).
-    """
+    """A sensor event entity that fires the mapped type of each public event."""
 
     entity_description: ProtectSensorEventEntityDescription
-    _state_attrs = ("_attr_available", "_attr_event_types")
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: ProtectDeviceType,
-        description: ProtectSensorEventEntityDescription,
-    ) -> None:
-        """Initialize the entity with the event types the sensor supports."""
-        super().__init__(data, device, description)
-        self._attr_event_types = self._async_supported_types(
-            device
-            if isinstance(device, PublicSensor)
-            else data.async_get_public_device(device)
-        ) or list(description.event_types or ())
-
-    @callback
-    def _async_supported_types(self, public: PublicDeviceModel | None) -> list[str]:
-        if not isinstance(public, PublicSensor):
-            return []
-        return self.entity_description.ufp_supported_types_fn(public)
-
-    @callback
-    @override
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        super()._async_update_device_from_protect(device)
-        if supported := self._async_supported_types(self._ufp_public_obj):
-            self._attr_event_types = supported
 
     @override
     def _async_public_event_subscriptions(
@@ -745,9 +710,7 @@ class ProtectSensorEventEntity(ProtectDevicePublicEventEntity):
 
     @callback
     def _async_sensor_event(self, event: ProtectEvent) -> None:
-        if (
-            event_type := self.entity_description.ufp_event_type_fn(event)
-        ) is None or event_type not in self.event_types:
+        if (event_type := self.entity_description.ufp_event_type_fn(event)) is None:
             return
         self._fire_once(event, event_type, {ATTR_EVENT_ID: event.id})
 
@@ -765,17 +728,8 @@ def _sensor_alarm_event_type(event: ProtectEvent) -> str | None:
     return _SENSOR_ALARM_EVENT_TYPES.get(alarm_type)
 
 
-def _supported_alarm_types(sensor: PublicSensor) -> list[str]:
-    supported = sensor.supported_alarm_types
-    return [
-        event_type
-        for alarm_type, event_type in _SENSOR_ALARM_EVENT_TYPES.items()
-        if alarm_type in supported
-    ]
-
-
 _MAINTENANCE_EVENT_TYPES: dict[EventType, str] = {
-    EventType.SENSOR_SMOKE_TEST: "test",
+    EventType.SENSOR_SMOKE_TEST: "self_test",
     EventType.SENSOR_SMOKE_BATTERY_LOW: "battery_low",
     EventType.SENSOR_SMOKE_NEEDS_CLEANING: "needs_cleaning",
     EventType.SENSOR_SMOKE_FAULT: "smoke_fault",
@@ -789,32 +743,23 @@ def _maintenance_event_type(event: ProtectEvent) -> str:
     return _MAINTENANCE_EVENT_TYPES[event.type]
 
 
-def _supported_maintenance_types(sensor: PublicSensor) -> list[str]:
-    supported = sensor.supported_event_types
-    return [
-        event_type
-        for protect_type, event_type in _MAINTENANCE_EVENT_TYPES.items()
-        if protect_type in supported
-    ]
-
-
 SENSOR_EVENT_DESCRIPTIONS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="alarm",
         translation_key="alarm",
         event_types=list(_SENSOR_ALARM_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
         ufp_public_event_types=(EventType.SENSOR_ALARM,),
         ufp_event_type_fn=_sensor_alarm_event_type,
-        ufp_supported_types_fn=_supported_alarm_types,
         entity_class=ProtectSensorEventEntity,
     ),
     ProtectSensorEventEntityDescription(
         key="maintenance",
         translation_key="maintenance",
         event_types=list(_MAINTENANCE_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
         ufp_public_event_types=tuple(_MAINTENANCE_EVENT_TYPES),
         ufp_event_type_fn=_maintenance_event_type,
-        ufp_supported_types_fn=_supported_maintenance_types,
         entity_class=ProtectSensorEventEntity,
     ),
 )
@@ -925,38 +870,12 @@ def _async_sensor_event_entities(
     data: ProtectData, device: ProtectDeviceType, public: PublicDeviceModel | None
 ) -> list[ProtectDeviceEntity]:
     # A sensor not yet mirrored publicly has no feature flags to check; it is
-    # built and stays unavailable until they arrive.
+    # built and stays unavailable until its public object arrives.
     return [
         description.entity_class(data, device, description)
         for description in SENSOR_EVENT_DESCRIPTIONS
-        if not isinstance(public, PublicSensor)
-        or description.ufp_supported_types_fn(public)
+        if _async_capability_supported(public, None, description)
     ]
-
-
-@callback
-def _async_remove_unsupported_sensor_events(
-    hass: HomeAssistant, data: ProtectData
-) -> None:
-    """Remove the event entities of sensors whose feature flags rule them out.
-
-    A sensor reporting no flags at all is skipped: they may still be pending,
-    and removing would drop a renamed entity.
-    """
-    entity_registry = er.async_get(hass)
-    for public, private in data.get_public_devices(ModelType.SENSOR):
-        if not isinstance(public, PublicSensor) or not any(
-            public.supports(capability) for capability in SensorFeatureCapability
-        ):
-            continue
-        mac = private.mac if private is not None else public.mac
-        for description in SENSOR_EVENT_DESCRIPTIONS:
-            if not description.ufp_supported_types_fn(public) and (
-                entity_id := entity_registry.async_get_entity_id(
-                    Platform.EVENT, DOMAIN, f"{mac}_{description.key}"
-                )
-            ):
-                entity_registry.async_remove(entity_id)
 
 
 async def async_setup_entry(
@@ -980,7 +899,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
     )
 
-    _async_remove_unsupported_sensor_events(hass, data)
+    async_remove_unsupported_sense_entities(
+        hass, Platform.EVENT, data, SENSOR_EVENT_DESCRIPTIONS
+    )
 
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.

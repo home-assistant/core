@@ -386,8 +386,8 @@
               "co_fault": "Carbon monoxide sensor fault",
               "end_of_life": "End of life",
               "needs_cleaning": "Needs cleaning",
-              "smoke_fault": "Smoke sensor fault",
-              "test": "Self-test"
+              "self_test": "Self-test",
+              "smoke_fault": "Smoke sensor fault"
             }
           }
         }
