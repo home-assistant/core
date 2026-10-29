@@ -746,6 +746,9 @@
       "music_sync": {
         "name": "Music sync"
       },
+      "night_vision": {
+        "name": "Night vision"
+      },
       "one_touch_locking": {
         "name": "One-touch locking"
       },

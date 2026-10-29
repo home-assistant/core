@@ -176,6 +176,13 @@
           "off": "mdi:music-off"
         }
       },
+      "night_vision": {
+        "default": "mdi:weather-night",
+        "state": {
+          "off": "mdi:weather-sunny",
+          "on": "mdi:weather-night"
+        }
+      },
       "one_touch_locking": {
         "default": "mdi:gesture-tap-button"
       },
