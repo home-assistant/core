@@ -25,6 +25,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
@@ -550,14 +551,33 @@ async def test_setup_takes_the_type_once_the_masks_answer(
     assert len(hass.states.async_all()) == 38
 
 
+@pytest.mark.parametrize(
+    ("platform", "key", "interval", "state"),
+    [
+        pytest.param(
+            SENSOR_DOMAIN, "grid_frequency", SCAN_INTERVAL, "50.0", id="reading"
+        ),
+        pytest.param(
+            BUTTON_DOMAIN,
+            "rtc_sync",
+            SETTINGS_SCAN_INTERVAL,
+            STATE_UNKNOWN,
+            id="button",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_setup_while_asleep_polls_stored_readings_once_awake(
+async def test_setup_while_asleep_fills_in_a_mask_typed_inverter(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
     entity_registry: er.EntityRegistry,
+    platform: str,
+    key: str,
+    interval: int,
+    state: str,
 ) -> None:
-    """Test a silent restart polls readings the type does not predict."""
+    """Test a silent restart fills in what only the masks' type allows."""
     entry = _unrecognized_entry(mock_connection)
     unit = mock_connection.for_unit(1)
     declare_pv_in_masks(unit)
@@ -570,15 +590,15 @@ async def test_setup_while_asleep_polls_stored_readings_once_awake(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     unit.fail_requests(None)
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    freezer.tick(timedelta(seconds=interval))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_grid_frequency"
+        platform, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_{key}"
     )
     assert entity_id is not None
-    assert hass.states.get(entity_id).state == "50.0"
+    assert hass.states.get(entity_id).state == state
 
 
 @pytest.mark.usefixtures("mock_get_unit")
