@@ -117,8 +117,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
-            except (RequestNotSuccessful, TimeoutError) as exc:
-                _LOGGER.error("Error connecting to server: %s", exc)
+            except RequestNotSuccessful, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
                 if (error := self._store_machines(things)) is None:
@@ -217,8 +216,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             except PolicyAcceptanceRequired:
                 _LOGGER.debug("Server still requires accepting the privacy policy")
                 errors["base"] = "policy_not_accepted"
-            except (RequestNotSuccessful, TimeoutError) as exc:
-                _LOGGER.error("Error connecting to server: %s", exc)
+            except RequestNotSuccessful, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
                 if (error := self._store_machines(things)) is not None:
