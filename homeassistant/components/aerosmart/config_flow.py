@@ -173,26 +173,31 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                             entry.entry_id
                         )
 
-                if not await self._async_can_connect(user_input):
-                    errors["base"] = "cannot_connect"
+                try:
+                    if not await self._async_can_connect(user_input):
+                        errors["base"] = "cannot_connect"
+                    else:
+                        # Another flow can create a matching entry while this one
+                        # awaits the connection probe above.
+                        self._async_abort_entries_match(
+                            {
+                                key: value
+                                for key, value in user_input.items()
+                                if key != CONF_BAUDRATE
+                            }
+                        )
+                        if self.source == SOURCE_RECONFIGURE:
+                            assert entry is not None
+                            relinking = False
+                            return self.async_update_reload_and_abort(
+                                entry, data=user_input
+                            )
+                        return self.async_create_entry(
+                            title="aerosmart", data=user_input
+                        )
+                finally:
                     if relinking and entry is not None:
                         await self.hass.config_entries.async_setup(entry.entry_id)
-                else:
-                    # Another flow can create a matching entry while this one
-                    # awaits the connection probe above.
-                    self._async_abort_entries_match(
-                        {
-                            key: value
-                            for key, value in user_input.items()
-                            if key != CONF_BAUDRATE
-                        }
-                    )
-                    if self.source == SOURCE_RECONFIGURE:
-                        assert entry is not None
-                        return self.async_update_reload_and_abort(
-                            entry, data=user_input
-                        )
-                    return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(
             step_id=step_id,
