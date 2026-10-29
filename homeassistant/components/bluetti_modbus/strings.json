@@ -2,7 +2,12 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unique_id_mismatch": "The power station at this address has a different serial number than expected. Make sure you enter the address for the correct power station."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_serial": "[%key:component::bluetti_modbus::config::error::invalid_serial%]",
+      "link_settings_in_use": "[%key:component::bluetti_modbus::config::error::link_settings_in_use%]",
+      "unique_id_mismatch": "The power station at this address has a different serial number than expected. Make sure you enter the address for the correct power station.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "[%key:component::bluetti_modbus::config::error::unsupported_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +16,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_device": "The device at this address does not report itself as a BLUETTI Balco 260, the only supported model."
     },
+    "flow_title": "{name} ({host})",
     "step": {
       "reconfigure": {
         "data": {
@@ -37,6 +43,9 @@
           "unit_id": "The Modbus device ID of the power station. The BLUETTI default is 1."
         },
         "description": "Connect to your BLUETTI power station over Modbus to monitor it locally."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the {name} found at {host}?"
       }
     }
   },

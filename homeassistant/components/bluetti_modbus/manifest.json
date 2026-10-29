@@ -10,5 +10,6 @@
   "iot_class": "local_polling",
   "loggers": ["bluetti_modbus_lib", "modbus_connection", "tmodbus"],
   "quality_scale": "bronze",
-  "requirements": ["bluetti-modbus==0.52.0"]
+  "requirements": ["bluetti-modbus==0.52.0"],
+  "zeroconf": [{ "name": "bluetti hems*", "type": "_http._tcp.local." }]
 }
