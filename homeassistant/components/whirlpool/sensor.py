@@ -8,12 +8,7 @@ from typing import override
 
 from whirlpool.appliance import Appliance
 from whirlpool.dryer import Dryer, MachineState as DryerMachineState
-from whirlpool.oven import (
-    Cavity as OvenCavity,
-    CavityState as OvenCavityState,
-    CookMode,
-    Oven,
-)
+from whirlpool.oven import Cavity as OvenCavity, CavityState as OvenCavityState, Oven
 from whirlpool.washer import MachineState as WasherMachineState, Washer
 
 from homeassistant.components.sensor import (
@@ -23,16 +18,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity, WhirlpoolOvenEntity
-from .util import deprecate_entity
 
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -102,17 +95,6 @@ OVEN_CAVITY_STATE = {
     OvenCavityState.Standby: "standby",
     OvenCavityState.Preheating: "preheating",
     OvenCavityState.Cooking: "cooking",
-}
-
-OVEN_COOK_MODE = {
-    CookMode.Standby: "standby",
-    CookMode.Bake: "bake",
-    CookMode.ConvectBake: "convection_bake",
-    CookMode.Broil: "broil",
-    CookMode.ConvectBroil: "convection_broil",
-    CookMode.ConvectRoast: "convection_roast",
-    CookMode.KeepWarm: "keep_warm",
-    CookMode.AirFry: "air_fry",
 }
 
 
@@ -230,17 +212,6 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
         ),
     ),
     WhirlpoolOvenCavitySensorEntityDescription(
-        key="oven_cook_mode",
-        translation_key="oven_cook_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=list(OVEN_COOK_MODE.values()),
-        value_fn=lambda oven, cavity: (
-            OVEN_COOK_MODE.get(cook_mode)
-            if (cook_mode := oven.get_cook_mode(cavity)) is not None
-            else None
-        ),
-    ),
-    WhirlpoolOvenCavitySensorEntityDescription(
         key="oven_current_temperature",
         translation_key="oven_current_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -248,43 +219,7 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda oven, cavity: oven.get_temp(cavity),
     ),
-    WhirlpoolOvenCavitySensorEntityDescription(
-        key="oven_target_temperature",
-        translation_key="oven_target_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda oven, cavity: oven.get_target_temp(cavity),
-    ),
 )
-
-# Sensors replaced by more capable entities (select and number respectively).
-DEPRECATED_OVEN_SENSOR_KEYS = ("oven_cook_mode", "oven_target_temperature")
-
-
-def _build_oven_cavity_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    oven: Oven,
-    cavity: OvenCavity,
-) -> list[SensorEntity]:
-    """Build the sensors for a single oven cavity, handling deprecations."""
-    suffix = WhirlpoolOvenEntity.cavity_suffix(oven, cavity)
-    sensors: list[SensorEntity] = []
-    for description in OVEN_CAVITY_SENSORS:
-        # The oven cook mode and target temperature sensors have been replaced
-        # by select and number entities respectively.
-        if description.key in DEPRECATED_OVEN_SENSOR_KEYS and not deprecate_entity(
-            hass,
-            entity_registry,
-            platform_domain=Platform.SENSOR,
-            entity_unique_id=f"{oven.said}-{description.key}{suffix}",
-            issue_id=f"deprecated_{description.key}_{oven.said}{suffix}",
-            translation_key=f"deprecated_{description.key}",
-        ):
-            continue
-        sensors.append(WhirlpoolOvenCavitySensor(oven, cavity, description))
-    return sensors
 
 
 async def async_setup_entry(
@@ -319,13 +254,12 @@ async def async_setup_entry(
         for description in WASHER_DRYER_TIME_SENSORS
     ]
 
-    entity_registry = er.async_get(hass)
     oven_cavity_sensors = [
-        sensor
+        WhirlpoolOvenCavitySensor(oven, cavity, description)
         for oven in appliances_manager.ovens
         for cavity in (OvenCavity.Upper, OvenCavity.Lower)
         if oven.get_oven_cavity_exists(cavity)
-        for sensor in _build_oven_cavity_sensors(hass, entity_registry, oven, cavity)
+        for description in OVEN_CAVITY_SENSORS
     ]
 
     async_add_entities(
