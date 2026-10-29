@@ -4,14 +4,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, load_json_object_fixture
 
 from homeassistant.components import sensor
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, load_json_object_fixture
 
 BUS_REPLY = load_json_object_fixture("bus_reply.json", "yandex_transport")
 SUBURBAN_TRAIN_REPLY = load_json_object_fixture(

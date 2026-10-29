@@ -1,12 +1,22 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_device": "The device at this address is not the one that was originally configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::watergate::config::step::user::data_description::ip_address%]"
+        },
+        "title": "Reconfigure Watergate device"
+      },
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
@@ -19,6 +29,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "water_flowing": {
+        "name": "Water flowing"
+      },
+      "wifi_connected": {
+        "name": "Wi-Fi connected"
+      }
+    },
     "event": {
       "auto_shut_off_duration": {
         "name": "Duration auto shut-off",
@@ -80,6 +101,12 @@
       },
       "water_meter_duration": {
         "name": "Water meter duration"
+      },
+      "water_meter_negative_duration": {
+        "name": "Water meter negative duration"
+      },
+      "water_meter_negative_volume": {
+        "name": "Water meter negative volume"
       },
       "water_meter_volume": {
         "name": "Water meter volume"

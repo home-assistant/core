@@ -6,11 +6,15 @@
         'hub': dict({
           'attributeValues': dict({
             'fanc': '1',
+            'ledc': '0',
             'roomc': '3',
             'roomnamec': 'Genie',
             'speedc': '2',
+            'squaremeterc': '60',
           }),
           'attributes': dict({
+            'ledc': True,
+            'squaremeterc': True,
           }),
           'firmwareInfo': dict({
             'currentFirmware': '4.0',

@@ -12,6 +12,9 @@ ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
+# Dispatcher signal for button events, formatted with (entry_id, button device id)
+SIGNAL_BUTTON_EVENT = "lutron_caseta_button_event_{}_{}"
+
 BRIDGE_DEVICE_ID = "1"
 
 DEVICE_TYPE_WHITE_TUNE = "WhiteTune"
@@ -42,7 +45,7 @@ BUTTON_STATUS_LONG_HOLD = "LongHold"
 # native LongHold events over LEAP. Used to gate the long_press device
 # trigger so it only appears in the automation UI for supported hardware.
 # Caseta and RadioRA3 processors do not emit LongHold.
-BRIDGE_DEVICE_TYPES_WITH_LONG_HOLD = frozenset({"HWQSProcessor"})
+BRIDGE_DEVICE_TYPES_WITH_LONG_HOLD = frozenset({"HWQSProcessor", "AthenaProcessor"})
 
 CONF_SUBTYPE = "subtype"
 

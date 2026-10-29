@@ -9,6 +9,7 @@ from pysmartyplants import (
     SmartyPlantsForbiddenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,11 +18,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import ACCOUNT_ID, API_KEY
-
-from tests.common import MockConfigEntry
+from .conftest import ACCOUNT_ID, API_KEY, WEBHOOK_ID, WEBHOOK_SECRET
 
 USER_INPUT = {CONF_API_KEY: API_KEY}
+NEW_API_KEY = "sp_rotated_key_87654321"
 
 
 @pytest.fixture
@@ -151,3 +151,84 @@ async def test_no_external_url_skips_webhook_step(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == ACCOUNT_ID
     assert CONF_WEBHOOK_SECRET not in result["data"]
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Test reauthentication stores the new key and keeps the rest."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: NEW_API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+        CONF_WEBHOOK_SECRET: WEBHOOK_SECRET,
+    }
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(SmartyPlantsAuthError("boom"), "invalid_auth", id="auth"),
+        pytest.param(
+            SmartyPlantsConnectionError("boom"), "cannot_connect", id="connection"
+        ),
+        pytest.param(SmartyPlantsForbiddenError("boom"), "forbidden", id="forbidden"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smartyplants_client: AsyncMock,
+    error: SmartyPlantsError,
+    expected: str,
+) -> None:
+    """Test a failed reauth check is reported and the flow can still finish."""
+    mock_config_entry.add_to_hass(hass)
+    mock_smartyplants_client.async_verify.side_effect = error
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
+
+    mock_smartyplants_client.async_verify.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_other_account_aborts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smartyplants_client: AsyncMock,
+) -> None:
+    """Test a key for a different account is refused and the old key kept."""
+    mock_config_entry.add_to_hass(hass)
+    mock_smartyplants_client.async_verify.return_value = "acct-other"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_API_KEY] == API_KEY

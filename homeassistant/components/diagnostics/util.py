@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import (
     ChildDeviceInfo,
     DeviceInfo,
 )
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import RegistryEntry, _serialize_aliases
 
 from .const import REDACTED
 
@@ -57,8 +57,8 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
 
 
 # DeviceEntry attributes that are internal bookkeeping and must not be exposed in
-# diagnostics. Underscore attributes (_cache, _suggested_area, and the transient
-# _pending_move / _composite_subentries) are excluded separately by _device_entry_filter.
+# diagnostics. Underscore attributes (_cache and the transient _pending_move /
+# _composite_subentries) are excluded separately by _device_entry_filter.
 # The composite-device migration attributes below can be removed in HA Core 2027.8.
 _INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
     "composite_device_id",
@@ -98,4 +98,6 @@ def entity_entry_as_dict(entry: RegistryEntry) -> dict[str, Any]:
 
     This excludes internal fields that should not be exposed in diagnostics.
     """
-    return attr.asdict(entry, filter=_entity_entry_filter)
+    data = attr.asdict(entry, filter=_entity_entry_filter)
+    data["aliases"] = _serialize_aliases(entry.aliases)
+    return data

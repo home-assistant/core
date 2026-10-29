@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import update_polled_entities
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

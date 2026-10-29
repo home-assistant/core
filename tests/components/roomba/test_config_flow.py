@@ -6,6 +6,7 @@ from ssl import SSLContext
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaClient, RoombaConnectionError, RoombaInfo, RoombaPassword
 
 from homeassistant.components.roomba import config_flow
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_IP = "1.2.3.4"
 VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"}
@@ -191,7 +190,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -314,7 +313,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -480,7 +479,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -551,7 +550,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -623,7 +622,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -644,7 +643,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result5 = await hass.config_entries.flow.async_configure(
@@ -695,7 +694,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -771,7 +770,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -839,7 +838,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1063,3 +1062,67 @@ async def test_dhcp_discovery_when_user_flow_in_progress(hass: HomeAssistant) ->
 
     current_flows = hass.config_entries.flow.async_progress()
     assert len(current_flows) == 2
+
+
+async def test_form_user_missing_name_falls_back_to_default_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test pairing succeeds with default name when telemetry omits name."""
+    mocked_roomba = _create_mocked_roomba(
+        connected=True,
+        master_state={"state": {"reported": {"netinfo": {"dhcp": True}}}},
+    )
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_no_devices_found_discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaPassword",
+        _mocked_failed_getpassword,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.roomba.RoombaClient",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=None,
+        ) as mock_setup_entry,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {CONF_PASSWORD: "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Roomba"
+    assert result4["result"].unique_id == "BLID"
+    assert result4["data"] == {
+        CONF_BLID: "BLID",
+        CONF_HOST: MOCK_IP,
+        CONF_PASSWORD: "password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

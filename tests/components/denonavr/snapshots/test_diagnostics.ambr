@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry_data': dict({
+      'manufacturer': 'Denon',
+      'model': 'model5',
+      'type': 'avr-x',
+    }),
+    'entry_options': dict({
+      'use_telnet': True,
+      'zone2': False,
+    }),
+    'receiver': dict({
+      'manufacturer': 'Denon',
+      'model_name': 'model5',
+      'receiver_port': 8080,
+      'receiver_type': 'avr-x',
+      'telnet_available': True,
+      'telnet_connected': True,
+      'telnet_healthy': True,
+    }),
+    'zones': dict({
+      'Main': dict({
+        'dynamic_eq': True,
+        'input_func': 'CD',
+        'input_func_list': list([
+          'CD',
+          'TV Audio',
+          'Spotify',
+        ]),
+        'muted': False,
+        'netaudio_func_list': list([
+          'Spotify',
+        ]),
+        'playing_func_list': list([
+          'Spotify',
+        ]),
+        'power': 'ON',
+        'sound_mode': 'STEREO',
+        'sound_mode_list': list([
+          'MUSIC',
+          'MOVIE',
+          'STEREO',
+        ]),
+        'sound_mode_raw': 'Stereo',
+        'state': 'on',
+        'support_sound_mode': True,
+        'support_tone_control': True,
+        'volume': -35.5,
+      }),
+    }),
+  })
+# ---

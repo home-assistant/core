@@ -5,14 +5,17 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ouman_eh_800.const import DEFAULT_SCAN_INTERVAL_SECONDS
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("init_integration", [Platform.BINARY_SENSOR], indirect=True)
@@ -35,7 +38,9 @@ async def test_summer_function_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the summer function state follows the device on the next poll."""
-    entity_id = "binary_sensor.heating_circuit_1_patterilammitys_summer_function"
+    entity_id = (
+        "binary_sensor.ouman_eh_800_heating_circuit_1_patterilammitys_summer_function"
+    )
     assert hass.states.get(entity_id).state == STATE_OFF
 
     mock_ouman_client.get_is_l1_summer_function_active.return_value = True

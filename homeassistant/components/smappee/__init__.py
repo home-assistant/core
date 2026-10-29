@@ -3,6 +3,7 @@
 
 import probatio
 from pysmappee import Smappee, helper, mqtt
+from pysmappee.api import SmappeeLocalApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -89,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmappeeConfigEntry) -> N
             )
         else:
             # legacy devices through local api
-            smappee_api = api.api.SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
+            smappee_api = SmappeeLocalApi(ip=entry.data[CONF_IP_ADDRESS])
             smappee = Smappee(
                 api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER]
             )
@@ -101,7 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmappeeConfigEntry) -> N
             )
         )
 
-        smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
+        session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+        # Token request errors map to ConfigEntryAuthFailed/ConfigEntryNotReady
+        await session.async_ensure_token_valid()
+
+        smappee_api = api.ConfigEntrySmappeeApi(hass, entry, session)
 
         smappee = Smappee(api=smappee_api)
         await hass.async_add_executor_job(smappee.load_service_locations)

@@ -5,6 +5,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "pubsub_api_error": "[%key:component::nest::config::error::pubsub_api_error%]",
@@ -78,7 +79,7 @@
         "title": "Configure Cloud Pub/Sub topic"
       },
       "pubsub_topic_confirm": {
-        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`\n4. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
+        "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. If *Events* are already enabled with a different topic, disable them first.\n4. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`.\n5. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "submit": "Confirm",
         "title": "Enable events"
       },
@@ -147,6 +148,16 @@
     },
     "subscriber_timeout": {
       "message": "Subscriber timed out while attempting to connect to Google. Please check your network connection and IPv6 configuration if applicable."
+    }
+  },
+  "issues": {
+    "legacy_pubsub_topic": {
+      "description": "Your Nest integration (**\"{entry_title}\"**) needs to be reconfigured before **November 30, 2026** to continue receiving realtime updates, camera events, and doorbell presses. It currently uses a legacy Google-hosted Cloud Pub/Sub topic that Google is retiring in favor of a Pub/Sub topic in your own Google Cloud project.\n\nTo update it, go to **Settings > Devices & services > Nest**, open the menu next to **\"{entry_title}\"**, and select **Reconfigure**. Home Assistant will create the new Pub/Sub topic in your Google Cloud project and guide you through updating the Nest Device Access Console.",
+      "title": "Nest Pub/Sub topic must be migrated"
+    },
+    "pubsub_subscription_not_found": {
+      "description": "The Nest integration entry **{entry_title}** could not connect to its Pub/Sub subscription. The subscription or its topic may have been deleted or misconfigured.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure** to select or create a Pub/Sub topic and subscription.",
+      "title": "Nest Pub/Sub subscription not found"
     }
   },
   "selector": {

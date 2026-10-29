@@ -6,9 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import SCAN_INTERVAL
+from homeassistant.components.control4.coordinator import SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -28,9 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import mock_director_variables, setup_integration
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -61,25 +64,17 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_cover_variables() -> dict:
+def mock_cover_variables() -> dict[int, dict[str, Any]]:
     """Mock cover variable data for default blind state."""
     return _make_cover_data()
 
 
 @pytest.fixture
 def mock_cover_update_variables(
-    mock_cover_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for cover platform."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_cover_variables
-
-    with patch(
-        "homeassistant.components.control4.cover.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director: MagicMock, mock_cover_variables: dict[int, dict[str, Any]]
+) -> None:
+    """Mock the cover variables reported by the director."""
+    mock_director_variables(mock_c4_director, mock_cover_variables)
 
 
 @pytest.fixture
@@ -273,10 +268,10 @@ async def test_cover_not_created_when_no_initial_data(
     ("mock_cover_variables", "expected_position", "expected_state"),
     [
         pytest.param(
-            {234: {}},
+            {234: {"Fully Open": False}},
             None,
             STATE_UNKNOWN,
-            id="all_missing",
+            id="level_missing",
         ),
         pytest.param(
             {234: {"Level": 0}},

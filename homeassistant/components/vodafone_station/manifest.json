@@ -1,6 +1,7 @@
 {
   "domain": "vodafone_station",
   "name": "Vodafone Station",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@paoloantinori", "@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vodafone_station",

@@ -1,5 +1,6 @@
 """Config flow for SmartyPlants — this is what replaces configuration.yaml."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -122,4 +123,34 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="webhook",
             data_schema=STEP_WEBHOOK_SCHEMA,
             description_placeholders={"webhook_url": webhook_url},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a rejected API key."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prompt for a new API key for the same account."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            error, account_id = await self._async_validate(user_input[CONF_API_KEY])
+            if error:
+                errors["base"] = error
+            else:
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=CREDENTIALS_SCHEMA,
+            errors=errors,
         )

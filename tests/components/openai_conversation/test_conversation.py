@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-import datetime
+import datetime as dt
 from typing import Literal
 from unittest.mock import AsyncMock
 
@@ -14,6 +14,7 @@ from openai.types.responses import (
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -53,7 +54,6 @@ from . import (
     create_web_search_item,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
@@ -289,7 +289,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                    "speech_slots": {"time": dt.time(12, 0, 0, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),
@@ -962,6 +962,15 @@ async def test_flex_tier_retry(
             CONF_TEMPERATURE: 0.5,
             CONF_TOP_P: 0.9,
         },
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6.1-terra",
+                CONF_REASONING_EFFORT: "none",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="terra_none",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")

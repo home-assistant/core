@@ -1,6 +1,8 @@
 """Define fixtures available for all tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
@@ -16,9 +18,6 @@ from homeassistant.components.switchbot.const import (
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 
 from . import WOSENSORTH_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture(autouse=True)

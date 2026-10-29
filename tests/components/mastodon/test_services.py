@@ -12,6 +12,7 @@ from mastodon.Mastodon import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -19,6 +20,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
     ATTR_ATTRIBUTION_DOMAINS,
     ATTR_AVATAR,
+    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
@@ -31,6 +33,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_FOCUS_X,
     ATTR_FOCUS_Y,
     ATTR_HEADER,
+    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
@@ -62,8 +65,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 MEDIA_IMAGES = {
     "media-source://camera/camera.demo_camera": media_source.MediaImage(
@@ -1323,6 +1324,14 @@ async def test_service_entry_availability(
                 ).resolve(),
                 ATTR_HEADER_MIME_TYPE: "image/jpeg",
             },
+        ),
+        (
+            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
+            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
+        ),
+        (
+            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
+            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
         ),
     ],
 )

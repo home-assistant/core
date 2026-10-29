@@ -129,6 +129,8 @@
           'installed': True,
           'installed_commit': None,
           'installed_version': '1.0.0',
+          'integration_categories': list([
+          ]),
           'last_commit': None,
           'last_updated': '2020-01-20T09:34:52Z',
           'last_version': '2.0.0',
@@ -191,6 +193,8 @@
           'installed': True,
           'installed_commit': None,
           'installed_version': '1.0.0',
+          'integration_categories': list([
+          ]),
           'last_commit': None,
           'last_updated': '2020-01-20T09:34:52Z',
           'last_version': '2.0.0',
@@ -236,5 +240,5 @@
   })
 # ---
 # name: test_diagnostics_without_a_rate_limit
-  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character: line 1 column 1 (char 0)"
+  "Could not handle response data from 'https://api.github.com/rate_limit' with - unexpected character, expected a JSON value: line 1 column 1 (char 0)"
 # ---

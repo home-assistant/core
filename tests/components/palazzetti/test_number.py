@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 from pypalazzetti.fan import FanType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
@@ -14,8 +15,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 POWER_ENTITY_ID = "number.stove_combustion_power"
 FAN_ENTITY_ID = "number.stove_left_fan_speed"

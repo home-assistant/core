@@ -7,7 +7,6 @@ import switchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
-from homeassistant.components.sensor import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CURTAIN_SPEED,
@@ -66,7 +66,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.METER.value: [Platform.SENSOR],
     SupportedModels.METER_PLUS.value: [Platform.SENSOR],
-    SupportedModels.METER_PRO.value: [Platform.SENSOR],
+    SupportedModels.METER_PRO.value: [Platform.BUTTON, Platform.SENSOR],
     SupportedModels.INDOOR_OUTDOOR_THERMO_HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.METER_PRO_CO2.value: [
         Platform.BUTTON,
@@ -289,6 +289,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.METER_PRO.value: switchbot.SwitchbotMeterPro,
     SupportedModels.METER_PRO_CO2.value: switchbot.SwitchbotMeterProCO2,
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
@@ -343,7 +344,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> None:
     """Set up Switchbot from a config entry."""
     assert entry.unique_id is not None
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
@@ -455,8 +456,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
 
-    return True
-
 
 def _entry_address(entry: SwitchbotConfigEntry) -> str:
     """Return the normalized address for a config entry."""
@@ -483,7 +482,7 @@ def _migrate_deprecated_model_type(
     return None
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> None:
     """Migrate old entry."""
     version = entry.version
     minor_version = entry.minor_version
@@ -537,17 +536,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
         )
         _LOGGER.debug("Migration to version 2.1 successful")
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )

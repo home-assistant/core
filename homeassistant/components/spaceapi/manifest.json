@@ -1,6 +1,7 @@
 {
   "domain": "spaceapi",
   "name": "SpaceAPI",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@fabaff"],
   "config_flow": false,
   "dependencies": ["http"],

@@ -4,15 +4,24 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final, override
 
-from aioairzone.common import GrilleAngle, OperationMode, QAdapt, SleepTimeout
+from aioairzone.common import (
+    AirzoneStages,
+    GrilleAngle,
+    OperationMode,
+    QAdapt,
+    SleepTimeout,
+)
 from aioairzone.const import (
     API_COLD_ANGLE,
     API_HEAT_ANGLE,
+    API_HEAT_STAGE,
     API_MODE,
     API_Q_ADAPT,
     API_SLEEP,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
+    AZD_HEAT_STAGE,
+    AZD_HEAT_STAGES,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
@@ -41,6 +50,7 @@ class AirzoneSelectDescription(SelectEntityDescription):
     options_fn: Callable[[dict[str, Any], dict[str, int]], list[str]] = (
         lambda zone_data, value: list(value)
     )
+    supported_fn: Callable[[dict[str, Any]], bool] = lambda zone_data: True
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
@@ -48,6 +58,12 @@ GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
     "50deg": GrilleAngle.DEG_50,
     "45deg": GrilleAngle.DEG_45,
     "40deg": GrilleAngle.DEG_40,
+}
+
+HEAT_STAGE_DICT: Final[dict[str, int]] = {
+    "air": AirzoneStages.Air,
+    "radiant": AirzoneStages.Radiant,
+    "combined": AirzoneStages.Combined,
 }
 
 MODE_DICT: Final[dict[str, int]] = {
@@ -82,6 +98,20 @@ def main_zone_options(
     """Filter available modes."""
     modes = zone_data.get(AZD_MODES, [])
     return [k for k, v in options.items() if v in modes]
+
+
+def heat_stage_options(
+    zone_data: dict[str, Any],
+    options: dict[str, int],
+) -> list[str]:
+    """Filter available heat stages."""
+    stages = zone_data.get(AZD_HEAT_STAGES, [])
+    return [k for k, v in options.items() if v in stages]
+
+
+def heat_stage_supported(zone_data: dict[str, Any]) -> bool:
+    """Return if the zone has more than one heat stage to choose from."""
+    return len(heat_stage_options(zone_data, HEAT_STAGE_DICT)) > 1
 
 
 SYSTEM_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -123,6 +153,15 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
         translation_key="heat_angles",
+    ),
+    AirzoneSelectDescription(
+        api_param=API_HEAT_STAGE,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_HEAT_STAGE,
+        options_dict=HEAT_STAGE_DICT,
+        options_fn=heat_stage_options,
+        supported_fn=heat_stage_supported,
+        translation_key="heat_stages",
     ),
     AirzoneSelectDescription(
         api_param=API_SLEEP,
@@ -197,6 +236,7 @@ async def async_setup_entry(
                 for system_zone_id in new_zones
                 for description in ZONE_SELECT_TYPES
                 if description.key in zones_data.get(system_zone_id)
+                and description.supported_fn(zones_data.get(system_zone_id))
             )
             added_zones.update(new_zones)
 

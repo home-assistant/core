@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-import datetime
+import datetime as dt
 from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
@@ -228,6 +228,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 f"{UPNP_ISSUE_ID}_{ip_address}",
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="upnp_disabled",
@@ -304,8 +305,11 @@ class SonosDiscoveryManager:
                 eager_start=True,
             )
 
-        async def async_subscription_failed(now: datetime.datetime) -> None:
+        async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
+            # The timer outlives an unload, and the issue can't link to a removed entry
+            if self._stop_event.is_set():
+                return
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
             if advertise_ip := soco_config.EVENT_ADVERTISE_IP:
@@ -314,6 +318,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 SUB_FAIL_ISSUE_ID,
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="subscriptions_failed",
@@ -469,9 +474,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
-    async def async_poll_manual_hosts(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that

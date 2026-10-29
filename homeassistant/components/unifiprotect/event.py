@@ -3,13 +3,15 @@
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
 import dataclasses
-import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
 from uiprotect.data import (
+    Bootstrap,
+    EventType,
     Fob,
     ModelType,
+    ProtectAdoptableDeviceModel,
     PublicCamera,
     PublicDeviceModel,
     SmartDetectObjectType,
@@ -28,7 +30,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
-from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
@@ -44,13 +45,7 @@ from .const import (
     KEYRINGS_USER_STATUS,
     VEHICLE_EVENT_DELAY_SECONDS,
 )
-from .data import (
-    EventType,
-    ProtectAdoptableDeviceModel,
-    ProtectData,
-    ProtectDeviceType,
-    UFPConfigEntry,
-)
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     EventEntityMixin,
     ProtectDeviceEntity,
@@ -548,29 +543,18 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
             )
 
 
-_CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
-
-# Friendly event-type slugs where the raw enum value is unclear or prefixed;
-# unlisted types fall back to a snake_case slug so new ones still auto-surface.
+# Event types that differ from the library slug; unlisted types use the
+# library slug so new ones still auto-surface.
 _EVENT_TYPE_OVERRIDES = {
-    SmartDetectObjectType.SMOKE: "smoke",
     SmartDetectObjectType.CMONX: "co",
-    SmartDetectObjectType.SIREN: "siren",
-    SmartDetectObjectType.BABY_CRY: "baby_cry",
     SmartDetectObjectType.SPEAK: "speaking",
-    SmartDetectObjectType.BARK: "bark",
     SmartDetectObjectType.BURGLAR: "car_alarm",
-    SmartDetectObjectType.CAR_HORN: "car_horn",
-    SmartDetectObjectType.GLASS_BREAK: "glass_break",
 }
 
 
 def _event_type(detected: SmartDetectObjectType) -> str:
     """Stable snake_case event type for a detection (HA translation-key rules)."""
-    return (
-        _EVENT_TYPE_OVERRIDES.get(detected)
-        or _CAMEL_BOUNDARY.sub("_", detected.value).lower()
-    )
+    return _EVENT_TYPE_OVERRIDES.get(detected) or detected.slug
 
 
 _SMART_OBJECT_EVENT_TYPES = [

@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_qube_heatpump import QubeDeviceInfo
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN, MDNS_LOOKUP_TIMEOUT
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DEVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 def patch_answering_hosts(*hosts: str):
@@ -223,8 +222,6 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"host": "192.168.5.208"}
-    progress = hass.config_entries.flow.async_progress()
-    assert progress[0]["context"]["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

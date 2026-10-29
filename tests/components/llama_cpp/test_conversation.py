@@ -1,7 +1,7 @@
 """Tests for the llama.cpp conversation platform."""
 
 from collections.abc import AsyncGenerator, Generator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -24,6 +24,7 @@ from openai.types.chat.chat_completion_chunk import (
 from openai.types.chat.chat_completion_message_tool_call import Function
 from openai.types.completion_usage import CompletionUsage
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -34,8 +35,6 @@ from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from .conftest import ASSIST_OPTIONS, MockChatLog
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -226,9 +225,9 @@ async def test_function_call_with_datetime_tool_results(
         {
             "call_call_1": {
                 "speech_slots": {
-                    "time": datetime.time(12, 0),
-                    "date": datetime.date(2026, 8, 23),
-                    "datetime": datetime.datetime(2026, 8, 23, 12, 0),
+                    "time": dt.time(12, 0),
+                    "date": dt.date(2026, 8, 23),
+                    "datetime": dt.datetime(2026, 8, 23, 12, 0),
                 }
             },
         }
@@ -453,7 +452,9 @@ async def test_assist_api_tools_conversion(
             ),
         ),
     ) as mock_create:
-        await conversation.async_converse(hass, "hello", None, None, agent_id=agent_id)
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=agent_id
+        )
 
     tools = mock_create.mock_calls[0][2]["tools"]
     assert tools

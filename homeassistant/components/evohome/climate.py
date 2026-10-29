@@ -6,6 +6,7 @@ from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
     SZ_MODE,
     SZ_PERIOD,
@@ -13,6 +14,7 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
+    SZ_TIMING_MODE,
     SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
@@ -37,7 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, EVOHOME_DATA, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
-from .services import as_snake_case, validate_set_system_mode_params
+from .helpers import as_snake_case
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,7 +189,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         if duration is None:
             until = None  # indefinitely
         elif duration.total_seconds() == 0:
-            await self._update_schedule()
+            await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get("next_sp_from")
         else:
             until = dt_util.now() + duration
@@ -258,7 +260,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
                 until = self._evo_device.until
             if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
-                await self._update_schedule()
+                await self.coordinator.async_ensure_schedule(self._evo_device)
                 until = self.setpoints.get("next_sp_from")
 
         until = dt_util.as_utc(until) if until else None
@@ -301,7 +303,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return
 
         if evo_preset_mode == EvoZoneMode.TEMPORARY_OVERRIDE:
-            await self._update_schedule()
+            await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get("next_sp_from")
         else:  # EvoZoneMode.PERMANENT_OVERRIDE
             until = None
@@ -342,9 +344,13 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowed_system_modes]
+        self._evo_modes = {
+            m[SZ_SYSTEM_MODE].value: m for m in evo_device.allowed_system_modes
+        }
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[mode]
+            for m in evo_device.allowed_system_modes
+            if (mode := m[SZ_SYSTEM_MODE]) in TCS_PRESET_TO_HA
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -361,21 +367,38 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set the system mode, either indefinitely or for a duration/period."""
 
-        data: dict[str, Any] = {SZ_MODE: mode}
-        if duration is not None:
-            data[SZ_DURATION] = duration
-        if period is not None:
-            data[SZ_PERIOD] = period
-        validate_set_system_mode_params(self._evo_device, data)
+        # check the requested mode; not all systems support all modes...
+        if (mode_info := self._evo_modes.get(as_snake_case(mode))) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mode_not_supported",
+                translation_placeholders={SZ_MODE: mode},
+            )
 
+        timing_mode: str | None = None
+        until: datetime | None = None
+
+        # service schema makes duration & period mutually exclusive (can be neither)
         if period is not None:
-            until = dt_util.start_of_local_day() + period
+            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
         elif duration is not None:
-            until = dt_util.now() + duration
-        else:
-            until = None
+            timing_mode, until = SZ_DURATION, dt_util.now() + duration
 
-        await self._set_tcs_mode(EvoSystemMode(as_snake_case(mode)), until=until)
+        if timing_mode is not None:
+            if not mode_info[SZ_CAN_BE_TEMPORARY]:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="mode_cant_be_temporary",
+                    translation_placeholders={SZ_MODE: mode},
+                )
+            if mode_info.get(SZ_TIMING_MODE) != timing_mode:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key=f"mode_cant_have_{timing_mode}",
+                    translation_placeholders={SZ_MODE: mode},
+                )
+
+        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
 
     async def _set_tcs_mode(
         self, mode: EvoSystemMode, until: datetime | None = None

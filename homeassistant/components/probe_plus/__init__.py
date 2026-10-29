@@ -4,16 +4,18 @@ import logging
 
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntry
 
+from .const import DOMAIN
 from .coordinator import ProbePlusConfigEntry, ProbePlusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> None:
     """Set up Probe Plus from a config entry."""
     # Perform a migration to ensure the model is added to the config entry schema.
     if CONF_MODEL not in entry.data:
@@ -25,15 +27,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) -> None:
     """Migrate a config entry."""
     _LOGGER.debug(
         "Migrating config entry from version %s.%s",
@@ -41,17 +42,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) 
         entry.minor_version,
     )
 
-    if entry.version > 1:
-        return False
-
     if entry.version == 1 and entry.minor_version < 2:
         mac = entry.unique_id
         if mac is None:
-            _LOGGER.warning(
-                "Cannot migrate config entry %s because unique_id is None",
-                entry.entry_id,
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_no_unique_id",
             )
-            return False
 
         legacy_keys = (
             "probe_temperature",
@@ -79,4 +76,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProbePlusConfigEntry) 
         entry.version,
         entry.minor_version,
     )
-    return True

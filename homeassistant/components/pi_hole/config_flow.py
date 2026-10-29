@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+from hole import Hole
 from hole.exceptions import HoleError
 import probatio
 
@@ -17,7 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from . import Hole, api_by_version, determine_api_version
+from . import api_by_version, determine_api_version
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,

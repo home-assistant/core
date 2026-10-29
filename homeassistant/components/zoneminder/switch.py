@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,9 @@ class ZMSwitchMonitors(SwitchEntity):
 
     def update(self) -> None:
         """Update the switch value."""
-        self._state = self._monitor.function == self._on_state
+        self._monitor.update_monitor()
+        function = self._monitor.function
+        self._state = None if function is None else function == self._on_state
 
     @property
     @override

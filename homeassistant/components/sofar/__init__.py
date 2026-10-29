@@ -4,9 +4,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusError, ModbusTimeoutError
+from modbus_connection import ModbusTimeoutError
 from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
-from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -29,6 +28,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
+    HAS_FAULT_LOG,
     METER_ENERGY,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
@@ -36,7 +36,7 @@ from .const import (
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,12 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-_IDENTITY_ATTEMPTS = 3
 
 _REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
 
@@ -76,7 +75,7 @@ def _async_remove_denied_meter_energy(
     if METER_ENERGY in served:
         return
     registry = er.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         if description.component != METER_ENERGY:
             continue
         entity_id = registry.async_get_entity_id(
@@ -86,27 +85,13 @@ def _async_remove_denied_meter_energy(
             registry.async_remove(entity_id)
 
 
-async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
-    """Read identity once, retrying a few times against a transient blip."""
-    for attempt in range(_IDENTITY_ATTEMPTS):
-        try:
-            await device.identity.async_update()
-        except ModbusError as err:
-            if attempt == _IDENTITY_ATTEMPTS - 1:
-                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
-        else:
-            return
-
-
 def _async_seed_high_water_marks(
     hass: HomeAssistant, serial: str, device: SofarInverter
 ) -> None:
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
     restore_state_data = restore_state.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
-        if (total_fn := description.total_fn) is None:
-            continue
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
@@ -120,7 +105,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -142,9 +127,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
-    link = TimedUnit(unit)
-    tuner = LinkTuner(link)
-    device = SofarInverter(link, serial_number=serial)
+    device = SofarInverter(
+        unit,
+        serial_number=serial,
+        has_fault_log=entry.data.get(HAS_FAULT_LOG, False),
+    )
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -153,7 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
-        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -161,14 +147,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
-        tuner,
     )
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
         failure = readings.last_exception
         if not (
-            link.connected
+            device.connected
             and isinstance(failure, UpdateFailed)
             and isinstance(failure.__cause__, ModbusTimeoutError)
         ):
@@ -189,16 +174,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     else:
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
-        await _async_read_identity(entry, device)
+        await device.async_read_identity()
+        # Stored so a flaky read at a later setup never drops the log.
+        if device.has_fault_log and not entry.data.get(HAS_FAULT_LOG):
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, HAS_FAULT_LOG: True}
+            )
 
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **readings.device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
-    _async_remove_denied_meter_energy(
-        hass, serial, entry.runtime_data.served_components
-    )
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
+    # Until the masks settle the type, nothing is served or denied.
+    if device.inverter_type:
+        _async_remove_denied_meter_energy(
+            hass, serial, entry.runtime_data.served_components
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

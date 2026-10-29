@@ -10,6 +10,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import (
     Chat,
     File,
@@ -116,9 +122,6 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
-from tests.typing import ClientSessionGenerator
-
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
@@ -153,6 +156,24 @@ async def test_polling_platform_init_failed(
 
     mock_get_me.assert_called_once()
     assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_polling_platform_setup_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails when the bot platform cannot be set up."""
+    with patch(
+        "homeassistant.components.telegram_bot.polling.async_setup_bot_platform",
+        side_effect=RuntimeError("mock platform error"),
+    ):
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_polling_config_entry.reason == "Failed to set up the Telegram bot"
 
 
 async def test_polling_platform_init_failed_does_not_log_token(
@@ -350,7 +371,6 @@ async def test_send_message_with_inline_keyboard(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=expected,
-            read_timeout=None,
             message_thread_id=None,
         )
 
@@ -1426,7 +1446,6 @@ async def test_edit_message(
         parse_mode=None,
         disable_web_page_preview=None,
         reply_markup=None,
-        read_timeout=None,
     )
 
     with patch(
@@ -1452,7 +1471,6 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        read_timeout=None,
         parse_mode=PARSER_MD2,
     )
 
@@ -1519,7 +1537,6 @@ async def test_answer_callback_query(
         123456,
         text="mock message",
         show_alert=True,
-        read_timeout=None,
     )
 
 
@@ -1830,7 +1847,6 @@ async def test_set_message_reaction(
         54321,
         reaction="👍",
         is_big=True,
-        read_timeout=None,
     )
 
 
@@ -1868,7 +1884,6 @@ async def test_send_message_draft(
         text="_Thinking..._",
         message_thread_id=123,
         parse_mode=PARSER_MD2,
-        read_timeout=None,
     )
 
 
@@ -2197,109 +2212,6 @@ async def test_notify_entity_not_found(
     assert err.value.translation_placeholders == {
         ATTR_ENTITY_ID: "notify.non_existent_entity"
     }
-
-
-@pytest.mark.parametrize(
-    ("event", "expected_action_origin"),
-    [
-        (
-            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
-            "automation.automation_0",
-        ),
-        (
-            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
-            "script.mock_script",
-        ),
-        (
-            None,
-            "call_service",
-        ),
-    ],
-)
-async def test_deprecated_timeout_parameter(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-    issue_registry: IssueRegistry,
-    event: Event | None,
-    expected_action_origin: str,
-) -> None:
-    """Test send message using the deprecated timeout parameter."""
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # trigger service call
-    context = Context()
-    context.origin_event = event
-    await hass.services.async_call(
-        DOMAIN,
-        "send_message",
-        {"message": "test message", "timeout": 5},
-        blocking=True,
-        context=context,
-    )
-
-    # check issue is created correctly
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_timeout_parameter",
-    )
-    assert issue is not None
-    assert issue.domain == DOMAIN
-    assert issue.translation_key == "deprecated_timeout_parameter"
-    assert issue.translation_placeholders == {
-        "integration_title": "Telegram Bot",
-        "action": "telegram_bot.send_message",
-        "action_origin": expected_action_origin,
-    }
-
-    # fix the issue via repair flow
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "form",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "step_id": "confirm",
-        "data_schema": [],
-        "errors": None,
-        "description_placeholders": {
-            "integration_title": "Telegram Bot",
-            "action": "telegram_bot.send_message",
-            "action_origin": expected_action_origin,
-        },
-        "last_step": None,
-        "preview": None,
-    }
-
-    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "create_entry",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "description": None,
-        "description_placeholders": None,
-    }
-
-    # verify issue is resolved
-    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")
 
 
 @pytest.mark.parametrize(
