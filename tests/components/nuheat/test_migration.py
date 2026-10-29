@@ -409,12 +409,12 @@ async def test_unreleased_oauth_schema_is_not_rewritten(
 @pytest.mark.parametrize(
     "access_token", ["malformed", jwt_access_token(None), jwt_access_token("")]
 )
-async def test_invalid_provisional_subject_fails_without_mutation_or_logging(
+async def test_unsupported_oauth_schema_preserves_data_without_token_logging(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     access_token: str,
 ) -> None:
-    """An invalid stored subject leaves provisional entries unchanged."""
+    """Unsupported schemas are rejected regardless of stored token contents."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Owner@Example.com",
@@ -438,10 +438,10 @@ async def test_invalid_provisional_subject_fails_without_mutation_or_logging(
 
 
 @pytest.mark.asyncio
-async def test_provisional_subject_migration_rejects_duplicate_without_mutation(
+async def test_unsupported_oauth_schema_cannot_replace_existing_account(
     hass: HomeAssistant,
 ) -> None:
-    """A subject collision is rejected before changing the provisional entry."""
+    """An unsupported schema cannot be adopted into a supported account entry."""
     existing = MockConfigEntry(
         domain=DOMAIN,
         data=oauth_data(subject=ACCOUNT_SUBJECT),

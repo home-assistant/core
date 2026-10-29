@@ -1,6 +1,6 @@
 {
   "application_credentials": {
-    "description": "For development and local testing, request OAuth credentials from NuHeat/Chemelex using the [OpenAPI documentation]({docs_url}). Do not use credentials extracted from a mobile app. An official integration should use Home Assistant Cloud Account Linking."
+    "description": "OAuth application registration information is available in the [NuHeat OpenAPI documentation]({docs_url})."
   },
   "config": {
     "abort": {
@@ -57,7 +57,7 @@
       "message": "Set a target temperature within the control range before selecting this hold mode. To exit Standby into the schedule, turn the thermostat on."
     },
     "unsupported_configuration_version": {
-      "message": "This entry uses an unsupported development configuration. Restore a compatible backup before reconnecting NuHeat. No account identity was changed."
+      "message": "This NuHeat entry uses an unsupported configuration version. Restore a compatible backup before reconnecting. No account identity was changed."
     },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
@@ -75,7 +75,7 @@
       "title": "NuHeat migration cleanup is incomplete"
     },
     "migration_rollback_failed": {
-      "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before migration testing.",
+      "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before reconnecting NuHeat.",
       "title": "NuHeat migration rollback needs manual recovery"
     }
   }

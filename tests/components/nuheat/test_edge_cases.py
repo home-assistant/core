@@ -62,7 +62,7 @@ def test_account_entry_data_validation() -> None:
 
 
 async def test_application_credentials_description(hass: HomeAssistant) -> None:
-    """Test the development credential documentation link."""
+    """Test the OAuth application registration documentation link."""
     assert await async_get_description_placeholders(hass) == {
         "docs_url": "https://api.nam.mynuheat.com/"
     }
