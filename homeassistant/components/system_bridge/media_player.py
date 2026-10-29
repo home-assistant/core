@@ -35,6 +35,7 @@ from .entity import (
     SystemBridgeAudioEntity,
     SystemBridgeEntity,
     async_add_new_audio_devices,
+    unique_names,
 )
 
 PARALLEL_UPDATES = 0
@@ -174,14 +175,15 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.STOP
         if media.is_seek_enabled:
             features |= MediaPlayerEntityFeature.SEEK
-        if media.volume is not None:
-            features |= (
-                MediaPlayerEntityFeature.VOLUME_SET
-                | MediaPlayerEntityFeature.VOLUME_STEP
-            )
-        # Windows reports shuffle and repeat but can't set them, and only
-        # Linux reports the player
+        # Windows reports shuffle and repeat but can't set them. Only Linux
+        # reports the player, from 5.20.0, which is also when it can set the
+        # volume it reports
         if self._systembridge_data.media.player is not None:
+            if media.volume is not None:
+                features |= (
+                    MediaPlayerEntityFeature.VOLUME_SET
+                    | MediaPlayerEntityFeature.VOLUME_STEP
+                )
             if media.shuffle is not None:
                 features |= MediaPlayerEntityFeature.SHUFFLE_SET
             if media.repeat is not None:
@@ -214,21 +216,25 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         return self._picked_player or self._systembridge_data.media
 
     @property
+    def _player_names(self) -> dict[str, str]:
+        """Return each player's source, by ID."""
+        return unique_names(
+            (player.id, player.name) for player in self._systembridge_data.media.players
+        )
+
+    @property
     @override
     def source(self) -> str:
-        """Name of the picked player."""
+        """Source of the picked player."""
         if (player := self._picked_player) is None:
             return SOURCE_AUTOMATIC
-        return player.name
+        return self._player_names[player.id]
 
     @property
     @override
     def source_list(self) -> list[str]:
-        """Names of the players that can be picked."""
-        return [
-            SOURCE_AUTOMATIC,
-            *(player.name for player in self._systembridge_data.media.players),
-        ]
+        """Sources for the players that can be picked."""
+        return [SOURCE_AUTOMATIC, *self._player_names.values()]
 
     @property
     @override
@@ -296,7 +302,10 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self._media.volume
+        # MPRIS allows amplified volumes above 1, which can't be set back
+        if self._media.volume is None:
+            return None
+        return min(self._media.volume, 1)
 
     @property
     @override
@@ -318,11 +327,12 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         if source == SOURCE_AUTOMATIC:
             self._picked_player_id = None
         else:
+            names = self._player_names
             player = next(
                 (
                     player
                     for player in self._systembridge_data.media.players
-                    if player.name == source
+                    if names[player.id] == source
                 ),
                 None,
             )
@@ -442,7 +452,8 @@ class SystemBridgeAudioVolumeMediaPlayer(SystemBridgeAudioEntity, MediaPlayerEnt
         """Volume level of the audio output (0..1)."""
         if (device := self._device) is None or device.volume is None:
             return None
-        return device.volume / 100
+        # Outputs can be amplified above 100%, which can't be set back
+        return min(device.volume / 100, 1)
 
     @property
     @override
@@ -505,6 +516,17 @@ class SystemBridgeAudioMediaPlayer(SystemBridgeAudioVolumeMediaPlayer):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True while there are outputs, even when none is the default."""
+        return self.coordinator.last_update_success and bool(self._outputs)
+
+    @property
+    def _names(self) -> dict[str, str]:
+        """Return each output's source, by ID."""
+        return unique_names((device.id, device.name) for device in self._outputs)
+
+    @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return super().supported_features | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -512,22 +534,23 @@ class SystemBridgeAudioMediaPlayer(SystemBridgeAudioVolumeMediaPlayer):
     @property
     @override
     def source(self) -> str | None:
-        """Name of the default output."""
+        """Source of the default output."""
         if (device := self._device) is None:
             return None
-        return device.name
+        return self._names[device.id]
 
     @property
     @override
     def source_list(self) -> list[str]:
-        """Names of the outputs that can be made the default."""
-        return [device.name for device in self._outputs]
+        """Sources for the outputs that can be made the default."""
+        return list(self._names.values())
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Make an output the default."""
+        names = self._names
         device = next(
-            (device for device in self._outputs if device.name == source), None
+            (device for device in self._outputs if names[device.id] == source), None
         )
         if device is None:
             raise ServiceValidationError(

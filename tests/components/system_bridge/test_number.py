@@ -112,6 +112,35 @@ async def test_brightness_display_disconnected(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_input_volume_added_once_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an input without a volume gets its number once it reports one."""
+    coordinator = mock_config_entry.runtime_data
+    headset = replace(FIXTURE_AUDIO.inputs[0], id="headset", name="Headset")
+
+    await coordinator.async_handle_module(
+        Module.AUDIO,
+        replace(
+            FIXTURE_AUDIO,
+            inputs=[*FIXTURE_AUDIO.inputs, replace(headset, volume=None)],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.hostname_headset_input_volume") is None
+
+    await coordinator.async_handle_module(
+        Module.AUDIO,
+        replace(FIXTURE_AUDIO, inputs=[*FIXTURE_AUDIO.inputs, headset]),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("number.hostname_headset_input_volume")
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_set_input_volume(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,

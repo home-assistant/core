@@ -1,6 +1,7 @@
 """Base entity for the system bridge integration."""
 
-from collections.abc import Callable
+from collections import Counter
+from collections.abc import Callable, Iterable
 from typing import override
 
 from systembridgeconnector.const import EventType
@@ -203,6 +204,7 @@ def async_add_new_audio_devices(
     entry: SystemBridgeConfigEntry,
     kind: str,
     add: Callable[[list[AudioDevice]], None],
+    include: Callable[[AudioDevice], bool] = lambda _: True,
 ) -> None:
     """Call add with the outputs or inputs not seen before, now and on updates."""
     coordinator = entry.runtime_data
@@ -213,9 +215,23 @@ def async_add_new_audio_devices(
         if (audio := coordinator.data.audio) is None:
             return
         devices = audio.outputs if kind == AUDIO_OUTPUT else audio.inputs
-        if new_devices := [device for device in devices if device.id not in known]:
+        # Only devices that are included count as seen, so one that later
+        # reports what it was missing still gets its entity
+        if new_devices := [
+            device for device in devices if device.id not in known and include(device)
+        ]:
             known.update(device.id for device in new_devices)
             add(new_devices)
 
     _async_check()
     entry.async_on_unload(coordinator.async_add_listener(_async_check))
+
+
+def unique_names(items: Iterable[tuple[str, str]]) -> dict[str, str]:
+    """Map each ID to its name, adding the ID to names that repeat."""
+    items = list(items)
+    counts = Counter(name for _, name in items)
+    return {
+        item_id: name if counts[name] == 1 else f"{name} ({item_id})"
+        for item_id, name in items
+    }

@@ -44,6 +44,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -176,7 +177,10 @@ async def test_media_without_player(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test seek, volume, shuffle and repeat are not offered when not reported."""
+    """Test seek, volume, shuffle and repeat are not offered without the player.
+
+    Backends before 5.20.0 report the volume, but can't set it.
+    """
     coordinator = mock_config_entry.runtime_data
 
     await coordinator.async_handle_module(
@@ -185,7 +189,6 @@ async def test_media_without_player(
             FIXTURE_MEDIA,
             player=None,
             players=[],
-            volume=None,
             is_seek_enabled=None,
         ),
     )
@@ -372,6 +375,16 @@ async def test_default_output_follows_default(
 
     await coordinator.async_handle_module(
         Module.AUDIO, replace(FIXTURE_AUDIO, outputs=[hdmi])
+    )
+    await hass.async_block_till_done()
+
+    # With no default, the source list still picks one
+    assert (state := hass.states.get(DEFAULT_OUTPUT_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert ATTR_INPUT_SOURCE not in state.attributes
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, outputs=[])
     )
     await hass.async_block_till_done()
 

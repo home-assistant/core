@@ -13,10 +13,16 @@ from systembridgeconnector.models.modules import Module
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -70,3 +76,66 @@ async def test_select_default_input(
     mock_websocket_client.audio_control.assert_awaited_once_with(
         AudioControl(id="headset", default=True)
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_duplicate_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test inputs with the same name get their ID added, and can each be picked."""
+    coordinator = mock_config_entry.runtime_data
+    microphone = FIXTURE_AUDIO.inputs[0]
+    twin = replace(microphone, id="twin", default=False)
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone, twin])
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_OPTIONS] == [
+        f"{microphone.name} ({microphone.id})",
+        f"{microphone.name} (twin)",
+    ]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: f"{microphone.name} (twin)"},
+        blocking=True,
+    )
+
+    mock_websocket_client.audio_control.assert_awaited_once_with(
+        AudioControl(id="twin", default=True)
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_available_without_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a new default can be picked when no input is the default."""
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(
+        Module.AUDIO,
+        replace(
+            FIXTURE_AUDIO,
+            inputs=[replace(device, default=False) for device in FIXTURE_AUDIO.inputs],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[])
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

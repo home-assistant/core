@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
-from .entity import SystemBridgeAudioEntity
+from .entity import SystemBridgeAudioEntity, unique_names
 
 PARALLEL_UPDATES = 0
 
@@ -67,20 +67,32 @@ class SystemBridgeAudioInputSelect(SystemBridgeAudioEntity, SelectEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return True while there are inputs, even when none is the default."""
+        return self.coordinator.last_update_success and bool(self._inputs)
+
+    @property
+    def _names(self) -> dict[str, str]:
+        """Return each input's option, by ID."""
+        return unique_names((device.id, device.name) for device in self._inputs)
+
+    @property
+    @override
     def current_option(self) -> str | None:
-        """Return the default input's name."""
+        """Return the default input's option."""
         if (device := self._device) is None:
             return None
-        return device.name
+        return self._names[device.id]
 
     @property
     @override
     def options(self) -> list[str]:
-        """Return the names of the inputs that can be made the default."""
-        return [device.name for device in self._inputs]
+        """Return the options for the inputs that can be made the default."""
+        return list(self._names.values())
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Make an input the default."""
-        device = next(device for device in self._inputs if device.name == option)
+        names = self._names
+        device = next(device for device in self._inputs if names[device.id] == option)
         await self._async_audio_control(device, default=True)

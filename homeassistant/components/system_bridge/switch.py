@@ -63,8 +63,8 @@ async def async_setup_entry(
                 device,
             )
             for device in devices
-            if device.muted is not None
         ),
+        lambda device: device.muted is not None,
     )
 
 
