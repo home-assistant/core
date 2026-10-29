@@ -1485,8 +1485,8 @@ async def test_entity_stays_available_through_tolerated_errors(
 
 @pytest.mark.parametrize(
     "error",
-    [TimeoutError, pyatmo.ApiError],
-    ids=["timeout", "api_error"],
+    [TimeoutError, pyatmo.ApiError, aiohttp.ServerDisconnectedError],
+    ids=["timeout", "api_error", "server_disconnected"],
 )
 async def test_entity_unavailable_after_three_failed_updates(
     hass: HomeAssistant,
