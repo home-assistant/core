@@ -112,6 +112,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
         self._finished_event = asyncio.Event()
         self._firmware: Firmware | None = None
+        self._last_update_success = coordinator.last_update_success
         self._unload: list[Callable] = []
         self.idx = idx
 
@@ -136,8 +137,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._firmware = self.entity_description.latest_version(
             self.coordinator.data, self.idx
         )
-        if self._firmware:
+        last_update_success = self.coordinator.last_update_success
+        if self._firmware or last_update_success != self._last_update_success:
             self.async_write_ha_state()
+        self._last_update_success = last_update_success
 
     @property
     @override

@@ -222,6 +222,55 @@ async def test_async_setup_no_internet(
     assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
 
 
+@pytest.mark.parametrize("error", [TimeoutError, ValueError])
+@pytest.mark.parametrize(
+    "entity_id",
+    ["update.mock_title_core_firmware", "update.mock_title_zigbee_firmware"],
+)
+async def test_firmware_catalog_failure_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    error: type[Exception],
+    entity_id: str,
+) -> None:
+    """Test background catalog failure and recovery without an initial candidate."""
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+    mock_smlight_client.get_firmware_version.side_effect = error
+
+    entry = await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get("sensor.mock_title_core_chip_temp").state != STATE_UNAVAILABLE
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.return_value = []
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    mock_smlight_client.get_firmware_version.side_effect = error
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_smlight_client.get_firmware_version.side_effect = get_firmware
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_slow_firmware_catalog_does_not_block_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
