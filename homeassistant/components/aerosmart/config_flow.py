@@ -1,5 +1,6 @@
 """Config flow for aerosmart."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from aerosmart_modbus import AerosmartDevice
@@ -126,7 +127,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None,
         *,
         step_id: str | None = None,
-        suggested_values: dict[str, Any] | None = None,
+        suggested_values: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Validate the controller connection and create an entry."""
         step_id = step_id or connection_type

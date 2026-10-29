@@ -24,6 +24,25 @@
         },
         "description": "Enter the serial port and both station addresses used by the aerosmart installation."
       },
+      "reconfigure": {
+        "data": {
+          "baudrate": "[%key:component::aerosmart::config::step::serial::data::baudrate%]",
+          "device": "[%key:component::aerosmart::config::step::serial::data::device%]",
+          "host": "[%key:component::aerosmart::config::step::tcp::data::host%]",
+          "port": "[%key:component::aerosmart::config::step::tcp::data::port%]",
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data::unit_ventilation%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::aerosmart::config::step::serial::data_description::baudrate%]",
+          "device": "[%key:component::aerosmart::config::step::serial::data_description::device%]",
+          "host": "[%key:component::aerosmart::config::step::tcp::data_description::host%]",
+          "port": "[%key:component::aerosmart::config::step::tcp::data_description::port%]",
+          "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data_description::unit_heat_pump%]",
+          "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data_description::unit_ventilation%]"
+        },
+        "description": "Update the connection details for this aerosmart installation."
+      },
       "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
