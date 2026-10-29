@@ -44,6 +44,9 @@ from .conftest import (
 
 NEW_LIBRARY_ID = "0c8bd7d5-6ba2-4e7d-9a8b-1f2f4c6ad2b1"
 
+NEW_TOKEN = "fedcba9876543210fedcba9876543210fedcba98"
+REAUTH_INPUT = {CONF_USERNAME: "user@example.com", CONF_PASSWORD: "hunter3"}
+
 USER_INPUT = {
     CONF_URL: URL,
     CONF_USERNAME: "user@example.com",
@@ -436,3 +439,119 @@ async def test_reconfigure_library(
         CONF_BACKUP: False,
         CONF_BACKUP_PATH: "/Backups/HA",
     }
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test logging in again replaces the token of the entry."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data == {
+        CONF_URL: URL,
+        CONF_TOKEN: NEW_TOKEN,
+        CONF_VERIFY_SSL: True,
+    }
+    mock_seafile_client.logout_device.assert_not_awaited()
+
+
+async def test_reauth_two_factor_authentication(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the code is asked when logging in again."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.side_effect = [
+        SeafileTwoFactorRequiredError,
+        NEW_TOKEN,
+    ]
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "otp"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"otp": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(SeafileAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(SeafileConnectionError, "cannot_connect", id="cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test login errors are shown on the reauth form and the flow can recover."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.side_effect = exception
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_seafile_client.get_auth_token.side_effect = None
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
+
+
+async def test_reauth_wrong_account(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test logging in with another account aborts and revokes its token."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+    mock_seafile_client.get_account_info.return_value = replace(
+        mock_seafile_client.get_account_info.return_value,
+        email="other@auth.local",
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_TOKEN] == TOKEN
+    mock_seafile_client.logout_device.assert_awaited_once()
