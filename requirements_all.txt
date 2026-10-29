@@ -2083,7 +2083,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.11.0
+py-synologydsm-api==2.11.1
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.2
