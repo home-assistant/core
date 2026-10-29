@@ -7,7 +7,6 @@ from opensensemap_api.exceptions import OpenSenseMapError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -67,24 +66,4 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema({probatio.Required(CONF_STATION_ID): str}),
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import of a YAML configuration."""
-        station_id = import_data[CONF_STATION_ID]
-        await self.async_set_unique_id(station_id)
-        self._abort_if_unique_id_configured()
-
-        # Even when YAML provides a display name, validate the station before
-        # migrating so broken YAML does not create an entry that cannot set up.
-        try:
-            name = await self._async_get_station_name(station_id)
-        except CannotConnect:
-            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-        except InvalidStation:
-            return self.async_abort(reason=ERROR_INVALID_STATION)
-
-        return self.async_create_entry(
-            title=import_data.get(CONF_NAME) or name,
-            data={CONF_STATION_ID: station_id},
         )
