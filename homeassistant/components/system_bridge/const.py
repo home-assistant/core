@@ -22,6 +22,9 @@ MODULES: Final[list[Module]] = [
 # Backends before 5.16.0 never answer a request for the audio module
 AUDIO_MIN_VERSION: Final = (5, 16, 0)
 
+# Backends before 5.23.0 list players without their controls or details
+PLAYER_DETAILS_MIN_VERSION: Final = (5, 23, 0)
+
 AUDIO_OUTPUT: Final = "output"
 AUDIO_INPUT: Final = "input"
 

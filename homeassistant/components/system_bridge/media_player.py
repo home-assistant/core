@@ -3,6 +3,7 @@
 import datetime as dt
 from typing import TYPE_CHECKING, Final, override
 
+from packaging.version import parse as parse_version
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.media_control import (
@@ -27,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import AUDIO_OUTPUT, DOMAIN
+from .const import AUDIO_OUTPUT, DOMAIN, PLAYER_DETAILS_MIN_VERSION
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import (
@@ -188,10 +189,21 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
                 features |= MediaPlayerEntityFeature.SHUFFLE_SET
             if media.repeat is not None:
                 features |= MediaPlayerEntityFeature.REPEAT_SET
-        if self._systembridge_data.media.players:
+        if self._can_pick_player:
             features |= MediaPlayerEntityFeature.SELECT_SOURCE
 
         return features
+
+    @property
+    def _can_pick_player(self) -> bool:
+        """Return True if there are players, with the details to show them."""
+        system = self._systembridge_data.system
+        return (
+            bool(self._systembridge_data.media.players)
+            and system is not None
+            and system.version is not None
+            and parse_version(system.version).release >= PLAYER_DETAILS_MIN_VERSION
+        )
 
     @property
     def _systembridge_data(self) -> SystemBridgeData:
@@ -224,8 +236,10 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
 
     @property
     @override
-    def source(self) -> str:
+    def source(self) -> str | None:
         """Source of the picked player."""
+        if not self._can_pick_player:
+            return None
         if (player := self._picked_player) is None:
             return SOURCE_AUTOMATIC
         return self._player_names[player.id]

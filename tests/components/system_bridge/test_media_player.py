@@ -13,6 +13,7 @@ from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.audio_control import AudioControl
 from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.media import FIXTURE_MEDIA
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.media_control import MediaAction, MediaControl
 from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.response import Response
@@ -68,6 +69,17 @@ def media_player_only() -> Generator[None]:
         "homeassistant.components.system_bridge.PLATFORMS",
         [Platform.MEDIA_PLAYER],
     ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def player_details_backend(mock_websocket_client: MagicMock) -> Generator[None]:
+    """Report a backend that lists players with their details."""
+    system = replace(FIXTURE_SYSTEM, version="5.23.0")
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, system=system
+    )
+    with patch("tests.components.system_bridge.FIXTURE_SYSTEM", system):
         yield
 
 
@@ -308,6 +320,25 @@ async def test_media_player_source(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic"
     assert state.attributes[ATTR_MEDIA_TITLE] == FIXTURE_MEDIA.title
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_source_needs_player_details(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test players can't be picked from backends that list them without details."""
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(
+        Module.SYSTEM, replace(FIXTURE_SYSTEM, version="5.22.1")
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    features = MediaPlayerEntityFeature(state.attributes[ATTR_SUPPORTED_FEATURES])
+    assert MediaPlayerEntityFeature.SELECT_SOURCE not in features
+    assert ATTR_INPUT_SOURCE not in state.attributes
 
 
 @pytest.mark.parametrize(
