@@ -5,15 +5,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    CONF_ICON,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
@@ -28,19 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
-    ATTR_NEXT_EVENT,
-    CONF_ALL_DAYS,
-    CONF_DATA,
-    CONF_FROM,
-    CONF_TO,
-    DATA_SCHEDULE,
-    DOMAIN,
-    LOGGER,
-    WEEKDAY_TO_CONF,
-    ScheduleEntityCapabilityAttribute,
-    ScheduleEntityStateAttribute,
-)
+from .const import ATTR_NEXT_EVENT, DATA_SCHEDULE, DOMAIN, LOGGER, WEEKDAY_TO_CONF
 from .entity import Schedule
 from .schema import (
     BASE_SCHEMA,
@@ -59,6 +39,15 @@ CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: cv.schema_with_slug_keys(probatio.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "ATTR_NEXT_EVENT",
+    "BASE_SCHEMA",
+    "DOMAIN",
+    "STORAGE_SCHEDULE_SCHEMA",
+    "WEEKDAY_TO_CONF",
+    "Schedule",
+]
 
 
 @dataclass(slots=True)

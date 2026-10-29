@@ -47,6 +47,7 @@ jobs:
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -r requirements.txt
+          uv pip install --no-deps -e packages/hassfest --config-settings editable_mode=compat
 
       - name: Create requirements_diff file
         run: |

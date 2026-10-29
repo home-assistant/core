@@ -45,7 +45,6 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._name = device.name
         self._host = host
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": self._name or "LOOKin",
             "host": host,
