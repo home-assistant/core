@@ -372,11 +372,21 @@ async def test_firmware_callback_no_hardware_domain(
     assert "No hardware integration found for device" in caplog.text
 
 
-async def test_get_serial_port_via_device_id_local(hass: HomeAssistant) -> None:
-    """Test a local serial port is not connected through another device."""
-    assert (
-        async_get_serial_port_via_device_id(hass, "/dev/serial/by-id/device1") is None
-    )
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param("/dev/serial/by-id/device1", id="local"),
+        pytest.param(
+            "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT?port_udev_id=some_id",
+            id="esphome_entry_removed",
+        ),
+    ],
+)
+async def test_get_serial_port_via_device_id_none(
+    hass: HomeAssistant, device: str
+) -> None:
+    """Test serial ports without a known device they are connected through."""
+    assert async_get_serial_port_via_device_id(hass, device) is None
 
 
 async def test_get_serial_port_via_device_id_esphome(

@@ -289,13 +289,19 @@ def async_get_serial_port_via_device_id(hass: HomeAssistant, device: str) -> str
     esphome_entry_id = URL(device).path.removeprefix("/")
 
     # ESPHome sub-devices are linked to the main device with `via_device_id`
-    [esphome_device] = [
+    esphome_devices = [
         device_entry
         for device_entry in dr.async_entries_for_config_entry(
             dr.async_get(hass), esphome_entry_id
         )
         if device_entry.via_device_id is None
     ]
+
+    # The ESPHome config entry can be removed while a serial port user sets up
+    if not esphome_devices:
+        return None
+
+    [esphome_device] = esphome_devices
 
     return esphome_device.id
 
