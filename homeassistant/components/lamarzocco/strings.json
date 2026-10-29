@@ -9,7 +9,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "machine_not_found": "Discovered machine not found in given account",
-      "no_machines": "No machines found in account"
+      "no_machines": "No machines found in account",
+      "policy_not_accepted": "La Marzocco did not register the privacy policy acceptance, please try again, or do it through the La Marzocco app."
     },
     "step": {
       "accept_policy": {

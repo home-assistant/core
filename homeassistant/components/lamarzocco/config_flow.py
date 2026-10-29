@@ -117,7 +117,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
-            except RequestNotSuccessful as exc:
+            except (RequestNotSuccessful, TimeoutError) as exc:
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
@@ -214,7 +214,10 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 return self._async_show_credentials_form({"base": "invalid_auth"})
-            except RequestNotSuccessful as exc:
+            except PolicyAcceptanceRequired:
+                _LOGGER.debug("Server still requires accepting the privacy policy")
+                errors["base"] = "policy_not_accepted"
+            except (RequestNotSuccessful, TimeoutError) as exc:
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:

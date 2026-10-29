@@ -146,6 +146,7 @@ async def test_form_abort_already_configured(
     [
         (AuthFail(""), "invalid_auth"),
         (RequestNotSuccessful(""), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
     ],
 )
 async def test_form_invalid_auth(
@@ -240,16 +241,39 @@ async def test_form_accept_policy(
     await __do_sucessful_machine_selection_step(hass, result)
 
 
-async def test_form_accept_policy_cannot_connect(
+@pytest.mark.parametrize(
+    ("accept_errors", "list_things_errors", "error"),
+    [
+        pytest.param(
+            [RequestNotSuccessful("")], [], "cannot_connect", id="accept_failed"
+        ),
+        pytest.param([TimeoutError()], [], "cannot_connect", id="accept_timeout"),
+        pytest.param(
+            [], [RequestNotSuccessful("")], "cannot_connect", id="list_things_failed"
+        ),
+        pytest.param([], [TimeoutError()], "cannot_connect", id="list_things_timeout"),
+        pytest.param(
+            [],
+            [PolicyAcceptanceRequired("")],
+            "policy_not_accepted",
+            id="policy_not_accepted",
+        ),
+    ],
+)
+async def test_form_accept_policy_errors(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
+    accept_errors: list[Exception],
+    list_things_errors: list[Exception],
+    error: str,
 ) -> None:
-    """Test a connection error while accepting the privacy policy."""
+    """Test recoverable errors while accepting the privacy policy."""
     mock_cloud_client.list_things.side_effect = [
         PolicyAcceptanceRequired(""),
+        *list_things_errors,
         mock_cloud_client.list_things.return_value,
     ]
-    mock_cloud_client.accept_privacy_policy.side_effect = RequestNotSuccessful("")
+    mock_cloud_client.accept_privacy_policy.side_effect = [*accept_errors, None]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -265,7 +289,7 @@ async def test_form_accept_policy_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "accept_policy"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     # test recovery from failure
     mock_cloud_client.accept_privacy_policy.side_effect = None
@@ -434,18 +458,41 @@ async def test_reauth_flow_accept_policy(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
-async def test_reauth_flow_accept_policy_cannot_connect(
+@pytest.mark.parametrize(
+    ("accept_errors", "list_things_errors", "error"),
+    [
+        pytest.param(
+            [RequestNotSuccessful("")], [], "cannot_connect", id="accept_failed"
+        ),
+        pytest.param([TimeoutError()], [], "cannot_connect", id="accept_timeout"),
+        pytest.param(
+            [], [RequestNotSuccessful("")], "cannot_connect", id="list_things_failed"
+        ),
+        pytest.param([], [TimeoutError()], "cannot_connect", id="list_things_timeout"),
+        pytest.param(
+            [],
+            [PolicyAcceptanceRequired("")],
+            "policy_not_accepted",
+            id="policy_not_accepted",
+        ),
+    ],
+)
+async def test_reauth_flow_accept_policy_errors(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    accept_errors: list[Exception],
+    list_things_errors: list[Exception],
+    error: str,
 ) -> None:
-    """Test a connection error while accepting the privacy policy during reauth."""
+    """Test recoverable errors while accepting the privacy policy during reauth."""
     mock_config_entry.add_to_hass(hass)
     mock_cloud_client.list_things.side_effect = [
         PolicyAcceptanceRequired(""),
+        *list_things_errors,
         mock_cloud_client.list_things.return_value,
     ]
-    mock_cloud_client.accept_privacy_policy.side_effect = RequestNotSuccessful("")
+    mock_cloud_client.accept_privacy_policy.side_effect = [*accept_errors, None]
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -459,7 +506,7 @@ async def test_reauth_flow_accept_policy_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "accept_policy"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     # test recovery from failure
     mock_cloud_client.accept_privacy_policy.side_effect = None
