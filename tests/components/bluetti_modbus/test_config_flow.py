@@ -312,14 +312,12 @@ async def test_user_flow_rejects_the_same_serial_at_a_different_endpoint(
     assert result["reason"] == "already_configured"
 
 
-def _zeroconf_info(
-    host: str = HOST, hostname: str = "blhems-1a2b3c4d5e6f.local."
-) -> ZeroconfServiceInfo:
+def _zeroconf_info(host: str = HOST) -> ZeroconfServiceInfo:
     """What a Balco 260 announces over mDNS."""
     return ZeroconfServiceInfo(
         ip_address=ip_address(host),
         ip_addresses=[ip_address(host)],
-        hostname=hostname,
+        hostname="blhems-1a2b3c4d5e6f.local.",
         name="Bluetti HEMS._http._tcp.local.",
         port=80,
         type="_http._tcp.local.",
@@ -327,24 +325,19 @@ def _zeroconf_info(
     )
 
 
-@pytest.mark.parametrize(
-    "hostname",
-    [
-        pytest.param("blhems-1a2b3c4d5e6f.local.", id="mac_in_hostname"),
-        pytest.param("bluetti.local.", id="no_mac_in_hostname"),
-    ],
-)
 async def test_zeroconf_flow(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit, hostname: str
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
     """A discovered power station is probed, confirmed and added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=_zeroconf_info(hostname=hostname),
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
+    assert (
+        hass.config_entries.flow.async_get(result["flow_id"])["context"]["unique_id"]
+        == SERIAL
+    )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
@@ -353,37 +346,6 @@ async def test_zeroconf_flow(
     assert result["title"] == TITLE
     assert result["data"] == bluetti_data()
     assert result["result"].unique_id == SERIAL
-
-
-@pytest.mark.parametrize(
-    ("hostname", "unique_id"),
-    [
-        pytest.param("blhems-1a2b3c4d5e6f.local.", "1a:2b:3c:4d:5e:6f", id="mac"),
-        pytest.param("BLHEMS-1A2B3C4D5E6F.local", "1a:2b:3c:4d:5e:6f", id="upper"),
-        pytest.param("bluetti.local.", SERIAL, id="other_name"),
-        pytest.param("blhems-1a2b3c4d5e6g.local.", SERIAL, id="not_hex"),
-        pytest.param("blhems-1a2b3c4d5e6f0.local.", SERIAL, id="too_long"),
-        pytest.param("blhems-1a2b3c4d5e6f.lan.", SERIAL, id="other_domain"),
-    ],
-)
-async def test_zeroconf_unique_id_from_hostname(
-    hass: HomeAssistant,
-    mock_modbus_unit: MockModbusUnit,
-    hostname: str,
-    unique_id: str,
-) -> None:
-    """Only a Balco 260 hostname gives its MAC, otherwise the serial is used."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=_zeroconf_info(hostname=hostname),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert (
-        hass.config_entries.flow.async_get(result["flow_id"])["context"]["unique_id"]
-        == unique_id
-    )
 
 
 async def test_zeroconf_known_address_is_not_probed(
@@ -403,57 +365,14 @@ async def test_zeroconf_known_address_is_not_probed(
     assert not mock_modbus_unit.read_events
 
 
-async def test_zeroconf_ignored_device_is_not_probed(
+async def test_zeroconf_discovery_in_progress(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
-    """A power station the user ignored aborts without a Modbus read."""
-    MockConfigEntry(
-        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="1a:2b:3c:4d:5e:6f"
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert not mock_modbus_unit.read_events
-
-
-async def test_zeroconf_ignoring_keeps_the_device_unprobed(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """Ignoring a discovery stores the MAC, so the next announcement is not probed."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IGNORE},
-        data={"unique_id": "1a:2b:3c:4d:5e:6f", "title": TITLE},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "1a:2b:3c:4d:5e:6f"
-    mock_modbus_unit.read_events.clear()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert not mock_modbus_unit.read_events
-
-
-async def test_zeroconf_discovery_in_progress_is_not_probed(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """A repeated announcement during a pending discovery aborts without a read."""
+    """A repeated announcement during a pending discovery aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
     )
     assert result["type"] is FlowResultType.FORM
-    mock_modbus_unit.read_events.clear()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
@@ -461,7 +380,6 @@ async def test_zeroconf_discovery_in_progress_is_not_probed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
-    assert not mock_modbus_unit.read_events
 
 
 async def test_zeroconf_updates_a_moved_device(
@@ -512,14 +430,12 @@ async def test_zeroconf_leaves_an_entry_on_other_settings(
     assert entry.data == {**bluetti_data(), CONF_HOST: "proxy.local", **entry_data}
 
 
-async def test_zeroconf_without_mac_can_be_ignored(
+async def test_zeroconf_can_be_ignored(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
-    """A discovery without a MAC in the hostname is ignored under its serial."""
+    """Ignoring a discovery stores the serial number."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=_zeroconf_info(hostname="bluetti.local."),
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
     )
     assert result["type"] is FlowResultType.FORM
 

@@ -1,7 +1,6 @@
 """Config flow to configure the BLUETTI Modbus integration."""
 
 import logging
-from string import hexdigits
 from typing import TYPE_CHECKING, Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
@@ -11,7 +10,6 @@ from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -24,9 +22,6 @@ from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, MODEL, M
 from .device import restricted_device
 
 _LOGGER = logging.getLogger(__name__)
-
-_HOSTNAME_PREFIX = "blhems-"
-_HOSTNAME_SUFFIX = ".local"
 
 STEP_USER = probatio.Schema(
     {
@@ -51,24 +46,12 @@ STEP_USER = probatio.Schema(
 )
 
 
-def _hostname_mac(hostname: str) -> str | None:
-    """Return the MAC in a Balco 260 hostname, "blhems-<MAC>.local."."""
-    name = hostname.lower().removesuffix(".")
-    if not name.startswith(_HOSTNAME_PREFIX) or not name.endswith(_HOSTNAME_SUFFIX):
-        return None
-    mac = name.removeprefix(_HOSTNAME_PREFIX).removesuffix(_HOSTNAME_SUFFIX)
-    if len(mac) != 12 or not set(mac) <= set(hexdigits):
-        return None
-    return format_mac(mac)
-
-
 class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BLUETTI Modbus config flow."""
 
     VERSION = 1
 
     _discovered: dict[str, Any]
-    _discovered_serial: str
 
     @override
     async def async_step_user(
@@ -110,12 +93,6 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         # The device accepts few Modbus clients at once, so a known one is
         # dropped before it is asked anything.
         self._async_abort_entries_match({CONF_HOST: host})
-        # The announcement carries no serial number. The MAC in the hostname
-        # identifies the flow until the device has been asked, so an ignored
-        # or already discovered power station is dropped without a connection.
-        if mac := _hostname_mac(discovery_info.hostname):
-            await self.async_set_unique_id(mac)
-            self._abort_if_unique_id_configured()
 
         data = {
             CONF_HOST: host,
@@ -128,6 +105,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert serial is not None
 
+        await self.async_set_unique_id(serial)
         if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, serial
         ):
@@ -142,12 +120,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_HOST: host}, reason="already_configured"
             )
 
-        if self.unique_id is None:
-            # Without a MAC, the serial number is what an ignore remembers.
-            await self.async_set_unique_id(serial)
-
         self._discovered = data
-        self._discovered_serial = serial
         self.context["title_placeholders"] = {"name": MODEL, "host": host}
         return await self.async_step_zeroconf_confirm()
 
@@ -156,10 +129,6 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm setting up a discovered power station."""
         if user_input is not None:
-            await self.async_set_unique_id(
-                self._discovered_serial, raise_on_progress=False
-            )
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=MODEL, data=self._discovered)
 
         return self.async_show_form(
