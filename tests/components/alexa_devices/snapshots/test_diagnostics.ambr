@@ -12,8 +12,65 @@
     }),
     'device family': 'mine',
     'device type': 'echo',
+    'features': dict({
+      'motionSensor': dict({
+        '2': dict({
+          'friendly_name': None,
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'detectionState',
+          ]),
+          'raw_configuration': dict({
+          }),
+          'sensor_keys': dict({
+            'detectionState': 'detectionState',
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
+      'temperatureSensor': dict({
+        '1': dict({
+          'friendly_name': None,
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'temperature',
+          ]),
+          'raw_configuration': dict({
+          }),
+          'sensor_keys': dict({
+            'temperature': 'temperature',
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
+    }),
     'online': True,
+    'primary display category': 'ALEXA_VOICE_ENABLED',
     'sensors': dict({
+      'detectionState': dict({
+        'error': False,
+        'error_msg': None,
+        'error_type': None,
+        'feature_name': 'motionSensor',
+        'instance': '2',
+        'name': 'detectionState',
+        'property_name': 'detectionState',
+        'scale': None,
+        'time_of_sample': None,
+        'value': 'DETECTED',
+      }),
       'dnd': dict({
         'error': False,
         'error_msg': None,
@@ -41,6 +98,36 @@
     }),
     'serial number': 'echo_test_serial_number',
     'software version': 'echo_test_software_version',
+    'unsupported features': dict({
+      'toggle': dict({
+        '11': dict({
+          'friendly_name': 'Enable LED Indicator',
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'toggleState',
+          ]),
+          'raw_configuration': dict({
+            '__typename': 'ToggleConfiguration',
+            'friendlyName': dict({
+              'value': dict({
+                'text': 'Enable LED Indicator',
+              }),
+            }),
+          }),
+          'sensor_keys': dict({
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+            'turnOn',
+            'turnOff',
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
+    }),
   })
 # ---
 # name: test_entry_diagnostics
@@ -59,8 +146,65 @@
           }),
           'device family': 'mine',
           'device type': 'echo',
+          'features': dict({
+            'motionSensor': dict({
+              '2': dict({
+                'friendly_name': None,
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'detectionState',
+                ]),
+                'raw_configuration': dict({
+                }),
+                'sensor_keys': dict({
+                  'detectionState': 'detectionState',
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
+            'temperatureSensor': dict({
+              '1': dict({
+                'friendly_name': None,
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'temperature',
+                ]),
+                'raw_configuration': dict({
+                }),
+                'sensor_keys': dict({
+                  'temperature': 'temperature',
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
+          }),
           'online': True,
+          'primary display category': 'ALEXA_VOICE_ENABLED',
           'sensors': dict({
+            'detectionState': dict({
+              'error': False,
+              'error_msg': None,
+              'error_type': None,
+              'feature_name': 'motionSensor',
+              'instance': '2',
+              'name': 'detectionState',
+              'property_name': 'detectionState',
+              'scale': None,
+              'time_of_sample': None,
+              'value': 'DETECTED',
+            }),
             'dnd': dict({
               'error': False,
               'error_msg': None,
@@ -88,6 +232,36 @@
           }),
           'serial number': 'echo_test_serial_number',
           'software version': 'echo_test_software_version',
+          'unsupported features': dict({
+            'toggle': dict({
+              '11': dict({
+                'friendly_name': 'Enable LED Indicator',
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'toggleState',
+                ]),
+                'raw_configuration': dict({
+                  '__typename': 'ToggleConfiguration',
+                  'friendlyName': dict({
+                    'value': dict({
+                      'text': 'Enable LED Indicator',
+                    }),
+                  }),
+                }),
+                'sensor_keys': dict({
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                  'turnOn',
+                  'turnOff',
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
+          }),
         }),
       ]),
       'last_exception': 'None',

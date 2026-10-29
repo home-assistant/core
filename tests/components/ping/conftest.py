@@ -43,6 +43,7 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="10.10.10.10",
+        entry_id="01JPING0000000000000000000",
         options={
             CONF_HOST: "10.10.10.10",
             CONF_PING_COUNT: 10.0,

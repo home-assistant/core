@@ -226,6 +226,43 @@
         "required": ["models"],
         "additionalProperties": false
       },
+      "lorawan": {
+        "description": "A list of LoRaWAN matchers. Each matcher is a pair of a network server stack and the brand ID it uses for the vendor. This requires \"config_flow\" to be true and \"lorawan\" in the \"dependencies\".\nhttps://contributors.home-assistant.io/core/integrations/manifest/#lorawan",
+        "examples": [
+          [
+            ["chirpstack", 744],
+            ["tts", "sensecap"]
+          ]
+        ],
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "type": "array",
+          "items": [
+            {
+              "description": "The network server stack.",
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "description": "The brand ID the network server uses for the vendor.",
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "string",
+                  "minLength": 1
+                }
+              ]
+            }
+          ],
+          "minItems": 2,
+          "additionalItems": false
+        }
+      },
       "dhcp": {
         "description": "A list of matchers to find devices discoverable via DHCP. In order to be discovered, the device has to match all properties of any of the matchers.\nYou can specify an item with \"registered_devices\" set to true to check for devices with MAC addresses specified in the device registry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#dhcp",
         "type": "array",
@@ -398,6 +435,111 @@
           "calculated"
         ]
       },
+      "categories": {
+        "description": "The categories of the integration, the primary category first.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#categories",
+        "examples": [["energy"], ["energy.ev_charging"]],
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "ai_voice",
+            "ai_voice.ai_models",
+            "ai_voice.image_recognition",
+            "ai_voice.speech",
+            "ai_voice.voice_assistants",
+            "appliances_cleaning",
+            "appliances_cleaning.cleaning",
+            "appliances_cleaning.cooking",
+            "appliances_cleaning.laundry",
+            "blinds_curtains",
+            "buttons_remotes",
+            "climate",
+            "climate.air_purifiers_humidifiers",
+            "climate.fans_ventilation",
+            "climate.heat_pumps_air_conditioning",
+            "climate.thermostats_heating",
+            "climate.water_heaters",
+            "computers_network",
+            "computers_network.cloud_developer_tools",
+            "computers_network.monitoring",
+            "computers_network.nas_servers",
+            "computers_network.printers",
+            "computers_network.routers_network",
+            "diy_makers",
+            "diy_makers.boards_hardware",
+            "diy_makers.web_data_connectors",
+            "energy",
+            "energy.backup_power",
+            "energy.energy_prices",
+            "energy.ev_charging",
+            "energy.meters_monitoring",
+            "energy.solar_batteries",
+            "finance",
+            "garden_plants",
+            "health_wellbeing",
+            "helpers",
+            "helpers.calculate_value",
+            "helpers.store_value",
+            "hubs_protocols",
+            "hubs_protocols.building_automation",
+            "hubs_protocols.smart_home_hubs",
+            "hubs_protocols.wireless_protocols",
+            "lighting",
+            "lighting.bulbs_lamps",
+            "lighting.led_strips_controllers",
+            "lighting.lighting_systems",
+            "local_services",
+            "media_entertainment",
+            "media_entertainment.gaming",
+            "media_entertainment.music_radio_services",
+            "media_entertainment.speakers_audio",
+            "media_entertainment.tv_streaming",
+            "messaging_notifications",
+            "messaging_notifications.chat_apps",
+            "messaging_notifications.email_sms_calls",
+            "messaging_notifications.push_notifications",
+            "news_social_media",
+            "other_ecosystems",
+            "pets",
+            "plugs_switches",
+            "presence_location",
+            "presence_location.network_presence",
+            "presence_location.phones_companion_apps",
+            "presence_location.trackers",
+            "productivity_information",
+            "productivity_information.calendars_todos",
+            "productivity_information.documents_photos",
+            "productivity_information.shopping_groceries",
+            "security_safety",
+            "security_safety.alarm_systems",
+            "security_safety.cameras",
+            "security_safety.doorbells_intercoms",
+            "security_safety.locks_access",
+            "security_safety.smoke_co_alarms",
+            "sensors",
+            "sensors.air_quality",
+            "sensors.door_window",
+            "sensors.motion_presence",
+            "sensors.temperature_humidity",
+            "vehicles_transport",
+            "vehicles_transport.bikes_scooters",
+            "vehicles_transport.cars_evs",
+            "vehicles_transport.flights",
+            "vehicles_transport.public_transport",
+            "water",
+            "water.meters_leak_detection",
+            "water.pools_spas",
+            "water.water_treatment",
+            "weather_alerts",
+            "weather_alerts.air_quality_pollen",
+            "weather_alerts.forecasts",
+            "weather_alerts.public_warnings"
+          ]
+        }
+      },
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#single_config_entry",
         "const": true
@@ -406,6 +548,19 @@
     "additionalProperties": false,
     "required": ["domain", "name", "codeowners", "documentation"],
     "dependencies": {
+      "lorawan": {
+        "properties": {
+          "config_flow": {
+            "const": true
+          },
+          "dependencies": {
+            "contains": {
+              "const": "lorawan"
+            }
+          }
+        },
+        "required": ["config_flow", "dependencies"]
+      },
       "mqtt": {
         "anyOf": [
           { "required": ["dependencies"] },

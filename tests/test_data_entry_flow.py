@@ -12,7 +12,7 @@ from pytest_homeassistant.common import async_capture_events
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, frame
 from homeassistant.util.decorator import Registry
 
 
@@ -590,6 +590,7 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
             if uncompleted_task:
                 assert progress_action
                 return self.async_show_progress(
+                    step_id="init",
                     progress_action=progress_action,
                     progress_task=uncompleted_task,
                 )
@@ -687,7 +688,7 @@ async def test_show_progress_error(
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(
-                progress_action="task", progress_task=self.progress_task
+                step_id="init", progress_action="task", progress_task=self.progress_task
             )
 
         async def async_step_error(self, user_input=None):
@@ -1713,3 +1714,93 @@ def test_invalid_visible(visible: Any) -> None:
         data_entry_flow.Required("a", visible=visible)
     with pytest.raises(probatio.Invalid):
         data_entry_flow.Optional("a", visible=visible)
+
+
+MISSING_STEP_ID_PARAMS = pytest.mark.parametrize(
+    ("method", "kwargs", "result_type"),
+    [
+        pytest.param(
+            "async_show_form", {}, data_entry_flow.FlowResultType.FORM, id="form"
+        ),
+        pytest.param(
+            "async_external_step",
+            {"url": "https://example.com"},
+            data_entry_flow.FlowResultType.EXTERNAL_STEP,
+            id="external_step",
+        ),
+        pytest.param(
+            "async_show_progress",
+            {"progress_action": "task"},
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            id="show_progress",
+        ),
+        pytest.param(
+            "async_show_menu",
+            {"menu_options": ["init"]},
+            data_entry_flow.FlowResultType.MENU,
+            id="menu",
+        ),
+    ],
+)
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param("homeassistant/components/hue", id="core_integration"),
+        pytest.param("homeassistant.core", id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_core(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    method: str,
+    kwargs: dict[str, str | list[str]],
+    result_type: data_entry_flow.FlowResultType,
+) -> None:
+    """Test a missing step_id raises for core and core integrations."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return getattr(self, method)(**kwargs)
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(RuntimeError, match=f"calls {method} without passing a step_id"),
+    ):
+        await manager.async_init("test")
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_custom_integration(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    kwargs: dict[str, str | list[str]],
+    result_type: data_entry_flow.FlowResultType,
+) -> None:
+    """Test a missing step_id is logged and defaults to the step for custom integrations."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return getattr(self, method)(**kwargs)
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await manager.async_init("test")
+
+    assert result["type"] is result_type
+    assert result["step_id"] == "init"
+    assert (
+        f"Detected that custom integration 'my_integration' calls {method} without "
+        "passing a step_id at custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2027.5.0"
+    ) in caplog.text

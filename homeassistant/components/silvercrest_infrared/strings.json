@@ -1,0 +1,67 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device has already been configured with this infrared entity.",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "The type of device to control.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the device type and an infrared emitter.",
+        "title": "Set up SilverCrest infrared device"
+      }
+    }
+  },
+  "device": {
+    "sml330a1": { "name": "Portable air cooler SML 330 A1" },
+    "ssvf45a1": { "name": "Pedestal fan SSVF 45 A1" },
+    "ssvf45b1": { "name": "Pedestal fan SSVF 45 B1" },
+    "ssvf45c1": { "name": "Pedestal fan SSVF 45 C1" },
+    "ssvs85a1": { "name": "Misting pedestal fan SSVS 85 A1" },
+    "ssvs85b2": { "name": "Misting pedestal fan SSVS 85 B2" },
+    "stvd45a1": { "name": "Tower fan STVD 45 A1" },
+    "stvl50a1": { "name": "Tower fan STVL 50 A1" },
+    "stvl50b1": { "name": "Tower fan STVL 50 B1" },
+    "stvl50c1": { "name": "Tower fan STVL 50 C1" },
+    "sv60a1": { "name": "Pedestal fan SV 60 A1" },
+    "sv60a2": { "name": "Pedestal fan SV 60 A2" }
+  },
+  "entity": {
+    "button": {
+      "mist": { "name": "Mist" },
+      "mode": { "name": "Mode" },
+      "osc": { "name": "Oscillation" },
+      "power": { "name": "Power" },
+      "speed": { "name": "Speed" },
+      "timer": { "name": "Timer" }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "sml330a1": "[%key:component::silvercrest_infrared::device::sml330a1::name%]",
+        "ssvf45a1": "[%key:component::silvercrest_infrared::device::ssvf45a1::name%]",
+        "ssvf45b1": "[%key:component::silvercrest_infrared::device::ssvf45b1::name%]",
+        "ssvf45c1": "[%key:component::silvercrest_infrared::device::ssvf45c1::name%]",
+        "ssvs85a1": "[%key:component::silvercrest_infrared::device::ssvs85a1::name%]",
+        "ssvs85b2": "[%key:component::silvercrest_infrared::device::ssvs85b2::name%]",
+        "stvd45a1": "[%key:component::silvercrest_infrared::device::stvd45a1::name%]",
+        "stvl50a1": "[%key:component::silvercrest_infrared::device::stvl50a1::name%]",
+        "stvl50b1": "[%key:component::silvercrest_infrared::device::stvl50b1::name%]",
+        "stvl50c1": "[%key:component::silvercrest_infrared::device::stvl50c1::name%]",
+        "sv60a1": "[%key:component::silvercrest_infrared::device::sv60a1::name%]",
+        "sv60a2": "[%key:component::silvercrest_infrared::device::sv60a2::name%]"
+      }
+    }
+  }
+}

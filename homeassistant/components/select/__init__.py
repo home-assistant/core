@@ -21,6 +21,8 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
     SelectEntityCapabilityAttribute,
+    SelectService,
+    SelectServiceArgument,
 )
 from .entity import SelectEntity, SelectEntityDescription
 from .services import async_setup_services
@@ -49,6 +51,8 @@ __all__ = [
     "SelectEntity",
     "SelectEntityCapabilityAttribute",
     "SelectEntityDescription",
+    "SelectService",
+    "SelectServiceArgument",
 ]
 
 # mypy: disallow-any-generics

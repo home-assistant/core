@@ -8,7 +8,7 @@
       'bme280_temperature': 7.56,
       'bmp180_pressure': 1032.0118,
       'bmp180_temperature': 7.56,
-      'bmp280_pressure': 1022.0117999999999,
+      'bmp280_pressure': 1022.0118,
       'bmp280_temperature': 5.56,
       'dht22_humidity': 46.23,
       'dht22_temperature': 6.26,

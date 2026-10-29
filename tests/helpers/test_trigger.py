@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -5194,6 +5195,186 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
+    freezer.tick(dt.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_trigger_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a trigger target consisting of only an exclude block is rejected."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    CONF_PLATFORM: "test",
+                    CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                }
+            ],
+        )
+
+
+_INCLUDED_ENTITY_ID = "test.included"
+_EXCLUDED_ENTITY_ID = "test.excluded"
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_target_exclude(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+    behavior: str,
+) -> None:
+    """Test entities matched by the exclude block are ignored by the trigger."""
+    label = label_registry.async_create("Targeted")
+    for object_id in ("included", "excluded"):
+        entry = entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+        hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        behavior,
+        calls,
+        duration=None,
+        target={
+            ATTR_LABEL_ID: label.label_id,
+            CONF_EXCLUDE: {CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID},
+        },
+    )
+
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The excluded entity being off doesn't prevent behavior all from firing
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == _INCLUDED_ENTITY_ID
+
+    unsub()
+
+
+async def test_entity_trigger_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a registry change of the excluded entities is taken into account."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Adding the excluded label removes the entity from the target
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Removing the excluded label adds it back
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(_INCLUDED_ENTITY_ID, labels=set())
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    unsub()
+
+
+async def test_entity_trigger_duration_each_cancelled_when_entity_excluded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test an each duration timer is cancelled when its entity gets excluded."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration={"seconds": 5},
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.tick(dt.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+
+    # Advance past the original duration, the timer was cancelled
     freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

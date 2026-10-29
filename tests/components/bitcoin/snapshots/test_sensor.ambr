@@ -1,0 +1,1119 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'https://www.blockchain.com/explorer',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'bitcoin',
+        '01JR3TZKNXVJ4S6ZKPD7A9BQ2E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Blockchain.com',
+    'model': None,
+    'model_id': None,
+    'name': 'Bitcoin',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_blocks_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_blocks_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blocks size',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blocks size',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blocks_size',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_blocks_size',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_blocks_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Blocks size',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_blocks_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '220382927.0',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_difficulty-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_difficulty',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Difficulty',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Difficulty',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'difficulty',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_difficulty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_difficulty-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Difficulty',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_difficulty',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '125807076547197',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_estimated_sent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_estimated_sent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated sent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Estimated sent',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_btc_sent',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_estimated_btc_sent',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_estimated_sent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Estimated sent',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_estimated_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '134771.49',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_estimated_transaction_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_estimated_transaction_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated transaction volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Estimated transaction volume',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_transaction_volume_usd',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_estimated_transaction_volume_usd',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_estimated_transaction_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Estimated transaction volume',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_estimated_transaction_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10730248533.91',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_exchange_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_exchange_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Exchange rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exchange rate',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exchangerate',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_exchangerate',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_exchange_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Exchange rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_exchange_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '79600.7',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_hash_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_hash_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hash rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hash rate',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hash_rate',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_hash_rate',
+    'unit_of_measurement': 'PH/s',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_hash_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Hash rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'PH/s',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_hash_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '838023.1',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_market_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_market_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Market price',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Market price',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'market_price_usd',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_market_price_usd',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_market_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Market price',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_market_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '79618.09',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_mined-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_mined',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mined',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mined',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'btc_mined',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_btc_mined',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_mined-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Mined',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_mined',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '418.75',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_mined_blocks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_mined_blocks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mined blocks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mined blocks',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mined_blocks',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_mined_blocks',
+    'unit_of_measurement': 'blocks',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_mined_blocks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Mined blocks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'blocks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_mined_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '134',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_miners_revenue-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_miners_revenue',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Miners revenue',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Miners revenue',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'miners_revenue_btc',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_miners_revenue_btc',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_miners_revenue-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Miners revenue',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_miners_revenue',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41.4',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_miners_revenue_in_usd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_miners_revenue_in_usd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Miners revenue in USD',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Miners revenue in USD',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'miners_revenue_usd',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_miners_revenue_usd',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_miners_revenue_in_usd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Miners revenue in USD',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_miners_revenue_in_usd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32941616',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_next_retarget-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_next_retarget',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next retarget',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next retarget',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_retarget',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_next_retarget',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_next_retarget-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Next retarget',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_next_retarget',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '965663.00',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_statistics_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_statistics_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Statistics timestamp',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Statistics timestamp',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timestamp',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_statistics_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Statistics timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_statistics_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1787919684000.0',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_time_between_blocks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_time_between_blocks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time between blocks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Time between blocks',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_between_blocks',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_minutes_between_blocks',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_entities[sensor.bitcoin_time_between_blocks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Time between blocks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_time_between_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.12',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_blocks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_total_blocks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total blocks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total blocks',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_blocks',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_total_blocks',
+    'unit_of_measurement': 'blocks',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_blocks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Total blocks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'blocks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_total_blocks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '964432',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_fees-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_total_fees',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total fees',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total fees',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_fees_btc',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_total_fees_btc',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_fees-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Total fees',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_total_fees',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.04',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_sent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_total_sent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total sent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total sent',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_btc_sent',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_total_btc_sent',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_sent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Total sent',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_total_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1062214.95',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_supply-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_total_supply',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total supply',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total supply',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_btc',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_total_btc',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_total_supply-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Total supply',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_total_supply',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20076350.00',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_trade_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_trade_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trade volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trade volume',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trade_volume_btc',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_trade_volume_btc',
+    'unit_of_measurement': 'BTC',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_trade_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Trade volume',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_trade_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6448.4',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_trade_volume_in_usd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_trade_volume_in_usd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trade volume in USD',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trade volume in USD',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trade_volume_usd',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_trade_volume_usd',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_trade_volume_in_usd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Trade volume in USD',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_trade_volume_in_usd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '513406106.8',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_transactions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bitcoin', '01JR3TZKNXVJ4S6ZKPD7A9BQ2E')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bitcoin_transactions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Transactions',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Transactions',
+    'platform': 'bitcoin',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'number_of_transactions',
+    'unique_id': '01JR3TZKNXVJ4S6ZKPD7A9BQ2E_number_of_transactions',
+    'unit_of_measurement': 'transactions',
+  })
+# ---
+# name: test_entities[sensor.bitcoin_transactions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by blockchain.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bitcoin Transactions',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'transactions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bitcoin_transactions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '599226',
+  })
+# ---
