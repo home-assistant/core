@@ -1,16 +1,14 @@
 """The tests for the hassio component."""
 
-import logging
-import os
 from dataclasses import replace
 from datetime import timedelta
+import logging
+import os
 from pathlib import Path, PurePath
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
-import aiohttp
-import pytest
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     AddonsStats,
@@ -31,8 +29,10 @@ from aiohasupervisor.models import (
     PartialRestoreOptions,
     SupervisorOptions,
 )
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -72,8 +72,6 @@ from homeassistant.components.hassio.const import (
 from homeassistant.components.hassio.handler import KEY_SUPERVISOR_CONNECTION
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
-)
-from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
@@ -82,8 +80,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME, KEY_DATA_LOGGING
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util

@@ -1,4 +1,4 @@
-"""Handler for Hass.io."""
+"""Handler for Supervisor."""
 
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -34,7 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-KEY_LEGACY_SUPERVISOR_CLIENT: HassKey[HassIO] = HassKey(DOMAIN)
+KEY_PASSTHROUGH_SUPERVISOR_CLIENT: HassKey[HassIO] = HassKey(DOMAIN)
 KEY_SUPERVISOR_CLIENT: HassKey[SupervisorClient] = HassKey("supervisor_client")
 KEY_SUPERVISOR_CONNECTION: HassKey[SupervisorConnection] = HassKey(
     "hassio_supervisor_connection"
@@ -68,10 +68,10 @@ class SupervisorConnection:
 
 
 class HassIO:
-    """Small API wrapper for Hass.io."""
+    """Small API wrapper for Supervisor."""
 
     def __init__(self, connection: SupervisorConnection) -> None:
-        """Initialize Hass.io API."""
+        """Initialize Supervisor API wrapper."""
         self._connection = connection
 
     async def send_command(
@@ -86,7 +86,7 @@ class HassIO:
         range_header: str | None = None,
         source: str = "core.handler",
     ) -> Any:
-        """Send API command to Hass.io.
+        """Send API command to Supervisor.
 
         This method is a coroutine.
         """
@@ -184,9 +184,9 @@ def get_supervisor_connection(hass: HomeAssistant) -> SupervisorConnection:
     )
 
 
-@singleton(KEY_LEGACY_SUPERVISOR_CLIENT)
-def get_legacy_supervisor_client(hass: HomeAssistant) -> HassIO:
-    """Return the legacy Hass.io handler for the send_command passthrough."""
+@singleton(KEY_PASSTHROUGH_SUPERVISOR_CLIENT)
+def get_passthrough_supervisor_client(hass: HomeAssistant) -> HassIO:
+    """Return the handler for the Supervisor API passthrough."""
     return HassIO(get_supervisor_connection(hass))
 
 

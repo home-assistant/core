@@ -1,11 +1,11 @@
 """Support for Hass.io."""
 
 import asyncio
+from collections.abc import Coroutine
+from functools import partial
 import logging
 import os
 import struct
-from collections.abc import Coroutine
-from functools import partial
 from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
@@ -29,16 +29,10 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
-)
-from homeassistant.helpers import (
     device_registry as dr,
-)
-from homeassistant.helpers import (
     discovery_flow,
-    system_state,
-)
-from homeassistant.helpers import (
     issue_registry as ir,
+    system_state,
 )
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -115,7 +109,7 @@ from .exceptions import HassioNotReadyError
 from .handler import (
     HassioAPIError,
     async_update_diagnostics,
-    get_legacy_supervisor_client,
+    get_passthrough_supervisor_client,
     get_supervisor_client,
     get_supervisor_connection,
 )
@@ -365,7 +359,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_read_core_log() -> list[str]:
         """Return the end of the log of Home Assistant since it started."""
-        supervisor = get_legacy_supervisor_client(hass)
+        supervisor = get_passthrough_supervisor_client(hass)
         try:
             text: str = await supervisor.send_command(
                 "/core/logs/latest",

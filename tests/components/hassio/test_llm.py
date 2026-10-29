@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hassio.const import DATA_ADDONS_LIST
 from homeassistant.components.hassio.handler import (
-    KEY_LEGACY_SUPERVISOR_CLIENT,
+    KEY_PASSTHROUGH_SUPERVISOR_CLIENT,
     HassioAPIError,
 )
 from homeassistant.components.hassio.llm import SupervisorGetLogsTool, async_get_tools
@@ -59,7 +59,7 @@ def send_command(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> AsyncMo
         return LOGS[command]
 
     mock = AsyncMock(side_effect=_send_command)
-    hass.data[KEY_LEGACY_SUPERVISOR_CLIENT] = Mock(send_command=mock)
+    hass.data[KEY_PASSTHROUGH_SUPERVISOR_CLIENT] = Mock(send_command=mock)
     freezer.move_to("2026-10-20 12:00:00+00:00")
     return mock
 
@@ -245,7 +245,7 @@ def _mock_journal(hass: HomeAssistant, journal: list[tuple[str, str]]) -> None:
             ][: int(lines)]
         )
 
-    hass.data[KEY_LEGACY_SUPERVISOR_CLIENT] = Mock(
+    hass.data[KEY_PASSTHROUGH_SUPERVISOR_CLIENT] = Mock(
         send_command=AsyncMock(side_effect=_send_command)
     )
 

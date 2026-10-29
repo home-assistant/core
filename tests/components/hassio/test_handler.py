@@ -18,7 +18,7 @@ from homeassistant.components.hassio.handler import (
     HassIO,
     HassioAPIError,
     SupervisorConnection,
-    get_legacy_supervisor_client,
+    get_passthrough_supervisor_client,
     get_supervisor_client,
     get_supervisor_connection,
 )
@@ -137,7 +137,7 @@ async def test_supervisor_client_source_header(
     ("client_call", "source"),
     [
         pytest.param(
-            lambda hass: get_legacy_supervisor_client(hass).send_command(
+            lambda hass: get_passthrough_supervisor_client(hass).send_command(
                 "/supervisor/ping", "get"
             ),
             "core.handler",
@@ -249,7 +249,7 @@ async def test_send_command_text_error(
 @pytest.mark.usefixtures("hassio_stubs")
 async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     """Test send command fails when command is invalid."""
-    hassio = get_legacy_supervisor_client(hass)
+    hassio = get_passthrough_supervisor_client(hass)
     with pytest.raises(HassioAPIError):
         # absolute path
         await hassio.send_command("/test/../bad")
