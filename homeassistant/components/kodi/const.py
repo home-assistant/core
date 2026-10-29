@@ -3,8 +3,6 @@
 DOMAIN = "kodi"
 
 CONF_WS_PORT = "ws_port"
-# Set once the notify entity of the entry is linked to a YAML notify configuration
-CONF_NOTIFY_LINKED = "notify_linked"
 
 DEFAULT_PORT = 8080
 DEFAULT_SSL = False

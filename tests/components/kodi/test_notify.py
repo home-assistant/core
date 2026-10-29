@@ -12,7 +12,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.kodi.const import CONF_NOTIFY_LINKED, DOMAIN
+from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
@@ -253,7 +253,6 @@ async def test_yaml_notify_linked_to_entry(
     await setup_yaml_notify(hass, [yaml_notify])
 
     assert hass.states.get(entity_id)
-    assert mock_config_entry.data[CONF_NOTIFY_LINKED] is True
     # The YAML keeps providing the legacy action until it is removed
     assert hass.services.has_service(NOTIFY_DOMAIN, action.split(".")[1])
     issue = issue_registry.async_get_issue(
@@ -287,15 +286,20 @@ async def test_yaml_notify_several_platforms_one_entry(
 
 
 @pytest.mark.usefixtures("mock_connection", "mock_kodi")
-async def test_yaml_notify_already_linked(
+async def test_yaml_notify_existing_entity_keeps_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a linked entry keeps the ID of its notify entity."""
+    """Test an existing notify entity is not renamed after the YAML name."""
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_NOTIFY_LINKED: True}
+    entity_registry.async_get_or_create(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        mock_config_entry.unique_id,
+        config_entry=mock_config_entry,
+        suggested_object_id="name",
     )
 
     await setup_yaml_notify(hass, [YAML_NOTIFY])
@@ -329,7 +333,6 @@ async def test_yaml_notify_without_matching_entry(
 
     # The entry still gets its notify entity, named after the device
     assert hass.states.get(ENTITY_ID)
-    assert CONF_NOTIFY_LINKED not in mock_config_entry.data
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify_living_room")
     assert issue
     assert issue.translation_key == "deprecated_yaml_notify_no_entry"

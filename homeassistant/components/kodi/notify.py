@@ -36,12 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import KodiConfigEntry
-from .const import (
-    CONF_NOTIFY_LINKED,
-    DEFAULT_NOTIFY_DISPLAYTIME,
-    DEFAULT_NOTIFY_ICON,
-    DOMAIN,
-)
+from .const import DEFAULT_NOTIFY_DISPLAYTIME, DEFAULT_NOTIFY_ICON, DOMAIN
 from .issue import (
     DATA_YAML_NOTIFY,
     YAML_NOTIFY_SCHEMA,
@@ -118,19 +113,14 @@ def _async_link_yaml_notify(
     yaml_configs: list[YamlNotifyConfig],
 ) -> None:
     """Name the notify entity after the YAML notify platform and raise the issues."""
-    # The first YAML name names a new entity; once linked, the entity keeps its ID
-    name = None if entry.data.get(CONF_NOTIFY_LINKED) else yaml_configs[0].name
+    # Only a new entity is named after the first YAML name; an existing one keeps its ID
     registry_entry = er.async_get(hass).async_get_or_create(
         NOTIFY_DOMAIN,
         DOMAIN,
         uid,
         config_entry=entry,
-        suggested_object_id=slugify(name or entry.data[CONF_NAME]),
+        suggested_object_id=slugify(yaml_configs[0].name or entry.data[CONF_NAME]),
     )
-    if not entry.data.get(CONF_NOTIFY_LINKED):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_NOTIFY_LINKED: True}
-        )
     for yaml_config in yaml_configs:
         async_create_notify_entity_issue(
             hass, yaml_config, registry_entry.entity_id, entry.title
