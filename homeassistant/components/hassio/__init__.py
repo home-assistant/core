@@ -159,7 +159,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 NETWORK_RELOAD_COOLDOWN = 10
 
-# Journal lines read for the log stream, reading is slow on HAOS (~1 s per 1,000)
+# Journal lines read for the log stream, on slow system reading can be as slow as ~1 s per 1,000
 CORE_LOG_LINES = 5000
 CORE_LOG_TIMEOUT = 30
 
