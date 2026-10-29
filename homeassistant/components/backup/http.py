@@ -13,7 +13,6 @@ from multidict import istr
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame
 from homeassistant.util import slugify
 from homeassistant.util.async_iterator import (
     AsyncIteratorReader,
@@ -66,16 +65,6 @@ class DownloadBackupView(HomeAssistantView):
         try:
             backup = await agent.async_get_backup(backup_id)
         except BackupNotFound:
-            return Response(status=HTTPStatus.NOT_FOUND)
-
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
