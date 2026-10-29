@@ -19,8 +19,10 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DOMAIN,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -132,6 +134,8 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_PRECISION: "0.5",
+            CONF_TEMP_STEP: "1",
         },
     )
     assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
@@ -141,6 +145,8 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
         user_input={},
     )
     assert result == snapshot(name="create_entry", include=SNAPSHOT_FLOW_PROPS)
+    assert result["data"][CONF_PRECISION] == "0.5"
+    assert result["data"][CONF_TEMP_STEP] == "1"
 
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
@@ -272,6 +278,47 @@ async def test_validate_config_min_max_duration() -> None:
     }
     result = await _validate_config(None, user_input_partial)
     assert result == user_input_partial
+
+
+@pytest.mark.parametrize(
+    ("precision", "temp_step"),
+    [
+        pytest.param("0.1", "1", id="tenths_precision"),
+        pytest.param("0.5", "0.1", id="halves_precision"),
+        pytest.param("1", "0.5", id="whole_precision"),
+    ],
+)
+async def test_config_flow_stores_precision_and_temp_step(
+    hass: HomeAssistant, precision: str, temp_step: str
+) -> None:
+    """Test precision and target_temp_step are stored in the options."""
+    with patch(
+        "homeassistant.components.generic_thermostat.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My thermostat",
+                CONF_HEATER: "switch.run",
+                CONF_SENSOR: "sensor.temperature",
+                CONF_AC_MODE: False,
+                CONF_COLD_TOLERANCE: 0.3,
+                CONF_HOT_TOLERANCE: 0.3,
+                CONF_PRECISION: precision,
+                CONF_TEMP_STEP: temp_step,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["options"][CONF_PRECISION] == precision
+    assert result["options"][CONF_TEMP_STEP] == temp_step
 
 
 @pytest.mark.parametrize(

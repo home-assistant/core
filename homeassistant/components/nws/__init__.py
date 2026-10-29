@@ -144,7 +144,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
                     retry_no_data=True,
                 )
             except NwsNoDataError as err:
-                raise UpdateFailed("No data returned.") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="no_data",
+                ) from err
 
         return update_forecast
 
@@ -162,7 +165,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None:
                     retry_no_data=True,
                 )
             except NwsNoDataError as err:
-                raise UpdateFailed("No data returned.") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="no_data",
+                ) from err
 
         return update_forecast_hourly
 

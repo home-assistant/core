@@ -1,14 +1,14 @@
 """Test sensor of Nettigo Air Monitor integration."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from dataclasses import replace
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from nettigo_air_monitor import ApiError
+from nettigo_air_monitor import ApiError, InvalidSensorDataError
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     async_fire_time_changed,
-    async_load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -31,33 +31,37 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
-from . import INCOMPLETE_NAM_DATA, init_integration
+from . import setup_integration
+from .conftest import NAM_SENSORS
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_nam_client")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the air_quality."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2024-04-20 12:00:00+00:00")
 
     with patch("homeassistant.components.nam.PLATFORMS", [Platform.SENSOR]):
-        entry = await init_integration(hass)
+        await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_nam_client")
 async def test_sensor_disabled(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor disabled by default."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     entry = entity_registry.async_get("sensor.nettigo_air_monitor_signal_strength")
     assert entry
@@ -74,9 +78,14 @@ async def test_sensor_disabled(
     assert updated_entry.disabled is False
 
 
-async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None:
+async def test_incomplete_data_after_device_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+) -> None:
     """Test states of the air_quality after device restart."""
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
@@ -84,63 +93,55 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
-    future = utcnow() + timedelta(minutes=6)
-    update_response = Mock(json=AsyncMock(return_value=INCOMPLETE_NAM_DATA))
-    with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-            return_value=update_response,
-        ),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    mock_nam_client.async_update.return_value = replace(
+        NAM_SENSORS, heca_temperature=None
+    )
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("exc", [ApiError("API Error"), RetryError, TimeoutError])
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ApiError("API Error"),
+        InvalidSensorDataError("Invalid sensor data"),
+        RetryError(Mock()),
+        TimeoutError,
+    ],
+)
 async def test_availability(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+    exc: Exception | type[Exception],
 ) -> None:
     """Ensure we mark entities unavailable when device causes an error."""
-    nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
-
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "7.56"
 
-    with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-            side_effect=exc,
-        ),
-    ):
-        freezer.tick(DEFAULT_UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    mock_nam_client.async_update.side_effect = exc
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-            return_value=update_response,
-        ),
-    ):
-        freezer.tick(DEFAULT_UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    mock_nam_client.async_update.side_effect = None
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
@@ -148,34 +149,32 @@ async def test_availability(
     assert state.state == "7.56"
 
 
-async def test_manual_update_entity(hass: HomeAssistant) -> None:
+async def test_manual_update_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam_client: MagicMock,
+) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
-    nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
-
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
-    update_response = Mock(json=AsyncMock(return_value=nam_data))
-    with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
-            return_value=update_response,
-        ) as mock_get_data,
-    ):
-        await hass.services.async_call(
-            HOMEASSISTANT_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: ["sensor.nettigo_air_monitor_bme280_temperature"]},
-            blocking=True,
-        )
+    mock_nam_client.async_update.reset_mock()
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["sensor.nettigo_air_monitor_bme280_temperature"]},
+        blocking=True,
+    )
 
-    assert mock_get_data.call_count == 1
+    assert mock_nam_client.async_update.call_count == 1
 
 
+@pytest.mark.usefixtures("mock_nam_client")
 async def test_unique_id_migration(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the unique_id migration."""
     entity_registry.async_get_or_create(
@@ -194,7 +193,7 @@ async def test_unique_id_migration(
         disabled_by=None,
     )
 
-    await init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     entry = entity_registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
     assert entry
