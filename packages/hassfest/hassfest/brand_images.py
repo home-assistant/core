@@ -82,6 +82,36 @@ def _validate_size(integration: Integration, image: str, size: tuple[int, int]) 
         )
 
 
+def _served(images: dict[str, Path], image: str) -> Path | None:
+    """Return the file the brands integration serves for an image, if any."""
+    return next(
+        (
+            images[name]
+            for name in (image, *IMAGE_FALLBACKS.get(image, ()))
+            if name in images
+        ),
+        None,
+    )
+
+
+def _redundant_fallback(images: dict[str, Path], image: str) -> str | None:
+    """Return the fallback an image duplicates, if removing it changes nothing."""
+    fallback = next(
+        (name for name in IMAGE_FALLBACKS.get(image, ()) if name in images), None
+    )
+    if fallback is None or images[fallback].read_bytes() != images[image].read_bytes():
+        return None
+    # An @2x image requires its normal-resolution companion.
+    if image.replace(".png", "@2x.png") in images:
+        return None
+    remaining = {name: path for name, path in images.items() if name != image}
+    for other in sorted(ALLOWED_IMAGES):
+        before, after = _served(images, other), _served(remaining, other)
+        if before and after and before.read_bytes() != after.read_bytes():
+            return None
+    return fallback
+
+
 def _validate_brand_folder(integration: Integration, brand_dir: Path) -> None:
     """Validate the brand folder of an integration."""
     images: dict[str, Path] = {}
@@ -111,15 +141,7 @@ def _validate_brand_folder(integration: Integration, brand_dir: Path) -> None:
                 " is missing",
             )
 
-        # The brands integration serves the first fallback that exists, so an image
-        # identical to that one adds nothing.
-        fallback = next(
-            (name for name in IMAGE_FALLBACKS.get(image, ()) if name in images), None
-        )
-        if (
-            fallback is not None
-            and images[fallback].read_bytes() == images[image].read_bytes()
-        ):
+        if (fallback := _redundant_fallback(images, image)) is not None:
             _report(
                 integration,
                 f"brand/{image} is identical to brand/{fallback}, which is used"

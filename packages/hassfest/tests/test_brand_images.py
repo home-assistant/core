@@ -61,6 +61,24 @@ def _validate(tmp_path: Path, config: Config, files: dict[str, bytes]) -> Integr
             # dark_icon.png is served when dark_logo.png is missing, not icon.png.
             id="identical_to_later_fallback",
         ),
+        pytest.param(
+            {
+                "icon.png": _png(256, 256),
+                "dark_icon.png": _png(256, 256),
+                "logo.png": _png(400, 128),
+            },
+            # Removing dark_icon.png would serve logo.png as the dark logo.
+            id="duplicate_serves_other_fallback",
+        ),
+        pytest.param(
+            {
+                "icon.png": _png(256, 256),
+                "dark_icon.png": _png(256, 256),
+                "dark_icon@2x.png": _png(512, 512),
+            },
+            # dark_icon@2x.png requires dark_icon.png.
+            id="duplicate_has_2x_companion",
+        ),
     ],
 )
 def test_valid_brand_folder(
