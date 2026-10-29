@@ -350,14 +350,9 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
 def cleanup_client_trackers(
     hass: HomeAssistant,
     controller: OmadaSiteController,
-    known_clients: dict[str, OmadaNetworkClient] | None = None,
+    known_clients: dict[str, OmadaNetworkClient],
 ) -> None:
     """Remove tracker entities for clients missing from the controller list."""
-    if known_clients is None:
-        known_clients = controller.known_clients_coordinator.data or {}
-    if not known_clients:
-        return
-
     # Trackers are created as scanner_<site>_<client.mac>, with the MAC taken
     # from the same client list, so comparing unique IDs avoids parsing them.
     config_entry = controller.known_clients_coordinator.config_entry
