@@ -16,32 +16,11 @@ from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_I
 from homeassistant.components.heiman_home.coordinator import (
     HeimanData,
     HeimanDataUpdateCoordinator,
-    _async_call_cleanup_method,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-
-async def test_async_call_cleanup_method_with_none_method(hass: HomeAssistant) -> None:
-    """Test _async_call_cleanup_method when method is None."""
-    mock_target = MagicMock()
-    # Set the attribute on this mock instance to trigger the continue path
-    mock_target.nonexistent = None
-
-    # This should skip the None method and continue
-    await _async_call_cleanup_method(mock_target, ("nonexistent",))
-
-
-async def test_async_call_cleanup_method_sync_method(hass: HomeAssistant) -> None:
-    """Test _async_call_cleanup_method with sync method."""
-    mock_target = MagicMock()
-    mock_target.close = MagicMock(return_value=None)  # Sync method
-
-    # Should call the sync method without awaiting
-    await _async_call_cleanup_method(mock_target, ("close", "async_close"))
-    mock_target.close.assert_called_once()
 
 
 async def test_coordinator_async_update_data_no_home_id(hass: HomeAssistant) -> None:
@@ -879,8 +858,14 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
         await coordinator._fetch_user_and_home_info()
 
 
-async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> None:
-    """Test _fetch_and_process_devices applies device filtering."""
+async def test_coordinator_fetch_devices_creates_all_devices(
+    hass: HomeAssistant,
+) -> None:
+    """Test _fetch_and_process_devices creates entities for every device.
+
+    Filtering is not a concept in Home Assistant core: every device the account
+    exposes gets an entity, users can disable the ones they don't need.
+    """
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -890,11 +875,6 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
     mock_api_client.cloud_client = mock_cloud_wrapper
     mock_api_client.initialize = AsyncMock()
 
-    # Create mock device management
-    mock_device_management = MagicMock()
-    mock_filter_manager = MagicMock()
-    mock_device_management.filter_manager = mock_filter_manager
-
     # Create devices
     mock_device1 = MagicMock(spec=HeimanDevice)
     mock_device1.device_id = "device-1"
@@ -903,9 +883,6 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
     mock_device2 = MagicMock(spec=HeimanDevice)
     mock_device2.device_id = "device-2"
     mock_device2.merge_from = MagicMock()
-
-    # Return only device-1 after filtering
-    mock_filter_manager.get_filtered_devices = MagicMock(return_value=[mock_device1])
 
     mock_cloud_wrapper.async_get_devices = AsyncMock(
         return_value={"device-1": mock_device1, "device-2": mock_device2}
@@ -917,17 +894,14 @@ async def test_coordinator_fetch_devices_with_filtering(hass: HomeAssistant) -> 
         logger=MagicMock(),
         api_client=mock_api_client,
         config_entry=config_entry,
-        device_management=mock_device_management,
     )
 
     coordinator.data = HeimanData()
 
     await coordinator._fetch_and_process_devices("test-home-id")
 
-    # Verify filtering was applied
-    mock_filter_manager.get_filtered_devices.assert_called_once()
-    assert "device-1" in coordinator.data.devices
-    assert "device-2" not in coordinator.data.devices
+    # Every discovered device ends up in the coordinator data
+    assert set(coordinator.data.devices) == {"device-1", "device-2"}
 
 
 async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(

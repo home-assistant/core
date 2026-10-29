@@ -7,7 +7,6 @@ import logging
 from typing import Any, override
 
 from heimanconnect import (
-    DeviceManagement,
     DeviceProperty,
     HeimanApiError,
     HeimanAuthError,
@@ -27,22 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import HeimanApiClient
-from .const import (
-    AREA_NAME_RULE_HOME_ROOM,
-    CONF_AREA_NAME_RULE,
-    CONF_DEVICE_FILTER,
-    CONF_DEVICE_FILTER_MODE,
-    CONF_DEVICE_LIST,
-    CONF_HOME_ID,
-    CONF_MODEL_FILTER_MODE,
-    CONF_MODEL_LIST,
-    CONF_ROOM_FILTER_MODE,
-    CONF_ROOM_LIST,
-    CONF_STATISTICS_LOGIC,
-    CONF_TYPE_FILTER_MODE,
-    CONF_TYPE_LIST,
-    CONF_USER_ID,
-)
+from .const import CONF_HOME_ID, CONF_USER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,33 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 # - New device detection
 # - Firmware version updates
 UPDATE_INTERVAL = timedelta(minutes=30)
-
-
-async def _async_call_cleanup_method(
-    target: object, method_names: tuple[str, ...]
-) -> None:
-    """Call the first available cleanup method on a target.
-
-    This helper function attempts to call cleanup methods in order of preference.
-    It supports both sync and async methods, automatically detecting and awaiting
-    coroutines when necessary.
-
-    Args:
-        target: The object to call the cleanup method on
-        method_names: Tuple of method names to try in order of preference
-
-    Example:
-        >>> await _async_call_cleanup_method(mqtt_client, ("async_disconnect", "disconnect"))
-        >>> await _async_call_cleanup_method(api_client, ("async_close", "close"))
-    """
-    for method_name in method_names:
-        method = getattr(target, method_name, None)
-        if method is None:
-            continue
-        result = method()
-        if hasattr(result, "__await__"):
-            await result
-        return
 
 
 @dataclass
@@ -103,7 +60,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         logger: logging.Logger,
         api_client: HeimanApiClient,
         config_entry: ConfigEntry,
-        device_management: DeviceManagement | None = None,
         oauth_session=None,
     ) -> None:
         """Initialize the coordinator.
@@ -113,7 +69,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             logger: Logger instance
             api_client: API client instance
             config_entry: Config entry instance
-            device_management: Device management instance
             oauth_session: OAuth2 session for token retrieval
         """
         super().__init__(
@@ -126,7 +81,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         self.api_client = api_client
         self.config_entry = config_entry
-        self.device_management = device_management
         self.data = HeimanData()
         self.mqtt_client: HeimanMqttClient | None = None
         self.oauth_session = oauth_session
@@ -134,37 +88,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         self._device_detail_cache: dict[str, dict[str, Any] | None] = {}
         # Cache TTL: 5 minutes
         self._device_detail_cache_ttl = 300
-
-        # Configure device management if provided
-        if self.device_management:
-            filter_config = {
-                "filter_mode": config_entry.data.get(CONF_DEVICE_FILTER, "exclude"),
-                "statistics_logic": config_entry.data.get(CONF_STATISTICS_LOGIC, "or"),
-                "room_filter_mode": config_entry.data.get(
-                    CONF_ROOM_FILTER_MODE, "exclude"
-                ),
-                "room_list": config_entry.data.get(CONF_ROOM_LIST, []),
-                "type_filter_mode": config_entry.data.get(
-                    CONF_TYPE_FILTER_MODE, "exclude"
-                ),
-                "type_list": config_entry.data.get(CONF_TYPE_LIST, []),
-                "model_filter_mode": config_entry.data.get(
-                    CONF_MODEL_FILTER_MODE, "exclude"
-                ),
-                "model_list": config_entry.data.get(CONF_MODEL_LIST, []),
-                "device_filter_mode": config_entry.data.get(
-                    CONF_DEVICE_FILTER_MODE, "exclude"
-                ),
-                "device_list": config_entry.data.get(CONF_DEVICE_LIST, []),
-            }
-            area_sync_mode = config_entry.data.get(
-                CONF_AREA_NAME_RULE, AREA_NAME_RULE_HOME_ROOM
-            )
-
-            self.device_management.configure(
-                filter_config=filter_config,
-                area_sync_mode=area_sync_mode,
-            )
 
     @override
     async def _async_update_data(self) -> HeimanData:
@@ -239,22 +162,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         cloud_wrapper = self.api_client.cloud_client
 
         try:
-            devices_dict = await cloud_wrapper.async_get_devices(home_id=home_id)
+            devices = await cloud_wrapper.async_get_devices(home_id=home_id)
 
-            # Apply device filtering
-            if self.device_management:
-                devices_list = list(devices_dict.values())
-                filtered_devices_list = (
-                    self.device_management.filter_manager.get_filtered_devices(
-                        devices_list
-                    )
-                )
-                # Convert back to dictionary
-                devices = {d.device_id: d for d in filtered_devices_list}
-            else:
-                devices = devices_dict
-
-            # Get detailed info for filtered devices to populate property values
+            # Get detailed info for devices to populate property values
             await self._update_device_details(devices)
 
             # Update device data and merge old states
@@ -414,15 +324,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         """Clean up MQTT client resources."""
         if self.mqtt_client is not None:
             with contextlib.suppress(Exception):
-                await _async_call_cleanup_method(
-                    self.mqtt_client,
-                    (
-                        "async_disconnect",
-                        "disconnect",
-                        "async_close",
-                        "close",
-                    ),
-                )
+                await self.mqtt_client.disconnect()
         self.mqtt_client = None
 
     def _on_device_property_update(

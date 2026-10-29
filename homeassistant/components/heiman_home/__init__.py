@@ -3,7 +3,7 @@
 import contextlib
 import logging
 
-from heimanconnect import DeviceManagement, HeimanMQTTError
+from heimanconnect import HeimanMQTTError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from .api import HeimanApiClient
 from .const import PLATFORMS
-from .coordinator import HeimanDataUpdateCoordinator, _async_call_cleanup_method
+from .coordinator import HeimanDataUpdateCoordinator
 
 type HeimanConfigEntry = ConfigEntry[HeimanDataUpdateCoordinator]
 
@@ -55,15 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
     api_client = HeimanApiClient(hass=hass, session=session)
 
-    # Create device management (configuration is handled by coordinator)
-    device_management = DeviceManagement()
-
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
         api_client=api_client,
         config_entry=entry,
-        device_management=device_management,
         oauth_session=session,
     )
 
@@ -82,15 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         mqtt_client = getattr(coordinator, "mqtt_client", None)
         if mqtt_client is not None:
             with contextlib.suppress(Exception):
-                await _async_call_cleanup_method(
-                    mqtt_client,
-                    (
-                        "async_disconnect",
-                        "disconnect",
-                    ),
-                )
+                await mqtt_client.disconnect()
         with contextlib.suppress(Exception):
-            await _async_call_cleanup_method(api_client, ("async_close", "close"))
+            await api_client.close()
         raise
 
     # Set runtime_data only after successful initialization
@@ -116,25 +106,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     # Disconnect MQTT client (may not be initialized if setup failed early)
     if coordinator.mqtt_client is not None:
         try:
-            await _async_call_cleanup_method(
-                coordinator.mqtt_client,
-                (
-                    "async_disconnect",
-                    "disconnect",
-                ),
-            )
+            await coordinator.mqtt_client.disconnect()
         except Exception:
             _LOGGER.exception("Error disconnecting MQTT client during unload")
 
     # Close API client (always exists once coordinator is created)
     try:
-        await _async_call_cleanup_method(
-            coordinator.api_client,
-            (
-                "async_close",
-                "close",
-            ),
-        )
+        await coordinator.api_client.close()
     except Exception:
         _LOGGER.exception("Error closing API client during unload")
 

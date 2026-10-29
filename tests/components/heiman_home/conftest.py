@@ -113,13 +113,3 @@ def mock_mqtt_client() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture
-def mock_device_management() -> Generator[MagicMock]:
-    """Mock device management."""
-    with patch(
-        "heimanconnect.DeviceManagement",
-        autospec=True,
-    ) as mock_dm:
-        dm = mock_dm.return_value
-        dm.filter_manager.get_filtered_devices = MagicMock(return_value=[])
-        yield dm

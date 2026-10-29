@@ -1,7 +1,7 @@
 """Sensor platform for Heiman integration."""
 
 import logging
-from typing import Any, override
+from typing import override
 
 from heimanconnect import DeviceProperty, HeimanDevice
 
@@ -301,14 +301,10 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-
-        device = self.coordinator.get_device(self._device.device_id)
-        if not device:
-            return False
-
-        return device.online is True
+        return (
+            super().available
+            and self._device.device_id in self.coordinator.data.devices
+        )
 
     @property
     @override
@@ -323,20 +319,3 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             return None
 
         return DeviceProperty.validate_sensor_value(prop.value)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        attributes = {}
-
-        device = self.coordinator.get_device(self._device.device_id)
-        if device:
-            prop = device.properties.get(self._property_identifier)
-            if prop:
-                if prop.unit:
-                    attributes["unit"] = prop.unit
-                if prop.data_type:
-                    attributes["data_type"] = prop.data_type
-
-        return attributes

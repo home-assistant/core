@@ -157,6 +157,7 @@ async def test_sensor_entity_available_property(hass: HomeAssistant) -> None:
 
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
+    mock_coordinator.data.devices = {"device-1": mock_device}
 
     sensor = HeimanSensorEntity(
         coordinator=mock_coordinator,
@@ -164,20 +165,16 @@ async def test_sensor_entity_available_property(hass: HomeAssistant) -> None:
         property_identifier="temperature",
     )
 
-    # Test available when device is online
+    # Available when the coordinator refreshed and the device is still
+    # present in the coordinator device list
     assert sensor.available is True
 
-    # Test not available when device is offline
-    mock_device.online = False
+    # Not available when the device disappeared from the device list
+    mock_coordinator.data.devices = {}
     assert sensor.available is False
 
-    # Test not available when device is not found
-    mock_coordinator.get_device.return_value = None
-    assert sensor.available is False
-
-    # Test not available when last update failed
-    mock_device.online = True
-    mock_coordinator.get_device.return_value = mock_device
+    # Not available when the last coordinator update failed
+    mock_coordinator.data.devices = {"device-1": mock_device}
     mock_coordinator.last_update_success = False
     assert sensor.available is False
 
@@ -219,43 +216,6 @@ async def test_sensor_entity_native_value(hass: HomeAssistant) -> None:
         property_identifier="non_existent",
     )
     assert sensor2.native_value is None
-
-
-async def test_sensor_entity_extra_state_attributes(hass: HomeAssistant) -> None:
-    """Test sensor entity extra_state_attributes property."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "temperature": DeviceProperty(
-            identifier="temperature",
-            name="Temperature",
-            value=25.5,
-            unit="°C",
-            data_type="float",
-        ),
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature",
-    )
-
-    # Test extra attributes
-    attrs = sensor.extra_state_attributes
-    assert attrs is not None
-    assert attrs.get("unit") == "°C"
-    assert attrs.get("data_type") == "float"
-
-    # Test when device is not found
-    mock_coordinator.get_device.return_value = None
-    attrs = sensor.extra_state_attributes
-    assert attrs == {}
 
 
 async def test_sensor_apply_sensor_config_temperature(hass: HomeAssistant) -> None:
@@ -624,68 +584,6 @@ async def test_sensor_entity_creation_no_readable_properties(
 
     # No sensors should be created
     assert len(added_entities) == 0
-
-
-async def test_sensor_extra_state_attributes_device_not_found(
-    hass: HomeAssistant,
-) -> None:
-    """Test extra_state_attributes when device is not found."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "temperature": DeviceProperty(
-            identifier="temperature",
-            name="Temperature",
-            value=25.5,
-            unit="°C",
-            data_type="float",
-        ),
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature",
-    )
-
-    # Get attributes normally
-    attrs = sensor.extra_state_attributes
-    assert attrs.get("unit") == "°C"
-    assert attrs.get("data_type") == "float"
-
-    # When device is not found
-    mock_coordinator.get_device.return_value = None
-    attrs = sensor.extra_state_attributes
-    assert attrs == {}
-
-
-async def test_sensor_extra_state_attributes_property_not_found(
-    hass: HomeAssistant,
-) -> None:
-    """Test extra_state_attributes when property is not found."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {}
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="temperature",
-    )
-
-    # When property is not found
-    attrs = sensor.extra_state_attributes
-    assert attrs == {}
 
 
 async def test_sensor_apply_sensor_config_voltage(hass: HomeAssistant) -> None:
