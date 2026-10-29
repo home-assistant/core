@@ -36,7 +36,7 @@ pytest_homeassistant = "pytest_homeassistant.bootstrap"
 
 [project.optional-dependencies]
 bluetooth = [
-  "aiohasupervisor==0.8.1",
+  "aiohasupervisor==0.9.0",
   "aiousbwatcher==1.1.2",
   "bluetooth-adapters==2.4.0",
   "bluetooth-auto-recovery==1.6.4",

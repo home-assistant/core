@@ -9,7 +9,11 @@ from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import MAC_GUEST, MAC_LAPTOP, MAC_PHONE, MOCK_CONFIG, MOCK_HOST
@@ -18,17 +22,22 @@ from .conftest import MAC_GUEST, MAC_LAPTOP, MAC_PHONE, MOCK_CONFIG, MOCK_HOST
 @pytest.mark.parametrize(
     ("dhcp_software", "expected_names"),
     [
-        pytest.param("dnsmasq", {"my-phone", "my-laptop"}, id="dnsmasq"),
-        pytest.param("odhcpd", {"my-phone", "my-laptop"}, id="odhcpd"),
-        pytest.param("none", {MAC_PHONE, MAC_LAPTOP}, id="none"),
+        pytest.param(
+            "dnsmasq", {MAC_PHONE: "my-phone", MAC_LAPTOP: "my-laptop"}, id="dnsmasq"
+        ),
+        pytest.param(
+            "odhcpd", {MAC_PHONE: "my-phone", MAC_LAPTOP: "my-laptop"}, id="odhcpd"
+        ),
+        pytest.param("none", {MAC_PHONE: MAC_PHONE, MAC_LAPTOP: MAC_LAPTOP}, id="none"),
     ],
 )
 async def test_only_authorized_clients_are_tracked(
     hass: HomeAssistant,
     mock_ubus: MagicMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    expected_names: set[str],
+    expected_names: dict[str, str],
 ) -> None:
     """Test that authorized clients become entities and names resolve per backend."""
     mock_config_entry.add_to_hass(hass)
@@ -42,7 +51,12 @@ async def test_only_authorized_clients_are_tracked(
 
     assert {e.unique_id for e in entries} == {MAC_PHONE, MAC_LAPTOP}
     assert MAC_GUEST not in {e.unique_id for e in entries}
-    assert {e.original_name for e in entries} == expected_names
+    assert {e.original_name for e in entries} == {None}
+    devices = {e.unique_id: device_registry.async_get(e.device_id) for e in entries}
+    assert {mac: device.name for mac, device in devices.items()} == expected_names
+    assert {mac: device.connections for mac, device in devices.items()} == {
+        mac: {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))} for mac in expected_names
+    }
 
 
 async def test_setup_scanner_imports_yaml(

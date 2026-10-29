@@ -6,7 +6,11 @@ from typing import Any, override
 
 from spotifyaio import SpotifyClient, SpotifyForbiddenError
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -58,6 +62,13 @@ class SpotifyFlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), title=name, data=data
             )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title=name,
+                data={**data, CONF_NAME: name},
+            )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
 
@@ -81,4 +92,16 @@ class SpotifyFlowHandler(
 
         return await self.async_step_pick_implementation(
             user_input={"implementation": reauth_entry.data["auth_implementation"]}
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
+        return await self.async_step_pick_implementation(
+            user_input={
+                "implementation": self._get_reconfigure_entry().data[
+                    "auth_implementation"
+                ]
+            }
         )
