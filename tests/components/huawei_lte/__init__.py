@@ -90,6 +90,10 @@ def magic_client() -> MagicMock:
             "arfcn": None,
             "bsic": None,
             "rxlev": None,
+            "ncgi": "00101ABCDEFABCD",
+            "nrdlfreq": "3500000kHz",
+            "nrulfreq": "1800000kHz",
+            "scc_pci": "456",
         }
     )
 
