@@ -45,17 +45,14 @@ async def async_setup_entry(
         returns.
         """
         entity_registry = er.async_get(hass)
-        if unique_id in added_unique_ids:
-            if (
-                entity_registry.async_get_entity_id(
-                    DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
-                )
-                is not None
-            ):
-                return False
-            # Stale tracker cleanup removed the entry, so allow the tracker to
-            # be created again.
-            added_unique_ids.discard(unique_id)
+        if (
+            unique_id in added_unique_ids
+            and entity_registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+            )
+            is not None
+        ):
+            return False
         added_unique_ids.add(unique_id)
         return True
 

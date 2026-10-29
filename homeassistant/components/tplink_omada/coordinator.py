@@ -382,17 +382,17 @@ def cleanup_client_trackers(
         # removes the tracker. Keep a device that other entities share so they
         # are not detached.
         if (
-            entity.device_id is not None
-            and device_registry.async_get(entity.device_id) is not None
+            (device_id := entity.device_id) is not None
+            and device_registry.async_get(device_id) is not None
             and len(
                 er.async_entries_for_device(
                     entity_registry,
-                    entity.device_id,
+                    device_id,
                     include_disabled_entities=True,
                 )
             )
             == 1
         ):
-            device_registry.async_remove_device(entity.device_id)
+            device_registry.async_remove_device(device_id)
             continue
         entity_registry.async_remove(entity.entity_id)
