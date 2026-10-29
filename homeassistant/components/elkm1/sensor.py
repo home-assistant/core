@@ -1,13 +1,12 @@
 """Support for control of ElkM1 sensors."""
 
-from typing import Any, cast, override
+from typing import Any, override
 
-from elkm1_lib.const import SettingFormat, ZoneType
+from elkm1_lib.const import ZoneType
 from elkm1_lib.counters import Counter
 from elkm1_lib.elements import Element
 from elkm1_lib.keypads import Keypad
 from elkm1_lib.panel import Panel
-from elkm1_lib.settings import Setting
 from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
 
@@ -19,17 +18,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
-from .entity import (
-    ElkAttachedEntity,
-    ElkEntity,
-    create_elk_entities,
-    generate_unique_id,
-)
-from .util import deprecate_entity
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 UNDEFINED_TEMPERATURE = -40
 
@@ -53,38 +45,12 @@ async def async_setup_entry(
     elk_data = config_entry.runtime_data
     elk = elk_data.elk
     entities: list[ElkEntity] = []
-    elk_settings: list[Setting] = []
 
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
 
-    entity_registry = er.async_get(hass)
-    for setting in elk.settings:
-        setting = cast(Setting, setting)
-        domain = (
-            "time" if setting.value_format is SettingFormat.TIME_OF_DAY else "number"
-        )
-
-        orig_unique_id = generate_unique_id(elk_data.prefix, setting)
-        new_unique_id = orig_unique_id
-        new_entity_id = f"{domain}.elkm1_{setting.name.replace(' ', '_')}".lower()
-
-        if deprecate_entity(
-            hass,
-            config_entry.entry_id,
-            entity_registry,
-            "sensor",
-            orig_unique_id,
-            f"deprecated_sensor_{orig_unique_id}",
-            "deprecated_sensor",
-            new_unique_id,
-            new_entity_id,
-        ):
-            elk_settings.append(setting)
-
-    create_elk_entities(elk_data, elk_settings, "setting", ElkSetting, entities)
     async_add_entities(entities)
 
 
@@ -195,27 +161,6 @@ class ElkPanel(ElkSensor):
             self._attr_native_value = "Paused" if self._elk.is_paused() else "Connected"
         else:
             self._attr_native_value = "Disconnected"
-
-
-class ElkSetting(ElkSensor):
-    """Representation of an Elk-M1 Setting."""
-
-    _attr_translation_key = "setting"
-    _element: Setting
-
-    @override
-    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        self._attr_native_value = (
-            None if self._element.value is None else str(self._element.value)
-        )
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Attributes of the sensor."""
-        attrs: dict[str, Any] = self.initial_attrs()
-        attrs["value_format"] = SettingFormat(self._element.value_format).name.lower()
-        return attrs
 
 
 class ElkZone(ElkSensor):
