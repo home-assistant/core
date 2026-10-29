@@ -84,6 +84,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.GATE: Platform.COVER,
     UIClass.LIGHT: Platform.LIGHT,
     UIClass.ON_OFF: Platform.SWITCH,
+    UIClass.OVEN: Platform.SWITCH,
     UIClass.PERGOLA: Platform.COVER,
     UIClass.ROLLER_SHUTTER: Platform.COVER,
     UIClass.SCREEN: Platform.COVER,

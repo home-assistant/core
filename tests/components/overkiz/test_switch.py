@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -29,6 +30,8 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
+    oven_local_control_event,
+    oven_remote_control_event,
 )
 
 ON_OFF = FixtureDevice(
@@ -58,11 +61,17 @@ DOMESTIC_HOT_WATER_TANK = FixtureDevice(
     "io://1234-5678-1202/6019143#7",
     "switch.somfy_tahoma_switch_hot_water_tank",
 )
+OVEN = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "switch.oven",
+)
 
 
 SNAPSHOT_FIXTURES = [
     ON_OFF,
     MYFOX_CAMERA,
+    OVEN,
 ]
 
 
@@ -137,6 +146,8 @@ async def test_switch_entities_snapshot(
             ["off"],
             id="domestic_hot_water_tank_turn_off",
         ),
+        pytest.param(OVEN, SERVICE_TURN_ON, "start", None, id="oven_turn_on"),
+        pytest.param(OVEN, SERVICE_TURN_OFF, "stop", None, id="oven_turn_off"),
     ],
 )
 async def test_switch_service_call(
@@ -223,3 +234,77 @@ async def test_switch_unavailability(
     )
 
     assert hass.states.get(ON_OFF.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_switch_follows_cooking(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven switch reflects whether the oven is cooking."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_OFF
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_STARTED_STOPPED.value,
+                        "type": 3,
+                        "value": "started",
+                    },
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_ON
+
+
+def _block_local_control(setup: Setup) -> None:
+    """Simulate an oven that has not been switched to its Wi-Fi mode."""
+    state = setup.devices[0].states[OverkizState.OGP_UNAVAILABLE_FEATURES]
+    state.value = [
+        {"feature": "*", "commands": ["*"], "states": ["*"], "cause": "localControl"}
+    ]
+
+
+async def test_oven_switch_unavailable_during_local_control(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a blanket localControl block makes the oven switch unavailable."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_block_local_control)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_switch_local_control_transition(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven switch follows localControl blocks delivered after setup."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    assert hass.states.get(OVEN.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [oven_local_control_event(OVEN.device_url)]
+    )
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass, freezer, mock_client, [oven_remote_control_event(OVEN.device_url)]
+    )
+
+    assert hass.states.get(OVEN.entity_id).state != STATE_UNAVAILABLE
