@@ -23,11 +23,11 @@ from . import init_integration
 ENTITY_ID = "button.sonic_reboot"
 
 
+@pytest.mark.usefixtures("mock_watergate_client")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
 ) -> None:
     """Test the button entities and their registry entries."""
