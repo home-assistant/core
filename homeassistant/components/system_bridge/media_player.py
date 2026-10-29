@@ -233,12 +233,6 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
 
     @property
     @override
-    def media_image_remotely_accessible(self) -> bool:
-        """Return True if the image URL is remotely accessible."""
-        return self.media_image_url is not None
-
-    @property
-    @override
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         if (

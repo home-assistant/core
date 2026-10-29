@@ -140,6 +140,7 @@ async def test_media_player_image_data_url(
 async def test_media_player_image_http_url(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test media player entity picture with an HTTP URL thumbnail."""
     coordinator = init_integration.runtime_data
@@ -154,7 +155,20 @@ async def test_media_player_image_http_url(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get("entity_picture") == "https://example.com/cover.jpg"
+    entity_picture = state.attributes.get("entity_picture")
+    assert entity_picture is not None
+    assert entity_picture.startswith(f"/api/media_player_proxy/{ENTITY_ID}?")
+
+    client = await hass_client_no_auth()
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+        return_value=(b"image_bytes", "image/jpeg"),
+    ) as mock_get_image:
+        resp = await client.get(entity_picture)
+        assert resp.status == HTTPStatus.OK
+        assert resp.headers["Content-Type"] == "image/jpeg"
+        assert await resp.read() == b"image_bytes"
+        mock_get_image.assert_called_once()
 
 
 @pytest.mark.parametrize(
