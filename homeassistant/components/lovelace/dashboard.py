@@ -153,10 +153,11 @@ class LovelaceStorage(LovelaceConfig):
             await self._load()
             if TYPE_CHECKING:
                 assert self._data is not None
-        self._data["config"] = config
+        data = {**self._data, "config": config}
+        await self._store.async_save(data)
+        self._data = data
         self._json_config = None
         self._config_updated()
-        await self._store.async_save(self._data)
 
     @override
     async def async_delete(self) -> None:
