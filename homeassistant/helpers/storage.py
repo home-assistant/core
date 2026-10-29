@@ -527,7 +527,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             self._async_ensure_final_write_listener()
             return
 
-        await self._async_handle_write_data()
+        await self._async_handle_write_data(raise_errors=True)
 
     @callback
     def async_delay_save(
@@ -619,7 +619,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._unsub_final_write_listener = None
         await self._async_handle_write_data()
 
-    async def _async_handle_write_data(self, *_args):
+    async def _async_handle_write_data(
+        self, *_args: Any, raise_errors: bool = False
+    ) -> None:
         """Handle writing the config."""
         async with self._write_lock:
             self._io.async_invalidate_cache()
@@ -640,6 +642,8 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 await self._async_write_data(data)
             except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
+                if raise_errors:
+                    raise
 
     async def _async_write_data(self, data: dict) -> None:
         if self._serialize_in_event_loop:
