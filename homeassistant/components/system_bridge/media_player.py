@@ -1,9 +1,16 @@
 """Support for System Bridge media players."""
 
 import datetime as dt
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
-from systembridgeconnector.models.media_control import MediaAction, MediaControl
+from systembridgeconnector.const import EventType
+from systembridgeconnector.exceptions import ConnectionClosedException
+from systembridgeconnector.models.media_control import (
+    MediaAction,
+    MediaControl,
+    MediaRepeat,
+)
+from systembridgeconnector.models.modules.audio import AudioDevice
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -13,14 +20,21 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     RepeatMode,
 )
-from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import AUDIO_OUTPUT, DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
-from .entity import SystemBridgeEntity
+from .entity import (
+    SystemBridgeAudioDeviceEntity,
+    SystemBridgeAudioEntity,
+    SystemBridgeEntity,
+    async_add_new_audio_devices,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -44,6 +58,12 @@ MEDIA_REPEAT_MAP: Final[dict[str, RepeatMode]] = {
     REPEAT_NONE: RepeatMode.OFF,
     REPEAT_TRACK: RepeatMode.ONE,
     REPEAT_LIST: RepeatMode.ALL,
+}
+
+REPEAT_MODE_MAP: Final[dict[RepeatMode, MediaRepeat]] = {
+    RepeatMode.OFF: MediaRepeat.NONE,
+    RepeatMode.ONE: MediaRepeat.TRACK,
+    RepeatMode.ALL: MediaRepeat.LIST,
 }
 
 MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
@@ -74,6 +94,37 @@ async def async_setup_entry(
                 )
             ]
         )
+
+    default_output_added = False
+
+    @callback
+    def _async_add_audio() -> None:
+        """Add the Audio media player once the backend reports audio."""
+        nonlocal default_output_added
+        if default_output_added or coordinator.data.audio is None:
+            return
+        default_output_added = True
+        async_add_entities(
+            [SystemBridgeAudioMediaPlayer(coordinator, entry.data[CONF_PORT])]
+        )
+
+    _async_add_audio()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_audio))
+
+    async_add_new_audio_devices(
+        entry,
+        AUDIO_OUTPUT,
+        lambda devices: async_add_entities(
+            SystemBridgeAudioOutputMediaPlayer(
+                coordinator,
+                entry.data[CONF_PORT],
+                f"audio_output_{device.id}",
+                AUDIO_OUTPUT,
+                device,
+            )
+            for device in devices
+        ),
+    )
 
 
 class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
@@ -116,6 +167,20 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         if data.media.is_stop_enabled:
             features |= MediaPlayerEntityFeature.STOP
+        if data.media.is_seek_enabled:
+            features |= MediaPlayerEntityFeature.SEEK
+        if data.media.volume is not None:
+            features |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
+        # Windows reports shuffle and repeat but can't set them, and only
+        # Linux reports the player
+        if data.media.player is not None:
+            if data.media.shuffle is not None:
+                features |= MediaPlayerEntityFeature.SHUFFLE_SET
+            if data.media.repeat is not None:
+                features |= MediaPlayerEntityFeature.REPEAT_SET
 
         return features
 
@@ -191,6 +256,12 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
 
     @property
     @override
+    def volume_level(self) -> float | None:
+        """Volume level of the media player (0..1)."""
+        return self._systembridge_data.media.volume
+
+    @property
+    @override
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         return self._systembridge_data.media.shuffle
@@ -206,44 +277,199 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.PLAY.value,
-            )
-        )
+        await self._async_media_control(MediaControl(action=MediaAction.PLAY.value))
 
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.PAUSE.value,
-            )
-        )
+        await self._async_media_control(MediaControl(action=MediaAction.PAUSE.value))
 
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.STOP.value,
-            )
-        )
+        await self._async_media_control(MediaControl(action=MediaAction.STOP.value))
 
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.PREVIOUS.value,
-            )
-        )
+        await self._async_media_control(MediaControl(action=MediaAction.PREVIOUS.value))
 
     @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self.coordinator.websocket_client.media_control(
+        await self._async_media_control(MediaControl(action=MediaAction.NEXT.value))
+
+    @override
+    async def async_media_seek(self, position: float) -> None:
+        """Send seek command."""
+        await self._async_media_control(
+            MediaControl(action=MediaAction.SEEK.value, position=position)
+        )
+
+    @override
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
+        await self._async_media_control(
+            MediaControl(action=MediaAction.SET_VOLUME.value, volume=volume)
+        )
+
+    @override
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Enable or disable shuffle mode."""
+        await self._async_media_control(
+            MediaControl(action=MediaAction.SET_SHUFFLE.value, shuffle=shuffle)
+        )
+
+    @override
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        await self._async_media_control(
             MediaControl(
-                action=MediaAction.NEXT.value,
+                action=MediaAction.SET_REPEAT.value,
+                repeat=REPEAT_MODE_MAP[repeat].value,
             )
         )
+
+    async def _async_media_control(self, model: MediaControl) -> None:
+        """Send a media control command."""
+        try:
+            response = await self.coordinator.websocket_client.media_control(model)
+        except ConnectionClosedException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "title": self.coordinator.config_entry.title,
+                    "host": self.coordinator.config_entry.data[CONF_HOST],
+                },
+            ) from e
+        if response.type == EventType.ERROR:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="media_control_failed",
+                translation_placeholders={"error": response.message or ""},
+            )
+
+
+class SystemBridgeAudioVolumeMediaPlayer(SystemBridgeAudioEntity, MediaPlayerEntity):
+    """Define a System Bridge media player for an audio output's volume."""
+
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_state = MediaPlayerState.ON
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = MediaPlayerEntityFeature(0)
+        if (device := self._device) is None:
+            return features
+        if device.volume is not None:
+            features |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
+        if device.muted is not None:
+            features |= MediaPlayerEntityFeature.VOLUME_MUTE
+        return features
+
+    @property
+    @override
+    def volume_level(self) -> float | None:
+        """Volume level of the audio output (0..1)."""
+        if (device := self._device) is None or device.volume is None:
+            return None
+        return device.volume / 100
+
+    @property
+    @override
+    def is_volume_muted(self) -> bool | None:
+        """Boolean if volume is currently muted."""
+        if (device := self._device) is None:
+            return None
+        return device.muted
+
+    @override
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
+        device = self._device
+        if TYPE_CHECKING:
+            assert device is not None
+        await self._async_audio_control(device, volume=volume * 100)
+
+    @override
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the volume."""
+        device = self._device
+        if TYPE_CHECKING:
+            assert device is not None
+        await self._async_audio_control(device, muted=mute)
+
+
+class SystemBridgeAudioOutputMediaPlayer(
+    SystemBridgeAudioDeviceEntity, SystemBridgeAudioVolumeMediaPlayer
+):
+    """Define a System Bridge media player for one audio output."""
+
+    _attr_translation_key = "audio_output"
+
+
+class SystemBridgeAudioMediaPlayer(SystemBridgeAudioVolumeMediaPlayer):
+    """Define a System Bridge media player for the system's default output."""
+
+    _attr_translation_key = "audio"
+
+    def __init__(
+        self,
+        coordinator: SystemBridgeDataUpdateCoordinator,
+        api_port: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, api_port, "audio")
+
+    @property
+    def _outputs(self) -> list[AudioDevice]:
+        """Return every audio output."""
+        if (audio := self.coordinator.data.audio) is None:
+            return []
+        return audio.outputs
+
+    @property
+    @override
+    def _device(self) -> AudioDevice | None:
+        """Return the default output, following it when it changes."""
+        return next((device for device in self._outputs if device.default), None)
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        return super().supported_features | MediaPlayerEntityFeature.SELECT_SOURCE
+
+    @property
+    @override
+    def source(self) -> str | None:
+        """Name of the default output."""
+        if (device := self._device) is None:
+            return None
+        return device.name
+
+    @property
+    @override
+    def source_list(self) -> list[str]:
+        """Names of the outputs that can be made the default."""
+        return [device.name for device in self._outputs]
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Make an output the default."""
+        device = next(
+            (device for device in self._outputs if device.name == source), None
+        )
+        if device is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="audio_device_not_found",
+                translation_placeholders={"name": source},
+            )
+        await self._async_audio_control(device, default=True)

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from systembridgeconnector.models.modules import (
     CPU,
     GPU,
+    Audio,
     Battery,
     Disks,
     Display,
@@ -20,6 +21,7 @@ from systembridgeconnector.models.modules import (
 class SystemBridgeData:
     """System Bridge Data."""
 
+    audio: Audio | None = None
     battery: Battery = field(default_factory=Battery)
     cpu: CPU = field(default_factory=CPU)
     disks: Disks | None = None

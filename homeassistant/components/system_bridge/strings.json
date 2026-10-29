@@ -42,13 +42,27 @@
       }
     },
     "media_player": {
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_output": {
+        "name": "{name} output"
+      },
       "media": {
         "name": "Media"
       }
     },
     "number": {
+      "audio_input_volume": {
+        "name": "{name} input volume"
+      },
       "display_brightness": {
         "name": "Display {display_id} brightness"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "name": "Audio input"
       }
     },
     "sensor": {
@@ -224,12 +238,21 @@
       }
     },
     "switch": {
+      "audio_input_mute": {
+        "name": "{name} input mute"
+      },
       "display_power": {
         "name": "Display {display_id} power"
       }
     }
   },
   "exceptions": {
+    "audio_control_failed": {
+      "message": "Failed to control audio device {name}: {error}"
+    },
+    "audio_device_not_found": {
+      "message": "No audio device named {name}"
+    },
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
@@ -238,6 +261,9 @@
     },
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
+    },
+    "media_control_failed": {
+      "message": "Failed to control the media player: {error}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

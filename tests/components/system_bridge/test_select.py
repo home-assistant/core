@@ -1,0 +1,72 @@
+"""Tests for the System Bridge select platform."""
+
+from collections.abc import Generator
+from dataclasses import replace
+from unittest.mock import MagicMock, patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.audio_control import AudioControl
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
+from systembridgeconnector.models.modules import Module
+
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+ENTITY_ID = "select.hostname_audio_input"
+
+
+@pytest.fixture(autouse=True)
+def select_only() -> Generator[None]:
+    """Enable only the select platform."""
+    with patch(
+        "homeassistant.components.system_bridge.PLATFORMS",
+        [Platform.SELECT],
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setup of the select platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_default_input(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test picking an input makes it the default."""
+    coordinator = mock_config_entry.runtime_data
+    microphone = FIXTURE_AUDIO.inputs[0]
+    headset = replace(microphone, id="headset", name="Headset", default=False)
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone, headset])
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Headset"},
+        blocking=True,
+    )
+
+    mock_websocket_client.audio_control.assert_awaited_once_with(
+        AudioControl(id="headset", default=True)
+    )
