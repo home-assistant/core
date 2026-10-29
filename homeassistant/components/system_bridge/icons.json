@@ -13,6 +13,11 @@
         "default": "mdi:volume-high"
       }
     },
+    "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      }
+    },
     "sensor": {
       "boot_time": {
         "default": "mdi:av-timer"
@@ -136,6 +141,14 @@
       },
       "version_latest": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "display_power": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
       }
     }
   },

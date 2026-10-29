@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -83,7 +84,9 @@ class DevoloScannerEntity(
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
-        self._attr_name = mac
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)}, name=mac
+        )
 
     @property
     @override

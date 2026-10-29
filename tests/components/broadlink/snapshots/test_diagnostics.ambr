@@ -1,26 +1,27 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'available': True,
     'data': dict({
+      'active': 1,
       'auto_mode': 0,
       'dayofweek': 3,
+      'external_temp': 30,
       'hour': 12,
-      'loop_mode': 1,
       'min': 34,
       'power': 1,
-      'room_temp': 21.5,
+      'room_temp': 22,
       'sec': 56,
       'sensor': 0,
-      'svh': 35,
-      'svl': 5,
-      'thermostat_temp': 22.0,
+      'thermostat_temp': 23,
     }),
     'device': dict({
-      'available': True,
       'devtype': 20141,
       'fw_version': 10024,
+      'is_locked': False,
       'manufacturer': 'Hysen',
       'model': 'HY02/HY03',
+      'timeout': 5,
       'type': 'HYS',
     }),
     'device_clock': dict({
@@ -28,13 +29,6 @@
       'local_time_at_poll': '2026-10-21T12:35:10+00:00',
       'time': '12:34:56',
     }),
-    'entry': dict({
-      'host': '**REDACTED**',
-      'mac': '**REDACTED**',
-      'timeout': 5,
-      'type': 20141,
-    }),
-    'options': dict({
-    }),
+    'update_manager': 'BroadlinkThermostatUpdateManager',
   })
 # ---

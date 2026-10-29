@@ -1,16 +1,13 @@
 """Diagnostics support for Broadlink."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import BROADLINK_DATA
-
-TO_REDACT = {CONF_HOST, CONF_MAC}
 
 DAY_ID_TO_NAME = {
     1: "monday",
@@ -27,32 +24,30 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    device = hass.data[BROADLINK_DATA].devices[entry.entry_id]
+    api = device.api
+    update_manager = device.update_manager
+    if TYPE_CHECKING:
+        assert update_manager is not None
     diagnostics: dict[str, Any] = {
-        "entry": async_redact_data(entry.data, TO_REDACT),
-        "options": dict(entry.options),
-    }
-    # The device is only registered once its setup succeeds.
-    if (device := hass.data[BROADLINK_DATA].devices.get(entry.entry_id)) is None:
-        return diagnostics
-
-    assert device.update_manager is not None
-    coordinator = device.update_manager.coordinator
-    diagnostics |= {
         "device": {
-            "type": device.api.type,
-            "devtype": device.api.devtype,
-            "model": device.api.model,
-            "manufacturer": device.api.manufacturer,
+            "type": api.type,
+            "devtype": api.devtype,
+            "model": api.model,
+            "manufacturer": api.manufacturer,
             "fw_version": device.fw_version,
-            "available": device.available,
+            "timeout": entry.data[CONF_TIMEOUT],
+            "is_locked": api.is_locked,
         },
-        "data": coordinator.data,
+        "available": device.available,
+        "update_manager": type(update_manager).__name__,
+        "data": update_manager.coordinator.data,
     }
 
     if (
-        device.api.type == "HYS"
-        and (data := coordinator.data)
-        and (last_update := device.update_manager.last_update)
+        api.type == "HYS"
+        and (data := update_manager.coordinator.data)
+        and (last_update := update_manager.last_update)
     ):
         # Compare the device clock with the local time it was read at, as
         # the coordinator data may be a few polls old.
