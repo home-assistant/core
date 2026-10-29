@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -9,15 +11,15 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 def _mock_receiver(model: str | None = "AT-500") -> MagicMock:
-    """Return a mock receiver that answers info queries."""
+    """Return a mock receiver whose probe reports the given model."""
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock()
     mock_receiver.disconnect = AsyncMock()
-    mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    mock_receiver.probe = AsyncMock(
+        return_value=None if model is None else MagicMock(model=model)
+    )
     return mock_receiver
 
 
@@ -50,7 +52,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
     mock_receiver.connect.assert_awaited_once()
-    mock_receiver.query_info.assert_awaited_once()
+    mock_receiver.probe.assert_awaited_once()
     mock_receiver.disconnect.assert_awaited_once()
 
 
@@ -151,13 +153,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -192,13 +188,7 @@ async def test_reconfigure_same_port(
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     with (
         patch(
@@ -240,13 +230,7 @@ async def test_reconfigure_unload_fails(hass: HomeAssistant) -> None:
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     with (
         patch(
             "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver"
@@ -284,13 +268,7 @@ async def test_reconfigure_port_used_by_other_entry(hass: HomeAssistant) -> None
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
@@ -319,13 +297,7 @@ async def test_reconfigure_cannot_connect(
     mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
@@ -384,13 +356,7 @@ async def test_reconfigure_unknown_model(
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",

@@ -28,6 +28,7 @@ set_location:
         number:
           mode: box
           step: any
+          unit_of_measurement: m
 
 stop:
 toggle:

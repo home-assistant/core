@@ -9,13 +9,17 @@
     "tts",
     "zeroconf"
   ],
+  "categories": [
+    "media_entertainment.tv_streaming",
+    "media_entertainment.speakers_audio"
+  ],
   "codeowners": ["@emontnemery"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["casttube", "pychromecast"],
-  "requirements": ["PyChromecast==14.0.10"],
+  "requirements": ["PyChromecast==14.1.0"],
   "single_config_entry": true,
   "zeroconf": ["_googlecast._tcp.local."]
 }

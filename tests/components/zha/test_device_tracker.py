@@ -6,10 +6,11 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.device_tracker import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -26,8 +27,6 @@ from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +49,7 @@ def device_tracker_platforms_only():
 async def test_device_tracker(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA device tracker platform."""
 

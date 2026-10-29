@@ -22,7 +22,8 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverState,
 )
-from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
+from homeassistant.components.shelly.const import DOMAIN, RPC_COVER_UPDATE_TIME_SEC
+from homeassistant.components.shelly.services import SERVICE_SET_COVER_POSITION_AND_TILT
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
@@ -485,3 +487,53 @@ async def test_rpc_not_initialized_update(
     mock_rpc_device.update_cover_status.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_cover_set_position_and_tilt(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC cover set position and tilt sends a single command."""
+    entity_id = "cover.test_name_test_cover_0"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["cover:0"]["slat"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cover:0"]["slat_pos"] = 0
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION_AND_TILT,
+        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 100, ATTR_TILT_POSITION: 100},
+        blocking=True,
+    )
+
+    mock_rpc_device.cover_set_position.assert_called_once_with(0, pos=100, slat_pos=100)
+
+
+async def test_rpc_cover_set_position_and_tilt_not_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test RPC cover set position and tilt on a cover without tilt."""
+    await init_integration(hass, 3)
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_COVER_POSITION_AND_TILT,
+            {
+                ATTR_ENTITY_ID: "cover.test_name_test_cover_0",
+                ATTR_POSITION: 100,
+                ATTR_TILT_POSITION: 100,
+            },
+            blocking=True,
+        )
+
+    mock_rpc_device.cover_set_position.assert_not_called()

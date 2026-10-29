@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
+        self._hap = hap
         self._home: AsyncHome = hap.home
 
     @property
@@ -96,20 +98,26 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         result = await self._home.set_security_zones_activation_async(
             internal, external
         )
+        problems = sorted(
+            label.strip()
+            for label in self._home.get_security_zone_activation_problems(result)
+        )
         # a request-based panel answers 200 without arming when a sensor blocks it
-        if result.success:
+        if result.success and not problems:
+            # the access point does not push a refusal, so the reply is published here
+            self._hap.async_set_arming_blocked(False)
             return
 
-        problems = self._home.get_security_zone_activation_problems(result)
         if not problems:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="alarm_activation_failed",
             )
+        self._hap.async_set_arming_blocked(True)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="alarm_activation_blocked",
-            translation_placeholders={"devices": ", ".join(sorted(problems))},
+            translation_placeholders={"devices": ", ".join(problems)},
         )
 
     @override
@@ -126,17 +134,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._async_set_zones_activation(internal=True, external=True)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

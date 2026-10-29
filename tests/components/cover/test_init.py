@@ -1,6 +1,7 @@
 """The tests for Cover."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components import cover
 from homeassistant.components.cover import ATTR_SPEED, CoverState
@@ -14,13 +15,10 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
-
-from tests.common import setup_test_component_platform
 
 
 async def test_services(
@@ -208,7 +206,7 @@ async def test_services_with_speed(
     hass: HomeAssistant,
     mock_cover_entities: list[MockCover],
 ) -> None:
-    """Test speed validation in cover services."""
+    """Test the speed argument in cover services."""
     setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
 
     assert await async_setup_component(
@@ -223,7 +221,7 @@ async def test_services_with_speed(
     ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
 
     state = hass.states.get(speed_cover.entity_id)
-    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+    assert state.attributes["supported_speeds"] == ["slow", "medium", "fast"]
 
     speed_cover.last_kwargs = None
     await hass.services.async_call(
@@ -252,46 +250,45 @@ async def test_services_with_speed(
         {
             ATTR_ENTITY_ID: speed_cover.entity_id,
             ATTR_POSITION: 75,
-            ATTR_SPEED: "default",
+            ATTR_SPEED: "medium",
         },
         blocking=True,
     )
-    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "medium"}
+
+    # A speed the cover does not list is dropped and the cover still moves
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "default"},
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {}
+    assert is_opening(hass, speed_cover, 50)
 
     speed_cover.last_kwargs = None
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {}
+    assert is_closing(hass, speed_cover, 50)
 
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
-
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {
-                ATTR_ENTITY_ID: speed_cover.entity_id,
-                ATTR_POSITION: 50,
-                ATTR_SPEED: "invalid",
-            },
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {
+            ATTR_ENTITY_ID: speed_cover.entity_id,
+            ATTR_POSITION: 50,
+            ATTR_SPEED: "invalid",
+        },
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {"position": 50}
 
     await hass.services.async_call(
         cover.DOMAIN,

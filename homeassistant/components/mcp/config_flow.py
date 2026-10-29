@@ -7,6 +7,7 @@ import logging
 from typing import Any, cast, override
 
 import httpx2
+from mcp import MCPError
 import probatio
 from yarl import URL
 
@@ -26,7 +27,7 @@ from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import TokenManager, mcp_client
+from .coordinator import TokenManager, create_mcp_httpx_client, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ async def validate_input(
                 raise MissingCapabilities(
                     f"MCP Server {url} does not support 'Tools' capability"
                 )
-            return {"title": response.serverInfo.name}
+            return {"title": response.server_info.name}
     except httpx2.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
@@ -136,7 +137,7 @@ async def validate_input(
             auth_header = AuthenticateHeader.from_header(url, error.response)
             raise InvalidAuth(auth_header) from error
         raise CannotConnect from error
-    except httpx2.HTTPError as error:
+    except (httpx2.HTTPError, MCPError) as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
 
@@ -222,7 +223,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the MCP server provided by an app."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="hassio_confirm",
                 description_placeholders={"addon": self.addon_name},
@@ -437,7 +437,7 @@ async def _async_fetch_any(
     async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
         try:
-            async with httpx2.AsyncClient() as client:
+            async with create_mcp_httpx_client() as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response

@@ -10,6 +10,8 @@ from pynordpool import (
     NordPoolError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nordpool.const import DOMAIN
@@ -24,9 +26,6 @@ from homeassistant.components.nordpool.services import (
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SERVICE_DATA = {
     ATTR_CONFIG_ENTRY: "to_replace",
@@ -99,6 +98,42 @@ async def test_service_call(
     )
 
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_data", "api_calls"),
+    [
+        pytest.param(
+            {ATTR_DATE: "2025-09-30", ATTR_AREAS: ["SE3", "SE4"]}, 0, id="yesterday"
+        ),
+        pytest.param({ATTR_DATE: "2025-10-01"}, 0, id="today_use_defaults"),
+        pytest.param({ATTR_DATE: "2025-10-02", ATTR_AREAS: "SE4"}, 0, id="tomorrow"),
+        pytest.param(
+            {ATTR_DATE: "2025-10-01", ATTR_CURRENCY: "EUR"}, 1, id="other_currency"
+        ),
+        pytest.param({ATTR_DATE: "2025-10-03"}, 1, id="date_not_stored"),
+    ],
+)
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_service_call_uses_stored_data(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    service_data: dict[str, Any],
+    api_calls: int,
+) -> None:
+    """Test get_prices_for_date only calls the API when data is not stored."""
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PRICES_FOR_DATE,
+        {ATTR_CONFIG_ENTRY: load_int.entry_id, **service_data},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert aioclient_mock.call_count == call_count + api_calls
 
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")

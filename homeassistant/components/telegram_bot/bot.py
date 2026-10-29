@@ -50,6 +50,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
@@ -91,7 +92,6 @@ from .const import (
     ATTR_RESIZE_KEYBOARD,
     ATTR_STICKER_ID,
     ATTR_TEXT,
-    ATTR_TIMEOUT,
     ATTR_TITLE,
     ATTR_URL,
     ATTR_USER_ID,
@@ -418,15 +418,12 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
                 params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
@@ -553,7 +550,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -702,7 +698,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -737,7 +732,6 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 context=context,
             )
         if type_edit == SERVICE_EDIT_CAPTION:
@@ -749,7 +743,6 @@ class TelegramNotificationService:
                 inline_message_id=inline_message_id,
                 caption=kwargs.get(ATTR_CAPTION),
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 context=context,
             )
@@ -761,7 +754,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -787,7 +779,6 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -840,7 +831,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -855,7 +845,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -870,7 +859,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -886,7 +874,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -902,7 +889,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -917,7 +903,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             parse_mode=params[ATTR_PARSER],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
@@ -941,7 +926,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -966,7 +950,6 @@ class TelegramNotificationService:
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -994,7 +977,6 @@ class TelegramNotificationService:
             open_period=openperiod,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -1036,7 +1018,6 @@ class TelegramNotificationService:
             message_id,
             reaction=reaction,
             is_big=is_big,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1066,7 +1047,6 @@ class TelegramNotificationService:
             text=message,
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             parse_mode=params[ATTR_PARSER],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1129,21 +1109,27 @@ class TelegramNotificationService:
             file_name = os.path.basename(file.file_path)
 
         custom_path = os.path.join(directory_path, file_name)
-        await self.hass.async_add_executor_job(
-            self._prepare_download_directory, directory_path
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self._prepare_download_directory, directory_path
+            )
+        except OSError as err:
+            raise os_write_error(err, directory_path) from err
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
-            await self.hass.async_add_executor_job(
-                Path(custom_path).write_bytes, file_content
-            )
         except (RuntimeError, OSError, TelegramError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
                 translation_placeholders={"error": str(exc)},
             ) from exc
+        try:
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except OSError as err:
+            raise os_write_error(err, custom_path) from err
         return {ATTR_FILE_PATH: custom_path}
 
     @staticmethod

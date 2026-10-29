@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -42,7 +42,14 @@ from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntr
 from .event import async_call_later
 from .frame import ReportBehavior, report_usage
 from .issue_registry import IssueSeverity, async_create_issue
-from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
+from .typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+    VolDictType,
+    VolSchemaType,
+)
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -538,7 +545,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -836,6 +844,56 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
+    @callback
+    def _async_get_entity_device(
+        self, entity: Entity, config_entry_id: str, config_subentry_id: str | None
+    ) -> dr.AnyDeviceEntry | None:
+        """Return the device of an entity.
+
+        A device info with fields gets or creates the device, otherwise the device
+        entry set on the entity is used.
+        """
+        if (device_info := entity.device_info) is None:
+            return entity.device_entry
+        dev_reg = dr.async_get(self.hass)
+        if isinstance(device_info, dr.ChildDeviceInfo):
+            return dev_reg.async_get_or_create_child_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        if isinstance(device_info, dr.DeviceInfo):
+            # A device info without any field means no device
+            if not device_info.as_dict():
+                return entity.device_entry
+            return dev_reg.async_get_or_create_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        # An integration can still describe its device with a plain mapping, which
+        # its type does not allow. To be deprecated.
+        device_info_fields = dict(device_info)  # type: ignore[unreachable]
+        # A device info without any field means no device
+        if not device_info_fields:
+            return entity.device_entry
+        # An explicit parent_device_id of None, as a dynamically built device info
+        # may carry, means a main device
+        if (
+            parent_device_id := device_info_fields.pop("parent_device_id", None)
+        ) is not None:
+            return dev_reg.async_get_or_create_child(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                parent_device_id=parent_device_id,
+                **device_info_fields,
+            )
+        return dev_reg.async_get_or_create(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            **device_info_fields,
+        )
+
     def _check_device_attach(self, entity: Entity, reason: str) -> None:
         """Check the entity does not attach a device and report it if it does.
 
@@ -926,7 +984,7 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
             raise
 
-    async def _async_add_entity_impl(  # noqa: C901
+    async def _async_add_entity_impl(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -1024,47 +1082,21 @@ class EntityPlatform:
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
-                if device_info := entity.device_info:
-                    dev_reg = dr.async_get(self.hass)
-                    try:
-                        # A device info carrying a parent_device_id registers a child
-                        # device. An explicit None (as a dynamically built device info
-                        # may carry) means a main device, so check `is not None`.
-                        if device_info.get("parent_device_id") is not None:
-                            device = dev_reg.async_get_or_create_child(
-                                config_entry_id=self.config_entry.entry_id,
-                                config_subentry_id=config_subentry_id,
-                                **cast("dr.ChildDeviceInfo", device_info),
-                            )
-                        else:
-                            # An explicit parent_device_id=None means a main device;
-                            # drop the key as async_get_or_create is main-only.
-                            device = dev_reg.async_get_or_create(
-                                config_entry_id=self.config_entry.entry_id,
-                                config_subentry_id=config_subentry_id,
-                                **cast(
-                                    "dr.DeviceInfo",
-                                    {
-                                        key: value
-                                        for key, value in device_info.items()
-                                        if key != "parent_device_id"
-                                    },
-                                ),
-                            )
-                    except (HomeAssistantError, TypeError) as exc:
-                        # A TypeError signals a bad key in the device info passed as
-                        # keyword arguments.
-                        self.logger.error(
-                            "%s: Not adding entity, error adding device: %s",
-                            self.platform_name,
-                            str(exc),
-                        )
-                        entity.add_to_platform_abort()
-                        return None
-
-                    entity.device_entry = device
-                else:
-                    device = entity.device_entry
+                try:
+                    device = self._async_get_entity_device(
+                        entity, self.config_entry.entry_id, config_subentry_id
+                    )
+                except (HomeAssistantError, TypeError) as exc:
+                    # A TypeError signals a bad key in the device info passed as
+                    # keyword arguments.
+                    self.logger.error(
+                        "%s: Not adding entity, error adding device: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return None
+                entity.device_entry = device
             else:
                 self._check_device_attach(entity, "without a config entry")
                 device = None
@@ -1072,7 +1104,7 @@ class EntityPlatform:
 
             suggested_object_id, object_id_base = _async_derive_object_ids(entity, self)
 
-            disabled_by: RegistryEntryDisabler | None = None
+            disabled_by: RegistryEntryDisabler | UndefinedType = UNDEFINED
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
@@ -1081,7 +1113,7 @@ class EntityPlatform:
                 hidden_by = RegistryEntryHider.INTEGRATION
 
             if (
-                disabled_by is None
+                disabled_by is UNDEFINED
                 and not registered_entity_id
                 and self.config_entry is not None
                 and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
@@ -1139,11 +1171,6 @@ class EntityPlatform:
                 )
                 entity.add_to_platform_abort()
                 return None
-
-            if device and device.disabled and not entry.disabled:
-                entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id

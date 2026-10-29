@@ -1,6 +1,7 @@
 {
   "domain": "environment_canada",
   "name": "Environment Canada",
+  "categories": ["weather_alerts.forecasts", "weather_alerts.public_warnings"],
   "codeowners": ["@gwww", "@michaeldavie"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/environment_canada",

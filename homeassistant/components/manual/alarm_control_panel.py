@@ -1,6 +1,6 @@
 """Support for manual alarms."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
 import probatio
@@ -31,7 +31,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-DOMAIN = "manual"
+from .const import DOMAIN, ManualEntityStateAttribute
 
 CONF_ARMING_STATES = "arming_states"
 CONF_CODE_TEMPLATE = "code_template"
@@ -48,9 +48,9 @@ CONF_ALARM_PENDING = "pending"
 CONF_ALARM_TRIGGERED = "triggered"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
-DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
+DEFAULT_DELAY_TIME = dt.timedelta(seconds=60)
+DEFAULT_ARMING_TIME = dt.timedelta(seconds=60)
+DEFAULT_TRIGGER_TIME = dt.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
 SUPPORTED_STATES = [
@@ -86,9 +86,6 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
         AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     ),
 }
-
-ATTR_PREVIOUS_STATE = "previous_state"
-ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(
@@ -236,7 +233,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._attr_code_arm_required = code_arm_required
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state: AlarmControlPanelState = self._state
-        self._state_ts: datetime.datetime = dt_util.utcnow()
+        self._state_ts: dt.datetime = dt_util.utcnow()
 
         self._delay_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_DELAY_TIME]
@@ -263,7 +260,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if self._state == AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
                 return AlarmControlPanelState.PENDING
-            trigger_time: datetime.timedelta = self._trigger_time_by_state[
+            trigger_time: dt.timedelta = self._trigger_time_by_state[
                 self._previous_state
             ]
             if (
@@ -291,14 +288,14 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             return self._previous_state
         return self._state
 
-    def _arming_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _arming_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the arming time."""
-        arming_time: datetime.timedelta = self._arming_time_by_state[state]
+        arming_time: dt.timedelta = self._arming_time_by_state[state]
         return arming_time
 
-    def _pending_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
+    def _pending_time(self, state: AlarmControlPanelState) -> dt.timedelta:
         """Get the pending time."""
-        delay_time: datetime.timedelta = self._delay_time_by_state[self._previous_state]
+        delay_time: dt.timedelta = self._delay_time_by_state[self._previous_state]
         return delay_time
 
     def _within_arming_time(self, state: AlarmControlPanelState) -> bool:
@@ -454,10 +451,13 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         else:
             prev_state = None
             state = None
-        return {ATTR_PREVIOUS_STATE: prev_state, ATTR_NEXT_STATE: state}
+        return {
+            ManualEntityStateAttribute.PREVIOUS_STATE: prev_state,
+            ManualEntityStateAttribute.NEXT_STATE: state,
+        }
 
     @callback
-    def async_scheduled_update(self, now: datetime.datetime) -> None:
+    def async_scheduled_update(self, now: dt.datetime) -> None:
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
@@ -468,7 +468,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
             try:
-                if next_state := state.attributes.get(ATTR_NEXT_STATE):
+                if next_state := state.attributes.get(
+                    ManualEntityStateAttribute.NEXT_STATE
+                ):
                     # If in arming or pending state we record the transition,
                     # not the current state
                     self._state = AlarmControlPanelState(next_state)
@@ -477,6 +479,8 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             except ValueError:
                 return
 
-            if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
+            if prev_state := state.attributes.get(
+                ManualEntityStateAttribute.PREVIOUS_STATE
+            ):
                 self._previous_state = prev_state
                 self._async_set_state_update_events()

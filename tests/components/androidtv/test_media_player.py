@@ -9,6 +9,8 @@ from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.androidtv.const import (
     CONF_APPS,
@@ -77,9 +79,6 @@ from .common import (
     setup_mock_entry,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
-
 MSG_RECONNECT = {
     patchers.KEY_PYTHON: (
         f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} successfully established"
@@ -115,7 +114,7 @@ async def test_reconnect(
     "Handles device/service unavailable. Log a warning once when
     unavailable, log once when reconnected."
 
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    https://contributors.home-assistant.io/core/quality-scale/
     """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -462,16 +461,18 @@ async def test_select_source_firetv(
 
 
 @pytest.mark.parametrize(
-    ("config", "connect"),
+    ("config", "connect", "translation_key"),
     [
-        (CONFIG_ANDROID_DEFAULT, False),
-        (CONFIG_FIRETV_DEFAULT, False),
-        (CONFIG_ANDROID_DEFAULT, True),
-        (CONFIG_FIRETV_DEFAULT, True),
+        (CONFIG_ANDROID_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_ADB_SERVER, False, "cannot_connect_adb_server"),
+        (CONFIG_FIRETV_ADB_SERVER, False, "cannot_connect_adb_server"),
     ],
 )
 async def test_setup_fail(
-    hass: HomeAssistant, config: dict[str, Any], connect: bool
+    hass: HomeAssistant, config: dict[str, Any], connect: bool, translation_key: str
 ) -> None:
     """Test entity is not created when ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
@@ -489,6 +490,11 @@ async def test_setup_fail(
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.error_reason_translation_key == translation_key
+        assert (
+            config_entry.error_reason_translation_placeholders["address"]
+            == f"{TEST_HOST_NAME}:{DEFAULT_PORT}"
+        )
         assert state is None
 
 

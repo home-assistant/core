@@ -1,5 +1,8 @@
 """Tests for the Sofar integration."""
 
+from datetime import datetime
+
+from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import (
@@ -15,6 +18,7 @@ MOCK_SERIAL = "SS2ES104N5S445"
 MOCK_MODEL = "4.4 KTLX-G3"
 MOCK_HYBRID_SERIAL = "SP1XXES100XX"
 MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
+MOCK_UNRECOGNIZED_SERIAL = "ZZ1XXES100XX"
 
 MOCK_HW_VERSION = "V100"
 MOCK_SW_VERSION = "V220"
@@ -33,6 +37,8 @@ MOCK_SERIAL_INPUT = {
     CONF_UNIT_ID: 1,
 }
 MOCK_SERIAL_ENTRY_DATA = {CONF_TYPE: TYPE_SERIAL, **MOCK_SERIAL_INPUT}
+
+FAULT_LOG_REGISTER = 0x1480
 
 
 def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
@@ -65,6 +71,16 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     unit.holding[0x0685] = 1000  # solar_generation_today low word -> 10.0 kWh
 
 
+def seed_fault_log(unit: MockModbusUnit, *entries: tuple[int, datetime]) -> None:
+    """Write the inverter's fault log, newest entry first."""
+    for number, (fault_id, when) in enumerate(entries):
+        address = FAULT_LOG_REGISTER + 4 * number
+        unit.holding[address] = fault_id
+        unit.holding[address + 1] = (when.year - 2000) << 8 | when.month
+        unit.holding[address + 2] = when.day << 8 | when.hour
+        unit.holding[address + 3] = when.minute << 8 | when.second
+
+
 def deny_meter_energy(unit: MockModbusUnit) -> None:
     """Seed a model that denies the meter block from 0x0688 on."""
     # Bits 0-3 must stay set, or the mask is ignored and denies nothing.
@@ -78,6 +94,25 @@ def serve_meter_energy(unit: MockModbusUnit) -> None:
     unit.holding[0x068B] = 10000  # load_consumption_total -> 1000.0 kWh
 
 
+def deny_charge_cutoff(unit: MockModbusUnit) -> None:
+    """Seed a battery config mask that leaves out 0x105B."""
+    unit.holding[0x1042] = 0x0000
+
+
+def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
+    """Seed a model that publishes no battery config mask."""
+    unit.fail_read(0x1040, ModbusError("illegal data address"))
+
+
+def declare_pv_in_masks(unit: MockModbusUnit) -> None:
+    """Seed masks declaring a three-phase PV model with two strings."""
+    # Each mask's lowest word sits at base+3; bits 0-3 make it usable.
+    unit.holding[0x0482] = 0x0100  # 0x0498, the second phase, is served
+    unit.holding[0x0483] = 0x000F
+    unit.holding[0x0583] = 0x000F  # no string past the second
+    unit.holding[0x0603] = 0x000F  # 0x0604, the first battery, is denied
+
+
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
@@ -87,3 +122,9 @@ def seed_hybrid_inverter(
     unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
     unit.holding[0x0612] = 515  # battery_voltage_3 -> 51.5 V
     unit.holding[0x0616] = 85  # battery_capacity_3 -> 85%
+    unit.holding[0x104D] = 73  # depth of discharge -> 27% on-grid cut-off
+    unit.holding[0x104E] = 90  # end of discharge -> 10% off-grid cut-off
+    unit.holding[0x1052] = 5  # EPS buffer -> 15% off-grid recovery
+    unit.holding[0x1042] = 0x0800  # 0x105B, the charge cut-off, is served
+    unit.holding[0x1043] = 0x000F
+    unit.holding[0x105B] = 95  # charge cut-off -> 95%

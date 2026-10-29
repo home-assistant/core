@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from fumis import FumisConnectionError, FumisInfo
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
 from homeassistant.components.fumis.const import DOMAIN, SCAN_INTERVAL
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .const import UNIQUE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 NO_ALERT = 0
 LOW_FUEL = 1

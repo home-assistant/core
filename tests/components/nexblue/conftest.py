@@ -5,12 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from nexblue_api import Charger, ChargerStatus, TokenBundle
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CHARGER = Charger.from_api(load_json_object_fixture("charger.json", DOMAIN))
 CHARGER_STATUS = ChargerStatus.from_api(
@@ -37,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Prevent a config-flow test from setting up the integration."""
-    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=None):
         yield
 
 

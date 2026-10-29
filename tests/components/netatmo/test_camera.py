@@ -9,6 +9,11 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
@@ -31,8 +36,6 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_entity(
@@ -261,7 +264,7 @@ async def test_service_set_person_away_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home_invalid_person(
@@ -289,7 +292,7 @@ async def test_service_set_persons_home_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home(
@@ -442,7 +445,7 @@ async def test_service_set_camera_light_invalid_type(
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
+    assert str(excinfo.value) == "NACamera <Hall> does not have a floodlight"
 
 
 @pytest.mark.parametrize(

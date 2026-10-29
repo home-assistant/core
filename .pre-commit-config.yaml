@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.3
     hooks:
       - id: ruff-check
         args:
           - --fix
       - id: ruff-format
-        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
+        files: ^((homeassistant|packages|script|tests)/.+)?[^/]+\.(py|pyi)$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
@@ -18,11 +18,12 @@ repos:
         exclude_types: [csv, json, html]
         exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.30.1
+    rev: v1.31.1
     hooks:
       - id: zizmor
         args:
           - --pedantic
+          - --no-online-audits
         exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -65,21 +66,21 @@ repos:
         language: script
         require_serial: true
         types_or: [python, pyi]
-        files: ^(homeassistant|pylint)/.+\.(py|pyi)$
+        files: ^(homeassistant|packages/pylint-home-assistant)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
         language: script
         require_serial: true
         types_or: [python, pyi]
-        files: ^(homeassistant|tests)/.+\.(py|pyi)$
+        files: ^(homeassistant|tests|packages/pytest-home-assistant)/.+\.(py|pyi)$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|requirements_test\.txt|packages/pytest-home-assistant/pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py|packages/hassfest/hassfest/requirements_util\.py)$
       - id: gen_copilot_instructions
         name: gen_copilot_instructions
         entry: script/run-in-env.sh python3 -m script.gen_copilot_instructions
@@ -93,7 +94,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/.+/(conditions|quality_scale|services|triggers)\.yaml|homeassistant/brands/.*\.json|script/hassfest/(?!metadata|mypy_config).+\.py|homeassistant/components/(button|binary_sensor|cover|event|humidifier|infrared|media_player|number|sensor|switch|update|valve)/const\.py|requirements.+\.txt)$
+        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/.+/(conditions|quality_scale|services|triggers)\.yaml|homeassistant/brands/.*\.json|script/hassfest/(?!metadata|mypy_config).+\.py|packages/hassfest/.+\.py|homeassistant/components/(button|binary_sensor|cover|event|humidifier|infrared|media_player|number|sensor|switch|update|valve)/const\.py|requirements.+\.txt)$
       - id: hassfest-metadata
         name: hassfest-metadata
         entry: script/run-in-env.sh python3 -m script.hassfest -p metadata,docker

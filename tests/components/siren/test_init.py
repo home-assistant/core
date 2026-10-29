@@ -11,6 +11,7 @@ from homeassistant.components.siren import (
 )
 from homeassistant.components.siren.const import SirenEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 
 class MockSirenEntity(SirenEntity):
@@ -57,10 +58,10 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
 
 
 async def test_no_available_tones(hass: HomeAssistant) -> None:
-    """Test ValueError when siren advertises tones but has no available_tones."""
+    """Test ServiceValidationError when siren advertises tones but has no available_tones."""
     siren = MockSirenEntity(SirenEntityFeature.TONES)
     siren.hass = hass
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         process_turn_on_params(siren, {"tone": "test"})
 
 
@@ -92,16 +93,16 @@ async def test_available_tones_dict(hass: HomeAssistant) -> None:
 
 
 async def test_missing_tones_list(hass: HomeAssistant) -> None:
-    """Test ValueError when setting a tone that is missing from available_tones list."""
+    """Test ServiceValidationError when setting a tone that is missing from available_tones list."""
     siren = MockSirenEntity(SirenEntityFeature.TONES, ["a", "b"])
     siren.hass = hass
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         process_turn_on_params(siren, {"tone": "test"})
 
 
 async def test_missing_tones_dict(hass: HomeAssistant) -> None:
-    """Test ValueError when setting a tone that is missing from available_tones dict."""
+    """Test ServiceValidationError when setting a tone that is missing from available_tones dict."""
     siren = MockSirenEntity(SirenEntityFeature.TONES, {1: "a", 2: "b"})
     siren.hass = hass
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         process_turn_on_params(siren, {"tone": 3})

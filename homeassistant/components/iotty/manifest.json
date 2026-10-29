@@ -1,6 +1,7 @@
 {
   "domain": "iotty",
   "name": "iotty",
+  "categories": ["plugs_switches", "blinds_curtains"],
   "codeowners": ["@shapournemati-iotty"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

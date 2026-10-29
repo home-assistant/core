@@ -1,6 +1,7 @@
 {
   "domain": "nexblue",
   "name": "NexBlue",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@nexblue-maintainer"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nexblue",

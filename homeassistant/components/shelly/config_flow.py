@@ -234,8 +234,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
-    disable_ap_after_provision: bool = True
-    disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
     _ble_rpc_device: RpcDevice | None = None
 
@@ -830,20 +828,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm bluetooth provisioning."""
         if user_input is not None:
-            self.disable_ap_after_provision = user_input.get("disable_ap", True)
-            self.disable_ble_rpc_after_provision = user_input.get(
-                "disable_ble_rpc", True
-            )
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional("disable_ap", default=True): bool,
-                    probatio.Optional("disable_ble_rpc", default=True): bool,
-                }
-            ),
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"]
             },
@@ -936,16 +924,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             provisioning_registry.pop(normalized_mac, None)
 
     async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
-        """Disable AP and/or BLE RPC after successful WiFi provisioning.
+        """Disable AP and BLE RPC after successful WiFi provisioning.
 
         Must be called via IP after device is on WiFi, not via BLE.
         """
-        if (
-            not self.disable_ap_after_provision
-            and not self.disable_ble_rpc_after_provision
-        ):
-            return
-
         # Connect to device via IP
         options = ConnectionOptions(
             host,
@@ -962,23 +944,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             await device.initialize()
 
-            restart_required = False
+            # Disable WiFi AP
+            wifi_result = await device.wifi_setconfig(ap_enable=False)
+            LOGGER.debug("Disabled WiFi AP on %s", host)
 
-            # Disable WiFi AP if requested
-            if self.disable_ap_after_provision:
-                result = await device.wifi_setconfig(ap_enable=False)
-                LOGGER.debug("Disabled WiFi AP on %s", host)
-                restart_required = restart_required or result.get(
-                    "restart_required", False
-                )
+            # Disable BLE RPC (keep BLE enabled for sensors/buttons)
+            ble_result = await device.ble_setconfig(enable=True, enable_rpc=False)
+            LOGGER.debug("Disabled BLE RPC on %s", host)
 
-            # Disable BLE RPC if requested (keep BLE enabled for sensors/buttons)
-            if self.disable_ble_rpc_after_provision:
-                result = await device.ble_setconfig(enable=True, enable_rpc=False)
-                LOGGER.debug("Disabled BLE RPC on %s", host)
-                restart_required = restart_required or result.get(
-                    "restart_required", False
-                )
+            restart_required = wifi_result.get(
+                "restart_required", False
+            ) or ble_result.get("restart_required", False)
 
             # Restart device once if either operation requires it
             if restart_required:
@@ -1106,7 +1082,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
 
-        # Secure device after provisioning if requested (disable AP/BLE)
+        # Secure device after provisioning (disable AP/BLE RPC)
         await self._async_secure_device_after_provision(self.host, self.port)
 
         # Clear match history so device can be rediscovered if factory reset
@@ -1285,7 +1261,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",

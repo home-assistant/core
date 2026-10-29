@@ -12,6 +12,7 @@ from hass_nabucasa import (
     LogoutEvent,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.cloud import (
@@ -29,17 +30,26 @@ from homeassistant.components.cloud.const import (
     DOMAIN,
     EVENT_CLOUD_EVENT,
     MODE_DEV,
+    PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
+    PREF_GOOGLE_SETTINGS_VERSION,
 )
-from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.components.cloud.prefs import (
+    ALEXA_SETTINGS_VERSION,
+    GOOGLE_SETTINGS_VERSION,
+    STORAGE_KEY,
+)
+from homeassistant.components.cloud.services import CloudService
+from homeassistant.const import (
+    CONF_MODE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser
 
 REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
@@ -115,18 +125,22 @@ async def test_remote_services(
     """Setup cloud component and test services."""
     cloud = hass.data[DATA_CLOUD]
 
-    assert hass.services.has_service(DOMAIN, "remote_connect")
-    assert hass.services.has_service(DOMAIN, "remote_disconnect")
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_CONNECT)
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_DISCONNECT)
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
-        await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_CONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
-        await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_DISCONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_disconnect.called
@@ -140,7 +154,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_connect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_CONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_connect.called is False
@@ -150,7 +167,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_DISCONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_disconnect.called is False
@@ -656,3 +676,30 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
 
     # Should not receive update after unsubscribe
     assert len(changes) == 1
+
+
+async def test_assistant_settings_migrated_at_startup(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test outdated assistant settings are migrated at startup without a login."""
+    hass.set_state(CoreState.not_running)
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "data": {
+            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION - 1,
+            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION - 1,
+        },
+    }
+    with patch("hass_nabucasa.Cloud.initialize"):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    prefs = hass.data[DATA_CLOUD].client.prefs
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION - 1
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION - 1
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION

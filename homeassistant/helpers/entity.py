@@ -115,15 +115,21 @@ _ADD_REMOVE_METHODS = (
 def _entity_class_requires_readd(entity_class: type[Entity]) -> bool:
     """Return if an entity_id change must remove and re-add entities of a class.
 
-    Add or remove methods in _ADD_REMOVE_METHODS defined by a class are covered
-    when that class, or a subclass of it in the MRO, defines
-    async_entity_id_changed. A sibling which is merely earlier in the MRO does
-    not cover them. Entity itself does not count, and neither do the internal add
-    and remove methods, which core handles in async_internal_entity_id_changed.
+    Only classes defined outside of Home Assistant Core count, entities of core
+    integrations are always changed in place. Add or remove methods in
+    _ADD_REMOVE_METHODS defined by such a class are covered when that class, or
+    a subclass of it in the MRO, defines async_entity_id_changed. A sibling
+    which is merely earlier in the MRO does not cover them. The internal add and
+    remove methods do not count, core handles them in
+    async_internal_entity_id_changed.
 
     This can be removed in Home Assistant Core 2027.11.
     """
-    mro = [cls for cls in entity_class.__mro__ if cls is not Entity]
+    mro = [
+        cls
+        for cls in entity_class.__mro__
+        if not cls.__module__.startswith("homeassistant.")
+    ]
     hook_owners = [cls for cls in mro if "async_entity_id_changed" in cls.__dict__]
     return any(
         any(method in cls.__dict__ for method in _ADD_REMOVE_METHODS)
@@ -1675,20 +1681,25 @@ class Entity(
         Called when self.entity_id is already the new entity_id, core bookkeeping
         (entity registry and device registry tracking, entity sources, restore
         state) has been moved to it and async_registry_entry_updated has run; the
-        old state has already been removed.
+        old state has already been removed but the new state has not been written.
 
         Re-key anything the state or attributes are derived from which depends on
         the entity_id, e.g. state change listeners or signals keyed on
-        self.entity_id. Writing the state is optional, core writes it after this
-        method returns if it has not been written under the new entity_id.
+        self.entity_id.
 
         Work which needs the state under the new entity_id, e.g. templates
-        rendering `this`, writes it with self.async_write_ha_state() first. This
-        method must not await; work which must await can be done in a task,
+        rendering `this`, may optionally write the state by calling
+        self.async_write_ha_state() first.
+
+        After the method returns, core will write the state under the new entity_id
+        if the method did not write it.
+
+        Call super() so base classes can do the same. If the method writes the state
+        the call to super() must happen before doing so.
+
+        This method must not await; work which must await can be done in a task,
         registry events are not serialized with it, so after an await re-check
         that the entity is still added and that self.entity_id is unchanged.
-
-        Call super() so base classes can do the same.
 
         To be extended by integrations.
 
@@ -1781,7 +1792,8 @@ class Entity(
     ) -> None:
         """Remove the entity and add it again with its new entity_id.
 
-        Used for entities which have not opted in to async_entity_id_changed.
+        Used for entities of custom integrations which have not opted in to
+        async_entity_id_changed.
         Can be removed in Home Assistant Core 2027.11.
         """
         await self.async_remove(force_remove=True)

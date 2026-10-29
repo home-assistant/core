@@ -87,6 +87,9 @@ def async_process_deprecated(
             entity.unique_id,
         )
         assert entity_id
+        entity_entry = ent_reg.async_get(entity_id)
+        if TYPE_CHECKING:
+            assert entity_entry
         # Check for issues that need to be created
         entity_automations = automations_with_entity(hass, entity_id)
         entity_scripts = scripts_with_entity(hass, entity_id)
@@ -96,6 +99,7 @@ def async_process_deprecated(
                 hass,
                 DOMAIN,
                 f"deprecated_entity_{entity_id}_{item}",
+                config_entry_id=entity_entry.config_entry_id,
                 breaks_in_ha_version=deprecated_info.breaks_in_ha_version,
                 is_fixable=False,
                 is_persistent=False,

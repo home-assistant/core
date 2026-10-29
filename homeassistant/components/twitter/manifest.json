@@ -1,6 +1,7 @@
 {
   "domain": "twitter",
   "name": "X",
+  "categories": ["news_social_media"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/twitter",
   "iot_class": "cloud_push",

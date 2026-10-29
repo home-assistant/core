@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from bsblan import BSBLANError, EntityInfo, State, get_hvac_action_category
+from bsblan import BSBLANError, EntityInfo, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -96,7 +96,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     ) -> None:
         """Initialize BSBLAN climate device."""
         super().__init__(data.fast_coordinator, data, circuit)
-        self._circuit = circuit
         mac = format_mac(data.device.MAC)
 
         # Backward compatible unique ID: circuit 1 keeps old format
@@ -127,11 +126,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         self._attr_native_temperature_unit = (
             data.fast_coordinator.client.get_temperature_unit
         )
-
-    @property
-    def _circuit_state(self) -> State:
-        """Return the state for this circuit."""
-        return self.coordinator.data.states[self._circuit]
 
     @property
     @override
@@ -170,8 +164,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Return the current running hvac action."""
         if (action := self._circuit_state.hvac_action) is None or action.value is None:
             return None
-        category = get_hvac_action_category(action.value)
-        return HVACAction(category.name.lower())
+        hvac_action = HVACAction(get_hvac_action_category(action.value).name.lower())
+        # In protection mode the circuit is off unless frost protection heats
+        if hvac_action is HVACAction.IDLE and self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
+        return hvac_action
 
     @property
     @override
@@ -218,4 +215,4 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_circuit(self._circuit)

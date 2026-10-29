@@ -25,6 +25,14 @@
         "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
         "title": "Discovered Kodi"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "The credentials for Kodi at {host} are no longer valid. Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

@@ -35,13 +35,72 @@
       "max": "255.255"
     },
     "preferred": false,
-    "associations": {
+    "endpoints": {
       "1": {
-        "groupId": 1,
-        "label": "Lifeline",
-        "maxNodes": 5,
-        "isLifeline": true,
-        "multiChannel": "auto"
+        "index": 1,
+        "label": "Clamp 1 Consumption"
+      },
+      "2": {
+        "index": 2,
+        "label": "Clamp 1 Production"
+      },
+      "3": {
+        "index": 3,
+        "label": "Clamp 2 Consumption"
+      },
+      "4": {
+        "index": 4,
+        "label": "Clamp 2 Production"
+      },
+      "5": {
+        "index": 5,
+        "label": "Clamp 3 Consumption"
+      },
+      "6": {
+        "index": 6,
+        "label": "Clamp 3 Production"
+      },
+      "7": {
+        "index": 7,
+        "label": "Total Consumption"
+      },
+      "8": {
+        "index": 8,
+        "label": "Total Production"
+      },
+      "9": {
+        "index": 9,
+        "label": "Net Consumption"
+      },
+      "10": {
+        "index": 10,
+        "label": "Net Generation"
+      }
+    },
+    "endpointGroups": {
+      "1": {
+        "id": 1,
+        "label": "Clamp 1",
+        "endpoints": [1, 2],
+        "isMainDevice": false
+      },
+      "2": {
+        "id": 2,
+        "label": "Clamp 2",
+        "endpoints": [3, 4],
+        "isMainDevice": false
+      },
+      "3": {
+        "id": 3,
+        "label": "Clamp 3",
+        "endpoints": [5, 6],
+        "isMainDevice": false
+      },
+      "4": {
+        "id": 4,
+        "label": "Total",
+        "endpoints": [7, 8, 9, 10],
+        "isMainDevice": true
       }
     },
     "paramInformation": {
@@ -5818,7 +5877,7 @@
   "endpointsHaveIdenticalCapabilities": true,
   "individualEndpointCount": 10,
   "aggregatedEndpointCount": 0,
-  "interviewAttempts": 0,
+  "interviewAttempts": 1,
   "isFrequentListening": false,
   "maxDataRate": 100000,
   "supportedDataRates": [40000, 100000],
@@ -5845,25 +5904,25 @@
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x0034:1.7.6",
   "statistics": {
-    "commandsTX": 475,
-    "commandsRX": 69394,
-    "commandsDroppedRX": 24,
+    "commandsTX": 660,
+    "commandsRX": 688,
+    "commandsDroppedRX": 2,
     "commandsDroppedTX": 0,
     "timeoutResponse": 0,
-    "lastSeen": "2026-08-27T22:07:22.572Z",
-    "rtt": 26.9,
-    "rssi": -36,
+    "lastSeen": "2026-10-09T15:10:22.214Z",
+    "rtt": 26.6,
+    "rssi": -30,
     "lwr": {
       "protocolDataRate": 3,
       "repeaters": [],
-      "rssi": -38,
+      "rssi": -30,
       "repeaterRSSI": []
     }
   },
   "highestSecurityClass": 1,
   "isControllerNode": false,
   "keepAwake": false,
-  "lastSeen": "2026-08-27T17:32:28.772Z",
+  "lastSeen": "2026-10-09T15:10:22.214Z",
   "protocol": 0,
   "sdkVersion": "7.22.0",
   "canSleep": false,
@@ -5871,6 +5930,32 @@
   "hasSUCReturnRoute": true,
   "manufacturer": "Aeotec Ltd.",
   "dsk": "**REDACTED**",
+  "endpointGroups": [
+    {
+      "id": 1,
+      "label": "Clamp 1",
+      "isMainDevice": false,
+      "endpointIndices": [1, 2]
+    },
+    {
+      "id": 2,
+      "label": "Clamp 2",
+      "isMainDevice": false,
+      "endpointIndices": [3, 4]
+    },
+    {
+      "id": 3,
+      "label": "Clamp 3",
+      "isMainDevice": false,
+      "endpointIndices": [5, 6]
+    },
+    {
+      "id": 4,
+      "label": "Total",
+      "isMainDevice": true,
+      "endpointIndices": [7, 8, 9, 10]
+    }
+  ],
   "values": [
     {
       "endpoint": 0,
@@ -13484,7 +13569,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.156
+      "value": 232.028
     },
     {
       "endpoint": 1,
@@ -13780,7 +13865,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.349
+      "value": 231.801
     },
     {
       "endpoint": 2,
@@ -13983,6 +14068,31 @@
       "commandClass": 50,
       "commandClassName": "Meter",
       "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 2,
+          "rateType": 1
+        },
+        "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 6.877
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
       "propertyKey": 65537,
       "propertyName": "value",
       "propertyKeyName": "Electric_kWh_Consumed",
@@ -14001,7 +14111,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 2918.415
+      "value": 2974.697
     },
     {
       "endpoint": 3,
@@ -14026,32 +14136,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 3939.45
-    },
-    {
-      "endpoint": 3,
-      "commandClass": 50,
-      "commandClassName": "Meter",
-      "property": "value",
-      "propertyKey": 66049,
-      "propertyName": "value",
-      "propertyKeyName": "Electric_W_Consumed",
-      "ccVersion": 6,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": false,
-        "label": "Electric Consumption [W]",
-        "ccSpecific": {
-          "meterType": 1,
-          "scale": 2,
-          "rateType": 1
-        },
-        "unit": "W",
-        "stateful": true,
-        "secret": false
-      },
-      "value": 6.502
+      "value": 4137.496
     },
     {
       "endpoint": 3,
@@ -14076,7 +14161,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.146
+      "value": 231.749
     },
     {
       "endpoint": 3,
@@ -14101,7 +14186,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.626
+      "value": 0.635
     },
     {
       "endpoint": 3,
@@ -14125,7 +14210,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.042
+      "value": 0.04
     },
     {
       "endpoint": 3,
@@ -14150,7 +14235,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.143
+      "value": 0.147
     },
     {
       "endpoint": 3,
@@ -14175,7 +14260,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 2646.158
+      "value": 2875.769
     },
     {
       "endpoint": 3,
@@ -14372,7 +14457,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.339
+      "value": 231.795
     },
     {
       "endpoint": 4,
@@ -14593,7 +14678,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 304.529
+      "value": 364.694
     },
     {
       "endpoint": 5,
@@ -14618,7 +14703,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 303.926
+      "value": 363.966
     },
     {
       "endpoint": 5,
@@ -14668,7 +14753,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.473
+      "value": 231.86
     },
     {
       "endpoint": 5,
@@ -14964,7 +15049,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.667
+      "value": 231.894
     },
     {
       "endpoint": 6,
@@ -15167,6 +15252,31 @@
       "commandClass": 50,
       "commandClassName": "Meter",
       "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 2,
+          "rateType": 1
+        },
+        "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 6.877
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
       "propertyKey": 65537,
       "propertyName": "value",
       "propertyKeyName": "Electric_kWh_Consumed",
@@ -15185,7 +15295,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 3224.163
+      "value": 3340.61
     },
     {
       "endpoint": 7,
@@ -15210,32 +15320,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 4245.542
-    },
-    {
-      "endpoint": 7,
-      "commandClass": 50,
-      "commandClassName": "Meter",
-      "property": "value",
-      "propertyKey": 66049,
-      "propertyName": "value",
-      "propertyKeyName": "Electric_W_Consumed",
-      "ccVersion": 6,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": false,
-        "label": "Electric Consumption [W]",
-        "ccSpecific": {
-          "meterType": 1,
-          "scale": 2,
-          "rateType": 1
-        },
-        "unit": "W",
-        "stateful": true,
-        "secret": false
-      },
-      "value": 6.502
+      "value": 4503.628
     },
     {
       "endpoint": 7,
@@ -15260,7 +15345,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.258
+      "value": 231.826
     },
     {
       "endpoint": 7,
@@ -15285,7 +15370,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.626
+      "value": 0.635
     },
     {
       "endpoint": 7,
@@ -15309,7 +15394,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.042
+      "value": 0.04
     },
     {
       "endpoint": 7,
@@ -15334,7 +15419,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 0.143
+      "value": 0.147
     },
     {
       "endpoint": 7,
@@ -15359,7 +15444,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 2647.948
+      "value": 2877.559
     },
     {
       "endpoint": 7,
@@ -15556,7 +15641,7 @@
         "stateful": true,
         "secret": false
       },
-      "value": 229.451
+      "value": 231.913
     },
     {
       "endpoint": 8,
@@ -15759,31 +15844,6 @@
       "commandClass": 50,
       "commandClassName": "Meter",
       "property": "value",
-      "propertyKey": 65537,
-      "propertyName": "value",
-      "propertyKeyName": "Electric_kWh_Consumed",
-      "ccVersion": 6,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": false,
-        "label": "Electric Consumption [kWh]",
-        "ccSpecific": {
-          "meterType": 1,
-          "scale": 0,
-          "rateType": 1
-        },
-        "unit": "kWh",
-        "stateful": true,
-        "secret": false
-      },
-      "value": 3202.83
-    },
-    {
-      "endpoint": 9,
-      "commandClass": 50,
-      "commandClassName": "Meter",
-      "property": "value",
       "propertyKey": 66049,
       "propertyName": "value",
       "propertyKeyName": "Electric_W_Consumed",
@@ -15802,7 +15862,32 @@
         "stateful": true,
         "secret": false
       },
-      "value": 6.502
+      "value": 6.877
+    },
+    {
+      "endpoint": 9,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 0,
+          "rateType": 1
+        },
+        "unit": "kWh",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3319.149
     },
     {
       "endpoint": 9,
@@ -15854,31 +15939,6 @@
       "commandClass": 50,
       "commandClassName": "Meter",
       "property": "value",
-      "propertyKey": 65538,
-      "propertyName": "value",
-      "propertyKeyName": "Electric_kWh_Produced",
-      "ccVersion": 6,
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": false,
-        "label": "Electric Production [kWh]",
-        "ccSpecific": {
-          "meterType": 1,
-          "scale": 0,
-          "rateType": 2
-        },
-        "unit": "kWh",
-        "stateful": true,
-        "secret": false
-      },
-      "value": 0
-    },
-    {
-      "endpoint": 10,
-      "commandClass": 50,
-      "commandClassName": "Meter",
-      "property": "value",
       "propertyKey": 66050,
       "propertyName": "value",
       "propertyKeyName": "Electric_W_Produced",
@@ -15894,6 +15954,31 @@
           "rateType": 2
         },
         "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 10,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65538,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Produced",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Production [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 0,
+          "rateType": 2
+        },
+        "unit": "kWh",
         "stateful": true,
         "secret": false
       },
@@ -15993,7 +16078,7 @@
         {
           "id": 34,
           "name": "Application Status",
-          "version": 0,
+          "version": 1,
           "isSecure": false
         },
         {
@@ -16144,7 +16229,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 1 Consumption"
     },
     {
       "nodeId": 39,
@@ -16214,7 +16300,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 1 Production"
     },
     {
       "nodeId": 39,
@@ -16284,7 +16371,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 2 Consumption"
     },
     {
       "nodeId": 39,
@@ -16354,7 +16442,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 2 Production"
     },
     {
       "nodeId": 39,
@@ -16424,7 +16513,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 3 Consumption"
     },
     {
       "nodeId": 39,
@@ -16494,7 +16584,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Clamp 3 Production"
     },
     {
       "nodeId": 39,
@@ -16564,7 +16655,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Total Consumption"
     },
     {
       "nodeId": 39,
@@ -16634,7 +16726,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Total Production"
     },
     {
       "nodeId": 39,
@@ -16704,7 +16797,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Net Consumption"
     },
     {
       "nodeId": 39,
@@ -16774,7 +16868,8 @@
           "version": 6,
           "isSecure": true
         }
-      ]
+      ],
+      "endpointLabel": "Net Generation"
     }
   ]
 }

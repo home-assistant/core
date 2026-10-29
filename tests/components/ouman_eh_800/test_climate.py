@@ -11,6 +11,7 @@ from ouman_eh_800_api import (
     OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -28,8 +29,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 # Climate entities only exist on circuits with a room sensor; the
@@ -68,7 +67,7 @@ async def test_async_set_temperature(
     hass: HomeAssistant, mock_ouman_client: AsyncMock
 ) -> None:
     """Test that setting the target temperature writes to the device and updates state."""
-    entity_id = "climate.heating_circuit_1_patterilammitys"
+    entity_id = "climate.ouman_eh_800_heating_circuit_1_patterilammitys"
 
     assert hass.states.get(entity_id).attributes["temperature"] == 21.0
 
@@ -95,7 +94,7 @@ async def test_async_set_temperature_with_hvac_mode(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+            ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
             ATTR_TEMPERATURE: 22.0,
             ATTR_HVAC_MODE: HVACMode.OFF,
         },
@@ -140,7 +139,7 @@ async def test_hvac_mode_mapping(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.heating_circuit_1_patterilammitys")
+    state = hass.states.get("climate.ouman_eh_800_heating_circuit_1_patterilammitys")
     assert state.state == expected_hvac_mode
 
 
@@ -182,7 +181,7 @@ async def test_hvac_action_mapping(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.heating_circuit_1_patterilammitys")
+    state = hass.states.get("climate.ouman_eh_800_heating_circuit_1_patterilammitys")
     assert state.attributes["hvac_action"] == expected_hvac_action
 
 
@@ -206,7 +205,7 @@ async def test_async_set_hvac_mode(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+            ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
             ATTR_HVAC_MODE: hvac_mode,
         },
         blocking=True,
@@ -244,7 +243,7 @@ async def test_async_set_preset_mode(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+            ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
             ATTR_PRESET_MODE: preset_mode,
         },
         blocking=True,
@@ -266,7 +265,7 @@ async def test_async_set_preset_mode_invalid(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+                ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
                 ATTR_PRESET_MODE: "nonexistent",
             },
             blocking=True,
@@ -286,7 +285,7 @@ async def test_async_set_temperature_out_of_range(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+                ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
                 ATTR_TEMPERATURE: 99.0,
             },
             blocking=True,
@@ -331,7 +330,7 @@ async def test_async_set_temperature_errors(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.heating_circuit_1_patterilammitys",
+                ATTR_ENTITY_ID: "climate.ouman_eh_800_heating_circuit_1_patterilammitys",
                 ATTR_TEMPERATURE: 22.0,
             },
             blocking=True,

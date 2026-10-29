@@ -5,14 +5,13 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests
 import requests_mock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 API_KEY = "0123-secret-api-key"
 URL = "https://www.worldtides.info/api"
