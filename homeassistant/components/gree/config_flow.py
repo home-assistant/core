@@ -156,6 +156,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
                 **self._selected,
                 CONF_IDENTIFIER: other_flow._selected[CONF_IDENTIFIER],
             }
+            other_flow.init_data = self.init_data
             if data != other_flow._selected:
                 other_flow._selected = data
                 other_flow.context["title_placeholders"] = {
@@ -190,7 +191,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_validate_selected(self) -> tuple[ConfigFlowResult | None, str]:
-        """Bind a temporary device and recheck ownership after the await."""
+        """Bind a temporary device without overwriting a concurrent winner."""
         assert self._selected is not None
         data = self._selected
         identifier = normalize_identifier(data[CONF_IDENTIFIER])
@@ -198,9 +199,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured"), ""
         if self.source == SOURCE_USER:
             await self.async_set_unique_id(identifier, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-        elif result := self._known_device(data):
-            return result, ""
+        self._abort_if_unique_id_configured()
         device = Device(
             DeviceInfo(
                 ip=data[CONF_HOST],
@@ -226,11 +225,6 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if any(data[key] != self._selected[key] for key in (CONF_HOST, CONF_PORT)):
             return None, "cannot_connect"
         data = self._selected
-        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, identifier
-        )
-        if entry is not None and entry.source != SOURCE_IGNORE:
-            return self._known_device(data), ""
         if identifier in async_get_legacy_identifiers(self.hass):
             return self.async_abort(reason="already_configured"), ""
         self._abort_if_unique_id_configured()

@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import discovery_flow, entity_registry as er
 
 from .common import build_device_mock
 
@@ -472,6 +472,31 @@ async def test_pending_discovery_endpoint_update(
     device().close.assert_called_once_with()
 
 
+async def test_background_discovery_endpoint_returns_to_original_address(
+    hass: HomeAssistant, device: MagicMock
+) -> None:
+    """Background deduplication cannot suppress an address returning to its origin."""
+    data = device_info_to_data(device().device_info)
+    await hass.async_start()
+    for observed in (data, {**data, CONF_HOST: "192.0.2.2"}, data):
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=observed,
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    pending = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(pending) == 1
+    device().bind.assert_not_awaited()
+    result = await hass.config_entries.flow.async_configure(pending[0]["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == data
+    assert result["result"].unique_id == normalize_identifier(data[CONF_IDENTIFIER])
+    assert device.call_args.args[0].ip == data[CONF_HOST]
+
+
 async def test_pending_discovery_failure_endpoint_update(
     hass: HomeAssistant, device: MagicMock
 ) -> None:
@@ -643,8 +668,8 @@ async def test_entry_created_during_validation(
         )
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == winners
-    assert winners[0].data[CONF_HOST] == data[CONF_HOST]
-    schedule.assert_called_once_with(winners[0].entry_id)
+    assert winners[0].data[CONF_HOST] == "192.0.2.99"
+    schedule.assert_not_called()
     device().close.assert_called_once_with()
 
 
@@ -708,7 +733,7 @@ async def test_candidate_configured_before_submission(
     """A candidate enrolled after the form appears is not bound or replaced."""
     data = device_info_to_data(device().device_info)
     result = await start_selected_step(hass, step, data)
-    entry = add_entry(hass, data)
+    entry = add_entry(hass, {**data, CONF_HOST: "192.0.2.99"})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -718,6 +743,7 @@ async def test_candidate_configured_before_submission(
     )
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data[CONF_HOST] == "192.0.2.99"
     device().bind.assert_not_awaited()
 
 

@@ -11,7 +11,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: GreeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    if (coordinator := getattr(entry, "runtime_data", None)) is None:
+        return {"devices": []}
     return {
         "devices": [
             {
