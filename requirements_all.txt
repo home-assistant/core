@@ -604,7 +604,7 @@ aqualogic==2.6
 aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==3.0.1
+arcam-fmj==3.1.1
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==2.2.0
