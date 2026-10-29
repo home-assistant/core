@@ -263,7 +263,6 @@ async def test_migrate_entry_drops_empty_mac_connection(
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             entry.data.get(CONF_MAC, None),
             entry.data.get(CONF_SN, None),
         )
@@ -299,7 +298,6 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             None,
             None,
         )
