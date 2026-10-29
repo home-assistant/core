@@ -205,7 +205,6 @@ ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
-ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
