@@ -1,9 +1,8 @@
 """Support for sending data to Datadog."""
 
 import asyncio
-from collections.abc import Callable
+from functools import partial
 import logging
-from typing import Any
 
 from datadog import DogStatsd, initialize
 
@@ -53,12 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
 
     initialize(statsd_host=host, statsd_port=port)
 
-    queue: list[tuple[Callable[..., None], tuple[Any, ...]]] = []
+    queue: list[partial[None]] = []
     sending: asyncio.Task[None] | None = None
 
     def run_sends(sends):
-        for target, args in sends:
-            target(*args)
+        for send in sends:
+            send()
 
     async def drain_queue():
         while queue:
@@ -71,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
     @callback
     def queue_send(target, *args):
         nonlocal sending
-        queue.append((target, args))
+        queue.append(partial(target, *args))
         if sending is None or sending.done():
             sending = entry.async_create_task(hass, drain_queue())
 
@@ -79,13 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
         statsd_client.flush()
         statsd_client.close_socket()
 
-    async def async_close_client():
-        if sending is not None:
-            await asyncio.wait([sending])
-        await hass.async_add_executor_job(close_client)
-
     # Registered first so it runs last, after the listeners and timer are removed.
-    entry.async_on_unload(async_close_client)
+    # Closing is queued like a send, so it runs after the last one.
+    entry.async_on_unload(partial(queue_send, close_client))
 
     def send_logbook_entry(event):
         name = event.data.get("name")
@@ -137,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
     @callback
     def send_all_states(now):
         # Skip if the previous resend is still waiting to be sent.
-        if all(target is not send_states for target, _ in queue):
+        if all(send.func is not send_states for send in queue):
             queue_send(send_states, hass.states.async_all())
 
     entry.async_on_unload(
