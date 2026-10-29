@@ -5,13 +5,15 @@ from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
+from aiohttp import ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
 from pyoverkiz.models import Setup
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -23,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import load_setup_fixture
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
     async_deliver_events,
@@ -450,6 +453,22 @@ async def test_oven_end_time_unknown_when_set_up_while_running(
     assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
 
 
+def _timer_event(running: bool, remaining: int | None = None):
+    """Build an oven timer event."""
+    states = [
+        {"name": OverkizState.CORE_RUNNING_TIMER.value, "type": 6, "value": running}
+    ]
+    if remaining is not None:
+        states.append(
+            {
+                "name": OverkizState.CORE_REMAINING_TIME.value,
+                "type": 1,
+                "value": remaining,
+            }
+        )
+    return device_state_changed_event(OVEN.device_url, states)
+
+
 async def test_oven_end_time_restart_in_one_batch(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -459,32 +478,49 @@ async def test_oven_end_time_restart_in_one_batch(
     """Test a timer restarted with the same duration within one poll is followed."""
     await setup_overkiz_integration(fixture=OVEN.fixture)
 
-    def timer_event(running: bool, remaining: int | None = None):
-        states = [
-            {
-                "name": OverkizState.CORE_RUNNING_TIMER.value,
-                "type": 6,
-                "value": running,
-            }
-        ]
-        if remaining is not None:
-            states.append(
-                {
-                    "name": OverkizState.CORE_REMAINING_TIME.value,
-                    "type": 1,
-                    "value": remaining,
-                }
-            )
-        return device_state_changed_event(OVEN.device_url, states)
-
-    await async_deliver_events(hass, freezer, mock_client, [timer_event(True, 300)])
+    await async_deliver_events(hass, freezer, mock_client, [_timer_event(True, 300)])
     first_end = hass.states.get(OVEN.entity_id).state
 
     freezer.tick(timedelta(minutes=2))
     await async_deliver_events(
-        hass, freezer, mock_client, [timer_event(False), timer_event(True, 300)]
+        hass, freezer, mock_client, [_timer_event(False), _timer_event(True, 300)]
     )
 
     end_time = dt_util.utcnow().replace(microsecond=0) + timedelta(seconds=300)
     assert hass.states.get(OVEN.entity_id).state == end_time.isoformat()
     assert end_time.isoformat() != first_end
+
+
+@pytest.mark.parametrize(
+    ("refreshed_remaining", "kept"),
+    [(300, True), (600, False)],
+    ids=["same_duration", "new_duration"],
+)
+async def test_oven_end_time_after_device_refresh(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    refreshed_remaining: int,
+    kept: bool,
+) -> None:
+    """Test a device refresh keeps the end time only while the duration is unchanged."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+    await async_deliver_events(hass, freezer, mock_client, [_timer_event(True, 300)])
+    end_time = hass.states.get(OVEN.entity_id).state
+
+    refreshed = load_setup_fixture(OVEN.fixture)
+    oven = refreshed.devices[0]
+    oven.states[OverkizState.CORE_RUNNING_TIMER.value].value = True
+    oven.states[OverkizState.CORE_REMAINING_TIME.value].value = refreshed_remaining
+    mock_client.get_devices.side_effect = None
+    mock_client.get_devices.return_value = refreshed.devices
+    mock_client.fetch_events.side_effect = ServerDisconnectedError()
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.get_devices.await_count >= 1
+    expected = end_time if kept else STATE_UNKNOWN
+    assert hass.states.get(OVEN.entity_id).state == expected

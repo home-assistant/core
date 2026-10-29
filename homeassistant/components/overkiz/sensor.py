@@ -692,7 +692,10 @@ class OverkizEndTimeSensor(OverkizDescriptiveEntity, SensorEntity):
             or not isinstance(report.value, int)
         ):
             self._attr_native_value = None
-        elif device is self._device and report is not self._report:
+        elif device is not self._device:
+            if self._report is None or report.value != self._report.value:
+                self._attr_native_value = None
+        elif report is not self._report:
             self._attr_native_value = dt_util.utcnow() + timedelta(seconds=report.value)
         self._device, self._report = device, report
         super()._handle_coordinator_update()
