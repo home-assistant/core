@@ -10,6 +10,7 @@ from chemelex_nuheat import (
     HoldUntilStatus,
     NuHeatApiError,
     NuHeatAuthError,
+    NuHeatRateLimitError,
     Thermostat,
     ThermostatState,
 )
@@ -347,6 +348,7 @@ async def test_duplicate_account_is_prevented(
     [
         (NuHeatAuthError("rejected"), "invalid_auth"),
         (NuHeatApiError("down"), "cannot_connect"),
+        (NuHeatRateLimitError(60), "rate_limited"),
     ],
 )
 async def test_account_lookup_failures(
@@ -368,7 +370,9 @@ async def test_account_lookup_failures(
         result = await complete_oauth_flow(
             hass, hass_client_no_auth, oauth_implementation(secret)
         )
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert hass.config_entries.async_entries(DOMAIN) == []
     assert secret not in caplog.text
 
 
