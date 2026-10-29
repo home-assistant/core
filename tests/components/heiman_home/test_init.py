@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from heimanconnect import HeimanMQTTError
+
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -134,10 +136,10 @@ async def test_unload_with_mqtt_disconnect(
 
     # Create mocks for MQTT and API client
     mock_mqtt_client = MagicMock()
-    mock_mqtt_client.async_disconnect = AsyncMock()
+    mock_mqtt_client.disconnect = AsyncMock()
 
     mock_api_client = MagicMock()
-    mock_api_client.async_close = AsyncMock()
+    mock_api_client.close = AsyncMock()
 
     mock_coordinator = MagicMock()
     mock_coordinator.mqtt_client = mock_mqtt_client
@@ -170,9 +172,9 @@ async def test_unload_with_mqtt_disconnect(
     await hass.async_block_till_done()
 
     # Verify MQTT was disconnected
-    mock_mqtt_client.async_disconnect.assert_called_once()
+    mock_mqtt_client.disconnect.assert_called_once()
     # Verify API client was closed
-    mock_api_client.async_close.assert_called_once()
+    mock_api_client.close.assert_called_once()
 
 
 async def test_setup_entry_oauth2_implementation_unavailable(
@@ -422,12 +424,12 @@ async def test_unload_with_mqtt_disconnect_exception(
 
     # Create mocks for MQTT client
     mock_mqtt_client = MagicMock()
-    mock_mqtt_client.async_disconnect = AsyncMock(
+    mock_mqtt_client.disconnect = AsyncMock(
         side_effect=Exception("MQTT disconnect failed")
     )
 
     mock_api_client = MagicMock()
-    mock_api_client.async_close = AsyncMock()
+    mock_api_client.close = AsyncMock()
 
     mock_coordinator = MagicMock()
     mock_coordinator.mqtt_client = mock_mqtt_client
@@ -484,10 +486,10 @@ async def test_unload_with_api_client_close_exception(
 
     # Create mocks
     mock_mqtt_client = MagicMock()
-    mock_mqtt_client.async_disconnect = AsyncMock()
+    mock_mqtt_client.disconnect = AsyncMock()
 
     mock_api_client = MagicMock()
-    mock_api_client.async_close = AsyncMock(side_effect=Exception("API close failed"))
+    mock_api_client.close = AsyncMock(side_effect=Exception("API close failed"))
 
     mock_coordinator = MagicMock()
     mock_coordinator.mqtt_client = mock_mqtt_client
@@ -580,12 +582,10 @@ async def test_unload_returns_false_when_platforms_unload_fails(
 async def test_setup_mqtt_init_failure_with_cleanup(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
-    """Test setup handles MQTT initialization failure with proper cleanup.
+    """Test setup retries when MQTT initialization fails.
 
-    When MQTT initialization fails, the integration should:
-    1. Disconnect any partially connected MQTT client
-    2. Close the API client
-    3. Re-raise the exception to fail setup
+    A transient MQTT broker outage raises ConfigEntryNotReady so Home
+    Assistant retries setup; the API client is closed on the way out.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -604,19 +604,14 @@ async def test_setup_mqtt_init_failure_with_cleanup(
     )
     entry.add_to_hass(hass)
 
-    # Create mocks for MQTT and API client
-    mock_mqtt_client = MagicMock()
-    mock_mqtt_client.async_disconnect = AsyncMock()
-
+    # Make async_init_mqtt_client fail the way a broker outage would
     mock_api_client_instance = MagicMock()
-    mock_api_client_instance.async_close = AsyncMock()
+    mock_api_client_instance.close = AsyncMock()
 
     mock_coordinator = MagicMock()
-    mock_coordinator.mqtt_client = mock_mqtt_client
     mock_coordinator.api_client = mock_api_client_instance
-    # Make async_init_mqtt_client raise an exception
     mock_coordinator.async_init_mqtt_client = AsyncMock(
-        side_effect=RuntimeError("MQTT connection failed")
+        side_effect=HeimanMQTTError("MQTT connection failed")
     )
     mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
 
@@ -638,12 +633,11 @@ async def test_setup_mqtt_init_failure_with_cleanup(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Verify setup failed
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    # A transient MQTT outage is retried by Home Assistant
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    # Verify cleanup was performed
-    mock_mqtt_client.async_disconnect.assert_called_once()
-    mock_api_client_instance.async_close.assert_called_once()
+    # Verify the API client was closed
+    mock_api_client_instance.close.assert_called_once()
 
 
 async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:

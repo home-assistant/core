@@ -301,10 +301,10 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self._device.device_id in self.coordinator.data.devices
-        )
+        if not super().available:
+            return False
+        device = self.coordinator.data.devices.get(self._device.device_id)
+        return device is not None and device.online is True
 
     @property
     @override

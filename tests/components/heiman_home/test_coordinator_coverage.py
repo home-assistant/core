@@ -496,8 +496,7 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
         mock_mqtt_instance.connect = AsyncMock(
             side_effect=HeimanMQTTError("MQTT connection failed")
         )
-        # Add async_disconnect as the first available method
-        mock_mqtt_instance.async_disconnect = AsyncMock()
+        mock_mqtt_instance.disconnect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
         # Exception should be re-raised after cleanup
@@ -506,8 +505,8 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
 
         # MQTT client should be cleared after failure
         assert coordinator.mqtt_client is None
-        # async_disconnect should have been called (first in the list)
-        mock_mqtt_instance.async_disconnect.assert_called_once()
+        # The failed client should have been disconnected
+        mock_mqtt_instance.disconnect.assert_called_once()
 
 
 async def test_coordinator_on_device_property_update_new_property(
