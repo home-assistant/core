@@ -22,8 +22,8 @@ from homeassistant.components.cloud import (
     async_get_or_create_cloudhook,
     async_listen_cloudhook_change,
     async_listen_connection_change,
-    async_remote_ui_aliases,
     async_remote_ui_url,
+    async_remote_ui_urls,
 )
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
@@ -306,29 +306,31 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
-async def test_remote_ui_aliases(hass: HomeAssistant) -> None:
-    """Test getting the custom domains of the remote ui."""
+async def test_remote_ui_urls(hass: HomeAssistant) -> None:
+    """Test getting the remote ui urls with custom domains first."""
     cl = hass.data[DATA_CLOUD]
 
-    # Not logged in
-    assert async_remote_ui_aliases(hass) == []
+    with pytest.raises(CloudNotAvailable):
+        async_remote_ui_urls(hass)
 
-    with patch("homeassistant.components.cloud.async_is_logged_in", return_value=True):
-        # Remote not enabled
-        assert async_remote_ui_aliases(hass) == []
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cl.remote, "connect"),
+    ):
+        await cl.client.prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+        cl.client.prefs._prefs["remote_domain"] = "example.com"
 
-        with patch.object(cl.remote, "connect"):
-            await cl.client.prefs.async_update(remote_enabled=True)
-            await hass.async_block_till_done()
-
-        # Remote backend not loaded yet
-        assert async_remote_ui_aliases(hass) == []
+        assert async_remote_ui_urls(hass) == ["https://example.com"]
 
         with patch.object(
             type(cl.remote), "alias", new_callable=PropertyMock
         ) as mock_alias:
             mock_alias.return_value = ["ha.example.com"]
-            assert async_remote_ui_aliases(hass) == ["ha.example.com"]
+            assert async_remote_ui_urls(hass) == [
+                "https://ha.example.com",
+                "https://example.com",
+            ]
 
 
 @pytest.mark.parametrize(

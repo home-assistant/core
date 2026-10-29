@@ -321,16 +321,15 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
 
 
 @callback
-def async_remote_ui_aliases(hass: HomeAssistant) -> list[str]:
-    """Get the custom domains that also serve the remote UI."""
-    if not async_is_logged_in(hass):
-        return []
+def async_remote_ui_urls(hass: HomeAssistant) -> list[str]:
+    """Get the remote UI URLs, custom domains first.
 
+    Custom domains are the user facing URLs. The instance domain always
+    works and comes last.
+    """
+    instance_url = async_remote_ui_url(hass)
     cloud = hass.data[DATA_CLOUD]
-    if not cloud.client.prefs.remote_enabled:
-        return []
-
-    return cloud.remote.alias or []
+    return [f"https://{alias}" for alias in cloud.remote.alias or []] + [instance_url]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
