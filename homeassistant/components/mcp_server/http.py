@@ -293,8 +293,6 @@ async def _async_handle_streamable_message(
     read_only: bool,
 ) -> web.StreamResponse:
     """Process a single JSON-RPC message for the given LLM API."""
-    hass = request.app[KEY_HASS]
-
     # The request must include a JSON-RPC message
     if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
         raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
