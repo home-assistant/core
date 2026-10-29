@@ -41,6 +41,12 @@ class RemoteEntityStateAttribute(StrEnum):
     CURRENT_ACTIVITY = "current_activity"
 
 
+class RemoteEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for remote entities."""
+
+    SUPPORTED_NAVIGATION = "supported_navigation"
+
+
 class RemoteNavigation(StrEnum):
     """Standard navigation (d-pad) actions of a remote."""
 

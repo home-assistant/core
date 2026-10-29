@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_APP_NAME, DOMAIN
+from .const import CONF_APP_NAME, DOMAIN, NAVIGATION_KEY_CODES
 from .entity import AndroidTVRemoteBaseEntity
 from .helpers import AndroidTVRemoteConfigEntry
 
@@ -35,18 +35,6 @@ VALID_PREFIXES: Final[frozenset[str]] = frozenset(
         "END_LONG",
     }
 )
-
-
-NAVIGATION_KEY_CODES: Final[dict[RemoteNavigation, str]] = {
-    RemoteNavigation.UP: "DPAD_UP",
-    RemoteNavigation.DOWN: "DPAD_DOWN",
-    RemoteNavigation.LEFT: "DPAD_LEFT",
-    RemoteNavigation.RIGHT: "DPAD_RIGHT",
-    RemoteNavigation.SELECT: "DPAD_CENTER",
-    RemoteNavigation.BACK: "BACK",
-    RemoteNavigation.HOME: "HOME",
-    RemoteNavigation.MENU: "MENU",
-}
 
 
 def _parse_command(single_command: str) -> tuple[str, str | None]:
@@ -75,6 +63,7 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
     _attr_supported_features = (
         RemoteEntityFeature.ACTIVITY | RemoteEntityFeature.NAVIGATE
     )
+    _attr_supported_navigation = list(RemoteNavigation)
 
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""

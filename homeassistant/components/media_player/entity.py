@@ -35,6 +35,7 @@ from .const import (
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerNavigation,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -123,6 +124,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "source_list",
     "sound_mode",
     "sound_mode_list",
+    "supported_navigation",
     "shuffle",
     "repeat",
     "group_members",
@@ -147,6 +149,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
             MediaPlayerEntityStateAttribute.MEDIA_POSITION,
             MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST,
+            MediaPlayerEntityCapabilityAttribute.SUPPORTED_NAVIGATION,
         }
     )
 
@@ -184,6 +187,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_source: str | None = None
     _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
+    _attr_supported_navigation: list[MediaPlayerNavigation] | None = None
     _attr_volume_level: float | None = None
     _attr_volume_step: float
 
@@ -382,6 +386,16 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_sound_mode_list
 
     @cached_property
+    def supported_navigation(self) -> list[MediaPlayerNavigation]:
+        """List of navigation actions the player supports.
+
+        Only used when the NAVIGATE feature is set. Defaults to all actions.
+        """
+        if self._attr_supported_navigation is None:
+            return list(MediaPlayerNavigation)
+        return self._attr_supported_navigation
+
+    @cached_property
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         return self._attr_shuffle
@@ -511,6 +525,14 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self.hass.async_add_executor_job(self.select_sound_mode, sound_mode)
+
+    def navigate(self, direction: MediaPlayerNavigation) -> None:
+        """Send a navigation (d-pad) action to the player."""
+        raise NotImplementedError
+
+    async def async_navigate(self, direction: MediaPlayerNavigation) -> None:
+        """Send a navigation (d-pad) action to the player."""
+        await self.hass.async_add_executor_job(self.navigate, direction)
 
     def clear_playlist(self) -> None:
         """Clear players playlist."""
@@ -722,6 +744,11 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             sound_mode_list := self.sound_mode_list
         ) and MediaPlayerEntityFeature.SELECT_SOUND_MODE in supported_features:
             data[MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST] = sound_mode_list
+
+        if MediaPlayerEntityFeature.NAVIGATE in supported_features:
+            data[MediaPlayerEntityCapabilityAttribute.SUPPORTED_NAVIGATION] = (
+                self.supported_navigation
+            )
 
         return data
 

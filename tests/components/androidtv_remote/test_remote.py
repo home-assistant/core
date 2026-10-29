@@ -1,12 +1,14 @@
 """Tests for the Android TV Remote remote platform."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from androidtvremote2 import ConnectionClosed
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.androidtv_remote.remote import AndroidTVRemoteEntity
+from homeassistant.components.remote import RemoteNavigation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -157,6 +159,63 @@ async def test_remote_navigate(
         blocking=True,
     )
     mock_api.send_key_command.assert_called_once_with(key_code, "SHORT")
+
+
+async def test_remote_supported_navigation_attribute(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test the remote exposes the navigation actions it supports."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(REMOTE_ENTITY)
+    assert state is not None
+    assert state.attributes["supported_navigation"] == [
+        "up",
+        "down",
+        "left",
+        "right",
+        "select",
+        "back",
+        "home",
+        "menu",
+    ]
+
+
+async def test_remote_navigate_unsupported_direction(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.navigate rejects a direction the remote does not support."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        AndroidTVRemoteEntity,
+        "_attr_supported_navigation",
+        [RemoteNavigation.UP, RemoteNavigation.SELECT],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(REMOTE_ENTITY)
+    assert state is not None
+    assert state.attributes["supported_navigation"] == ["up", "select"]
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            "remote",
+            "navigate",
+            {"entity_id": REMOTE_ENTITY, "direction": "home"},
+            blocking=True,
+        )
+    mock_api.send_key_command.assert_not_called()
+
+    await hass.services.async_call(
+        "remote",
+        "navigate",
+        {"entity_id": REMOTE_ENTITY, "direction": "up"},
+        blocking=True,
+    )
+    mock_api.send_key_command.assert_called_once_with("DPAD_UP", "SHORT")
 
 
 async def test_remote_navigate_invalid_direction(

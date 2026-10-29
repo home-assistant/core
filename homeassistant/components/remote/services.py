@@ -2,22 +2,40 @@
 
 import probatio
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     DATA_COMPONENT,
     DEFAULT_HOLD_SECS,
     DEFAULT_NUM_REPEATS,
+    DOMAIN,
     RemoteEntityFeature,
     RemoteNavigation,
     RemoteService,
     RemoteServiceArgument,
 )
+from .entity import RemoteEntity
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
     {probatio.Optional(RemoteServiceArgument.ACTIVITY): cv.string}
 )
+
+
+async def _async_navigate(entity: RemoteEntity, call: ServiceCall) -> None:
+    """Send a navigation action if the remote supports it."""
+    direction: RemoteNavigation = call.data[RemoteServiceArgument.DIRECTION]
+    if direction not in entity.supported_navigation:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="navigation_not_supported",
+            translation_placeholders={
+                "entity_id": entity.entity_id,
+                "direction": direction,
+            },
+        )
+    await entity.async_navigate(direction)
 
 
 @callback
@@ -62,7 +80,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 RemoteNavigation
             )
         },
-        "async_navigate",
+        _async_navigate,
         [RemoteEntityFeature.NAVIGATE],
     )
 

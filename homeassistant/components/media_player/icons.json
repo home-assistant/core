@@ -97,6 +97,9 @@
     "media_stop": {
       "service": "mdi:stop"
     },
+    "navigate": {
+      "service": "mdi:gamepad-up"
+    },
     "play_media": {
       "service": "mdi:play"
     },

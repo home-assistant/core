@@ -272,6 +272,9 @@
         "source_list": {
           "name": "Available sources"
         },
+        "supported_navigation": {
+          "name": "Supported navigation"
+        },
         "volume_level": {
           "name": "Volume"
         }
@@ -291,6 +294,9 @@
     }
   },
   "exceptions": {
+    "navigation_not_supported": {
+      "message": "{entity_id} does not support the navigation action {direction}."
+    },
     "no_url_available": {
       "message": "Unable to determine Home Assistant URL to send to device."
     },
@@ -299,6 +305,18 @@
     }
   },
   "selector": {
+    "direction": {
+      "options": {
+        "back": "Back",
+        "down": "Down",
+        "home": "Home",
+        "left": "Left",
+        "menu": "Menu",
+        "right": "Right",
+        "select": "Select",
+        "up": "Up"
+      }
+    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -377,6 +395,16 @@
     "media_stop": {
       "description": "Stops playback on a media player.",
       "name": "Stop media"
+    },
+    "navigate": {
+      "description": "Sends a navigation action to a media player.",
+      "fields": {
+        "direction": {
+          "description": "The navigation action to send.",
+          "name": "Direction"
+        }
+      },
+      "name": "Navigate media player"
     },
     "play_media": {
       "description": "Starts playing specified media on a media player.",

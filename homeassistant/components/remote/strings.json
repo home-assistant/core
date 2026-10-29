@@ -59,6 +59,11 @@
       }
     }
   },
+  "exceptions": {
+    "navigation_not_supported": {
+      "message": "{entity_id} does not support the navigation action {direction}."
+    }
+  },
   "selector": {
     "direction": {
       "options": {
