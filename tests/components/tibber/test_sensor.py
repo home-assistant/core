@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.const import UnitOfLength
+from homeassistant.const import STATE_UNAVAILABLE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -17,6 +17,51 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import create_tibber_device, create_tibber_home
+
+RT_POWER_ENTITY_ID = "sensor.tibber_pulse_home_power"
+
+
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+async def test_realtime_error_recovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    realtime_home: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Realtime errors make sensors unavailable until a new measurement arrives."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    on_update = realtime_home.rt_subscribe.call_args.args[0]
+    on_error = realtime_home.rt_subscribe.call_args.kwargs["on_error"]
+    on_error(TimeoutError("Realtime connection not established"))
+    await hass.async_block_till_done()
+    assert hass.states.get(RT_POWER_ENTITY_ID) is None
+
+    on_update({"data": {"liveMeasurement": {"power": 100}}})
+    await hass.async_block_till_done()
+    state = hass.states.get(RT_POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "100"
+
+    on_error(TimeoutError("Realtime connection lost"))
+    await hass.async_block_till_done()
+    state = hass.states.get(RT_POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    on_update({"data": {"liveMeasurement": {"power": 200}}})
+    await hass.async_block_till_done()
+    state = hass.states.get(RT_POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "200"
+
+    caplog.clear()
+    on_update({"errors": ["Realtime measurement failed"]})
+    await hass.async_block_till_done()
+    state = hass.states.get(RT_POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.messages.count("Realtime measurement failed") == 1
 
 
 async def test_price_sensor_state_unit_and_attributes(

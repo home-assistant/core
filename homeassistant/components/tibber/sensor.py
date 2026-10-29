@@ -27,7 +27,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -636,13 +636,15 @@ async def _async_setup_graphql_sensors(
             entity_creator = TibberRtEntityCreator(
                 async_add_entities, home, entity_registry
             )
+            rt_coordinator = TibberRtDataCoordinator(
+                hass,
+                entry,
+                entity_creator.add_sensors,
+                home,
+            )
             await home.rt_subscribe(
-                TibberRtDataCoordinator(
-                    hass,
-                    entry,
-                    entity_creator.add_sensors,
-                    home,
-                ).async_set_updated_data
+                rt_coordinator.async_set_updated_data,
+                on_error=rt_coordinator.async_set_update_error,
             )
 
     async_add_entities(entities)
@@ -870,15 +872,21 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._tibber_home.rt_subscription_running
+        return (
+            super().available
+            and self.coordinator.get_live_measurement() is not None
+            and self._tibber_home.rt_subscription_running
+        )
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         if not (live_measurement := self.coordinator.get_live_measurement()):
+            self.async_write_ha_state()
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
+            self.async_write_ha_state()
             return
         if self.entity_description.key in (
             "accumulatedConsumption",
@@ -1012,25 +1020,47 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
             ),
         )
 
-        self._async_remove_device_updates_handler = self.async_add_listener(
-            self._data_updated
+        self._async_remove_device_updates_handler: CALLBACK_TYPE | None = (
+            self.async_add_listener(self._data_updated)
         )
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        self._async_remove_stop_handler: CALLBACK_TYPE | None = (
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        )
+        config_entry.async_on_unload(self._remove_listeners)
+
+    @callback
+    def _remove_listeners(self) -> None:
+        """Remove listeners owned by this coordinator."""
+        if remove := self._async_remove_stop_handler:
+            self._async_remove_stop_handler = None
+            remove()
+        if remove := self._async_remove_device_updates_handler:
+            self._async_remove_device_updates_handler = None
+            remove()
 
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
-        self._async_remove_device_updates_handler()
+        self._async_remove_stop_handler = None
+        self._remove_listeners()
 
     @callback
     def _data_updated(self) -> None:
         """Triggered when data is updated."""
+        if (
+            self.last_update_success
+            and self.data is not None
+            and (errors := self.data.get("errors"))
+        ):
+            _LOGGER.error(errors[0])
+            return
         if live_measurement := self.get_live_measurement():
             self._add_sensor_callback(self, live_measurement)
 
     def get_live_measurement(self) -> Any:
         """Get live measurement data."""
-        if errors := self.data.get("errors"):
-            _LOGGER.error(errors[0])
+        if not self.last_update_success or self.data is None:
+            return None
+        if self.data.get("errors"):
             return None
         return self.data.get("data", {}).get("liveMeasurement")
