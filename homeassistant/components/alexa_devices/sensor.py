@@ -1,6 +1,5 @@
 """Support for sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Final, override
@@ -10,7 +9,6 @@ from aioamazondevices.const.schedules import (
     NOTIFICATION_REMINDER,
     NOTIFICATION_TIMER,
 )
-from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,27 +21,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
-from .entity import AmazonEntity
+from .coordinator import AmazonConfigEntry
+from .entity import AmazonEntity, DescriptionFn
 from .utils import async_remove_unsupported_notification_sensors
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
-type ValueFn = Callable[
-    [AmazonDevice, str, AmazonDevicesCoordinator], StateType | datetime
-]
+type ValueFn = DescriptionFn[StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonBaseEntityDescription(SensorEntityDescription):
     """Shared Amazon Devices entity description."""
 
-    native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
-    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
-        lambda device, key, coordinator: device.online
-    )
+    native_unit_of_measurement_fn: DescriptionFn[str] | None = None
+    is_available_fn: DescriptionFn[bool] = lambda device, key, _: device.online
     value_fn: ValueFn
 
 
@@ -51,31 +45,29 @@ class AmazonBaseEntityDescription(SensorEntityDescription):
 class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices sensor entity description."""
 
-    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
-        lambda device, key, _: (
-            device.online
-            and (sensor := device.sensors.get(key)) is not None
-            and sensor.error is False
-        )
+    is_available_fn: DescriptionFn[bool] = lambda device, key, coordinator: (
+        device.online
+        and (sensor := coordinator.device_sensor(device.serial_number, key)) is not None
+        and sensor.error is False
     )
-    value_fn: ValueFn = lambda device, key, _: device.sensors[key].value
+    value_fn: ValueFn = lambda device, key, coordinator: (
+        coordinator.sensors[device.serial_number][key].value
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    is_available_fn: Callable[[AmazonDevice, str, AmazonDevicesCoordinator], bool] = (
-        lambda device, key, coordinator: (
-            device.online
-            and (
-                notification := coordinator.notifications.get(
-                    device.serial_number, {}
-                ).get(key)
+    is_available_fn: DescriptionFn[bool] = lambda device, key, coordinator: (
+        device.online
+        and (
+            notification := coordinator.notifications.get(device.serial_number, {}).get(
+                key
             )
-            is not None
-            and notification.next_occurrence is not None
         )
+        is not None
+        and notification.next_occurrence is not None
     )
     value_fn: ValueFn = lambda device, key, coordinator: (
         coordinator.notifications[device.serial_number][key].next_occurrence
@@ -86,9 +78,10 @@ SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device, key: (
+        native_unit_of_measurement_fn=lambda device, key, coordinator: (
             UnitOfTemperature.CELSIUS
-            if key in device.sensors and device.sensors[key].scale == "CELSIUS"
+            if (sensor := coordinator.device_sensor(device.serial_number, key))
+            and sensor.scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
         state_class=SensorStateClass.MEASUREMENT,
@@ -178,7 +171,7 @@ async def async_setup_entry(
                 AmazonSensorEntity(coordinator, serial_num, sensor_desc)
                 for sensor_desc in SENSORS
                 for serial_num in new_devices
-                if coordinator.data[serial_num].sensors.get(sensor_desc.key) is not None
+                if sensor_desc.key in coordinator.supported_sensor_keys(serial_num)
             ]
             notifications_list = [
                 AmazonSensorEntity(coordinator, serial_num, notification_desc)
@@ -205,7 +198,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
         """Return the unit of measurement of the sensor."""
         if self.entity_description.native_unit_of_measurement_fn:
             return self.entity_description.native_unit_of_measurement_fn(
-                self.device, self.entity_description.key
+                self.device, self.entity_description.key, self.coordinator
             )
 
         return super().native_unit_of_measurement

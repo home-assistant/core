@@ -18,7 +18,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     TEST_DEVICE_1,
+    TEST_DEVICE_1_SENSORS,
     TEST_DEVICE_1_SN,
+    TEST_DEVICE_2_SENSORS,
+    TEST_DEVICE_2_SN,
+    TEST_DEVICE_AQM_SENSORS,
+    TEST_DEVICE_AQM_SN,
+    TEST_DEVICE_GLOW_SENSORS,
+    TEST_DEVICE_GLOW_SN,
     TEST_NOTIFICATIONS,
     TEST_PASSWORD,
     TEST_USER_ID,
@@ -59,6 +66,12 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
+        client.sensors = {
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1_SENSORS),
+            TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2_SENSORS),
+            TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM_SENSORS),
+            TEST_DEVICE_GLOW_SN: deepcopy(TEST_DEVICE_GLOW_SENSORS),
+        }
         client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))
         client.routines = ["Test Routine"]
         client.sync_history_state = AsyncMock(
@@ -84,6 +97,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
 
         client.sync_notifications = AsyncMock(side_effect=_sync_notifications)
         client.on_dnd_event = MagicMock()
+        client.on_sensor_event = MagicMock()
         dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []
         client.on_dnd_event.append.side_effect = dnd_event_handler.append
 

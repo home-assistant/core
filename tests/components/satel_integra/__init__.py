@@ -1,7 +1,7 @@
 """The tests for Satel Integra integration."""
 
 from collections.abc import Callable
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -109,26 +109,42 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
     await hass.async_block_till_done()
 
 
-def get_monitor_callbacks(
-    mock_satel: AsyncMock,
-) -> tuple[
-    Callable[[], None],
-    Callable[[dict[int, int]], None],
-    Callable[[dict[int, int]], None],
-]:
-    """Return callbacks passed to `register_callbacks`."""
-    if not mock_satel.register_callbacks.call_args_list:
-        pytest.fail("register_callbacks was not called")
+def _get_registered_callback(
+    callback_method: Mock, callback_name: str
+) -> Callable[[], None]:
+    """Return the callback passed to a registration method."""
+    if not callback_method.call_args_list:
+        pytest.fail(f"{callback_name} callback was not registered")
 
-    call = mock_satel.register_callbacks.call_args_list[-1]
-    if call.kwargs:
-        partitions_cb = call.kwargs["alarm_status_callback"]
-        zones_cb = call.kwargs["zone_changed_callback"]
-        outputs_cb = call.kwargs["output_changed_callback"]
-    else:
-        partitions_cb, zones_cb, outputs_cb = call.args
+    return callback_method.call_args_list[-1].args[0]
 
-    return partitions_cb, zones_cb, outputs_cb
+
+def get_alarm_status_callback(mock_satel: AsyncMock) -> Callable[[], None]:
+    """Return the registered alarm status callback."""
+    return _get_registered_callback(
+        mock_satel.add_alarm_status_callback, "Alarm status"
+    )
+
+
+def get_zone_changed_callback(mock_satel: AsyncMock) -> Callable[[], None]:
+    """Return the registered zone changed callback."""
+    return _get_registered_callback(
+        mock_satel.add_zone_changed_callback, "Zone changed"
+    )
+
+
+def get_output_changed_callback(mock_satel: AsyncMock) -> Callable[[], None]:
+    """Return the registered output changed callback."""
+    return _get_registered_callback(
+        mock_satel.add_output_changed_callback, "Output changed"
+    )
+
+
+def get_system_status_callback(mock_satel: AsyncMock) -> Callable[[], None]:
+    """Return the registered system status callback."""
+    return _get_registered_callback(
+        mock_satel.add_system_status_callback, "System status"
+    )
 
 
 async def trigger_connection_status_update(

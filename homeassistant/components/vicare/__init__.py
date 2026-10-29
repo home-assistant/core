@@ -15,6 +15,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
 import requests
@@ -248,9 +249,9 @@ async def _async_register_zigbee_gateway_devices(
             continue
         gateway_serial = device.config.getConfig().serial
         identifier = f"{gateway_serial}_{device_serial.replace('-', '_')}"
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(identifiers={(DOMAIN, identifier)}),
+            identifiers={(DOMAIN, identifier)},
         )
 
 
@@ -280,16 +281,16 @@ def _setup_vicare_api(
     client.initWithExternalOAuth(auth)
 
     device_config_list = get_supported_devices(client.devices)
+    probed: dict[str, bool] = {}
 
     # In viaGateway mode each gateway is one bulk fetch per cycle, so the rate
-    # limit scales with the number of gateways, not devices. Offline gateways
-    # are never fetched, and are skipped below, so they must not count here
-    # either; this has to match the grouping in async_setup_entry.
+    # limit scales with the number of gateways, not devices. Unreachable
+    # gateways are skipped below, so they must not count here either; this has
+    # to match the grouping in async_setup_entry.
     gateway_count = len(
         {
             config.getConfig().serial
-            for config in device_config_list
-            if config.isOnline()
+            for config in _reachable_devices(device_config_list, probed)
         }
     )
     if gateway_count > 1:
@@ -313,9 +314,7 @@ def _setup_vicare_api(
         )
 
     devices = []
-    for device_config in device_config_list:
-        if not bool(device_config.isOnline()):
-            continue
+    for device_config in _reachable_devices(device_config_list, probed):
         api = device_config.asAutoDetectDevice()
         devices.append(
             ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
@@ -324,6 +323,35 @@ def _setup_vicare_api(
         # Offline devices get no entities, and nothing would set them up later.
         raise ConfigEntryNotReady("No ViCare device is online")
     return ViCareData(client=client, devices=devices)
+
+
+def _reachable_devices(
+    device_config_list: list[PyViCareDeviceConfig], probed: dict[str, bool]
+) -> list[PyViCareDeviceConfig]:
+    """Return the devices to set up, probing each gateway reported offline once.
+
+    The API's online flag is not reliable: a device can be reported offline
+    while its gateway keeps delivering current data.
+    """
+    reachable = []
+    for config in device_config_list:
+        if not config.isOnline():
+            serial = config.getConfig().serial
+            if serial not in probed:
+                probed[serial] = _gateway_delivers_data(config)
+            if not probed[serial]:
+                continue
+        reachable.append(config)
+    return reachable
+
+
+def _gateway_delivers_data(config: PyViCareDeviceConfig) -> bool:
+    """Return whether a fetch from the device's gateway succeeds."""
+    try:
+        config.asAutoDetectDevice().service.fetch_all_features(config.getConfig())
+    except PyViCareDeviceCommunicationError, PyViCareNotSupportedFeatureError:
+        return False
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
