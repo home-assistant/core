@@ -1,5 +1,7 @@
 """The tests for the Datadog component."""
 
+import asyncio
+import threading
 from unittest import mock
 from unittest.mock import patch
 
@@ -22,6 +24,7 @@ from homeassistant.components.datadog.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .common import MOCK_DATA, MOCK_OPTIONS, create_mock_state
 
@@ -273,3 +276,43 @@ async def test_unchanged_states_resent(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert mock_statsd.gauge.call_args_list == expected_calls
+
+
+async def test_unload_waits_for_resend(hass: HomeAssistant) -> None:
+    """Test unloading waits for an in-progress resend before closing the client."""
+    started = threading.Event()
+    release = threading.Event()
+
+    def blocking_gauge(*args: object, **kwargs: object) -> None:
+        started.set()
+        release.wait(5)
+
+    with patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class:
+        mock_statsd = mock_statsd_class.return_value
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=MOCK_DATA,
+            options={**MOCK_OPTIONS, "resend_unchanged": True},
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        hass.states.async_set("sensor.foo", "1.5")
+        await hass.async_block_till_done()
+        mock_statsd.gauge.side_effect = blocking_gauge
+
+        async_fire_time_changed(hass, dt_util.utcnow() + SEND_INTERVAL)
+        assert await hass.async_add_executor_job(started.wait, 5)
+
+        unload = hass.async_create_task(
+            hass.config_entries.async_unload(entry.entry_id)
+        )
+        # The unload must not finish while the resend is still sending.
+        done, _ = await asyncio.wait([unload], timeout=0.1)
+        assert not done
+        mock_statsd.close_socket.assert_not_called()
+
+        release.set()
+        assert await unload
+
+    mock_statsd.close_socket.assert_called_once()

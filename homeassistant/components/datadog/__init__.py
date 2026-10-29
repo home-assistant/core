@@ -1,5 +1,6 @@
 """Support for sending data to Datadog."""
 
+import asyncio
 import logging
 
 from datadog import DogStatsd, initialize
@@ -13,7 +14,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -49,6 +50,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
     entry.runtime_data = statsd_client
 
     initialize(statsd_host=host, statsd_port=port)
+
+    sweep: asyncio.Future[None] | None = None
+
+    async def close_client() -> None:
+        if sweep is not None:
+            await sweep
+        statsd_client.flush()
+        statsd_client.close_socket()
+
+    # Registered first so it runs last, after the listeners and timer are removed.
+    entry.async_on_unload(close_client)
 
     def logbook_entry_listener(event):
         name = event.data.get("name")
@@ -87,10 +99,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
     def state_changed_listener(event):
         send_state(event.data.get("new_state"))
 
-    # Resend unchanged states so Datadog does not show gaps for stable values.
-    def send_all_states(now):
-        for state in hass.states.all():
+    def send_states(states):
+        for state in states:
             send_state(state)
+
+    # Resend unchanged states so Datadog does not show gaps for stable values.
+    @callback
+    def send_all_states(now):
+        nonlocal sweep
+        if sweep is None or sweep.done():
+            sweep = hass.async_add_executor_job(send_states, hass.states.async_all())
 
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
@@ -108,6 +126,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
 
 async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> None:
     """Unload a Datadog config entry."""
-    runtime = entry.runtime_data
-    runtime.flush()
-    runtime.close_socket()
