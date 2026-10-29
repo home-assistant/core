@@ -1,4 +1,4 @@
-"""Local Application Credentials fallback for NuHeat development."""
+"""Application credentials platform for NuHeat."""
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,7 @@ from .const import AUTHORIZE_URL, TOKEN_URL
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
 ) -> AbstractOAuth2Implementation:
-    """Return the user-supplied NuHeat OAuth implementation."""
+    """Return the NuHeat OAuth implementation for registered credentials."""
     return LocalOAuth2ImplementationWithPkce(
         hass,
         auth_domain,
@@ -28,5 +28,5 @@ async def async_get_auth_implementation(
 async def async_get_description_placeholders(
     hass: HomeAssistant,
 ) -> dict[str, str]:
-    """Describe where users obtain legitimate application credentials."""
+    """Return the authorization server documentation placeholder."""
     return {"docs_url": "https://api.nam.mynuheat.com/"}

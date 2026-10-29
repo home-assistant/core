@@ -28,12 +28,11 @@ from homeassistant.components.nuheat.const import (
 from homeassistant.components.nuheat.coordinator import NuHeatCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .control_helpers import advance
 from .test_integration import add_entity_state, coordinator_with, thermostat
-from .test_setpoint_reconciliation import advance
 
 
 def permanent(*, target: int = 2300, operating: int = 1) -> Thermostat:
@@ -61,7 +60,7 @@ async def test_preset_menu_and_app_driven_permanent_hold(hass: HomeAssistant) ->
         PRESET_PERMANENT_HOLD,
     ]
     assert entity.preset_mode == PRESET_PERMANENT_HOLD
-    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.hvac_mode is HVACMode.HEAT
     assert entity.unique_id == "ABC123"
     assert (
         hass.states.get(entity.entity_id).attributes["preset_mode"]
@@ -71,48 +70,9 @@ async def test_preset_menu_and_app_driven_permanent_hold(hass: HomeAssistant) ->
     await coordinator.async_shutdown()
 
 
-async def test_standby_confirmation_then_external_schedule(
+async def test_select_permanent_hold_preserves_target(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Delayed Standby confirmation must not mask subsequent external changes."""
-    coordinator, api, _ = await coordinator_with(hass, permanent())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    await entity.async_turn_off()
-    assert entity.hvac_mode is HVACMode.OFF
-    assert entity.assumed_state
-    assert entity.native_target_temperature is None
-    api.list_thermostats.return_value = [permanent(target=500, operating=2)]
-    await advance(hass, freezer, 2)
-    assert entity.hvac_mode is HVACMode.OFF
-    assert not entity.assumed_state
-    api.list_thermostats.return_value = [
-        thermostat(mode=1, hold_until=None, hold_until_status=HoldUntilStatus.NULL)
-    ]
-    coordinator.async_schedule_reconciliation()
-    await advance(hass, freezer, 2)
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.preset_mode == PRESET_RUN
-    assert entity.native_target_temperature == 23
-    api.set_standby.assert_awaited_once_with("ABC123")
-    await coordinator.async_shutdown()
-
-
-async def test_unconfirmed_standby_expires(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """An unconfirmed OFF command expires without retrying the write."""
-    coordinator, api, _ = await coordinator_with(hass, permanent())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    await entity.async_turn_off()
-    assert entity.hvac_mode is HVACMode.OFF
-    await advance(hass, freezer, 30)
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert not entity.assumed_state
-    api.set_standby.assert_awaited_once_with("ABC123")
-    await coordinator.async_shutdown()
-
-
-async def test_select_permanent_hold_preserves_target(hass: HomeAssistant) -> None:
     """Select permanent hold preserves target."""
     coordinator, api, _ = await coordinator_with(hass, thermostat())
     entity = NuHeatClimateEntity(coordinator, "ABC123")
@@ -121,25 +81,8 @@ async def test_select_permanent_hold_preserves_target(hass: HomeAssistant) -> No
     api.set_schedule_mode.assert_awaited_once_with(
         "ABC123", ScheduleMode.PERMANENT_HOLD, temperature=23
     )
-    assert entity.preset_mode == PRESET_PERMANENT_HOLD
-    await coordinator.async_shutdown()
-
-
-@pytest.mark.parametrize("imperial", [False, True])
-async def test_setpoint_change_stays_permanent_and_is_optimistic(
-    hass: HomeAssistant, imperial: bool
-) -> None:
-    """Setpoint change stays permanent and is optimistic."""
-    hass.config.units = {True: US_CUSTOMARY_SYSTEM, False: METRIC_SYSTEM}[imperial]
-    coordinator, api, _ = await coordinator_with(hass, permanent())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    requested = 75.2 if imperial else 24
-    await entity.async_set_temperature(temperature=requested)
-    api.set_target_temperature.assert_awaited_once_with(
-        "ABC123", 24, mode=ScheduleMode.PERMANENT_HOLD
-    )
-    assert entity.native_target_temperature == pytest.approx(requested)
-    assert entity.assumed_state
+    assert entity.preset_mode == PRESET_TEMPORARY_HOLD
+    await advance(hass, freezer, 2)
     assert entity.preset_mode == PRESET_PERMANENT_HOLD
     await coordinator.async_shutdown()
 
@@ -149,7 +92,7 @@ async def test_setpoint_change_stays_permanent_and_is_optimistic(
     [
         (2, 2300, HVACMode.HEAT, None),
         (2, 500, HVACMode.OFF, None),
-        (1, 500, HVACMode.AUTO, PRESET_PERMANENT_HOLD),
+        (1, 500, HVACMode.HEAT, PRESET_PERMANENT_HOLD),
     ],
 )
 async def test_manual_and_standby_not_mislabeled(
@@ -177,21 +120,6 @@ async def test_conflicting_or_missing_details_do_not_guess_permanent(
     await coordinator.async_shutdown()
 
 
-async def test_resume_schedule_clears_pending_target(hass: HomeAssistant) -> None:
-    """Resume schedule clears pending target."""
-    coordinator, api, _ = await coordinator_with(hass, permanent())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    coordinator.async_set_pending_setpoint("ABC123", 24)
-    api.list_thermostats.return_value = [
-        thermostat(mode=1, hold_until=None, hold_until_status=HoldUntilStatus.NULL)
-    ]
-    await entity.async_set_preset_mode(PRESET_RUN)
-    assert coordinator.pending_setpoint("ABC123") is None
-    assert entity.preset_mode == PRESET_RUN
-    assert not entity.assumed_state
-    await coordinator.async_shutdown()
-
-
 async def test_failed_preset_write_preserves_state_and_does_not_retry(
     hass: HomeAssistant,
 ) -> None:
@@ -199,7 +127,7 @@ async def test_failed_preset_write_preserves_state_and_does_not_retry(
     coordinator, api, _ = await coordinator_with(hass, thermostat())
     entity = NuHeatClimateEntity(coordinator, "ABC123")
     api.set_schedule_mode.side_effect = NuHeatApiError("synthetic failure")
-    with pytest.raises(NuHeatApiError):
+    with pytest.raises(HomeAssistantError):
         await entity.async_set_preset_mode(PRESET_PERMANENT_HOLD)
     assert entity.preset_mode == PRESET_TEMPORARY_HOLD
     assert not entity.assumed_state
@@ -216,7 +144,7 @@ async def test_failed_post_write_read_reconciles_without_repeating_command(
     api.set_schedule_mode.side_effect = NuHeatApiError(
         "synthetic post-PUT read failure"
     )
-    with pytest.raises(NuHeatApiError):
+    with pytest.raises(HomeAssistantError):
         await entity.async_set_preset_mode(PRESET_PERMANENT_HOLD)
     assert entity.preset_mode == PRESET_TEMPORARY_HOLD
     api.list_thermostats.return_value = [permanent()]
@@ -225,29 +153,6 @@ async def test_failed_post_write_read_reconciles_without_repeating_command(
     await hass.async_block_till_done()
     assert entity.preset_mode == PRESET_PERMANENT_HOLD
     assert api.set_schedule_mode.await_count == 1
-    await coordinator.async_shutdown()
-
-
-async def test_permanent_from_standby_and_delayed_confirmation(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Permanent from standby and delayed confirmation."""
-    coordinator, api, _ = await coordinator_with(
-        hass, permanent(target=500, operating=2)
-    )
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    coordinator.async_set_pending_mode("ABC123", None)
-    await entity.async_set_preset_mode(PRESET_PERMANENT_HOLD)
-    api.set_schedule_mode.assert_awaited_once_with(
-        "ABC123", ScheduleMode.PERMANENT_HOLD, temperature=5
-    )
-    api.list_thermostats.return_value = [permanent(target=500)]
-    freezer.tick(timedelta(seconds=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert entity.preset_mode == PRESET_PERMANENT_HOLD
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.native_target_temperature == 5
     await coordinator.async_shutdown()
 
 
@@ -283,7 +188,7 @@ async def test_missing_schedule_details_do_not_silently_convert_hold_to_manual(
     api.set_target_temperature.assert_not_awaited()
     await entity.async_set_temperature(temperature=24, hvac_mode=HVACMode.HEAT)
     api.set_target_temperature.assert_awaited_once_with(
-        "ABC123", 24, mode=ScheduleMode.MANUAL
+        "ABC123", 24, mode=ScheduleMode.PERMANENT_HOLD
     )
     await coordinator.async_shutdown()
 
@@ -376,7 +281,7 @@ async def test_real_client_and_entity_complete_four_control_roundtrip(
     await advance(hass, freezer, 2)
     assert (
         entity.preset_mode == PRESET_PERMANENT_HOLD
-        and entity.hvac_mode is HVACMode.AUTO
+        and entity.hvac_mode is HVACMode.HEAT
     )
     await entity.async_set_temperature(temperature=24)
     await advance(hass, freezer, 2)
@@ -398,6 +303,11 @@ async def test_real_client_and_entity_complete_four_control_roundtrip(
     await advance(hass, freezer, 2)
     assert entity.hvac_mode is HVACMode.OFF and entity.native_target_temperature is None
     assert state["target"] == 500
+    assert writes[-1] == (
+        "/api/v2/Mode/Manual",
+        {"serialNumber": "ABC123", "temperature": 500},
+    )
+    assert sum(path == "/api/v2/Mode/Manual" for path, _ in writes) == 1
     await entity.async_turn_on()
     await advance(hass, freezer, 2)
     assert entity.hvac_mode is HVACMode.AUTO and entity.preset_mode == PRESET_RUN
@@ -456,7 +366,7 @@ async def test_failed_resume_does_not_invent_auto_or_repeat_write(
     coordinator, api, _ = await coordinator_with(hass, permanent(operating=2))
     entity = NuHeatClimateEntity(coordinator, "ABC123")
     api.set_schedule_mode.side_effect = NuHeatApiError("synthetic uncertain write")
-    with pytest.raises(NuHeatApiError):
+    with pytest.raises(HomeAssistantError):
         await getattr(
             entity,
             {"preset": "async_set_preset_mode", "hvac": "async_set_hvac_mode"}[control],

@@ -24,12 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 
-from .account_identity import (
-    InvalidAccountSubjectError,
-    account_subject_from_entry_data,
-)
 from .const import DOMAIN
 from .coordinator import NuHeatCoordinator
 from .migration import (
@@ -39,7 +34,6 @@ from .migration import (
     is_pending_cleanup_entry,
     migration_reload_active,
 )
-from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -58,17 +52,10 @@ class NuHeatRuntimeData:
 type NuHeatConfigEntry = ConfigEntry[NuHeatRuntimeData]
 
 
-async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
-    """Register actions independently of account availability."""
-    async_setup_services(hass)
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: NuHeatConfigEntry) -> None:
     """Set up NuHeat from an OAuth config entry."""
     if is_pending_cleanup_entry(entry):
-        # A deferred cleanup marker has no credentials and must never call the
-        # obsolete API or create duplicate entities.
+        # Deleting the initiating entry during reauth would abort its flow.
         return
     if is_legacy_entry(entry):
         raise ConfigEntryAuthFailed(
@@ -145,26 +132,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry[Any]) -> N
             )
         return
     if entry.version < OAUTH_CONFIG_ENTRY_VERSION:
-        try:
-            account_subject = account_subject_from_entry_data(entry.data)
-        except InvalidAccountSubjectError as err:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="oauth_subject_migration_failed",
-            ) from err
-
-        if any(
-            other.entry_id != entry.entry_id
-            and other.unique_id == account_subject
-            and not is_pending_cleanup_entry(other)
-            for other in hass.config_entries.async_entries(DOMAIN)
-        ):
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="oauth_subject_migration_duplicate",
-            )
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=account_subject,
-            version=OAUTH_CONFIG_ENTRY_VERSION,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_configuration_version",
         )

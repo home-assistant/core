@@ -88,6 +88,7 @@ async def complete_oauth_flow(
     confirmation_step: str | None = None,
 ) -> config_entries.ConfigFlowResult:
     """Complete user setup or reauthentication through the public flow manager."""
+    hass.config.components.add("cloud")
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         return_value={implementation.domain: implementation},

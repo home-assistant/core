@@ -3,6 +3,7 @@
 from contextlib import ExitStack
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
+from functools import partial
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -33,7 +34,6 @@ from homeassistant.components.nuheat.migration import (
     MigrationPreflightError,
     _cleanup_plan_entries,
     _legacy_serial,
-    _oauth_entry_subject,
     _pending_serial,
     _require_config_entry,
     _restart_anchor,
@@ -282,7 +282,7 @@ def build_existing_anchor_plan(hass: HomeAssistant, *, loaded: bool):
         title="Original OAuth account",
         data=oauth_data(subject=ACCOUNT_SUBJECT),
         unique_id=ACCOUNT_SUBJECT,
-        version=2,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     anchor.add_to_hass(hass)
     if loaded:
@@ -377,10 +377,10 @@ async def test_legacy_entry_detection_and_setup_requests_migration(
 
 
 @pytest.mark.asyncio
-async def test_version_one_oauth_entry_advances_without_legacy_data(
+async def test_unreleased_oauth_schema_is_not_rewritten(
     hass: HomeAssistant,
 ) -> None:
-    """A provisional username ID migrates in place to the token subject."""
+    """Unreleased OAuth schemas are rejected without identity normalization."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=oauth_data(),
@@ -396,58 +396,13 @@ async def test_version_one_oauth_entry_advances_without_legacy_data(
         "homeassistant.components.nuheat.async_setup_entry",
         AsyncMock(return_value=None),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id) is True
-    assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
+        assert await hass.config_entries.async_setup(entry.entry_id) is False
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 1
     assert entry.entry_id == entry_id
-    assert entry.unique_id == ACCOUNT_SUBJECT
+    assert entry.unique_id == "owner@example.com"
     assert entry.data is original_data
     assert entry.title == original_title
-
-
-@pytest.mark.asyncio
-async def test_provisional_oauth_subject_migration_preserves_registry_identity(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Changing account identity does not change thermostat-level identity."""
-    data = {
-        **oauth_data(subject=ACCOUNT_SUBJECT),
-        CONF_MIGRATION_STATE: "in_progress",
-        CONF_MIGRATION_VALIDATED_SERIALS: ["ABC123"],
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Owner@Example.com",
-        data=data,
-        unique_id="owner@example.com",
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    records = [create_customized_registry_records(hass, entry, "ABC123")]
-    before = local_state(hass, [entry], records)
-    entry_id = entry.entry_id
-    automation_reference = records[0][0].entity_id
-
-    with patch(
-        "homeassistant.components.nuheat.async_setup_entry",
-        AsyncMock(return_value=None),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id) is True
-
-    assert entry.entry_id == entry_id
-    assert entry.unique_id == ACCOUNT_SUBJECT
-    assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
-    assert entry.title == "Owner@Example.com"
-    assert entry.data == data
-    after = local_state(hass, [entry], records)
-    assert after["entities"] == before["entities"]
-    assert after["devices"] == before["devices"]
-    entity = entity_registry.async_get(automation_reference)
-    assert entity is not None
-    assert entity.entity_id == "climate.synthetic_customized_heater"
-    assert entity.unique_id == "ABC123"
-    assert device_registry.async_get(records[0][1].id).id == records[0][1].id
 
 
 @pytest.mark.asyncio
@@ -770,8 +725,8 @@ async def test_existing_oauth_account_absorbs_matching_legacy_entry(
         domain=DOMAIN,
         title="Owner@Example.com",
         data=oauth_data(subject=ACCOUNT_SUBJECT),
-        unique_id="owner@example.com",
-        version=2,
+        unique_id=ACCOUNT_SUBJECT,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     account_entry.add_to_hass(hass)
     if anchor_loaded:
@@ -1301,6 +1256,55 @@ async def test_restart_after_registry_transfer_converges_without_duplicates(
     assert len(device_registry.devices) == len(records)
 
 
+@pytest.mark.parametrize("revalidate", [False, True])
+@pytest.mark.parametrize(
+    ("version", "unique_id"),
+    [
+        (2, "owner@example.com"),
+        (OAUTH_CONFIG_ENTRY_VERSION, None),
+        (OAUTH_CONFIG_ENTRY_VERSION, "conflicting-subject"),
+    ],
+)
+def test_unsupported_oauth_entry_blocks_migration_without_mutation(
+    hass: HomeAssistant, revalidate: bool, version: int, unique_id: str | None
+) -> None:
+    """Never rescue a development identity from a saved token's subject."""
+    legacy = add_legacy_entry(hass, "ABC123")
+    plan = build_migration_plan(
+        hass,
+        legacy,
+        account_unique_id=ACCOUNT_SUBJECT,
+        account_title="Synthetic account",
+        thermostats=[thermostat("ABC123")],
+    )
+    unsupported = MockConfigEntry(
+        domain=DOMAIN,
+        data=oauth_data(subject=ACCOUNT_SUBJECT),
+        unique_id=unique_id,
+        version=version,
+    )
+    unsupported.add_to_hass(hass)
+    before = local_state(hass, [legacy, unsupported], [])
+    operation = (
+        partial(validate_migration_plan, hass, plan)
+        if revalidate
+        else partial(
+            build_migration_plan,
+            hass,
+            legacy,
+            account_unique_id=ACCOUNT_SUBJECT,
+            account_title="Synthetic account",
+            thermostats=[thermostat("ABC123")],
+        )
+    )
+    with pytest.raises(
+        MigrationPreflightError,
+        match="Unsupported NuHeat OAuth entry|Conflicting NuHeat OAuth identity",
+    ):
+        operation()
+    assert local_state(hass, [legacy, unsupported], []) == before
+
+
 def test_migration_private_value_helpers() -> None:
     """Test malformed stored values are ignored without exposing them."""
     entry = SimpleNamespace(
@@ -1308,7 +1312,6 @@ def test_migration_private_value_helpers() -> None:
     )
     assert _legacy_serial(entry) is None
     assert _pending_serial(entry) is None
-    assert _oauth_entry_subject(entry) is None
 
 
 @pytest.mark.asyncio
@@ -1326,7 +1329,7 @@ async def test_build_plan_defensive_preflight_failures(hass: HomeAssistant) -> N
         )
 
     initiating = add_legacy_entry(hass, "A")
-    for unique_id in (ACCOUNT_SUBJECT, "provisional"):
+    for unique_id in (ACCOUNT_SUBJECT, ACCOUNT_SUBJECT):
         MockConfigEntry(
             domain=DOMAIN,
             data=oauth_data(subject=ACCOUNT_SUBJECT),

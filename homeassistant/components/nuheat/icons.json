@@ -1,7 +1,0 @@
-{
-  "services": {
-    "set_temporary_hold": {
-      "service": "mdi:timer-outline"
-    }
-  }
-}

@@ -6,13 +6,13 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "Unable to connect to NuHeat.",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "invalid_account_identity": "NuHeat authorization did not provide a valid account identity. No settings were changed.",
       "invalid_auth": "NuHeat rejected the authorization.",
       "migration_account_mismatch": "The linked NuHeat account does not contain this thermostat. No legacy settings were changed.",
       "migration_failed": "NuHeat migration could not be completed. No legacy config entry was removed.",
       "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
       "permission_denied": "NuHeat denied application permission. Verify the application has access; keep the existing entry and credentials.",
       "rate_limited": "NuHeat is temporarily rate-limited. Wait for the cooldown and retry linking the existing entry.",
       "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
@@ -37,36 +37,9 @@
       }
     }
   },
-  "entity": {
-    "climate": {
-      "thermostat": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "permanent_hold": "Permanent hold",
-              "run_schedule": "Run schedule",
-              "temporary_hold": "Temporary hold"
-            }
-          }
-        }
-      }
-    }
-  },
   "exceptions": {
-    "invalid_hold_temperature": {
-      "message": "Choose a finite temperature within the thermostat's supported range, using Home Assistant's temperature unit."
-    },
-    "invalid_hold_time": {
-      "message": "Choose a future hold expiry. Ambiguous or nonexistent local times require a valid explicit UTC offset."
-    },
     "legacy_migration_required": {
       "message": "This NuHeat entry must be reconnected through OAuth."
-    },
-    "oauth_subject_migration_duplicate": {
-      "message": "Another NuHeat entry already uses this OAuth account subject. No settings were changed."
-    },
-    "oauth_subject_migration_failed": {
-      "message": "The stored NuHeat authorization has no valid account subject. Reauthenticate the entry before retrying migration."
     },
     "permission_denied": {
       "message": "NuHeat denied application permission. Verify application access; relinking the same application may not resolve it."
@@ -74,8 +47,17 @@
     "rate_limited": {
       "message": "NuHeat is rate-limited. Retry after {seconds} seconds; this command was not queued."
     },
+    "request_failed": {
+      "message": "NuHeat could not confirm the command. Check the thermostat in the app before repeating it."
+    },
     "request_timeout": {
       "message": "NuHeat did not finish within the request deadline. The command outcome may be uncertain. Check the app before repeating it."
+    },
+    "target_temperature_required": {
+      "message": "Set a target temperature within the control range before selecting this hold mode. To exit Standby into the schedule, turn the thermostat on."
+    },
+    "unsupported_configuration_version": {
+      "message": "This entry uses an unsupported development configuration. Restore a compatible backup before reconnecting NuHeat. No account identity was changed."
     },
     "unsupported_preset": {
       "message": "The preset {preset} is not supported by NuHeat."
@@ -84,7 +66,7 @@
       "message": "NuHeat reported thermostat state {state}, which cannot be controlled safely. Refresh before retrying."
     },
     "write_unconfirmed": {
-      "message": "NuHeat accepted the command, but readback failed. Confirmation is pending; check the app before repeating it."
+      "message": "NuHeat accepted the command, but readback failed. Home Assistant will read the thermostat again; check the app before repeating the command."
     }
   },
   "issues": {
@@ -95,22 +77,6 @@
     "migration_rollback_failed": {
       "description": "Home Assistant could not completely restore local NuHeat registry or config-entry state after a migration failure. Stop retrying migration and restore the Home Assistant backup made before migration testing.",
       "title": "NuHeat migration rollback needs manual recovery"
-    }
-  },
-  "services": {
-    "set_temporary_hold": {
-      "description": "Hold a target until a future date and time. Local times use Home Assistant's timezone.",
-      "fields": {
-        "hold_until": {
-          "description": "Future expiry in Home Assistant's timezone. Use an explicit UTC offset for ambiguous local times.",
-          "name": "Hold until"
-        },
-        "temperature": {
-          "description": "Target in Home Assistant's temperature unit (Celsius or Fahrenheit).",
-          "name": "Target temperature"
-        }
-      },
-      "name": "Set temporary hold"
     }
   }
 }

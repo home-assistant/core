@@ -35,14 +35,12 @@ def hvac_mode_for_thermostat(thermostat: Thermostat) -> HVACMode | None:
     """Map the corrected GET state while preserving unresolved ambiguity."""
     if thermostat.state is ThermostatState.STANDBY:
         return HVACMode.OFF
-    if thermostat.state in (
-        ThermostatState.SCHEDULED,
-        ThermostatState.TIMED_HOLD,
-        ThermostatState.PERMANENT_HOLD,
-    ):
+    if thermostat.state is ThermostatState.SCHEDULED:
         return HVACMode.AUTO
     if thermostat.state in (
         ThermostatState.MANUAL,
+        ThermostatState.TIMED_HOLD,
+        ThermostatState.PERMANENT_HOLD,
         ThermostatState.AMBIGUOUS_MANUAL_OR_PERMANENT_HOLD,
     ):
         return HVACMode.HEAT
@@ -57,7 +55,7 @@ def api_mode_for_hvac_mode(hvac_mode: HVACMode) -> ScheduleMode:
     if hvac_mode is HVACMode.AUTO:
         return ScheduleMode.AUTO
     if hvac_mode is HVACMode.HEAT:
-        return ScheduleMode.MANUAL
+        return ScheduleMode.PERMANENT_HOLD
     raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
 
@@ -66,7 +64,7 @@ def setpoint_command_mode(
 ) -> ScheduleMode:
     """Choose a command without deriving it from the numeric mode alone.
 
-    An explicit HEAT request retains the existing documented Manual command.
+    An explicit HEAT request retains the released permanent-hold command.
     Scheduled operation uses Hold-until-next-schedule for a setpoint change.
     An existing timed hold keeps its explicit end in the entity write path.
     Verified Permanent Hold keeps its indefinite hold. Unresolved schedule
@@ -74,7 +72,7 @@ def setpoint_command_mode(
     Standby and unknown responses require an explicit command.
     """
     if requested_hvac_mode is HVACMode.HEAT:
-        return ScheduleMode.MANUAL
+        return ScheduleMode.PERMANENT_HOLD
     if thermostat.state in (
         ThermostatState.SCHEDULED,
         ThermostatState.TIMED_HOLD,

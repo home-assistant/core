@@ -4,11 +4,10 @@ import asyncio
 from asyncio import CancelledError, Event, create_task, sleep
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from datetime import timedelta
 import time
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
-from chemelex_nuheat import NuHeatPermissionError, NuHeatRateLimitError, Thermostat
+from chemelex_nuheat import NuHeatPermissionError, NuHeatRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -26,10 +25,9 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util
 
+from .control_helpers import CONTROLS, advance, command
 from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
-from .test_hold_action import CONTROLS, command
 from .test_integration import (
     ACCOUNT_SUBJECT,
     coordinator_with,
@@ -39,7 +37,6 @@ from .test_integration import (
 )
 from .test_migration import create_customized_registry_records
 from .test_permanent_hold import permanent
-from .test_setpoint_reconciliation import advance
 
 
 @pytest.mark.parametrize("provider", ["community", "custom"])
@@ -141,43 +138,6 @@ async def test_startup_failures_preserve_entry_and_retry(
     assert dict(entry.data) == original
 
 
-@pytest.mark.parametrize(
-    ("first_poll", "second_poll"),
-    [
-        pytest.param(False, False, id="reconcile-reconcile"),
-        pytest.param(True, False, id="poll-reconcile"),
-        pytest.param(False, True, id="reconcile-poll"),
-        pytest.param(True, True, id="poll-poll"),
-    ],
-)
-async def test_overlapping_poll_and_reconciliation_share_one_account_read(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    first_poll: bool,
-    second_poll: bool,
-) -> None:
-    """Scheduled poll/reconciliation callbacks coalesce a shared in-flight read."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    entered = Event()
-    release = Event()
-
-    async def read() -> list[Thermostat]:
-        """Keep the first synthetic cloud request open while another becomes due."""
-        entered.set()
-        await release.wait()
-        return [thermostat()]
-
-    api.list_thermostats.side_effect = read
-    before = api.list_thermostats.await_count
-    await _trigger_scheduled_read(hass, freezer, coordinator, first_poll)
-    await entered.wait()
-    await _trigger_scheduled_read(hass, freezer, coordinator, second_poll)
-    release.set()
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert api.list_thermostats.await_count == before + 1
-    await coordinator.async_shutdown()
-
-
 async def test_zero_retry_after_does_not_create_endless_fast_reads(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -189,7 +149,6 @@ async def test_zero_retry_after_does_not_create_endless_fast_reads(
     reads = api.list_thermostats.await_count
     await advance(hass, freezer, 30)
     assert api.list_thermostats.await_count == reads
-    assert not coordinator._cooldown_read_due
     await coordinator.async_shutdown()
 
 
@@ -204,10 +163,9 @@ async def test_very_long_cooldown_read_is_cancelled_on_shutdown(
     await coordinator.async_shutdown()
     await advance(hass, freezer, 86401)
     assert api.list_thermostats.await_count == reads
-    assert not coordinator._cooldown_read_due
 
 
-@pytest.mark.parametrize("control", [*CONTROLS, "target", "timed"])
+@pytest.mark.parametrize("control", [*CONTROLS, "target"])
 async def test_all_controls_reject_cooldown_without_writes(
     hass: HomeAssistant, control: str
 ) -> None:
@@ -225,70 +183,7 @@ async def test_all_controls_reject_cooldown_without_writes(
     await coordinator.async_shutdown()
 
 
-async def test_primary_throttle_defers_reads_but_not_pending_expiry(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Primary throttle defers reads but not pending expiry."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    until = time.monotonic() + 120
-
-    async def throttled() -> None:
-        """Throttled."""
-        raise NuHeatRateLimitError(120)
-
-    api.list_thermostats.side_effect = throttled
-    with patch.object(
-        type(api),
-        "cooldown_remaining",
-        PropertyMock(side_effect=lambda: max(0, until - time.monotonic())),
-        create=True,
-    ):
-        coordinator.async_set_pending_setpoint("ABC123", 24)
-        reads = api.list_thermostats.await_count
-        await advance(hass, freezer, 30)
-        assert coordinator.pending_setpoint("ABC123") is None
-        await advance(hass, freezer, 89)
-        assert api.list_thermostats.await_count == reads
-        api.list_thermostats.side_effect = None
-        await advance(hass, freezer, 1)
-        assert api.list_thermostats.await_count == reads + 1
-        assert not entity.assumed_state
-    await coordinator.async_shutdown()
-
-
-async def test_optional_throttle_retains_data_and_one_deferred_read(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Optional throttle retains data and one deferred read."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    until = time.monotonic() + 120
-
-    async def optional_throttled() -> list[Thermostat]:
-        """Optional throttled."""
-        api.cooldown_remaining = max(0, until - time.monotonic())
-        return [thermostat()]
-
-    api.list_thermostats.side_effect = optional_throttled
-    coordinator.async_schedule_reconciliation()
-    await advance(hass, freezer, 2)
-    assert coordinator.last_update_success
-    reads = api.list_thermostats.await_count
-    with patch.object(
-        type(api),
-        "cooldown_remaining",
-        PropertyMock(side_effect=lambda: max(0, until - time.monotonic())),
-        create=True,
-    ):
-        await advance(hass, freezer, 117)
-        assert api.list_thermostats.await_count == reads
-        api.list_thermostats.side_effect = None
-        await advance(hass, freezer, 1)
-        assert api.list_thermostats.await_count == reads + 1
-    await coordinator.async_shutdown()
-
-
-@pytest.mark.parametrize("control", [*CONTROLS, "target", "timed"])
+@pytest.mark.parametrize("control", [*CONTROLS, "target"])
 async def test_all_controls_timeout_without_retry_and_release_lock(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch, control: str
 ) -> None:
@@ -377,7 +272,7 @@ async def test_primary_permission_is_not_account_reauth(
     entity = NuHeatClimateEntity(coordinator, "ABC123")
     api.set_schedule_mode.side_effect = NuHeatPermissionError("synthetic", status=403)
     with pytest.raises(ServiceValidationError) as error:
-        await entity.async_set_preset_mode("permanent_hold")
+        await entity.async_set_preset_mode("Permanent Hold")
     assert error.value.translation_key == "permission_denied"
     api.set_target_temperature.assert_not_awaited()
     await coordinator.async_shutdown()
@@ -404,8 +299,6 @@ async def _command(entity: NuHeatClimateEntity, control: str) -> None:
     """Dispatch a synthetic control through its ordinary public method."""
     if control == "target":
         await entity.async_set_temperature(temperature=24)
-    elif control == "timed":
-        await entity.async_set_temporary_hold(24, dt_util.utcnow() + timedelta(hours=1))
     else:
         await command(entity, control)
 

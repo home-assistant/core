@@ -18,9 +18,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
-)
 
 from .account_identity import (
     InvalidAccountSubjectError,
@@ -50,18 +47,12 @@ class NuHeatConfigFlow(
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start with any HA-registered local or cloud OAuth provider."""
-        if user_input is None:
-            try:
-                implementations = (
-                    await config_entry_oauth2_flow.async_get_implementations(
-                        self.hass, DOMAIN
-                    )
-                )
-            except ImplementationUnavailableError:
-                return self.async_abort(reason="oauth_implementation_unavailable")
-            if not implementations:
-                return self.async_abort(reason="missing_oauth_credentials")
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
+            )
         return await super().async_step_user(user_input)
 
     @property
@@ -130,17 +121,6 @@ class NuHeatConfigFlow(
                     )
                 return result
 
-            if entry.unique_id != unique_id:
-                try:
-                    stored_subject = account_subject_from_entry_data(entry.data)
-                except InvalidAccountSubjectError:
-                    stored_subject = None
-                if stored_subject == unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        unique_id=unique_id,
-                        version=OAUTH_CONFIG_ENTRY_VERSION,
-                    )
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             self.hass.config_entries.async_update_entry(
                 entry, version=OAUTH_CONFIG_ENTRY_VERSION
@@ -149,20 +129,6 @@ class NuHeatConfigFlow(
                 entry, title=account_title, data=data
             )
 
-        for existing_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if existing_entry.unique_id == unique_id:
-                continue
-            try:
-                stored_subject = account_subject_from_entry_data(existing_entry.data)
-            except InvalidAccountSubjectError:
-                continue
-            if stored_subject == unique_id:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry,
-                    unique_id=unique_id,
-                    version=OAUTH_CONFIG_ENTRY_VERSION,
-                )
-                break
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=account_title, data=data)
 

@@ -2,7 +2,6 @@
 
 from datetime import UTC, datetime
 import time
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,55 +10,29 @@ from chemelex_nuheat import (
     HoldUntilStatus,
     NuHeatApiError,
     NuHeatAuthError,
-    ScheduleMode,
     Thermostat,
     ThermostatState,
 )
-from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.application_credentials import ClientCredential
-from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import HVACAction
 from homeassistant.components.nuheat.application_credentials import (
     async_get_auth_implementation,
 )
-from homeassistant.components.nuheat.behavior import (
-    api_mode_for_hvac_mode,
-    api_mode_for_preset,
-    hvac_mode_for_thermostat,
-    preset_for_thermostat,
-    setpoint_command_mode,
-)
-from homeassistant.components.nuheat.climate import (
-    NuHeatClimateEntity,
-    async_setup_entry as async_setup_climate,
-)
+from homeassistant.components.nuheat.climate import NuHeatClimateEntity
 from homeassistant.components.nuheat.const import (
     AUTHORIZE_URL,
     DOMAIN,
     OAUTH_SCOPES,
-    PRESET_PERMANENT_HOLD,
-    PRESET_RUN,
-    PRESET_TEMPORARY_HOLD,
-    SCAN_INTERVAL,
     TOKEN_URL,
 )
 from homeassistant.components.nuheat.coordinator import NuHeatCoordinator
 from homeassistant.components.nuheat.migration import OAUTH_CONFIG_ENTRY_VERSION
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ACCESS_TOKEN,
-    CONF_TOKEN,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
@@ -74,7 +47,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2ImplementationWithPkce,
 )
 from homeassistant.util.json import load_json
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
 
@@ -185,17 +157,37 @@ async def test_local_application_credentials_path(
 
 
 @pytest.mark.asyncio
-async def test_missing_credentials_has_helpful_error(hass: HomeAssistant) -> None:
-    """Test missing OAuth credentials produce a helpful abort."""
+async def test_cloud_disabled_without_local_credentials(hass: HomeAssistant) -> None:
+    """Official setup requires the cloud component, not user-supplied secrets."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(return_value={}),
-    ):
+    ) as get_implementations:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
+    get_implementations.assert_not_called()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_oauth_credentials"
+    assert result["reason"] == "cloud_not_enabled"
+    assert result["description_placeholders"] == {"default_config": "default_config"}
+
+
+async def test_local_credentials_without_cloud(hass: HomeAssistant) -> None:
+    """Local credentials cannot bypass the cloud availability guard."""
+    implementation = await async_get_auth_implementation(
+        hass, "local-test", ClientCredential("synthetic-client", "synthetic-secret")
+    )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+        return_value={"local-test": implementation},
+    ) as get_implementations:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    get_implementations.assert_not_called()
+    assert "cloud" not in hass.config.components
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
 
 
 @pytest.mark.asyncio
@@ -203,6 +195,7 @@ async def test_oauth_implementation_temporarily_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """A cloud implementation lookup failure produces a translated abort."""
+    hass.config.components.add("cloud")
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(side_effect=ImplementationUnavailableError("cloud unavailable")),
@@ -253,6 +246,7 @@ async def test_config_flow_accepts_future_cloud_implementation(
     hass: HomeAssistant,
 ) -> None:
     """Test a centrally managed OAuth implementation can be selected."""
+    hass.config.components.add("cloud")
     local = FakeOAuthImplementation(domain="local")
     cloud = FakeOAuthImplementation(domain="cloud")
     with patch(
@@ -348,45 +342,6 @@ async def test_duplicate_account_is_prevented(
 
 
 @pytest.mark.asyncio
-async def test_duplicate_provisional_account_migrates_in_place_and_is_rejected(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
-) -> None:
-    """Fresh setup recognizes a stored subject behind a provisional ID."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Owner@Example.com",
-        data=oauth_data(subject=ACCOUNT_SUBJECT),
-        unique_id="owner@example.com",
-        version=2,
-    )
-    entry.add_to_hass(hass)
-    entry_id = entry.entry_id
-    original_data = entry.data
-    with (
-        patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
-        patch(
-            "homeassistant.components.nuheat.config_flow.NuHeatClient.get_account",
-            AsyncMock(return_value=Account("Owner@Example.com")),
-        ),
-        patch(
-            "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
-            AsyncMock(return_value=[thermostat()]),
-        ),
-    ):
-        result = await complete_oauth_flow(
-            hass, hass_client_no_auth, oauth_implementation()
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.entry_id == entry_id
-    assert entry.unique_id == ACCOUNT_SUBJECT
-    assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
-    assert entry.data is original_data
-    assert entry.title == "Owner@Example.com"
-
-
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
@@ -428,9 +383,9 @@ async def test_successful_reauthentication(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=oauth_data(subject=ACCOUNT_SUBJECT),
-        unique_id="owner@example.com",
+        unique_id=ACCOUNT_SUBJECT,
         title="Owner@Example.com",
-        version=2,
+        version=OAUTH_CONFIG_ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
     with (
@@ -464,10 +419,12 @@ async def test_successful_reauthentication(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("implementations", "reason"),
+    ("cloud_enabled", "implementations", "reason"),
     [
-        ({}, "missing_oauth_credentials"),
+        (False, {}, "cloud_not_enabled"),
+        (True, {}, "missing_credentials"),
         (
+            True,
             ImplementationUnavailableError("synthetic implementation outage"),
             "oauth_implementation_unavailable",
         ),
@@ -475,10 +432,13 @@ async def test_successful_reauthentication(
 )
 async def test_reauthentication_without_available_implementation(
     hass: HomeAssistant,
+    cloud_enabled: bool,
     implementations: dict[str, FakeOAuthImplementation] | Exception,
     reason: str,
 ) -> None:
     """Reauth reports unavailable implementations without indexing stored data."""
+    if cloud_enabled:
+        hass.config.components.add("cloud")
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=oauth_data(subject=ACCOUNT_SUBJECT),
@@ -494,12 +454,14 @@ async def test_reauthentication_without_available_implementation(
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
         AsyncMock(**effect),
-    ):
+    ) as get_implementations:
         result = await entry.start_reauth_flow(hass)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    if not cloud_enabled:
+        get_implementations.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -646,35 +608,6 @@ async def test_coordinator_auth_failure_triggers_reauthentication(
     assert coordinator.data is None
 
 
-@pytest.mark.asyncio
-async def test_dynamic_discovery_retains_entities_without_duplicates(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test coordinator updates discover entities without duplicates."""
-    coordinator, api, entry = await coordinator_with(
-        hass, thermostat(), thermostat("XYZ789")
-    )
-    entry.runtime_data = SimpleNamespace(coordinator=coordinator)
-    added: list[NuHeatClimateEntity] = []
-    await async_setup_climate(hass, entry, added.extend)
-    assert {entity.unique_id for entity in added} == {"ABC123", "XYZ789"}
-
-    api.list_thermostats.return_value = [thermostat(), thermostat("NEW456")]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert {entity.unique_id for entity in added} == {"ABC123", "XYZ789", "NEW456"}
-    assert "XYZ789" in coordinator.data
-    assert coordinator.is_thermostat_available("XYZ789") is False
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert len(added) == 3
-    await coordinator.async_shutdown()
-
-
 async def add_entity_state(
     hass: HomeAssistant, entity: NuHeatClimateEntity, entity_id: str
 ) -> State:
@@ -691,82 +624,6 @@ async def add_entity_state(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("imperial", "unit", "current", "target", "minimum", "maximum", "write", "celsius"),
-    [
-        (False, UnitOfTemperature.CELSIUS, 21.5, 23.0, 7.0, 35.0, 24.0, 24.0),
-        (True, UnitOfTemperature.FAHRENHEIT, 71.0, 73.0, 45.0, 95.0, 75.2, 24.0),
-    ],
-)
-async def test_climate_state_and_writes_follow_ha_unit(
-    hass: HomeAssistant,
-    imperial: bool,
-    unit: UnitOfTemperature,
-    current: float,
-    target: float,
-    minimum: float,
-    maximum: float,
-    write: float,
-    celsius: float,
-) -> None:
-    """Test climate reads and writes follow the configured unit system."""
-    if imperial:
-        hass.config.units = US_CUSTOMARY_SYSTEM
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    api.set_target_temperature.return_value = thermostat(
-        mode=3,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    state = await add_entity_state(hass, entity, "climate.nuheat_test")
-
-    assert entity.native_temperature_unit == unit
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == pytest.approx(current)
-    assert state.attributes[ATTR_TEMPERATURE] == pytest.approx(target)
-    assert state.attributes["min_temp"] == pytest.approx(minimum)
-    assert state.attributes["max_temp"] == pytest.approx(maximum)
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.hvac_action is HVACAction.HEATING
-    assert entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
-    assert entity.supported_features & ClimateEntityFeature.TURN_OFF
-    assert entity.supported_features & ClimateEntityFeature.TURN_ON
-
-    await entity.async_set_temperature(temperature=write)
-    api.set_target_temperature.assert_awaited_once_with(
-        "ABC123",
-        pytest.approx(celsius),
-        mode=ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE,
-        hold_until=datetime(2026, 7, 8, 1, tzinfo=UTC),
-    )
-    assert api.list_thermostats.await_count == 2
-    await entity.async_will_remove_from_hass()
-    await coordinator.async_shutdown()
-
-
-@pytest.mark.asyncio
-async def test_scheduled_target_change_holds_until_next_schedule(
-    hass: HomeAssistant,
-) -> None:
-    """A scheduled setpoint write omits the end and refreshes the coordinator."""
-    scheduled = thermostat(
-        mode=1,
-        raw_target_temperature=500,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    coordinator, api, _ = await coordinator_with(hass, scheduled)
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    await entity.async_set_temperature(temperature=22.0)
-
-    api.set_target_temperature.assert_awaited_once_with(
-        "ABC123", 22.0, mode=ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
-    )
-    assert api.list_thermostats.await_count == 2
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
     ("heating", "expected"),
     [(True, HVACAction.HEATING), (False, HVACAction.IDLE)],
 )
@@ -778,340 +635,6 @@ async def test_hvac_action_follows_is_heating(
     entity = NuHeatClimateEntity(coordinator, "ABC123")
 
     assert entity.hvac_action is expected
-
-
-@pytest.mark.asyncio
-async def test_standby_get_is_authoritative_across_restart(
-    hass: HomeAssistant,
-) -> None:
-    """A confirmed Standby response reports OFF without command memory."""
-    standby = thermostat(
-        mode=3,
-        raw_target_temperature=500,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-        heating=False,
-    )
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    api.list_thermostats.return_value = [standby]
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.assumed_state is False
-
-    await entity.async_set_hvac_mode(HVACMode.OFF)
-
-    api.set_standby.assert_awaited_once_with("ABC123")
-    assert api.list_thermostats.await_count == 2
-    assert entity.hvac_mode is HVACMode.OFF
-    assert entity.hvac_action is HVACAction.OFF
-    assert entity.native_target_temperature is None
-    assert entity.assumed_state is False
-
-    # A newly created entity derives the same state from GET after restart.
-    restarted_entity = NuHeatClimateEntity(coordinator, "ABC123")
-    assert restarted_entity.hvac_mode is HVACMode.OFF
-    assert restarted_entity.hvac_action is HVACAction.OFF
-    assert restarted_entity.native_target_temperature is None
-    assert restarted_entity.assumed_state is False
-
-
-@pytest.mark.asyncio
-async def test_failed_standby_command_does_not_assume_off(
-    hass: HomeAssistant,
-) -> None:
-    """OFF is remembered only after the Standby command succeeds."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    api.set_standby.side_effect = NuHeatApiError("write failed")
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    with pytest.raises(NuHeatApiError, match="write failed"):
-        await entity.async_turn_off()
-
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.assumed_state is False
-    assert api.list_thermostats.await_count == 1
-
-
-@pytest.mark.asyncio
-async def test_turn_off_and_turn_on_use_standby_and_auto(
-    hass: HomeAssistant,
-) -> None:
-    """The standard climate actions map to verified Standby and Auto writes."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    await entity.async_turn_off()
-    api.set_standby.assert_awaited_once_with("ABC123")
-    assert entity.hvac_mode is HVACMode.OFF
-
-    await entity.async_turn_on()
-    api.set_schedule_mode.assert_awaited_once_with("ABC123", ScheduleMode.AUTO)
-    assert entity.hvac_mode is HVACMode.AUTO
-    assert entity.hvac_action is HVACAction.HEATING
-    assert entity.native_target_temperature == 23.0
-    assert entity.assumed_state is True
-    # The coordinator debounces the two immediate post-command refreshes.
-    assert api.list_thermostats.await_count == 2
-    await coordinator.async_shutdown()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "exit_command",
-    ["auto", "heat", "target", "run-preset", "temporary-hold-preset"],
-)
-async def test_successful_control_command_clears_optimistic_off(
-    hass: HomeAssistant, exit_command: str
-) -> None:
-    """Every supported command which exits Standby clears local OFF memory."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    await entity.async_turn_off()
-    assert entity.assumed_state is True
-
-    if exit_command == "auto":
-        await entity.async_set_hvac_mode(HVACMode.AUTO)
-    elif exit_command == "heat":
-        await entity.async_set_hvac_mode(HVACMode.HEAT)
-    elif exit_command == "target":
-        await entity.async_set_temperature(temperature=22.0)
-        api.set_target_temperature.assert_awaited_once_with(
-            "ABC123", 22.0, mode=ScheduleMode.MANUAL
-        )
-    elif exit_command == "run-preset":
-        await entity.async_set_preset_mode(PRESET_RUN)
-    else:
-        await entity.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
-
-    assert entity.assumed_state is True
-    assert entity.hvac_mode is not HVACMode.OFF
-    # The coordinator debounces the two immediate post-command refreshes.
-    assert api.list_thermostats.await_count == 2
-    await coordinator.async_shutdown()
-
-
-@pytest.mark.parametrize(
-    ("value", "expected_preset", "expected_hvac"),
-    [
-        (
-            thermostat(
-                mode=1,
-                raw_target_temperature=500,
-                hold_until=None,
-                hold_until_status=HoldUntilStatus.NULL,
-            ),
-            PRESET_RUN,
-            HVACMode.AUTO,
-        ),
-        (thermostat(), PRESET_TEMPORARY_HOLD, HVACMode.AUTO),
-        (
-            thermostat(
-                mode=3,
-                raw_target_temperature=2111,
-                hold_until=None,
-                hold_until_status=HoldUntilStatus.NULL,
-            ),
-            None,
-            HVACMode.HEAT,
-        ),
-        (
-            thermostat(
-                mode=3,
-                raw_target_temperature=500,
-                hold_until=None,
-                hold_until_status=HoldUntilStatus.NULL,
-            ),
-            None,
-            HVACMode.OFF,
-        ),
-    ],
-)
-def test_live_read_state_mapping(
-    value: Thermostat, expected_preset: str | None, expected_hvac: HVACMode
-) -> None:
-    """Only live-validated complete states receive presets and HVAC modes."""
-    assert preset_for_thermostat(value) == expected_preset
-    assert hvac_mode_for_thermostat(value) is expected_hvac
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("preset", "schedule_mode", "temperature"),
-    [
-        (PRESET_RUN, ScheduleMode.AUTO, None),
-        (
-            PRESET_TEMPORARY_HOLD,
-            ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE,
-            23.0,
-        ),
-    ],
-)
-async def test_validated_preset_commands(
-    hass: HomeAssistant,
-    preset: str,
-    schedule_mode: ScheduleMode,
-    temperature: float | None,
-) -> None:
-    """Only presets with documented command behavior issue writes."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    api.set_schedule_mode.return_value = thermostat()
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    await entity.async_set_preset_mode(preset)
-
-    if temperature is None:
-        api.set_schedule_mode.assert_awaited_once_with("ABC123", schedule_mode)
-    else:
-        api.set_schedule_mode.assert_awaited_once_with(
-            "ABC123", schedule_mode, temperature=temperature
-        )
-    assert api_mode_for_preset(preset) is schedule_mode
-    assert api.list_thermostats.await_count == 2
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("hvac_mode", "schedule_mode", "temperature"),
-    [
-        (HVACMode.AUTO, ScheduleMode.AUTO, None),
-        (HVACMode.HEAT, ScheduleMode.MANUAL, 23.0),
-    ],
-)
-async def test_legacy_hvac_command_support_remains_separate_from_read_state(
-    hass: HomeAssistant,
-    hvac_mode: HVACMode,
-    schedule_mode: ScheduleMode,
-    temperature: float | None,
-) -> None:
-    """AUTO and HEAT commands remain, without claiming a Manual readback."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    refreshed = (
-        thermostat(
-            mode=1,
-            raw_target_temperature=500,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        )
-        if hvac_mode is HVACMode.AUTO
-        else thermostat(
-            mode=3,
-            raw_target_temperature=2111,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        )
-    )
-    api.list_thermostats.return_value = [refreshed]
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-    assert entity.hvac_modes == [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-    assert entity.preset_modes == [
-        PRESET_RUN,
-        PRESET_TEMPORARY_HOLD,
-        PRESET_PERMANENT_HOLD,
-    ]
-
-    await entity.async_set_hvac_mode(hvac_mode)
-
-    if temperature is None:
-        api.set_schedule_mode.assert_awaited_once_with("ABC123", schedule_mode)
-    else:
-        api.set_schedule_mode.assert_awaited_once_with(
-            "ABC123", schedule_mode, temperature=temperature
-        )
-    assert api_mode_for_hvac_mode(hvac_mode) is schedule_mode
-    assert entity.hvac_mode is (
-        HVACMode.AUTO if hvac_mode is HVACMode.AUTO else HVACMode.HEAT
-    )
-    assert api.list_thermostats.await_count == 2
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "current",
-    [
-        thermostat(),
-        thermostat(
-            mode=3,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        ),
-        thermostat(
-            mode=3,
-            raw_target_temperature=0,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        ),
-        thermostat(
-            raw_target_temperature=0,
-            hold_until=None,
-            hold_until_status=HoldUntilStatus.NULL,
-        ),
-    ],
-    ids=["timed-hold", "permanent-hold", "manual-or-standby", "scheduled"],
-)
-async def test_auto_command_is_serial_only_for_every_read_state(
-    hass: HomeAssistant, current: Thermostat
-) -> None:
-    """Auto uses one verified command to resume or exit every control state."""
-    coordinator, api, _ = await coordinator_with(hass, current)
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    await entity.async_set_hvac_mode(HVACMode.AUTO)
-
-    api.set_schedule_mode.assert_awaited_once_with("ABC123", ScheduleMode.AUTO)
-    assert api.list_thermostats.await_count == 2
-
-
-@pytest.mark.asyncio
-async def test_bodyless_command_success_relies_on_coordinator_refresh(
-    hass: HomeAssistant,
-) -> None:
-    """Core does not inspect a write result before requesting fresh state."""
-    coordinator, api, _ = await coordinator_with(hass, thermostat())
-    api.set_schedule_mode.return_value = None
-    entity = NuHeatClimateEntity(coordinator, "ABC123")
-
-    await entity.async_set_hvac_mode(HVACMode.AUTO)
-
-    api.set_schedule_mode.assert_awaited_once_with("ABC123", ScheduleMode.AUTO)
-    assert api.list_thermostats.await_count == 2
-
-
-def test_setpoint_command_mapping_uses_derived_state() -> None:
-    """Setpoints follow corrected states without treating Standby as heat."""
-    scheduled = thermostat(
-        mode=1,
-        raw_target_temperature=500,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    ambiguous = thermostat(
-        mode=3,
-        raw_target_temperature=2111,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    standby = thermostat(
-        mode=3,
-        raw_target_temperature=500,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-    unknown = thermostat(
-        mode=999,
-        raw_target_temperature=0,
-        hold_until=None,
-        hold_until_status=HoldUntilStatus.NULL,
-    )
-
-    assert setpoint_command_mode(scheduled) is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
-    assert setpoint_command_mode(thermostat()) is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
-    assert setpoint_command_mode(ambiguous) is ScheduleMode.MANUAL
-    assert setpoint_command_mode(ambiguous, HVACMode.HEAT) is ScheduleMode.MANUAL
-    for value in (standby, unknown):
-        with pytest.raises(ValueError, match="Unsupported thermostat state"):
-            setpoint_command_mode(value)
 
 
 @pytest.mark.asyncio
@@ -1158,18 +681,6 @@ async def test_unsupported_preset_uses_translated_exception(
     assert raised.value.translation_domain == DOMAIN
     assert raised.value.translation_key == "unsupported_preset"
     api.set_schedule_mode.assert_not_awaited()
-
-
-def test_climate_preset_translations() -> None:
-    """All NuHeat preset labels are supplied through entity translations."""
-    strings = load_json("homeassistant/components/nuheat/strings.json")
-    assert strings["entity"]["climate"]["thermostat"]["state_attributes"][
-        "preset_mode"
-    ]["state"] == {
-        PRESET_RUN: "Run schedule",
-        PRESET_TEMPORARY_HOLD: "Temporary hold",
-        PRESET_PERMANENT_HOLD: "Permanent hold",
-    }
 
 
 @pytest.mark.asyncio

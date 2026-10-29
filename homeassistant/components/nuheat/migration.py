@@ -166,12 +166,23 @@ def _pending_serial(entry: ConfigEntry[Any]) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
-def _oauth_entry_subject(entry: ConfigEntry[Any]) -> str | None:
-    """Return a stored OAuth subject without exposing token contents."""
-    try:
-        return account_subject_from_entry_data(entry.data)
-    except InvalidAccountSubjectError:
-        return None
+def _validate_oauth_entries(hass: HomeAssistant) -> None:
+    """Reject unsupported OAuth records instead of rescuing their identity."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if CONF_TOKEN not in entry.data or is_pending_cleanup_entry(entry):
+            continue
+        if (
+            entry.version != OAUTH_CONFIG_ENTRY_VERSION
+            or not isinstance(entry.unique_id, str)
+            or not entry.unique_id.strip()
+        ):
+            raise MigrationPreflightError("Unsupported NuHeat OAuth entry")
+        try:
+            subject = account_subject_from_entry_data(entry.data)
+        except InvalidAccountSubjectError as err:
+            raise MigrationPreflightError("Invalid NuHeat OAuth identity") from err
+        if entry.unique_id != subject:
+            raise MigrationPreflightError("Conflicting NuHeat OAuth identity")
 
 
 def _issue_id(issue_type: str, anchor_entry_id: str) -> str:
@@ -219,16 +230,14 @@ def build_migration_plan(
     if initiating_serial is None or initiating_serial not in validated_serials:
         raise MigrationAccountMismatchError
 
+    _validate_oauth_entries(hass)
     account_entries = [
         entry
         for entry in domain_entries
         if entry.entry_id != initiating_entry.entry_id
         and CONF_TOKEN in entry.data
         and not is_pending_cleanup_entry(entry)
-        and (
-            entry.unique_id == account_unique_id
-            or _oauth_entry_subject(entry) == account_unique_id
-        )
+        and entry.unique_id == account_unique_id
     ]
     if len(account_entries) > 1:
         raise MigrationPreflightError("Duplicate NuHeat account entry appeared")
@@ -296,6 +305,7 @@ def build_migration_plan(
 
 def validate_migration_plan(hass: HomeAssistant, plan: MigrationPlan) -> None:
     """Recheck every preflight assumption immediately before mutation."""
+    _validate_oauth_entries(hass)
     anchor = hass.config_entries.async_get_entry(plan.anchor_entry_id)
     if anchor is None:
         raise MigrationPreflightError("NuHeat anchor disappeared after preflight")
@@ -325,10 +335,7 @@ def validate_migration_plan(hass: HomeAssistant, plan: MigrationPlan) -> None:
         if entry.entry_id != plan.anchor_entry_id
         and CONF_TOKEN in entry.data
         and not is_pending_cleanup_entry(entry)
-        and (
-            entry.unique_id == plan.account_unique_id
-            or _oauth_entry_subject(entry) == plan.account_unique_id
-        )
+        and entry.unique_id == plan.account_unique_id
     ]
     if duplicates:
         raise MigrationPreflightError("Duplicate NuHeat account entry appeared")
