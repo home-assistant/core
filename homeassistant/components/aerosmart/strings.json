@@ -9,21 +9,6 @@
       "same_unit": "The ventilation and heat pump unit IDs must be different."
     },
     "step": {
-      "serial": {
-        "data": {
-          "baudrate": "Baud rate",
-          "device": "[%key:common::config_flow::data::device%]",
-          "unit_heat_pump": "Heat pump unit",
-          "unit_ventilation": "Ventilation unit"
-        },
-        "data_description": {
-          "baudrate": "Speed of the Modbus RTU connection.",
-          "device": "Serial port connected to the aerosmart Modbus bus.",
-          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default {default_unit_heat_pump}).",
-          "unit_ventilation": "The ventilation controller's Modbus station address (default {default_unit_ventilation})."
-        },
-        "description": "Enter the serial port and both station addresses used by the aerosmart installation."
-      },
       "reconfigure": {
         "data": {
           "baudrate": "[%key:component::aerosmart::config::step::serial::data::baudrate%]",
@@ -42,6 +27,21 @@
           "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data_description::unit_ventilation%]"
         },
         "description": "Update the connection details for this aerosmart installation."
+      },
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "[%key:common::config_flow::data::device%]",
+          "unit_heat_pump": "Heat pump unit",
+          "unit_ventilation": "Ventilation unit"
+        },
+        "data_description": {
+          "baudrate": "Speed of the Modbus RTU connection.",
+          "device": "Serial port connected to the aerosmart Modbus bus.",
+          "unit_heat_pump": "The heat pump / hot water controller's Modbus station address (default {default_unit_heat_pump}).",
+          "unit_ventilation": "The ventilation controller's Modbus station address (default {default_unit_ventilation})."
+        },
+        "description": "Enter the serial port and both station addresses used by the aerosmart installation."
       },
       "tcp": {
         "data": {
