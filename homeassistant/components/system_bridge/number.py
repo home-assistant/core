@@ -104,9 +104,9 @@ class SystemBridgeAudioInputVolumeNumber(SystemBridgeAudioDeviceEntity, NumberEn
     @override
     def native_value(self) -> float | None:
         """Return the input's volume."""
-        if (device := self._device) is None:
+        if (device := self._device) is None or device.volume is None:
             return None
-        return device.volume
+        return min(device.volume, 100)
 
     @override
     async def async_set_native_value(self, value: float) -> None:

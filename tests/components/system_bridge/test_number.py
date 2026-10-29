@@ -141,6 +141,24 @@ async def test_input_volume_added_once_reported(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_input_volume_amplified(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an amplified input volume stays within the number's range."""
+    coordinator = mock_config_entry.runtime_data
+    microphone = replace(FIXTURE_AUDIO.inputs[0], volume=150)
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone])
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("number.hostname_microphone_input_volume"))
+    assert state.state == "100"
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_set_input_volume(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,

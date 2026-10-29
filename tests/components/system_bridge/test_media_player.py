@@ -20,6 +20,7 @@ from systembridgeconnector.models.response import Response
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
@@ -320,6 +321,34 @@ async def test_media_player_source(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic"
     assert state.attributes[ATTR_MEDIA_TITLE] == FIXTURE_MEDIA.title
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_source_named_automatic(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a player named like the automatic source can still be picked."""
+    coordinator = mock_config_entry.runtime_data
+    player = replace(FIXTURE_MEDIA.players[0], id="auto", name="Automatic")
+    await coordinator.async_handle_module(
+        Module.MEDIA, replace(FIXTURE_MEDIA, players=[player])
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Automatic (auto)"},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic (auto)"
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "Automatic",
+        "Automatic (auto)",
+    ]
 
 
 @pytest.mark.usefixtures("init_integration")

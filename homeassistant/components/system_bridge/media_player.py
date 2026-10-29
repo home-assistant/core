@@ -231,7 +231,11 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     def _player_names(self) -> dict[str, str]:
         """Return each player's source, by ID."""
         return unique_names(
-            (player.id, player.name) for player in self._systembridge_data.media.players
+            (
+                (player.id, player.name)
+                for player in self._systembridge_data.media.players
+            ),
+            reserved=[SOURCE_AUTOMATIC],
         )
 
     @property
