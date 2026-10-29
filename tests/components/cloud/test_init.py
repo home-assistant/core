@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from hass_nabucasa import (
     AutoLoginController,
@@ -22,6 +22,7 @@ from homeassistant.components.cloud import (
     async_get_or_create_cloudhook,
     async_listen_cloudhook_change,
     async_listen_connection_change,
+    async_remote_ui_aliases,
     async_remote_ui_url,
 )
 from homeassistant.components.cloud.const import (
@@ -302,6 +303,32 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
         cl.client.prefs._prefs["remote_domain"] = None
         with patch.object(cl.remote, "_instance_domain", "live.example.com"):
             assert async_remote_ui_url(hass) == "https://live.example.com"
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_aliases(hass: HomeAssistant) -> None:
+    """Test getting the custom domains of the remote ui."""
+    cl = hass.data[DATA_CLOUD]
+
+    # Not logged in
+    assert async_remote_ui_aliases(hass) == []
+
+    with patch("homeassistant.components.cloud.async_is_logged_in", return_value=True):
+        # Remote not enabled
+        assert async_remote_ui_aliases(hass) == []
+
+        with patch.object(cl.remote, "connect"):
+            await cl.client.prefs.async_update(remote_enabled=True)
+            await hass.async_block_till_done()
+
+        # Remote backend not loaded yet
+        assert async_remote_ui_aliases(hass) == []
+
+        with patch.object(
+            type(cl.remote), "alias", new_callable=PropertyMock
+        ) as mock_alias:
+            mock_alias.return_value = ["ha.example.com"]
+            assert async_remote_ui_aliases(hass) == ["ha.example.com"]
 
 
 @pytest.mark.parametrize(

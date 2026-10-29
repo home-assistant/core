@@ -354,6 +354,7 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
         # Local import to avoid circular dependencies
         from homeassistant.components.cloud import (  # noqa: PLC0415
             CloudNotAvailable,
+            async_remote_ui_aliases,
             async_remote_ui_url,
         )
 
@@ -364,6 +365,12 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
 
         if not require_current_request or _match_request_host_port(cloud_url):
             return normalize_url(str(cloud_url))
+
+        # Custom domains are served over the same remote connection
+        for alias in async_remote_ui_aliases(hass):
+            alias_url = yarl.URL.build(scheme="https", host=alias)
+            if _match_request_host_port(alias_url):
+                return normalize_url(str(alias_url))
 
     raise NoURLAvailableError
 

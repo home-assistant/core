@@ -413,6 +413,35 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
         ):
             _get_cloud_url(hass, require_current_request=True)
 
+        # A custom domain alias of the remote UI is accepted as well
+        with (
+            patch(
+                "homeassistant.components.cloud.async_remote_ui_aliases",
+                return_value=["ha.example.com"],
+            ),
+            patch(
+                "homeassistant.helpers.network._get_request_host_port",
+                return_value=("ha.example.com", 443),
+            ),
+        ):
+            assert (
+                _get_cloud_url(hass, require_current_request=True)
+                == "https://ha.example.com"
+            )
+
+        with (
+            patch(
+                "homeassistant.components.cloud.async_remote_ui_aliases",
+                return_value=["ha.example.com"],
+            ),
+            patch(
+                "homeassistant.helpers.network._get_request_host_port",
+                return_value=("ha.example.com", 8123),
+            ),
+            pytest.raises(NoURLAvailableError),
+        ):
+            _get_cloud_url(hass, require_current_request=True)
+
     with (
         patch(
             "homeassistant.components.cloud.async_remote_ui_url",

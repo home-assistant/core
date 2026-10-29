@@ -320,6 +320,19 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     return f"https://{remote_domain}"
 
 
+@callback
+def async_remote_ui_aliases(hass: HomeAssistant) -> list[str]:
+    """Get the custom domains that also serve the remote UI."""
+    if not async_is_logged_in(hass):
+        return []
+
+    cloud = hass.data[DATA_CLOUD]
+    if not cloud.client.prefs.remote_enabled:
+        return []
+
+    return cloud.remote.alias or []
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
