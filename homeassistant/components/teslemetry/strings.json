@@ -1357,9 +1357,6 @@
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
     },
-    "no_local_powerwall": {
-      "message": "{name} is not connected to its Powerwall for local control, add it as a local energy site or restore its local connection"
-    },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
     },
