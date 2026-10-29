@@ -1,7 +1,6 @@
 """Support for System Bridge media players."""
 
 import base64
-import binascii
 import contextlib
 import datetime as dt
 import hashlib
@@ -265,7 +264,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         result: tuple[bytes, str] | None = None
         thumb_hash: str | None = None
         if thumb.startswith("data:"):
-            with contextlib.suppress(ValueError, binascii.Error):
+            with contextlib.suppress(ValueError):
                 prefix, image_data = thumb.split(",", 1)
                 if ";base64" in prefix:
                     mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1].strip().lower()
