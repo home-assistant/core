@@ -45,7 +45,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: Aerosmart controllers do not advertise a Modbus endpoint; their TCP gateway or serial port must be configured manually.
@@ -68,7 +68,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairable issues are raised.

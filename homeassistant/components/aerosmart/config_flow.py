@@ -7,7 +7,11 @@ from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -104,19 +108,36 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
         """Configure a serial Modbus RTU connection."""
         return await self._async_step_connection(TYPE_SERIAL, user_input)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the existing controller connection."""
+        entry = self._get_reconfigure_entry()
+        return await self._async_step_connection(
+            entry.data[CONF_TYPE],
+            user_input,
+            step_id="reconfigure",
+            suggested_values=entry.data,
+        )
+
     async def _async_step_connection(
-        self, connection_type: str, user_input: dict[str, Any] | None
+        self,
+        connection_type: str,
+        user_input: dict[str, Any] | None,
+        *,
+        step_id: str | None = None,
+        suggested_values: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Validate the controller connection and create an entry."""
+        step_id = step_id or connection_type
+        schema = STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = self._validate_integer_inputs(connection_type, user_input)
             if errors:
                 return self.async_show_form(
-                    step_id=connection_type,
-                    data_schema=(
-                        STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP
-                    ),
+                    step_id=step_id,
+                    data_schema=schema,
                     errors=errors,
                     description_placeholders=DESCRIPTION_PLACEHOLDERS,
                 )
@@ -145,11 +166,17 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                             if key != CONF_BAUDRATE
                         }
                     )
+                    if self.source == SOURCE_RECONFIGURE:
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(), data=user_input
+                        )
                     return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(
-            step_id=connection_type,
-            data_schema=STEP_SERIAL if connection_type == TYPE_SERIAL else STEP_TCP,
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                schema, suggested_values or user_input
+            ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )

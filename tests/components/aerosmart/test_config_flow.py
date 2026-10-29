@@ -412,3 +412,77 @@ async def test_serial_flow(
     }
     assert mock_modbus_api.temporary_unit.call_count == 2
     mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
+async def test_reconfigure_updates_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The connection can be changed without recreating the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "gateway.local",
+            CONF_PORT: 1502,
+            CONF_UNIT_VENTILATION: 3,
+            CONF_UNIT_HEAT_PUMP: 4,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_TYPE: TYPE_TCP,
+        CONF_HOST: "gateway.local",
+        CONF_PORT: 1502,
+        CONF_UNIT_VENTILATION: 3,
+        CONF_UNIT_HEAT_PUMP: 4,
+    }
+
+
+@pytest.mark.usefixtures("mock_modbus_unit_ventilation", "mock_modbus_unit_heat_pump")
+async def test_reconfigure_recovers_after_connection_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_api: MockModbusApi,
+) -> None:
+    """A failed reconfigure probe keeps the form open for correction."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    working_side_effect = mock_modbus_api.temporary_unit.side_effect
+    mock_modbus_api.temporary_unit.side_effect = OSError("unreachable")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "gateway.local",
+            CONF_PORT: 502,
+            CONF_UNIT_VENTILATION: 1,
+            CONF_UNIT_HEAT_PUMP: 2,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_modbus_api.temporary_unit.side_effect = working_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "gateway.local",
+            CONF_PORT: 502,
+            CONF_UNIT_VENTILATION: 1,
+            CONF_UNIT_HEAT_PUMP: 2,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
