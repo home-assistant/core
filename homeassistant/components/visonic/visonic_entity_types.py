@@ -29,9 +29,9 @@ class PanelState(DataclassDictMixin):
     """Internal panel state."""
 
     emulationmode: str
-    trouble: str
-    battery_level: int
-    tamper: bool
+    trouble: str | None
+    battery_level: int | None
+    tamper: bool | None
     attributes: dict[str, Any] = field(default_factory=dict)
 
 

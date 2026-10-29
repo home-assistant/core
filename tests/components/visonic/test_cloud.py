@@ -654,7 +654,7 @@ def test_process_devices_propagates_invalid_device(
         ),
         pytest.raises(RuntimeError, match="malformed panel device"),
     ):
-        cloud.process_devices([PanelDevice({})])
+        cloud.process_devices([PanelDevice({"low_battery": False})])
 
 
 @pytest.mark.parametrize(
@@ -2019,3 +2019,45 @@ async def test_panel_battery_from_library_devices(
     devices = await AlarmSystem(api).get_devices()
     state = cloud.process_devices(devices)
     assert state.battery_level == expected_level
+
+
+@pytest.mark.parametrize(
+    ("low_battery", "expected_level"),
+    [
+        pytest.param(False, 100, id="boolean-normal"),
+        pytest.param(True, 0, id="boolean-low"),
+        pytest.param("false", 100, id="string-normal"),
+        pytest.param("true", 0, id="string-low"),
+        pytest.param("0", 100, id="zero"),
+        pytest.param("1", 0, id="one"),
+        pytest.param("Unknown", None, id="unknown"),
+        pytest.param("", None, id="missing"),
+    ],
+)
+def test_panel_battery_flag(
+    cloud: VisonicCloudConnection, low_battery: bool | str, expected_level: int | None
+) -> None:
+    """Read the library's string flags without treating a false string as low."""
+    state = cloud.process_devices(
+        [PanelDevice({"low_battery": low_battery, "tamper": False, "trouble": "none"})]
+    )
+    assert state.battery_level == expected_level
+    assert state.tamper is False
+    assert state.trouble == "none"
+
+
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param([], id="missing-panel"),
+        pytest.param([PanelDevice({})], id="missing-fields"),
+    ],
+)
+def test_missing_panel_flags(
+    cloud: VisonicCloudConnection, devices: list[PanelDevice]
+) -> None:
+    """Missing panel fields cannot establish a healthy state."""
+    state = cloud.process_devices(devices)
+    assert state.battery_level is None
+    assert state.tamper is None
+    assert state.trouble is None

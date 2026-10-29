@@ -462,13 +462,28 @@ class VisonicCloudConnection(VisonicConnection):
         """Process the devices from the panel."""
         panelstate = PanelState(
             emulationmode="cloud",
-            trouble="none",
-            battery_level=100,
-            tamper=False,
+            trouble=None,
+            battery_level=None,
+            tamper=None,
         )
         for device in devices:
             if isinstance(device, PanelDevice):
-                panelstate.battery_level = 0 if to_bool(device.low_battery) else 100
-                panelstate.tamper = to_bool(device.tamper)
-                panelstate.trouble = device.trouble
+                battery = device.low_battery
+                tamper = device.tamper
+                trouble = device.trouble
+                panelstate.battery_level = (
+                    None
+                    if battery.lower() in ("unknown", "none", "")
+                    else 0
+                    if to_bool(battery)
+                    else 100
+                )
+                panelstate.tamper = (
+                    None
+                    if tamper.lower() in ("unknown", "none", "")
+                    else to_bool(tamper)
+                )
+                panelstate.trouble = (
+                    None if trouble.lower() in ("unknown", "") else trouble
+                )
         return panelstate
