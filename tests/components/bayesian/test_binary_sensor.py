@@ -2,6 +2,7 @@
 
 import json
 from logging import WARNING
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -1358,50 +1359,45 @@ async def _test_mirrored_observations(
     )
 
 
+@pytest.mark.parametrize(
+    "observation",
+    [
+        {
+            "platform": "state",
+            "entity_id": "binary_sensor.test_monitored",
+            "to_state": "on",
+            "prob_given_true": 0.8,
+        },
+        {
+            "platform": "template",
+            "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
+            "prob_given_true": 0.79,
+        },
+        {
+            "platform": "numeric_state",
+            "entity_id": "sensor.test_monitored1",
+            "above": 5,
+            "prob_given_true": 0.7,
+        },
+    ],
+    ids=["state", "template", "numeric_state"],
+)
 async def test_missing_prob_given_false(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, observation: dict[str, Any]
 ) -> None:
-    """Test missing prob_given_false detection in YAML."""
-
+    """Test that prob_given_false is required in YAML."""
     config = {
         "binary_sensor": {
             "platform": "bayesian",
             "name": "missingpgf",
-            "observations": [
-                {
-                    "platform": "state",
-                    "entity_id": "binary_sensor.test_monitored",
-                    "to_state": "on",
-                    "prob_given_true": 0.8,
-                },
-                {
-                    "platform": "template",
-                    "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
-                    "prob_given_true": 0.79,
-                },
-                {
-                    "platform": "numeric_state",
-                    "entity_id": "sensor.test_monitored1",
-                    "above": 5,
-                    "prob_given_true": 0.7,
-                },
-            ],
+            "observations": [observation],
             "prior": 0.1,
         }
     }
-    assert len(issue_registry.issues) == 0
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_monitored2", "on")
-    await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 3
-    assert (
-        issue_registry.issues[
-            ("bayesian", "no_prob_given_false/missingpgf/sensor.test_monitored1")
-        ]
-        is not None
-    )
+    assert hass.states.get("binary_sensor.missingpgf") is None
 
 
 async def test_bad_multi_numeric(

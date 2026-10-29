@@ -65,7 +65,7 @@ from .const import (
     PLATFORMS,
 )
 from .helpers import Observation
-from .issues import raise_mirrored_entries, raise_no_prob_given_false
+from .issues import raise_mirrored_entries
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ NUMERIC_STATE_SCHEMA = probatio.All(
             probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
             probatio.Optional(CONF_BELOW): probatio.Coerce(float),
             probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-            probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+            probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
         },
         required=True,
     ),
@@ -167,7 +167,7 @@ STATE_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ENTITY_ID): cv.entity_id,
         probatio.Required(CONF_TO_STATE): cv.string,
         probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+        probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
@@ -177,7 +177,7 @@ TEMPLATE_SCHEMA = probatio.Schema(
         CONF_PLATFORM: CONF_TEMPLATE,
         probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
-        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
+        probatio.Required(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
@@ -239,20 +239,6 @@ async def async_setup_platform(
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-
-    # Should deprecate in some future version (2022.10 at time
-    # of writing) & make prob_given_false required in schemas.
-    broken_observations: list[dict[str, Any]] = []
-    for observation in observations:
-        if CONF_P_GIVEN_F not in observation:
-            text = (
-                f"{name}/{observation.get(CONF_ENTITY_ID, '')}"
-                f"{observation.get(CONF_VALUE_TEMPLATE, '')}"
-            )
-            raise_no_prob_given_false(hass, text)
-            _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
-            broken_observations.append(observation)
-    observations = [x for x in observations if x not in broken_observations]
 
     async_add_entities(
         [
