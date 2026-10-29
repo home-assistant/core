@@ -1592,3 +1592,54 @@ async def test_stop_rejects_queued_entity_command(
         after_stop = await coordinator.send_command(AlarmPanelCommand.DISARM, "1234")
         assert after_stop.status is AlarmCommandStatus.FAIL_PANEL_NO_CONNECTION
         backend.assert_awaited_once()
+
+
+async def test_stop_suppresses_authentication_failure_from_running_command(
+    hass: HomeAssistant,
+) -> None:
+    """An accepted command can fail during shutdown without requesting reauth."""
+    entry = create_config_entry_example(data={CONF_TYPE: DeviceType.CLOUD})
+    coordinator = VisonicCoordinator(hass, entry, 1)
+    coordinator.async_set_updated_data(
+        VisonicCoordinatorData(connected=True, mode="cloud")
+    )
+    started = asyncio.Event()
+    release = asyncio.Event()
+    shutdown_started = asyncio.Event()
+    listener = MagicMock(side_effect=shutdown_started.set)
+    coordinator.async_add_listener(listener)
+    error = VisonicAuthException("Credentials rejected")
+
+    async def send(command: AlarmPanelCommand, code: str | None) -> CommandResult:
+        started.set()
+        await release.wait()
+        raise error
+
+    with (
+        patch.object(
+            coordinator.connection, "send_command", side_effect=send
+        ) as backend,
+        patch.object(coordinator.connection, "async_panel_stop") as close,
+        patch.object(entry, "async_start_reauth_if_available") as reauth,
+    ):
+        command = asyncio.create_task(
+            coordinator.send_command(AlarmPanelCommand.ARM_AWAY, "1234")
+        )
+        await started.wait()
+        stop = asyncio.create_task(coordinator.async_panel_stop())
+        await shutdown_started.wait()
+        close.assert_not_awaited()
+        release.set()
+
+        with pytest.raises(VisonicAuthException) as raised:
+            await command
+        await stop
+
+    assert raised.value is error
+    backend.assert_awaited_once_with(AlarmPanelCommand.ARM_AWAY, "1234")
+    close.assert_awaited_once_with()
+    reauth.assert_not_called()
+    listener.assert_called_once_with()
+    assert coordinator.last_update_success
+    assert coordinator.last_exception is None
+    assert coordinator.data == VisonicCoordinatorData(connected=False, mode="stopped")

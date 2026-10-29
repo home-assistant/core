@@ -405,6 +405,8 @@ class VisonicCoordinator(DataUpdateCoordinator[VisonicCoordinatorData]):
     @callback
     def _async_handle_authentication_failure(self, err: VisonicAuthException) -> None:
         """Publish lost authentication and request updated credentials."""
+        if self._stopping:
+            return
         if TYPE_CHECKING:
             assert self.config_entry is not None
         self.async_set_update_error(
