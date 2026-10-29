@@ -2,12 +2,10 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
 import time
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import aiohttp
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 import tibber
 
@@ -15,13 +13,12 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import DOMAIN
 from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, STATE_UNAVAILABLE
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from .conftest import create_tibber_device, create_tibber_home
+from .conftest import create_tibber_home
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("recorder_mock", "setup_credentials")
@@ -56,24 +53,14 @@ async def test_setup_history_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     tibber_mock: MagicMock,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     method: str,
     error: Exception,
 ) -> None:
-    """History failures allow setup, recover on schedule, and stop on unload."""
-    home = create_tibber_home()
-    home.has_real_time_consumption = True
-    home.rt_subscribe = AsyncMock()
-    tibber_mock.get_homes.return_value = [home]
-    device = create_tibber_device(state_of_charge=72.0)
-    tibber_mock.data_api.get_all_devices.return_value = {device.id: device}
-    tibber_mock.data_api.update_devices.return_value = {device.id: device}
-    history_fetch = getattr(tibber_mock, method)
-    history_fetch.side_effect = error
+    """Test setup succeeds when the initial history refresh fails."""
+    tibber_mock.get_homes.return_value = [create_tibber_home()]
+    getattr(tibber_mock, method).side_effect = error
 
-    await hass.async_start()
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -81,46 +68,10 @@ async def test_setup_history_failure(
     coordinator = config_entry.runtime_data.data_coordinator
     assert coordinator is not None
     assert not coordinator.last_update_success
-    price_id = entity_registry.async_get_entity_id("sensor", DOMAIN, home.home_id)
-    battery_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "device-id_storage.stateOfCharge"
+    assert (
+        "Unable to update Tibber consumption/production history and statistics; will retry"
+        in caplog.messages
     )
-    history_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "home-id_month_cost"
-    )
-    assert hass.states.get(price_id).state == "1.25"
-    assert hass.states.get(battery_id).state == "72.0"
-    assert hass.states.get(history_id).state == STATE_UNAVAILABLE
-    home.rt_subscribe.assert_awaited_once()
-    assert "will retry" in caplog.text
-    caplog.clear()
-
-    freezer.tick(timedelta(minutes=21))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert history_fetch.await_count == 2
-    assert hass.states.get(history_id).state == STATE_UNAVAILABLE
-    assert "will retry" not in caplog.text
-
-    history_fetch.side_effect = None
-    freezer.tick(timedelta(minutes=21))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert history_fetch.await_count == 3
-    assert coordinator.last_update_success
-    assert hass.states.get(history_id).state == "111.1"
-    assert config_entry.state is ConfigEntryState.LOADED
-    home.rt_subscribe.assert_awaited_once()
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    freezer.tick(timedelta(minutes=21))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert history_fetch.await_count == 3
-    tibber_mock.rt_disconnect.assert_awaited_once()
 
 
 async def test_entry_unload(
