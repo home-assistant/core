@@ -394,7 +394,9 @@ def _media_result_info(item: Any, plex_server: PlexServer) -> dict[str, Any]:
     duration = info["duration"]
     info["view_offset"] = view_offset
     info["progress_percent"] = (
-        round(view_offset / duration * 100) if view_offset and duration else None
+        round(view_offset / duration * 100)
+        if view_offset is not None and duration
+        else None
     )
     return info
 

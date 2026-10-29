@@ -459,7 +459,8 @@ async def test_on_deck_service(
     assert first["title"] == "Movie 1"
     assert first["media_type"] == "movie"
     assert first["server_id"] == mock_plex_server.machine_identifier
-    assert first["progress_percent"] is None
+    assert first["view_offset"] == 0
+    assert first["progress_percent"] == 0
 
     result = await hass.services.async_call(
         DOMAIN,
