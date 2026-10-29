@@ -55,7 +55,21 @@ async def test_system_health_info_storage_migration(
 async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "lovelace": {
+                "dashboards": {
+                    "lovelace": {
+                        "mode": "yaml",
+                        "filename": "ui-lovelace.yaml",
+                        "title": "Overview",
+                    }
+                }
+            }
+        },
+    )
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.lovelace.dashboard.load_yaml_dict",
@@ -69,7 +83,21 @@ async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
 async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "lovelace": {
+                "dashboards": {
+                    "lovelace": {
+                        "mode": "yaml",
+                        "filename": "ui-lovelace.yaml",
+                        "title": "Overview",
+                    }
+                }
+            }
+        },
+    )
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
     # 2 dashboards: default storage (None) + yaml "lovelace" dashboard

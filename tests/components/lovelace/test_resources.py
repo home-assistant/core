@@ -27,7 +27,9 @@ async def test_yaml_resources(
 ) -> None:
     """Test defining resources in configuration.yaml."""
     assert await async_setup_component(
-        hass, DOMAIN, {"lovelace": {"mode": "yaml", "resources": RESOURCE_EXAMPLES}}
+        hass,
+        DOMAIN,
+        {"lovelace": {"resource_mode": "yaml", "resources": RESOURCE_EXAMPLES}},
     )
 
     client = await hass_ws_client(hass)
@@ -48,7 +50,9 @@ async def test_yaml_resources_backwards(
         "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
-        assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "yaml"}})
+        assert await async_setup_component(
+            hass, DOMAIN, {"lovelace": {"resource_mode": "yaml"}}
+        )
 
     client = await hass_ws_client(hass)
 

@@ -12,11 +12,7 @@ from homeassistant.components import frontend, onboarding, websocket_api
 from homeassistant.const import CONF_FILENAME, CONF_ICON, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    collection,
-    config_validation as cv,
-    issue_registry as ir,
-)
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
@@ -33,7 +29,6 @@ from .const import (
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
-    LOVELACE_CONFIG_FILE,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
@@ -89,13 +84,9 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default={}): probatio.Schema(
             {
-                # Deprecated - Remove in 2026.8
-                probatio.Optional(CONF_MODE, default=MODE_STORAGE): probatio.All(
-                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
-                ),
-                probatio.Optional(CONF_RESOURCE_MODE): probatio.All(
-                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
-                ),
+                probatio.Optional(
+                    CONF_RESOURCE_MODE, default=MODE_STORAGE
+                ): probatio.All(probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])),
                 probatio.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
                     slug_validator=_validate_url_slug,
@@ -120,12 +111,8 @@ class LovelaceData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Lovelace commands."""
-    mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
-
-    # resource_mode controls how resources are loaded (yaml vs storage)
-    # Deprecated - Remove mode fallback in 2026.8
-    resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
+    resource_mode = config[DOMAIN][CONF_RESOURCE_MODE]
 
     resource_collection: (
         resources.ResourceYAMLCollection | resources.ResourceStorageCollection
@@ -175,29 +162,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
-
-    # Deprecated - Remove in 2026.8
-    # For YAML mode, add the default "lovelace" dashboard if not already defined
-    # This migrates the legacy yaml mode to a proper yaml dashboard entry
-    if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
-        translations = await async_get_translations(
-            hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
-        )
-        title = translations.get(
-            "component.onboarding.dashboard.overview.title", "Overview"
-        )
-        yaml_dashboards = {
-            DOMAIN: {
-                CONF_TITLE: title,
-                CONF_ICON: DEFAULT_ICON,
-                CONF_SHOW_IN_SIDEBAR: True,
-                CONF_REQUIRE_ADMIN: False,
-                CONF_MODE: MODE_YAML,
-                CONF_FILENAME: LOVELACE_CONFIG_FILE,
-            },
-            **yaml_dashboards,
-        }
-        _async_create_yaml_mode_repair(hass)
 
     hass.data[LOVELACE_DATA] = LovelaceData(
         resource_mode=resource_mode,
@@ -268,9 +232,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    # Migrate default lovelace panel to dashboard entry (storage mode only)
-    if mode == MODE_STORAGE:
-        await _async_migrate_default_config(hass, dashboards_collection)
+    await _async_migrate_default_config(hass, dashboards_collection)
 
     # Ensure lovelace panel is always registered for backwards compatibility
     _async_ensure_default_panel(hass)
@@ -421,19 +383,3 @@ async def _async_migrate_default_config(
             "core", {**(core_data or {}), "default_panel": DOMAIN}
         )
         _LOGGER.info("Set default panel to 'lovelace' during migration")
-
-
-# Deprecated - Remove in 2026.8
-@callback
-def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
-    """Create repair issue for YAML mode deprecation."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "yaml_mode_deprecated",
-        breaks_in_ha_version="2026.8.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="yaml_mode_deprecated",
-        translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
-    )
