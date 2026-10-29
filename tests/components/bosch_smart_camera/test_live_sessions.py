@@ -582,6 +582,31 @@ async def test_reopen_releases_the_stream_when_preload_ends_mid_open(
     assert entity.stream is None
 
 
+async def test_reopen_keeps_the_stream_of_a_viewer_when_preload_ends(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a viewer keeps the stream when preload is switched off mid-open."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    entity = _entity(hass)
+    stream = await _watch(hass, viewer=True, preload=True)
+    source = stream.source
+    real = mock_live.open.side_effect
+
+    async def _open_then_switch_off(*args: Any, **kwargs: Any) -> Any:
+        stream.dynamic_stream_settings = replace(
+            stream.dynamic_stream_settings, preload_stream=False
+        )
+        return await real(*args, **kwargs)
+
+    mock_live.open.side_effect = _open_then_switch_off
+    mock_live.proxy_died[CAMERA_ID]()
+    await hass.async_block_till_done()
+
+    assert entity.stream is stream
+    assert stream.source != source
+
+
 async def test_unload_stops_the_reopen_retry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
 ) -> None:
