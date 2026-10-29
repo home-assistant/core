@@ -118,11 +118,11 @@ class VeluxCover(VeluxEntity, CoverEntity):
             case RollerShutter():
                 self._attr_device_class = CoverDeviceClass.SHUTTER
 
-    # Remove in 2027.6.0 when the deprecated speeds are removed
     @property
     @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes without the deprecated speeds."""
+        # Remove in 2027.6.0 when the deprecated speeds are removed
         return {
             CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY)
         }
