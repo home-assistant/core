@@ -1,8 +1,7 @@
 """Platform for Roth Touchline floor heating controller."""
 
+from datetime import timedelta
 from typing import Any, NamedTuple, override
-
-from pytouchline_extended import PyTouchline
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -12,9 +11,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,6 +42,8 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
+SCAN_INTERVAL = timedelta(minutes=1)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -50,20 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Touchline devices from a config entry."""
-    host = entry.data[CONF_HOST]
-
-    devices = []
-    for device_id in range(entry.runtime_data.number_of_devices):
-        device = PyTouchline(id=device_id, url=host)
-        try:
-            await hass.async_add_executor_job(device.update)
-        except (OSError, ConnectionError, TimeoutError) as err:
-            raise ConfigEntryNotReady(
-                f"Error while connecting to Touchline controller at {host}"
-            ) from err
-        devices.append(Touchline(device))
-
-    async_add_entities(devices)
+    async_add_entities(Touchline(device) for device in entry.runtime_data.devices)
 
 
 class Touchline(ClimateEntity):
@@ -111,8 +99,18 @@ class Touchline(ClimateEntity):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset.mode)
-        self.unit.set_week_program(preset.program)
+        try:
+            if not (
+                self.unit.set_operation_mode(preset.mode)
+                and self.unit.set_week_program(preset.program)
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="error_set_preset"
+                )
+        except (OSError, ConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="error_set_preset"
+            ) from err
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -122,6 +120,15 @@ class Touchline(ClimateEntity):
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
+        try:
             self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_target_temperature(self._attr_native_target_temperature)
+            if not self.unit.set_target_temperature(
+                self._attr_native_target_temperature
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="error_set_temperature"
+                )
+        except (OSError, ConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="error_set_temperature"
+            ) from err
