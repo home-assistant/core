@@ -96,7 +96,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Not tied to the entry, the panel explains a setup that failed. It is
     # reached from the Settings dashboard, so it never shows in the sidebar.
     async_register_built_in_panel(
-        hass, DOMAIN, require_admin=True, show_in_sidebar=False
+        hass,
+        DOMAIN,
+        DOMAIN,
+        "mdi:store",
+        require_admin=True,
+        show_in_sidebar=False,
     )
 
     # The custom integration lived at /hacs, where bookmarks still point
