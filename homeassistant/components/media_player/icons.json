@@ -98,7 +98,7 @@
       "service": "mdi:stop"
     },
     "navigate": {
-      "service": "mdi:gamepad-up"
+      "service": "mdi:remote"
     },
     "play_media": {
       "service": "mdi:play"
