@@ -15,7 +15,7 @@
         "data_description": {
           "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
         },
-        "title": "Reconfigure SilverCrest Infrared device"
+        "title": "Reconfigure SilverCrest infrared device"
       },
       "user": {
         "data": {
