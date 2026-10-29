@@ -10,6 +10,7 @@ import probatio
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -155,8 +156,27 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
 
+                entry = (
+                    self._get_reconfigure_entry()
+                    if self.source == SOURCE_RECONFIGURE
+                    else None
+                )
+                relinking = False
+                if entry and entry.state in (
+                    ConfigEntryState.LOADED,
+                    ConfigEntryState.SETUP_RETRY,
+                ):
+                    current = create_modbus_params(entry.data)
+                    new = create_modbus_params(user_input)
+                    if new.endpoint == current.endpoint and new != current:
+                        relinking = await self.hass.config_entries.async_unload(
+                            entry.entry_id
+                        )
+
                 if not await self._async_can_connect(user_input):
                     errors["base"] = "cannot_connect"
+                    if relinking:
+                        await self.hass.config_entries.async_setup(entry.entry_id)
                 else:
                     # Another flow can create a matching entry while this one
                     # awaits the connection probe above.
@@ -169,14 +189,14 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     if self.source == SOURCE_RECONFIGURE:
                         return self.async_update_reload_and_abort(
-                            self._get_reconfigure_entry(), data=user_input
+                            entry, data=user_input
                         )
                     return self.async_create_entry(title="aerosmart", data=user_input)
 
         return self.async_show_form(
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
-                schema, suggested_values or user_input
+                schema, user_input or suggested_values
             ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
