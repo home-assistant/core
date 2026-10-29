@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import MagicMock, Mock, patch
 
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from RFXtrx import RFXtrxTransportError
 
 from homeassistant import config_entries
@@ -54,6 +54,18 @@ async def start_add_device_flow(
     return await hass.config_entries.subentries.async_init(
         (entry.entry_id, "device"),
         context={"source": config_entries.SOURCE_USER},
+    )
+
+
+async def start_reconfigure_flow(
+    hass: HomeAssistant, entry: MockConfigEntry, subentry_id: str, next_step_id: str
+) -> config_entries.SubentryFlowResult:
+    """Start the reconfigure subentry flow and pick a menu option."""
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+    return await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"next_step_id": next_step_id}
     )
 
 
@@ -500,8 +512,14 @@ async def test_options_replace_device(
     device_registry.async_update_device(device_entry.id, name_by_user="My custom name")
 
     # Point the same configured device at a different physical device
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
-    assert result["step_id"] == "reconfigure"
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "replace_device"
+    )
+    assert result["step_id"] == "replace_device"
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, "event_code")
+        == "0b1100cd0213c7f230010f71"
+    )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -589,8 +607,17 @@ async def test_options_reconfigure_invalid_and_duplicate_event_code(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
+    # Reconfigure A without an event code
+    result = await start_reconfigure_flow(
+        hass, entry, subentry_a.subentry_id, "replace_device"
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["event_code"] == "invalid_event_code"
+
     # Reconfigure A with an invalid event code
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry_a.subentry_id)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={"event_code": "invalid"},
@@ -680,11 +707,11 @@ async def test_options_reconfigure_ignores_broken_subentries(
 
     # Reconfiguring it exercises _get_replace_devices skipping the same
     # "other" and broken subentries.
-    result = await entry.start_subentry_reconfigure_flow(
-        hass, device_subentry.subentry_id
+    result = await start_reconfigure_flow(
+        hass, entry, device_subentry.subentry_id, "replace_device"
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "replace_device"
 
 
 async def test_options_replace_device_with_existing(
@@ -751,8 +778,10 @@ async def test_options_replace_device_with_existing(
     )
 
     # Reconfigure A, picking B as the device to take over
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry_a.subentry_id)
-    assert result["step_id"] == "reconfigure"
+    result = await start_reconfigure_flow(
+        hass, entry, subentry_a.subentry_id, "replace_device"
+    )
+    assert result["step_id"] == "replace_device"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -844,8 +873,8 @@ async def test_options_replace_device_coalesces_reload(
         "homeassistant.components.rfxtrx.async_setup_entry",
         wraps=rfxtrx.async_setup_entry,
     ) as mock_setup_entry:
-        result = await entry.start_subentry_reconfigure_flow(
-            hass, subentry_a.subentry_id
+        result = await start_reconfigure_flow(
+            hass, entry, subentry_a.subentry_id, "replace_device"
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
@@ -1010,7 +1039,9 @@ async def test_options_reconfigure_race_conflict_returns_to_event_code(
     await hass.async_block_till_done()
 
     subentry = next(iter(entry.subentries.values()))
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "replace_device"
+    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={"event_code": "0b1100cd0213c7f330010f71"},
@@ -1023,7 +1054,7 @@ async def test_options_reconfigure_race_conflict_returns_to_event_code(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "replace_device"
     assert result["errors"] == {"event_code": "already_configured_device"}
 
     result = await hass.config_entries.subentries.async_configure(
@@ -1230,14 +1261,8 @@ async def test_options_add_and_configure_device(
 
     assert device_entries[0].id
 
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={"event_code": "0913000022670e013970"},
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "reconfigure_options"
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1300,12 +1325,8 @@ async def test_options_reconfigure_keeps_matching_event_codes(
     await hass.async_block_till_done()
 
     subentry = next(iter(entry.subentries.values()))
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={"event_code": "08200300a109000070"},
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "reconfigure_options"
     )
     assert result["step_id"] == "device_options"
 
@@ -1371,14 +1392,8 @@ async def test_options_configure_rfy_cover_device(
 
     assert device_entries[0].id
 
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={"event_code": "0C1a0000010203010000000000"},
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "reconfigure_options"
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1399,3 +1414,59 @@ async def test_options_configure_rfy_cover_device(
     subentry = entry.subentries[subentry.subentry_id]
     assert subentry.data["event_code"] == ["0C1a0000010203010000000000"]
     assert subentry.data["venetian_blind_mode"] == "EU"
+
+
+async def _setup_entry_with_off_delay(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry with a single device that has an off delay."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": ["0b1100cd0213c7f230010f71"], "off_delay": 5},
+                "subentry_type": "device",
+                "title": "AC 213c7f2:48",
+                "unique_id": "11_0_213c7f2:48",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_options_reconfigure_options_uses_current_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test configuring options starts from the device's current options."""
+    entry = await _setup_entry_with_off_delay(hass)
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "reconfigure_options"
+    )
+    assert result["step_id"] == "device_options"
+    assert get_schema_suggested_value(result["data_schema"].schema, "off_delay") == 5
+
+
+async def test_options_replace_device_resets_options(hass: HomeAssistant) -> None:
+    """Test replacing with a new event code doesn't carry over old options."""
+    entry = await _setup_entry_with_off_delay(hass)
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "replace_device"
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"event_code": "0b1100cd0213c7f330010f71"}
+    )
+    assert result["step_id"] == "device_options"
+    assert get_schema_suggested_value(result["data_schema"].schema, "off_delay") is None
