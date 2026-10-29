@@ -758,7 +758,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.11
 
 # homeassistant.components.bosch_smart_camera
-bosch-shc-camera-client==0.6.2
+bosch-shc-camera-client==0.7.0
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.6.25
@@ -2454,7 +2454,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.5.2
+pylamarzocco==2.5.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2550,7 +2550,7 @@ pynuki==1.6.3
 pynws[retry]==1.8.2
 
 # homeassistant.components.nx584
-pynx584==0.8.2
+pynx584==0.9.0
 
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
@@ -2855,7 +2855,7 @@ python-mpd2==3.1.1
 python-mystrom==2.5.0
 
 # homeassistant.components.open_router
-python-open-router==0.4.0
+python-open-router==0.5.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
@@ -3213,7 +3213,7 @@ snapcast==2.3.8
 soco==0.31.5
 
 # homeassistant.components.sofar
-sofar-modbus==0.25.0
+sofar-modbus==0.25.1
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.0
@@ -3392,7 +3392,7 @@ toonapi==0.3.0
 total-connect-client==2026.9
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.13
+tplink-omada-client==1.5.14
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3556,7 +3556,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.4.0
+wiim==0.4.1
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -3646,7 +3646,7 @@ zeversolar==0.3.2
 zha-quirks==2.4.0
 
 # homeassistant.components.zha
-zha==2.4.1
+zha==2.4.2
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21
