@@ -5,7 +5,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.components import stt
+from homeassistant.components import stt, wake_word
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session
 from homeassistant.helpers.typing import ConfigType
@@ -105,6 +105,7 @@ async def async_pipeline_from_audio_stream(
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
     wake_word_phrase: str | None = None,
+    wake_word_detection: wake_word.DetectionResult | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | dict[str, Any] | None = None,
@@ -131,6 +132,7 @@ async def async_pipeline_from_audio_stream(
             stt_metadata=stt_metadata,
             stt_stream=stt_stream,
             wake_word_phrase=wake_word_phrase,
+            wake_word_detection=wake_word_detection,
             conversation_extra_system_prompt=conversation_extra_system_prompt,
             run=PipelineRun(
                 hass,

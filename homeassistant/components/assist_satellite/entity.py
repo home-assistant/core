@@ -13,7 +13,7 @@ from hassil import Intents, recognize
 from hassil.expression import Expression, Group, ListReference
 from hassil.intents import WildcardSlotList
 
-from homeassistant.components import conversation, media_source, stt, tts
+from homeassistant.components import conversation, media_source, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -447,6 +447,7 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
         *,
         context: Context | None = None,
+        wake_word_detection: wake_word.DetectionResult | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
@@ -527,6 +528,7 @@ class AssistSatelliteEntity(entity.Entity):
                         satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
+                        wake_word_detection=wake_word_detection,
                         audio_settings=AudioSettings(
                             silence_seconds=self._resolve_vad_sensitivity()
                         ),
