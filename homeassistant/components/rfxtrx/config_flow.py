@@ -105,7 +105,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize rfxtrx device subentry flow."""
         self._event_code: str | None = None
         self._device_object: rfxtrxmod.RFXtrxEvent | None = None
-        self._current_data: Mapping[str, Any] = {}
+        self._options_subentry_id: str | None = None
         self._replace_subentry_id: str | None = None
 
     async def async_step_user(
@@ -145,7 +145,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
         self._event_code = subentry.data[CONF_EVENT_CODE][0]
         self._device_object = get_rfx_object(self._event_code)
-        self._current_data = subentry.data
+        self._options_subentry_id = subentry.subentry_id
         return await self.async_step_device_options()
 
     async def async_step_replace_device(
@@ -170,10 +170,12 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             replace_subentry_id = user_input.get(CONF_REPLACE_DEVICE)
-            current_data: Mapping[str, Any] = {}
             if replace_subentry_id:
-                current_data = self._get_entry().subentries[replace_subentry_id].data
-                event_code = current_data[CONF_EVENT_CODE][0]
+                event_code = (
+                    self._get_entry()
+                    .subentries[replace_subentry_id]
+                    .data[CONF_EVENT_CODE][0]
+                )
             else:
                 event_code = user_input.get(CONF_EVENT_CODE, "")
 
@@ -191,7 +193,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 self._event_code = event_code
                 self._device_object = device_object
-                self._current_data = current_data
+                self._options_subentry_id = replace_subentry_id
                 self._replace_subentry_id = replace_subentry_id
                 return await self.async_step_device_options()
 
@@ -219,7 +221,9 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         assert self._device_object
         assert self._event_code
-        current_data = self._current_data
+        current_data: Mapping[str, Any] = {}
+        if self._options_subentry_id:
+            current_data = self._get_entry().subentries[self._options_subentry_id].data
 
         if user_input is not None:
             try:

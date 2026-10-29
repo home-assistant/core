@@ -1,6 +1,7 @@
 """Test the Rfxtrx config flow."""
 
 import asyncio
+from types import MappingProxyType
 from unittest.mock import MagicMock, Mock, patch
 
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
@@ -1470,3 +1471,57 @@ async def test_options_replace_device_resets_options(hass: HomeAssistant) -> Non
     )
     assert result["step_id"] == "device_options"
     assert get_schema_suggested_value(result["data_schema"].schema, "off_delay") is None
+
+
+async def test_options_reconfigure_keeps_codes_added_while_open(
+    hass: HomeAssistant,
+) -> None:
+    """Test an event code recorded while the options form is open is kept."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": ["08200300a109000070"]},
+                "subentry_type": "device",
+                "title": "KD101 Smoke Detector a10900:32",
+                "unique_id": "20_3_a10900:32",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(entry.subentries.values()))
+    result = await start_reconfigure_flow(
+        hass, entry, subentry.subentry_id, "reconfigure_options"
+    )
+    assert result["step_id"] == "device_options"
+
+    # A packet revealing another entity records its code on the subentry.
+    hass.config_entries.async_update_subentry(
+        entry,
+        subentry,
+        data=MappingProxyType(
+            {"event_code": ["08200300a109000070", "08200300a109000670"]}
+        ),
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"off_delay": 5}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert entry.subentries[subentry.subentry_id].data["event_code"] == [
+        "08200300a109000070",
+        "08200300a109000670",
+    ]
