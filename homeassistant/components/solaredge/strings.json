@@ -176,8 +176,17 @@
     }
   },
   "exceptions": {
+    "api_request_failed": {
+      "message": "Error requesting {service} data: {status}"
+    },
     "cannot_retrieve_details": {
       "message": "Could not retrieve details from SolarEdge API"
+    },
+    "data_unavailable": {
+      "message": "{service} data not available from API"
+    },
+    "missing_data": {
+      "message": "Missing {service} data, skipping update"
     },
     "missing_details": {
       "message": "Missing details data in SolarEdge response"
