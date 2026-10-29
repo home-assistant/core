@@ -3,7 +3,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
@@ -66,6 +66,8 @@ class _ResolveHostExecutor:
     def __init__(self) -> None:
         """Initialize the holder."""
         self._executor: ThreadPoolExecutor | None = None
+        self._lookup: Future[tuple[str, list[str], list[str]]] | None = None
+        self._shutdown_registered = False
 
     def get(self) -> ThreadPoolExecutor:
         """Return a live pool, rebuilding it if it was shut down."""
@@ -76,8 +78,42 @@ class _ResolveHostExecutor:
             )
         return executor
 
+    def submit_lookup(
+        self, hass: HomeAssistant, address: str
+    ) -> Future[tuple[str, list[str], list[str]]] | None:
+        """Submit a reverse-DNS lookup, unless one is already running.
+
+        A lookup that timed out cannot be cancelled, so queueing more work
+        behind a stalled resolver only grows the pool queue. Skipping the
+        lookup falls back to the bare IP address, same as a timeout.
+        """
+        if self._lookup is not None and not self._lookup.done():
+            return None
+        self.register_shutdown(hass)
+        self._lookup = self.get().submit(gethostbyaddr, address)
+        return self._lookup
+
+    def register_shutdown(self, hass: HomeAssistant) -> None:
+        """Register the stop listener the first time the pool is used.
+
+        process_wrong_login can create the pool without setup_bans having
+        run, since log_invalid_auth also works when banning is disabled,
+        so the listener cannot only be registered from setup_bans.
+        """
+        if self._shutdown_registered:
+            return
+        self._shutdown_registered = True
+
+        @callback
+        def _shutdown_on_stop(_event: Any) -> None:
+            """Release the dedicated reverse-DNS thread on stop."""
+            self.shutdown()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_on_stop)
+
     def shutdown(self) -> None:
         """Release the thread."""
+        self._shutdown_registered = False
         if self._executor is not None:
             self._executor.shutdown(wait=False, cancel_futures=True)
             self._executor = None
@@ -98,12 +134,6 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
-
-    def shutdown_executor(_event: Any) -> None:
-        """Release the dedicated reverse-DNS thread on stop."""
-        _resolve_host_executor.shutdown()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_executor)
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -169,13 +199,12 @@ async def process_wrong_login(request: Request) -> None:
 
     # The lookup only enriches the log message, so it must never delay the
     # auth response. On timeout, fall back to the bare IP address.
-    with suppress(herror, asyncio.TimeoutError):
-        remote_host, _, _ = await asyncio.wait_for(
-            hass.loop.run_in_executor(
-                _resolve_host_executor.get(), gethostbyaddr, request.remote
-            ),
-            timeout=RESOLVE_HOST_TIMEOUT,
-        )
+    lookup = _resolve_host_executor.submit_lookup(hass, request.remote)
+    if lookup is not None:
+        with suppress(herror, asyncio.TimeoutError):
+            remote_host, _, _ = await asyncio.wait_for(
+                asyncio.wrap_future(lookup), timeout=RESOLVE_HOST_TIMEOUT
+            )
 
     base_msg = (
         "Login attempt or request with invalid authentication from"
