@@ -170,6 +170,20 @@ async def test_media_player_image_data_url(
     assert resp.headers["Content-Type"] == "image/jpeg"
     assert await resp.read() == jpeg_bytes
 
+    # Update with thumbnail cleared and verify entity_picture is removed
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Track Without Artwork",
+            thumbnail=None,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("entity_picture") is None
+
 
 async def test_media_player_image_http_url(
     hass: HomeAssistant,
