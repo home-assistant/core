@@ -1,7 +1,6 @@
 """Services for the Forecast.Solar integration."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 import probatio
 
@@ -19,9 +18,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from .coordinator import ForecastSolarConfigEntry
+from .coordinator import ForecastSolarConfigEntry, energy_by_period_start
 
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_START = "start"
@@ -94,7 +91,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         estimate = entry.runtime_data.data
 
-        wh_period: dict[datetime, int] = dict(estimate.wh_period)
+        wh_period = energy_by_period_start(estimate.wh_period)
         watts: dict[datetime, float]
 
         if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:

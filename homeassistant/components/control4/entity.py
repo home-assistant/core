@@ -1,25 +1,23 @@
 """The Control4 integration."""
 
-from typing import Any, override
+from typing import override
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import Control4RuntimeData
 from .const import DOMAIN
+from .coordinator import Control4DataUpdateCoordinator
 
 
-class Control4Entity(CoordinatorEntity[Any]):
+class Control4Entity(CoordinatorEntity[Control4DataUpdateCoordinator]):
     """Base entity for Control4."""
 
     def __init__(
         self,
         runtime_data: Control4RuntimeData,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: Control4DataUpdateCoordinator,
         name: str | None,
         idx: int,
         device_name: str | None,

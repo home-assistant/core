@@ -6,6 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.unifi_direct.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.setup import async_setup_component
@@ -15,6 +16,7 @@ async def test_device_tracker_entities_created(
     hass: HomeAssistant,
     mock_config_entry,
     mock_unifiap,
+    device_registry: dr.DeviceRegistry,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test that device tracker entities are created from coordinator data."""
@@ -38,6 +40,19 @@ async def test_device_tracker_entities_created(
     assert any(
         entity_id.startswith("device_tracker.my_laptop") for entity_id in entity_ids
     )
+
+    assert {entry.original_name for entry in entries} == {None}
+    devices = {
+        entry.unique_id: device_registry.async_get(entry.device_id) for entry in entries
+    }
+    assert {mac: device.name for mac, device in devices.items()} == {
+        "AA:BB:CC:DD:EE:FF": "my-phone",
+        "11:22:33:44:55:66": "my-laptop",
+    }
+    assert {mac: device.connections for mac, device in devices.items()} == {
+        "AA:BB:CC:DD:EE:FF": {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")},
+        "11:22:33:44:55:66": {(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")},
+    }
 
 
 async def test_setup_scanner_legacy_platform_imports_config_entry(
