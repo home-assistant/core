@@ -34,6 +34,7 @@ from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
     DOMAIN,
     MANUFACTURER,
+    NETATMO_CREATE_BOILER_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
@@ -548,16 +549,20 @@ class NetatmoDataHandler:
 
                 for module in room.modules.values():
                     if module.device_category is NetatmoDeviceCategory.climate:
-                        async_dispatcher_send(
-                            self.hass,
+                        for signal in (
                             NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
-                            NetatmoDevice(
-                                self,
-                                module,
-                                room.entity_id,
-                                signal_home,
-                            ),
-                        )
+                            NETATMO_CREATE_BOILER_BINARY_SENSOR,
+                        ):
+                            async_dispatcher_send(
+                                self.hass,
+                                signal,
+                                NetatmoDevice(
+                                    self,
+                                    module,
+                                    room.entity_id,
+                                    signal_home,
+                                ),
+                            )
 
                 if "humidity" in room.features:
                     async_dispatcher_send(

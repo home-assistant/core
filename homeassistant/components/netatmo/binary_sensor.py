@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    CONF_URL_ENERGY,
     CONF_URL_SECURITY,
     DOORTAG_CATEGORY_DOOR,
     DOORTAG_CATEGORY_FURNITURE,
@@ -33,6 +34,7 @@ from .const import (
     DOORTAG_STATUS_OPEN,
     DOORTAG_STATUS_UNDEFINED,
     DOORTAG_STATUS_WEAK_SIGNAL,
+    NETATMO_CREATE_BOILER_BINARY_SENSOR,
     NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
@@ -137,8 +139,19 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
     ),
 ]
 
+NETATMO_BOILER_BINARY_SENSOR_DESCRIPTIONS: Final[
+    list[NetatmoBinarySensorEntityDescription]
+] = [
+    NetatmoBinarySensorEntityDescription(
+        key="boiler_status",
+        translation_key="boiler_status",
+        device_class=BinarySensorDeviceClass.RUNNING,
+    ),
+]
+
 DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.climate: CONF_URL_ENERGY,
 }
 
 DEVICE_CATEGORY_WEATHER_BINARY_SENSORS: Final[
@@ -160,8 +173,15 @@ DEVICE_CATEGORY_OPENING_BINARY_SENSORS: Final[
     NetatmoDeviceCategory.opening: NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS,
 }
 
+DEVICE_CATEGORY_BOILER_BINARY_SENSORS: Final[
+    dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
+] = {
+    NetatmoDeviceCategory.climate: NETATMO_BOILER_BINARY_SENSOR_DESCRIPTIONS,
+}
+
 DEVICE_CATEGORY_BINARY_PUBLISHERS: Final[list[NetatmoDeviceCategory]] = [
     NetatmoDeviceCategory.opening,
+    NetatmoDeviceCategory.climate,
 ]
 
 
@@ -178,6 +198,7 @@ async def async_setup_entry(
             NetatmoWeatherBinarySensor
             | NetatmoOpeningBinarySensor
             | NetatmoConnectivityBinarySensor
+            | NetatmoBinarySensor
         ],
         descriptions: dict[
             NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]
@@ -197,6 +218,7 @@ async def async_setup_entry(
             NetatmoWeatherBinarySensor
             | NetatmoOpeningBinarySensor
             | NetatmoConnectivityBinarySensor
+            | NetatmoBinarySensor
         ] = []
 
         # Create binary sensors for module
@@ -254,6 +276,18 @@ async def async_setup_entry(
                 _create_binary_sensor_entity,
                 NetatmoConnectivityBinarySensor,
                 DEVICE_CATEGORY_CONNECTIVITY_BINARY_SENSORS,
+            ),
+        )
+    )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NETATMO_CREATE_BOILER_BINARY_SENSOR,
+            partial(
+                _create_binary_sensor_entity,
+                NetatmoBinarySensor,
+                DEVICE_CATEGORY_BOILER_BINARY_SENSORS,
             ),
         )
     )

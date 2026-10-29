@@ -47,6 +47,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "boiler_status": {
+        "name": "Boiler"
+      },
       "furniture": {
         "name": "Furniture"
       },
