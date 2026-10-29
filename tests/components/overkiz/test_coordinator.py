@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import ExecutionState, OverkizState
+from pyoverkiz.enums import ExecutionState, OverkizState, Server
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
@@ -28,12 +28,14 @@ from homeassistant.components.overkiz.const import (
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
     UPDATE_INTERVAL_EXECUTION,
+    UPDATE_INTERVAL_SAUTER_SMART_CONTROL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import DEFAULT_SETUP_FIXTURE
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
     async_deliver_events,
@@ -44,6 +46,7 @@ from .helpers import (
     gateway_alive_event,
     gateway_down_event,
 )
+from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -492,3 +495,36 @@ async def test_gateway_down_leaves_other_gateways_alone(
     )
 
     assert hass.states.get(POOL_PUMP.entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_sauter_smart_control_polls_before_session_expires(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Sauter Smart Control is polled before its listening session expires."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": Server.SAUTER_SMART_CONTROL,
+        },
+    )
+    entry.add_to_hass(hass)
+    mock_client.set_setup_fixture(DEFAULT_SETUP_FIXTURE)
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL_SAUTER_SMART_CONTROL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
