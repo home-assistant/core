@@ -63,9 +63,6 @@
       }
     },
     "number": {
-      "fan_speed": {
-        "default": "mdi:wind-power-outline"
-      },
       "lamp_brightness": {
         "default": "mdi:alarm-light-outline"
       },
