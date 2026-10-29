@@ -4,6 +4,7 @@ import struct
 from typing import Any, override
 
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
@@ -172,6 +173,8 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+            await self.async_handle_set_operation_mode(operation_mode)
         target_temperature = (
             float(kwargs[ATTR_TEMPERATURE]) - self._target_temp_offset
         ) / self._target_temp_scale

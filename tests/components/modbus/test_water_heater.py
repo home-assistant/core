@@ -41,6 +41,7 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
+    STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
@@ -65,6 +66,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
@@ -531,6 +533,72 @@ async def test_set_temperature(
         blocking=True,
     )
     assert getattr(mock_modbus_ha, write_call).call_args_list == [expected_call]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_WATER_HEATERS: [
+                {
+                    **BASE_CONFIG,
+                    CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                    CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                },
+            ]
+        },
+    ],
+)
+async def test_set_temperature_with_operation_mode(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test setting the target temperature together with the operation mode."""
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 50,
+            ATTR_OPERATION_MODE: STATE_ECO,
+        },
+        blocking=True,
+    )
+    assert mock_modbus_ha.write_register.call_args_list == [
+        mock.call(ONOFF_ADDRESS, device_id=10, value=1),
+        mock.call(MODE_ADDRESS, device_id=10, value=9),
+        mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=50),
+    ]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_WATER_HEATERS: [
+                {
+                    **BASE_CONFIG,
+                    CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                },
+            ]
+        },
+    ],
+)
+async def test_set_temperature_with_invalid_operation_mode(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test an unsupported operation mode is rejected before anything is written."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 50,
+                ATTR_OPERATION_MODE: STATE_GAS,
+            },
+            blocking=True,
+        )
+    mock_modbus_ha.write_register.assert_not_called()
 
 
 @pytest.mark.parametrize(
