@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, AsyncIterable
 
 import pytest
 
-from homeassistant.components import assist_pipeline, stt, wake_word
+from homeassistant.components import assist_pipeline, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_pipeline.const import BYTES_PER_CHUNK, MS_PER_CHUNK
 from homeassistant.core import Context, HomeAssistant
@@ -22,7 +22,10 @@ async def _audio_stream(*chunks: bytes) -> AsyncGenerator[bytes]:
 
 
 async def _async_run_pipeline(
-    hass: HomeAssistant, audio_stream: AsyncIterable[bytes], timestamp: int
+    hass: HomeAssistant,
+    audio_stream: AsyncIterable[bytes],
+    timestamp: int,
+    end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
 ) -> list[PipelineEvent]:
     events: list[PipelineEvent] = []
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -45,7 +48,7 @@ async def _async_run_pipeline(
             timestamp=timestamp,
         ),
         audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        end_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=end_stage,
     )
     return events
 
@@ -81,14 +84,23 @@ async def test_wake_word_audio(
     )
 
 
+@pytest.mark.parametrize(
+    "end_stage",
+    [
+        pytest.param(assist_pipeline.PipelineStage.STT, id="end_at_stt"),
+        pytest.param(assist_pipeline.PipelineStage.TTS, id="end_at_tts"),
+    ],
+)
 @pytest.mark.usefixtures("init_components", "mock_stt_provider_entity")
-async def test_wake_word_audio_duplicate(hass: HomeAssistant) -> None:
+async def test_wake_word_audio_duplicate(
+    hass: HomeAssistant, end_stage: assist_pipeline.PipelineStage
+) -> None:
     """Test a wake word another satellite just woke up with is rejected."""
     first_events = await _async_run_pipeline(
         hass, _audio_stream(WAKE, COMMAND), MS_PER_CHUNK
     )
     second_events = await _async_run_pipeline(
-        hass, _audio_stream(WAKE, COMMAND), MS_PER_CHUNK
+        hass, _audio_stream(WAKE, COMMAND), MS_PER_CHUNK, end_stage
     )
 
     assert first_events[1].type is PipelineEventType.WAKE_WORD_END
@@ -104,3 +116,5 @@ async def test_wake_word_audio_duplicate(hass: HomeAssistant) -> None:
             "timestamp": MS_PER_CHUNK,
         }
     }
+    # The text-to-speech stream prepared for the rejected run is removed
+    assert not hass.data[tts.DATA_TTS_MANAGER].token_to_stream

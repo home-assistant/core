@@ -1157,6 +1157,7 @@ class _DefaultPipelineProcessor:
 
             if request.wake_word_detection is not None:
                 if not self._accept_wake_word_detection(request.wake_word_detection):
+                    self.cleanup()
                     return
             elif request.wake_word_phrase is not None:
                 self.host.accept_wake_word(request.wake_word_phrase)
