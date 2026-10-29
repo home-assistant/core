@@ -97,6 +97,7 @@ EVENT_STORE_RELOADED = "store_reloaded"
 EVENT_ADDON = "addon"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+UPDATE_KEY_NETWORK = "network"
 STARTUP_COMPLETE = "complete"
 
 MAIN_COORDINATOR: HassKey[HassioMainDataUpdateCoordinator] = HassKey(
