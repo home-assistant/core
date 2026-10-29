@@ -1939,17 +1939,66 @@ async def test_library_errors_become_home_assistant_errors(
         )
 
 
-async def test_failed_refresh_marks_light_unavailable(hass: HomeAssistant) -> None:
-    """Test coordinator availability remains visible on the light entity."""
+@pytest.mark.parametrize(
+    ("missed_polls", "expected_state"),
+    [
+        pytest.param(1, STATE_ON, id="one_missed_poll"),
+        pytest.param(2, STATE_ON, id="two_missed_polls"),
+        pytest.param(3, STATE_UNAVAILABLE, id="three_missed_polls"),
+    ],
+)
+async def test_light_is_unavailable_after_three_missed_polls(
+    hass: HomeAssistant, missed_polls: int, expected_state: str
+) -> None:
+    """Test a light keeps its last state until it misses three polls in a row."""
     device = create_mock_light()
+    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.side_effect = LifxError("offline")
 
+    for _ in range(missed_polls):
+        await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+
+
+async def test_answered_poll_resets_missed_polls(hass: HomeAssistant) -> None:
+    """Test the missed polls are counted again after the light answers."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
     await async_trigger_update(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_ON
+
+
+async def test_light_recovers_after_being_unavailable(hass: HomeAssistant) -> None:
+    """Test a light is available again as soon as it answers a poll."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.side_effect = LifxError("offline")
+    for _ in range(3):
+        await async_trigger_update(hass)
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
