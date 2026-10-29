@@ -1,14 +1,12 @@
 """Test for the SmartThings climate platform."""
 
-import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, call
 
 from pysmartthings import (
     Attribute,
     Capability,
     Command,
-    DeviceEvent,
     SmartThingsConnectionError,
     Status,
 )
@@ -69,38 +67,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-
-def report_switch_on_after_command(hass: HomeAssistant, devices: AsyncMock) -> None:
-    """Let the mocked device report that it is on after a switch-on command."""
-
-    def dispatch_switch_on(device_id: str) -> None:
-        event = DeviceEvent(
-            "abc",
-            "abc",
-            "abc",
-            device_id,
-            MAIN,
-            Capability.SWITCH,
-            Attribute.SWITCH,
-            "on",
-            None,
-        )
-        for listener in devices.add_device_capability_event_listener.call_args_list:
-            if listener[0][0] == device_id and listener[0][2] == Capability.SWITCH:
-                listener[0][3](event)
-
-    async def execute_device_command(
-        device_id: str,
-        capability: Capability,
-        command: Command,
-        component: str,
-        **kwargs: Any,
-    ) -> None:
-        if command == Command.ON:
-            hass.loop.call_soon(dispatch_switch_on, device_id)
-
-    devices.execute_device_command.side_effect = execute_device_command
 
 
 async def test_all_entities(
@@ -217,7 +183,6 @@ async def test_ac_set_hvac_mode_turns_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting AC HVAC mode turns on the device if it is off."""
-    report_switch_on_after_command(hass, devices)
 
     await setup_integration(hass, mock_config_entry)
 
@@ -248,94 +213,6 @@ async def test_ac_set_hvac_mode_turns_on(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_ac_set_hvac_mode_waits_for_switch_on(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the mode is sent only after the AC reports that it is on."""
-    switch_on_sent = asyncio.Event()
-    devices.execute_device_command.side_effect = lambda *args, **kwargs: (
-        switch_on_sent.set()
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    task = asyncio.create_task(
-        hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {
-                ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-            },
-            blocking=True,
-        )
-    )
-    await switch_on_sent.wait()
-    await asyncio.sleep(0)
-    assert devices.execute_device_command.mock_calls == [
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
-        ),
-    ]
-
-    await trigger_update(
-        hass,
-        devices,
-        "96a5ef74-5832-a84b-f1f7-ca799957065d",
-        Capability.SWITCH,
-        Attribute.SWITCH,
-        "on",
-    )
-    await task
-    assert devices.execute_device_command.mock_calls == [
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.AIR_CONDITIONER_MODE,
-            Command.SET_AIR_CONDITIONER_MODE,
-            MAIN,
-            argument="heat",
-        ),
-    ]
-
-
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_ac_set_hvac_mode_switch_on_timeout(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the mode is still sent when the AC does not report that it is on."""
-    await setup_integration(hass, mock_config_entry)
-
-    with patch("homeassistant.components.smartthings.climate.SWITCH_ON_TIMEOUT", 0):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {
-                ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-            },
-            blocking=True,
-        )
-    assert devices.execute_device_command.mock_calls == [
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.AIR_CONDITIONER_MODE,
-            Command.SET_AIR_CONDITIONER_MODE,
-            MAIN,
-            argument="heat",
-        ),
-    ]
-
-
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_switch_on_fails(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -361,118 +238,6 @@ async def test_ac_set_hvac_mode_switch_on_fails(
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
         ),
-    ]
-
-
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-@pytest.mark.parametrize(
-    ("service", "data", "command"),
-    [
-        (
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: 20},
-            call(
-                "96a5ef74-5832-a84b-f1f7-ca799957065d",
-                Capability.THERMOSTAT_COOLING_SETPOINT,
-                Command.SET_COOLING_SETPOINT,
-                MAIN,
-                argument=20.0,
-            ),
-        ),
-        (
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_HVAC_MODE: HVACMode.COOL},
-            call(
-                "96a5ef74-5832-a84b-f1f7-ca799957065d",
-                Capability.AIR_CONDITIONER_MODE,
-                Command.SET_AIR_CONDITIONER_MODE,
-                MAIN,
-                argument="cool",
-            ),
-        ),
-        (
-            SERVICE_TURN_OFF,
-            {},
-            call(
-                "96a5ef74-5832-a84b-f1f7-ca799957065d",
-                Capability.SWITCH,
-                Command.OFF,
-                MAIN,
-            ),
-        ),
-    ],
-)
-async def test_ac_request_waits_for_earlier_request(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    service: str,
-    data: dict[str, Any],
-    command: Any,
-) -> None:
-    """Test a request is sent after an earlier one that waits for the AC to turn on."""
-    switch_on_sent = asyncio.Event()
-    devices.execute_device_command.side_effect = lambda *args, **kwargs: (
-        switch_on_sent.set()
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    first = asyncio.create_task(
-        hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-                ATTR_TEMPERATURE: 23,
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-            },
-            blocking=True,
-        )
-    )
-    await switch_on_sent.wait()
-    second = asyncio.create_task(
-        hass.services.async_call(
-            CLIMATE_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", **data},
-            blocking=True,
-        )
-    )
-    await asyncio.sleep(0)
-    assert devices.execute_device_command.mock_calls == [
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
-        ),
-    ]
-
-    await trigger_update(
-        hass,
-        devices,
-        "96a5ef74-5832-a84b-f1f7-ca799957065d",
-        Capability.SWITCH,
-        Attribute.SWITCH,
-        "on",
-    )
-    await asyncio.gather(first, second)
-    assert devices.execute_device_command.mock_calls == [
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, Command.ON, MAIN
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.AIR_CONDITIONER_MODE,
-            Command.SET_AIR_CONDITIONER_MODE,
-            MAIN,
-            argument="heat",
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        command,
     ]
 
 
@@ -559,7 +324,6 @@ async def test_ac_set_hvac_mode_auto_turns_on_uses_aicomfort(
         Attribute.SUPPORTED_AC_MODES,
         ["aIComfort", "cool", "dry", "heat", "fanOnly"],
     )
-    report_switch_on_after_command(hass, devices)
 
     await setup_integration(hass, mock_config_entry)
 
@@ -743,7 +507,6 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
 
     The device is turned on once, then gets the mode, then the setpoint.
     """
-    report_switch_on_after_command(hass, devices)
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
