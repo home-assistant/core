@@ -139,6 +139,10 @@
       "description": "App {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
       "title": "Insecure secrets detected in app configuration"
     },
+    "issue_core_deprecated_tcp_api_request": {
+      "description": "Something in Home Assistant is calling the Supervisor API with the `{supervisor_token}` token, for example a request to `{reference}`. Support for this ends in Home Assistant {breaks_in_ha_version}, after which these requests will fail.\n\nThis usually comes from a [Command line]({command_line_url}) or [Shell command]({shell_command_url}) configuration, or from a custom integration. Select Learn more to find out how to find and update it.",
+      "title": "Deprecated use of the Supervisor API token"
+    },
     "issue_mount_mount_failed": {
       "fix_flow": {
         "abort": {

@@ -123,12 +123,14 @@ def assert_issue_repair_in_list(
     *,
     reference: str | None = None,
     placeholders: dict[str, str] | None = None,
+    learn_more_url: str | None = None,
+    breaks_in_ha_version: str | None = None,
 ) -> None:
     """Assert repair for unhealthy/unsupported in list."""
     if reference:
         placeholders = (placeholders or {}) | {"reference": reference}
     assert {
-        "breaks_in_ha_version": None,
+        "breaks_in_ha_version": breaks_in_ha_version,
         "created": ANY,
         "dismissed_version": None,
         "domain": "hassio",
@@ -136,7 +138,7 @@ def assert_issue_repair_in_list(
         "is_fixable": fixable,
         "issue_id": uuid,
         "issue_domain": None,
-        "learn_more_url": None,
+        "learn_more_url": learn_more_url,
         "severity": "warning",
         "translation_key": f"issue_{context}_{type_}",
         "translation_placeholders": placeholders,
@@ -1196,6 +1198,62 @@ async def test_supervisor_issues_disk_lifetime(
         type_="disk_lifetime",
         fixable=False,
         placeholders=None,
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_deprecated_tcp_api_request(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for a deprecated TCP API request with Core's token."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "deprecated_tcp_api_request",
+                    "context": "core",
+                    "reference": "/core/info",
+                    "reference_extra": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="core",
+        type_="deprecated_tcp_api_request",
+        fixable=False,
+        placeholders={
+            "reference": "/core/info",
+            "supervisor_token": "SUPERVISOR_TOKEN",
+            "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
+            "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
+            "breaks_in_ha_version": "2027.6.0",
+        },
+        learn_more_url="https://www.home-assistant.io/more-info/supervisor-token",
+        breaks_in_ha_version="2027.6.0",
     )
 
 
