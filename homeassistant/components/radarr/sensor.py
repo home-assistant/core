@@ -33,12 +33,17 @@ def get_space(data: list[Diskspace], path: str) -> str:
 
 def get_folder_names(mounts: list[RootFolder]) -> list[str]:
     """Return a unique name for each root folder."""
+    basenames = [mount.path.rsplit("/")[-1].rsplit("\\")[-1] for mount in mounts]
+    # Every original basename is reserved, so existing unique IDs don't change
+    taken = set(basenames)
+    claimed: set[str] = set()
     names: list[str] = []
-    for mount in mounts:
-        name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
-        # Only repeated names get the root folder ID, so existing unique IDs don't change
-        while name in names:
-            name = f"{name}_{mount.id}"
+    for mount, name in zip(mounts, basenames, strict=True):
+        if name in claimed:
+            while name in taken:
+                name = f"{name}_{mount.id}"
+            taken.add(name)
+        claimed.add(name)
         names.append(name)
     return names
 

@@ -134,6 +134,15 @@ async def test_windows(
             },
             id="suffix_already_taken",
         ),
+        pytest.param(
+            "rootfolder-suffix-taken-later",
+            {
+                "movies": ("Movies", "263.10"),
+                "movies_2_2": ("Movies_2_2", "93.13"),
+                "movies_2": ("Movies_2", "46.57"),
+            },
+            id="suffix_taken_by_later_folder",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
