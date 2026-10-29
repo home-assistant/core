@@ -2753,7 +2753,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.10.0
+pystiebeleltron==0.10.1
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.8
