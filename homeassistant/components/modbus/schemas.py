@@ -478,6 +478,10 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
+OPERATION_MODE_VALUE = probatio.Any(
+    cv.positive_int, probatio.All([cv.positive_int], probatio.Length(min=1))
+)
+
 WATER_HEATER_SCHEMA = probatio.All(
     BASE_STRUCT_SCHEMA.extend(
         {
@@ -526,27 +530,27 @@ WATER_HEATER_SCHEMA = probatio.All(
                 {
                     probatio.Required(CONF_ADDRESS): cv.positive_int,
                     probatio.Required(CONF_OPERATION_MODE_VALUES): {
-                        probatio.Optional(CONF_OPERATION_MODE_OFF): probatio.Any(
-                            cv.positive_int, [cv.positive_int]
-                        ),
-                        probatio.Optional(CONF_OPERATION_MODE_ECO): probatio.Any(
-                            cv.positive_int, [cv.positive_int]
-                        ),
-                        probatio.Optional(CONF_OPERATION_MODE_ELECTRIC): probatio.Any(
-                            cv.positive_int, [cv.positive_int]
-                        ),
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_OFF
+                        ): OPERATION_MODE_VALUE,
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_ECO
+                        ): OPERATION_MODE_VALUE,
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_ELECTRIC
+                        ): OPERATION_MODE_VALUE,
                         probatio.Optional(
                             CONF_OPERATION_MODE_PERFORMANCE
-                        ): probatio.Any(cv.positive_int, [cv.positive_int]),
+                        ): OPERATION_MODE_VALUE,
                         probatio.Optional(
                             CONF_OPERATION_MODE_HIGH_DEMAND
-                        ): probatio.Any(cv.positive_int, [cv.positive_int]),
-                        probatio.Optional(CONF_OPERATION_MODE_HEAT_PUMP): probatio.Any(
-                            cv.positive_int, [cv.positive_int]
-                        ),
-                        probatio.Optional(CONF_OPERATION_MODE_GAS): probatio.Any(
-                            cv.positive_int, [cv.positive_int]
-                        ),
+                        ): OPERATION_MODE_VALUE,
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_HEAT_PUMP
+                        ): OPERATION_MODE_VALUE,
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_GAS
+                        ): OPERATION_MODE_VALUE,
                     },
                     probatio.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 },

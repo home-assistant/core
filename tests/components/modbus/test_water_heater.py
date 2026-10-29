@@ -617,6 +617,27 @@ async def test_set_temperature(
                 CONF_WATER_HEATERS: [
                     {
                         **BASE_CONFIG,
+                        CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                        CONF_OPERATION_MODE_REGISTER: {
+                            CONF_ADDRESS: MODE_ADDRESS,
+                            CONF_OPERATION_MODE_VALUES: {
+                                CONF_OPERATION_MODE_OFF: 0,
+                                CONF_OPERATION_MODE_ECO: 1,
+                            },
+                        },
+                    },
+                ]
+            },
+            STATE_OFF,
+            [mock.call(ONOFF_ADDRESS, device_id=10, value=0)],
+            [],
+            id="off_keeps_mode_with_onoff",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
                         CONF_OPERATION_MODE_REGISTER: {
                             CONF_ADDRESS: MODE_ADDRESS,
                             CONF_OPERATION_MODE_VALUES: {
@@ -807,6 +828,20 @@ async def test_turn_on_off(
                 ]
             },
             id="mode_without_values",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_OPERATION_MODE_REGISTER: {
+                            CONF_ADDRESS: MODE_ADDRESS,
+                            CONF_OPERATION_MODE_VALUES: {CONF_OPERATION_MODE_ECO: []},
+                        },
+                    },
+                ]
+            },
+            id="empty_mode_values",
         ),
         pytest.param(
             {

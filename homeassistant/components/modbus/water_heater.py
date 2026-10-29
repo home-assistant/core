@@ -205,9 +205,12 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
+        has_onoff = self._onoff_coil is not None or self._onoff_register is not None
         await self._async_write_onoff(operation_mode != STATE_OFF)
+        # keep the mode when turning off, so turning on resumes it
         if (
             self._operation_mode_register is not None
+            and not (has_onoff and operation_mode == STATE_OFF)
             and (value := self._operation_mode_to_modbus.get(operation_mode))
             is not None
         ):
