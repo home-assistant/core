@@ -175,7 +175,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not await self._async_can_connect(user_input):
                     errors["base"] = "cannot_connect"
-                    if relinking:
+                    if relinking and entry is not None:
                         await self.hass.config_entries.async_setup(entry.entry_id)
                 else:
                     # Another flow can create a matching entry while this one
@@ -188,6 +188,7 @@ class AerosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                         }
                     )
                     if self.source == SOURCE_RECONFIGURE:
+                        assert entry is not None
                         return self.async_update_reload_and_abort(
                             entry, data=user_input
                         )
