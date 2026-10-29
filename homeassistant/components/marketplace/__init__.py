@@ -98,8 +98,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_built_in_panel(
         hass,
         DOMAIN,
-        DOMAIN,
-        "mdi:store",
+        sidebar_icon="mdi:store",
+        sidebar_title=DOMAIN,
         require_admin=True,
         show_in_sidebar=False,
     )
