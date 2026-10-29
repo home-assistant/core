@@ -31,6 +31,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "ac_connected": {
+        "name": "AC power"
+      },
       "camera_in_use": {
         "name": "Camera in use"
       },
@@ -43,12 +46,46 @@
         "name": "Media"
       }
     },
+    "number": {
+      "display_brightness": {
+        "name": "Display {display_id} brightness"
+      }
+    },
     "sensor": {
       "amount_memory_used": {
         "name": "Amount of memory used"
       },
+      "battery_info": {
+        "name": "{battery} battery"
+      },
+      "battery_info_state": {
+        "name": "{battery} battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "[%key:component::system_bridge::entity::sensor::battery_state::state::not_charging%]"
+        }
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "empty": "[%key:common::state::empty%]",
+          "full": "[%key:common::state::full%]",
+          "not_charging": "Not charging"
+        }
+      },
       "battery_time_remaining": {
         "name": "Battery time remaining"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
       },
       "boot_time": {
         "name": "Boot time"
@@ -185,6 +222,11 @@
       "version_latest": {
         "name": "Latest version"
       }
+    },
+    "switch": {
+      "display_power": {
+        "name": "Display {display_id} power"
+      }
     }
   },
   "exceptions": {
@@ -193,6 +235,9 @@
     },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
+    },
+    "display_control_failed": {
+      "message": "Failed to control display {display_id}: {error}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

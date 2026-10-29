@@ -26,20 +26,13 @@ from homeassistant.core import (
     async_get_hass_or_none,
     callback,
 )
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    EventDeviceRegistryUpdatedData,
-)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import CalculatedState, Entity, EntityDescription
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_HOST_NAME,
@@ -62,8 +55,6 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
-
 
 @callback
 def _async_connected_device_registered(
@@ -84,85 +75,6 @@ def _async_connected_device_registered(
             ATTR_HOST_NAME: hostname,
         },
     )
-
-
-@callback
-def _async_register_mac(
-    hass: HomeAssistant,
-    domain: str,
-    mac: str,
-    unique_id: str,
-) -> None:
-    """Register a mac address with a unique ID."""
-    mac = dr.format_mac(mac)
-    if DATA_KEY in hass.data:
-        hass.data[DATA_KEY][mac] = (domain, unique_id)
-        return
-
-    # Setup listening.
-
-    # dict mapping mac -> partial unique ID
-    data = hass.data[DATA_KEY] = {mac: (domain, unique_id)}
-
-    @callback
-    def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:
-        """Enable the online status entity for the mac of a newly created device."""
-        # Only for new devices
-        if ev.data["action"] != "create":
-            return
-
-        dev_reg = dr.async_get(hass)
-        device_entry = dev_reg.async_get(
-            ev.data["device_id"], include_child_devices=False
-        )
-
-        if device_entry is None:
-            # A child device resolves to None here; it has no MAC to match.
-            return
-
-        # Check if device has a mac
-        mac = None
-        for conn in device_entry.connections:
-            if conn[0] == dr.CONNECTION_NETWORK_MAC:
-                mac = conn[1]
-                break
-
-        if mac is None:
-            return
-
-        # Check if we have an entity for this mac
-        if (unique_id := data.get(mac)) is None:
-            return
-
-        ent_reg = er.async_get(hass)
-
-        if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
-            return
-
-        entity_entry = ent_reg.entities[entity_id]
-
-        # Make sure entity has a config entry and was disabled by the
-        # default disable logic in the integration and new entities
-        # are allowed to be added.
-        if (
-            entity_entry.config_entry_id is None
-            or (
-                (
-                    config_entry := hass.config_entries.async_get_entry(
-                        entity_entry.config_entry_id
-                    )
-                )
-                is not None
-                and config_entry.pref_disable_new_entities
-            )
-            or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
-        ):
-            return
-
-        # Enable entity
-        ent_reg.async_update_entity(entity_id, disabled_by=None)
-
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
 class BaseTrackerEntity(Entity):
@@ -637,6 +549,9 @@ class ScannerEntity(
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None
+    _attr_device_info: DeviceInfo | None  # type: ignore[assignment]
+    # Most scanned network clients are not worth tracking
+    _attr_entity_registry_enabled_default = False
     _attr_source_type: SourceType = SourceType.ROUTER
 
     @cached_property
@@ -660,96 +575,78 @@ class ScannerEntity(
         """Return unique ID of the entity."""
         return self.mac_address
 
-    @final
-    @property
-    @override
-    def device_info(self) -> DeviceInfo | None:
-        """Device tracker entities should not create device registry entries."""
-        return None
+    @callback
+    def _async_fallback_device_name(
+        self, connections: set[tuple[str, str]]
+    ) -> str | None:
+        """Return the name of the tracked device for its default device info.
 
-    @property
-    @override
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        # If mac_address is None, we can never find a matching device.
-        return (
-            # Do not disable if we won't activate our own device registration logic
-            self.mac_address is None
-            or self.device_info is not None
-            # Disable if the tracked device is not known to any integration
-            or self._async_mac_address_registered()
+        The MAC address only names a new device, so it does not replace a name
+        given by the integration's other entities or before the tracked device
+        went offline.
+        """
+        if self.hostname:
+            return self.hostname
+        if TYPE_CHECKING:
+            assert self.platform.config_entry is not None
+        if dr.async_get(self.hass).async_get_devices(
+            connections=connections,
+            config_entry_id=self.platform.config_entry.entry_id,
+        ):
+            return None
+        return self.mac_address
+
+    @callback
+    def _async_set_default_device_info(self) -> None:
+        """Describe the tracked device for an integration which does not.
+
+        To be removed in HA Core 2028.11, integrations should provide device info
+        with the MAC address of the tracked device as a connection, or an empty
+        device info for a tracker without a device.
+        """
+        if TYPE_CHECKING:
+            assert self.mac_address is not None
+        connections = {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+        if (name := self._async_fallback_device_name(connections)) is None:
+            self._attr_device_info = DeviceInfo(connections=connections)
+        else:
+            self._attr_device_info = DeviceInfo(connections=connections, name=name)
+        # An integration overriding device_info is not affected
+        if self.device_info is None:
+            return
+        report_usage(
+            "does not provide device info for its ScannerEntity device tracker, "
+            "it should provide device info with the MAC address of the tracked "
+            "device in its connections, or an empty DeviceInfo() if the tracker "
+            "should not have a device",
+            breaks_in_ha_version="2028.11.0",
+            core_integration_behavior=ReportBehavior.ERROR,
+            integration_domain=self.platform.platform_name,
         )
 
     @override
     async def async_prepare_to_add_to_hass(self) -> None:
-        """Run before the entity is added to hass.
-
-        Registers the MAC address before the entity is added so a tracker that is
-        created disabled can still be enabled later when its device becomes known.
-        """
+        """Run before the entity is added to hass."""
         await super().async_prepare_to_add_to_hass()
-        if self.mac_address and self.unique_id:
-            _async_register_mac(
-                self.hass,
-                self.platform.platform_name,
-                self.mac_address,
-                self.unique_id,
-            )
-            if self.is_connected and self.ip_address:
-                _async_connected_device_registered(
-                    self.hass,
-                    self.mac_address,
-                    self.ip_address,
-                    self.hostname,
-                )
-
-    @callback
-    def _async_mac_address_registered(self) -> bool:
-        """Return if a device with the entity's MAC address is registered."""
-        assert self.mac_address is not None
-
-        return bool(
-            dr.async_get(self.hass).async_get_devices(
-                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
-            )
-        )
-
-    @override
-    async def async_internal_added_to_hass(self) -> None:
-        """Handle added to Home Assistant."""
-        # Entities without a unique ID don't have a device
         if (
-            not self.registry_entry
-            or not self.platform.config_entry
-            or not self.mac_address
-            or not self._async_mac_address_registered()
-            # Entities should not have a device info. We opt them out
-            # of this logic if they do.
-            or self.device_info
+            self.device_info is None
+            and self.mac_address
+            and self.unique_id
+            and self.platform.config_entry is not None
         ):
-            if self.device_info:
-                LOGGER.debug("Entity %s unexpectedly has a device info", self.entity_id)
-            await super().async_internal_added_to_hass()
-            return
-
-        # Register our own device now that the tracked device is known to another
-        # integration; matching the split of a pre-migration composite device prunes
-        # the identifiers and connections copied from the composite.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.platform.config_entry.entry_id,
-            config_subentry_id=self.registry_entry.config_subentry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
-        )
-
-        # Link the entity's registry entry to the device
-        if self.registry_entry.device_id != device_entry.id:
-            self.registry_entry = er.async_get(self.hass).async_update_entity(
-                self.entity_id, device_id=device_entry.id
+            self._async_set_default_device_info()
+        if (
+            self.mac_address
+            and self.unique_id
+            and self.is_connected
+            and self.ip_address
+        ):
+            _async_connected_device_registered(
+                self.hass,
+                self.mac_address,
+                self.ip_address,
+                self.hostname,
             )
-
-        # Do this last or else the entity registry update listener has been installed
-        await super().async_internal_added_to_hass()
 
     # BaseScannerEntity.state_attributes is @final to keep external subclasses
     # from tampering with it; ScannerEntity is an in-tree subclass that
