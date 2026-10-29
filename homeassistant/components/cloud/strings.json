@@ -33,7 +33,7 @@
         "step": {
           "confirm": {
             "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead.",
-            "title": "[%key:component::cloud::issues::deprecated_voice::title%]"
+            "title": "[%key:component::cloud::issues::deprecated_gender::title%]"
           }
         }
       },
@@ -42,17 +42,6 @@
     "deprecated_tts_platform_config": {
       "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue.",
       "title": "The Cloud text-to-speech platform configuration is deprecated"
-    },
-    "deprecated_voice": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`.",
-            "title": "[%key:component::cloud::issues::deprecated_voice::title%]"
-          }
-        }
-      },
-      "title": "A deprecated voice was used"
     },
     "legacy_subscription": {
       "fix_flow": {
