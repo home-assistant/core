@@ -505,8 +505,7 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
 
         # MQTT client should be cleared after failure
         assert coordinator.mqtt_client is None
-        # The failed client should have been disconnected
-        mock_mqtt_instance.disconnect.assert_called_once()
+        mock_mqtt_instance.disconnect.assert_awaited_once()
 
 
 async def test_coordinator_on_device_property_update_new_property(

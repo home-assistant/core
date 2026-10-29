@@ -171,10 +171,8 @@ async def test_unload_with_mqtt_disconnect(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify MQTT was disconnected
-    mock_mqtt_client.disconnect.assert_called_once()
-    # Verify API client was closed
-    mock_api_client.close.assert_called_once()
+    mock_mqtt_client.disconnect.assert_awaited_once()
+    mock_api_client.close.assert_awaited_once()
 
 
 async def test_setup_entry_oauth2_implementation_unavailable(
@@ -636,8 +634,7 @@ async def test_setup_mqtt_init_failure_with_cleanup(
     # A transient MQTT outage is retried by Home Assistant
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    # Verify the API client was closed
-    mock_api_client_instance.close.assert_called_once()
+    mock_api_client_instance.close.assert_awaited_once()
 
 
 async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
